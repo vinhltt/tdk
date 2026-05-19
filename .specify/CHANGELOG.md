@@ -1,0 +1,1214 @@
+---
+tags: [changelog, config]
+status: active
+---
+# Changelog
+
+All notable changes to the project configuration (.specify/, .claude/, .github/)
+will be documented in this file.
+
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
+
+## [1.45.0] - 2026-05-19
+
+### Added
+- **[Scripts]** New CLI utilities for phase status management
+  - `parse-phases-table.ts` — CLI wrapper to parse `## Phases` table from plan.md; supports `--json` flag; exits 1 on parse errors
+  - `phase-frontmatter.ts` — Module for surgically updating `status:` in phase file YAML frontmatter without YAML round-trip (preserves comments and key order)
+  - `update-phase-frontmatter-status.ts` — CLI for `phase-frontmatter` module with status validation
+  - `update-phase-status.ts` — CLI to update phase row status in plan.md table; rejects legacy status vocabulary before writing
+  - Test fixtures and tests for all new utilities (`phase-frontmatter.test.ts`, `parse-phases-table-cli.test.ts`, `update-phase-status-cli.test.ts`, `sync-phase-status.integration.test.ts`)
+
+### Changed
+- **[Scripts]** `phases-table-parser.ts` — Added `cancelled` to `PhaseStatus` type; exported `VALID_STATUSES`; added legacy alias map (`pending`→`todo`, `in-progress`→`in_progress`, `completed`→`done`) for backward compat with pre-schema_version-3 plans; updated tests
+- **[tdk-core]** Four skills refactored from TypeScript direct imports to CLI wrappers
+  - `tdk-analyze` (1.1.1→1.10.2): uses `parse-phases-table.ts` CLI instead of `parsePhasesTable()` import
+  - `tdk-implement-from-plan` (0.2.3→1.10.2): uses `update-phase-frontmatter-status.ts` + `update-phase-status.ts` CLIs at every status transition; phase file frontmatter MUST be updated before plan.md table
+  - `tdk-ut-backfill-auto` (1.2.1→1.10.2): uses `parse-phases-table.ts` CLI instead of TypeScript import
+  - `tdk-plan` (1.10.1→1.10.2): `output-standards.md` updates status vocab (`todo/in_progress/done/skipped/blocked/cancelled`) and bumps `schema_version` to 3; `plan-organization.md` documents CLI-based status update tools and deprecates header-block frontmatter
+
+## [1.44.1] - 2026-05-18
+
+### Changed
+- **[Scripts]** Setup command improvements
+  - Use `Bun.argv` instead of `process.argv` for native Bun argument parsing
+  - Skip claude availability check when `--skipPlugins` is set
+  - Add error handling for `main()` with stderr output and `process.exit(1)` on failure
+  - Plugin registration failures now return `fail` status instead of silently passing
+  - Updated test to assert `fail` status and exit code in error message
+- **[General]** setup.sh: Windows users get manual install instructions for jq/yq; prioritize `--frozen-lockfile` over `--no-save` for bun install
+
+## [1.44.0] - 2026-05-18
+
+### Added
+- **[Scripts]** TypeScript setup command suite replacing bash-based setup orchestration
+  - `setup.ts` — entry point: detects OS/arch, resolves project root, orchestrates all setup steps
+  - `setup-cli.ts` — step orchestrator with `parseSetupArgs` / `runSetupSteps` functions
+  - `types.ts` — shared `StepResult`, `SetupOptions`, `SetupContext`, `CommandRunner` interfaces
+  - `steps/python-venv.ts`, `steps/ts-deps.ts`, `steps/config-detect.ts`, `steps/config-migrate.ts`, `steps/python-imports.ts`, `steps/plugin-register.ts` — modular step implementations
+  - `utils/default-command-runner.ts`, `utils/output-helpers.ts` — CLI output and command execution utilities
+  - Tests: `common-env-parity.test.ts` + 8 setup step/integration tests
+
+### Changed
+- **[Setup]** `speckit-setup-guide.md`: updated description to reflect new bash→TS delegation architecture
+- **[General]** `setup.sh` refactored from 482-line monolith to 71-line thin bootstrap that installs prerequisites (git, jq, yq, bun) then delegates all setup logic to `setup.ts`
+
+### Removed
+- **[Scripts]** `common-env.sh` — 346-line bash environment loader (`load_feature_env`, `validate_prefix`, `parse_ticket_id`) replaced by TypeScript setup command
+
+## [1.43.3] - 2026-05-17
+
+### Changed
+- **[Scripts]** `run-migration-tests.sh`: removed `.specify/scripts/python/` exclusion from T15 commercehub reference check
+
+### Removed
+- **[Scripts]** Deleted Python utility scripts
+  - `generate_data_model.py`: generated data-model.md and ER diagrams from spec.md entities
+  - `sync_requirements.py`: synced REQ-0xx/REQ-1xx blocks from requirements files into spec.md
+  - `tasks_to_issues.py`: created GitHub Issues from tasks.md TODO items
+
+## [1.43.2] - 2026-05-17
+
+### Removed
+- **[Scripts]** Delete `common.sh` — fully migrated to TypeScript `common.ts`; no bash callers remain
+
+### Changed
+- **[Setup]** Update `speckit-setup-guide.md` references from bash scripts to TypeScript equivalents
+  - `detect-config.sh` → `detect-config.ts`, `common.sh` references removed
+  - Troubleshooting section updated for Bun-based workflow
+- **[Claude Skills]** Update `tdk-distribute/SKILL.md` — remove `common.sh` from distribution file list
+- **[Scripts]** Clean up `common.ts` comments — remove stale `common.sh` migration references
+
+## [1.43.1] - 2026-05-17
+
+### Changed
+- **[Scripts]** `common-env.sh`: Migrated config detection from bash `detect-config.sh` to TypeScript `detect-config.ts`; added `bun` availability guard; updated JSON field references from SCREAMING_SNAKE_CASE to camelCase (`configFound`, `workspaceRoot`, `workspaceName`, `targetSubWorkspace`, etc.)
+- **[Setup]** `setup.sh`: Switched config detection from bash+Python to bun+jq; added `bun` availability check before running detection; updated JSON field references to camelCase
+
+### Removed
+- **[Scripts]** `detect-config.sh` deleted — config detection logic migrated to TypeScript (`detect-config.ts`)
+
+## [1.43.0] - 2026-05-17
+
+### Added
+- **[Scripts]** New TypeScript environment scripts for test-api skills, replacing Bash run.sh
+  - `codegen-env.ts` — env validation for tdk-test-api-gen-code-playwright-ts
+  - `plan-env.ts` — env validation for tdk-test-api-plan
+  - `testcase-env.ts` — env validation for tdk-test-api-generate-testcase
+  - `test-api-shared-setup.ts` — shared utilities for all 3 scripts
+- **[tdk-test-api]** `CHANGELOG.md`
+
+### Changed
+- **[Skills]** tdk-test-api skills migrated from bash run.sh to bun TypeScript env scripts
+  - `tdk-test-api-gen-code-playwright-ts`: Step 0 now calls `codegen-env.ts`; bumped to 1.1.0
+  - `tdk-test-api-generate-testcase`: Step 0 now calls `testcase-env.ts`; bumped to 1.1.0
+  - `tdk-test-api-plan`: Step 0 now calls `plan-env.ts`; bumped to 1.1.0
+- **[tdk-utils]** Plugin version bumped to 1.10.1
+
+### Removed
+- **[Skills]** Bash `run.sh` scripts removed from all 3 tdk-test-api skills (replaced by TypeScript equivalents)
+
+## [1.42.4] - 2026-05-17
+
+### Added
+- **[Agents]** `tdk-utils/CHANGELOG.md` — plugin-level changelog file
+
+### Changed
+- **[Agents]** `researcher` (tdk-utils) — replaced generic "document-skills" reference with specific office document skills: xlsx, docx, pptx, pdf
+
+## [1.42.3] - 2026-05-17
+
+### Changed
+- **[Scripts]** Simplified migration test runner and updated compatibility references
+  - Slimmed `run-migration-tests.sh` from 7 tests (T01/T04/T05/T10/T11/T14/T15) to 2 (T14/T15), removing setup code that depended on the deleted compat shim
+  - Updated `common.ts` comment to remove stale reference to `common-compat.sh`
+
+### Removed
+- **[Scripts]** Removed `common-compat.sh` — bash compat shim bridging legacy calling conventions to `common.sh`; functionality now handled directly via `common.sh` or TypeScript equivalents in `common.ts`
+
+## [1.42.2] - 2026-05-13
+
+### Added
+- **[Scripts]** `plan-prose-validator.ts` — validates guarded sections (`## Phases`, `## Decisions Made`, `## Success Metrics`) in `plan.md` for prose injection
+  - `plan-prose-validator.test.ts` — 12 test cases: happy paths, prose detection, edge cases
+- **[Skills]** `tdk-core/CHANGELOG.md` — per-plugin changelog file
+
+### Changed
+- **[Skills]** `tdk-plan` — integrated prose validation in Append Phase flow
+  - `handle-existing-plan.md`: added Step 8 validator (snapshot + rollback on violation); renumbered old Step 8→9; prohibited prose injection in `plan.md`
+
+## [1.42.1] - 2026-05-11
+
+### Fixed
+- **[Scripts]** Fix `resolveTargets` in sub-workspace `docs` command to use sub-workspace `name` (not `path`) for output directory
+
+## [1.42.0] - 2026-05-10
+
+### Added
+- **[tdk-core]** New sub-workspace docs generator (replaces `/ck:docs init` for sub-workspaces)
+  - skill: `tdk-sub-workspace-docs` (v1.0.0) — smart init/update/force flow per sub-workspace; pipes repomix pack + tdk-scout report into per-target subagent; writes 4 files under `<docsPath>/sub-workspaces/<wsPath>/` (codebase-summary, code-standards, system-architecture, README)
+  - agent: `tdk-docs-writer` (v1.0.0) — haiku-model per-target writer; consumes repomix pack + scout report, renders templates or splices AUTO-GEN marker bodies, enforces code-first / no-stale-TODO / honest-fallback rules
+- **[Scripts]** New `tdk sub-workspace docs` subcommand + supporting library
+  - command module: `commands/sub-workspace/{docs,repomix-pack,types}.ts`
+  - AUTO-GEN marker engine: `lib/auto-gen-markers.ts` (pure parse/splice, EOL-preserving) + `lib/auto-gen-markers-cli.ts` (CLI wrapper for agent invocation)
+  - tests: `tests/lib/{auto-gen-markers,auto-gen-markers-cli,templates-roundtrip}.test.ts`, `tests/sub-workspace/docs.test.ts`
+- **[Templates]** New `sub-workspace-docs/` template set with AUTO-GEN markers
+  - `README.md.tpl`, `code-standards.md.tpl`, `codebase-summary.md.tpl`, `system-architecture.md.tpl`
+
+### Changed
+- **[Scripts]** Register `sub-workspace docs` subcommand in TS CLI entrypoint (`src/index.ts`)
+- **[tdk-core]** Plugin bumped `1.9.0 → 1.10.0` to register sub-workspace docs skill + agent
+
+## [1.41.0] - 2026-05-10
+
+### Added
+- **[tdk-utils]** New codebase navigation components (S4 hierarchical 2-tier)
+  - skill: `tdk-scout` — orchestrates Tier 1 deterministic TS resolver + dispatches Tier 2 agent; emits markdown navigation report (relevant files + descriptions + unresolved questions)
+  - agent: `tdk-scout-runner` — haiku-model Tier 2 specialist; scores files via in-degree + path heuristics + task-hint, samples within budget, writes report
+- **[Scripts]** New `tdk scout` subcommand + module under `commands/scout/`
+  - core: `index.ts`, `extract.ts`, `args-validator.ts`, `cache-resolver.ts`, `pack-splitter.ts`, `repomix-runner.ts`, `tokens.ts`, `tree-builder.ts`, `types.ts`
+  - language parsers: `language-parsers/{index,go,python,ts-js}.ts` (regex-based symbol/import extraction)
+  - tests: full suite under `tests/scout/` (unit per parser + module, integration for `extract` and `run-scout`, fixtures `sample-pack-{ts,mixed}.md`)
+
+### Changed
+- **[Scripts]** Register `scout` subcommand in TS CLI entrypoint (`src/index.ts`)
+- **[tdk-utils]** Plugin bumped `1.9.0 → 1.10.0` to register scout skill + agent
+
+## [1.40.1] - 2026-05-10
+
+### Added
+- **[code-review]** Report-driven review workflow with new reference docs
+  - `references/output-path-resolution.md`: deterministic rules for `{base_path}/reviews/{YYYYMMDD-HHmm}-{slug}.md` (user path > auto-detected `.specify/specs/{task-id}/` from branch > cwd) with slug derivation + collision handling
+  - `references/review-report-template.md`: canonical report structure with P0/P1/P2 buckets, Simplification Opportunities, Plan Additions paste-ready block, Verification Performed, Open Questions
+
+### Changed
+- **[code-review]** SKILL.md: repositioned as report-writing audit complementary to `/simplify` (read-only, persists findings); added Relationship to /simplify table, Review Output Protocol section, updated decision tree and Integration with Workflows; version 1.0.0 → 1.1.0
+- **[code-review]** `references/requesting-code-review.md`: subagent contract now requires `REPORT_PATH` + `TEMPLATE_PATH`; deliverable is the populated report file; example updated with realistic branch/SHA flow
+
+## [1.40.0] - 2026-05-09
+
+### Added
+- **[Scripts]** TypeScript implementation of doc sync (`util/sync-docs.ts`)
+  - `sync-docs-helpers/sync-modes.ts`: `--all`, `--from-sub-workspace`, `--to-sub-workspace` mode handlers
+  - `sync-docs-helpers/sync-file.ts`: per-file sync with dry-run + force flags
+  - `sync-docs-helpers/walk-files.ts`: recursive markdown discovery
+- **[Scripts]** Snapshot test suite for sync-docs (`tests/sync-docs/`)
+  - `snapshot.test.ts`, `capture-snapshots.ts`, `fixture-setup.ts`, `normalize-paths.ts`
+  - Six baseline snapshots covering dry-run + real runs across all three modes
+  - `README.md` documenting fixture layout and snapshot regeneration
+
+### Changed
+- **[tdk-core]** `tdk-config-sync` skill now invokes `bun .../sync-docs.ts` instead of `bash .../sync-docs.sh`
+- **[Guides]** `command-reference.md`: dropped "Bash Fallback Commands" section (no remaining bash fallbacks)
+
+### Removed
+- **[Scripts]** `bash/sync-docs.sh` (superseded by TypeScript implementation)
+
+## [1.39.1] - 2026-05-08
+
+### Added
+- **[General]** Session tracking support for `tdk-core`
+  - `lib/session-tracker.cjs`: records session IDs to `sessions.txt` per task folder with file-lock concurrency control
+  - `__tests__/session-tracker.test.cjs`: unit tests covering skip conditions, idempotency, lock cleanup, and lock-contention
+
+### Changed
+- **[Hooks]** `dev-context-injector`: integrated session tracking — extracts ticket-id from branch and records current session ID on each prompt submit
+
+## [1.39.0] - 2026-05-08
+
+### Removed
+- **[tdk-core]** Page-design pipeline retired — consolidated into `/tdk-ui-design` + `/tdk-specify`/`/tdk-plan`
+  - `tdk-specify-pages` skill (was 1.0.9)
+  - `specify-pages.sh` bash script
+  - `clone-template.sh` bash script (generic template cloner, no longer used)
+  - Migration test cases T02/T03 (specify-pages list/create) from `run-migration-tests.sh`
+
+### Changed
+- **[tdk-memory]** `tdk-memory-preload`: removed `/tdk-specify-pages` from auto-invocation list in description
+- **[tdk-utils]** Dropped `tdk-specify-pages` from "Called by" lists in skill descriptions
+  - `tdk-load-project-context`
+  - `tdk-validate-task-id`
+- **[Guides]** Removed `/tdk-specify-pages` references across documentation
+  - `command-reference.md`: page-design section, troubleshooting entry, command-order quick reference
+  - `document-flow.md`: arrows in Mermaid flow diagrams and document-flow tables
+  - `evolution-comparison.md`: row in upgraded-commands table
+
+## [1.38.2] - 2026-05-06
+
+### Changed
+- **[tdk-plan]** MCP availability handling in Phase 0.guardian and --fast mode
+  - gates.md: added --no-mcp flag, STATUS: MCP_UNAVAILABLE handling, auto-respawn in --fast
+  - modes.md: corrected Phase 0.guardian to run in --fast mode; clarified MCP_UNAVAILABLE auto-handling
+  - red-team-workflow.md: replaced Vietnamese example reply with English
+- **[memory-guardian]** Added Tool Priority section, Phase 0 MCP Availability Check, and claim-type tool-selection table
+- **[brainstorming]** Translated scripts/README.md from Vietnamese to English
+- **[planning]** Translated project-knowledge.md intro from Vietnamese to English
+
+## [1.38.1] - 2026-05-06
+
+### Changed
+- **[Scripts]** Removed `bin.tdk` entry (pointing to `./bin/tdk.sh`) from `package.json`
+- **[Setup]** Updated `speckit-setup-guide.md` references from bash scripts to TypeScript equivalents
+
+### Removed
+- **[Scripts]** Deleted 7 bash scripts migrated to TypeScript
+  - `check-prerequisites.sh`
+  - `config/diff.sh`, `config/index.sh`
+  - `create-new-feature.sh`, `feature/status.sh`
+  - `setup-plan.sh`, `sync-commands.sh`
+
+## [1.38.0] - 2026-05-03
+
+### Changed
+- **[Scripts]** Reorganized UT TypeScript commands into `ut/backfill/` subfolder; added `ut/index.ts` and `ut/backfill/index.ts` as CLI entry points; updated `cli-error-handler.ts`, `check-rules.ts`, `create-rules.ts`, `feature/status.ts`, `config.ts`, `types.ts`, and root `src/index.ts`
+- **[Skills/tdk-ut-backfill-auto]** Renamed from `tdk-ut-auto`; updated workflow overview and CLI usage for backfill command group
+- **[Skills/tdk-ut-backfill-plan]** Renamed from `tdk-ut-plan`
+- **[Skills/tdk-ut-backfill-impl]** Renamed from `tdk-ut-generate`
+- **[Skills/tdk-ut-backfill-check-rules]** Renamed from `tdk-ut-check-rules`
+- **[Skills/tdk-ut-backfill-create-rules]** Renamed from `tdk-ut-create-rules`
+- **[Skills/tdk-config-index]** Updated system doc reference from `/tdk-ut-create-rules` → `/tdk-ut-backfill-create-rules`
+- **[Skills/tdk-implement-from-plan]** Updated all UT delegation options to backfill variants
+- **[Skills/tdk-implement-task]** Updated UT phase detection and delegation targets to backfill variants
+- **[Skills/tdk-plan]** Updated UT planning delegation ref to `/tdk-ut-backfill-plan`
+- **[Guides]** Renamed `tdk-ut-skills-usage.md` → `tdk-ut-backfill-skills-usage.md`; updated `command-reference.md`, `ut-rule-merge-self-check.md`, scenario guides (01, 04, 05, 06, 07, 13), `document-flow.md`, `evolution-comparison.md` with backfill skill names
+- **[Templates]** Restructured `ut-phase-template.md` to module-based format; updated `ut-plan-template.md`
+
+### Removed
+- **[Scripts]** Deleted legacy bash UT scripts: `ut/auto.sh`, `ut/check-rules.sh`, `ut/create-rules.sh`, `ut/generate.sh`, `ut/plan.sh`
+
+## [1.37.0] - 2026-05-02
+
+### Changed
+- **[Skills / tdk-core]** Removed references to deleted skills
+  - `tdk-implement-from-plan`: removed `/tdk-review-code` from post-implementation next steps
+  - `tdk-specify-pages`: removed `/tdk-update-page-design` from Related section
+- **[Skills / tdk-utils]** Updated callers list to remove deleted skills
+  - `tdk-load-project-context`: removed `tdk-change-requirement`, `tdk-review-code`, `tdk-show-progress` from callers list
+  - `tdk-validate-task-id`: removed same three skills from callers list
+- **[Guides]** Updated docs to reflect reduced command set (19→15 commands)
+  - `command-reference.md`: reduced command count, removed entries and diagrams for deleted skills, simplified Page Design section
+  - `document-flow.md`: removed Phase 3 code-review/design-update diagram and change-management flowchart nodes
+  - `evolution-comparison.md`: removed comparison rows for the four deleted skills
+- **[Setup]** `speckit-setup-guide.md`: removed `/tdk-review-code` and `/tdk-show-progress` from key commands list
+
+### Removed
+- **[Skills / tdk-core]** Deleted four skills
+  - `tdk-change-requirement` (was v1.0.6)
+  - `tdk-review-code` (was v1.0.5)
+  - `tdk-show-progress` (was v1.0.5)
+  - `tdk-update-page-design` (was v1.0.3)
+- **[Scripts]** Deleted bash scripts: `change-requirement.sh`, `review-code.sh`, `show-progress.sh`, `update-page-design.sh`
+- **[Guides]** Removed scenario docs: `12-page-design-full-pipeline.md`, `14-requirement-change-workflow.md`
+
+## [1.36.0] - 2026-05-02
+
+### Changed
+- **[tdk-core]** Removed references to deleted skills from commands
+  - `tdk-change-requirement`: simplified apply workflow from 5 phases to 3 (spec → page designs → implementation; removed test-spec + E2E phases)
+  - `tdk-review-code`: removed `tdk-fix-review-feedback` next-step guidance
+  - `tdk-show-progress`: removed related links to `tdk-fix-review-feedback`, `tdk-run-e2e-test`, `tdk-fix-bug`
+  - `tdk-specify-pages`: removed related link to `tdk-generate-test-spec`
+  - `tdk-update-page-design`: removed related link to `tdk-generate-test-spec`
+- **[tdk-utils]** Removed deleted-skill references from shared utilities
+  - `tdk-load-project-context`: removed `tdk-fix-bug`, `tdk-fix-review-feedback`, `tdk-generate-aws-architecture`, `tdk-generate-test-spec` from caller list
+  - `tdk-validate-task-id`: same caller list cleanup
+- **[Scripts]** Updated bash scripts to reflect simplified workflows
+  - `change-requirement.sh`: simplified analyze/apply output from 5-step to 3-step guidance
+  - `run-migration-tests.sh`: reduced from 15 tests to 9 (T01-T05, T10, T11, T14, T15); removed tests for deleted commands
+- **[Templates]** `requirement-change-template.md`: removed test-specifications checklist item and test-related action items
+- **[Guides]** Documentation updated to reflect command set reduction
+  - `command-reference.md`: reduced command count 25→19; removed Testing & Bugs, fix-review-feedback, and Infrastructure sections; updated diagrams and troubleshooting table
+  - `document-flow.md`: removed phases 4-5 from flowchart (test spec generation, E2E test, bug management)
+  - `README.md`: renumbered scenarios 13-15 to 12-14; removed AWS infrastructure scenario entry
+  - `evolution-comparison.md`: updated upgraded command count 19→13; removed deleted commands from upgrade table
+- **[Claude Skills]** `tdk-skill-docs-sync/docs-structure-map.md`: removed Testing & Bugs and Infrastructure skill categories
+
+### Removed
+- **[tdk-core]** Deleted 6 deprecated skills
+  - `tdk-fix-bug` (was 1.0.4) — bug fix after E2E test failures
+  - `tdk-fix-review-feedback` (was 1.0.4) — auto-fix from code review reports
+  - `tdk-generate-aws-architecture` (was 1.0.4) — AWS architecture doc generation
+  - `tdk-generate-aws-cfn` (was 1.0.2) — CloudFormation nested stack generation
+  - `tdk-generate-test-spec` (was 1.0.4) — E2E test specification generation
+  - `tdk-run-e2e-test` (was 1.0.2) — Playwright E2E test execution
+- **[Scripts]** Deleted 6 bash scripts: `fix-bug.sh`, `fix-review-feedback.sh`, `generate-aws-architecture.sh`, `generate-aws-cfn.sh`, `generate-test-spec.sh`, `run-e2e-test.sh`
+- **[Templates]** `test-spec-template.md` removed
+- **[Guides]** Scenario `12-aws-infrastructure-end-to-end.md` removed
+
+## [1.35.0] - 2026-05-02
+
+### Changed
+- **[General]** Removed `document-skills@tdk-plugin-marketplace` from enabled plugins in `.claude/settings.json`
+- **[Setup]** Removed `document-skills` from plugin registry documentation and setup instructions
+
+### Removed
+- **[Skills]** `document-skills` plugin (v1.0.4) removed
+  - `docx` (was 1.0.2) — Word document processing with OOXML schemas and Python scripting utilities
+  - `pdf` (was 1.0.2) — PDF form field extraction, filling, and bounding box validation scripts
+  - `pptx` (was 1.0.2) — PowerPoint processing with HTML-to-PPTX converter and OOXML schema support
+  - `xlsx` (was 1.0.2) — Excel file recalculation utility
+
+## [1.34.0] - 2026-05-01
+
+### Added
+- **[Scripts]** New `json-field.ts` CLI utility for reading and writing JSON fields using dot-notation paths
+
+### Changed
+- **[General]** Added `effortLevel: "high"` to Claude Code settings; removed `specify-devtools` from enabled plugins
+- **[Setup]** Removed `specify-devtools` references from plugin marketplace setup documentation
+- **[Scripts]** Updated changelog verify test fixtures from decommissioned `specify-devtools` to `tdk-utils`/`brainstorming`; cleaned up legacy comment in `seed-versions.ts`
+
+### Removed
+- **[specify-devtools]** Decommissioned plugin — removed from marketplace manifest, settings, and setup docs; skills migrated to root-level `.claude/skills/` (tdk-skill-docs-sync, tdk-bump, tdk-distribute)
+
+## [1.33.2] - 2026-04-29
+
+### Added
+- **[Scripts]** New test (`handle-existing-plan-paths.test.ts`) asserting `handle-existing-plan.md` enforces `phases/` path conventions
+
+### Changed
+- **[Skills]** `tdk-plan` reference docs updated to `phases/` subdirectory convention
+  - `handle-existing-plan.md`: Updated path prompts, dirty-guard regex, collision check, and Phases table links to `phases/phase-NN-*.md`
+  - `plan-organization.md`: Updated directory tree, Phases section description, table examples, and file-naming rule
+- **[Scripts]** Parser and tests updated for `phases/` path support
+  - `phases-table-parser.ts`: `isValidPath()` now accepts `phases/` prefix; updated error message example to `phases/phase-02-x.md`
+  - `phases-table-parser.test.ts`: Updated expected error message to match new example
+
+## [1.33.1] - 2026-04-29
+
+### Removed
+- **[General]** `compute-manifest.py` — Python manifest computation script removed; replaced by Bun TypeScript port
+
+### Added
+- **[Scripts]** TypeScript port of manifest computation (`bun run manifest`)
+  - `compare.ts` — file/component comparison; fixes Python bug where `changed_components` was always `[]`
+  - `compute.ts` — CLI entry point
+  - `find-project-root.ts` — git + upward `.specify/` root detection
+  - `identify-components.ts` — component discovery by directory structure
+  - `io.ts` — atomic manifest JSON load/write
+  - `scan-files.ts` — recursive file scanner + SHA-256 hasher
+  - `seed-versions.ts` — version seeding from `plugin.json` for migration
+  - `types.ts` — shared TypeScript type definitions
+- **[Scripts]** Unit tests for manifest modules
+  - `compare.test.ts` — 10 test cases for `compareComponents`
+  - `identify-components.test.ts` — tests for `identifyComponents`
+
+### Changed
+- **[Scripts]**
+  - `package.json` — added `manifest` npm script
+  - `check-cross-consistency.ts` — 3 fix hints updated to `bun run manifest`
+- **[Skills]** tdk-bump and tdk-distribute updated to reference `bun run manifest`
+  - `tdk-bump/SKILL.md` — Step 6/11 commands updated; `removed_components` added to output schema; DoD #4 refined; Phase 1 migration notice removed
+  - `tdk-distribute/SKILL.md` — troubleshooting references updated
+
+## [1.33.0] - 2026-04-27
+
+### Added
+- **[Templates]** New documentation templates for project-wide source code layout and technical context
+  - `source-code-structure-template.md` — template for `source-code-structure.md` (SOT for plan.md `### Source Code` section)
+  - `technical-context-template.md` — template for `technical-context.md` (SOT for plan.md `## Technical Context` section)
+
+### Changed
+- **[Skills]** tdk-plan reference files updated with SOT pre-load steps
+  - `design-phase.md` — added "Project Source Layout SOT Pre-load": read `source-code-structure.md` before filling `### Source Code`; falls back to boilerplate if missing
+  - `research-phase.md` — added "Project Tech Baseline SOT Pre-load": read `technical-context.md` before filling `## Technical Context`; falls back to codebase scan if missing
+
+## [1.32.0] - 2026-04-26
+
+### Added
+- **[tdk-core]** Comprehensive documentation for tdk-plan skill
+  - Cross-plan dependencies detection guide
+  - Design phase workflow documentation
+  - Plan organization and structure reference
+  - Red team workflow procedures (reliability, security, skeptic)
+  - Research phase guidelines
+  - Scope challenge resolution framework
+  - Validation question framework and workflows
+  - Modes and gates reference documentation
+  - Output standards and handle-existing-plan guides
+
+- **[tdk-utils]** Three new red-team agents for critical analysis
+  - tdk-red-team-reliability: Analyzes implementation reliability and robustness
+  - tdk-red-team-security: Evaluates security considerations and threat models
+  - tdk-red-team-skeptic: Challenges assumptions and explores alternative approaches
+
+- **[Guides]** New tdk-ut-skills-usage guide documenting unit test skill workflows
+
+- **[Scripts]** New TypeScript utilities for cross-plan operations
+  - cross-plan-deps-detectors.ts: Detect dependencies across plan files
+  - parse-plan-frontmatter.ts: Parse plan file frontmatter metadata
+  - scan-cross-plan-deps.ts: Scan and analyze cross-plan dependencies
+
+### Changed
+- **[tdk-core]** Major refactoring of tdk-plan skill documentation
+  - Extracted inline documentation into focused reference files
+  - Reorganized skill definition for clarity and maintainability
+  - Updated tdk-ut-plan skill with enhanced documentation
+
+- **[tdk-utils]** Documentation improvements
+  - Enhanced brainstorming skill scripts documentation
+  - Updated planning skill references for codebase understanding and project knowledge
+  - Improved common environment setup documentation
+
+- **[General]** Configuration and template updates
+  - Updated .gitignore for new build artifacts and codebase tools
+  - Enhanced plan, task, and test specification templates
+  - Aligned documentation standards across guides
+
+### Deprecated
+- Plan template references deprecated in favor of phase-based documentation structure
+
+## [1.31.0] - 2026-04-22
+
+### Added
+- **[tdk-core]** Mirror test strategy support and validation
+  - tdk-ut-auto: Support `testMapping.strategy = 'mirror'` for test directory selection
+  - tdk-ut-check-rules: New Step 0.5 for handling config parse errors with migration guidance
+  - tdk-ut-check-rules: New Step 2 for mirror structure validation with orphan test detection and handling
+  - tdk-ut-create-rules: Mirror strategy documentation
+  - tdk-ut-generate: Mirror strategy documentation
+  - tdk-ut-plan: Mirror strategy documentation
+
+### Changed
+- **[Scripts]** Enhanced CLI error handling and validation utilities
+  - Added mirror-validator utility for detecting and validating mirror test structure
+  - Updated config parser to emit `mirrorValidation` for mirror strategy workspaces
+  - Enhanced error handling in check-rules and cli-error-handler
+  - Updated test detection and validation logic
+
+## [1.30.0] - 2026-04-22
+
+### Added
+- **[tdk-core]** Test fixture `expected-decisions.md` for tdk-ut-auto skill validation
+- **[Scripts]** New utility `phases-table-parser.ts` — TypeScript parser for extracting and validating dependency tables from plan markdown files; includes 14 comprehensive test fixtures covering canonical, edge cases, and invalid scenarios
+
+### Changed
+- **[Guides]** Comprehensive documentation updates across 12 guide files — enhanced scenarios (full feature development, quick specification, quality review, unit testing, progress tracking, mid-development changes, existing feature resumption, page design, requirement changes) with improved clarity and workflow examples
+- **[tdk-core]** Skills documentation and workflows updated: tdk-analyze, tdk-change-requirement, tdk-checklist, tdk-implement-from-plan, tdk-plan, tdk-status, tdk-tasks, tdk-ut-auto — enhanced with clearer step descriptions, improved branching logic, and comprehensive error handling
+- **[tdk-utils]** Skills documentation and workflows: brainstorming (improved research integration), planning (output standards refinement)
+- **[Scripts]** feature/status.ts significantly enhanced with improved phase table parsing and status reporting; check-prerequisites.ts and utils/common.ts minor improvements for integration support
+- **[Templates]** Incremental refinements to checklist, plan, and tasks templates
+
+### Renamed
+- **[tdk-core]** Skill `tdk-implement` → `tdk-implement-task` for clearer intent (task-specific implementation vs. general implementation)
+
+## [1.29.0] - 2026-04-19
+
+### Added
+- **[tdk-utils]** New `researcher` agent and `research` skill — comprehensive technical research agent for evaluating technologies, analyzing architectures, gathering requirements; supports multiple research sources (websites, documentation, APIs); integrates with docs-seeker and context7 for knowledge synthesis
+
+### Changed
+- **[Plugins]** Simplified `plugin.json` across all 9 plugins — removed redundant `"skills": "./skills/"` and `"hooks": "./hooks/hooks.json"` fields. Claude marketplace auto-discovers these via directory structure.
+- **[tdk-utils]** Version bumped `1.4.6 → 1.5.0` for new agent/skill capability
+- **[Configuration]** Added `.specify.json.example` config sections for research skill: `skills.research.useGemini` flag and `gemini.model` selection
+
+## [1.28.0] - 2026-04-19
+
+### Changed
+- **[Plugins]** Standardize `plugin.json` layout across all 8 plugins — moved to `.claude-plugin/plugin.json` subdir (Claude marketplace convention). Affects `document-converter` (0.0.3 → 0.0.4), `document-skills` (1.0.3 → 1.0.4),  `tdk-core` (1.2.12 → 1.2.13), `tdk-memory` (0.2.3 → 0.2.4), `tdk-test-api` (1.0.2 → 1.0.3), `tdk-utils` (1.4.5 → 1.4.6). `specify-devtools` was already nested — plugin bumped `0.6.0 → 0.6.1` for coupled simplification below.
+- **[Scripts]** `verify.ts / fs-helpers.ts:resolvePluginJson()` simplified to single-path (nested only). Removed flat-path fallback dead code. `fixture-builder.ts` drops `nested?: boolean` knob — all fixtures build under `.claude-plugin/`. Breaking change for external projects still on flat layout. Skill `tdk-bump` 1.2.0 → 1.2.1.
+
+### Migration
+- Downstream projects consuming this marketplace: no action required — `marketplace.json > plugins[].source` references plugin directories, not `plugin.json` paths; Claude auto-discovers the nested file.
+- Downstream projects that custom-read `plugin.json` paths: update to `.claude-plugin/plugin.json` (breaking).
+
+## [1.27.0] - 2026-04-17
+
+### Changed
+- **[Skills]** `tdk-bump` — port `collect-diff-data.py` → TypeScript (Bun runtime). Python dependency removed for Step 1 of the workflow; Steps 6 and 11 still use `compute-manifest.py` (Python). Skill version bumped `1.0.15 → 1.1.0` (runtime requirement change — Bun ≥ 1.0 required). Output JSON is byte-identical to prior Python version (validated on 5 scenarios including error paths).
+
+### Removed
+- **[Skills]** `tdk-bump/scripts/collect-diff-data.py`, `scripts/tests/test_collect_diff_data.py`, `scripts/tests/__init__.py` — replaced by `collect-diff-data.ts` + `collect-diff-data.test.ts`.
+
+## [1.26.5] - 2026-04-17
+
+### Changed
+- **[Scripts]** Refactored config detection CLI to improve API clarity
+  - detect-config.ts: Updated command output to use new utility functions (findConfigFile, parseConfig, loadFeatureEnv, readTestApiConfig) and removed resultToJson helper
+  - common.ts: Changed default feature prefix from 'aa' to 'feat' for semantic clarity; improved parameter naming in readTestApiConfig
+  - config.ts: Removed rawConfig field from public ConfigResult interface and removed resultToJson export (moved to inline JSON serialization in CLI)
+- **[Skills]** Updated tdk-load-project-context documentation
+  - Updated SKILL.md to reference new featureEnv and testConfig output fields instead of deprecated rawConfig structure
+- **[Tests]** Enhanced test coverage for config detection CLI
+  - detect-config.test.ts: Added test D-07 validating CLI output envelope replaces rawConfig with featureEnv + testConfig
+  - common.test.ts: Updated test expectations to match new default prefixList ('feat' instead of 'aa')
+
+## [1.26.4] - 2026-04-16
+
+### Changed
+- **[tdk-core]** Enhanced module detection in UT skills
+  - tdk-ut-auto: Added Step 0b module detection and configuration with interactive user prompts
+  - tdk-ut-check-rules: Added Step 0b module detection with module creation flow and validation
+  - tdk-ut-create-rules: Added Step 0b module detection supporting existing and new module paths
+  - tdk-ut-generate: Added Step 0b module detection and module-aware test generation setup
+  - tdk-ut-plan: Added Step 0b module detection with sub-workspace and module-level orchestration
+- **[Scripts]** Improved UT command error handling and configuration management
+  - Added cli-error-handler.ts for standardized error handling across UT commands
+  - Enhanced auto.ts, check-rules.ts, create-rules.ts, generate.ts, plan.ts with improved error management
+  - Updated config.ts and types.ts for better type definitions and configuration utilities
+  - Enhanced ut-scripts.test.ts test coverage for CLI error scenarios
+
+## [1.26.3] - 2026-04-14
+
+### Added
+- **[tdk-utils]** Unit tests for brainstorming script configuration
+  - test_brainstorm_config.py with config validation tests
+- **[specify-devtools]** Unit tests for diff data collection
+  - test_collect_diff_data.py with changelog diff parsing tests
+
+### Changed
+- **[tdk-core]** Configuration format and parser updates
+  - Migrated config format from YAML (.specify.yaml) to JSON (.specify.json)
+  - Enhanced speckit-config-reader to support JSON format with auto-migration from YAML
+  - Updated test fixtures and context builder to use new JSON format
+  - Updated 7 skills documentation to reference .specify.json instead of .specify.yaml: tdk-implement-from-plan, tdk-implement, tdk-sub-workspace-init, tdk-sub-workspace-list, tdk-ut-create-rules, tdk-ut-generate, tdk-ut-plan
+- **[tdk-memory]** Documentation updates
+  - tdk-memory-init skill updated for .specify.json compatibility
+- **[tdk-test-api]** Test code generation updates
+  - tdk-test-api-gen-code-playwright-ts: auth strategy patterns and Playwright config patterns refined
+  - tdk-test-api-plan: documentation clarifications
+- **[tdk-utils]** Utility updates
+  - brainstorm.py: improved config handling and documentation
+  - Updated 3 skills for consistency: tdk-load-project-context, tdk-setup-guide, tdk-validate-task-id
+- **[specify-devtools]** Changelog and distribution improvements
+  - tdk-bump: simplified diff collection script and enhanced SKILL documentation
+  - tdk-distribute: documentation updates
+
+## [1.26.2] - 2026-04-12
+
+### Changed
+- **[tdk-ut-auto]** Enhanced documentation for --module parameter support
+- **[tdk-ut-check-rules]** Added module-level rules checking capability
+- **[tdk-ut-create-rules]** Extended to support module-specific configurations; improved .specify.json handling
+- **[tdk-ut-generate]** Updated documentation for module-aware test generation
+- **[tdk-ut-plan]** Enhanced planning for module-specific unit test workflows
+- **[Scripts]** Improved config handling and enhanced test coverage for UT commands
+
+## [1.26.1] - 2026-04-12
+
+### Changed
+- **tdk-core** YAML indentation standardization across 30 skills (3-space → 2-space indent)
+- **tdk-utils** YAML indentation standardization across 2 skills (3-space → 2-space indent)
+- **specify-devtools** YAML indentation standardization in tdk-bump skill
+
+## [1.26.0] - 2026-04-11
+
+### Added
+- **Scripts** New TypeScript-based command infrastructure with bun runtime (replaces bash)
+  - Config detection and management CLI (detect-config, config diff, config sync)
+  - Feature workflow commands (create-new-feature, status tracking)
+  - Unit test automation commands (plan, generate, check-rules, auto mode)
+  - Utility commands (check-prerequisites, setup-plan, sync-commands)
+  - Comprehensive test suites for CLI and security validation
+
+### Changed
+- **Configuration** Migrated from `.specify.yaml` to `.specify.json` format for configuration metadata
+  - Enhanced version tracking and architecture support
+  - Improved changelog exclusion patterns
+  - Refined spec folder and ticket format configuration
+
+- **Setup** Enhanced setup.sh with automatic dependency installation
+  - Auto-detect OS (Linux, macOS, Windows) and architecture (amd64, arm64)
+  - Auto-install jq, yq, and bun with fallback to manual installation guidance
+  - Improved prerequisite checking flow
+
+- **Skills** Updated 30 skill definitions with new TypeScript script references
+  - Migrated from bash check-prerequisites.sh to TypeScript CLI commands
+  - Updated parameter names and JSON output handling
+  - Enhanced documentation for new bun-based infrastructure
+  - Affected plugins: tdk-core, tdk-utils, specify-devtools
+
+### Removed
+- **Configuration** Deprecated `.specify.yaml` and `.specify.yaml.example` (replaced by JSON format)
+
+## [1.24.0] - 2026-04-05
+
+### Added
+- **[Scripts]** Centralized `compute-manifest.py` for SHA-256 file hashing and component version tracking across all plugins
+- **[General]** Centralized `manifest.json` replacing per-plugin inline checksum tracking
+
+### Changed
+- **[General]** Relocated `marketplace.json` to `.claude-plugin/` at git root for auto-detection; updated all plugin sources to absolute paths with `strict` mode
+- **[General]** Cleaned inline `skills` checksum objects from all plugin.json files, replaced with `"skills": "./skills/"` path reference
+- **[General]** Relocated specify-devtools plugin.json to `.claude-plugin/` subdirectory
+- **[Skills]** Updated changelog-generator and distribute skill docs to reference centralized manifest system
+- **[Skills]** Updated `collect-diff-data.py`, `scan-skill-docs-gaps.py`, `sync-distribute-common-files.py` to use `manifest.json`
+- **[Setup]** Removed manual local marketplace registration from setup.sh and docs (auto-detected via `.claude-plugin/`)
+- **[General]** Updated `distribute.sh` to use `compute-manifest.py` for component-level diffs
+- **[General]** Fixed whitespace in `.claude/settings.json`
+
+### Removed
+- **[Skills]** Deleted `compute-skill-checksums.py` (replaced by `compute-manifest.py`)
+
+## [1.23.1] - 2026-04-03
+
+### Changed
+- **[General]** `.specify/.specify.yaml`: added `logLevel` configuration and documented hook logging levels/content policy (`Trace`/`Debug` allow content; higher levels do not).
+- **[Hooks]** `tdk-core/hooks/dev-context-injector.cjs`: enriched hook log payload with explicit `message` fields for skip/success paths and included injected context content in success events.
+- **[General]** `tdk-core/lib/hook-logger.cjs`: added config-aware content logging gate (`shouldLogContent()`), `message` field persistence, and conditional `content` logging only when log level is `Debug` or `Trace`.
+- **[General]** `tdk-core/lib/speckit-config-reader.cjs`: added `logLevel` defaulting/parsing support in both YAML parser paths and normalized config output.
+
+## [1.23.0] - 2026-04-03
+
+### Added
+- **[General]** Added `.specify/.specify.yaml` as the central workspace configuration (architecture, docs path, git defaults, changelog exclude, and spec ticket format settings).
+- **[Skills]** Added compiled cache artifact `tdk-distribute/scripts/__pycache__/sync-distribute-common-files.cpython-313.pyc` alongside distribute script updates.
+
+### Changed
+- **[Skills]** `tdk-distribute/SKILL.md`: migrated guidance from `manifest.yaml` skill checksums to per-plugin `plugin.json` checksums; documented new sync flags (`--with-claude`, `--force`, `--verbose`) and CLI wrapper usage.
+- **[Skills]** `tdk-distribute/scripts/sync-distribute-common-files.py`: switched skill comparison source from `manifest.yaml` to `plugin.json`, added verbose logging, force-update mode, optional `.claude/` sync path, and improved directory exclude matching.
+
+### Removed
+- **[General]** Removed `tdk-core/.logs/hook-log.jsonl` from tracked configuration files.
+
+## [1.22.1] - 2026-04-02
+
+### Changed
+- **[General]** `tdk-core/lib/context-builder.cjs`: removed duplicate Workspace section injection and added `Spec Context` output (spec folder, current branch, active ticket extraction from branch).
+- **[General]** `tdk-core/__tests__/context-builder.test.cjs`: added coverage for ticket extraction, spec-context rendering, and regression test ensuring Workspace section is emitted once.
+
+## [1.22.0] - 2026-04-02
+
+### Added
+- **[Hooks]** Added hook configuration system with `UserPromptSubmit` event support in tdk-core
+- **[Hooks]** Added `dev-context-injector.cjs` hook to inject speckit development context on each prompt
+- **[Lib]** Added `context-builder.cjs` for building speckit development context
+- **[Lib]** Added `hook-logger.cjs` for hook execution logging with log rotation
+- **[Lib]** Added `speckit-config-reader.cjs` for parsing .specify.yaml configuration
+- **[Configs]** Added hook guidelines: development-principles.md, modularization-guidelines.md, subagent-guidelines.md
+- **[Tests]** Added test suite for tdk-core hooks and lib modules
+
+### Changed
+- **[General]** tdk-core/plugin.json: added hooks field to register hook configuration
+
+## [1.21.2] - 2026-03-29
+
+### Changed
+- **[General]** `.specify/.specify.yaml`: updated the architecture auto-detection note from `/docs:init` to `/tdk-config-init`.
+- **[Skills]** `tdk-config-diff`, `tdk-config-index`, `tdk-config-sync`: synchronized slash command naming from the `/docs:*` group to `/tdk-config-*` in titles, examples, and follow-up run suggestions.
+- **[Scripts]** `.specify/scripts/bash/config/diff.sh` and `.specify/scripts/bash/config/index.sh`: updated command reference comments to use the new `/tdk-config-*` command set.
+
+## [1.21.1] - 2026-03-28
+
+### Changed
+- **[Skills]** `tdk-implement` and `tdk-implement-from-plan`: improved UT phase detection (including signals from `Delegate to:`), auto-detected `--sub-workspace`, and added orchestration branching based on `ut-plan.md` status (`/tdk-ut-generate` when a plan exists, `/tdk-ut-auto` when it does not).
+- **[Skills]** `tdk-plan`: added an auto-include rule for a “Unit Test Planning” phase at the end of the plan when applicable, and clarified the boundary between plan-only behavior and execution delegation.
+- **[Skills]** `tdk-ut-auto`: updated trigger/orchestration descriptions and added a “Called By” table to standardize invocation flow from plan/implement.
+
+## [1.21.0] - 2026-03-28
+
+### Added
+- **[Skills]** Added `specify-devtools/tdk-skill-docs-sync` skill to scan and sync marketplace skill documentation, including deterministic gap scanning script and docs structure mapping reference.
+
+### Changed
+- **[Guides]** Updated command and workflow documentation to reflect 37 commands and include `tdk-batch-design`, `tdk-test-viewpoint`, and `tdk-implement-from-plan` in command reference, document flow, and evolution comparison guides.
+- **[Skills]** `tdk-utils` guide skills (`obsidian-brain`, `tdk-setup-guide`, `tdk-skill-guide`) now enforce explicit smart-obsidian vault path rules to prevent `.specify/` double-prefix and empty-path errors.
+
+## [1.20.1] - 2026-03-27
+
+### Changed
+- **[Skills]** `tdk-core/tdk-ut-auto`: refactored to orchestrator pattern that delegates to `/tdk-ut-check-rules`, `/tdk-ut-create-rules`, `/tdk-ut-plan`, and `/tdk-ut-generate`; clarified mandatory stop conditions and standardized step-by-step workflow.
+
+## [1.20.0] - 2026-03-27
+
+### Added
+- **[Claude Hooks]** Added `destructive-command-block.cjs` to block destructive shell commands (`rm`, `rmdir`, `git reset --hard`, force push) at PreToolUse for safer command execution.
+- **[Claude Hooks]** Added `privacy-block.cjs` to block access/search on sensitive files and secret-like patterns, with explicit user-approval flow via `AskUserQuestion` marker payload.
+
+### Changed
+- **[General]** `.claude/settings.json`: enabled `PreToolUse` hooks for `Bash` destructive-command blocking and `Bash|Glob|Grep|Read|Edit|Write` privacy blocking.
+
+## [1.19.1] - 2026-03-27
+
+### Changed
+- **[Skills]** `tdk-utils/tdk-skill-guide`: switched to smart-obsidian MCP-first tool strategy, adding MCP availability guard and fallback flows for overview/detail/search/scenario/tips modes.
+
+## [1.19.0] - 2026-03-27
+
+### Added
+- **[Docs]** Added centralized docs index at `.specify/docs/README.md` and guides hub at `.specify/docs/guides/README.md` to improve navigation by purpose.
+- **[Setup]** Added Claude Code setup visual assets (extension and Windows terminal screenshots) and plugin marketplace setup screenshots under `.specify/docs/setup/`.
+- **[Skills]** Added `tdk-setup-guide` and `tdk-skill-guide` skills to `tdk-utils` for interactive setup guidance and skill discovery.
+
+### Changed
+- **[Guides]** Reorganized documentation paths from `docs/` and `.specify/plugins/docs/` into `.specify/docs/guides/` and `.specify/docs/setup/`, including scenario files and setup guides.
+- **[Setup]** Updated setup documentation links and references across Claude/Obsidian/plugin marketplace guides.
+- **[Skills]** `tdk-bump` updated grouping guidance and diff collection mapping to classify `.specify/docs/guides/` as **Guides** and `.specify/docs/setup/` as **Setup**.
+- **[Scripts]** Updated `.specify/setup.sh` paths/messages to point to the new `.specify/docs/setup/` locations.
+
+## [1.18.0] - 2026-03-26
+
+### Added
+- **[Claude Skills]** New skill `tdk-test-viewpoint`: generates high-level test viewpoints (観点) from spec.md and ba-requirement.md, outputting UTF-8 BOM CSV. Includes SKILL.md, sample CSV example, element-type matrix, generation guidelines, and quality checklist references.
+
+### Changed
+- **[Scripts]** `status.sh`: updated task ID regex to support flexible alphanumeric formats (T###, PnTnn, etc.) instead of only T### pattern.
+
+## [1.17.2] - 2026-03-26
+
+### Added
+- **[Config]** `.specify/.specify.yaml`: Add `changelog.exclude` config for tdk-bump skill
+
+### Changed
+- **[Skills]** tdk-bump: Move version source from top-level `version` to `metadata.version` in marketplace.json; refactor collect-diff-data.py to read changelog.exclude from `.specify/.specify.yaml`
+
+## [1.17.1] - 2026-03-26
+
+### Changed
+- **[Skills]** Refactor 7 tdk-core skills to use `tdk-load-project-context` skill instead of direct `detect-config.sh` script invocation: `tdk-constitution`, `tdk-sub-workspace-init`, `tdk-sub-workspace-list`, `tdk-ut-auto`, `tdk-ut-create-rules`, `tdk-ut-generate`, `tdk-ut-plan`
+
+## [1.17.0] - 2026-03-26
+
+### Added
+- **[tdk-utils]** New skill `tdk-validate-task-id` — extracted task ID validation logic shared across tdk-core skills
+- **[tdk-utils]** New skill `tdk-load-project-context` — extracted project context loading shared across tdk-core skills
+
+### Changed
+- **[tdk-core]** 21 skills refactored to use `tdk-validate-task-id` and `tdk-load-project-context` for task ID validation and project context loading (DRY improvement)
+- **[tdk-utils]** Updated plugin configuration
+- **[Scripts]** Updated `auto.sh` and `check-rules.sh` scripts
+
+## [1.16.0] - 2026-03-25
+
+### Added
+- **[Claude Skills]** New skill `tdk-batch-design` for batch design document generation with Scenario A (new batch) and B (existing code impact) support
+- **[Claude Skills]** Added `template-filling-rules.md` reference for tdk-batch-design skill with section-by-section filling guidance
+
+### Changed
+- **[General]** `.claude/settings.json` — Added permissions deny list (security hardening: blocks dangerous rm, git push/reset, docker prune, shutdown commands)
+
+## [1.15.3] - 2026-03-22
+
+### Added
+- **[Claude Skills]** `tdk-ui-design`: New skill for generating comprehensive UI design specifications (screen item specs, logic, error messages) with page design templates, layout guidelines, and approval sections
+- **[Claude Skills]** `tdk-ui-design/references/template-filling-rules.md`: Template rules for UI design document generation ensuring consistent component naming, error handling patterns, and screen state documentation
+- **[Claude Skills]** `tdk-ba-requirement/references/template-filling-rules.md`: Template rules for BA requirement document generation with section-by-section filling guidance
+- **[Claude Skills]** `tdk-api-design/references/template-filling-rules.md`: Template rules for API design document generation (moved from tdk-db-design consolidation)
+- **[Scripts]** `.specify/scripts/bash/clone-template.sh`: New bash utility (118 lines) for cloning reusable skill/template files with destination normalization, backup, and progress output
+
+### Changed
+- **[Claude Skills]** `tdk-api-design/SKILL.md`: Refactored from partial DB design — now consolidates database/API schema design into unified skill with Scenario A (new design) and B (existing code impact) support
+- **[Claude Skills]** `tdk-ba-requirement/SKILL.md`: Updated with clarified sections and template reference paths; simplified presentation of BA requirement generation workflow
+- **[Claude Skills]** `tdk-api-design/references/db-schema-format-convention.md`: Renamed from tdk-db-design reference (now part of tdk-api-design); maintains column types, index naming, FK patterns for CommonDragon
+- **[Skills]** `tdk-specify-pages/SKILL.md`: Minor refinements to page design specification workflow
+- **[Scripts]** `tdk-utils/shard-doc/scripts/engine.py`: Enhanced document sharding logic (2-line patch)
+- **[Scripts]** `specify-devtools/tdk-bump/scripts/collect-diff-data.py`: Extended diff collection for improved file grouping (6-line addition)
+- **[Docs]** `docs/tdk-command-guide.md`: Updated command references to reflect skill consolidation
+- **[Docs]** `docs/tdk-document-flow.md`: Updated workflow documentation for consolidated design skills
+
+### Removed
+- **[Claude Skills]** `tdk-db-design/SKILL.md`: Consolidated into `tdk-api-design` skill — database design is now covered under unified API/database schema design workflow
+
+## [1.15.2] - 2026-03-19
+
+### Added
+- **[General]** .specify/setup.sh: New SpecKit automated setup script with smart re-run detection (skips already-installed components), prerequisite validation (Python, jq, yq, git), venv management, config detection, and colorized step-by-step output
+
+### Changed
+- **[Skills]** tdk-bump: Bumped patch version for collect-diff-data.py enhancements
+- **[Scripts]** collect-diff-data.py: Enhanced `is_excluded()` function to support glob patterns (`**`, `*`) in addition to exact matches and directory prefixes
+- **[General]** marketplace.json: Added `.specify/specs/**` to changelog exclusion patterns to prevent spec files from being included in configuration change tracking
+
+## [1.15.1] - 2026-03-18
+
+### Changed
+- **[Skills]** tdk-bump: Enhanced path pattern matching with glob support (**, *) to support flexible .specify/ component grouping
+- **[Scripts]** collect-diff-data.py: Added regex module and updated COMPONENT_MAP for better path pattern handling including nested structures (agents, hooks under .specify/**)
+
+## [1.15.0] - 2026-03-18
+
+### Added
+- **[General]** ctx7-setup.md: Setup guide for Context7 plugin integration (MCP tools: resolve-library-id, query-docs)
+- **[General]** github-mcp-setup.md: Setup guide for GitHub MCP server read-only access (PAT setup, remote/local modes, available tools)
+
+### Changed
+- **[Claude Agent Config]** settings.json: Added context7-plugin@context7-marketplace to enabled plugins; moved env block before hooks
+- **[Embedded Skills]** docs-seeker SKILL.md: Refactored from script-based workflow to MCP tool routing chain (context7 MCP → GitHub MCP → WebFetch → WebSearch); removed script dependency
+
+### Removed
+- **[Embedded Skills]** docs-seeker: Removed legacy scripts (analyze-llms-txt.js, detect-topic.js, fetch-docs.js + test suite), workflow files (library-search.md, repo-analysis.md, topic-search.md), references/ docs, .env.example, and package.json — replaced by MCP tool routing
+
+## [1.14.1] - 2026-03-18
+
+### Changed
+- **[General]** Added `docs-seeker` skill path to `.claude-plugin` marketplace plugin configuration
+
+## [1.14.0] - 2026-03-16
+
+### Added
+- **[Embedded Skills]** `tdk-specify`: Added evals test suite (`evals/evals.json`) with 3 test cases covering English spec generation, Vietnamese input handling, and missing-description error handling
+
+### Changed
+- **[Embedded Skills]** `tdk-analyze`: Enriched frontmatter with `argument-hint`, `compatibility`, `user-invocable`, `license`, `metadata` (category, requires, input_format, output_format, examples)
+- **[Embedded Skills]** `tdk-memory-changelog`: Added `metadata` block with category `Analysis & Review` and `requires: [tdk-memory-init]`
+- **[Embedded Skills]** `tdk-memory-checksum`: Added `metadata` block with category `Context & Memory` and `requires: [tdk-memory-init]`
+- **[Embedded Skills]** `tdk-memory-init`: Added `metadata` block with full input/output format, examples, and `requires: []`
+- **[Embedded Skills]** `tdk-memory-preload`: Added `argument-hint` and `metadata` block with category, requires, input/output format, and examples
+- **[Embedded Skills]** `tdk-memory-query`: Added `metadata` block with examples, marked `user-invocable: true`, added `argument-hint`
+- **[Embedded Skills]** `tdk-memory-update`: Added `metadata` block with category `Context & Memory`, requires chain, and examples
+
+## [1.13.0] - 2026-03-15
+
+### Added
+- **[Claude Agent Config]** Added new `tdk-api-design` skill for generating API design documents from feature specifications
+- **[Templates]** Added template for `api_design.md` generation
+
+### Changed
+- **[General]** Improved `tdk-specify-pages` skill prompt to better handle missing documentation, use actual API endpoints, follow UI/UX guidelines, and provide a clearer final summary
+
+## [1.12.1] - 2026-03-15
+
+### Changed
+- **[Claude Agent Config]** Added `user-invocable: false` to 14 skill frontmatters to prevent direct user invocation (sequential-thinking, docx, pdf, pptx, xlsx, tdk-memory-checksum, brainstorming, common, context-engineering, docs-seeker, obsidian-brain, planning, problem-solving, repomix, shard-doc)
+
+### Removed
+- **[Claude Agent Config]** Deleted local `.claude/skills/docs-seeker/` (17 files) — skill now available via `tdk-utils` plugin marketplace only
+
+## [1.12.0] - 2026-03-15
+
+### Added
+- **[Claude Agent Config]** New `tdk-db-design` skill — generates DB design documents for leader/PO approval with Scenario A (new DB) and B (existing code impact) support
+- **[Claude Agent Config]** DB design format convention reference (`db-design-format-convention.md`) — column types, index naming, FK patterns for CommonDragon
+- **[Templates]** DB design output template (`db-design-template.md`) — standardized markdown table format with new/modified tables, impact analysis, ER diagram, and approval sections
+
+### Changed
+- **[Claude Agent Config]** Updated `tdk-ba-requirement` skill template path reference from `ba-requirement-output-template.md` to `ba-requirement-template.md`
+- **[Templates]** Renamed BA requirement template for naming consistency (`ba-requirement-output-template.md` → `ba-requirement-template.md`)
+
+## [1.11.0] - 2026-03-15
+
+### Added
+- **[Claude Agent Config]** New `tdk-ba-requirement` skill for generating BA requirement documents from feature specifications (includes task validation, spec parsing, technical implication analysis, and approval section generation)
+- **[Templates]** New `ba-requirement-output-template.md` template with structured sections for requirements, analysis, clarifications, and approval sign-off
+
+## [1.10.5] - 2026-03-13
+
+### Added
+- **[Embedded Skills]** `tdk-memory-preload`: Added `flow-preload-mcp.md` and `flow-preload-normal.md` — per-skill MCP and non-MCP execution flow references
+- **[Embedded Skills]** `tdk-memory-query`: Added `flow-available-mcp.md` and `flow-query-normal.md` — per-skill MCP and non-MCP execution flow references
+- **[Embedded Skills]** `tdk-memory-update`: Added `flow-update-mcp.md` and `flow-update-normal.md` — per-skill MCP and non-MCP execution flow references
+
+### Changed
+- **[Embedded Skills]** `tdk-memory-preload/SKILL.md`: Simplified — Step 0 now redirects to `flow-preload-mcp.md` or `flow-preload-normal.md` based on MCP availability, replacing 100+ lines of inlined steps
+- **[Embedded Skills]** `tdk-memory-query/SKILL.md`: Simplified — redirects to per-skill flow references after MCP availability check
+- **[Embedded Skills]** `tdk-memory-update/SKILL.md`: Simplified — redirects to per-skill flow references after MCP availability check
+
+### Removed
+- **[General]** Deleted shared `references/mcp-tool-mapping.md` — replaced by per-skill flow reference files
+
+## [1.10.4] - 2026-03-13
+
+### Changed
+- **[General]** `mcp-tool-mapping.md`: updated all MCP tool references to full `mcp__smart-obsidian__*` names; added deferred tools notice and explicit `ToolSearch("select:...")` requirement before first MCP call
+- **[Embedded Skills]** `tdk-memory-preload`: expanded Step 0 with inline ToolSearch + step-by-step MCP check instead of cross-reference-only
+- **[Embedded Skills]** `tdk-memory-query`: same Step 0 expansion as preload
+- **[Embedded Skills]** `tdk-memory-update`: same Step 0 expansion as preload
+
+## [1.10.3] - 2026-03-13
+
+### Added
+- **[General]** New shared reference `mcp-tool-mapping.md` for MCP/fallback tool mapping used by all tdk-memory skills
+
+### Changed
+- **[General]** `tdk-memory-preload`: refactored MCP availability check to Step 0 using shared reference; steps renumbered; simplified tool call descriptions
+- **[General]** `tdk-memory-query`: same refactoring — MCP check to Step 0, guard checks to Step 1, steps renumbered
+- **[General]** `tdk-memory-update`: same refactoring — MCP check to Step 0, read memory-index merged into Step 1, steps renumbered; removed duplicated MCP/fallback inline code blocks
+
+## [1.10.2] - 2026-03-13
+
+### Changed
+- **[Embedded Skills]** `tdk-memory-preload`: Switch MCP availability guard from `list_vault_files` to `get_server_info` for more reliable health check
+- **[Embedded Skills]** `tdk-memory-query`: Switch MCP availability guard from `list_vault_files` to `get_server_info` for more reliable health check
+- **[Embedded Skills]** `tdk-memory-update`: Switch MCP availability guard from `list_vault_files` to `get_server_info` for more reliable health check
+
+## [1.10.1] - 2026-03-12
+
+### Changed
+- **[General]** `tdk-memory-preload`: Added MCP Availability Guard (Step 0.5) detecting smart-obsidian MCP at runtime; added Step 2.5 cross-domain semantic discovery via `search_vault_smart`; updated Step 3 to load files via `get_vault_file` (MCP) or `tdk-memory-query` legacy fallback when MCP unavailable
+- **[General]** `tdk-memory-query`: Added MCP Availability Guard (Step 0.5); updated Step 2 file resolution to use `list_vault_files` / `search_vault_smart` / `search_vault` MCP tools based on query flags; updated Step 3 to read via `get_vault_file` (MCP) or `Read` tool fallback
+- **[General]** `tdk-memory-update`: Added MCP Availability Guard (Step 0.5); replaced section-anchor strategy with heading-based `patch_vault_file` / `create_vault_file` MCP tools in Step 4; updated Step 5 index rebuild to use `list_vault_files`; removed malformed-tag guard and section-anchor reference doc dependency; updated block ID guidance to heading-based targeting
+
+## [1.10.0] - 2026-03-12
+
+### Added
+- **[Embedded Skills]** Added `docs-seeker` skill to `tdk-utils`: script-first documentation discovery via context7.com llms.txt standard; includes `detect-topic.js`, `fetch-docs.js`, `analyze-llms-txt.js` scripts with zero-token overhead, test suite (3 test files + runner), workflow references (library-search, repo-analysis, topic-search), and advanced/error/context7-patterns reference docs
+- **[Embedded Skills]** Added `shard-doc` skill to `tdk-utils`: splits large markdown documents (200+ lines) into smaller section files by heading level, replaces extracted content with Obsidian `[[wikilinks]]`, generates navigation index; includes Python scripts (`engine.py`, `rewriter.py`, `shard_doc.py`), wikilink sharding pattern reference, and test samples
+
+## [1.9.5] - 2026-03-10
+
+### Added
+- **[General]** Added `document-converter` plugin with `xlsx-to-csv` skill: converts XLSX files to CSV with auto-detect output directory (`{source}_CSV_AI`), multi-sheet support (each sheet → separate CSV file), recursive directory processing, UTF-8 BOM encoding for Excel compatibility, and `--overwrite` flag.
+
+### Changed
+- **[General]** Registered `document-converter` plugin in marketplace.json.
+
+## [1.9.4] - 2026-03-08
+
+### Changed
+- **[Embedded Skills]** `tdk-implement-from-plan`: Phase detection upgraded to flexible regex supporting `##`–`####` headings with any separator (`:`, `.`, `—`, `-`). Added lightweight phase status tracking via `<!-- status:done -->`/`<!-- status:skipped -->` HTML comments written to plan.md. Split phase execution into UT phases (4B) and Implementation phases (4C). UT phases now strictly enforce delegation to `/tdk-ut-auto` — never write tests inline. Implementation phases explicitly require actual code output.
+- **[Embedded Skills]** `tdk-status`: Fast-path display (plan.md without tasks.md) now reads `<!-- status:done/skipped -->` markers to show real progress (✅/⏭️/⏸️) with progress bar and percentage. Previously showed all phases as pending.
+- **[Embedded Skills]** `tdk-ut-auto`: Script execution hardened to always run from workspace root (`git rev-parse --show-toplevel`). Added existence check for `auto.sh` before execution. `detect-config.sh` also anchored to workspace root.
+
+## [1.9.3] - 2026-03-08
+
+### Changed
+- **[General]** `tdk-plan` skill: removed Phase 1 step that ran `update-agent-context.sh` to update AI agent context files
+- **[General]** `planning` skill: removed Phase 1 step that referenced agent context update
+
+### Removed
+- **[Scripts]** Deleted `update-agent-context.sh` (817-line bash script) that auto-updated AI agent context files (Claude, Gemini, Copilot, Cursor, etc.) from plan.md data
+
+## [1.9.2] - 2026-03-08
+
+### Changed
+- **[General]** Consolidated git and spec configuration into `.specify.yaml` under new `git:` and `specs:` sections (migrated from `.specify.env`)
+- **[Scripts]** Updated `common-env.sh` to load config from `.specify.yaml` via `yq` instead of parsing `.specify.env`
+- **[Claude Agent Config]** Updated `development-rules.md` config source table — replaced `.specify.env` row with `.specify.yaml → git:, specs:` reference
+- **[Claude Agent Config]** Added `tdk-test-api@tdk-plugin-marketplace` to enabled plugins in `settings.json`
+- **[Embedded Skills]** Updated all 16 tdk-core skills and archived commands to reference `.specify.yaml` `git.prefix-list` / `specs.default-folder` instead of `.specify.env` env vars
+- **[Embedded Skills]** Updated `brainstorming` skill script to parse `.specify.yaml` for prefix config instead of `.specify.env`
+- **[Embedded Skills]** Updated `tdk-distribute` docs to reference `.specify.yaml` instead of `.specify.env.example`
+
+### Removed
+- **[General]** Deleted `.specify.env` and `.specify.env.example` — git/spec configuration migrated into `.specify.yaml`
+
+## [1.9.1] - 2026-03-08
+
+### Changed
+- **[General]** `marketplace.json`: Registered 2 new plugin bundles — `tdk-test-api` (API test automation: plan, test case generation, Playwright TS code gen) and `tdk-utils` (utility skills: brainstorming, planning, problem-solving, context-engineering, obsidian-brain, repomix, common)
+- **[Embedded Skills]** `tdk-memory-init`: Added Step 5.1 — Obsidian enrichment for domain-overview.md (full frontmatter: aliases, type, domain, tags, created_at, updated_by; wikilinks to sibling files)
+- **[Embedded Skills]** `tdk-memory-init`: Added Step 6.5 — generate `memory-map.canvas` visual domain map (Obsidian Canvas JSON, radial layout); SHA256 entry added to memory.yaml manifest
+- **[Embedded Skills]** `tdk-memory-init`: Updated Step 6 memory-index.md domain table to use wikilink format for domain rows
+- **[Embedded Skills]** `tdk-memory-update`: Added Step 4.1 — Obsidian enrichment for new files (frontmatter, wikilinks, callouts, block IDs)
+- **[Embedded Skills]** `tdk-memory-update`: Added Step 4.2 — wikilink preservation rule when updating existing memory files
+- **[Templates]** All 6 memory templates enriched with Obsidian-compatible frontmatter: aliases, type, multi-line tags, created_at, updated_by; title formats standardized (e.g. "{ScreenName} Screen", "{FlowName} Flow")
+
+## [1.9.0] - 2026-03-08
+
+### Added
+- **[General]** New `tdk-utils` plugin in marketplace with 7 utility skills migrated from `.claude/skills/`: brainstorming, common, context-engineering, obsidian-brain, planning, problem-solving, repomix
+- **[Claude Agent Config]** Enabled `tdk-utils@tdk-plugin-marketplace` in `settings.json`
+
+### Changed
+- **[General]** Updated README with `tdk-utils` plugin entry and updated installation example with `tdk-memory`
+- **[Embedded Skills]** `tdk-core/tdk-plan`: Updated AI Docs Manager step to use `tdk-memory-query` skill instead of deprecated `memory-architect` script
+- **[Scripts]** `specify-devtools/tdk-bump`: Fixed `compute-skill-checksums.py` docstring to show correct default skill version (`0.1.0`)
+
+### Removed
+- **[Claude Agent Config]** Removed `claude-code` skill from `.claude/skills/` (SKILL.md + 11 reference files)
+- **[Claude Agent Config]** Removed `mcp-builder` skill from `.claude/skills/` (SKILL.md + 4 references + 4 scripts)
+- **[Claude Agent Config]** Removed `template-skill/SKILL.md`
+
+## [1.8.0] - 2026-03-07
+
+### Added
+- **[Embedded Skills]** `tdk-core`: New `tdk-implement-from-plan` skill — stateless fast path to execute implementation directly from plan.md phases without requiring tasks.md
+
+### Changed
+- **[Embedded Skills]** `tdk-core/tdk-status`: Updated skill definition and workflow tracking instructions
+- **[Embedded Skills]** `specify-devtools/tdk-bump`: Refactored — enhanced diff collection script, improved checksum computation, updated SKILL.md with detailed step-by-step workflow
+- **[Embedded Skills]** `specify-devtools/tdk-distribute`: Updated sync-config.yaml distribution configuration
+
+### Removed
+- **[General]** `.specify/manifest.yaml` — centralized skill manifest replaced by per-plugin plugin.json files
+- **[Embedded Skills]** `tdk-bump/install.sh` — install script removed (no longer needed)
+
+## [1.7.5] - 2026-03-07
+
+### Changed
+- **[Scripts]** Remove `save_manifest_plugins()` function and manifest.yaml sync logic from `tdk-distribute` sync script — manifest updates now handled externally
+
+## [1.7.4] - 2026-03-07
+
+### Added
+- **[General]** specify-devtools plugin.json: initial plugin descriptor file
+
+### Changed
+- **[Embedded Skills]** tdk-bump: fix new skill default version from 1.0.0 to 0.1.0, add plugin.json sync to Step 11, update Step 12 summary format
+- **[Embedded Skills]** tdk-bump: compute-skill-checksums.py default version changed from 1.0.0 to 0.1.0 for unmanifested skills
+- **[Claude Agent Config]** memory-guardian agent: add `model: sonnet` to frontmatter
+
+## [1.7.3] - 2026-03-07
+
+### Added
+- **[Embedded Skills]** `tdk-memory-preload` skill — auto-loads relevant memory context (business rules, data models, constraints) before spec/plan generation
+- **[Embedded Skills]** `tdk-memory-query` skill — NL query interface for `.specify/memory/` knowledge base with agent-mode output
+- **[Claude Agent Config]** `memory-guardian` agent — validates specs/plans against memory for business logic conflicts (CONFLICT/WARNING/CLEAR)
+
+### Changed
+- **[Embedded Skills]** `tdk-analyze`, `tdk-clarify`, `tdk-plan`, `tdk-specify`, `tdk-specify-pages` — added Step 0.memory for automatic memory context pre-loading
+- **[Embedded Skills]** `tdk-plan` — added Phase 0.guardian for business logic validation via memory-guardian agent
+- **[Embedded Skills]** `tdk-memory-init` — improved domain map scope column auto-fill from evidence snippets (fresh-init + re-run flows)
+- **[General]** `tdk-memory` plugin.json — updated description and bumped to v0.1.0
+
+### Removed
+- **[Claude Agent Config]** `skill-creator` skill — removed entirely (LICENSE, SKILL.md, references, scripts)
+
+## [1.7.2] - 2026-03-06
+
+### Added
+- **[Embedded Skills]** Add `tdk-memory-init` reference files for modular skill architecture (domain-extraction-and-confirmation, domain-overview-template, fresh-init-flow, memory-index-template, re-run-flow)
+- **[Embedded Skills]** Add `tdk-memory-update` reference files for modular skill architecture (deprecation-flow, domain-source-extraction-flow, regenerate-memory-index-flow)
+
+### Changed
+- **[Scripts]** Fix file handle leak in `compute-sha256-hashes.py` — use `with` statement for proper resource cleanup
+- **[Embedded Skills]** Refactor `tdk-memory-init` SKILL.md — extract inline flows into 5 modular reference files; improve description for better LLM skill triggering
+- **[Embedded Skills]** Refactor `tdk-memory-update` SKILL.md — extract inline flows into 3 modular reference files
+
+## [1.7.1] - 2026-03-06
+
+### Changed
+- **[tdk-memory-init]** Replace domain interview with file-based extraction: AI reads provided source files to extract business domains with evidence snippets, conflict/ambiguity detection, and path/size security guards; falls back to text description if no file given
+- **[tdk-memory-init]** Scaffold creates only `flows/` subdirectory per domain — removed auto-generation of `services.md` and `business-rules.md` at init time (use `/tdk-memory-update` instead)
+- **[tdk-memory-init]** Re-run guard replaced with idempotent flow: presents "Run /tdk-memory-update" vs "Force Re-init" options with explicit wipe confirmation before deleting existing domain folders
+- **[tdk-memory-init]** Removed Step 4 (copy templates), Step 5 (create per-domain files from templates), and Step 8 (create `memory-architect/SKILL.md`); `memory.yaml` now records only `memory-index.md` hash at init time
+- **[tdk-memory-update]** Added Step 1.5: optional source file extraction for domain-level updates (`services.md`, `business-rules.md`, `flows/`) with domain mismatch check against Step 1 routing result
+- **[tdk-memory-update]** Added Step 3.5: Merge vs Replace decision for domain-level updates with preview of entries to be removed before replacement
+- **[tdk-memory-update]** `memory-index.md` regeneration no longer excludes `memory-architect/` directory
+
+### Removed
+- **[tdk-memory-init]** Deleted `references/memory-architect-skill-template-for-project-specific-ai-context.md` — memory-architect step removed from init flow
+
+## [1.7.0] - 2026-03-06
+
+### Added
+- **[Plugin Marketplace]** New plugin `tdk-memory` (v0.0.2) — domain-based project memory knowledge base with 4 skills: `tdk-memory-init` (domain scaffold interview), `tdk-memory-update` (natural language update routing with additive/replacement strategy), `tdk-memory-checksum` (validate memory checksums against manifest), `tdk-memory-changelog` (generate changelog entries for memory changes)
+- **[Plugin Marketplace]** SHA-256 checksum script (`compute-sha256-hashes.py`) for `tdk-memory`
+- **[Templates]** 6 memory domain templates under `.specify/templates/memory/`: `business-rules`, `data-model`, `flow`, `screen-flow`, `screen`, `services`
+
+### Changed
+- **[Plugin Marketplace]** README updated to list `tdk-memory` plugin with skill inventory and description
+
+## [1.6.2] - 2026-03-05
+
+### Changed
+- **[Scripts]** Replace `SCRIPT_DIR`-based relative path resolution with `CLAUDE_PROJECT_DIR` env var (git fallback) in `common-env.sh` `get_repo_root()`
+- **[Scripts]** Use `CLAUDE_PROJECT_DIR` for `REPO_ROOT` in `show-progress.sh`, `sync-commands.sh`, `run-migration-tests.sh`
+- **[Scripts]** Update migration tests: add prompt stub creation, fix function rename `get_bug_list_path` → `get_bugs_dir`, update CLI signatures to include feature-id arg
+- **[Embedded Skills]** Replace `SCRIPT_DIR`-relative sourcing with `REPO_ROOT`/`CLAUDE_PROJECT_DIR` in tdk-test-api skill scripts (gen-code, generate-testcase, plan)
+- **[Embedded Skills]** Simplify `install.sh` path resolution in tdk-bump using `CLAUDE_PROJECT_DIR`
+
+## [1.6.1] - 2026-03-05
+
+### Changed
+- **[Embedded Skills]** Update `tdk-test-api-generate-testcase` template path references from `.specify/templates/` to `.specify/templates/test/api-test/`
+- **[Embedded Skills]** Update `tdk-test-api-plan` template path references from `.specify/templates/` to `.specify/templates/test/api-test/`
+- **[Templates]** Reorganize API test templates into nested `test/api-test/` subdirectory for better template organization
+
+## [1.6.0] - 2026-03-05
+
+### Added
+- **[Plugin]** New `tdk-test-api` plugin with 3 skills for API test automation
+- **[Skill]** `tdk-test-api-plan` — generate API test plans from OpenAPI specs with Python parser
+- **[Skill]** `tdk-test-api-generate-testcase` — generate test cases from API test plans
+- **[Skill]** `tdk-test-api-gen-code-playwright-ts` — generate Playwright TypeScript test code with auth strategy and config pattern references
+- **[Templates]** `api-test-plan-template.md` and `api-testcases-template.md` for API test artifacts
+
+### Changed
+- **[Scripts]** Add `json_escape()`, `read_test_api_config()`, `resolve_skill_workspace()` helpers to `common-env.sh`
+- **[Scripts]** Expose `RAW_CONFIG` in `detect-config.sh` output for plugin-specific config reads
+
+## [1.5.3] - 2026-03-04
+
+### Changed
+- **[General]** Add `_shared` directory to tdk-distribute sync-config include paths
+- **[Scripts]** Update `status.sh` command references from `/erc:*` to `/tdk-*` syntax
+
+## [1.5.2] - 2026-03-04
+
+### Changed
+- **[Scripts]** Migrate `compute-skill-checksums.py` manifest format from flat `skills:` to nested `plugins:` structure; add `--write` flag for direct manifest updates; add `build_plugins_section()` and `write_manifest_plugins()` helpers
+- **[Scripts]** Migrate `sync-distribute-common-files.py` manifest format from `skills:` to `plugins:` key; rename `save_manifest_skills` → `save_manifest_plugins`; add `get_skills_section()` helper for backward-compatible manifest reading
+
+## [1.5.1] - 2026-03-04
+
+### Changed
+- **[Scripts]** Add `flatten_skills()` to `compute-skill-checksums.py`: handle nested plugin-grouped manifest format in skill classification
+- **[Scripts]** Add `flatten_skills()` to `sync-distribute-common-files.py`: handle nested plugin-grouped manifest format in skill distribution
+- **[Scripts]** Update docstring step reference in `compute-skill-checksums.py`: "Step 10.5" → "Step 6"
+
+## [1.5.0] - 2026-03-04
+
+### Added
+- **[Embedded Skills]** New `tdk-distribute` skill: distribute common .specify/ files from current project to target projects with sync-config.yaml and sync script
+- **[Scripts]** Add `compute-skill-checksums.py` for detecting skill content changes via MD5 checksums
+- **[Embedded Skills]** Add checksum-based skill version tracking to `tdk-bump` workflow (Step 6 + Step 11 manifest updates)
+
+### Changed
+- **[Embedded Skills]** Centralize version tracking: remove inline `version` from 33 skill SKILL.md frontmatter files (tdk-core x31, tdk-bump x1) — versions now managed in manifest.yaml
+- **[Configurations]** Register `tdk-distribute` in marketplace.json plugin registry
+
+## [1.4.2] - 2026-03-04
+
+### Changed
+- **[General]** Update plugins README: add `tdk-core` to plugin table, add VSCode Extension setup guide (Option B), update enabledPlugins config and verification steps
+
+### Added
+- **[General]** Add 5 screenshot assets for plugin marketplace setup documentation (access settings, add marketplace, success confirmation, skill loading in extension/terminal)
+
+## [1.4.1] - 2026-03-03
+
+### Changed
+- **[Embedded Skills]** Update cross-references in 17 `tdk-core` skills: `/tdk-cmd-sub` syntax
+- **[Claude Agent Config]** Update planning skill and output-standards: `/tdk-tasks` references
+- **[Scripts]** Update 6 bash scripts (check-prerequisites, sync-commands, ut/*): command references to new skill syntax
+- **[Templates]** Update 5 templates (checklist, plan, tasks, ut-phase, ut-plan): command references to new skill syntax
+- **[Configurations]** Update document-manager.md: `/tdk-config-index`
+- **[General]** Update `.specify.yaml.example`: `/tdk-config-init`
+
+## [1.4.0] - 2026-03-03
+
+### Added
+- **[Embedded Skills]** Migrate 31 Tihon slash commands to `tdk-core` plugin skills with YAML frontmatter and cross-ref updates
+
+### Changed
+- **[Claude Agent Config]** Enabled `tdk-core` plugin in `.claude/settings.json`
+- **[General]** Registered `tdk-core` with 31 skill references in marketplace.json
+
+### Removed
+- **[Commands]** Archived 31 Tihon slash commands to `.specify/commands-archived/` (replaced by plugin skills)
+
+## [1.3.0] - 2026-03-02
+
+### Added
+- **[Embedded Skills]** `references/sheet-reference-cards.md` — CSV-verified specs for all 20 sheet types in DevelopmentDocument_CSV_AI (データフロー設計, 画面定義書, API mapping mini-sheets)
+- **[Embedded Skills]** `references/validation-checks.md` — 10 post-edit validation checks for design document consistency (completeness, cross-doc parity, CSV-reference completeness, etc.)
+- **[Embedded Skills]** `references/anti-regression-rules.md` — 10 anti-regression rules to prevent known failure patterns (route-first classification, evidence-based edits, free-form 業務チェック handling)
+
+## [1.2.0] - 2026-03-02
+
+### Added
+- **[General]** `specify-devtools` plugin registered in marketplace with `tdk-bump` skill
+- **[Claude Agent Config]** `specify-devtools@tdk-plugin-marketplace` enabled in `.claude/settings.json`
+
+### Changed
+- **[Embedded Skills]** Migrated `tdk-bump` (SKILL.md, install.sh, collect-diff-data.py) from `.claude/skills/` to `.specify/plugins/specify-devtools/skills/`
+- **[General]** Updated marketplace README to document new plugin and generalize "Adding a new plugin" instructions
+
+## [1.1.0] - 2026-03-02
+
+### Added
+- **[Plugin Marketplace]** New `tdk-plugin-marketplace` registry at `.specify/plugins/` with `marketplace.json` defining plugin sources and skill declarations
+- **[Embedded Skills]** `document-skills` plugin with 4 new document processing skills: `docx` (create/edit/analyze .docx files with OOXML schema validation, redlining workflow, docx-js integration, and comment templates), `pdf` (form filling, field extraction, bounding box checks, annotation-based filling, PDF-to-image conversion), `pptx` (HTML-to-PPTX conversion, OOXML manipulation, slide inventory/rearrange/replace, thumbnail generation), `xlsx` (spreadsheet formula recalculation support)
+
+## [1.0.2] - 2026-03-02
+
+### Added
+- **[Claude Agent Config]** `install.sh` — New install script for `tdk-bump` skill; installs `pyyaml>=6.0` into project `.venv` with Linux/macOS and Windows path support
+
+### Changed
+- **[Claude Agent Config]** `SKILL.md` — Added Step 2 "Bootstrap manifest" handling Case A (manifest missing: create with defaults) and Case B (manifest exists but version empty: prompt user to set version); renumbered subsequent steps 2→11; updated collect-diff-data.py output description to include `manifest_exists` field
+- **[Claude Agent Config]** `collect-diff-data.py` — Added `manifest_exists` boolean to JSON output; replaced yaml import fallback with hard-exit + helpful install hint; improved `parse_manifest` error handling with typed exceptions and clean None returns
+
+## [1.0.1] - 2026-03-01
+
+### Changed
+- **[Commands]** `tdk-plan` — Added Step 1.5 "Handle Existing Plan": detects `PLAN_EXISTS` flag from setup script and prompts user to update existing plan, regenerate from scratch, or abort; Added UPDATE mode (preserve populated sections) and REGENERATE mode (fresh template via `--force`) guidance to Step 2
+- **[Scripts]** `setup-plan.sh` — Added `--force` flag to overwrite existing `plan.md` unconditionally; script now detects pre-existing plan before template copy and reports `PLAN_EXISTS` in both JSON and plain-text output; template copy skipped when plan exists unless `--force` is passed
+
+## [1.0.0] - 2026-03-01
+
+### Added
+- **[Claude Agent Config]** New `tdk-bump` skill (`SKILL.md`) — 10-step workflow for generating Keep-a-Changelog entries from staged or historical git diffs in `.specify/`, `.claude/`, `.github/` directories
+- **[Claude Agent Config]** Added `collect-diff-data.py` helper script — parses git diff output, filters to tracked config directories, classifies files by component group (Scripts, Commands, Templates, Embedded Skills, Memory, Configurations, etc.), and reads current version from `.specify/manifest.yaml`

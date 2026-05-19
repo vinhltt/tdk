@@ -1,0 +1,135 @@
+// CLI: check-prerequisites — validate feature directory and docs exist before workflow steps
+// Replaces: bash/check-prerequisites.sh
+// Display script — outputs human-readable text (or JSON with --json)
+
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { Command } from 'commander';
+import { loadFeatureEnv, getRepoRoot, getFeaturePaths } from '../../utils/index';
+
+function checkTool(name: string): boolean {
+  try {
+    execFileSync(name, ['--version'], { stdio: 'pipe' });
+    return true;
+  } catch { return false; }
+}
+
+function checkFile(file: string, label: string): void {
+  console.log(existsSync(file) ? `  ✓ ${label}` : `  ✗ ${label}`);
+}
+
+function checkDir(dir: string, label: string): void {
+  console.log(existsSync(dir) ? `  ✓ ${label}` : `  ✗ ${label}`);
+}
+
+const program = new Command()
+  .name('check-prerequisites')
+  .description('Validate feature directory and required docs exist before workflow steps')
+  .argument('<task-id>', 'Task ID (e.g., pref-001, feature/aa-123)')
+  .option('--json', 'Output in JSON format', false)
+  .option('--require-tasks', '[deprecated] Require tasks.md to exist (for implementation phase)', false)
+  .option('--include-tasks', '[deprecated] Include tasks.md in available docs list', false)
+  .option('--paths-only', 'Only output path variables, no validation', false)
+  .action((taskId: string, opts: { json: boolean; requireTasks: boolean; includeTasks: boolean; pathsOnly: boolean }) => {
+    // Check required tools
+    const missingTools: string[] = [];
+    if (!checkTool('yq')) missingTools.push('yq');
+    if (!checkTool('jq')) missingTools.push('jq');
+    if (missingTools.length > 0) {
+      process.stderr.write(`ERROR: Missing required tools: ${missingTools.join(', ')}\n\n`);
+      process.stderr.write('Install instructions:\n');
+      for (const tool of missingTools) {
+        if (tool === 'yq') {
+          process.stderr.write('  yq:\n    macOS:   brew install yq\n    Linux:   wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && chmod +x /usr/local/bin/yq\n    Windows: choco install yq\n');
+        } else if (tool === 'jq') {
+          process.stderr.write('  jq:\n    macOS:   brew install jq\n    Linux:   apt-get install jq\n    Windows: choco install jq\n');
+        }
+      }
+      process.exit(1);
+    }
+
+    const env = loadFeatureEnv();
+    const repoRoot = getRepoRoot();
+    const paths = getFeaturePaths(
+      join(repoRoot, env.specsRoot, env.defaultFolder, taskId.includes('/') ? taskId.slice(taskId.indexOf('/') + 1) : taskId),
+      repoRoot,
+      taskId,
+    ) as Record<string, string | boolean>;
+
+    const featureDir = paths['featureDir'] as string;
+    const featureSpec = paths['featureSpec'] as string;
+    const implPlan = paths['implPlan'] as string;
+    const tasks = paths['tasks'] as string;
+    const research = paths['research'] as string;
+    const dataModel = paths['dataModel'] as string;
+    const contractsDir = paths['contractsDir'] as string;
+    const quickstart = paths['quickstart'] as string;
+
+    // Paths-only mode
+    if (opts.pathsOnly) {
+      if (opts.json) {
+        console.log(JSON.stringify({ taskId, repoRoot, featureDir, featureSpec, implPlan, tasks }, null, 2));
+      } else {
+        console.log(`TASK_ID: ${taskId}`);
+        console.log(`REPO_ROOT: ${repoRoot}`);
+        console.log(`FEATURE_DIR: ${featureDir}`);
+        console.log(`FEATURE_SPEC: ${featureSpec}`);
+        console.log(`IMPL_PLAN: ${implPlan}`);
+        console.log(`TASKS: ${tasks}`);
+      }
+      return;
+    }
+
+    // Validate required directories and files
+    if (!existsSync(featureDir)) {
+      process.stderr.write(`ERROR: Feature directory not found: ${featureDir}\n`);
+      process.stderr.write('Run /tdk-specify first to create the feature structure.\n');
+      process.exit(1);
+    }
+    if (!existsSync(featureSpec)) {
+      process.stderr.write(`ERROR: spec.md not found in ${featureDir}\n`);
+      process.stderr.write('Run /tdk-specify first to create the specification.\n');
+      process.exit(1);
+    }
+    if (!existsSync(implPlan)) {
+      process.stderr.write(`ERROR: plan.md not found in ${featureDir}\n`);
+      process.stderr.write('Run /tdk-plan first to create the implementation plan.\n');
+      process.exit(1);
+    }
+    if (opts.requireTasks && !existsSync(tasks)) {
+      process.stderr.write(`ERROR: tasks.md not found in ${featureDir}\n`);
+      process.stderr.write('[deprecated] Run /tdk-tasks first (legacy) or /tdk-plan to create plan.md with ## Phases table.\n');
+      process.exit(1);
+    }
+
+    // Build available docs list from feature directory (top-level only)
+    const docs: string[] = [];
+    try {
+      const entries = readdirSync(featureDir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
+      for (const entry of entries) {
+        if (entry.name.startsWith('.')) continue;
+        if (entry.isDirectory()) {
+          docs.push(`${entry.name}/`);
+        } else if (entry.name.endsWith('.md')) {
+          if (entry.name === 'tasks.md' && !opts.includeTasks) continue;
+          docs.push(entry.name);
+        }
+      }
+    } catch { /* ignore */ }
+
+    if (opts.json) {
+      console.log(JSON.stringify({ taskId, featureDir, availableDocs: docs }, null, 2));
+    } else {
+      console.log(`TASK_ID: ${taskId}`);
+      console.log(`FEATURE_DIR: ${featureDir}`);
+      console.log('AVAILABLE_DOCS:');
+      checkFile(research, 'research.md');
+      checkFile(dataModel, 'data-model.md');
+      checkDir(contractsDir, 'contracts/');
+      checkFile(quickstart, 'quickstart.md');
+      if (opts.includeTasks) checkFile(tasks, 'tasks.md');
+    }
+  });
+
+program.parse();

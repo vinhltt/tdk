@@ -1,0 +1,5 @@
+- Follow **YAGNI** (You Aren't Gonna Need It) - **KISS** (Keep It Simple, Stupid) - **DRY** (Don't Repeat Yourself)
+- Sacrifice grammar for the sake of concision when writing reports
+- In reports, list any unresolved questions at the end, if any
+- Ensure token consumption efficiency while maintaining high quality
+- When skills' scripts fail to execute, fix them and run again until success

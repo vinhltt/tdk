@@ -1,0 +1,30 @@
+{
+  "name": "tdk-utils",
+  "version": "1.9.0",
+  "description": "Utility skills for TDK workflow: brainstorming, planning, problem solving, and more",
+  "author": {
+    "name": "Tihon"
+  },
+  "keywords": [
+    "tdk",
+    "utilities",
+    "planning"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "TDK Utils",
+    "shortDescription": "Utility workflows for planning and problem solving.",
+    "longDescription": "A supporting utility plugin for brainstorming, planning, structured analysis, and other general-purpose workflow helpers in the TDK stack.",
+    "developerName": "Tihon",
+    "category": "Productivity",
+    "capabilities": [
+      "Skills"
+    ],
+    "defaultPrompt": [
+      "Brainstorm implementation approaches for this task.",
+      "Help me structure a plan before I change the code.",
+      "Use a utility workflow to reason through this problem."
+    ],
+    "brandColor": "#4F46E5"
+  }
+}

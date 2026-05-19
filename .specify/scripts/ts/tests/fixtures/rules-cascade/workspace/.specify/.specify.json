@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "name": "rules-cascade-fixture",
+  "architecture": {
+    "type": "monolith",
+    "description": "Cascade merge test fixture"
+  },
+  "docs": {
+    "path": "docs"
+  },
+  "git": {
+    "mainBranch": "master"
+  },
+  "specs": {
+    "root": ".specify",
+    "defaultFolder": "features",
+    "ticketFormat": "^([a-zA-Z]+)-([0-9]+)$"
+  },
+  "logLevel": "Error"
+}

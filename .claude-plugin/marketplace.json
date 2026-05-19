@@ -1,0 +1,37 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "tdk-plugin-marketplace",
+  "owner": {
+    "name": "Tihon"
+  },
+  "metadata": {
+    "description": "TDK project plugin marketplace",
+    "version": "1.45.0"
+  },
+  "plugins": [
+    {
+      "name": "tdk-memory",
+      "description": "Domain-based project memory knowledge base: init with domain interview, natural language update routing, checksum validation, and changelog",
+      "source": "./.specify/plugins/tdk-memory",
+      "strict": true
+    },
+    {
+      "name": "tdk-core",
+      "description": "Core TDK workflow skills: specify, plan, implement, fix, review, analyze, config, tests",
+      "source": "./.specify/plugins/tdk-core",
+      "strict": true
+    },
+    {
+      "name": "tdk-test-api",
+      "description": "API test automation skills: plan from OpenAPI specs, generate test cases, generate Playwright TypeScript test code",
+      "source": "./.specify/plugins/tdk-test-api",
+      "strict": true
+    },
+{
+      "name": "tdk-utils",
+      "description": "Utility skills for TDK workflow: brainstorming, planning, problem solving, and more",
+      "source": "./.specify/plugins/tdk-utils",
+      "strict": true
+    }
+  ]
+}

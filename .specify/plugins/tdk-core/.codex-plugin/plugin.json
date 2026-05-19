@@ -1,0 +1,30 @@
+{
+  "name": "tdk-core",
+  "version": "1.8.0",
+  "description": "Core TDK workflow skills: specify, plan, implement, fix, review, analyze, config, tests",
+  "author": {
+    "name": "Tihon"
+  },
+  "keywords": [
+    "tdk",
+    "speckit",
+    "workflow"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "TDK Core",
+    "shortDescription": "Core TDK workflow skills for daily engineering tasks.",
+    "longDescription": "The main Speckit plugin for specification, planning, implementation, debugging, review, configuration, and test-oriented development workflows.",
+    "developerName": "Tihon",
+    "category": "Development",
+    "capabilities": [
+      "Skills"
+    ],
+    "defaultPrompt": [
+      "Use Speckit to plan this feature before coding.",
+      "Help me review or fix an implementation with the core workflow.",
+      "Generate a task-oriented execution plan for this repo."
+    ],
+    "brandColor": "#1D4ED8"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "skill_name": "tdk-specify",
+  "description": "Evaluates whether tdk-specify correctly generates a feature specification (spec.md) from a natural language description.",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "tdk-001 Add a user login feature. Users should be able to log in with email and password, see an error if credentials are wrong, and stay logged in after refreshing the page.",
+      "expected_output": "A spec.md file created at .specify/feature/tdk-001/spec.md with: User Scenarios section containing at least 2 user stories with acceptance scenarios (Given/When/Then), Functional Requirements section with testable requirements for login, error handling, and session persistence, Success Criteria section with measurable and technology-agnostic criteria, and a checklist at .specify/feature/tdk-001/checklists/requirements.md.",
+      "files": [],
+      "assertions": [
+        "File .specify/feature/tdk-001/spec.md is created",
+        "spec.md contains a 'User Scenarios & Testing' section with at least 2 user stories",
+        "Each user story contains at least one Given/When/Then acceptance scenario",
+        "spec.md contains a 'Functional Requirements' section",
+        "All functional requirements are testable and unambiguous (no vague terms like 'fast', 'easy')",
+        "spec.md contains a 'Success Criteria' section with measurable criteria",
+        "Success criteria contain no implementation details (no mention of JWT, Redis, database, React, etc.)",
+        "spec.md does NOT mention implementation technologies (no Laravel, Vue, MySQL, API, etc.)",
+        "File .specify/feature/tdk-001/checklists/requirements.md is created",
+        "Total [NEEDS CLARIFICATION] markers in spec.md is 3 or fewer"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "tdk-002 thêm chức năng export báo cáo ứng viên ra file excel. Admin có thể chọn khoảng thời gian và lọc theo trạng thái ứng viên trước khi export.",
+      "expected_output": "A spec.md created at .specify/feature/tdk-002/spec.md. The spec must correctly interpret the Vietnamese input — user is an Admin, the feature is exporting candidate reports to Excel with date range filter and status filter. Spec should be written in English (or the project's configured language), cover the export flow as primary user story, and include edge cases like empty results or large datasets.",
+      "files": [],
+      "assertions": [
+        "File .specify/feature/tdk-002/spec.md is created",
+        "spec.md correctly identifies the actor as 'Admin'",
+        "spec.md covers the primary flow: Admin selects filters → exports → downloads file",
+        "spec.md includes an acceptance scenario for empty results (no candidates match filters)",
+        "spec.md contains a 'Functional Requirements' section",
+        "spec.md contains a 'Success Criteria' section",
+        "Success criteria are technology-agnostic (no mention of xlsx library, S3, etc.)",
+        "spec.md does NOT contain implementation details",
+        "File .specify/feature/tdk-002/checklists/requirements.md is created"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "tdk-003",
+      "expected_output": "The skill should stop with a clear error message indicating that a feature description is required. No spec.md file should be created. Error message should include usage instructions.",
+      "files": [],
+      "assertions": [
+        "No file .specify/feature/tdk-003/spec.md is created",
+        "Output contains an error message about missing description",
+        "Output includes usage example (e.g., '/tdk-specify tdk-003 \"description\"')"
+      ]
+    }
+  ]
+}

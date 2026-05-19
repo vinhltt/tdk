@@ -1,0 +1,77 @@
+{
+  "version": "1.0",
+  "name": "my-project",
+
+  "architecture": {
+    "type": "modular-monolith",
+    "description": "Brief description of the architecture"
+  },
+
+  "docs": {
+    "path": ".specify/configurations",
+    "sync": {
+      "backup": true,
+      "exclude": ["*.draft.md"]
+    },
+    "rules": []
+  },
+
+  "git": {
+    "mainBranch": "develop",
+    "prefixList": "spec,feat,docs,hotfix,bug"
+  },
+
+  "specs": {
+    "root": ".specify",
+    "defaultFolder": "feature",
+    "ticketFormat": "^([a-zA-Z]+/)?([a-zA-Z]+)-([0-9]+)$"
+  },
+
+  "changelog": {
+    "exclude": [".specify/specs/**"]
+  },
+
+  "subWorkspaces": [
+    {
+      "name": "backend",
+      "path": "backend",
+      "modules": [
+        { "name": "api", "path": "src/MyApp.Api", "testPath": "tests/MyApp.Api.Tests" },
+        { "name": "services", "path": "src/MyApp.Services", "testPath": "tests/MyApp.Services.Tests" }
+      ],
+      "testMapping": { "strategy": "separate-project" },
+      "docs": { "path": ".specify/configurations" }
+    },
+    {
+      "name": "frontend",
+      "path": "frontend"
+    }
+  ],
+
+  "validation": {
+    "hook": ".specify/hooks/validate.sh",
+    "timeout": 30,
+    "failBehavior": "exit"
+  },
+
+  "test": {
+    "api": {
+      "outputDir": "test-results",
+      "authStrategy": "bearer",
+      "baseUrlEnv": "API_BASE_URL",
+      "tokenEnv": "API_TOKEN"
+    }
+  },
+
+  "logLevel": "Debug",
+
+  "skills": {
+    "research": {
+      "useGemini": false
+    }
+  },
+
+  "gemini": {
+    "model": "gemini-3-flash-preview"
+  }
+}

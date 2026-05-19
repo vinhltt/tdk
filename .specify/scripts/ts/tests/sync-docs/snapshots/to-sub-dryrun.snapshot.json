@@ -1,0 +1,9 @@
+{
+  "SUCCESS": true,
+  "DIRECTION": "to-sub-workspace",
+  "SUB_WORKSPACE": "alpha",
+  "SOURCE": "<FIXTURE_ROOT>/.specify/configurations/sub-workspaces/alpha",
+  "TARGET": "<FIXTURE_ROOT>/sub-alpha/.specify/configurations",
+  "FILES_SYNCED": 1,
+  "DRY_RUN": true
+}

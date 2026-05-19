@@ -1,0 +1,18 @@
+.claude/session-state/*
+.claude/hooks/.logs/*
+**/.logs/*
+.claude/settings.local.json
+.venv/*
+
+# Local-only artifacts from in-flight refactor (e.g. tdk-plan hybrid Phase 01)
+**/SKILL.md.bak.*
+experiments/
+
+# Cross-plan deps scan cache (Phase 05) — local state, regenerated on demand
+.specify/**/.deps-cache.json
+.specify/**/.deps-cache.json.tmp
+
+# Claude-mem MCP auto-generated per-folder memory (non-portable, session-local)
+**/CLAUDE.md
+!/CLAUDE.md
+**/node_modules/
