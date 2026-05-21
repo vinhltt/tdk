@@ -58,6 +58,7 @@ Every `phases/phase-NN-*.md` MUST include (in order):
 - `## Context Links` — links to brainstorm, research, target files.
 - `## Overview` — what this phase does + why.
 - `## Key Insights` — non-obvious findings from research.
+- `## Delegate Skills` — skills to trigger during implementation (optional — injected by skill routing).
 - `## Requirements` — Functional + Non-functional checkboxes.
 - `## Architecture` — component layout + data flow.
 - `## Related Code Files` — Modify / Create / Delete lists.

@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "1.10.2"
+  version: "1.11.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -58,7 +58,8 @@ You **MUST** consider the user input before proceeding (if not empty).
 ```mermaid
 flowchart TD
     A[Step 0 Parse Args + Validate TASK_ID] --> B[Step 0.1 Load Project Context]
-    B --> C[Step 0.memory Memory Pre-load]
+    B --> B2[Step 0.1b Load Skill Routing]
+    B2 --> C[Step 0.memory Memory Pre-load]
     C --> S[Step 0.scope Scope Challenge]
     S --> X[Step 0.deps Cross-Plan Scan]
     X --> D[Step 1 Setup]
@@ -86,6 +87,10 @@ Split `$ARGUMENTS` into `TASK_ID` (first positional) and `FLAGS` (remaining `--[
 ### Step 0.1 — Load Project Context
 **Inline.** <!-- script invocation -->
 Invoke `tdk-load-project-context` with the validated `TASK_ID`. Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
+
+### Step 0.1b — Load Skill Routing
+Load: `references/skill-routing.md`
+Resolve skill-routing file per reference. Parse sub-workspace sections. Store: `SKILL_ROUTING` map. Missing file → AskUserQuestion per reference (opt-in create or skip with empty map).
 
 ### Step 0.memory — Memory Pre-load
 Load: `references/gates.md`

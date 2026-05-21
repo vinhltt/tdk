@@ -59,6 +59,44 @@ Mode: **embedded — reasoning technique only.**
 5. For each phase, identify: prerequisites, deliverables, success criteria.
 6. Flag parallel opportunities between independent phases.
 
+## Skill Routing Injection
+
+**Skip if:** `SKILL_ROUTING` is empty (file missing or parse failure).
+
+**Pre-injection refresh:** Re-read `{docs.path}/custom-workflow/plan-skill-routing.md` to refresh `SKILL_ROUTING` before injection. Prevents context drift from intermediate steps (memory, research, cross-plan deps loaded between Step 0.1b and 3b).
+
+**Timing:** Inline — inject while creating each phase, NOT as a post-processing pass. Phase N's assignment informs Phase N+1's choices.
+
+**Exclusion:** Skip UT auto-generated phases (phases with `Delegate to: /tdk-ut-backfill-plan`). These already have their own delegation mechanism.
+
+For each non-UT phase being created:
+
+1. **Identify target sub-workspace(s):**
+   - Extract file paths from phase's `## Related Code Files`
+   - Match against `PROJECT_CONTEXT.subWorkspaces[].path` (prefix match)
+   - If no subWorkspaces configured (monolith) → use "global"
+   - If ambiguous (multiple sub-workspaces) → merge skill sets
+
+2. **Detect phase domain** from title/description:
+   - test/UT/spec keywords → "test"
+   - database/schema/migration → "database"
+   - UI/component/screen/mockup → "design" + "implement"
+   - API/endpoint/service → "implement"
+   - research/exploration → "research"
+   - fallback → "implement"
+
+3. **Lookup skills:** `SKILL_ROUTING[subWorkspace][domain]`
+   - Primary: matched sub-workspace + matched domain
+   - Fallback: `SKILL_ROUTING["global"][domain]`
+   - If no match at all → skip injection for this phase
+
+4. **Inject `## Delegate Skills`** into phase body (after `## Key Insights`, before `## Requirements`):
+   - `/{skill-name}` — {brief purpose from routing file context}
+   - One bullet per skill, ordered as listed in routing file
+   - **Idempotency:** if `## Delegate Skills` already exists → replace section content, don't append
+
+5. **EC-11 advisory** (once per plan, not per phase): if any `PROJECT_CONTEXT.subWorkspaces[].name` has no corresponding `##` section in skill-routing file → warn: "Sub-workspace '{name}' has no skill routing — using global defaults."
+
 ## UT Phase Auto-inclusion
 
 After all implementation phases are defined, check if a Unit Test phase should be added.

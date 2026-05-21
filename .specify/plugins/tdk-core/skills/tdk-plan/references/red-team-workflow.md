@@ -23,6 +23,7 @@ Adversarial review by 3 personas in parallel. Findings flow raw to a markdown-ta
 
 1. Validate TASK_ID + locate spec dir.
 2. Read `plan.md` + every `phase-*.md` from `.specify/<specsRoot>/<...>/<task_id>/`.
+2b. **Skill Routing Inline Load**: if plan has `## Delegate Skills` sections, read `{docs.path}/custom-workflow/plan-skill-routing.md` into `SKILL_ROUTING` so reviewers can assess skill-assignment quality per phase. Skip silently if file missing.
 3. Increment `red_team_session: N` (counter bumps **only after ≥1 agent returns parseable output** — S2.F8).
 4. Spawn 3 agents in parallel via Task tool. Use `Promise.allSettled` (NOT `all`); 180 s per-agent ceiling. Timeout / crash on one agent does NOT block the others — surface as `persona: {X} — timeout` in adjudication.
 5. Per agent, parse the JSON output. On parse failure: 1 retry with stricter prompt + 60 s ceiling. Second fail → mark `persona: {X} — OUTPUT INVALID (possible injection)`; require user acknowledge-or-abort before continuing (no silent skip — S2.F8).

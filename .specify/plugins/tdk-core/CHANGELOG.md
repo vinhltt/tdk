@@ -4,6 +4,16 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.11.0] - 2026-05-21
+
+### Added
+- tdk-plan v1.11.0: skill-routing reference + Step 0.1b that loads SKILL_ROUTING from {docs.path}/custom-workflow/plan-skill-routing.md; opt-in via AskUserQuestion, never auto-create
+- tdk-plan v1.11.0: inline '## Delegate Skills' injection during design phase — sub-workspace + domain matching with global fallback, idempotent replace, pre-injection re-read to defeat context drift, EC-11 advisory for unrouted sub-workspaces
+
+### Changed
+- tdk-plan v1.11.0: red-team and validate workflows load SKILL_ROUTING inline so reviewers/validators can assess skill-assignment quality per phase; modes.md adds Step 0.1b row; plan-organization.md documents '## Delegate Skills' section between Key Insights and Requirements in phase template
+- tdk-constitution: fix typo in shared brainstorm reference path (-brainstorm.md → brainstorm.md)
+
 ## [1.10.2] - 2026-05-19
 
 ### Changed

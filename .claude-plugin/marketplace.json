@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "TDK project plugin marketplace",
-    "version": "1.45.0"
+    "version": "1.46.0"
   },
   "plugins": [
     {
@@ -27,7 +27,7 @@
       "source": "./.specify/plugins/tdk-test-api",
       "strict": true
     },
-{
+    {
       "name": "tdk-utils",
       "description": "Utility skills for TDK workflow: brainstorming, planning, problem solving, and more",
       "source": "./.specify/plugins/tdk-utils",

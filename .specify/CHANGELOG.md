@@ -10,6 +10,20 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.46.0] - 2026-05-21
+
+### Added
+- **[tdk-plan]** Skill-routing capability
+  - `references/skill-routing.md` defines per-project skill assignments per sub-workspace/domain
+  - Step 0.1b loads `SKILL_ROUTING` from `{docs.path}/custom-workflow/plan-skill-routing.md` (opt-in via AskUserQuestion, never auto-creates routing file)
+  - Inline `## Delegate Skills` injection during design phase — sub-workspace + domain matching with global fallback, idempotent replace, pre-injection re-read to defeat context drift, EC-11 advisory for unrouted sub-workspaces
+- **[Templates]** `plan-skill-routing-template.tpl` — starter template users copy to `{docs.path}/custom-workflow/plan-skill-routing.md`
+
+### Changed
+- **[tdk-plan]** Red-team and validate workflows load `SKILL_ROUTING` inline so reviewers/validators can assess skill-assignment quality per phase
+- **[tdk-plan]** `modes.md` adds Step 0.1b row; `plan-organization.md` documents `## Delegate Skills` section between Key Insights and Requirements in phase template
+- **[tdk-constitution]** Fix typo in shared brainstorm reference path (`-brainstorm.md` → `brainstorm.md`)
+
 ## [1.45.0] - 2026-05-19
 
 ### Added

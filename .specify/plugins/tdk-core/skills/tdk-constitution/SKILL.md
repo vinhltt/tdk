@@ -1,6 +1,8 @@
 ---
 name: tdk-constitution
 description: "Create or update the project constitution from interactive or provided principle inputs, ensuring all dependent templates stay in sync"
+metadata:
+  version: 1.11.0
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -28,7 +30,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Skill References
 
-> Shared base instructions: `.specify/_shared/skills/ -brainstorm.md`
+> Shared base instructions: `.specify/_shared/skills/brainstorm.md`
 
 ### Embedded Brainstorming (Principle Trade-offs)
 

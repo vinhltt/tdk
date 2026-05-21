@@ -48,6 +48,7 @@ Exit immediately. No file mutations, no counter bump.
 
 1. Validate TASK_ID, locate spec dir.
 2. Load plan.md + every `phase-*.md`.
+2b. **Skill Routing Inline Load**: if plan has `## Delegate Skills` sections, read `{docs.path}/custom-workflow/plan-skill-routing.md` into `SKILL_ROUTING` so validation interview can include skill-routing questions. Skip silently if file missing.
 3. Increment `validation_session: N` in plan.md frontmatter (via Edit tool — Session 2 #12 frontmatter mutations are framework-managed; do NOT add a custom bun writer).
 4. Reset `validation_cursor: 0`.
 5. **Write `## Validation Log` header IMMEDIATELY** with `(in-progress)` marker (S1.F14):

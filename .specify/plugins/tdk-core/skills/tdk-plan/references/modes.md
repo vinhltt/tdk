@@ -20,6 +20,7 @@ Single source of truth for `/tdk-plan` flag dispatch. SKILL.md only routes; this
 |---|---|---|---|
 | Step 0 Validate TASK_ID | yes | yes | yes |
 | Step 0.1 Project context | yes | yes | yes |
+| Step 0.1b Skill routing | yes | yes | yes |
 | Step 0.memory pre-load | yes | **yes** | yes |
 | Step 0.scope (Phase 04) | yes | skip | yes |
 | Step 0.deps (Phase 05) | yes | skip | yes |
