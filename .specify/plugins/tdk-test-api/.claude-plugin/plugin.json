@@ -1,5 +1,5 @@
 {
   "name": "tdk-test-api",
   "description": "API test generation skills: test plan, testcase generation, Playwright TypeScript code generation from OpenAPI specs or codebase scouting",
-  "version": "1.1.0"
+  "version": "1.1.1"
 }

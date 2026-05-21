@@ -2,7 +2,7 @@
 name: tdk-checklist
 description: "Generate a custom checklist for the current feature based on user requirements."
 metadata: 
-  version: "1.0.5"
+  version: "1.11.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -258,7 +258,7 @@ Run `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/check-p
    - ✅ "Are [edge cases/scenarios] addressed in requirements?"
    - ✅ "Does the spec define [missing aspect]?"
 
-6. **Structure Reference**: Generate the checklist following the canonical template in `.specify/templates/checklist-template.md` for title, meta section, category headings, and ID formatting. If template is unavailable, use: H1 title, purpose/created meta lines, `##` category sections containing `- [ ] CHK### <requirement item>` lines with globally incrementing IDs starting at CHK001.
+6. **Structure Reference**: Generate the checklist following the canonical template in `.specify/templates/checklist-template.md.tpl` for title, meta section, category headings, and ID formatting. If template is unavailable, use: H1 title, purpose/created meta lines, `##` category sections containing `- [ ] CHK### <requirement item>` lines with globally incrementing IDs starting at CHK001.
 
 7. **Report**: Output full path to created checklist, item count, and remind user that each run creates a new file. Summarize:
    - Focus areas selected

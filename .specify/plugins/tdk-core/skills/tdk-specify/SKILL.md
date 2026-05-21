@@ -2,7 +2,7 @@
 name: tdk-specify
 description: "Create or update the feature specification from a natural language feature description."
 metadata: 
-  version: "1.0.6"
+  version: "1.11.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -170,7 +170,7 @@ After completion, proceed to next step with validated task_id and PROJECT_CONTEX
 
 **This step MUST NOT block or error.** If `tdk-memory-preload` fails for any reason, skip and continue.
 
-### Step 1: Load `.specify/templates/spec-template.md` to understand required sections.
+### Step 1: Load `.specify/templates/spec-template.md.tpl` to understand required sections.
 
 ### Step 2: Follow Specification Generation Flow:
 

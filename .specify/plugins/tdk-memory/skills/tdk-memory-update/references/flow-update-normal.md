@@ -21,13 +21,13 @@ Read user request from `$ARGUMENTS`. Match against Routing Rules table:
 
 | Request describes... | Route to... | Template |
 |---|---|---|
-| Entity, table, model, database schema | `data-model/{table-name}.md` | `data-model-template.md` |
-| Service method, API endpoint, controller action | `domains/{domain}/services.md` | `services-template.md` |
-| Business rule, validation, constraint, policy | `domains/{domain}/business-rules.md` | `business-rules-template.md` |
-| Screen, page, UI component, view | `screens/{module}/{name}.md` | `screen-template.md` |
-| Multi-screen user journey or flow | `screen-flows/{flow-name}.md` | `screen-flow-template.md` |
-| Complex multi-step flow within domain | `domains/{domain}/flows/{name}-flow.md` | `flow-template.md` |
-| Cross-domain or shared flow | `shared-flows/{flow-name}.md` | `flow-template.md` |
+| Entity, table, model, database schema | `data-model/{table-name}.md` | `data-model-template.md.tpl` |
+| Service method, API endpoint, controller action | `domains/{domain}/services.md` | `services-template.md.tpl` |
+| Business rule, validation, constraint, policy | `domains/{domain}/business-rules.md` | `business-rules-template.md.tpl` |
+| Screen, page, UI component, view | `screens/{module}/{name}.md` | `screen-template.md.tpl` |
+| Multi-screen user journey or flow | `screen-flows/{flow-name}.md` | `screen-flow-template.md.tpl` |
+| Complex multi-step flow within domain | `domains/{domain}/flows/{name}-flow.md` | `flow-template.md.tpl` |
+| Cross-domain or shared flow | `shared-flows/{flow-name}.md` | `flow-template.md.tpl` |
 
 **If ambiguous:** AskUserQuestion to clarify content type and/or domain.
 
@@ -43,7 +43,7 @@ Follow `references/domain-source-extraction-flow.md`.
 
 ## Step 3: Read template
 
-`Read(".specify/templates/memory/{type}-template.md")` based on content type.
+`Read(".specify/templates/memory/{type}-template.md.tpl")` based on content type.
 
 If missing: STOP "Template not found. Re-run /tdk-memory-init to restore templates."
 

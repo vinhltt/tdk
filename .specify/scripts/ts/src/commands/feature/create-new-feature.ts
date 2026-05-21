@@ -82,7 +82,7 @@ const program = new Command()
 
     // Create feature directory and spec file
     mkdirSync(featureDir, { recursive: true });
-    const templateFile = join(repoRoot, env.specsRoot, 'templates', 'spec-template.md');
+    const templateFile = join(repoRoot, env.specsRoot, 'templates', 'spec-template.md.tpl');
     const specFile = join(featureDir, 'spec.md');
     if (existsSync(templateFile)) {
       copyFileSync(templateFile, specFile);

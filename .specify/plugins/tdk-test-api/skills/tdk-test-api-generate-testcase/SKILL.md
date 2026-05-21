@@ -2,7 +2,7 @@
 name: tdk-test-api-generate-testcase
 description: "Generate per-endpoint test case files and execution manifest from API test plan."
 metadata:
-  version: 1.1.0
+  version: 1.1.1
 ---
 
 # /tdk-test-api-generate-testcase - API Test Case Generator
@@ -30,7 +30,7 @@ If testcase files already exist AND user provides an update description:
 ## Input
 
 - `api-test-plan.md` — from `/tdk-test-api-plan` (required)
-- `.specify/templates/test/api-test/api-testcases-template.md` — template structure
+- `.specify/templates/test/api-test/api-testcases-template.md.tpl` — template structure
 
 ---
 
@@ -48,7 +48,7 @@ Creates in `{output_dir}/{resource}/`:
 |-------|--------|
 | `api-test-plan.md` not found | STOP: "Run `/tdk-test-api-plan {feature-id}` first" |
 | Plan missing required sections | STOP with list of missing sections |
-| Template not found | STOP: "Template missing. Check `.specify/templates/test/api-test/api-testcases-template.md`" |
+| Template not found | STOP: "Template missing. Check `.specify/templates/test/api-test/api-testcases-template.md.tpl`" |
 
 ---
 
@@ -112,7 +112,7 @@ For each unique resource (from endpoint paths):
 **Process one endpoint at a time** (per-endpoint focused prompt for quality).
 
 For each endpoint:
-1. Read `api-testcases-template.md`
+1. Read `api-testcases-template.md.tpl`
 2. Determine applicable test categories from plan's priority matrix
 3. Generate test cases by category:
 

@@ -2,7 +2,7 @@
 name: tdk-test-api-plan
 description: "Generate API test plan from endpoints discovered via OpenAPI specs, codebase scouting, or manual input."
 metadata:
-  version: 1.1.0
+  version: 1.1.1
 ---
 
 # /tdk-test-api-plan - API Test Plan Generator
@@ -53,7 +53,7 @@ Creates in `{output_dir}/` (default: `tests/api/`):
 | `test.api` missing in `.specify.json` | STOP with error + show suggested JSON config block for user to copy-paste |
 | OpenAPI file not found | Warning, fallback to mode B/C |
 | No endpoints discovered | STOP with error |
-| Template not found | STOP: "Template missing. Check `.specify/templates/test/api-test/api-test-plan-template.md`" |
+| Template not found | STOP: "Template missing. Check `.specify/templates/test/api-test/api-test-plan-template.md.tpl`" |
 
 ---
 
@@ -163,7 +163,7 @@ For each discovered endpoint:
 
 ### Step 3: Generate API Test Plan
 
-1. **Read** template: `.specify/templates/test/api-test/api-test-plan-template.md`
+1. **Read** template: `.specify/templates/test/api-test/api-test-plan-template.md.tpl`
 2. **Fill sections**:
 
 | Section | Source |
@@ -203,7 +203,7 @@ Next: /tdk-test-api-generate-testcase {feature-id}
 |-------|----------|
 | .specify.json not found | Check workspace config |
 | test.api block missing | Show suggested JSON config block |
-| Template missing | Check `.specify/templates/test/api-test/api-test-plan-template.md` |
+| Template missing | Check `.specify/templates/test/api-test/api-test-plan-template.md.tpl` |
 | OpenAPI parse error | Validate spec format, fallback to scout |
 | No endpoints found | Ask user for manual input |
 | Parser script missing | Warning: "parse_openapi_spec.py not found. Falling back to scout mode." |

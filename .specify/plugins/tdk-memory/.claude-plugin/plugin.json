@@ -1,5 +1,5 @@
 {
   "name": "tdk-memory",
   "description": "Domain-based project memory: init, update, checksum, changelog, query, and preload context. Includes memory-guardian agent for business logic conflict detection.",
-  "version": "0.3.0"
+  "version": "0.3.1"
 }

@@ -2,7 +2,7 @@
 name: tdk-tasks
 description: "[deprecated - scheduled for removal in future version] Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts."
 metadata: 
-  version: "1.0.5"
+  version: "1.11.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -231,7 +231,7 @@ Run `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/check-p
    **Backup** (UPDATE/UPDATE_KEEP_ORDER only): Before writing, copy existing `tasks.md` content to `tasks.md.bak` in same directory. If merge produces bad output, user can restore from backup.
 
    **If MODE = GENERATE** (fresh generation):
-   Use `.specify/templates/tasks-template.md` as structure, fill with:
+   Use `.specify/templates/tasks-template.md.tpl` as structure, fill with:
    - Correct feature name from plan.md
    - Phase 1: Setup tasks (project initialization)
    - Phase 2: Foundational tasks (blocking prerequisites)

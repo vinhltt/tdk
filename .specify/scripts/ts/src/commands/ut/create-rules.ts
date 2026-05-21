@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { type ConfigResult, detectConfig, getRepoRoot, validatePathContainment } from '../../utils/index';
+import { type ConfigResult, detectConfig, getRepoRoot, loadFeatureEnv, validatePathContainment } from '../../utils/index';
 import { handleCliError } from './cli-error-handler';
 
 // Extracted for testability — builds rules CREATE directory path based on config targeting
@@ -63,7 +63,8 @@ export function createCreateRulesCommand(): Command {
         process.stderr.write(`Warning: Existing L2 rule at ${l2Path} shadows L3 in read cascade. Consider deleting L2 file.\n`);
       }
     }
-    const templateFile = join(repoRoot, '.specify', 'templates', 'ut-rule-template.md');
+    const env = loadFeatureEnv();
+    const templateFile = join(repoRoot, env.specsRoot, 'templates', 'ut-rule-template.md.tpl');
 
     // Validate .specify directory exists
     if (!existsSync(join(repoRoot, '.specify'))) {

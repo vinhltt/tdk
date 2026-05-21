@@ -13,7 +13,7 @@ try {
   const executionPlan = join(env.apiTestDir, 'test-execution-plan.yaml');
   const templateFile = join(
     env.workspaceRoot,
-    '.specify/templates/test/api-test/api-testcases-template.md',
+    '.specify/templates/test/api-test/api-testcases-template.md.tpl',
   );
 
   const testcaseFiles = findFilesRecursive(env.apiTestDir, /\.testcases\.md$/).slice(0, 20);

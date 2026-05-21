@@ -57,7 +57,7 @@ Skills (from plugin.json):
   UNCHANGED: 5 skills
 
 Other files:
-  NEW:       templates/spec-template.md (14 files)
+  NEW:       templates/spec-template.md.tpl (14 files)
   UPDATED:   CHANGELOG.md (1 file)
   UNCHANGED: .specify.json (1 file)
 ```

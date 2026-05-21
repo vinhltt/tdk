@@ -4,6 +4,16 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.11.1] - 2026-05-21
+
+### Changed
+- tdk-checklist: update template reference to checklist-template.md.tpl after template rename
+- tdk-constitution: update template references (plan/spec/tasks) to .md.tpl after template rename
+- tdk-specify: update spec-template reference to spec-template.md.tpl after template rename
+- tdk-specify-fast: update spec-template reference to spec-template.md.tpl after template rename
+- tdk-tasks: update tasks-template reference to tasks-template.md.tpl after template rename
+- tdk-ut-backfill-plan: update ut-plan-template and ut-phase-template references to .md.tpl after template rename
+
 ## [1.11.0] - 2026-05-21
 
 ### Added

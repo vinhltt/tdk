@@ -2,7 +2,7 @@
 name: tdk-specify-fast
 description: "Quick feature specification without brainstorm enrichment. Same workflow as /tdk-specify but skips embedded brainstorming for faster, lower-token spec generation."
 metadata: 
-  version: "1.0.4"
+  version: "1.11.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -134,7 +134,7 @@ After completion, proceed to next step with validated task_id and PROJECT_CONTEX
 - Proceed to load spec template
 - Use `SPEC_FILE` path to write specification
 
-### Step 1: Load `.specify/templates/spec-template.md` to understand required sections.
+### Step 1: Load `.specify/templates/spec-template.md.tpl` to understand required sections.
 
 ### Step 2: Follow Specification Generation Flow:
 

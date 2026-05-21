@@ -2,7 +2,7 @@
 name: tdk-ut-backfill-plan
 description: "Generate unit test plan using templates. Creates `ut/plan.md` + phase files at `ut/phases/{module}.md` for implementation by `/tdk-ut-backfill-impl`."
 metadata:
-  version: "1.2.2"
+  version: "1.11.1"
 ---
 
 # /tdk-ut-backfill-plan - Create Unit Test Plan
@@ -68,8 +68,8 @@ UT rules file location depends on sub-workspace targeting:
 
 | Template | Location |
 |----------|----------|
-| Plan | `.specify/templates/ut/ut-plan-template.md` |
-| Phase | `.specify/templates/ut/ut-phase-template.md` |
+| Plan | `.specify/templates/ut/ut-plan-template.md.tpl` |
+| Phase | `.specify/templates/ut/ut-phase-template.md.tpl` |
 
 ---
 
@@ -204,8 +204,8 @@ If `PROJECT_CONTEXT.configFound` is false: Auto-detect from sub-workspace files 
 ### Step 1: Load Templates
 
 **Read**:
-- `.specify/templates/ut/ut-plan-template.md` -> PLAN_TEMPLATE
-- `.specify/templates/ut/ut-phase-template.md` -> PHASE_TEMPLATE
+- `.specify/templates/ut/ut-plan-template.md.tpl` -> PLAN_TEMPLATE
+- `.specify/templates/ut/ut-phase-template.md.tpl` -> PHASE_TEMPLATE
 
 If missing -> STOP: "Templates not found. Check `.specify/templates/ut/`"
 

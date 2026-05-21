@@ -39,7 +39,7 @@ const program = new Command()
     const planExists = existsSync(implPlan);
 
     // Copy plan template (guarded by planExists and force flag)
-    const templateFile = join(repoRoot, env.specsRoot, 'templates', 'plan-template.md');
+    const templateFile = join(repoRoot, env.specsRoot, 'templates', 'plan-template.md.tpl');
     if (existsSync(templateFile)) {
       if (!planExists || opts.force) {
         copyFileSync(templateFile, implPlan);

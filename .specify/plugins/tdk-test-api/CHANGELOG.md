@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.1.1] - 2026-05-21
+
+### Changed
+- tdk-test-api-plan: update template path references to renamed .md.tpl extension
+- tdk-test-api-generate-testcase: update template path references to renamed .md.tpl extension
+
 ## [2.0.0] - 2026-05-17
 
 ### Changed

@@ -112,7 +112,7 @@ flowchart TD
     subgraph REFERENCES[Reference Files]
         CONST[constitution.md]
         UIUX[ui-ux-design.md]
-        REF_DM[data-model-template.md]
+        REF_DM[data-model-template.md.tpl]
     end
 
     subgraph PLAN_OUTPUT["/tdk-plan output"]
@@ -340,8 +340,8 @@ flowchart LR
     subgraph TEMPLATES[Reference Files]
         CONST[.specify/memory/<br/>constitution.md]
         UIUX[ui-ux-design.md<br/>Design System]
-        REF_DM[.specify/templates/<br/>data-model-template.md]
-        REF_ST[.specify/templates/<br/>state-transitions-template.md]
+        REF_DM[.specify/templates/<br/>data-model-template.md.tpl]
+        REF_ST[.specify/templates/<br/>state-transitions-template.md.tpl]
     end
 
     subgraph COMMANDS[Commands That Reference]

@@ -10,6 +10,30 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.47.0] - 2026-05-21
+
+### Changed
+- **[Templates]** Rename all template files from `.md` to `.md.tpl` (29 files) to distinguish source-of-truth templates from generated/rendered Markdown
+  - root: spec, plan, tasks, agent-file, checklist, data-model, state-transitions, page-design, requirement-change, task-design, task-requirement, ut-rule
+  - docs/: source-code-structure, technical-context
+  - memory/: business-rules, data-model, flow, screen-flow, screen, services
+  - output/: api-design, ba-requirement, batch-design, test-design, ui-design
+  - test/api-test/: api-test-plan, api-testcases
+  - ut/: ut-phase, ut-plan
+- **[tdk-core]** Update skill template references to .md.tpl (1.11.0 → 1.11.1)
+  - tdk-checklist, tdk-constitution, tdk-specify, tdk-specify-fast, tdk-tasks, tdk-ut-backfill-plan
+- **[tdk-memory]** Update skill template references to .md.tpl (0.3.0 → 0.3.1)
+  - tdk-memory-init, tdk-memory-update
+- **[tdk-test-api]** Update skill template references to .md.tpl (1.1.0 → 1.1.1)
+  - tdk-test-api-plan, tdk-test-api-generate-testcase
+- **[Scripts]** Update template lookup paths to .md.tpl extension
+  - create-new-feature, setup-plan, testcase-env, ut/create-rules (also loads env via loadFeatureEnv for specsRoot resolution)
+- **[Guides]** Update document-flow.md Mermaid diagrams to reflect renamed templates
+- **[tdk-distribute]** Update file-tree example to show spec-template.md.tpl
+
+### Added
+- **[tdk-memory]** Add CHANGELOG.md for plugin
+
 ## [1.46.0] - 2026-05-21
 
 ### Added
