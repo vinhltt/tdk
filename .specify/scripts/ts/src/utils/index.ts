@@ -3,7 +3,6 @@
 
 export * from './types';
 export * from './config';
-export * from './rules';
 export * from './feature';
 export * from './common';
 export * from './mirror-validator';

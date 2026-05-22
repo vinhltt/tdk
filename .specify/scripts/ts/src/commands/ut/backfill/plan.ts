@@ -1,9 +1,9 @@
-// CLI: UT plan — feature ID + config + 4-level rule resolution
+// CLI: UT plan — feature ID + config validation
 
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { detectConfig, resolveRulesCascade, parseFeatureId, loadFeatureEnv, getRepoRoot } from '../../../utils/index';
+import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot } from '../../../utils/index';
 import { handleCliError } from '../cli-error-handler';
 
 /** Create ut-plan command for CLI registration (group: tdk ut plan) */
@@ -29,18 +29,6 @@ export function createPlanCommand(): Command {
       console.log(JSON.stringify(cliError));
       process.exit(1);
     }
-
-    // Cascade resolution — collects all levels in base->specific order.
-    const cascade = resolveRulesCascade({
-      workspaceRoot: config.workspaceRoot || repoRoot,
-      docsPath: config.docsPath,
-      ruleSubPath: 'rules/test/ut-rule.md',
-      swName: config.targetSubWorkspace?.name ?? opts.subWorkspace,
-      moduleName: config.targetModule?.name ?? opts.module,
-      targetRoot: config.targetSubWorkspace?.root,
-      targetDocsPath: config.targetSubWorkspace?.docsPath,
-    });
-    const utRulesFile = cascade.primary;
 
     const specFile = join(feature.featureDir, 'spec.md');
     const testSpecFile = join(feature.featureDir, 'ut-spec.md');
@@ -74,10 +62,6 @@ export function createPlanCommand(): Command {
       testSpecFile,
       coverageFile,
       planFile,
-      utRulesFile: utRulesFile ?? '',
-      utRulesFiles: cascade.entries,
-      // Intentional TOCTOU re-probe: entries snapshot may be stale if user deletes file mid-flight.
-      hasUtRules: utRulesFile !== null && existsSync(utRulesFile),
       hasSpecFile,
       needsStandalonePrompt,
       existingFiles: existingFiles.join(' '),

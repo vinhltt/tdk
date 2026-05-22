@@ -8,7 +8,6 @@ export function handleCliError(
   opts: { subWorkspace?: string; module?: string }
 ): { error: string; message: string; availableSubWorkspaces?: string[]; availableModules?: string[] } | null {
   // [A7] Surface parseConfig migration hint (separate-folder, YAML, invalid JSON).
-  // Skill /tdk-ut-backfill-check-rules Step 0.5 branches on this error code.
   if (config.error?.startsWith('parse_error:')) {
     return { error: 'parse_error', message: config.error };
   }

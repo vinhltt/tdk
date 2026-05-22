@@ -204,13 +204,8 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    FRAMEWORK_UT[Framework Detection<br/>Laravel, Vue, etc.]
     SPEC_UT[spec.md<br/>Feature Spec]
-
-    subgraph SETUP_UT["One-time Setup"]
-        CREATE_RULES["/tdk-ut-backfill-create-rules<br/>--sub-workspace name"]
-        UT_RULE["rules/test/ut-rule.md<br/>Test Conventions"]
-    end
+    UT_SKILL["consumer UT skill<br/>.claude/skills/{name}/SKILL.md"]
 
     subgraph PLANNING_UT["Test Planning"]
         UT_PLAN_CMD["/tdk-ut-backfill-plan id<br/>--sub-workspace name"]
@@ -225,31 +220,26 @@ flowchart TD
 
     UT_AUTO["/tdk-ut-backfill-auto id<br/>Orchestrates all steps"]
 
-    FRAMEWORK_UT -->|detect| CREATE_RULES
-    CREATE_RULES --> UT_RULE
-    UT_RULE -->|input| UT_PLAN_CMD
+    UT_SKILL -->|conventions| UT_PLAN_CMD
     UT_PLAN_CMD --> UT_PLAN
     UT_PLAN_CMD --> UT_PHASES
     UT_PLAN -->|input| UT_GEN
     UT_PHASES -->|input| UT_GEN
-    UT_RULE -.->|conventions| UT_GEN
+    UT_SKILL -.->|conventions| UT_GEN
     UT_GEN --> TEST_FILES
-    UT_AUTO -.->|"automates"| CREATE_RULES
     UT_AUTO -.->|"automates"| UT_PLAN_CMD
     UT_AUTO -.->|"automates"| UT_GEN
     SPEC_UT -.->|optional input| UT_PLAN_CMD
 
-    classDef setup fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
     classDef planning fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef generation fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef orchestrator fill:#e1f5ff,stroke:#01579b,stroke-width:2px
     classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5
 
-    class CREATE_RULES,UT_RULE setup
     class UT_PLAN_CMD,UT_PLAN,UT_PHASES planning
     class UT_GEN,TEST_FILES generation
     class UT_AUTO orchestrator
-    class SPEC_UT,FRAMEWORK_UT reference
+    class SPEC_UT,UT_SKILL reference
 ```
 
 `ut:auto` runs the full pipeline in one command; use individual commands for manual control. `--sub-workspace` targets a specific workspace (e.g., `backend`, `frontend`). `--standalone` on `ut:plan` skips spec dependency for existing code.
@@ -322,9 +312,8 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `tasks.md` (deprecated) | `/tdk-tasks` [deprecated] | Design artifacts (API, DB, Page, Data Model) | `/tdk-implement-task` [deprecated] | Legacy only |
 | `backend/src/**` | `/tdk-implement-from-plan` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement-from-plan` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
-| `rules/test/ut-rule.md` | `/tdk-ut-backfill-create-rules` | Framework detection | `/tdk-ut-backfill-plan`, `/tdk-ut-backfill-impl` | One-time setup |
-| `ut/plan.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), `ut-rule.md` | `/tdk-ut-backfill-impl` | Feature UT |
-| `ut/phases/{module}.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), `ut-rule.md` | `/tdk-ut-backfill-impl` | Feature UT |
+| `ut/plan.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), consumer UT skill | `/tdk-ut-backfill-impl` | Feature UT |
+| `ut/phases/{module}.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), consumer UT skill | `/tdk-ut-backfill-impl` | Feature UT |
 | `*.test.ts` / `test_*.py` etc. | `/tdk-ut-backfill-impl` | `ut/plan.md`, `ut/phases/{module}.md` | Test runner | Feature UT |
 | `.specify.yaml` | `/tdk-sub-workdspace-init` | Project config | `config:*`, `ut:*` | Project setup |
 | `document-manager.md` | `/tdk-config-index` | All docs files | Manual reference, LLM tools | On demand |

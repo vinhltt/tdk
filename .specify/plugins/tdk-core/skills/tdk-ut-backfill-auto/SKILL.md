@@ -2,14 +2,14 @@
 name: tdk-ut-backfill-auto
 description: "Automated Unit Test Full Workflow. This skill should be used when the user asks to 'run unit tests', 'generate tests', 'create UT', 'tdk-ut-backfill-auto', or when /tdk-implement-from-plan or /tdk-implement-task detects a UT phase WITHOUT existing ut/plan.md. Orchestrates: check rules → plan → generate → run → report."
 metadata:
-  version: "1.10.2"
+  version: "2.0.0"
 ---
 
 # /tdk-ut-backfill-auto - Automated Unit Test Workflow
 
 ## Purpose
 
-Orchestrate the complete UT workflow by sequentially activating individual `/tdk-ut-*` skills. Single command for end-to-end test creation: check rules → create rules → plan → generate → run → update plan.
+Orchestrate the complete UT workflow by sequentially activating individual `/tdk-ut-*` skills. Single command for end-to-end test creation: plan → generate → run → update plan.
 
 ---
 
@@ -45,7 +45,7 @@ Orchestrate the complete UT workflow by sequentially activating individual `/tdk
 ```
 [Step 0] Parse Args & Run tdk ut backfill auto
    ↓
-[Step 1] Skill: /tdk-ut-backfill-check-rules  →  rules missing? → Skill: /tdk-ut-backfill-create-rules
+[Step 1] Resolve UT Skill from consumer .claude/skills/
    ↓
 [Step 2] Skill: /tdk-ut-backfill-plan  (create or update)  ── if --plan-only → DONE
    ↓
@@ -85,7 +85,7 @@ cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut backfill auto 
 cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut backfill auto <feature-id>
 ```
 
-Parse JSON output → Store paths and flags: `featureDir`, `hasPlan`, `hasUtRules`, `utPlanFile`, `utRulesFile`, `createdFeatureDir`
+Parse JSON output → Store paths and flags: `featureDir`, `hasPlan`, `createdFeatureDir`
 
 **VALIDATE OUTPUT:**
 - Script exit code != 0 OR output contains "❌ Error" → **STOP**, report to user
@@ -126,17 +126,18 @@ Store parsed `--sub-workspace`, `--module`, `--skip-run`, `--plan-only`, `--forc
 
 ---
 
-### Step 1: Check & Create UT Rules
+### Step 1: Resolve UT Skill
 
-**Activate** `/tdk-ut-backfill-check-rules` with the same `--sub-workspace` and `--module` flags from Step 0.
+Locate the consumer's UT conventions skill from `.claude/skills/`:
 
-Evaluate output:
-- **Rules found** → Log "✓ UT rules OK" + emit cascade summary line (see "Rule Loading (Merge Cascade)" below). Continue to Step 2.
-- **Rules NOT found** → **Activate** `/tdk-ut-backfill-create-rules` with same `--sub-workspace` and `--module` flags
-  - On success → Continue to Step 2
-  - On failure → **STOP**, report error to user
+1. Check `plan-skill-routing-template.tpl` for a `test` domain mapping (e.g., `test: /dotnet-ut`)
+2. If skill name specified → Read `.claude/skills/{name}/SKILL.md`
+3. If not specified → Glob `.claude/skills/*/SKILL.md`, match by: skill name contains `-ut` or `-test`, OR frontmatter contains `domain: unit-test`
+4. If none found → AskUserQuestion: "No UT skill found in `.claude/skills/`. Create one now, or proceed with defaults?"
+   - **Create** → scaffold SKILL.md with framework/coverage sections via user input
+   - **Defaults** → continue with framework auto-detection (vitest/80%)
 
-**Cascade forwarding**: auto forwards `utRulesFiles[]` to child skills (`tdk-ut-backfill-plan`, `tdk-ut-backfill-impl`). The cascade summary line appears **once** here at orchestration start; merge work happens in child skills per their own SKILL.md contract.
+Store the resolved skill path as `UT_SKILL_PATH` for forwarding to child skills.
 
 ---
 
@@ -236,7 +237,7 @@ Feature: {feature-id}
 Framework: {name version}
 
 Steps Completed:
-  1. UT Rules: ✓ {found / created}
+  1. UT Skill: ✓ {resolved / defaults}
   2. Plan: ✓ {created / updated}
   3. Generate: ✓ {N} test files
   4. Run: ✓ {passed} / ✗ {failed} of {total}
@@ -268,38 +269,13 @@ Next Steps:
 
 ---
 
-## Rule Loading (Merge Cascade)
-
-**Full contract**: `.specify/docs/guides/rule-cascade-merge-contract.md` — read before merging.
-
-**Rules (titles only, see contract for bodies)**:
-1. Match headings (normalized via `github-slugger` v2.x).
-1b. Duplicate heading within file → last wins + warning.
-2. Most specific wins — WHOLESALE (sub-sections under replaced `##` are discarded).
-3. Unique heading → inherit.
-4. Sub-section merge only when parent `##` NOT overridden at more-specific level.
-5. Preamble concat base-first, blank-line separator.
-6. Empty file = no-op, still listed in summary.
-
-**Version-skew fallback**: if CLI JSON lacks `utRulesFiles` or entry `level === 'unknown'` → synthesize single-file entry, skip Rules 1b/2/3/4/5, emit warning `Note: older CLI detected — upgrade for full cascade merge. Running in single-file mode.`
-
-**Cascade summary** (1 line to user after merge):
-`Loaded N rule file(s): global → sw-parent → sw-own → module` (list only levels actually present, in read order).
-
-**Orchestrator note**: auto emits the cascade summary once at orchestration start (Step 1). Child skills (`tdk-ut-backfill-plan`, `tdk-ut-backfill-impl`) receive the same `utRulesFiles[]` and perform their own merge per this contract.
-
-**Canonical headings**: see `.specify/docs/guides/ut-rule-canonical-headings.md`.
-
----
-
 ## Error Handling
 
 | Step | Condition | Action |
 |------|-----------|--------|
 | **0** | Script non-zero exit | **STOP** — report error |
 | **0** | Sub-workspace not found | **STOP** — show available |
-| **1** | `/tdk-ut-backfill-check-rules` → not found | Auto-activate `/tdk-ut-backfill-create-rules` |
-| **1** | `/tdk-ut-backfill-create-rules` fails | **STOP** — report error |
+| **1** | No UT skill found | AskUserQuestion: create or use defaults |
 | **2** | `/tdk-ut-backfill-plan` fails | **STOP** — report error |
 | **2** | ut/plan.md still missing after step | **STOP** — gate failed |
 | **3** | `/tdk-ut-backfill-impl` fails | **STOP** — plan preserved |
@@ -313,8 +289,6 @@ Next Steps:
 
 | Skill | Role in workflow |
 |-------|-----------------|
-| `/tdk-ut-backfill-check-rules` | Step 1 — validate rules exist |
-| `/tdk-ut-backfill-create-rules` | Step 1 — create rules if missing |
 | `/tdk-ut-backfill-plan` | Step 2 — create test plan |
 | `/tdk-ut-backfill-impl` | Step 3 — generate test code |
 

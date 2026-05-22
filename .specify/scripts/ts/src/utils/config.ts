@@ -82,7 +82,6 @@ export function parseConfig(configPath: string): { config: SpecifyConfig | null;
     return { config: validated, error: null };
   } catch (e) {
     // [A7] Machine-parseable signal: hoist separate-folder migration hint to first line.
-    // Skill /tdk-ut-backfill-check-rules Step 0.5 consumes firstLine to branch UX.
     if (e instanceof z.ZodError) {
       const migrationIssue = e.issues.find(
         (i) =>

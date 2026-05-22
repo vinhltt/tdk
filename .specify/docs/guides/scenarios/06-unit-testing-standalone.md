@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-ut-backfill-create-rules → /tdk-ut-backfill-plan --standalone → /tdk-ut-backfill-impl
+/tdk-ut-backfill-plan --standalone → /tdk-ut-backfill-impl
 ```
 
 Or automated:
@@ -16,19 +16,7 @@ Or automated:
 
 ## Step-by-Step
 
-### 1. Ensure UT rules exist
-
-```
-/tdk-ut-backfill-check-rules --sub-workspace backend
-```
-
-If missing:
-
-```
-/tdk-ut-backfill-create-rules --sub-workspace backend
-```
-
-### 2. Create a standalone UT plan
+### 1. Create a standalone UT plan
 
 ```
 /tdk-ut-backfill-plan feat-001 --sub-workspace backend --standalone
@@ -55,4 +43,4 @@ Or combine everything with `ut:auto`:
 - `--standalone` is the key differentiator — it makes `spec.md` optional for UT planning.
 - This is ideal for adding test coverage to legacy modules or third-party integrations.
 - You still need a task ID for file organization, even without a spec.
-- UT rules (`ut-rule.md`) are always required regardless of standalone mode.
+- A consumer UT skill (`.claude/skills/{name}/SKILL.md`) is always required regardless of standalone mode.

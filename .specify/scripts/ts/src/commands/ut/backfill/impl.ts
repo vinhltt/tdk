@@ -1,9 +1,9 @@
-// CLI: UT impl — feature ID + validation + 4-level rule resolution
+// CLI: UT impl — feature ID + validation
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { detectConfig, resolveRulesCascade, parseFeatureId, loadFeatureEnv, getRepoRoot } from '../../../utils/index';
+import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot } from '../../../utils/index';
 import { handleCliError } from '../cli-error-handler';
 
 /** Create ut-impl command for CLI registration (group: tdk ut impl) */
@@ -27,18 +27,6 @@ export function createImplCommand(): Command {
       process.exit(1);
     }
 
-    // Cascade resolution — collects all levels in base->specific order.
-    const cascade = resolveRulesCascade({
-      workspaceRoot: config.workspaceRoot || repoRoot,
-      docsPath: config.docsPath,
-      ruleSubPath: 'rules/test/ut-rule.md',
-      swName: config.targetSubWorkspace?.name ?? opts.subWorkspace,
-      moduleName: config.targetModule?.name ?? opts.module,
-      targetRoot: config.targetSubWorkspace?.root,
-      targetDocsPath: config.targetSubWorkspace?.docsPath,
-    });
-    const utRulesFile = cascade.primary;
-
     // Validate feature directory
     if (!existsSync(feature.featureDir)) {
       process.stderr.write(`Error: Feature directory not found: ${feature.featureDir}\n`);
@@ -48,11 +36,6 @@ export function createImplCommand(): Command {
     const planFile = join(feature.featureDir, 'ut', 'plan.md');
     if (!existsSync(planFile)) {
       process.stderr.write(`Error: ut/plan.md not found: ${planFile}\n`);
-      process.exit(1);
-    }
-
-    if (!utRulesFile || !existsSync(utRulesFile)) {
-      process.stderr.write(`Error: UT rules not found\n`);
       process.exit(1);
     }
 
@@ -66,8 +49,6 @@ export function createImplCommand(): Command {
       planFile,
       testSpecFile,
       coverageFile,
-      utRulesFile,
-      utRulesFiles: cascade.entries,
       hasTestSpec: existsSync(testSpecFile),
       hasCoverage: existsSync(coverageFile),
       subWorkspaceName: opts.subWorkspace ?? '',

@@ -35,7 +35,7 @@ CommonDragon is the third generation of this framework, built natively for Claud
 |-----------|-----------------|----------------|--------------|
 | Commands | 9 | 18 | **15** (11 TS + 4 bash fallback) |
 | Platform | Agent templates | GitHub Copilot | **Claude Code CLI** |
-| UT Framework | -- | -- | **5 commands** |
+| UT Framework | -- | -- | **3 commands** |
 | Sub-workspace | -- | -- | **Isolation support** |
 | Config mgmt | -- | -- | **diff/sync/index** |
 | Skills system | -- | -- | **10+ skills** |
@@ -51,15 +51,13 @@ These capabilities are not present in the original frameworks.
 
 ### Unit Testing Framework
 
-Five dedicated commands cover the full test automation cycle:
+Three dedicated commands cover the full test automation cycle:
 
 | Command | Role |
 |---------|------|
 | `/tdk-ut-backfill-auto` | Orchestrates the full pipeline in one command |
 | `/tdk-ut-backfill-plan` | Generates test plan + phase files from spec or existing code |
 | `/tdk-ut-backfill-impl` | Generates test code from UT plan |
-| `/tdk-ut-backfill-create-rules` | One-time setup: detect framework, create test conventions |
-| `/tdk-ut-backfill-check-rules` | Validate that UT rules exist and are correct |
 
 ### Sub-Workspace Isolation
 
@@ -160,8 +158,6 @@ Each command reads the output of the previous one, building a chain of artifacts
 | 15 | `/tdk-ut-backfill-auto <id>` | Automated full unit test workflow |
 | 16 | `/tdk-ut-backfill-plan <id>` | Generate unit test plan and phase files |
 | 17 | `/tdk-ut-backfill-impl <id>` | Generate test code from UT plan |
-| 18 | `/tdk-ut-backfill-create-rules` | Create sub-workspace UT standards (one-time) |
-| 19 | `/tdk-ut-backfill-check-rules` | Validate UT rules exist and are correct |
 | — | **Config & Workspace** | |
 | 20 | `/tdk-config-diff` | Compare workspace vs sub-workspace docs |
 | 21 | `/tdk-config-sync` | Sync docs between workspace and sub-workspaces |
@@ -244,7 +240,7 @@ Then:
 /tdk-ut-backfill-auto feat-001 --sub-workspace backend
 ```
 
-Generates UT rules (if first time), creates test plan, and generates test code. See [04-unit-testing-full-pipeline.md](scenarios/04-unit-testing-full-pipeline.md) for a detailed walkthrough.
+Reads UT conventions from the consumer UT skill, creates test plan, and generates test code. See [04-unit-testing-full-pipeline.md](scenarios/04-unit-testing-full-pipeline.md) for a detailed walkthrough.
 
 ### Check progress any time
 
@@ -295,11 +291,9 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| ut:auto | `/tdk-ut-backfill-auto <id>` | `--sub-workspace`, `--skip-run`, `--plan-only`, `--force` | `spec.md` (opt), `ut-rule.md` | `ut-plan.md`, phase files, test files | ut:create-rules |
-| ut:plan | `/tdk-ut-backfill-plan <id>` | `--sub-workspace`, `--review`, `--force`, `--standalone` | `spec.md` (opt), `ut-rule.md` | `ut-plan.md`, `ut-phase-*.md` | ut:create-rules |
-| ut:generate | `/tdk-ut-backfill-impl <id>` | `--sub-workspace` | `ut-plan.md`, `ut-phase-*.md`, `ut-rule.md` | Test files (`.test.ts`, `test_*.py`, etc.) | ut:plan |
-| ut:create-rules | `/tdk-ut-backfill-create-rules` | `--sub-workspace` | Framework detection | `rules/test/ut-rule.md` | None (one-time setup) |
-| ut:check-rules | `/tdk-ut-backfill-check-rules` | `--sub-workspace` | `ut-rule.md` | Validation report (no file) | ut:create-rules |
+| ut:auto | `/tdk-ut-backfill-auto <id>` | `--sub-workspace`, `--skip-run`, `--plan-only`, `--force` | `spec.md` (opt), consumer UT skill | `ut-plan.md`, phase files, test files | None |
+| ut:plan | `/tdk-ut-backfill-plan <id>` | `--sub-workspace`, `--review`, `--force`, `--standalone` | `spec.md` (opt), consumer UT skill | `ut-plan.md`, `ut-phase-*.md` | None |
+| ut:generate | `/tdk-ut-backfill-impl <id>` | `--sub-workspace` | `ut-plan.md`, `ut-phase-*.md`, consumer UT skill | Test files (`.test.ts`, `test_*.py`, etc.) | ut:plan |
 
 ### Config Commands
 
@@ -462,7 +456,7 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 | "plan.md not found" | Running implementation before `plan` | Run `/tdk-plan <id>` first |
 | "Invalid prefix" | Task ID prefix not in allowed list | Check `ERCSPEC_PREFIX_LIST` in `.specify/.specify.env` |
 | "Task ID already exists" | Feature directory already created | Work on existing feature or use a different ID |
-| "ut-rule.md missing" | Running UT commands before creating rules | Run `/tdk-ut-backfill-create-rules --sub-workspace <name>` |
+| "No UT skill found" | Running UT commands without a consumer UT skill | Create one in `.claude/skills/{name}/SKILL.md` with UT conventions |
 | "tasks.md not found" [legacy] | Running `/tdk-implement-task` before `/tdk-tasks` | Run `/tdk-tasks <id>` first (legacy path) |
 | Script execution fails | Git Bash not available on Windows | Install Git for Windows (includes Git Bash) |
 | "Feature not found" | Wrong task ID or folder | Check `.specify/specs/` for existing features; verify prefix in `.specify.env` |

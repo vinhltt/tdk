@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-sub-workdspace-init (×2) → /tdk-ut-backfill-create-rules (per ws) → /tdk-config-diff → /tdk-config-sync
+/tdk-sub-workdspace-init (×2) → /tdk-config-diff → /tdk-config-sync
 ```
 
 ## Step-by-Step
@@ -28,15 +28,9 @@
 
 **What happens**: Displays a table of all configured sub-workspaces with their paths and status.
 
-### 3. Create UT rules per sub-workspace
+### 3. Set up UT conventions per sub-workspace
 
-```
-/tdk-ut-backfill-create-rules --sub-workspace frontend
-/tdk-ut-backfill-create-rules --sub-workspace backend
-```
-
-**What happens**: Claude detects each workspace's framework (e.g., Vue for frontend, Laravel for backend) and generates workspace-specific test conventions.
-**Output**: `{docs-path}/rules/test/ut-rule.md` per sub-workspace
+Create a consumer UT skill at `.claude/skills/{name}/SKILL.md` for each sub-workspace, defining test conventions (framework, naming patterns, coverage targets). The `/tdk-ut-backfill-auto` skill resolves these at runtime.
 
 ### 4. Compare documentation between workspaces
 
@@ -71,5 +65,5 @@ Preview first, then apply:
 
 - Initialize sub-workspaces BEFORE running any `--sub-workspace` flagged commands.
 - Always `diff` before `sync` to understand what will change.
-- UT rules are workspace-specific — `ut:create-rules` detects each workspace's framework independently.
+- UT conventions are workspace-specific — define them in each sub-workspace's consumer UT skill (`.claude/skills/{name}/SKILL.md`).
 - Use `config:sync --dry-run` before actual sync to avoid unintended overwrites.

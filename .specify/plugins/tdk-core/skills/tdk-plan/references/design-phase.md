@@ -105,7 +105,7 @@ After all implementation phases are defined, check if a Unit Test phase should b
 
 **Condition** (any of):
 - spec.md mentions testing / test requirements; OR
-- project has `.specify/configurations/sub-workspaces/*/rules/test/ut-rule.md`; OR
+- project has a UT skill in `.claude/skills/` (name contains `-ut` or `-test`); OR
 - plan has ≥ 2 implementation phases.
 
 **If condition met** → append a UT phase as the last phase:

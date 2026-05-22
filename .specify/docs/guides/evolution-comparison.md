@@ -17,7 +17,7 @@ Three generations of the Tihon framework, each targeting a different AI platform
 |-----------|-----------------|----------------|--------------|
 | Commands | 9¹ | 18 | **38** |
 | Platform | Agent templates | GitHub Copilot | **Claude Code CLI** |
-| UT Framework | -- | -- | **5 commands** |
+| UT Framework | -- | -- | **3 commands** |
 | Sub-workspace | -- | -- | **Isolation support** |
 | Config mgmt | -- | -- | **diff/sync/index** |
 | Skills system | -- | -- | **10+ skills** |
@@ -53,12 +53,12 @@ Three generations of the Tihon framework, each targeting a different AI platform
 | **Validation & Quality** | | | |
 | Requirements gate | Advisory² | Advisory | **✓ Blocking gate** |
 | Cross-artifact analysis | -- | Basic | **✓ Full consistency check** |
-| UT rules validation | -- | -- | **✓ `ut:check-rules`** |
+| UT skill-based conventions | -- | -- | **✓ per consumer skill** |
 | **Git Workflow** | | | |
 | Branch auto-creation | Enforced | Enforced | **❌ Removed — flexible** |
 | Parallel spec development | ✗ | ✗ | **✓ Any branch strategy** |
 | **Unit Testing** | | | |
-| UT framework | -- | -- | **✓ 5 commands** |
+| UT framework | -- | -- | **✓ 3 commands** |
 | Framework-aware rules | -- | -- | **✓ Per sub-workspace** |
 | UT pipeline automation | -- | -- | **✓ `ut:auto` (one command)** |
 | **E2E Testing & Bugs** | | | |
@@ -117,8 +117,6 @@ Commands not present in any predecessor (15 total):
 | `/tdk-ut-backfill-auto` | Unit Testing | **Full UT pipeline in one command** |
 | `/tdk-ut-backfill-plan` | Unit Testing | **Framework-aware test plan** with phase files |
 | `/tdk-ut-backfill-impl` | Unit Testing | **Code generation from UT plan** |
-| `/tdk-ut-backfill-create-rules` | Unit Testing | **One-time framework detection** + conventions |
-| `/tdk-ut-backfill-check-rules` | Unit Testing | **Validation gate** before UT pipeline |
 | `/tdk-config-diff` | Config Mgmt | **Compare** workspace vs sub-workspace docs |
 | `/tdk-config-sync` | Config Mgmt | **Bidirectional sync** with dry-run |
 | `/tdk-config-index` | Config Mgmt | **LLM-discoverable** doc index |
@@ -136,7 +134,6 @@ Commands not present in any predecessor (15 total):
 |------|:----------------:|:--------------:|:------------:|
 | `/tdk-checklist` | Advisory² | -- | **Blocks implementation until approved** |
 | `/tdk-analyze` | -- | Basic | **Full cross-artifact: spec↔plan↔tasks** |
-| `/tdk-ut-backfill-check-rules` | -- | -- | **New: validates UT rules before generation** |
 
 ---
 
@@ -152,7 +149,7 @@ CommonDragon elevates the `plan.md` file's `## Phases` table as the primary sour
 
 ### Validation-First
 
-Three-layer validation gates ensure quality before proceeding: `/tdk-checklist` blocks implementation until resolved → `/tdk-analyze` checks cross-artifact consistency → `/tdk-ut-backfill-check-rules` validates test conventions. Every phase has a quality gate, not just a final review.
+Two-layer validation gates ensure quality before proceeding: `/tdk-checklist` blocks implementation until resolved → `/tdk-analyze` checks cross-artifact consistency. UT conventions are defined in consumer `.claude/skills/{name}/SKILL.md` files and resolved at runtime by `/tdk-ut-backfill-auto`. Every phase has a quality gate, not just a final review.
 
 ### Native Integration > Scripted Workarounds
 

@@ -1,16 +1,14 @@
 # tdk-ut Skills — Usage Guide
 
-How to configure and use the `tdk-ut-*` skills family for unit-test rule authoring, test planning, and automatic test generation inside a tdk workspace.
+How to configure and use the `tdk-ut-*` skills family for test planning and automatic test generation inside a tdk workspace.
 
 ## 1. Overview
 
-`tdk-ut-*` is the tdk sub-plugin for **unit-test rule management**. Skills cascade-merge rule files across 4 levels (global → sw-parent → sw-own → module) and drive test planning + generation from those rules.
+`tdk-ut-*` is the tdk sub-plugin for **unit-test automation**. UT conventions are defined in consumer `.claude/skills/{name}/SKILL.md` files. The `/tdk-ut-backfill-auto` skill resolves these at runtime and drives test planning + generation from those conventions.
 
 Entry points:
 
-- `/tdk-ut-backfill-auto` — end-to-end bootstrap (create rules + plan + generate).
-- `/tdk-ut-backfill-create-rules` — scaffold a new `ut-rule.md`.
-- `/tdk-ut-backfill-check-rules` — validate existence + cascade + (since v1.1) mirror structure.
+- `/tdk-ut-backfill-auto` — end-to-end: plan + generate (reads consumer UT skill for conventions).
 - `/tdk-ut-backfill-plan` — generate test plan against target module.
 - `/tdk-ut-backfill-impl` — write test files from the plan.
 
@@ -18,29 +16,27 @@ Entry points:
 
 | Skill | Purpose | Typical scope |
 |-------|---------|---------------|
-| tdk-ut-backfill-auto | One-shot: rules → plan → generate | Workspace or SW |
-| tdk-ut-backfill-create-rules | Create/update `ut-rule.md` | Any level |
-| tdk-ut-backfill-check-rules | Validate rules + mirror structure | Any level |
+| tdk-ut-backfill-auto | One-shot: plan → generate | Workspace or SW |
 | tdk-ut-backfill-plan | Produce test plan JSON | Module or SW |
 | tdk-ut-backfill-impl | Emit test files from plan | Module |
 
 ## 3. Quick start
 
 ```bash
-# 1. Create workspace-level UT rules (framework, coverage target):
-/tdk-ut-backfill-create-rules
+# 1. Ensure a consumer UT skill exists at .claude/skills/{name}/SKILL.md
+#    with framework, coverage targets, naming conventions.
 
-# 2. Validate rules exist + mirror structure is clean:
-/tdk-ut-backfill-check-rules --sub-workspace backend
-
-# 3. Plan + generate tests for a specific module:
-/tdk-ut-backfill-plan    --sub-workspace backend --module api
+# 2. Plan + generate tests for a specific module:
+/tdk-ut-backfill-plan --sub-workspace backend --module api
 /tdk-ut-backfill-impl --sub-workspace backend --module api
+
+# Or run the full pipeline in one command:
+/tdk-ut-backfill-auto --sub-workspace backend
 ```
 
-## 4. Cascade rule
+## 4. UT convention source
 
-Rules resolve bottom-up: module > sw-own > sw-parent > global. Most-specific wins **wholesale** per `##` section — sub-sections under a replaced heading are discarded. See `rule-cascade-merge-contract.md` for the full merge contract.
+UT conventions (framework, naming patterns, coverage targets, mocking strategies) are defined in the consumer's `.claude/skills/{name}/SKILL.md`. The `/tdk-ut-backfill-auto` skill discovers and reads these files at runtime.
 
 ## 5. Config shape
 
@@ -137,7 +133,7 @@ One module, one `test/` tree. Validator detects stale test files whose source wa
 }
 ```
 
-`apps/web/test/Button.test.ts` requires `apps/web/components/Button.ts`. When `components/Button.ts` is deleted, `/tdk-ut-backfill-check-rules` surfaces the orphan and asks per-item fix / exclude / ignore.
+`apps/web/test/Button.test.ts` requires `apps/web/components/Button.ts`. When `components/Button.ts` is deleted, `/tdk-ut-backfill-auto` surfaces the orphan and asks per-item fix / exclude / ignore.
 
 ## 8. Decision flowchart
 

@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-constitution → /tdk-sub-workdspace-init → /tdk-ut-backfill-create-rules
+/tdk-constitution → /tdk-sub-workdspace-init
 ```
 
 ## Step-by-Step
@@ -47,14 +47,9 @@ The constitution uses semantic versioning (MAJOR.MINOR.PATCH) and propagates cha
 
 Shows a table of all configured sub-workspaces with their paths, docs locations, and status.
 
-### 4. Set up UT rules per sub-workspace
+### 4. Set up UT conventions per sub-workspace
 
-```
-/tdk-ut-backfill-create-rules --sub-workspace backend
-/tdk-ut-backfill-create-rules --sub-workspace frontend
-```
-
-Creates testing standards tailored to each sub-workspace's framework.
+Create a consumer UT skill at `.claude/skills/{name}/SKILL.md` for each sub-workspace, defining test conventions (framework, naming patterns, coverage targets, mocking strategies). The `/tdk-ut-backfill-auto` skill resolves these at runtime.
 
 ## Tips
 

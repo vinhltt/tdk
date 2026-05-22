@@ -4,6 +4,21 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.0.0] - 2026-05-22
+
+### Changed
+- tdk-ut-backfill-auto: replace check/create-rules orchestration with consumer UT skill resolution from .claude/skills/
+- tdk-ut-backfill-plan: drop rule cascade merge; read UT conventions from consumer skill instead of ut-rule.md
+- tdk-ut-backfill-impl: drop rule cascade merge and check-rules gate; read UT conventions from consumer skill
+- tdk-config-diff: update example paths away from ut-rule.md to generic naming rule
+- tdk-config-index: drop ut-rule.md from auto-generated system documents list
+- tdk-config-sync: update example paths away from ut-rule.md to generic naming rule
+- tdk-plan: UT phase detection now checks for consumer UT skill in .claude/skills/ instead of ut-rule.md
+
+### Removed
+- tdk-ut-backfill-check-rules: remove skill (UT conventions now sourced from consumer .claude/skills/)
+- tdk-ut-backfill-create-rules: remove skill (consumer owns UT skill creation)
+
 ## [1.11.1] - 2026-05-21
 
 ### Changed

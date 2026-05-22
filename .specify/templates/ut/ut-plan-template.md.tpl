@@ -8,7 +8,7 @@ v2 will add Agent | Skill columns when subagent dispatch lands.
 Status flags: 🟡 Draft | 🔵 Implementing | 🟢 Complete | 🟠 Failed | 🔴 Drift.
 MVR active transitions: 🟡 → 🔵 → 🟢 only.
 🟠 (subagent failure) reserved for v2 dispatcher.
-🔴 (drift) reserved for v2 tdk-ut-backfill-check-rules Phase 2.
+🔴 (drift) reserved for v2 drift detection.
 -->
 
 ## Metadata
@@ -34,7 +34,7 @@ Phase files live at: .specify/specs/{feature-id}/ut/phases/{module}.md
 ## Coverage Goals
 
 <!--
-ACTION REQUIRED: Adjust targets per ut-rule.md or use defaults below.
+ACTION REQUIRED: Adjust targets per consumer UT skill or use defaults below.
 -->
 
 | Priority | Target | Scope |

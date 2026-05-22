@@ -22,7 +22,7 @@ configGroup.addCommand(createConfigIndexCommand());
 configGroup.addCommand(createConfigDiffCommand());
 program.addCommand(configGroup);
 
-// UT command group: tdk ut <auto|plan|impl|check-rules|create-rules>
+// UT command group: tdk ut <auto|plan|impl>
 program.addCommand(createUtCommandGroup());
 
 // Scout command: tdk scout --scope <dir> | --from-pack <file>

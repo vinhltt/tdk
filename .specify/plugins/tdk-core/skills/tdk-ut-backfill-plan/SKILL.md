@@ -2,7 +2,7 @@
 name: tdk-ut-backfill-plan
 description: "Generate unit test plan using templates. Creates `ut/plan.md` + phase files at `ut/phases/{module}.md` for implementation by `/tdk-ut-backfill-impl`."
 metadata:
-  version: "1.11.1"
+  version: "2.0.0"
 ---
 
 # /tdk-ut-backfill-plan - Create Unit Test Plan
@@ -57,10 +57,6 @@ Creates in `.specify/specs/{feature-id}/ut/`:
 1. **plan.md** - Master test plan with tracking table (from template)
 2. **phases/{module1}.md** - Per-module phase file (P1 modules)
 3. **phases/{module2}.md** - Per-module phase file (P2-P3 modules, if needed)
-
-UT rules file location depends on sub-workspace targeting:
-- **With --sub-workspace**: `{sub-workspace-root}/{docs-path}/rules/test/ut-rule.md`
-- **Without**: `{workspace-root}/{docs-path}/rules/test/ut-rule.md`
 
 ---
 
@@ -151,42 +147,7 @@ If error -> STOP and report to user
 
 ---
 
-### Step 0.1: Check UT Rules
-
-**Run check-rules script**:
-
-```bash
-# If sub-workspace specified:
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut check-rules --sub-workspace {SUB_WORKSPACE_NAME}
-
-# If module specified:
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut check-rules --sub-workspace {SUB_WORKSPACE_NAME} --module {MODULE_NAME}
-
-# Otherwise:
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut check-rules
-```
-
-Parse JSON output → Store `exists`, `rulesFile`, `framework`
-
-**If exists = false**:
-- Show warning:
-  ```
-  ⚠️ UT Rules not found: {rulesFile}
-  ```
-- Ask via AskUserQuestion:
-  - **Option 1**: "Run `/tdk-ut-backfill-create-rules` first" (recommended)
-  - **Option 2**: "Continue with defaults"
-
-- If Option 1 → STOP, instruct to run create-rules
-- If Option 2 → Continue with framework auto-detection
-
-**If exists = true**:
-- Log: "✓ Using rules: {rulesFile}"
-- Store framework for later steps
-
----
-
-### Step 0.5 — Load Sub-Workspace Context (Optional)
+### Step 0.1 — Load Sub-Workspace Context (Optional)
 
 Invoke `tdk-load-project-context` with `require_feature_dir: false` and `require_prefix_validation: false`.
 Store: `PROJECT_CONTEXT`.
@@ -201,6 +162,19 @@ If `PROJECT_CONTEXT.configFound` is false: Auto-detect from sub-workspace files 
 
 ---
 
+### Step 0.2: Resolve UT Skill (Consumer Conventions)
+
+Read UT conventions from the consumer's skill in `.claude/skills/`:
+
+1. If `/tdk-ut-backfill-auto` passed `UT_SKILL_PATH` → Read that file directly
+2. Otherwise → Glob `.claude/skills/*/SKILL.md`, match by: skill name contains `-ut` or `-test`, OR frontmatter contains `domain: unit-test`
+3. If found → extract `## Framework`, `## Coverage Target`, `## Naming Conventions`, `## Test Structure` sections
+4. If not found → continue with framework auto-detection in Step 2
+
+Store extracted conventions for plan generation (Step 5).
+
+---
+
 ### Step 1: Load Templates
 
 **Read**:
@@ -211,16 +185,7 @@ If missing -> STOP: "Templates not found. Check `.specify/templates/ut/`"
 
 ---
 
-### Step 2: Load UT Rules (Cascade Merge)
-
-**Check**: Rules already validated in Step 0.1
-
-- **If `hasUtRules = true`** → iterate `utRulesFiles[]` from CLI JSON (base→specific) and apply the cascade merge contract (see "Rule Loading (Merge Cascade)" section below). Merged rules feed plan generation (naming, coverage, mocking).
-- **If `hasUtRules = false`** → User chose to continue with defaults in Step 0.1.
-
----
-
-### Step 3: Detect Framework (AI)
+### Step 2: Detect Framework (AI)
 
 **Scan config files using Read tool**:
 
@@ -238,7 +203,7 @@ If missing -> STOP: "Templates not found. Check `.specify/templates/ut/`"
 
 ---
 
-### Step 4: Analyze Feature Spec (or User Input in Standalone Mode)
+### Step 3: Analyze Feature Spec (or User Input in Standalone Mode)
 
 **If standaloneMode = false** (standard mode):
 - **Read**: `.specify/specs/{feature-id}/spec.md`
@@ -254,7 +219,7 @@ If missing -> STOP: "Templates not found. Check `.specify/templates/ut/`"
   - What modules/files should be tested? (e.g., "org api, org service, org repository")
   - What are the main test scenarios? (optional - can derive from code)
   - Any specific edge cases to consider? (optional)
-- **Derive requirements** from Step 5 (codebase scan):
+- **Derive requirements** from Step 4 (codebase scan):
   - Public APIs -> Test scenarios
   - Method signatures -> Input/output tests
   - Error handling patterns -> Edge cases
@@ -262,7 +227,7 @@ If missing -> STOP: "Templates not found. Check `.specify/templates/ut/`"
 
 ---
 
-### Step 5: Scan Codebase for Testable Units (AI)
+### Step 4: Scan Codebase for Testable Units (AI)
 
 **Use Glob tool to find source files**:
 ```
@@ -292,7 +257,7 @@ app/**/*.rb
 
 ---
 
-### Step 6: Generate UT Plan
+### Step 5: Generate UT Plan
 
 **Read**: PLAN_TEMPLATE
 
@@ -307,7 +272,7 @@ app/**/*.rb
 | `[VERSION]` | From config file |
 | Summary | From spec.md |
 | Test Organization | From Step 5 |
-| Coverage Goals | From ut-rule.md or defaults |
+| Coverage Goals | From UT skill or defaults |
 | Critical Paths | From spec.md user stories |
 | Edge Cases | From spec.md |
 | Mocking Strategy | AI analysis of dependencies |
@@ -317,7 +282,7 @@ app/**/*.rb
 
 ---
 
-### Step 6.5: Assign Test Case IDs (Semantic ID Format)
+### Step 5.5: Assign Test Case IDs (Semantic ID Format)
 
 Before generating phase files, determine the ID format for all test cases in this phase set.
 
@@ -356,11 +321,11 @@ grep -oE '[a-zA-Z_][a-zA-Z0-9_.]*__[a-z0-9_]+'
 
 ---
 
-### Step 7: Generate Phase Files
+### Step 6: Generate Phase Files
 
 One phase file per module. NO setup phase (cross-module shared fixtures → flag in `ut/plan.md` Open Questions).
 
-For each module identified in Step 5:
+For each module identified in Step 4:
 
 1. **Read**: PHASE_TEMPLATE
 2. **Fill placeholders**:
@@ -380,7 +345,7 @@ For each module identified in Step 5:
 
 ---
 
-### Step 8: Output Summary
+### Step 7: Output Summary
 
 ```
 UT Plan Created
@@ -439,28 +404,6 @@ Confirm -> Update files
 
 ---
 
-## Rule Loading (Merge Cascade)
-
-**Full contract**: `.specify/docs/guides/rule-cascade-merge-contract.md` — read before merging.
-
-**Rules (titles only, see contract for bodies)**:
-1. Match headings (normalized via `github-slugger` v2.x).
-1b. Duplicate heading within file → last wins + warning.
-2. Most specific wins — WHOLESALE (sub-sections under replaced `##` are discarded).
-3. Unique heading → inherit.
-4. Sub-section merge only when parent `##` NOT overridden at more-specific level.
-5. Preamble concat base-first, blank-line separator.
-6. Empty file = no-op, still listed in summary.
-
-**Version-skew fallback**: if CLI JSON lacks `utRulesFiles` or entry `level === 'unknown'` → synthesize single-file entry, skip Rules 1b/2/3/4/5, emit warning `Note: older CLI detected — upgrade for full cascade merge. Running in single-file mode.`
-
-**Cascade summary** (1 line to user after merge):
-`Loaded N rule file(s): global → sw-parent → sw-own → module` (list only levels actually present, in read order).
-
-**Canonical headings**: see `.specify/docs/guides/ut-rule-canonical-headings.md`.
-
----
-
 ## Error Handling
 
 | Error | Solution |
@@ -488,6 +431,5 @@ Confirm -> Update files
 
 ## Related
 
-- `ut:create-rules` - One-time sub-workspace setup
-- `ut:generate` - Generate test files from plan
-- `ut:auto` - Automated test workflow
+- `/tdk-ut-backfill-impl` — generate test files from plan
+- `/tdk-ut-backfill-auto` — automated workflow (plan + generate + run)

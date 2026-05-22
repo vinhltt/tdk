@@ -10,6 +10,36 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.48.0] - 2026-05-22
+
+### Added
+- **[Guides]** `migration-ut-rule-to-skill.md` — migration guide from `ut-rule.md` cascade to consumer-owned UT skill in `.claude/skills/`
+
+### Changed
+- **[tdk-core]** Migrate UT workflow from workspace `ut-rule.md` cascade to consumer `.claude/skills/` UT skill resolution (tdk-core plugin bumped to v2.0.0)
+  - tdk-ut-backfill-auto: replace check/create-rules orchestration with UT skill resolution from `.claude/skills/`
+  - tdk-ut-backfill-plan: drop rule cascade merge; read UT conventions from consumer skill
+  - tdk-ut-backfill-impl: drop rule cascade merge and check-rules gate; read UT conventions from consumer skill
+  - tdk-plan: UT phase detection now checks for consumer UT skill instead of `ut-rule.md`
+  - tdk-config-diff / tdk-config-index / tdk-config-sync: update example paths and drop `ut-rule.md` from auto-generated system documents list
+- **[Scripts]** CLI surface aligned to new UT skill flow
+  - `ut/backfill/auto.ts`, `plan.ts`, `impl.ts`: drop rule-cascade dependencies and `utRulesFiles[]` payload
+  - `cli-error-handler.ts`, `utils/config.ts`, `utils/index.ts`, `ut/index.ts`: remove rules-related branches
+  - `tests/cli/ut-scripts.test.ts`: update fixtures and assertions to reflect new payload shape
+- **[Templates]** `ut-plan-template.md.tpl`, `ut-phase-template.md.tpl`, `plan-skill-routing-template.tpl`: rewrite references from `ut-rule.md` to consumer UT skill
+- **[Guides]** Refresh UT-related scenarios and references (4 unit-testing scenarios, multi-sub-workspace monorepo, constitution setup, command-reference, document-flow, evolution-comparison, tdk-ut-backfill-skills-usage)
+
+### Removed
+- **[tdk-core]** Two skills retired — UT conventions are now consumer-owned
+  - tdk-ut-backfill-check-rules: validate `ut-rule.md` existence (no longer needed)
+  - tdk-ut-backfill-create-rules: scaffold workspace `ut-rule.md` (replaced by consumer-defined skill)
+- **[Scripts]** Rule-cascade infrastructure
+  - `ut/check-rules.ts`, `ut/create-rules.ts`: CLI commands matching deleted skills
+  - `utils/rules.ts`: cascade-merge utility for `ut-rule.md` files
+  - `tests/utils/rules.test.ts`, `tests/utils/rules-cascade-snapshot.test.ts`, `tests/smoke/cli-cascade-smoke.test.ts`, `tests/fixtures/rules-cascade/*`
+- **[Templates]** `ut-rule-template.md.tpl` — workspace UT-rule template
+- **[Guides]** `rule-cascade-merge-contract.md`, `ut-rule-canonical-headings.md`, `ut-rule-merge-self-check.md` — cascade contract docs
+
 ## [1.47.0] - 2026-05-21
 
 ### Changed

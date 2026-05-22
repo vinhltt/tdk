@@ -18,11 +18,10 @@
 
 **What happens**: Claude runs the full UT pipeline automatically:
 
-1. **Check rules** — verifies `ut-rule.md` exists; if missing, prompts to create it
-2. **Create/update UT plan** — generates `ut-plan.md` and phase files
-3. **Generate test code** — writes test files per UT plan
-4. **Run tests** — executes the test suite
-5. **Update plan** — marks completed items in `ut-plan.md`
+1. **Create/update UT plan** — generates `ut-plan.md` and phase files from consumer UT skill conventions
+2. **Generate test code** — writes test files per UT plan
+3. **Run tests** — executes the test suite
+4. **Update plan** — marks completed items in `ut-plan.md`
 
 **Output**: `ut-plan.md`, `ut-phase-*.md`, test files, test results report
 
@@ -57,4 +56,4 @@ Only update the UT plan:
 
 - `ut-auto` is called automatically by `/tdk-implement-from-plan` when it encounters a UT phase in the plan's `## Phases` table — you don't need to run it manually during implementation.
 - If you want review points between plan and generation, use the [full pipeline](04-unit-testing-full-pipeline.md) instead.
-- If `ut-rule.md` is missing, `ut-auto` will prompt you to create it before proceeding.
+- UT conventions are read from the consumer UT skill (`.claude/skills/{name}/SKILL.md`). If no UT skill is found, `ut-auto` will prompt you to create one before proceeding.

@@ -2,7 +2,7 @@
 name: tdk-ut-backfill-impl
 description: "Generate executable unit test code based on the UT plan. Creates test files with test cases, assertions, mocks, and fixtures following sub-workspace conventions."
 metadata:
-  version: "1.2.1"
+  version: "2.0.0"
 ---
 
 # /tdk-ut-backfill-impl - Generate Unit Test Files
@@ -27,8 +27,6 @@ Generate executable unit test code based on the UT plan. Creates test files with
 
 - **ut/plan.md** - Test organization, coverage goals, tracking table
 - **ut/phases/*.md** - Per-module phase files with test matrices
-- **ut-rule.md** - From sub-workspace or workspace (based on --sub-workspace flag)
-
 ---
 
 ## Output
@@ -72,7 +70,7 @@ cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut backfill impl 
 cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut backfill impl <feature-id>
 ```
 
-Parse JSON output -> Store `featureDir`, `utPlanFile`, `utRulesFile`
+Parse JSON output -> Store `featureDir`, `planFile`
 
 If error -> STOP and report to user
 
@@ -109,49 +107,7 @@ If error -> STOP and report to user
 
 ---
 
-### Step 0.1: Validate UT Rules (Required)
-
-**Run check-rules script**:
-
-```bash
-# If sub-workspace specified:
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut check-rules --sub-workspace {SUB_WORKSPACE_NAME}
-
-# If module specified:
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut check-rules --sub-workspace {SUB_WORKSPACE_NAME} --module {MODULE_NAME}
-
-# Otherwise:
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut check-rules
-```
-
-Parse JSON output → Store `exists`, `rulesFile`, `utRulesFiles`, `framework`, `coverageTarget`
-
-**Cascade exit check**: if `utRulesFiles.length === 0` (after version-skew fallback — see "Rule Loading (Merge Cascade)" below) → treat as `exists = false`.
-
-**If exists = false**:
-- Show error:
-  ```
-  ❌ UT Rules Required
-  =====================
-  Cannot generate tests without UT rules.
-
-  Expected: {rulesFile}
-
-  💡 Run these commands first:
-     1. /tdk-ut-backfill-create-rules --sub-workspace {SUB_WORKSPACE_NAME}
-     2. /tdk-ut-backfill-impl {feature-id} --sub-workspace {SUB_WORKSPACE_NAME}
-  ```
-- **STOP** - Do not continue
-
-**If exists = true**:
-- Apply the cascade merge contract (see "Rule Loading (Merge Cascade)" below) against `utRulesFiles[]` — the merged rules become input to Step 6 code generation.
-- Log: "✓ Rules loaded: {rulesFile}" + cascade summary line.
-- Store framework, coverageTarget (parsed from merged content) for later steps.
-- Continue to Step 1.
-
----
-
-### Step 0.5 — Load Sub-Workspace Context (Optional)
+### Step 0.1 — Load Sub-Workspace Context (Optional)
 
 Invoke `tdk-load-project-context` with `require_feature_dir: false` and `require_prefix_validation: false`.
 Store: `PROJECT_CONTEXT`.
@@ -163,6 +119,19 @@ If `PROJECT_CONTEXT.configFound` is true, extract for later steps:
 - **Language**: `METADATA.language` for syntax patterns
 
 If `PROJECT_CONTEXT.configFound` is false: Auto-detect from sub-workspace files (existing behavior).
+
+---
+
+### Step 0.2: Resolve UT Skill (Consumer Conventions)
+
+Read UT conventions from the consumer's skill in `.claude/skills/`:
+
+1. If `/tdk-ut-backfill-auto` passed `UT_SKILL_PATH` → Read that file directly
+2. Otherwise → Glob `.claude/skills/*/SKILL.md`, match by: skill name contains `-ut` or `-test`, OR frontmatter contains `domain: unit-test`
+3. If found → extract `## Mocking Strategy`, `## Edge Cases`, `## Framework Syntax`, `## Test Structure` sections
+4. If not found → continue with framework auto-detection from codebase
+
+Store extracted conventions for code generation (Steps 4-6).
 
 ---
 
@@ -431,28 +400,6 @@ Next: Run tests with `npm test` or `pnpm test`
 
 ---
 
-## Rule Loading (Merge Cascade)
-
-**Full contract**: `.specify/docs/guides/rule-cascade-merge-contract.md` — read before merging.
-
-**Rules (titles only, see contract for bodies)**:
-1. Match headings (normalized via `github-slugger` v2.x).
-1b. Duplicate heading within file → last wins + warning.
-2. Most specific wins — WHOLESALE (sub-sections under replaced `##` are discarded).
-3. Unique heading → inherit.
-4. Sub-section merge only when parent `##` NOT overridden at more-specific level.
-5. Preamble concat base-first, blank-line separator.
-6. Empty file = no-op, still listed in summary.
-
-**Version-skew fallback**: if CLI JSON lacks `utRulesFiles` or entry `level === 'unknown'` → synthesize single-file entry, skip Rules 1b/2/3/4/5, emit warning `Note: older CLI detected — upgrade for full cascade merge. Running in single-file mode.`
-
-**Cascade summary** (1 line to user after merge):
-`Loaded N rule file(s): global → sw-parent → sw-own → module` (list only levels actually present, in read order).
-
-**Canonical headings**: see `.specify/docs/guides/ut-rule-canonical-headings.md`.
-
----
-
 ## Error Handling
 
 | Error | Solution |
@@ -480,5 +427,5 @@ Next: Run tests with `npm test` or `pnpm test`
 
 ## Related
 
-- `ut:plan` - Create test plan (run first)
-- `ut:auto` - Automated workflow (plan + generate + run)
+- `/tdk-ut-backfill-plan` — create test plan (run first)
+- `/tdk-ut-backfill-auto` — automated workflow (plan + generate + run)

@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { detectConfig, resolveRulesCascade, parseFeatureId, loadFeatureEnv, getRepoRoot } from '../../../utils/index';
+import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot } from '../../../utils/index';
 import { handleCliError } from '../cli-error-handler';
 
 /** Create ut-auto command for CLI registration (group: tdk ut auto) */
@@ -30,17 +30,6 @@ export function createAutoCommand(): Command {
       process.exit(1);
     }
 
-    const cascade = resolveRulesCascade({
-      workspaceRoot: config.workspaceRoot || repoRoot,
-      docsPath: config.docsPath,
-      ruleSubPath: 'rules/test/ut-rule.md',
-      swName: config.targetSubWorkspace?.name ?? opts.subWorkspace,
-      moduleName: config.targetModule?.name ?? opts.module,
-      targetRoot: config.targetSubWorkspace?.root,
-      targetDocsPath: config.targetSubWorkspace?.docsPath,
-    });
-    const rulesFile = cascade.primary;
-
     // Auto-create feature directory
     let createdFeatureDir = false;
     if (!existsSync(feature.featureDir)) {
@@ -58,12 +47,8 @@ export function createAutoCommand(): Command {
       featureDir: feature.featureDir,
       specFile,
       planFile,
-      utRulesFile: rulesFile ?? '',
-      utRulesFiles: cascade.entries,
       createdFeatureDir,
       hasSpec: existsSync(specFile),
-      // Intentional TOCTOU re-probe: entries snapshot may be stale if user deletes file mid-flight.
-      hasUtRules: rulesFile !== null && existsSync(rulesFile),
       hasPlan: existsSync(planFile),
       skipRun: opts.skipRun,
       planOnly: opts.planOnly,

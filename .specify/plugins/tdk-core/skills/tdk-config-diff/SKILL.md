@@ -2,7 +2,7 @@
 name: tdk-config-diff
 description: "Compare Workspace and Sub-Workspace Docs."
 metadata: 
-  version: "1.0.3"
+  version: "2.0.0"
 ---
 
 # /tdk-config-diff - Compare Workspace and Sub-Workspace Docs
@@ -64,7 +64,7 @@ Direction: Sub-workspace -> Workspace
 +--------------------------+-------------+---------------------+
 | File                     | Status      | Details             |
 +--------------------------+-------------+---------------------+
-| rules/test/ut-rule.md    | Modified    | +15 -3 lines        |
+| rules/code/naming.md     | Modified    | +15 -3 lines        |
 | rules/code/style.md      | New         | Sub-workspace only  |
 | shared/conventions.md    | Identical   | No changes          |
 | old-feature/spec.md      | Workspace   | Workspace only      |
@@ -86,11 +86,11 @@ Summary: {modified} modified | {new} new | {identical} identical | {workspace_on
 If `--detailed` flag was specified, show diff content for modified files:
 
 ```
-### Modified: rules/test/ut-rule.md
+### Modified: rules/code/naming.md
 
 ```diff
---- workspace/rules/test/ut-rule.md
-+++ sub-workspace/rules/test/ut-rule.md
+--- workspace/rules/code/naming.md
++++ sub-workspace/rules/code/naming.md
 @@ -10,3 +10,5 @@
  - Test framework: vitest
 +- Coverage target: 85%

@@ -5,6 +5,9 @@ Sections = sub-workspace names (from `.specify.json`). `## global` = fallback/mo
 Line format: `- {domain}: {skill-name} [, {skill-name}]`
 Auto-detected domains: `research`, `implement`, `test`, `database`, `design`. Other domains (e.g. `clarify`, `styling`) require manual assignment in phase files.
 
+<!-- UT conventions are defined as consumer skills in .claude/skills/.
+     The skill name referenced here is loaded by /tdk-ut-backfill-auto at runtime. -->
+
 ## global
 
 - research: (default - no special skill)

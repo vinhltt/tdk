@@ -2,7 +2,7 @@
 name: tdk-config-sync
 description: "Synchronize documentation files between workspace and sub-workspaces."
 metadata:
-  version: "1.0.4"
+  version: "2.0.0"
 ---
 
 # /tdk-config-sync - Sync Documentation Between Workspace and Sub-Workspaces
@@ -61,7 +61,7 @@ Diff Preview: {SUB_WORKSPACE_NAME} <-> workspace
 +--------------------------+-------------+---------------------+
 | File                     | Status      | Details             |
 +--------------------------+-------------+---------------------+
-| rules/test/ut-rule.md    | Modified    | +15 -3 lines        |
+| rules/code/naming.md     | Modified    | +15 -3 lines        |
 | rules/code/style.md      | New         | Sub-workspace only  |
 +--------------------------+-------------+---------------------+
 
