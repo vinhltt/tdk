@@ -10,6 +10,31 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.49.0] - 2026-05-23
+
+### Added
+- **[Scripts]** `read-component-version.ts` — read component versions from source-of-truth definition files (SKILL.md `metadata.version`, agent `version`, hooks.json `version`) instead of derived manifest.
+- **[Scripts]** Test fixture `read-component-version.test.ts` covering skills/agents/commands/hooks version extraction including null-fallback edge cases.
+- **[Skills]** tdk-core eval fixtures for multi-subworkspace scenarios
+  - tdk-specify-fast: `evals/evals.json` + `evals/fixtures/multi-sw/.specify.json`
+  - tdk-specify: `evals/fixtures/multi-sw/.specify.json`
+
+### Changed
+- **[Templates]** `spec-template.md.tpl` migrated to **9-section v2 format**: Problem Statement, Scope Boundary, Impact Surface, Evaluated Approaches, User Requirements & Testing (with `[sw/module]` tags), Functional Requirements, Success Criteria, Risks & Mitigations, Unresolved Questions.
+- **[Skills]** tdk-core skills aligned to spec format v2
+  - tdk-specify (→ 2.1.0): produce 9-section spec with Impact Surface detection
+  - tdk-specify-fast (→ 2.1.0): fast variant using direct YAGNI/KISS (no embedded brainstorm)
+  - tdk-analyze (→ 2.1.0): new Passes H (Scope Boundary) + I (Impact Surface Coverage), legacy-format detection
+  - tdk-clarify (→ 2.1.0): new taxonomy categories (Problem Clarity, Scope Boundary, Impact Surface, Risks)
+  - tdk-checklist (→ 2.1.0): success-criteria & risks coverage, `[sw/module]` tag checks
+  - tdk-constitution, tdk-implement-task, tdk-plan, tdk-ut-backfill-plan: format-alignment touch-ups
+- **[Scripts]** changelog/manifest pipeline upgraded for multi-format manifest enforcement
+  - `check-plugin-versions.ts` verifies every existing manifest format (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`) against `manifest.json`; failure hints suggest `plugin-bump --target=plugins/<plugin>` resync
+  - `manifest/compute.ts` reads component versions from source-of-truth files via `read-component-version.ts` (precedence: definition file → existing manifest entry → `--seed` → default `0.1.0`)
+  - `fs-helpers.ts` adds `MANIFEST_FORMATS` registry and `resolveAllPluginJson()` for multi-format discovery
+  - Test fixture builder supports optional `codexPluginJsonVersion` / `cursorPluginJsonVersion`; `verify.test.ts` adds S3b/S3c/S3d cases for per-format stale detection
+- **[Claude Skills]** `tdk-bump` (→ 1.3.0): delegates per-plugin cascade to `plugin-bump`, new Step 11 (delegation) + Step 12 (workspace finalization) + Step 14 (verify.ts gate). DoD requires `verify.ts` exit 0.
+
 ## [1.48.0] - 2026-05-22
 
 ### Added

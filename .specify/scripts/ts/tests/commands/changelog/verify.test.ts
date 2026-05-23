@@ -60,6 +60,63 @@ describe('verify.ts — 5 checks + auto-infer', () => {
     expect(fail).toBeDefined();
     expect(fail?.expected).toBe('0.6.1');
     expect(fail?.actual).toBe('0.5.99');
+    expect(fail?.name).toContain('claude');
+  });
+
+  it('S3b: codex plugin.json stale → check 3 fails on codex mirror', () => {
+    const spec = happyPathSpec();
+    spec.plugins[0]!.codexPluginJsonVersion = '0.5.99'; // claude=0.6.1, codex=0.5.99
+    buildFixture(root, spec);
+    const results = runChecks({
+      root,
+      expectedVersion: '1.2.0',
+      plugins: ['tdk-utils'],
+      skills: ['brainstorming'],
+    });
+    const fail = results.find(r => !r.ok && r.index === 3 && r.name.includes('codex'));
+    expect(fail).toBeDefined();
+    expect(fail?.expected).toBe('0.6.1');
+    expect(fail?.actual).toBe('0.5.99');
+    // Claude mirror still passes
+    const claudePass = results.find(r => r.ok && r.index === 3 && r.name.includes('claude'));
+    expect(claudePass).toBeDefined();
+  });
+
+  it('S3c: cursor plugin.json stale → check 3 fails on cursor mirror', () => {
+    const spec = happyPathSpec();
+    spec.plugins[0]!.cursorPluginJsonVersion = '0.4.0'; // claude=0.6.1, cursor=0.4.0
+    buildFixture(root, spec);
+    const results = runChecks({
+      root,
+      expectedVersion: '1.2.0',
+      plugins: ['tdk-utils'],
+      skills: ['brainstorming'],
+    });
+    const fail = results.find(r => !r.ok && r.index === 3 && r.name.includes('cursor'));
+    expect(fail).toBeDefined();
+    expect(fail?.expected).toBe('0.6.1');
+    expect(fail?.actual).toBe('0.4.0');
+  });
+
+  it('S3d: all 3 formats in sync → check 3 passes', () => {
+    const spec = happyPathSpec();
+    spec.plugins[0]!.codexPluginJsonVersion = '0.6.1';
+    spec.plugins[0]!.cursorPluginJsonVersion = '0.6.1';
+    buildFixture(root, spec);
+    const results = runChecks({
+      root,
+      expectedVersion: '1.2.0',
+      plugins: ['tdk-utils'],
+      skills: ['brainstorming'],
+    });
+    const fails = results.filter(r => !r.ok);
+    expect(fails.length).toBe(0);
+    const formats = results
+      .filter(r => r.ok && r.index === 3)
+      .map(r => r.name);
+    expect(formats.some(n => n.includes('claude'))).toBe(true);
+    expect(formats.some(n => n.includes('codex'))).toBe(true);
+    expect(formats.some(n => n.includes('cursor'))).toBe(true);
   });
 
   it('S4: SKILL.md frontmatter drift → check 4 fails', () => {

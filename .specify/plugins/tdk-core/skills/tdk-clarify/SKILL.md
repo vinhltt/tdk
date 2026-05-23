@@ -2,7 +2,7 @@
 name: tdk-clarify
 description: "Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec."
 metadata: 
-  version: "1.0.5"
+  version: "2.1.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -91,11 +91,29 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
    - If JSON parsing fails, abort and instruct user to re-run `/tdk-specify` or verify feature branch environment.
    - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 
-2. Load the current spec file. Perform a structured ambiguity & coverage scan using this taxonomy. For each category, mark status: Clear / Partial / Missing. Produce an internal coverage map used for prioritization (do not output raw map unless no questions will be asked).
+2. Load the current spec file.
+
+   **Legacy format detection**: Check for ALL THREE headings: `## 1. Problem Statement`, `## 2. Scope Boundary`, `## 3. Impact Surface`. If ANY of the three is missing: emit advisory "Legacy spec format detected. Re-run /tdk-specify to upgrade." Skip new taxonomy categories (Problem Clarity, Scope Boundary Completeness, Impact Surface Coverage, Risk Identification) and continue with existing categories for best-effort clarification.
+
+   Perform a structured ambiguity & coverage scan using this taxonomy. For each category, mark status: Clear / Partial / Missing. Produce an internal coverage map used for prioritization (do not output raw map unless no questions will be asked).
+
+   Problem Clarity:
+   - Is ## 1. Problem Statement concrete and specific? Or vague ("improve UX")?
+   - Does it identify who is affected and why the feature is needed now?
+
+   Scope Boundary Completeness:
+   - Are ## 2. Scope Boundary in-scope/out-of-scope items explicit?
+   - Any ambiguous boundary items that could be interpreted either way?
+   - Does ## 2. Scope Boundary align with what's actually covered in ## 5. User Requirements & Testing and ## 6. Functional Requirements?
+
+   Impact Surface Coverage:
+   - Do all impacted subworkspaces/modules in ## 3. Impact Surface have corresponding UR/FR entries?
+   - Are there UR/FR with [sw/module] tags not present in ## 3. Impact Surface?
+   - Is ## 3. Impact Surface "N/A" appropriate (monolith) or missing data (multi-SW project)?
 
    Functional Scope & Behavior:
    - Core user goals & success criteria
-   - Explicit out-of-scope declarations
+   - Explicit out-of-scope declarations (now also scans ## 2. Scope Boundary for implicit scope gaps)
    - User roles / personas differentiation
 
    Domain & Data Model:
@@ -129,7 +147,11 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
    Constraints & Tradeoffs:
    - Technical constraints (language, storage, hosting)
-   - Explicit tradeoffs or rejected alternatives
+   - Explicit tradeoffs or rejected alternatives (now also scans ## 4. Evaluated Approaches for rejected alternatives that may need documentation)
+
+   Risk Identification:
+   - Are ## 8. Risks & Mitigations identified? Are mitigations realistic?
+   - Are there obvious risks from scope decisions or multi-subworkspace coordination not captured?
 
    Terminology & Consistency:
    - Canonical glossary terms
@@ -215,15 +237,18 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 5. Integration after EACH accepted answer (incremental update approach):
     - Maintain in-memory representation of the spec (loaded once at start) plus the raw file contents.
     - For the first integrated answer in this session:
-       - Ensure a `## Clarifications` section exists (create it just after the highest-level contextual/overview section per the spec template if missing).
+       - Ensure a `## Clarifications` section exists (create at end of spec, after the last numbered section ## 9. Unresolved Questions, before any trailing content).
        - Under it, create (if not present) a `### Session YYYY-MM-DD` subheading for today.
     - Append a bullet line immediately after acceptance: `- Q: <question> → A: <final answer> (Rationale: <why chosen over alternatives>)`.
     - Then immediately apply the clarification to the most appropriate section(s):
-       - Functional ambiguity → Update or add a bullet in Functional Requirements.
-       - User interaction / actor distinction → Update User Stories or Actors subsection (if present) with clarified role, constraint, or scenario.
-       - Data shape / entities → Update Data Model (add fields, types, relationships) preserving ordering; note added constraints succinctly.
-       - Non-functional constraint → Add/modify measurable criteria in Non-Functional / Quality Attributes section (convert vague adjective to metric or explicit target).
-       - Edge case / negative flow → Add a new bullet under Edge Cases / Error Handling (or create such subsection if template provides placeholder for it).
+       - Functional ambiguity → Update or add a bullet in ## 6. Functional Requirements.
+       - User interaction / actor distinction → Update ## 5. User Requirements & Testing with clarified role, constraint, or scenario.
+       - Data shape / entities → Update ## 6. Functional Requirements > Key Entities subsection (add fields, types, relationships) preserving ordering; note added constraints succinctly.
+       - Non-functional constraint → Add/modify measurable criteria in ## 7. Success Criteria (convert vague adjective to metric or explicit target).
+       - Edge case / negative flow → Add a new bullet under ## 5. User Requirements & Testing > Edge Cases subsection (or create if missing).
+       - Scope ambiguity → Update ## 2. Scope Boundary with clarified in-scope/out-of-scope item.
+       - Risk gap → Add row to ## 8. Risks & Mitigations table.
+       - Problem clarity → Refine ## 1. Problem Statement with concrete detail.
        - Terminology conflict → Normalize term across spec; retain original only if necessary by adding `(formerly referred to as "X")` once.
     - When updating the target section, include:
       - The chosen decision/value
@@ -249,7 +274,7 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
    - Number of questions asked & answered.
    - Path to updated spec.
    - Sections touched (list names).
-   - Coverage summary table listing each taxonomy category with Status: Resolved (was Partial/Missing and addressed), Deferred (exceeds question quota or better suited for planning), Clear (already sufficient), Outstanding (still Partial/Missing but low impact).
+   - Coverage summary table listing each taxonomy category (including new categories: Problem Clarity, Scope Boundary Completeness, Impact Surface Coverage, Risk Identification) with Status: Resolved (was Partial/Missing and addressed), Deferred (exceeds question quota or better suited for planning), Clear (already sufficient), Outstanding (still Partial/Missing but low impact).
    - If any Outstanding or Deferred remain, recommend whether to proceed to `/tdk-plan` or run `/tdk-clarify` again later post-plan.
    - Suggested next command.
 

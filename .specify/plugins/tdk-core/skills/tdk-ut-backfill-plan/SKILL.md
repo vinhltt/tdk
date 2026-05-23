@@ -2,7 +2,7 @@
 name: tdk-ut-backfill-plan
 description: "Generate unit test plan using templates. Creates `ut/plan.md` + phase files at `ut/phases/{module}.md` for implementation by `/tdk-ut-backfill-impl`."
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 # /tdk-ut-backfill-plan - Create Unit Test Plan
@@ -207,12 +207,13 @@ If missing -> STOP: "Templates not found. Check `.specify/templates/ut/`"
 
 **If standaloneMode = false** (standard mode):
 - **Read**: `.specify/specs/{feature-id}/spec.md`
+- **Legacy format detection**: Check for ALL THREE headings: `## 1. Problem Statement`, `## 2. Scope Boundary`, `## 3. Impact Surface`. If ANY missing: emit advisory "Legacy spec format detected. Re-run /tdk-specify to upgrade." Continue with best-effort semantic reading.
 - **Extract**:
   - Feature name and summary
-  - Functional requirements (FR-*) -> Test scenarios
-  - User stories -> Critical paths
-  - Edge cases -> Boundary tests
-  - Success criteria -> Coverage goals
+  - ## 6. Functional Requirements (FR-*) with `[sw/module]` tags -> Test scenarios
+  - ## 5. User Requirements & Testing -> Critical paths
+  - ## 5. User Requirements & Testing > Edge Cases subsection -> Boundary tests
+  - ## 7. Success Criteria -> Coverage goals
 
 **If standaloneMode = true** (standalone mode):
 - **Ask user** via AskUserQuestion:
@@ -273,8 +274,8 @@ app/**/*.rb
 | Summary | From spec.md |
 | Test Organization | From Step 5 |
 | Coverage Goals | From UT skill or defaults |
-| Critical Paths | From spec.md user stories |
-| Edge Cases | From spec.md |
+| Critical Paths | From spec.md ## 5. User Requirements & Testing |
+| Edge Cases | From spec.md ## 5. User Requirements & Testing > Edge Cases subsection |
 | Mocking Strategy | AI analysis of dependencies |
 | Implementation Phases | Generated phase list |
 

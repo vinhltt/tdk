@@ -6,7 +6,7 @@ compatibility: "Requires successful completion of /tdk-plan with a valid plan.md
 user-invocable: true
 license: MIT
 metadata:
-  version: "1.10.2"
+  version: "2.1.0"
   category: "Analysis & Review"
   requires:
     - tdk-plan (for prerequisite plan.md with ## Phases table)
@@ -58,10 +58,11 @@ You **MUST** consider the user input before proceeding (if not empty).
 6. If finding count >50, prioritize by severity and aggregate remainder
 
 **Explicit pass ordering:**
-- Run passes A-G in order (each pass may inform the next)
+- Run passes A-I in order (each pass may inform the next)
 - Duplication detection (A) informs Inconsistency detection (F)
 - Coverage gaps (E) cross-references with Underspecification (C)
 - Phase artifact consistency (G) cross-references with Coverage gaps (E) and Inconsistency (F)
+- Scope Boundary (H) and Impact Surface (I) run after G; skip both if legacy format detected
 
 ## Goal
 
@@ -114,11 +115,18 @@ Load only the minimal necessary context from each artifact:
 
 **From spec.md:**
 
-- Overview/Context
-- Functional Requirements
-- Non-Functional Requirements
-- User Stories
-- Edge Cases (if present)
+**Legacy format detection**: Check for ALL THREE headings: `## 1. Problem Statement`, `## 2. Scope Boundary`, `## 3. Impact Surface`. If ANY of the three is missing: skip Passes H and I (new passes depend on new sections), emit single advisory finding "Legacy spec format. Re-run /tdk-specify to upgrade.", continue with Passes A-G using best-effort semantic reading.
+
+- ## 1. Problem Statement
+- ## 2. Scope Boundary (in-scope / out-of-scope items)
+- ## 3. Impact Surface table (subworkspace/module/impact rows)
+- ## 4. Evaluated Approaches (recommended approach + alternatives)
+- ## 5. User Requirements & Testing (with `[sw/module]` tags)
+- ## 6. Functional Requirements (with `[sw/module]` tags + Key Entities)
+- ## 7. Success Criteria (keep name — no rename to "Metrics")
+- ## 8. Risks & Mitigations
+- ## 9. Unresolved Questions
+- Edge Cases (from ## 5. User Requirements & Testing subsection)
 
 **From plan.md:**
 
@@ -140,10 +148,13 @@ Do not attempt to continue analysis without a valid `## Phases` table.
 
 Create internal representations (do not include raw artifacts in output):
 
-- **Requirements inventory**: Each functional + non-functional requirement with a stable key (derive slug based on imperative phrase; e.g., "User can upload file" → `user-can-upload-file`)
-- **User story/action inventory**: Discrete user actions with acceptance criteria
+- **Requirements inventory**: Each functional requirement (from ## 6. Functional Requirements) with a stable key (derive slug based on imperative phrase; e.g., "User can upload file" → `user-can-upload-file`). Non-functional metrics extracted from ## 7. Success Criteria as secondary inventory.
+- **User requirement/action inventory**: Discrete user actions with acceptance criteria
 - **Phase coverage mapping**: Map each plan.md phase row to its associated requirements or stories (inference by title keyword / explicit reference patterns)
 - **Constitution rule set**: Extract principle names and MUST/SHOULD normative statements
+- **Impact Surface inventory**: Parse ## 3. Impact Surface table → `{subworkspace, module, impactType, description}[]`
+- **Scope boundary inventory**: Parse ## 2. Scope Boundary → `{item, type: "in"|"out", rationale}[]`
+- **Subworkspace tag map**: From ## 5. User Requirements & Testing + ## 6. Functional Requirements, collect all `[sw/module]` tags → `{tag: string, usedInUR: boolean, usedInFR: boolean}`
 
 ### 4. Detection Passes (Token-Efficient Analysis)
 
@@ -180,7 +191,8 @@ Apply sequential thinking across all detection passes. For each pass:
 
 - Requirements with zero associated plan phases
 - Plan phases with no mapped requirement/story
-- Non-functional requirements not reflected in any phase (e.g., performance, security)
+- Success criteria (## 7. Success Criteria) not reflected in any phase (e.g., performance, security metrics) → missing success criteria coverage in plan phases
+- `[sw/module]` tags in spec not represented in any plan phase's `## Related Code Files` paths → MEDIUM (spec claims subworkspace involvement but plan doesn't address it)
 
 #### F. Inconsistency
 
@@ -205,13 +217,32 @@ Parse the `## Phases` table from plan.md using the CLI wrapper:
 
 **Note:** Pass G performs file-row existence only; does NOT validate Status/BlockedBy coherence. No semantic cross-check between status values and dependency graph is performed.
 
+#### H. Scope Boundary Completeness
+
+**Skip if legacy format detected (missing ## 1. Problem Statement / ## 2. Scope Boundary / ## 3. Impact Surface headings).**
+
+- ## 2. Scope Boundary missing entirely → CRITICAL
+- Zero in-scope items → HIGH
+- Zero out-of-scope items → MEDIUM (feature may be unbounded)
+- In-scope item not covered by any FR → HIGH (scope promise without requirement). Matching algorithm: **semantic keyword matching** — extract key nouns/verbs from in-scope items and match against FR descriptions (same inference approach as existing phase coverage mapping).
+- Out-of-scope item contradicted by an FR → CRITICAL (scope says "out" but FR says "must")
+
+#### I. Impact Surface Coverage
+
+**Skip if legacy format detected (missing ## 1. Problem Statement / ## 2. Scope Boundary / ## 3. Impact Surface headings).**
+
+- Impact Surface row with no matching `[sw/module]` tag on any FR → HIGH (claimed impact with no requirement). Matching: **exact `[sw/module]` tag matching, case-insensitive**. `[backend/api]` matches `[backend/api]` only — no fuzzy matching.
+- FR with `[sw/module]` tag not in Impact Surface table → MEDIUM (undeclared impact area)
+- Impact Surface row with [TBD] impact type → MEDIUM (unresolved detection)
+- Impact Surface empty but project has subWorkspaces → HIGH (multi-SW project with no impact analysis)
+
 ### 5. Severity Assignment
 
 Use this heuristic to prioritize findings:
 
-- **CRITICAL**: Violates constitution MUST, missing core spec artifact, or requirement with zero coverage that blocks baseline functionality
-- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion, plan phase file missing from disk
-- **MEDIUM**: Terminology drift, missing non-functional task coverage, underspecified edge case
+- **CRITICAL**: Violates constitution MUST, missing core spec artifact, requirement with zero coverage that blocks baseline functionality, scope boundary contradicted by FR (Pass H), ## 2. Scope Boundary missing entirely (Pass H)
+- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion, plan phase file missing from disk, Impact Surface row with no FR coverage (Pass I), in-scope item with no FR (Pass H)
+- **MEDIUM**: Terminology drift, missing success criteria coverage in plan phases, underspecified edge case, missing out-of-scope declaration (Pass H), undeclared impact area (Pass I), [TBD] impact type (Pass I)
 - **LOW**: Style/wording improvements, minor redundancy not affecting execution order
 
 ### 6. Produce Compact Analysis Report
@@ -253,6 +284,9 @@ Output a Markdown report (no file writes) with the following structure:
 - Duplication Count
 - Critical Issues Count
 - Phase Gaps Count (from Pass G — missing phase files)
+- Scope Boundary: N in-scope, M out-of-scope items
+- Impact Surface: N subworkspaces, M modules declared
+- Tag Coverage: N% of Impact Surface rows have matching FR tags
 
 ### 7. Provide Next Actions
 

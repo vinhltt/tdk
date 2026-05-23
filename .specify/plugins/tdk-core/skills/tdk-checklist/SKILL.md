@@ -2,7 +2,7 @@
 name: tdk-checklist
 description: "Generate a custom checklist for the current feature based on user requirements."
 metadata: 
-  version: "1.11.1"
+  version: "2.1.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -82,6 +82,8 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 Run `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/check-prerequisites.ts {task_id} --json` from repo root (pass the validated task_id from Step 0). Parse JSON for taskId, featureDir, availableDocs.
 - All file paths must be absolute.
 - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+
+**Legacy format detection**: After loading spec.md, check for ALL THREE headings: `## 1. Problem Statement`, `## 2. Scope Boundary`, `## 3. Impact Surface`. If ANY missing: emit advisory "Legacy spec format detected. Re-run /tdk-specify to upgrade." Continue with best-effort semantic reading. When new format detected, include checks for: ## 1. Problem Statement concreteness, ## 2. Scope Boundary completeness, ## 3. Impact Surface coverage.
 
 2. **Clarify intent (dynamic)**: Derive up to THREE initial contextual clarifying questions (no pre-baked catalog). They MUST:
    - Be generated from the user's phrasing + extracted signals from spec/plan/tasks
@@ -165,7 +167,7 @@ Run `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/check-p
    - **Acceptance Criteria Quality** (Are success criteria measurable?)
    - **Scenario Coverage** (Are all flows/cases addressed?)
    - **Edge Case Coverage** (Are boundary conditions defined?)
-   - **Non-Functional Requirements** (Performance, Security, Accessibility, etc. - are they specified?)
+   - **Success Criteria & Non-Functional Quality** (## 7. Success Criteria measurable? ## 8. Risks & Mitigations identified? Performance, Security, Accessibility addressed?)
    - **Dependencies & Assumptions** (Are they documented and validated?)
    - **Ambiguities & Conflicts** (What needs clarification?)
 

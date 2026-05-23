@@ -20,10 +20,10 @@
 
 **Fallback:** if file missing → use template Option 1/2/3 boilerplate (current behavior).
 
-1. Extract entities from spec → `data-model.md`.
-2. Define API contracts → `contracts/`.
+1. Extract entities from spec ## 6. Functional Requirements > Key Entities → `data-model.md`.
+2. Define API contracts from ## 6. Functional Requirements → `contracts/`.
 3. Plan file structure based on framework.
-4. Identify dependencies and risks.
+4. Identify dependencies and risks (also read ## 8. Risks & Mitigations from spec).
 
 **Output:** `data-model.md`, `contracts/`, `quickstart.md`.
 
@@ -58,8 +58,15 @@ Mode: **embedded — reasoning technique only.**
 4. Order phases: foundational → core → integration → polish.
 5. For each phase, identify: prerequisites, deliverables, success criteria.
 6. Flag parallel opportunities between independent phases.
+6b. **Subworkspace-aware grouping**: If spec.md ## 5. User Requirements & Testing and ## 6. Functional Requirements contain `[sw/module]` tags:
+   - Group implementation units by subworkspace first, then by dependency
+   - Consider creating per-subworkspace phases when modules are independent
+   - Use tags as **soft hints** — may group multiple modules into one phase for efficiency
+   - If no tags present (legacy spec): fall back to current behavior
 
 ## Skill Routing Injection
+
+**Spec tag pre-hint**: If spec.md contains `[sw/module]` tags on ## 5. User Requirements & Testing/## 6. Functional Requirements, use them to pre-populate the subworkspace→phase mapping BEFORE scanning `## Related Code Files`. Tags provide intent; file paths provide verification.
 
 **Skip if:** `SKILL_ROUTING` is empty (file missing or parse failure).
 

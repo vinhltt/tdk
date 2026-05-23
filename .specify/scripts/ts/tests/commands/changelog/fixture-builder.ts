@@ -16,7 +16,9 @@ export interface FixtureSpec {
   marketplaceVersion?: string;                         // override; undefined = use version
   plugins: Array<{
     name: string;
-    pluginJsonVersion: string;
+    pluginJsonVersion: string;                          // Claude anchor (always written)
+    codexPluginJsonVersion?: string;                    // undefined → no .codex-plugin/plugin.json file
+    cursorPluginJsonVersion?: string;                   // undefined → no .cursor-plugin/plugin.json file
     manifestVersion: string;
     skills?: Array<{
       name: string;
@@ -63,6 +65,24 @@ export function buildFixture(root: string, spec: FixtureSpec): void {
       join(pluginJsonDir, 'plugin.json'),
       JSON.stringify({ name: p.name, version: p.pluginJsonVersion }, null, 2),
     );
+
+    if (p.codexPluginJsonVersion !== undefined) {
+      const codexDir = join(pluginDir, '.codex-plugin');
+      mkdirSync(codexDir, { recursive: true });
+      writeFileSync(
+        join(codexDir, 'plugin.json'),
+        JSON.stringify({ name: p.name, version: p.codexPluginJsonVersion }, null, 2),
+      );
+    }
+
+    if (p.cursorPluginJsonVersion !== undefined) {
+      const cursorDir = join(pluginDir, '.cursor-plugin');
+      mkdirSync(cursorDir, { recursive: true });
+      writeFileSync(
+        join(cursorDir, 'plugin.json'),
+        JSON.stringify({ name: p.name, version: p.cursorPluginJsonVersion }, null, 2),
+      );
+    }
 
     const skillEntries: Record<string, { version: string }> = {};
     for (const s of p.skills ?? []) {

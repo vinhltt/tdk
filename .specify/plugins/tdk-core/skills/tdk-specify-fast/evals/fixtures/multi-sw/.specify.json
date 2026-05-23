@@ -1,0 +1,18 @@
+{
+  "projectName": "multi-sw-test",
+  "subWorkspaces": [
+    {
+      "name": "backend",
+      "modules": [
+        { "name": "api" },
+        { "name": "models" }
+      ]
+    },
+    {
+      "name": "frontend",
+      "modules": [
+        { "name": "pages" }
+      ]
+    }
+  ]
+}

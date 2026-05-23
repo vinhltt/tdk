@@ -3,7 +3,9 @@
 //   <root>/.claude-plugin/marketplace.json
 //   <root>/.specify/CHANGELOG.md
 //   <root>/.specify/plugins/manifest.json
-//   <root>/.specify/plugins/<plugin>/.claude-plugin/plugin.json
+//   <root>/.specify/plugins/<plugin>/.claude-plugin/plugin.json     (anchor — required)
+//   <root>/.specify/plugins/<plugin>/.codex-plugin/plugin.json      (Codex — optional)
+//   <root>/.specify/plugins/<plugin>/.cursor-plugin/plugin.json     (Cursor — optional)
 //   <root>/.specify/plugins/<plugin>/skills/<skill>/SKILL.md
 // [RT4-7] execFileSync + array args only; never string interpolation into shell.
 
@@ -27,10 +29,42 @@ export const PLUGIN_DIR = (root: string, plugin: string) =>
 export const SKILL_MD = (root: string, plugin: string, skill: string) =>
   join(PLUGIN_DIR(root, plugin), 'skills', skill, 'SKILL.md');
 
-/** Resolve plugin.json under .claude-plugin/. Returns null if absent. */
+/**
+ * Manifest formats discovered by tdk-bump / plugin-bump.
+ * Claude is the anchor — required and authoritative. Codex/Cursor are
+ * optional per-platform mirrors. plugin-bump auto-scaffolds missing
+ * Codex/Cursor manifests by copying the Claude anchor.
+ */
+export type ManifestFormat = 'claude' | 'codex' | 'cursor';
+
+export interface ManifestTarget {
+  format: ManifestFormat;
+  dir: string;
+}
+
+export const MANIFEST_FORMATS: readonly ManifestTarget[] = [
+  { format: 'claude', dir: '.claude-plugin' },
+  { format: 'codex',  dir: '.codex-plugin' },
+  { format: 'cursor', dir: '.cursor-plugin' },
+] as const;
+
+/** Resolve Claude-anchor plugin.json. Returns null if absent. Used for existence/identity checks. */
 export function resolvePluginJson(root: string, plugin: string): string | null {
   const nested = join(PLUGIN_DIR(root, plugin), '.claude-plugin', 'plugin.json');
   return existsSync(nested) ? nested : null;
+}
+
+/**
+ * Resolve every existing plugin.json across all manifest formats for a plugin.
+ * Returns empty array if none exist. Order matches MANIFEST_FORMATS (claude first).
+ */
+export function resolveAllPluginJson(root: string, plugin: string): Array<{ format: ManifestFormat; path: string }> {
+  const out: Array<{ format: ManifestFormat; path: string }> = [];
+  for (const target of MANIFEST_FORMATS) {
+    const path = join(PLUGIN_DIR(root, plugin), target.dir, 'plugin.json');
+    if (existsSync(path)) out.push({ format: target.format, path });
+  }
+  return out;
 }
 
 export function readJson<T = unknown>(path: string): T {

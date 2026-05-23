@@ -1,115 +1,139 @@
 # Feature Specification: [FEATURE NAME]
 
-**Feature Branch**: `[FEATURE NAME]`  
-**Created**: [DATE]  
-**Status**: Draft  
+**Feature Branch**: `[FEATURE NAME]`
+**Created**: [DATE]
+**Status**: Draft
 **Input**: User description: "$ARGUMENTS"
+**Memory context loaded**: [true/false]
 
-## User Scenarios & Testing *(mandatory)*
+## 1. Problem Statement *(mandatory)*
 
 <!--
-  IMPORTANT: User stories should be PRIORITIZED as user journeys ordered by importance.
-  Each user story/journey must be INDEPENDENTLY TESTABLE - meaning if you implement just ONE of them,
-  you should still have a viable MVP (Minimum Viable Product) that delivers value.
-  
-  Assign priorities (P1, P2, P3, etc.) to each story, where P1 is the most critical.
-  Think of each story as a standalone slice of functionality that can be:
-  - Developed independently
-  - Tested independently
-  - Deployed independently
-  - Demonstrated to users independently
+  Describe the CONCRETE problem this feature solves.
+  - Who is affected? (specific actors/roles)
+  - What is the current pain point?
+  - Why does this feature need to exist now?
+  Avoid vague statements like "improve UX" or "make it better."
 -->
 
-### User Story 1 - [Brief Title] (Priority: P1)
+[Concrete problem description: who is affected, what pain point exists, why this feature is needed]
 
-[Describe this user journey in plain language]
+## 2. Scope Boundary *(mandatory)*
 
-**Why this priority**: [Explain the value and why it has this priority level]
+<!--
+  Every item must have a rationale.
+  Apply YAGNI: if uncertain, default to out-of-scope with documented reasoning.
+-->
 
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+**In scope:**
+- [Item] (Rationale: [why included for MVP])
+- [Item] (Rationale: [why included for MVP])
 
+**Out of scope:**
+- [Item] (YAGNI: [why not needed for MVP])
+- [Item] (YAGNI: [why not needed for MVP])
+
+## 3. Impact Surface *(mandatory)*
+
+<!--
+  Auto-detected from .specify.json subWorkspaces and modules.
+  Confirm or edit before proceeding.
+  If monolith project with no subWorkspaces/modules: "N/A — monolith project"
+-->
+
+| Subworkspace | Module | Impact Type | Description |
+|---|---|---|---|
+| [subworkspace] | [module] | [create/modify/extend] | [brief description] |
+
+## 4. Evaluated Approaches *(recommended)*
+
+<!--
+  Scope-level options ONLY. No implementation details, no tech/framework/library mentions.
+  Evaluate MVP boundary: what to include vs exclude.
+-->
+
+### Option A: [Approach Name]
+- **Scope**: [what's included/excluded]
+- **Pros**: [benefits]
+- **Cons**: [drawbacks]
+
+### Option B: [Approach Name]
+- **Scope**: [what's included/excluded]
+- **Pros**: [benefits]
+- **Cons**: [drawbacks]
+
+**Recommended**: Option [X] — [rationale grounded in YAGNI/KISS]
+
+## 5. User Requirements & Testing *(mandatory)*
+
+<!--
+  User stories MUST be PRIORITIZED as user journeys ordered by importance.
+  Each story must be INDEPENDENTLY TESTABLE — implement just ONE and still have a viable MVP.
+  Tag each story with [subworkspace/module] from Impact Surface (lowercase/slash only).
+  If monolith with no modules: omit tags.
+-->
+
+### UR-1: [Title] (P1) `[subworkspace/module]`
+[Description]
+**Why this priority**: [rationale]
+**Independent Test**: [how to verify in isolation]
 **Acceptance Scenarios**:
+1. **Given** [state], **When** [action], **Then** [outcome]
 
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-2. **Given** [initial state], **When** [action], **Then** [expected outcome]
-
----
-
-### User Story 2 - [Brief Title] (Priority: P2)
-
-[Describe this user journey in plain language]
-
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently]
-
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-
----
-
-### User Story 3 - [Brief Title] (Priority: P3)
-
-[Describe this user journey in plain language]
-
-**Why this priority**: [Explain the value and why it has this priority level]
-
-**Independent Test**: [Describe how this can be tested independently]
-
-**Acceptance Scenarios**:
-
-1. **Given** [initial state], **When** [action], **Then** [expected outcome]
-
----
-
-[Add more user stories as needed, each with an assigned priority]
+[Add more user requirements as needed, each with assigned priority and [subworkspace/module] tag]
 
 ### Edge Cases
-
-<!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right edge cases.
--->
 
 - What happens when [boundary condition]?
 - How does system handle [error scenario]?
 
-## Requirements *(mandatory)*
+## 6. Functional Requirements *(mandatory)*
 
 <!--
-  ACTION REQUIRED: The content in this section represents placeholders.
-  Fill them out with the right functional requirements.
+  Tag each FR with [subworkspace/module] from Impact Surface (lowercase/slash only).
+  If monolith with no modules: omit tags.
+  Requirements must be testable and unambiguous.
 -->
 
-### Functional Requirements
-
-- **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
-- **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
-- **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
-- **FR-005**: System MUST [behavior, e.g., "log all security events"]
-
-*Example of marking unclear requirements:*
-
-- **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
-- **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+- **FR-001** `[subworkspace/module]`: System MUST [capability]
+- **FR-002** `[subworkspace/module]`: UI MUST [capability]
 
 ### Key Entities *(include if feature involves data)*
 
 - **[Entity 1]**: [What it represents, key attributes without implementation]
 - **[Entity 2]**: [What it represents, relationships to other entities]
 
-## Success Criteria *(mandatory)*
+## 7. Success Criteria *(mandatory)*
 
 <!--
-  ACTION REQUIRED: Define measurable success criteria.
-  These must be technology-agnostic and measurable.
+  Measurable, technology-agnostic outcomes.
+  No mention of frameworks, languages, databases, or tools.
+  Describe from user/business perspective, not system internals.
 -->
 
-### Measurable Outcomes
+- **SC-001**: [Measurable, tech-agnostic outcome]
+- **SC-002**: [Quantitative metric]
 
-- **SC-001**: [Measurable metric, e.g., "Users can complete account creation in under 2 minutes"]
-- **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
-- **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
-- **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+## 8. Risks & Mitigations *(recommended)*
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| [Risk description] | [High/Medium/Low] | [Mitigation strategy] |
+| [Risk description] | [High/Medium/Low] | [Mitigation strategy] |
+
+## 9. Unresolved Questions *(mandatory)*
+
+<!--
+  Migrate all unclear requirements here (no inline [NEEDS CLARIFICATION] markers in other sections).
+  No limit on number of questions — agent asks until requirements are clear.
+  Each question must include a recommendation.
+-->
+
+1. [Question about unclear requirement] — Recommend: [suggestion]
+2. [Question about unclear requirement] — Recommend: [suggestion]
+
+*(Write "None" if all requirements are clear)*
+
+## Clarifications
+
+<!-- Reserved for /tdk-clarify sessions. Do not remove this section. -->

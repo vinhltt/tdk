@@ -11,6 +11,7 @@ import { identifyComponents } from './identify-components';
 import { comparePlugin, compareComponents } from './compare';
 import { seedVersionsFromChecksums } from './seed-versions';
 import { findProjectRoot } from './find-project-root';
+import { readComponentVersionFromSource } from './read-component-version';
 import { COMPONENT_TYPES } from './types';
 import type { Manifest, ManifestEntry, PluginComparison, PluginComponents } from './types';
 
@@ -103,8 +104,11 @@ function main(): void {
 
     for (const compType of COMPONENT_TYPES) {
       for (const compName of Object.keys(components[compType])) {
+        // Source-of-truth precedence: definition file frontmatter (plugin-bump writes here)
+        // → existing manifest entry → --seed migration → default 0.1.0
         const version =
-          (existingComponents[compType] as Record<string, { version: string }> | undefined)?.[compName]?.['version']
+          readComponentVersionFromSource(pluginDir, compType, compName)
+          ?? (existingComponents[compType] as Record<string, { version: string }> | undefined)?.[compName]?.['version']
           ?? (seedPlugin[compType] as Record<string, string> | undefined)?.[compName]
           ?? '0.1.0';
         components[compType][compName] = { version }; // mutate in-place

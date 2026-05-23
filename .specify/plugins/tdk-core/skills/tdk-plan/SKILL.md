@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -119,6 +119,8 @@ Resolve `MODE` from `FLAGS`: `fast` | `hard` | `red-team` | `validate` | `defaul
 ### Step 2 — Load Context
 Load: `references/gates.md`
 Read `featureSpec` and `.specify/memory/constitution.md`. Apply Constitution Check + Skip Conditions. Choose UPDATE vs REGENERATE mode based on Step 1.5 outcome. Per-step skip rules under each mode are defined in `references/modes.md`.
+
+**New spec format sections to read**: ## 1. Problem Statement, ## 2. Scope Boundary, ## 3. Impact Surface, ## 5. User Requirements & Testing (with `[sw/module]` tags), ## 6. Functional Requirements (with tags), ## 7. Success Criteria, ## 8. Risks & Mitigations.
 
 ### Step 3 — Execute Plan Workflow
 

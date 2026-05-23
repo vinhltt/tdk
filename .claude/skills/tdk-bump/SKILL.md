@@ -1,8 +1,8 @@
 ---
 name: tdk-bump
 description: "Generate Keep-a-Changelog entries for .specify/, .claude/, .github/ config changes. Use when updating commands, scripts, templates, or governance files."
-metadata: 
-  version: "1.2.2"
+metadata:
+  version: "1.3.0"
 ---
 
 # tdk-bump
@@ -12,13 +12,25 @@ Generate changelog entries for project configuration changes.
 ## Definition of Done
 
 This skill completes SUCCESS only when ALL:
-1. New version entry in CHANGELOG.md
-2. marketplace.json.metadata.version matches (or N/A)
-3. All affected plugin.json bumped
+1. New version entry in `.specify/CHANGELOG.md`
+2. `marketplace.json.metadata.version` matches the bumped version
+3. All affected plugin.json bumped **across every existing manifest format** (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`). Missing Codex/Cursor mirrors are auto-scaffolded by `plugin-bump`.
 4. All changed skill/agent/hook/command components bumped — "changed" = any file in component directory M/A/D (not just SKILL.md). Removed components NOT bumped, listed under `### Removed` in CHANGELOG.
-5. Step 13 `verify.ts` exits 0
+5. Step 14 `verify.ts` exits 0 — includes per-format checks on claude/codex/cursor `plugin.json`.
 
 ANY fail → report FAILED, DO NOT print success summary.
+
+## Prerequisite: plugin-bump
+
+This skill delegates per-plugin version cascade (3-format `plugin.json` sync, component bumps, per-plugin CHANGELOG) to the `plugin-bump` skill from `plugins-toolkit`. Before running, ensure `plugin-bump` is installed and reachable:
+
+```bash
+# Expected entry point (adjust path if plugins-toolkit is installed elsewhere):
+PLUGIN_BUMP_RUN="$HOME/.claude/plugins/marketplaces/agent-plugins-marketplace/plugins/plugins-toolkit/skills/plugin-bump/scripts/run.ts"
+test -f "$PLUGIN_BUMP_RUN" || { echo "plugin-bump missing — install plugins-toolkit"; exit 2; }
+```
+
+If `plugin-bump` is unavailable, fail fast in Step 11 with an actionable hint — do NOT silently fall back to single-format Claude-only bump (that would leave Codex/Cursor mirrors stale).
 
 ## Usage
 
@@ -53,7 +65,7 @@ The `version` field is already returned by Step 1's `collect-diff-data.ts` outpu
 
 ## Workflow
 
-**Auto mode progress:** Print `[N/13] <step name>... ✓` for each step. Missing printouts = visible skip.
+**Auto mode progress:** Print `[N/14] <step name>... ✓` for each step. Missing printouts = visible skip.
 
 ### Step 1: Collect diff data
 
@@ -108,9 +120,9 @@ git diff <ref>..HEAD -- <file1> <file2> ...
 
 Read the diffs to understand WHAT changed, not just which files.
 
-### Step 6: Compute component checksums
+### Step 6: Discover affected components
 
-Run the manifest script to detect which files and components have changed:
+Run the manifest script to detect which files and components have changed per plugin:
 
 ```bash
 bun .specify/scripts/ts/src/commands/manifest/compute.ts --project-root <project-root>
@@ -118,47 +130,17 @@ bun .specify/scripts/ts/src/commands/manifest/compute.ts --project-root <project
 
 Parse JSON output. Structure: `{ "<plugin-name>": { new_files, changed_files, removed_files, unchanged_files, new_components, changed_components, unchanged_components, removed_components } }`
 
-`removed_components` lists components present in the previous manifest but absent from the current scan (per component type). Render each as `### Removed\n- skill-foo (was 1.2.3)` using the version from the previous manifest entry.
+This step is **discovery only** — you do NOT compute new versions here. Versions are owned by `plugin-bump` (Step 11) which max-wins semver from per-plugin git diff and writes new versions into definition files (SKILL.md frontmatter, agent `version`, hooks.json `version`). Then `manifest compute --write` in Step 12 reads those versions back as source-of-truth.
 
-**For each component type** (`skills`, `agents`, `hooks`, `commands`):
+What to extract from this output for downstream steps:
 
-**If `new_{type}` and `changed_{type}` are both empty:** skip that type silently — no changes.
+- **Affected plugins**: any plugin with non-empty `new_files`, `changed_files`, or `removed_files` → goes to Step 11 for `plugin-bump` delegation.
+- **Components per category** (for changelog drafting in Step 7):
+  - `new_components.{type}` → "Added" bullets
+  - `changed_components.{type}` → "Changed" bullets
+  - `removed_components.{type}` → "Removed" bullets (render as `- skill-foo (was 1.2.3)` using the version from the previous manifest entry — that record disappears after `plugin-bump` runs, so capture it now)
 
-**Otherwise:**
-
-**Version source resolution** (for each component):
-- Read the component's definition file (`SKILL.md` or agent `.md`) frontmatter for a `version` field
-- **If definition file has `version`**: trust it as source of truth
-- **If no `version` in definition file**: fall back to `manifest.json` → `plugins.{plugin}.components.{type}.{name}.version`
-
-**Apply version bumps:**
-
-1. For each item in `new_{type}`: if definition file has version, use it; else set to `0.1.0`. Use computed checksum.
-2. For each item in `changed_{type}`: resolve current version (definition file → manifest.json fallback), then bump patch (e.g., `1.0.0 → 1.0.1`). Use new checksum.
-3. For each item in `unchanged_{type}`: keep existing version and checksum
-
-**Auto mode (`--auto`):** Accept all auto-bumped versions without prompting. Print the reclassify table to stdout for visibility, then proceed.
-
-**Interactive mode:** Display reclassify table using `AskUserQuestion`:
-
-**Question:** "Component versions auto-bumped (patch). Reclassify any?"
-
-Table format in question description:
-```
-┌──────────────────────────────────────┬───────┬────────────────────┐
-│ Component                            │ Type  │ Version bump       │
-├──────────────────────────────────────┼───────┼────────────────────┤
-│ tdk-bump          │ skill │ 1.0.0 → 1.0.1     │
-│ memory-guardian                      │ agent │ new → 0.1.0        │
-│ tdk-core (hooks)             │ hooks │ 1.0.0 → 1.0.1     │
-└──────────────────────────────────────┴───────┴────────────────────┘
-```
-
-**Options:**
-- "Looks good, proceed" (Recommended)
-- "Reclassify a component" → follow-up: ask which component and new bump type (patch/minor/major)
-
-Hold the resolved component versions in memory — they will be written to `manifest.json` in Step 11.
+Keep this discovery data in memory for Step 7 (categorize) and Step 11 (build `--added/--changed/--removed` flags per plugin).
 
 ### Step 7: Categorize and draft entries
 
@@ -254,33 +236,64 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 **Grouping rule:** When a component has 2+ entries in the same category, always use the nested sub-bullet format. Never repeat the same `**[Component]**` tag on consecutive flat lines. Only include category sections that have entries. Use today's date (from `date +%Y-%m-%d`).
 
-### Step 11: Bump versions
+### Step 11: Delegate per-plugin cascade to `plugin-bump`
 
-1. Update `marketplace.json` → set `metadata.version` to the new global version.
+For each affected plugin (had new/changed files or components in Step 6), shell out to `plugin-bump`. This is the single source of truth for per-plugin manifest updates — do NOT hand-edit `plugin.json` files here.
 
-2. For each affected plugin (had new/changed files or components in Step 6):
-   - Read `manifest.json` → `plugins.{plugin-name}.components.{type}.{name}.version`
-   - Set new component versions (bumped in Step 6) directly into manifest.json
-   - Bump `plugins.{plugin-name}.version` with same bump type from Step 8
-   - Update the plugin's `plugin.json` → `version` field to match the new plugin version
-     - Locate via: `{plugin-name}/plugin.json` or `{plugin-name}/.claude-plugin/plugin.json`
+**What `plugin-bump` handles automatically:**
+- All three manifest formats: `.claude-plugin/plugin.json` (anchor), `.codex-plugin/plugin.json`, `.cursor-plugin/plugin.json`
+- Auto-scaffolds missing `.codex-plugin/` and `.cursor-plugin/` directories by copying the Claude anchor (only `version` is overwritten on first creation — Codex `interface` block and Cursor-specific fields are preserved on subsequent runs)
+- Cascade bumps to component frontmatter (`SKILL.md metadata.version`, agent `version`)
+- Per-plugin `<plugin-dir>/CHANGELOG.md` (sibling to the workspace-level `.specify/CHANGELOG.md` written in Step 10 — they intentionally coexist as rollup + detail)
 
-3. For each affected skill/agent component (had version bumped in Step 6):
-   - Read the component's definition file (`SKILL.md` or agent `.md`)
-   - Update or add `version` field in frontmatter metadata to the new bumped version
-   - **YAML indentation: always use 2-space indent** (e.g., `metadata:\n  version: "1.0.1"`). Never use 3-space.
-   - If frontmatter exists but has no `version` field → add `version: "{new_version}"` after the last existing field, indented with 2 spaces
-   - If no frontmatter exists → skip (don't create frontmatter for files that don't use it)
+**Invocation per affected plugin:**
 
-4. Run `bun run manifest --project-root <project-root> --write` to update file hashes (preserves versions already set in step 2).
+```bash
+bun "$PLUGIN_BUMP_RUN" \
+  --target=<absolute-path-to-plugin-dir> \
+  --auto \
+  --added="<bullet>" --added="<bullet>" \
+  --changed="<bullet>" --changed="<bullet>" \
+  --removed="<bullet>"
+```
 
-**Version consistency rule:** After Step 11, the same version string for each component MUST appear in all three locations: `manifest.json`, `plugin.json` (plugin-level), and the component's definition file frontmatter.
+Build `--added/--changed/--removed` bullets from the Step 7 categorized entries **filtered to this plugin only**. Each bullet is one logical change (not one file). Reuse the same prose as the workspace CHANGELOG entries.
 
-### Step 12: Summary
+**Semver alignment:** `plugin-bump` auto-derives its own semver per plugin (max-wins from git diff: D=major, A=minor, M/R/C=patch). The workspace bump type from Step 8 may differ — that is intentional. Component bumps inside a plugin follow `plugin-bump`'s decision; marketplace-level bump in Step 12 follows Step 8.
 
-Print summary: version bumped to X.Y.Z, N entries written across M categories, plugin.json updated for: [list of affected plugin names], SKILL.md versions synced for: [list of affected component names].
+**On non-zero exit from plugin-bump:**
+- Exit 2 (precondition): dirty tree without `--auto`, empty diff, invalid ref → report to user verbatim, do NOT proceed to Step 12.
+- Exit 4 (verify): plugin-bump's internal 4-check DoD failed → read its failure output, apply the fix, re-run for that plugin.
+- Exit 99: unexpected error → bubble up to user.
 
-### Step 13: Post-flight verification (MANDATORY)
+Run all affected plugins sequentially (or in parallel via background tasks if changes are independent). Wait for ALL to exit 0 before Step 12.
+
+### Step 12: Workspace-level finalization
+
+After every affected plugin has been bumped by `plugin-bump`, tdk-bump owns ONLY the workspace-scope files that `plugin-bump` deliberately ignores. Two writes total:
+
+1. **Bump `marketplace.json`** — set `.claude-plugin/marketplace.json` → `metadata.version` to the new workspace version (from Step 8).
+   Codex reads this same file as a legacy-compatible marketplace catalog — no separate `.codex-plugin/marketplace.json` needed.
+
+2. **Refresh `manifest.json`** — run:
+   ```bash
+   bun run manifest --project-root <project-root> --write
+   ```
+   `manifest compute` reads component versions directly from each definition file (SKILL.md `metadata.version`, agent `version`, hooks.json `version`) — the source-of-truth files `plugin-bump` just wrote. No explicit version propagation needed; the new versions are picked up automatically.
+
+**Version consistency rule:** After Step 12, the version string for each plugin MUST match across:
+- `manifest.json` → `plugins.{plugin}.version`
+- `.claude-plugin/plugin.json` → `version`
+- `.codex-plugin/plugin.json` → `version` (if exists)
+- `.cursor-plugin/plugin.json` → `version` (if exists)
+
+And each component version MUST match across `manifest.json` and its definition file frontmatter — enforced by `manifest compute` reading from frontmatter as the primary source.
+
+### Step 13: Summary
+
+Print summary: version bumped to X.Y.Z, N entries written across M categories, per-plugin cascade ran for: [list of affected plugins] (manifest formats touched per plugin), SKILL.md versions synced for: [list of affected component names].
+
+### Step 14: Post-flight verification (MANDATORY)
 
 Before invoking `verify.ts`, ensure `--expected-version` is known. If the target version is not already established by earlier steps: propose a candidate (from the diff + current `marketplace.json.metadata.version`) and ask the user via `AskUserQuestion` to confirm before calling `verify.ts`. The script WILL exit 1 if `--expected-version` is missing.
 
@@ -293,12 +306,14 @@ bun .specify/scripts/ts/src/commands/changelog/verify.ts \
   --skills=<affected-skills-csv>
 ```
 
+Check 3 now reports per format — failure lines look like `plugin.json vs manifest [tdk-core/codex]` and the `fix:` hint suggests re-running `plugin-bump --target=plugins/<plugin>` to resync.
+
 Expected output on success: `ALL CHECKS PASSED` (exit 0).
 
 **On non-zero exit:**
 1. Read the printed failures — each line includes `expected`, `actual`, and an actionable `fix:` hint with file path.
 2. Apply the fixes exactly as the hints describe — do NOT invent alternate repairs.
 3. Re-run `verify.ts` with the same flags until it exits 0.
-4. Only after exit 0 may you print the Step 12 success summary.
+4. Only after exit 0 may you print the Step 13 success summary.
 
 **Never report SUCCESS after a non-zero verify exit.** The Definition of Done pins the success contract to `verify.ts` exit 0 — no exception.

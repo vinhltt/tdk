@@ -66,4 +66,4 @@ Output: .specify/specs/{task-id}/reports/scout-{area}.md
 
 ## Output
 
-`research.md` with Decision, Rationale, Alternatives, References for every NEEDS CLARIFICATION item.
+`research.md` with Decision, Rationale, Alternatives, References for every ## 9. Unresolved Questions item.

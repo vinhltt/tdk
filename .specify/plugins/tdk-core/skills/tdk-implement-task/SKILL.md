@@ -2,7 +2,7 @@
 name: tdk-implement-task
 description: "[deprecated - scheduled for removal in future version] Execute the implementation plan by processing and executing all tasks defined in tasks.md"
 metadata: 
-  version: "1.0.6"
+  version: "2.1.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -37,7 +37,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 **Trigger:** When encountering non-trivial implementation decisions during task execution.
 **Technique:** Pause and reason step-by-step:
 1. State the decision point clearly
-2. Identify constraints from plan.md and spec.md
+2. Identify constraints from plan.md and spec.md (## 2. Scope Boundary, ## 7. Success Criteria, ## 8. Risks & Mitigations)
 3. List 2-3 implementation approaches
 4. Evaluate against project patterns (from codebase understanding)
 5. Choose approach that aligns with existing code patterns + KISS principle

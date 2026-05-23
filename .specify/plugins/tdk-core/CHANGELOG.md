@@ -4,6 +4,20 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.1.0] - 2026-05-23
+
+### Added
+- **[Skills]** tdk-specify-fast evals: evals.json + multi-sw/.specify.json fixture
+- **[Skills]** tdk-specify evals: multi-sw/.specify.json fixture
+
+### Changed
+- **[Skills]** tdk-specify (→ 2.1.0): 9-section spec format with Impact Surface detection
+- **[Skills]** tdk-specify-fast (→ 2.1.0): direct YAGNI/KISS variant, no embedded brainstorm
+- **[Skills]** tdk-analyze (→ 2.1.0): Passes H (Scope Boundary) + I (Impact Surface), legacy-format detection
+- **[Skills]** tdk-clarify (→ 2.1.0): new taxonomy (Problem Clarity, Scope Boundary, Impact Surface, Risks)
+- **[Skills]** tdk-checklist (→ 2.1.0): success-criteria & risks coverage, [sw/module] tag checks
+- **[Skills]** tdk-constitution, tdk-implement-task, tdk-plan, tdk-ut-backfill-plan: format-alignment touch-ups
+
 ## [2.0.0] - 2026-05-22
 
 ### Changed

@@ -1,7 +1,10 @@
-// Check 3: Per plugin, plugin.json.version === manifest.plugins[name].version.
+// Check 3: Per plugin, every existing plugin.json (claude/codex/cursor)
+// .version === manifest.plugins[name].version.
+// Claude is the anchor — must exist. Codex/Cursor are optional mirrors:
+// when present, they must match the anchor version (plugin-bump keeps them in sync).
 
 import type { CheckOpts, CheckResult } from './types';
-import { readManifest, readJson, resolvePluginJson } from './fs-helpers';
+import { readManifest, readJson, resolvePluginJson, resolveAllPluginJson } from './fs-helpers';
 
 interface PluginJson {
   name?: string;
@@ -21,45 +24,49 @@ export function checkPluginVersions(opts: CheckOpts): CheckResult[] {
   const out: CheckResult[] = [];
 
   for (const plugin of opts.plugins) {
-    const pluginJsonPath = resolvePluginJson(opts.root, plugin);
-    if (!pluginJsonPath) {
+    // Anchor (Claude) must exist — Codex/Cursor are optional mirrors.
+    const anchorPath = resolvePluginJson(opts.root, plugin);
+    if (!anchorPath) {
       out.push({
         ok: false, index, name: `${name} [${plugin}]`,
-        expected: '(plugin.json present)',
+        expected: '(.claude-plugin/plugin.json present)',
         actual: 'not found',
-        fixHint: `plugin.json missing for "${plugin}" — check plugins/${plugin}/`,
-      });
-      continue;
-    }
-
-    let pluginJson: PluginJson;
-    try {
-      pluginJson = readJson<PluginJson>(pluginJsonPath);
-    } catch (e) {
-      out.push({
-        ok: false, index, name: `${name} [${plugin}]`,
-        expected: '(valid JSON)',
-        actual: `parse error: ${(e as Error).message}`,
-        fixHint: `fix JSON syntax in ${pluginJsonPath}`,
-        path: pluginJsonPath,
+        fixHint: `plugin.json missing for "${plugin}" — check plugins/${plugin}/.claude-plugin/`,
       });
       continue;
     }
 
     const manifestEntry = manifest.plugins[plugin];
     const manifestVersion = manifestEntry?.version ?? '(missing)';
-    const pluginVersion = pluginJson.version ?? '(missing)';
 
-    if (pluginVersion === manifestVersion) {
-      out.push({ ok: true, index, name: `${name} [${plugin}]`, path: pluginJsonPath });
-    } else {
-      out.push({
-        ok: false, index, name: `${name} [${plugin}]`,
-        expected: manifestVersion,
-        actual: pluginVersion,
-        fixHint: `sync versions: manifest.plugins.${plugin}.version=${manifestVersion} vs ${pluginJsonPath}.version=${pluginVersion}`,
-        path: pluginJsonPath,
-      });
+    // Verify every existing manifest format matches the manifest.json version.
+    for (const { format, path } of resolveAllPluginJson(opts.root, plugin)) {
+      let pluginJson: PluginJson;
+      try {
+        pluginJson = readJson<PluginJson>(path);
+      } catch (e) {
+        out.push({
+          ok: false, index, name: `${name} [${plugin}/${format}]`,
+          expected: '(valid JSON)',
+          actual: `parse error: ${(e as Error).message}`,
+          fixHint: `fix JSON syntax in ${path}`,
+          path,
+        });
+        continue;
+      }
+
+      const pluginVersion = pluginJson.version ?? '(missing)';
+      if (pluginVersion === manifestVersion) {
+        out.push({ ok: true, index, name: `${name} [${plugin}/${format}]`, path });
+      } else {
+        out.push({
+          ok: false, index, name: `${name} [${plugin}/${format}]`,
+          expected: manifestVersion,
+          actual: pluginVersion,
+          fixHint: `sync versions: manifest.plugins.${plugin}.version=${manifestVersion} vs ${path}.version=${pluginVersion} — re-run plugin-bump --target=plugins/${plugin}`,
+          path,
+        });
+      }
     }
   }
 
