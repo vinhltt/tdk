@@ -1,14 +1,25 @@
 #!/usr/bin/env node
+// Dev Context Injector — UserPromptSubmit hook.
+// Builds and injects speckit development context (workspace info, rules, paths, git config)
+// into model context on each user prompt. Skips if recently injected (dedup via transcript).
+//
+// Called via hook-gateway.cjs (stdin passed as param) or standalone (reads stdin directly).
+// Fail-open: any error → exit 0 (never blocks prompt submission).
 
 try {
   const fs = require('fs');
   const { createHookTimer, logHookCrash } = require('../lib/hook-logger.cjs');
   const { buildSpeckitContext, wasRecentlyInjected } = require('../lib/context-builder.cjs');
 
-  function main() {
+  /**
+   * Main entry point for dev-context-injector hook.
+   * @param {string} [stdinData] - Pre-read stdin from hook-gateway.cjs. If omitted, reads stdin directly.
+   * @returns {number} Exit code (always 0 — fail-open).
+   */
+  function main(stdinData) {
     const timer = createHookTimer('dev-context-injector', { event: 'UserPromptSubmit' });
     try {
-      const stdin = fs.readFileSync(0, 'utf-8').trim();
+      const stdin = (stdinData ?? fs.readFileSync(0, 'utf-8')).trim();
       if (!stdin) {
         timer.end({ status: 'skip', note: 'empty-input', message: 'Skipped: empty stdin input' });
         return 0;

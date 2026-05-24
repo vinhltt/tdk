@@ -1,5 +1,5 @@
 {
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Inject speckit development context and path-based rules",
   "hooks": {
     "UserPromptSubmit": [
@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/dev-context-injector.cjs\""
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/hook-gateway.cjs\" dev-context-injector"
           }
         ]
       }
@@ -19,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/path-rule-injector.cjs\""
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/hook-gateway.cjs\" path-rule-injector"
           }
         ]
       }

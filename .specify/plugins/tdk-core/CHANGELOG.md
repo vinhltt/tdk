@@ -4,6 +4,17 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.2.0] - 2026-05-24
+
+### Added
+- hook-gateway.cjs — single entry point that checks .specify.json hooks.disabled[] before delegating to the actual hook
+- __tests__/hook-gateway.test.cjs — covers disabled-list skip, fail-open on non-array, and delegation behavior
+
+### Changed
+- hooks.json — UserPromptSubmit and PreToolUse commands route through hook-gateway.cjs
+- dev-context-injector.cjs and path-rule-injector.cjs — main() accepts pre-read stdinData from gateway, falls back to direct stdin read when standalone
+- speckit-config-reader.cjs — defaults extended with hooks.disabled=[]; JSDoc added across exported helpers
+
 ## [3.1.0] - 2026-05-24
 
 ### Added

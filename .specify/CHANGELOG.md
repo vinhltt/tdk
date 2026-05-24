@@ -10,6 +10,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.52.0] - 2026-05-24
+
+### Added
+- **[Hooks]** `hook-gateway.cjs` — single entry point that checks `.specify.json` → `hooks.disabled[]` before delegating to the actual hook; reads stdin once and forwards it to the delegate so hook authors no longer need disable logic
+- **[Tests]** `__tests__/hook-gateway.test.cjs` — covers no-argv pass-through, disabled-list skip, non-array `hooks.disabled` fail-open, missing-hooks-field delegation, and end-to-end delegation to `path-rule-injector`
+
+### Changed
+- **[Hooks]** tdk-core hooks routed through gateway
+  - `hooks.json` — UserPromptSubmit and PreToolUse commands now invoke `hook-gateway.cjs <hook-name>` instead of calling hook scripts directly
+  - `dev-context-injector.cjs` and `path-rule-injector.cjs` — `main()` accepts an optional pre-read `stdinData` parameter; falls back to reading stdin directly when run standalone (avoids double-read when invoked via gateway)
+- **[Plugin Libs]** `speckit-config-reader.cjs` — defaults extended with `hooks: { disabled: [] }`; JSDoc added across exported helpers (`findSpecifyConfig`, `loadSpeckitConfig`, `detectActiveWorkspace`, `getWorkspaceRoot`, path getters)
+
 ## [1.51.0] - 2026-05-24
 
 ### Added
