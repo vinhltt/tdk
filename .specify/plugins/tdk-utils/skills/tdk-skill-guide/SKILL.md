@@ -1,6 +1,8 @@
 ---
 name: tdk-skill-guide
 description: "Interactive guide for TDK skills and commands. Shows usage, scenarios, tips, and skill discovery. Use when asking 'how to use /tdk-*', 'what skills are available', 'show scenario', 'find a skill for X', 'tdk guide', 'tdk help'."
+metadata:
+  version: 1.10.3
 ---
 
 # TDK Skill Guide
@@ -180,7 +182,6 @@ Present results grouped by source:
 
 ### Skills
 - **/tdk-specify** (tdk-core) — Create feature spec from natural language
-- **/tdk-specify-fast** (tdk-core) — Quick spec without brainstorm
 
 ### Command Reference
 - Line 142: "Use /tdk-specify to kick off the workflow..."

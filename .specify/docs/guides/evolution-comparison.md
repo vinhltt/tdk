@@ -36,7 +36,7 @@ Three generations of the Tihon framework, each targeting a different AI platform
 | External dependencies | Git scripts | GitHub Copilot + bash | **None (MCP native)** |
 | **Specification** | | | |
 | Spec + brainstorm | ✓ | ✓ | ✓ |
-| Fast/token-efficient mode | -- | -- | **✓ `specify-fast`** |
+| Fast/token-efficient mode | -- | -- | **✓ `specify --fast`** |
 | Inline clarifying Q&A | Basic | ✓ (up to 5) | ✓ (up to 5) |
 | Auto-requirements checklist | -- | -- | **✓ (generated with spec)** |
 | **Planning & Architecture** | | | |
@@ -110,7 +110,7 @@ Commands not present in any predecessor (15 total):
 
 | Command | Category | Value |
 |---------|----------|-------|
-| `/tdk-specify-fast` | Specification | **Token-efficient fast mode**, skips brainstorm |
+| `/tdk-specify --fast` | Specification | **Token-efficient fast mode**, skips brainstorm |
 | `/tdk-status` | Workflow | **Project/feature status overview** |
 | `/tdk-ut-backfill-auto` | Unit Testing | **Full UT pipeline in one command** |
 | `/tdk-ut-backfill-plan` | Unit Testing | **Framework-aware test plan** with phase files |
@@ -159,7 +159,7 @@ Full traceable chain: requirements → checklist → spec → plan (7+ files wit
 
 ### Token-Efficient Variants
 
-`/tdk-specify-fast` provides a lightweight path for small, well-understood features — skips brainstorm phase, produces fewer tokens. This is a developer UX choice, not a capability limitation; full `specify` remains available for complex features.
+`/tdk-specify --fast` provides a lightweight path for small, well-understood features — skips brainstorm phase, produces fewer tokens. Without `--fast`, auto-detect picks the mode based on description complexity and Impact Surface (defaults to full brainstorm).
 
 ---
 

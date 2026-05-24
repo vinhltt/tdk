@@ -172,7 +172,6 @@ commondragon/
 │   ├── .specify.yaml              # Workspace config
 │   ├── .specify.env.example       # Env template (copy to .specify.env)
 │   ├── scripts/bash/              # Automation scripts
-│   │   ├── create-new-feature.ts  # Feature scaffolding (TS)
 │   │   └── ...
 │   ├── docs/                      # All SpecKit documentation
 │   │   ├── guides/                # Usage docs, scenarios, command reference

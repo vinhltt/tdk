@@ -1,8 +1,8 @@
 ---
 name: tdk-specify
-description: "Create or update the feature specification from a natural language feature description."
+description: "Create or update the feature specification from a natural language feature description. Default: full brainstorm with Option A/B. Use --fast for single recommendation without brainstorm."
 metadata: 
-  version: "3.0.0"
+  version: "3.3.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -30,61 +30,9 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Skill References
 
-<!-- from: .claude/skills/common/references/principles.md -->
-### Core Principles
-
-**YAGNI (You Aren't Gonna Need It)**
-- Implement only what is explicitly required
-- No speculative features
-- Question every addition: "Is this needed NOW?"
-
-**KISS (Keep It Simple, Stupid)**
-- Prefer simple solutions over clever ones
-- Break complex tasks into smaller steps
-- Avoid premature optimization
-
-**DRY (Don't Repeat Yourself)**
-- Extract common patterns into reusable components
-- Reference existing solutions before creating new
-- Maintain single source of truth
-
-<!-- from: .claude/skills/planning/SKILL.md -->
-### Planning Framework
-
-**Purpose:** Transform requirements into actionable implementation plans.
-**Boundary:** This skill produces PLANS only. No code implementation.
-**Be honest, brutal, straight to the point, and concise.**
-
-**Workflow:**
-1. Research - Gather context, resolve unknowns (use @workspace, gh, repomix)
-2. Design - Architecture decisions, data models, trade-offs
-3. Decompose - Break into phases with clear deliverables
-4. Document - Create plan files with success criteria
-
-**Subagent Delegation:** Delegate → output to file → user continues manually → main agent reads output.
-
-> Shared base instructions: `.specify/_shared/skills/embedded-brainstorm.md`
-
-### Embedded Brainstorming (Scope Exploration)
-
-**Mode:** Embedded -- reasoning technique only.
-**DO NOT** call brainstorm.py. **DO NOT** create separate brainstorm files.
-Output goes directly into spec.md.
-
-**When to trigger:** At every scope boundary decision:
-- Feature in-scope vs out-of-scope determination
-- Requirement inclusion/exclusion when multiple interpretations exist
-- "Nice to have" vs "must have" classification
-
-**Technique per scope decision:**
-1. Identify what's being considered for inclusion
-2. Apply YAGNI analysis: "Is this needed NOW for MVP?"
-3. If unclear, generate 2-3 scope boundary options
-4. Evaluate: complexity cost vs user value
-5. Recommend with YAGNI/KISS rationale
-6. Document in spec under Scope section as:
-   - In scope: [item] (Rationale: [why included])
-   - Out of scope: [item] (Rationale: [YAGNI -- not needed for MVP])
+**Load before Step 2:**
+- Read `references/spec-writing-principles.md` for Core Principles (YAGNI/KISS/DRY), Planning Framework, and Embedded Brainstorming rules.
+- Read `references/spec-quality-guidelines.md` for section requirements, AI generation rules, and success criteria guidelines.
 
 ## Boundary Declaration
 
@@ -112,8 +60,6 @@ Output goes directly into spec.md.
 - [ ] No implementation details in spec
 - [ ] `[sw/module]` tags on all UR/FR (unless monolith with no modules)
 
-## Outline
-
 ## Execution Steps
 
 ### Step 0 — Validate Task ID
@@ -125,38 +71,78 @@ Store: `TASK_ID`, `TASK_ID_SOURCE`.
 Invoke `tdk-load-project-context` with validated `TASK_ID`.
 Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
-### Step 0.2: Check Feature Description
+### Step 0.2: Check Feature Description & Create Feature Directory
 
 - Extract second argument onwards as description
-- If description EMPTY or MISSING:
-  ERROR: "Description required. Usage: /tdk-specify {task-id} {description}"
-- Proceed to Execute Script (step 6)
+- When checking if description is empty, treat `--fast` token as non-description text (ignore it for emptiness check only — actual flag stripping happens in Step 0.3)
+- If description EMPTY or MISSING (after ignoring --fast token):
+  ERROR: "Description required. Usage: /tdk-specify {task-id} {description} [--fast]"
 
-After completion, proceed to next step with validated task_id and PROJECT_CONTEXT.
+**Create feature directory:**
 
-6. **Execute Script**:
+1. Determine paths from PROJECT_CONTEXT:
+   - `SPECS_ROOT` = project's `.specify` root
+   - `FOLDER` = parsed from TASK_ID (prefix folder or defaultFolder)
+   - `TICKET_ID` = parsed ticket identifier (e.g. `tdk-001`)
+   - `FEATURE_DIR` = `$SPECS_ROOT/$FOLDER/$TICKET_ID`
+   - `SPEC_FILE` = `$FEATURE_DIR/spec.md`
+
+2. Check duplicate feature directory:
    ```bash
-   cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/feature/create-new-feature.ts <task-id> <description>
+   ls "$FEATURE_DIR" 2>/dev/null && echo "ERROR: Ticket already exists" || echo "OK"
+   ```
+   If directory exists → ERROR, STOP.
+
+3. Check duplicate git branches (non-blocking warning):
+   ```bash
+   git branch --list "$FOLDER/$TICKET_ID" 2>/dev/null
+   git ls-remote --heads origin "refs/heads/$FOLDER/$TICKET_ID" 2>/dev/null
+   ```
+   If branch exists → WARN only, continue.
+
+4. Create feature directory:
+   ```bash
+   mkdir -p "$FEATURE_DIR"
    ```
 
-   Script operations (automatic):
-   - Validates task ID format (parse_ticket_id)
-   - Converts to lowercase (case-insensitive)
-   - Checks for duplicate task IDs
-   - **Warns if current branch doesn't match expected** (non-blocking)
-   - Creates feature directory: `.specify/{folder}/{task-id}/`
-   - Copies spec template to: `.specify/{folder}/{task-id}/spec.md`
-   - Returns JSON: `TASK_ID`, `EXPECTED_BRANCH`, `CURRENT_BRANCH`, `SPEC_FILE`
+5. Note current branch for warning:
+   ```bash
+   CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "N/A")
+   EXPECTED_BRANCH="$FOLDER/$TICKET_ID"
+   ```
+   If `CURRENT_BRANCH != EXPECTED_BRANCH` → print warning (non-blocking).
 
-7. **Process Script Output**:
-   - Parse JSON output from script
-   - Extract `SPEC_FILE` path for AI processing
-   - Note: Branch mismatch warning (if any) is informational only
-   - If script fails → ERROR with script output, STOP
+Store: `FEATURE_DIR`, `SPEC_FILE`, `EXPECTED_BRANCH`, `CURRENT_BRANCH`.
 
-**After Validation**:
-- Proceed to load spec template
-- Use `SPEC_FILE` path to write specification
+### Step 0.3 — Mode Detection
+
+**This step owns ALL flag parsing and mode decision logic.**
+
+1. **Flag parsing** (highest priority):
+   - Scan $ARGUMENTS for `--fast`
+   - If `--fast` found: set `SPEC_MODE = fast`, `MODE_SOURCE = "user-specified"`, strip flag from description
+   - If not found: proceed to auto-detect (default is full mode)
+
+2. **Auto-detect from description** (when no flag):
+   - Analyze the feature description:
+     - Count words (excluding task ID)
+     - Count distinct actors (roles/users mentioned)
+     - Count distinct actions (verbs/operations)
+   - Decision rule:
+     - Word count ≤15 AND single actor AND single action → `PRELIMINARY_MODE = fast`
+     - Otherwise → `PRELIMINARY_MODE = full`
+   - Set `MODE_SOURCE = "auto-detected"`
+
+3. **Print mode and confirm**:
+   - If `MODE_SOURCE = "user-specified"`:
+     Print `Mode: fast (user-specified via --fast)` and proceed.
+   - If `MODE_SOURCE = "auto-detected"`:
+     Use AskUserQuestion to confirm:
+     - Question: "Detected mode: [fast|full] (reason: [N words, M actors, K actions]). Proceed with this mode?"
+     - Options: "Yes, proceed" / "Switch to [other mode]"
+     If user switches → update `SPEC_MODE` accordingly.
+
+Store: `SPEC_MODE`, `MODE_SOURCE`, `PRELIMINARY_MODE` (only set during auto-detect).
 
 ### Step 0.memory: Memory Context Pre-load
 
@@ -196,27 +182,64 @@ After completion, proceed to next step with validated task_id and PROJECT_CONTEX
 
 **Edge case**: Feature touches unknown area → add row with Impact Type = "[TBD]"
 
+**Mode upgrade check**: If `PRELIMINARY_MODE = fast` AND `MODE_SOURCE = "auto-detected"` AND Impact Surface has ≥2 subworkspaces:
+- Upgrade `SPEC_MODE` to `full`
+- Print: "Mode upgraded: fast → full (Impact Surface spans 2+ subworkspaces)"
+- User flag override (`--fast`) is NOT upgraded — user explicitly chose fast
+
 ### Step 2: Specification Generation (9-Section Format)
 
     1. Parse user description from Input
        If empty: ERROR "No feature description provided"
     2. Extract key concepts from description
        Identify: actors, actions, data, constraints
-       **Brainstorm Scope Boundaries:**
-       For each concept extracted, apply embedded brainstorming:
+
+       **If SPEC_MODE = full:**
+       Apply embedded brainstorming at every scope boundary decision:
        - Is this core to the feature? (in scope)
        - Is this a future enhancement? (out of scope, note as future)
        - Are there multiple interpretations? Generate alternatives, recommend one
        - Apply YAGNI: if uncertain, default to out-of-scope with documented rationale
+
+       **If SPEC_MODE = fast:**
+       Apply direct YAGNI/KISS reasoning for scope decisions (no multi-option comparison)
+
     3. Generate all 9 sections in order:
 
        **## 1. Problem Statement**: Extract from user description — concrete problem, who is affected, why this feature is needed now. Reject vague statements ("improve UX").
 
-       **## 2. Scope Boundary**: Apply embedded brainstorm at every scope decision. In-scope items with rationale, out-of-scope items with YAGNI reasoning. Must have ≥1 in-scope + ≥1 out-of-scope.
+       **## 2. Scope Boundary**: In-scope items with rationale, out-of-scope items with YAGNI reasoning. Must have ≥1 in-scope + ≥1 out-of-scope.
+       - **Full mode**: Apply embedded brainstorm at every scope decision.
+       - **Fast mode**: Direct YAGNI/KISS reasoning without multi-option comparison.
 
        **## 3. Impact Surface**: Insert IMPACT_SURFACE table from Step 1.5. If monolith: "N/A — monolith project".
 
-       **## 4. Evaluated Approaches**: Apply embedded brainstorm technique. 2-3 scope-level options evaluating MVP boundary (what to include vs exclude). **Constraint: scope-level ONLY — no tech/framework/library mentions.** Format: Option A/B with Scope, Pros, Cons. End with `**Recommended**: Option [X] — [rationale]`.
+       **## 4. Evaluated Approaches**:
+
+       **If SPEC_MODE = full:**
+       Apply embedded brainstorm technique. 2-3 scope-level options evaluating MVP boundary (what to include vs exclude). **Constraint: scope-level ONLY — no tech/framework/library mentions.** Format:
+       ```
+       ### Option A: [Approach Name]
+       - **Scope**: [what's included/excluded]
+       - **Pros**: [benefits]
+       - **Cons**: [drawbacks]
+
+       ### Option B: [Approach Name]
+       - **Scope**: [what's included/excluded]
+       - **Pros**: [benefits]
+       - **Cons**: [drawbacks]
+
+       **Recommended**: Option [X] — [rationale grounded in YAGNI/KISS]
+       ```
+
+       **If SPEC_MODE = fast:**
+       Single recommended scope approach only. **Constraint: scope-level ONLY — no tech/framework/library mentions.** Format:
+       ```
+       **Recommended scope**: [approach name]
+       - **Includes**: [what's in scope]
+       - **Excludes**: [what's out]
+       - **Rationale**: [brief YAGNI/KISS reasoning]
+       ```
 
        **## 5. User Requirements & Testing**: Same quality as current — P1/P2/P3 prioritization, Independent Test, Given/When/Then acceptance scenarios. Tag each UR with `[subworkspace/module]` from IMPACT_SURFACE (lowercase/slash only, e.g. `[backend/api]`). Skip tags if IMPACT_SURFACE is empty. Include Edge Cases subsection.
 
@@ -239,31 +262,7 @@ After completion, proceed to next step with validated task_id and PROJECT_CONTEX
 After writing spec, check ## 9. Unresolved Questions:
 
 - If "None": skip to Step 5
-- For each unresolved question, present options to user via AskUserQuestion:
-
-  ```markdown
-  ## Question [N]: [Topic]
-  
-  **Context**: [Quote relevant spec section]
-  
-  **What we need to know**: [Specific question]
-  
-  **Suggested Answers**:
-  
-  | Option | Answer | Implications |
-  |--------|--------|--------------|
-  | A      | [First suggested answer] | [What this means for the feature] |
-  | B      | [Second suggested answer] | [What this means for the feature] |
-  | C      | [Third suggested answer] | [What this means for the feature] |
-  | Custom | Provide your own answer | [Explain how to provide custom input] |
-  
-  **Your choice**: _[Wait for user response]_
-  ```
-
-- **CRITICAL - Table Formatting**: Ensure markdown tables are properly formatted:
-  - Use consistent spacing with pipes aligned
-  - Each cell should have spaces around content: `| Content |` not `|Content|`
-  - Header separator must have at least 3 dashes: `|--------|`
+- For each question, present via AskUserQuestion with: Context (quote spec section), Question, Suggested Answers (A/B/C table: Option | Answer | Implications), Custom option
 - Present all questions together before waiting for responses
 - Wait for user to respond with choices
 - Update spec ## 9. Unresolved Questions: replace resolved questions with the chosen answer integrated into the relevant section
@@ -274,50 +273,7 @@ After writing spec, check ## 9. Unresolved Questions:
 
 After writing the spec and resolving unresolved questions, validate against quality criteria:
 
-   a. **Create Spec Quality Checklist**: Generate a checklist file at `FEATURE_DIR/checklists/requirements.md`:
-
-      ```markdown
-      # Specification Quality Checklist: [FEATURE NAME]
-      
-      **Purpose**: Validate specification completeness and quality before proceeding to planning
-      **Created**: [DATE]
-      **Feature**: [Link to spec.md]
-      
-      ## Structure Completeness
-      
-      - [ ] ## 1. Problem Statement is concrete (not vague "improve X")
-      - [ ] ## 2. Scope Boundary has ≥1 in-scope + ≥1 out-of-scope item
-      - [ ] ## 3. Impact Surface has ≥1 row (unless monolith with no modules)
-      - [ ] ## 4. Evaluated Approaches is scope-level only (reject tech/framework mentions)
-      - [ ] ## 7. Success Criteria are measurable and technology-agnostic
-      - [ ] ## 8. Risks & Mitigations has ≥1 entry
-      - [ ] ## 9. Unresolved Questions is "None" or numbered list
-      - [ ] ## Clarifications section exists at end
-      
-      ## Tagging & Cross-references (conditional — skip if IMPACT_SURFACE is empty)
-      
-      - [ ] Every UR tagged with [sw/module] matching Impact Surface
-      - [ ] Every FR tagged with [sw/module] matching Impact Surface
-      
-      ## Content Quality
-      
-      - [ ] No implementation details (languages, frameworks, APIs)
-      - [ ] Focused on user value and business needs
-      - [ ] Written for non-technical stakeholders
-      - [ ] All mandatory sections completed
-      
-      ## Requirement Completeness
-      
-      - [ ] No inline [NEEDS CLARIFICATION] markers remain (all in ## 9. Unresolved Questions)
-      - [ ] Requirements are testable and unambiguous
-      - [ ] All acceptance scenarios defined (Given/When/Then)
-      - [ ] Edge cases identified
-      - [ ] Scope is clearly bounded (## 2. Scope Boundary)
-      
-      ## Notes
-      
-      - Items marked incomplete require spec updates before `/tdk-clarify` or `/tdk-plan`
-      ```
+   a. **Create Spec Quality Checklist**: Read `references/spec-quality-guidelines.md` → "## Checklist Template" section. Generate checklist at `FEATURE_DIR/checklists/requirements.md` using that template.
 
    b. **Run Validation Check**: Review the spec against each checklist item:
       - For each item, determine if it passes or fails
@@ -342,63 +298,5 @@ Report completion with:
 - Checklist results (pass/fail summary)
 - Impact Surface summary (N subworkspaces, M modules touched)
 - Unresolved Questions count (from ## 9. Unresolved Questions — 0 if all resolved)
+- Mode used: `SPEC_MODE` (`MODE_SOURCE`)
 - Readiness for next phase (`/tdk-clarify` or `/tdk-plan`)
-
-**NOTE:** The script creates and checks out the new branch and initializes the spec file before writing.
-
-## General Guidelines
-
-## Quick Guidelines
-
-- Focus on **WHAT** users need and **WHY**.
-- Avoid HOW to implement (no tech stack, APIs, code structure).
-- Written for business stakeholders, not developers.
-- DO NOT create any checklists that are embedded in the spec. That will be a separate command.
-
-### Section Requirements
-
-- **Mandatory sections**: ## 1. Problem Statement, ## 2. Scope Boundary, ## 3. Impact Surface, ## 5. User Requirements & Testing, ## 6. Functional Requirements, ## 7. Success Criteria, ## 9. Unresolved Questions — must be completed for every feature
-- **Recommended sections**: ## 4. Evaluated Approaches, ## 8. Risks & Mitigations — include when relevant; mark N/A only when genuinely not applicable
-- **Reserved section**: Clarifications — always present, never remove
-
-### For AI Generation
-
-When creating this spec from a user prompt:
-
-1. **Make informed guesses**: Use context, industry standards, and common patterns to fill gaps
-2. **Document assumptions**: Record reasonable defaults in the Scope Boundary section
-3. **No inline clarification markers**: All unresolved questions go to ## 9. Unresolved Questions — no [NEEDS CLARIFICATION] markers in other sections
-4. **Prioritize questions**: scope > security/privacy > user experience > technical details
-5. **Think like a tester**: Every vague requirement should fail the "testable and unambiguous" checklist item
-6. **Tag format**: `[subworkspace/module]` — lowercase/slash only (e.g. `[backend/api]`). Must match names in .specify.json
-
-**Examples of reasonable defaults** (don't ask about these):
-
-- Data retention: Industry-standard practices for the domain
-- Performance targets: Standard web/mobile app expectations unless specified
-- Error handling: User-friendly messages with appropriate fallbacks
-- Authentication method: Standard session-based or OAuth2 for web apps
-- Integration patterns: RESTful APIs unless specified otherwise
-
-### Success Criteria Guidelines
-
-Success criteria must be:
-
-1. **Measurable**: Include specific metrics (time, percentage, count, rate)
-2. **Technology-agnostic**: No mention of frameworks, languages, databases, or tools
-3. **User-focused**: Describe outcomes from user/business perspective, not system internals
-4. **Verifiable**: Can be tested/validated without knowing implementation details
-
-**Good examples**:
-
-- "Users can complete checkout in under 3 minutes"
-- "System supports 10,000 concurrent users"
-- "95% of searches return results in under 1 second"
-- "Task completion rate improves by 40%"
-
-**Bad examples** (implementation-focused):
-
-- "API response time is under 200ms" (too technical, use "Users see results instantly")
-- "Database can handle 1000 TPS" (implementation detail, use user-facing metric)
-- "React components render efficiently" (framework-specific)
-- "Redis cache hit rate above 80%" (technology-specific)

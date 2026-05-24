@@ -10,6 +10,29 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.54.0] - 2026-05-24
+
+### Added
+- **[tdk-specify]** Consolidated `--fast` flag support — single-recommendation mode (no Option A/B brainstorm). Replaces removed `tdk-specify-fast` skill.
+- **[tdk-specify]** New references extracted from inline SKILL.md:
+  - `references/spec-writing-principles.md` (YAGNI/KISS/DRY + Planning Framework + Embedded Brainstorming)
+  - `references/spec-quality-guidelines.md` (section requirements, AI rules, success criteria)
+- **[tdk-specify]** Two new eval cases (id 5 + 6) covering `--fast` mode in English and Vietnamese.
+
+### Changed
+- **[tdk-specify]** SKILL.md restructured (3.0.0 → 3.3.0): description documents default vs `--fast` modes; Step 0.2 strips `--fast` token; principles moved to references.
+- **[tdk-constitution]** Spec-template reference wrapping/reformatting (9-section list reflow).
+- **[tdk-utils]** Skill descriptions updated to reflect tdk-specify-fast removal:
+  - `tdk-load-project-context` — `tdk-specify-fast` → `tdk-specify (supports --fast mode)`
+  - `tdk-validate-task-id` — same
+  - `tdk-skill-guide` — dropped `/tdk-specify-fast` listing
+- **[Guides]** `command-reference.md`, `evolution-comparison.md`, `scenarios/02-quick-specification.md` — replaced `specify-fast` references with `specify --fast`.
+- **[Setup]** `speckit-setup-guide.md` minor cleanup.
+
+### Removed
+- **[tdk-specify-fast]** Skill removed (was in `tdk-core`); functionality merged into `tdk-specify` via `--fast` flag.
+- **[Scripts]** `.specify/scripts/ts/src/commands/feature/create-new-feature.ts` — unused, removed.
+
 ## [1.53.0] - 2026-05-24
 
 ### Added

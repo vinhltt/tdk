@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.10.3] - 2026-05-24
+
+### Changed
+- tdk-load-project-context: description updated, tdk-specify-fast -> tdk-specify (supports --fast mode)
+- tdk-validate-task-id: description updated, tdk-specify-fast -> tdk-specify (supports --fast mode)
+- tdk-skill-guide: dropped /tdk-specify-fast from listed commands
+
 ## [1.10.2] - 2026-05-24
 
 ### Changed

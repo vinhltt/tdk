@@ -5,24 +5,26 @@
 ## Command Sequence
 
 ```
-/tdk-specify-fast → /tdk-plan → /tdk-implement-from-plan
+/tdk-specify --fast → /tdk-plan → /tdk-implement-from-plan
 ```
 
-## When to Choose `specify-fast` vs `specify`
+## When to Choose `--fast` vs Default
 
-| Criteria | Use `specify` | Use `specify-fast` |
-|----------|--------------|-------------------|
+| Criteria | Default (full brainstorm) | `--fast` |
+|----------|--------------------------|----------|
 | Feature scope | Unclear, needs exploration | Well-defined, small |
 | Brainstorm needed? | Yes — explore trade-offs | No — approach is obvious |
 | Token budget | Not a concern | Want to minimize usage |
 | Output quality | Same | Same (just skips brainstorm) |
+
+**Note:** Without `--fast`, `/tdk-specify` auto-detects the mode based on description complexity and Impact Surface.
 
 ## Step-by-Step
 
 ### 1. Create the spec quickly
 
 ```
-/tdk-specify-fast bug-042 Fix pagination offset error on company list API
+/tdk-specify bug-042 Fix pagination offset error on company list API --fast
 ```
 
 **What happens**: Same as `/tdk-specify` but skips the embedded brainstorming step. Claude generates `spec.md` directly from your description without exploring scope boundary options.
@@ -48,6 +50,7 @@
 ## Tips
 
 - The only difference is brainstorm enrichment is skipped. All other steps are identical.
-- If you realize the spec needs more depth after using `specify-fast`, run `/tdk-clarify` to fill gaps.
-- Both `specify` and `specify-fast` produce the same artifact structure — downstream commands work identically.
+- If you realize the spec needs more depth after using `--fast`, run `/tdk-clarify` to fill gaps.
+- Both `--fast` and default modes produce the same artifact structure — downstream commands work identically.
 - Use `/tdk-implement-from-plan` to execute from the plan's `## Phases` table (primary workflow).
+

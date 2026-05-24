@@ -4,6 +4,20 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.3.0] - 2026-05-24
+
+### Added
+- tdk-specify: --fast flag for single-recommendation mode (replaces removed tdk-specify-fast skill)
+- tdk-specify: new references/spec-writing-principles.md and references/spec-quality-guidelines.md extracted from inline SKILL.md
+- tdk-specify: two new eval cases (id 5 + 6) covering --fast mode in English and Vietnamese
+
+### Changed
+- tdk-specify: SKILL.md restructured (3.0.0 -> 3.3.0); description documents default vs --fast modes; principles moved to references
+- tdk-constitution: spec-template reference wrapping/reformatting (9-section list reflow)
+
+### Removed
+- tdk-specify-fast: skill removed; functionality merged into tdk-specify via --fast flag
+
 ## [3.2.0] - 2026-05-24
 
 ### Added

@@ -98,18 +98,18 @@ The Tihon command suite provides a **specification-driven development** workflow
                     │                   SPECIFICATION-DRIVEN WORKFLOW                     │
                     └─────────────────────────────────────────────────────────────────────┘
 
-  Phase 0                Phase 1                    Phase 2           Phase 3
-  ┌──────────────┐    ┌──────────┐    ┌────────┐    ┌─────────┐    ┌─────────────┐
-  │   specify    │───>│ clarify  │───>│  plan  │───>│implement-from-plan│
-  │ specify-fast │    │ (should) │    │        │    │                   │
-  └──────────────┘    └──────────┘    └────────┘    └───────────────────┘
-         │                  │              │                |
-         v                  v              v                |
-    ┌──────────┐     ┌──────────────┐ ┌─────────────┐    ┌──────────┐
-    │checklist │     │ba-requirement│ │api-design   │    │ ut:auto  │
-    │(optional)│     │  (Approval)  │ │db-design    │    │(auto UT) │
-    └──────────┘     └──────────────┘ │ (Approval)  │    └──────────┘
-                                      └─────────────┘
+  Phase 0                Phase 1              Phase 2                Phase 3
+  ┌──────────────┐    ┌──────────┐    ┌────────────────┐    ┌───────────────────┐
+  │   specify    │───>│ clarify  │───>│      plan      │───>│implement-from-plan│
+  │  (--fast)    │    │ (should) │    │                │    │                   │
+  └──────────────┘    └──────────┘    └────────────────┘    └───────────────────┘
+         │                  │                │                       |
+         v                  v                v                       |
+    ┌──────────┐     ┌──────────────┐  ┌─────────────┐        ┌──────────┐
+    │checklist │     │ba-requirement│  │api-design   │        │ ut:auto  │
+    │(optional)│     │  (Approval)  │  │db-design    │        │(auto UT) │
+    └──────────┘     └──────────────┘  │ (Approval)  │        └──────────┘
+                                       └─────────────┘
 
   Design Documents
   ┌──────────────────┐
@@ -141,7 +141,7 @@ Each command reads the output of the previous one, building a chain of artifacts
 | # | Command | Description |
 |---|---------|-------------|
 | 1 | `/tdk-specify <id> <desc>` | Create feature specification from natural language |
-| 2 | `/tdk-specify-fast <id> <desc>` | Quick specification (skips brainstorm, fewer tokens) |
+| 2 | `/tdk-specify <id> <desc> --fast` | Quick specification (skips brainstorm, fewer tokens) |
 | 3 | `/tdk-clarify <id>` | Ask up to 5 targeted questions to fill spec gaps |
 | 4 | `/tdk-ba-requirement <id>` | Generate BA requirement document for stakeholder approval |
 | 5 | `/tdk-plan <id>` | Generate implementation plan with design artifacts |
@@ -249,7 +249,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
 | specify | `/tdk-specify <id> <desc>` | — | `.specify.env` | `spec.md`, `checklists/requirements.md` | None (start here) |
-| specify-fast | `/tdk-specify-fast <id> <desc>` | — | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
+| specify (fast) | `/tdk-specify <id> <desc> --fast` | `--fast` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
 | ba-requirement | `/tdk-ba-requirement <id>` | `--figma-pc`, `--figma-sp`, `--output` | `spec.md` | `ba-requirement.md` | clarify |
 | plan | `/tdk-plan <id>` | — | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research.md`, `data-model.md`, `contracts/` | ba-requirement |
@@ -376,7 +376,7 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 
 ### Workflow Efficiency
 
-- **Start with `specify-fast`** for small, well-understood features. Use full `specify` when scope is unclear and brainstorm exploration helps.
+- **Use `/tdk-specify --fast`** for small, well-understood features. Default mode includes brainstorm exploration for unclear scope. Auto-detect picks mode based on description complexity.
 - **Always run `clarify`** before `plan` — it catches ambiguities early, saving rework during implementation.
 - **Run `analyze` before `implement`** — it catches spec-plan-tasks inconsistencies that would cause bugs.
 - **Use `status` liberally** — it's read-only and shows what's done vs. remaining.
@@ -423,7 +423,7 @@ If you get a "not found" error, follow this dependency chain:
 ```
 constitution (optional, project-level)
      ↓
-specify or specify-fast  →  clarify (optional)  →  checklist (optional)
+specify [--fast]  →  clarify (optional)  →  checklist (optional)
      ↓
 ba-requirement (for Approval)  →  test-viewpoint (optional)
      ↓
