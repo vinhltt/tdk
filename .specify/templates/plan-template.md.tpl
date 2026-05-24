@@ -56,7 +56,6 @@ Document any necessary deviations with rationale in Complexity Tracking section 
 ├── data-model.md        # Phase 1 output (/tdk-plan command)
 ├── quickstart.md        # Phase 1 output (/tdk-plan command)
 ├── contracts/           # Phase 1 output (/tdk-plan command)
-└── tasks.md             # [deprecated legacy] Phase 2 output (/tdk-tasks command - NOT created by /tdk-plan; prefer plan.md ## Phases table)
 ```
 
 ### Source Code (repository root)

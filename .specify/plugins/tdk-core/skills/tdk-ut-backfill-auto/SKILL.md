@@ -1,8 +1,8 @@
 ---
 name: tdk-ut-backfill-auto
-description: "Automated Unit Test Full Workflow. This skill should be used when the user asks to 'run unit tests', 'generate tests', 'create UT', 'tdk-ut-backfill-auto', or when /tdk-implement-from-plan or /tdk-implement-task detects a UT phase WITHOUT existing ut/plan.md. Orchestrates: check rules → plan → generate → run → report."
+description: "Automated Unit Test Full Workflow. This skill should be used when the user asks to 'run unit tests', 'generate tests', 'create UT', 'tdk-ut-backfill-auto', or when /tdk-implement-from-plan detects a UT phase WITHOUT existing ut/plan.md. Orchestrates: check rules → plan → generate → run → report."
 metadata:
-  version: "2.0.0"
+  version: "3.0.0"
 ---
 
 # /tdk-ut-backfill-auto - Automated Unit Test Workflow
@@ -296,7 +296,7 @@ Next Steps:
 
 ## UT Phase Discovery — Source Parsing
 
-Callers (`/tdk-implement-from-plan`, `/tdk-implement-task`) discover which phases are UT phases via the `## Phases` table in `plan.md`. Use the CLI wrapper:
+Callers (`/tdk-implement-from-plan`) discover which phases are UT phases via the `## Phases` table in `plan.md`. Use the CLI wrapper:
 
 ```bash
 cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/parse-phases-table.ts "{planPath}" --json
@@ -363,5 +363,4 @@ Match any of these in the H1 title **or** filename stem:
 | `/tdk-plan` | UT phase in plan output | Mentions `/tdk-ut-backfill-plan` (plan only, no code) |
 | `/tdk-implement-from-plan` (primary) | UT phase detected + NO ut/plan.md | `/tdk-ut-backfill-auto` (this skill — full workflow) |
 | `/tdk-implement-from-plan` (primary) | UT phase detected + ut/plan.md EXISTS | `/tdk-ut-backfill-impl` (generate only, skips this skill) |
-| `/tdk-implement-task` (legacy fallback) | Same logic as `/tdk-implement-from-plan` | Same delegation |
 | User | Direct invocation | `/tdk-ut-backfill-auto {feature-id}` |

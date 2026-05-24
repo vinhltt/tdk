@@ -4,14 +4,8 @@
 
 ## Command Sequence
 
-**Primary (plan.md-based):**
 ```
 /tdk-status → /tdk-implement-from-plan
-```
-
-**Legacy (tasks.md-based, [deprecated]):**
-```
-/tdk-status → /tdk-implement-task
 ```
 
 ## Step-by-Step
@@ -26,19 +20,11 @@
 
 ### 2. Resume implementation
 
-**Primary path (recommended):**
 ```
 /tdk-implement-from-plan feat-001
 ```
 
 **What happens**: Claude reads `plan.md ## Phases` (primary source of truth), finds the first uncompleted phase, and continues execution from there. Already completed phases are skipped.
-
-**Legacy path [deprecated]:**
-```
-/tdk-implement-task feat-001
-```
-
-**What happens**: Claude reads `tasks.md`, finds the first uncompleted task `[ ]`, and continues execution from there. Already completed tasks `[X]` are skipped. *(This path is maintained for backward compatibility but plan.md-based execution is preferred.)*
 
 ## Common Situations
 
@@ -62,12 +48,10 @@ If `status` shows warnings (>7 days stale):
 
 ### "Implementation was interrupted mid-phase"
 
-`/tdk-implement-from-plan` resumes from the last uncompleted phase in `plan.md ## Phases`. If a partially-completed phase caused issues, you may need to manually fix the state before continuing. Alternatively, use `/tdk-implement-task` (legacy) to resume from the last uncompleted task in `tasks.md`.
+`/tdk-implement-from-plan` resumes from the last uncompleted phase in `plan.md ## Phases`. If a partially-completed phase caused issues, you may need to manually fix the state before continuing.
 
 ## Tips
 
 - `status` is your starting point after any break — it tells you exactly where things stand.
-- `implement-from-plan` is idempotent for completed phases — re-running it skips completed items safely (primary path).
-- `implement-task` is idempotent for completed tasks — re-running it skips `[X]` items safely (legacy path).
+- `implement-from-plan` is idempotent for completed phases — re-running it skips completed items safely.
 - If you're in a new chat session, provide the task ID explicitly since Claude won't have conversation context.
-- Prefer `/tdk-implement-from-plan` (uses `plan.md ## Phases`); use `/tdk-implement-task` only if working with legacy `tasks.md` checkboxes.

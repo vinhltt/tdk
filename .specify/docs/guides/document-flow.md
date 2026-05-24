@@ -41,21 +41,6 @@ flowchart TD
     PLAN -->|/tdk-implement-from-plan| CODE_BE[backend/src/<br/>Backend Code]
     PLAN -->|/tdk-implement-from-plan| CODE_FE[frontend/pages/<br/>Frontend Code]
 
-    %% Phase 2: Implementation (Legacy Path - Deprecated)
-    RESEARCH -.->|[deprecated] /tdk-tasks| TASKS_LEGACY["tasks.md<br/>(Legacy/Deprecated)"]
-    DATAMODEL -.->|[deprecated] /tdk-tasks| TASKS_LEGACY
-    STATETRANS -.->|[deprecated] /tdk-tasks| TASKS_LEGACY
-    CONTRACTS -.->|[deprecated] /tdk-tasks| TASKS_LEGACY
-    PAGEDESIGNS -.->|[deprecated] /tdk-tasks| TASKS_LEGACY
-    WIREFRAMES -.->|[deprecated] /tdk-tasks| TASKS_LEGACY
-    API_DESIGN -.->|[deprecated] /tdk-tasks| TASKS_LEGACY
-    BATCH_DESIGN -.->|[deprecated] /tdk-tasks| TASKS_LEGACY
-    UI_DESIGN -.->|[deprecated] /tdk-tasks| TASKS_LEGACY
-
-    TASKS_LEGACY -->|[deprecated] /tdk-implement-task| CODE_BE
-    TASKS_LEGACY -->|[deprecated] /tdk-implement-task| CODE_FE
-    TASKS_LEGACY -->|[deprecated] /tdk-implement-task| TESTS[tests/<br/>Test Code]
-
     %% Styling
     classDef phase0 fill:#e1f5ff,stroke:#01579b,stroke-width:2px
     classDef phase1 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
@@ -72,7 +57,6 @@ flowchart TD
     class TEST_VP phase0
     class CONSTITUTION,UIUX,REF_DATAMODEL,REF_STATE reference
     class CODE_BE,CODE_FE,TESTS code
-    class TASKS_LEGACY reference
 ```
 
 ---
@@ -165,38 +149,6 @@ flowchart TD
     classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
 
     class PLAN input
-    class CODE_BE,CODE_FE,TESTS code
-```
-
-#### Legacy Path (Deprecated)
-```mermaid
-flowchart TD
-    subgraph INPUTS[Design Artifacts]
-        RESEARCH[research.md]
-        DATAMODEL[data-model.md]
-        CONTRACTS[contracts/]
-        PAGEDESIGNS[page-designs/]
-        API_DESIGN[api_design.md]
-        DB_DESIGN[db_design.md]
-    end
-
-    TASKS["tasks.md<br/>(Deprecated)"]
-
-    subgraph IMPL_OUTPUT[Implementation Output]
-        CODE_BE[backend/src/]
-        CODE_FE[frontend/pages/]
-        TESTS[tests/]
-    end
-
-    INPUTS -->|[deprecated] "/tdk-tasks"| TASKS
-    TASKS -->|[deprecated] "/tdk-implement-task"| IMPL_OUTPUT
-
-    classDef input fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef output fill:#fff3e0,stroke:#e65100,stroke-width:2px,stroke-dasharray: 5 5
-    classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
-
-    class RESEARCH,DATAMODEL,CONTRACTS,PAGEDESIGNS,API_DESIGN,DB_DESIGN input
-    class TASKS output
     class CODE_BE,CODE_FE,TESTS code
 ```
 
@@ -303,13 +255,12 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-ba-requirement` | After specify |
 | `ba-requirement.md` | `/tdk-ba-requirement` | `spec.md` | `/tdk-plan` | For Approval |
 | `plan.md` | `/tdk-plan` | `ba-requirement.md`, `constitution.md` | `plan.md ## Phases`, `/tdk-implement-from-plan` | Feature start |
-| `plan.md ## Phases` | `/tdk-plan` | `ba-requirement.md`, design artifacts | `/tdk-implement-from-plan` (primary), `/tdk-tasks` (legacy) | Feature start |
-| `research.md` | `/tdk-plan` | `ba-requirement.md` | `/tdk-tasks` (legacy) | Feature start |
-| `data-model.md` | `/tdk-plan` | `ba-requirement.md` | `/tdk-tasks` (legacy) | Feature start |
-| `api_design.md` | `/tdk-api-design` | `plan.md` | `/tdk-tasks` (legacy) | For Approval |
-| `batch-design.md` | `/tdk-batch-design` | `spec.md`, `research.md`, `data-model.md` | `/tdk-tasks` (legacy) | For Approval |
+| `plan.md ## Phases` | `/tdk-plan` | `ba-requirement.md`, design artifacts | `/tdk-implement-from-plan` | Feature start |
+| `research.md` | `/tdk-plan` | `ba-requirement.md` | Reference | Feature start |
+| `data-model.md` | `/tdk-plan` | `ba-requirement.md` | Reference | Feature start |
+| `api_design.md` | `/tdk-api-design` | `plan.md` | Reference | For Approval |
+| `batch-design.md` | `/tdk-batch-design` | `spec.md`, `research.md`, `data-model.md` | Reference | For Approval |
 | `test-viewpoint.csv` | `/tdk-test-viewpoint` | `spec.md`, `ba-requirement.md` | Manual reference | After ba-requirement |
-| `tasks.md` (deprecated) | `/tdk-tasks` [deprecated] | Design artifacts (API, DB, Page, Data Model) | `/tdk-implement-task` [deprecated] | Legacy only |
 | `backend/src/**` | `/tdk-implement-from-plan` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement-from-plan` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
 | `ut/plan.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), consumer UT skill | `/tdk-ut-backfill-impl` | Feature UT |
@@ -335,20 +286,18 @@ flowchart LR
 
     subgraph COMMANDS[Commands That Reference]
         PLAN[tdk-plan]
-        TASKS[tdk-tasks]
     end
 
     CONST -.->|principles| PLAN
     UIUX -.->|design| PLAN
     REF_DM -.->|enum format| PLAN
     REF_ST -.->|state format| PLAN
-    REF_ST -.->|validation| TASKS
 
     classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:2px,stroke-dasharray: 5 5
     classDef command fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
 
     class CONST,UIUX,REF_DM,REF_ST reference
-    class PLAN,TASKS command
+    class PLAN command
 ```
 
 ---
@@ -366,18 +315,12 @@ flowchart TD
     CLARIFY --> PLAN[tdk-plan]
     PLAN --> IMPLEMENT[tdk-implement-from-plan]
     
-    PLAN -.->|[deprecated] legacy path| TASKS[tdk-tasks]
-    TASKS -->|[deprecated]| IMPLEMENT_LEGACY[tdk-implement-task]
-
     UPDATE_CONTRACT --> PLAN
 
     classDef event fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef command fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
-    classDef deprecated fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5
-
     class START event
-    class SPECIFY,CLARIFY,PLAN,SPECIFY_PAGES,IMPLEMENT command
-    class TASKS,IMPLEMENT_LEGACY deprecated
+    class SPECIFY,CLARIFY,PLAN,IMPLEMENT command
 ```
 
 ---
@@ -399,7 +342,6 @@ flowchart TD
 ├── page-designs/                       # Phase 1: Screen specifications
 │   └── {category}/
 │       └── {screen}.md
-├── tasks.md                            # Phase 2: Implementation task list (deprecated — use plan.md ## Phases instead)
 └── checklists/                         # Quality checklists
     └── requirements.md
 ```

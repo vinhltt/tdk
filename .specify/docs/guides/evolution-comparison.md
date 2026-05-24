@@ -7,7 +7,7 @@ Three generations of the Tihon framework, each targeting a different AI platform
 
 - **speckit-original** — 9 commands¹, GitHub Copilot, core workflow only
 - **speckit-tdk-jp** — 18 commands, GitHub Copilot, full dev cycle (hardcoded to one project)
-- **CommonDragon** — 38 commands, Claude Code CLI, multi-workspace, no external deps
+- **CommonDragon** — 36 commands, Claude Code CLI, multi-workspace, no external deps
 
 ---
 
@@ -15,7 +15,7 @@ Three generations of the Tihon framework, each targeting a different AI platform
 
 | Dimension | speckit-original | speckit-tdk-jp | CommonDragon |
 |-----------|-----------------|----------------|--------------|
-| Commands | 9¹ | 18 | **38** |
+| Commands | 9¹ | 18 | **36** |
 | Platform | Agent templates | GitHub Copilot | **Claude Code CLI** |
 | UT Framework | -- | -- | **3 commands** |
 | Sub-workspace | -- | -- | **Isolation support** |
@@ -32,7 +32,7 @@ Three generations of the Tihon framework, each targeting a different AI platform
 | **Platform** | | | |
 | Runtime | Agent templates | GitHub Copilot + bash | **Claude Code CLI** |
 | Language | English | Japanese | **English** |
-| Command count | 9¹ | 18 | **38** |
+| Command count | 9¹ | 18 | **36** |
 | External dependencies | Git scripts | GitHub Copilot + bash | **None (MCP native)** |
 | **Specification** | | | |
 | Spec + brainstorm | ✓ | ✓ | ✓ |
@@ -91,7 +91,7 @@ Three generations of the Tihon framework, each targeting a different AI platform
 
 ## Core Command Upgrades
 
-Commands present in predecessors, upgraded in CommonDragon (13 total):
+Commands present in predecessors, upgraded in CommonDragon (11 total):
 
 | Command | Predecessor | CommonDragon Upgrade |
 |---------|-------------|----------------------|
@@ -99,8 +99,6 @@ Commands present in predecessors, upgraded in CommonDragon (13 total):
 | `/tdk-clarify` | Up to 5 Q&A | **Deeper integration with spec.md structure** |
 | `/tdk-constitution` | Template (orig) / 5 principles (jp) | **8 principles, v2.1 governance, amendment versioning** |
 | `/tdk-plan` | plan + research + constitution + quickstart + wireframes | **+ YAML contracts, enhanced quickstart & wireframe generation, ## Phases table SoT** |
-| `/tdk-tasks` [deprecated] | Task list + `[P]` parallel + TDD ordering | **+ Phase grouping `[P1/P2/P3]`, legacy path (use plan ## Phases instead)** |
-| `/tdk-implement-task` [deprecated] | Execute tasks + `[X]` tracking + per-task branching | **+ auto-delegate UT to `ut:auto`, legacy path** |
 | `/tdk-analyze` | Basic quality check | **+ Full cross-artifact consistency, gap detection, coverage scoring** |
 | `/tdk-checklist` | Quality testing (orig only)² | **+ Gate mode: blocks implementation until items resolved** |
 
@@ -145,7 +143,7 @@ speckit-original and speckit-tdk-jp auto-created a feature branch per spec (e.g.
 
 ### Plan.md ## Phases as Primary SoT
 
-CommonDragon elevates the `plan.md` file's `## Phases` table as the primary source of truth for implementation, replacing the legacy `tasks.md` approach. This reduces artifact overhead while maintaining phase-based organization. The legacy `/tdk-tasks` → `/tdk-implement-task` path remains available for complex features requiring granular task dependencies.
+CommonDragon elevates the `plan.md` file's `## Phases` table as the primary source of truth for implementation. This reduces artifact overhead while maintaining phase-based organization.
 
 ### Validation-First
 

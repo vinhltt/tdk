@@ -4,6 +4,19 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.0.0] - 2026-05-24
+
+### Changed
+- tdk-constitution: drop reference to removed tasks-template.md.tpl
+- tdk-implement-from-plan: remove legacy tasks.md advisory check
+- tdk-specify: drop /tdk-tasks from next-step guidance
+- tdk-specify-fast: drop /tdk-tasks from next-step guidance
+- tdk-ut-backfill-auto: drop /tdk-implement-task caller references
+
+### Removed
+- tdk-implement-task: remove deprecated skill (replaced by tdk-implement-from-plan with plan.md ## Phases as SoT)
+- tdk-tasks: remove deprecated skill (replaced by /tdk-plan ## Phases table)
+
 ## [2.1.0] - 2026-05-23
 
 ### Added

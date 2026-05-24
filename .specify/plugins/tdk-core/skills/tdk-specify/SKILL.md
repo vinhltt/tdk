@@ -2,7 +2,7 @@
 name: tdk-specify
 description: "Create or update the feature specification from a natural language feature description."
 metadata: 
-  version: "2.1.0"
+  version: "3.0.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -95,7 +95,7 @@ Output goes directly into spec.md.
 
 **This command does NOT:**
 - Create implementation plans (use /tdk-plan)
-- Generate tasks (use /tdk-tasks)
+- Generate tasks
 - Write code
 
 ## Quality Gates

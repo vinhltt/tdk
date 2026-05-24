@@ -2,7 +2,7 @@
 name: tdk-specify-fast
 description: "Quick feature specification without brainstorm enrichment. Same workflow as /tdk-specify but skips embedded brainstorming for faster, lower-token spec generation."
 metadata: 
-  version: "2.1.0"
+  version: "3.0.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -74,7 +74,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 **This command does NOT:**
 - Create implementation plans (use /tdk-plan)
-- Generate tasks (use /tdk-tasks)
+- Generate tasks
 - Write code
 
 ## Quality Gates

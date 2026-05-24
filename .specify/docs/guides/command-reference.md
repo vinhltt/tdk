@@ -33,7 +33,7 @@ CommonDragon is the third generation of this framework, built natively for Claud
 
 | Dimension | speckit-original | speckit-tdk-jp | CommonDragon |
 |-----------|-----------------|----------------|--------------|
-| Commands | 9 | 18 | **15** (11 TS + 4 bash fallback) |
+| Commands | 9 | 18 | **13** (11 TS + 2 bash fallback) |
 | Platform | Agent templates | GitHub Copilot | **Claude Code CLI** |
 | UT Framework | -- | -- | **3 commands** |
 | Sub-workspace | -- | -- | **Isolation support** |
@@ -100,10 +100,10 @@ The Tihon command suite provides a **specification-driven development** workflow
 
   Phase 0                Phase 1                    Phase 2           Phase 3
   ┌──────────────┐    ┌──────────┐    ┌────────┐    ┌─────────┐    ┌─────────────┐
-  │   specify    │───>│ clarify  │───>│  plan  │───>│implement-from-plan (primary) │
-  │ specify-fast │    │ (should) │    │        │    │   or tasks→implement-task    │
-  └──────────────┘    └──────────┘    └────────┘    │   [legacy]                 │
-         │                  │              │         └─────────────────────────────┘
+  │   specify    │───>│ clarify  │───>│  plan  │───>│implement-from-plan│
+  │ specify-fast │    │ (should) │    │        │    │                   │
+  └──────────────┘    └──────────┘    └────────┘    └───────────────────┘
+         │                  │              │                |
          v                  v              v                |
     ┌──────────┐     ┌──────────────┐ ┌─────────────┐    ┌──────────┐
     │checklist │     │ba-requirement│ │api-design   │    │ ut:auto  │
@@ -134,8 +134,6 @@ The Tihon command suite provides a **specification-driven development** workflow
 
 Each command reads the output of the previous one, building a chain of artifacts: `spec.md` → `plan.md` (with ## Phases table) → source code.
 
-**Legacy flow** [deprecated]: `specify` → `clarify` → `plan` → `tasks` → `implement-task` (use primary flow instead).
-
 ---
 
 ## Cheat Sheet
@@ -148,8 +146,6 @@ Each command reads the output of the previous one, building a chain of artifacts
 | 4 | `/tdk-ba-requirement <id>` | Generate BA requirement document for stakeholder approval |
 | 5 | `/tdk-plan <id>` | Generate implementation plan with design artifacts |
 | 6 | `/tdk-api-design <id>` | Generate detailed API design (Scenario A/B) with DB schema for approval |
-| 8 | `/tdk-tasks <id>` [deprecated] | Legacy: Generate dependency-ordered task breakdown |
-| 9 | `/tdk-implement-task <id>` [deprecated] | Legacy: Execute all tasks from tasks.md phase-by-phase |
 | 10 | `/tdk-analyze <id>` | Cross-artifact consistency and quality analysis |
 | 11 | `/tdk-status <id>` | Show workflow progress (read-only, any time) |
 | 12 | `/tdk-checklist <id> [focus]` | Generate quality checklist for requirements |
@@ -216,24 +212,6 @@ Generates `plan.md` with architecture decisions, file structure, tech stack, and
 
 Executes implementation directly from `plan.md ## Phases` table. Lightweight approach for small to medium features. Marks completion via status comments in `plan.md`. UT phases auto-delegate to `/tdk-ut-backfill-auto`.
 
-### Step 4 (Alternative) — Generate tasks [deprecated]
-
-For larger projects with many dependencies, use the legacy task-based path:
-
-```
-/tdk-tasks feat-001
-```
-
-[deprecated — legacy path] Creates `tasks.md` with phased, dependency-ordered tasks. Each task has an ID, description, file paths, and parallel markers `[P]`.
-
-Then:
-
-```
-/tdk-implement-task feat-001
-```
-
-[deprecated — legacy path] Executes all tasks phase-by-phase: setup → tests → core → integration → polish. Marks completed tasks `[X]` in `tasks.md`. UT phases auto-delegate to `/tdk-ut-backfill-auto`.
-
 ### Step 5 — Run unit tests (optional)
 
 ```
@@ -262,11 +240,6 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 └── checklists/          ← /tdk-checklist (optional)
 ```
 
-**Legacy Path** (optional, when using `/tdk-tasks` + `/tdk-implement-task`):
-```
-├── tasks.md             ← Step 4 [deprecated]
-```
-
 ---
 
 ## Command Reference
@@ -281,10 +254,8 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | ba-requirement | `/tdk-ba-requirement <id>` | `--figma-pc`, `--figma-sp`, `--output` | `spec.md` | `ba-requirement.md` | clarify |
 | plan | `/tdk-plan <id>` | — | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research.md`, `data-model.md`, `contracts/` | ba-requirement |
 | api-design | `/tdk-api-design <id>` | `--scenario A|B` | `spec.md`, `research.md` | `api_design.md` (incl. DB schema) | plan |
-| tasks [deprecated] | `/tdk-tasks <id>` | — | `plan.md`, `spec.md` | `tasks.md` | plan |
 | implement-from-plan | `/tdk-implement-from-plan <id>` | — | `plan.md` | Source code, `plan.md` (with status markers) | plan |
-| implement-task [deprecated] | `/tdk-implement-task <id>` | — | `tasks.md`, `plan.md` | Source code, `tasks.md` (marked `[X]`) | tasks |
-| analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md`, `tasks.md` (legacy) or `plan.md ## Phases` | Report (no file created) | plan or tasks |
+| analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report (no file created) | specify |
 
 ### UT Commands
@@ -346,17 +317,6 @@ Detection: `--scenario A|B` flag explicit, else `research.md` exists → B, othe
 - **(a) Update phases only** — When feature scope expands or phases change: re-run `/tdk-plan <id>` (overwrites plan.md; you lose status markers)
 - **(b) Append new phases** — When adding follow-up work: manually add rows to the existing `## Phases` table in plan.md, then resume with `/tdk-implement-from-plan <id>`
 
-### Legacy Implementation Path [deprecated]
-
-For complex features with many dependencies, the legacy task-based pipeline remains available:
-
-| Command | Syntax | Key Flags | Input | Output | Depends On |
-|---------|--------|-----------|-------|--------|------------|
-| tasks [deprecated] | `/tdk-tasks <id>` | — | `plan.md` | `tasks.md` | plan |
-| implement-task [deprecated] | `/tdk-implement-task <id>` | — | `tasks.md`, `plan.md` | Source code, `tasks.md` (marked `[X]`) | tasks |
-
-Use `/tdk-tasks` → `/tdk-implement-task` only if you need granular, dependency-ordered task tracking that exceeds what plan.md ## Phases provides.
-
 ## Document Flow
 
 See [tdk-document-flow.md](document-flow.md) for full Mermaid flow diagrams showing input/output relationships between all commands and artifacts.
@@ -370,12 +330,6 @@ req → /specify → spec.md → /clarify → spec.md (clarified)
   → /batch-design → batch-design.md (Approval)
   → /db-design → db_design.md (Approval)
   → /implement-from-plan → source code
-```
-
-**Legacy flow** [deprecated]:
-```
-  → /plan → plan.md, research.md, data-model.md, contracts/, wireframes/
-  → /tasks → tasks.md → /implement-task → source code
 ```
 
 ---
@@ -457,7 +411,6 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 | "Invalid prefix" | Task ID prefix not in allowed list | Check `ERCSPEC_PREFIX_LIST` in `.specify/.specify.env` |
 | "Task ID already exists" | Feature directory already created | Work on existing feature or use a different ID |
 | "No UT skill found" | Running UT commands without a consumer UT skill | Create one in `.claude/skills/{name}/SKILL.md` with UT conventions |
-| "tasks.md not found" [legacy] | Running `/tdk-implement-task` before `/tdk-tasks` | Run `/tdk-tasks <id>` first (legacy path) |
 | Script execution fails | Git Bash not available on Windows | Install Git for Windows (includes Git Bash) |
 | "Feature not found" | Wrong task ID or folder | Check `.specify/specs/` for existing features; verify prefix in `.specify.env` |
 | Checklist gate blocks implement | Incomplete checklist items | Complete checklist items or confirm to proceed when prompted |
@@ -477,15 +430,6 @@ ba-requirement (for Approval)  →  test-viewpoint (optional)
    plan (generates ## Phases table)  →  api-design  →  batch-design  →  db-design (as needed)
      ↓
  implement-from-plan  →  status (any time)
-```
-
-**Legacy Path [deprecated]:**
-```
-   plan  →  api-design  →  batch-design  →  db-design (as needed)
-     ↓
-   tasks  →  analyze (optional)
-     ↓
- implement-task  →  status (any time)
 ```
 
 Each command requires the output of commands above it in the chain.

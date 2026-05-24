@@ -66,16 +66,6 @@ Type in Claude Code chat:
 
 Run at any point to see a progress bar, completed phases, and recommendations.
 
-### Legacy: Generate task breakdown (deprecated)
-
-If you prefer the legacy workflow with explicit task breakdown:
-
-```
-/tdk-tasks feat-001
-```
-
-**Note:** `/tdk-tasks` is deprecated. The primary workflow uses `plan.md ## Phases` as the source-of-truth for implementation phases. Use `/tdk-implement-from-plan` to execute from the plan directly.
-
 ## Tips
 
 - If your feature is small and well-understood, skip `clarify` and go straight to `plan`.

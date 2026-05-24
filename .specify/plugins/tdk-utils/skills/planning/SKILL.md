@@ -3,7 +3,7 @@ name: planning
 description: Plan implementations, design architectures, create technical roadmaps with detailed phases
 user-invocable: false
 metadata:
-  version: "1.0.4"
+  version: "1.10.2"
 ---
 
 # Planning Skill
@@ -59,7 +59,7 @@ Load: `references/output-standards.md`
 - Summarize research + design decisions
 - Link to generated artifacts
 - List dependencies and risks
-- Guide user to `/tdk-plan` for plan.md ## Phases table (`/tdk-tasks` [deprecated])
+- Guide user to `/tdk-plan` for plan.md ## Phases table
 
 ## Workflow Process
 
@@ -70,7 +70,7 @@ Load: `references/output-standards.md`
 5. **Plan Documentation** → Write plan.md with summary, NOT implementation tasks
 6. **Review & Refine** → Ensure completeness, clarity, actionability
 
-**Note:** This skill creates plan.md with `## Phases` table as the primary SoT. `/tdk-tasks` is [deprecated] — use `/tdk-plan` to update the ## Phases table.
+**Note:** This skill creates plan.md with `## Phases` table as the primary SoT.
 
 ## Subagent Delegation (Copilot)
 
@@ -97,7 +97,7 @@ GitHub Copilot supports subagents in VS Code with manual continuation:
 - `quickstart.md` - Phase 1 integration scenarios
 
 **What this skill does NOT produce:**
-- `plan.md ## Phases` table — primary task/phase SoT (replaces tasks.md [deprecated])
+- `plan.md ## Phases` table — primary task/phase SoT
 - Implementation code
 - Test code
 - Pull requests or commits
@@ -106,7 +106,7 @@ GitHub Copilot supports subagents in VS Code with manual continuation:
 - Report paths to generated files
 - Summarize key decisions from research
 - Note any remaining questions or risks
-- Guide user to next step: `/tdk-implement-from-plan {task-id}` (use `/tdk-plan {task-id}` to view/update the ## Phases table; `/tdk-tasks` is [deprecated])
+- Guide user to next step: `/tdk-implement-from-plan {task-id}`
 
 ### Plan Directory Structure
 
@@ -123,10 +123,9 @@ GitHub Copilot supports subagents in VS Code with manual continuation:
 ├── contracts/                       # Phase 1: API specs (THIS command output)
 │   └── *.yaml or *.json
 ├── quickstart.md                    # Phase 1: Integration scenarios (THIS command output)
-└── tasks.md                         # [deprecated] Legacy task breakdown — SoT is plan.md ## Phases table
 ```
 
-**Important:** This skill creates research & design artifacts and plan.md ## Phases table (primary SoT). `/tdk-tasks` is [deprecated].
+**Important:** This skill creates research & design artifacts and plan.md ## Phases table (primary SoT).
 
 ## Quality Standards
 

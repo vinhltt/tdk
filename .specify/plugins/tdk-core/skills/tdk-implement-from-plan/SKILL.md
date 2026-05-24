@@ -2,7 +2,7 @@
 name: tdk-implement-from-plan
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata: 
-  version: "1.10.2"
+  version: "3.0.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -59,11 +59,6 @@ Parse JSON output. Then:
   ```
   STOP.
 
-- **tasks.md check** (advisory only): If tasks.md exists, inform user:
-  ```
-  ℹ️  tasks.md detected (legacy artifact). This skill now uses plan.md ## Phases table as SoT. For legacy resume path only, use /tdk-implement-task.
-  ```
-  Do NOT stop — continue with plan.md path.
 
 ### Step 2: Parse Phases Table
 

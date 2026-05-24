@@ -10,6 +10,39 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.50.0] - 2026-05-24
+
+### Removed
+- **[Skills]** Legacy task-based workflow skills (replaced by `plan.md ## Phases` SoT)
+  - tdk-implement-task (was 2.1.0)
+  - tdk-tasks (was 1.11.1)
+- **[Templates]** Legacy task-flow artifacts
+  - task-design-template.md.tpl
+  - task-requirement-template.md.tpl
+  - tasks-template.md.tpl
+
+### Changed
+- **[Skills]** tdk-core skills drop legacy task references and bump to 3.0.0
+  - tdk-constitution: drop reference to removed tasks-template.md.tpl
+  - tdk-implement-from-plan: remove legacy tasks.md advisory check (plan.md ## Phases is sole SoT)
+  - tdk-specify: drop /tdk-tasks from next-step guidance
+  - tdk-specify-fast: drop /tdk-tasks from next-step guidance
+  - tdk-ut-backfill-auto: drop /tdk-implement-task caller references in description and routing
+- **[Skills]** tdk-utils planning/context skills drop legacy task references
+  - planning (→ 1.10.2): remove /tdk-tasks and tasks.md from plan directory structure and SoT notes
+  - planning output-standards: remove tasks.md from artifacts list and next-step guidance
+  - tdk-load-project-context (→ 1.10.2): drop tdk-implement and tdk-tasks from caller list
+  - tdk-validate-task-id (→ 1.10.2): drop tdk-implement and tdk-tasks from caller list
+- **[Templates]** `plan-template.md.tpl`: drop deprecated tasks.md entry from plan directory structure
+- **[Guides]** Documentation aligned to plan.md ## Phases workflow (legacy path removed)
+  - command-reference.md: drop legacy cheat-sheet rows, deprecated implementation section, command count 15→13
+  - document-flow.md: remove legacy mermaid edges and legacy path subgraph
+  - evolution-comparison.md: command count 38→36, drop legacy upgrade rows, remove backward-compat note
+  - scenarios/01-full-feature-development.md: drop legacy task-breakdown section
+  - scenarios/11-resume-existing-feature.md: remove legacy resume path and associated tips
+- **[General]** `manifest.json`: drop tdk-implement-task and tdk-tasks entries from tdk-core
+- **[General]** tdk-utils: scaffold initial `.cursor-plugin/plugin.json` mirror
+
 ## [1.49.0] - 2026-05-23
 
 ### Added
