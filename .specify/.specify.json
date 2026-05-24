@@ -20,5 +20,8 @@
     "defaultFolder": "specs",
     "ticketFormat": "^([a-zA-Z]+/)?([a-zA-Z]+)-([0-9]+)$"
   },
-  "logLevel": "Debug"
+  "logLevel": "Debug",
+  "rules": {
+    "path": ".specify/rules"
+  }
 }

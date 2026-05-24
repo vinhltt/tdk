@@ -4,6 +4,19 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.1.0] - 2026-05-24
+
+### Added
+- Hook path-rule-injector.cjs — PreToolUse on Read|Edit|Write injects path-matched rules from .specify/rules/*.md
+- Lib modules rule-loader.cjs, rule-matcher.cjs and vendored minimatch/yaml for hook-time rule resolution
+- Sample rules under .specify/rules/: always-apply-project-guidelines, api-reference-guide, typescript-conventions
+- Tests for rule-loader, rule-matcher, and path-rule-injector integration
+
+### Changed
+- hooks.json — new PreToolUse matcher and description update for path-rule-injector
+- speckit-config-reader.cjs — getRulesPath renamed to getSubWorkspaceRulesPath; defaults extended with rules.path
+- context-builder.cjs — call site updated to getSubWorkspaceRulesPath
+
 ## [3.0.0] - 2026-05-24
 
 ### Changed

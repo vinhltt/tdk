@@ -4,7 +4,7 @@ const path = require('path');
 const {
   loadSpeckitConfig,
   detectActiveWorkspace,
-  getRulesPath
+  getSubWorkspaceRulesPath
 } = require('./speckit-config-reader.cjs');
 
 const DEDUP_MARKER = '<!-- speckit-dev-context-injected -->';
@@ -73,7 +73,7 @@ function buildWorkspaceSection(config, activeWorkspace) {
 }
 
 function buildRulesSection(config, activeWorkspace, cwd = process.cwd()) {
-  const rulesPath = activeWorkspace ? getRulesPath(config, activeWorkspace, cwd) : null;
+  const rulesPath = activeWorkspace ? getSubWorkspaceRulesPath(config, activeWorkspace, cwd) : null;
   const rulesPathDisplay = rulesPath ? normalizePath(path.relative(cwd, rulesPath)) : '(root workspace)';
   const devRulesPath = '.claude/rules/development-rules.md';
 

@@ -11,7 +11,7 @@ const {
   getSpecsPath,
   getConfigurationsPath,
   getMemoryPath,
-  getRulesPath
+  getSubWorkspaceRulesPath
 } = require('../lib/speckit-config-reader.cjs');
 
 function makeTempJsonRoot(configOverrides = {}) {
@@ -118,11 +118,11 @@ test('path helpers resolve expected speckit paths', () => {
   assert.equal(getMemoryPath(config, cwd).replace(/\\/g, '/'), '/project/.specify/memory');
 });
 
-test('getRulesPath resolves workspace-specific rules directory', () => {
+test('getSubWorkspaceRulesPath resolves workspace-specific rules directory', () => {
   const cwd = '/project';
   const config = { docs: { path: '.specify/configurations' } };
   const ws = { name: 'backend', path: 'backend' };
-  const rulesPath = getRulesPath(config, ws, cwd).replace(/\\/g, '/');
+  const rulesPath = getSubWorkspaceRulesPath(config, ws, cwd).replace(/\\/g, '/');
   assert.equal(rulesPath, '/project/.specify/configurations/sub-workspaces/backend/rules');
 });
 

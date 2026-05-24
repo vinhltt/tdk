@@ -8,7 +8,8 @@ const SPECKIT_DEFAULTS = {
   subWorkspaces: [],
   git: { mainBranch: 'develop', prefixList: '' },
   specs: { root: '.specify', defaultFolder: 'specs', ticketFormat: '' },
-  logLevel: 'Information'
+  logLevel: 'Information',
+  rules: { path: '.specify/rules' }
 };
 
 function deepCloneDefaults(cwd = process.cwd()) {
@@ -19,7 +20,8 @@ function deepCloneDefaults(cwd = process.cwd()) {
     subWorkspaces: [],
     git: { ...SPECKIT_DEFAULTS.git },
     specs: { ...SPECKIT_DEFAULTS.specs },
-    logLevel: SPECKIT_DEFAULTS.logLevel
+    logLevel: SPECKIT_DEFAULTS.logLevel,
+    rules: { ...SPECKIT_DEFAULTS.rules }
   };
 }
 
@@ -96,7 +98,7 @@ function getMemoryPath(config, cwd = process.cwd()) {
   return path.join(root, config.specs.root, 'memory');
 }
 
-function getRulesPath(config, workspace, cwd = process.cwd()) {
+function getSubWorkspaceRulesPath(config, workspace, cwd = process.cwd()) {
   if (!workspace?.path) return null;
   const root = getWorkspaceRoot(config, cwd);
   return path.join(root, config.docs.path, 'sub-workspaces', workspace.path, 'rules');
@@ -111,5 +113,5 @@ module.exports = {
   getSpecsPath,
   getConfigurationsPath,
   getMemoryPath,
-  getRulesPath
+  getSubWorkspaceRulesPath
 };

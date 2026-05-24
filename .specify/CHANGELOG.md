@@ -10,6 +10,25 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.51.0] - 2026-05-24
+
+### Added
+- **[Hooks]** path-rule-injector.cjs — PreToolUse on Read|Edit|Write injects path-matched rules from `.specify/rules/*.md` into tool input
+- **[Plugin Libs]** Path-based rule system for tdk-core
+  - lib/rule-loader.cjs — parses frontmatter (paths, description, inject), caches by mtime, applies soft limits (20 rules, 2KB body)
+  - lib/rule-matcher.cjs — minimatch-backed glob matching with negation support
+  - lib/vendored/minimatch.cjs and lib/vendored/yaml.cjs — vendored runtime deps (no npm install)
+- **[Examples]** Sample rules under `.specify/examples/rules/`
+  - always-apply-project-guidelines.md (paths: `**`, once-per-session dedup)
+  - api-reference-guide.md (`inject: reference` mode)
+  - typescript-conventions.md (glob + negation example)
+- **[Tests]** Coverage for rule-loader, rule-matcher, and path-rule-injector integration
+
+### Changed
+- **[Configurations]** `.specify.json` schema gains optional `rules.path` (default `.specify/rules`); `speckit-config-reader.cjs` defaults extended accordingly
+- **[Plugin Libs]** `speckit-config-reader.cjs` renames `getRulesPath` → `getSubWorkspaceRulesPath` (disambiguates from new workspace-rules path); `context-builder.cjs` call site updated
+- **[Hooks]** `tdk-core` hooks.json — adds PreToolUse matcher for Read|Edit|Write wiring path-rule-injector; description updated; version 3.1.0
+
 ## [1.50.0] - 2026-05-24
 
 ### Removed
