@@ -10,6 +10,21 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.53.0] - 2026-05-24
+
+### Added
+- **[Plugins]** `tdk-scaffold` plugin (v0.1.0) — initial release
+  - Architecture-aware skill/agent recommendations from `.specify/.specify.json` + project docs
+  - Three-format manifests: .claude-plugin / .codex-plugin / .cursor-plugin
+- **[Skills]** `tdk-recommend-automations` (v0.1.0) under tdk-scaffold
+  - Reads `architecture.type` + `docs.path`, maps monolith/modular-monolith → monolith preset, microservices/layered-application → distributed preset
+  - Optional community skill discovery via `vercel-labs:find-skills`
+  - Emits `.specify/reports/recommendation-<project>.md`
+  - `references/architecture-presets.md` defining baseline recommendations per category
+
+### Changed
+- **[Manifest]** `.specify/plugins/manifest.json` regenerated to include tdk-scaffold + tdk-recommend-automations entries
+
 ## [1.52.0] - 2026-05-24
 
 ### Added

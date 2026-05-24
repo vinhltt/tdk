@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-05-24T07:11:19Z",
+  "generated_at": "2026-05-24T08:26:01Z",
   "plugins": {
     "tdk-core": {
       "version": "3.2.0",
@@ -196,6 +196,27 @@
         "skills/tdk-memory-update/references/flow-update-normal.md": "702fc5cb64362c6518f21436105a0b4ca8ffd74f298c3963327c99d9ffb0943c",
         "skills/tdk-memory-update/references/memory-section-anchor-update-strategy-additive-vs-replacement.md": "489d4ed9540772ce1ae87ed6739d7822e70e3a1ed3a3ba1df220c0ebe32406b8",
         "skills/tdk-memory-update/references/regenerate-memory-index-flow.md": "176cade0e7ecb28856793cc0ef20947c757cbb39d04ba4a3c1eda3766a5a7c9a"
+      }
+    },
+    "tdk-scaffold": {
+      "version": "0.1.0",
+      "components": {
+        "skills": {
+          "tdk-recommend-automations": {
+            "version": "0.1.0"
+          }
+        },
+        "agents": {},
+        "hooks": {},
+        "commands": {}
+      },
+      "files": {
+        ".claude-plugin/plugin.json": "7732a6b582eccbacf0f519cd5a9642af903b0c531a017d63090d8adf7179b398",
+        ".codex-plugin/plugin.json": "a850e9420db0e8b15123e09adf3d93c4cb4db314042d62643e9fa5c0155f6068",
+        ".cursor-plugin/plugin.json": "7732a6b582eccbacf0f519cd5a9642af903b0c531a017d63090d8adf7179b398",
+        "CHANGELOG.md": "39aed6b96792319deef15c30d2abda691e102de0da5ccf38ae2578baed565019",
+        "skills/tdk-recommend-automations/SKILL.md": "fc98581f70636cc75cde8fdcd0d8430f319fb3208eec124adfa2ec000528a244",
+        "skills/tdk-recommend-automations/references/architecture-presets.md": "ce006dcc1d6d91141362d306bb0103359b60f8877f033c9e195bf1b78f1cbe2f"
       }
     },
     "tdk-test-api": {

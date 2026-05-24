@@ -1,0 +1,5 @@
+{
+  "name": "tdk-scaffold",
+  "description": "Architecture-aware skill/agent recommendations based on .specify/.specify.json config and project docs.",
+  "version": "0.1.0"
+}

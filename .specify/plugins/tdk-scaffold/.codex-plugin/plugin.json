@@ -1,0 +1,28 @@
+{
+  "name": "tdk-scaffold",
+  "version": "0.1.0",
+  "description": "Architecture-aware skill/agent recommendations based on .specify/.specify.json config and project docs.",
+  "author": {
+    "name": "VinhLTT"
+  },
+  "keywords": [
+    "tdk",
+    "scaffold",
+    "recommendations"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "TDK Scaffold",
+    "shortDescription": "Architecture-aware automation recommendations.",
+    "longDescription": "Reads .specify/.specify.json architecture type + project docs + community skills to generate skill/agent recommendation files tailored to project architecture.",
+    "developerName": "VinhLTT",
+    "category": "Development",
+    "capabilities": [
+      "Skills"
+    ],
+    "defaultPrompt": [
+      "Recommend automations for this project based on its architecture."
+    ],
+    "brandColor": "#10B981"
+  }
+}
