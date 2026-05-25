@@ -15,6 +15,8 @@
 #   --yes             Skip confirmation prompt (auto-approve)
 #   --with-claude     Also sync .claude/ files (skills, hooks, settings)
 #   --force           Overwrite all files (skip MD5 comparison)
+#   --no-delete       Skip orphan removal (don't delete files missing from source)
+#   --yes-delete      Auto-approve file deletions (skip 'type delete' prompt)
 #   --log-file PATH   Tee all output to a file (ANSI colors stripped in file)
 #   --help            Show this help message
 #
@@ -49,6 +51,8 @@ DRY_RUN=false
 AUTO_YES=false
 WITH_CLAUDE=false
 FORCE=false
+NO_DELETE=false
+AUTO_YES_DELETE=false
 TARGET_PATH=""
 
 # ─── Args ─────────────────────────────────────────────────────────────────────
@@ -58,6 +62,8 @@ while [[ $# -gt 0 ]]; do
         --yes|-y)       AUTO_YES=true ;;
         --with-claude)  WITH_CLAUDE=true ;;
         --force)        FORCE=true ;;
+        --no-delete)    NO_DELETE=true ;;
+        --yes-delete)   AUTO_YES_DELETE=true ;;
         --log-file)
             shift
             LOG_FILE="${1:-}"
@@ -169,6 +175,7 @@ echo -e "  ${WHITE}Target:${NC}  $TARGET_ROOT"
 $WITH_CLAUDE && echo -e "  ${WHITE}Scope:${NC}   .specify/ + .claude/"
 $WITH_CLAUDE || echo -e "  ${WHITE}Scope:${NC}   .specify/ only (use --with-claude for .claude/)"
 $FORCE && echo -e "  ${YELLOW}Mode:    --force (skip MD5 comparison)${NC}"
+$NO_DELETE && echo -e "  ${YELLOW}Mode:    --no-delete (skip orphan removal)${NC}"
 echo ""
 
 # ─── Parse sync-config.yaml ──────────────────────────────────────────────────
@@ -275,11 +282,42 @@ collect_files() {
     done
 }
 
-# ─── Classify files into new/updated/unchanged ───────────────────────────────
-# Sets global arrays: G_NEW, G_UPDATED, G_UNCHANGED
+# ─── Collect orphan files in target not present in source ────────────────────
+collect_target_orphans() {
+    local source_dir="$1" target_dir="$2"; shift 2
+    local -a includes=() excludes=()
+    while [[ $# -gt 0 && "$1" != "--" ]]; do includes+=("$1"); shift; done
+    [[ "${1:-}" == "--" ]] && shift
+    excludes=("$@")
+
+    for pattern in "${includes[@]}"; do
+        local target="$target_dir/${pattern%/}"
+        if [[ -d "$target" ]]; then
+            while IFS= read -r -d '' file; do
+                local rel="${file#$target_dir/}"
+                if is_excluded "$rel" "${excludes[@]}"; then
+                    continue
+                fi
+                local src="$source_dir/$rel"
+                if [[ ! -f "$src" ]]; then
+                    echo "$rel"
+                fi
+            done < <(find "$target" -type f -print0 2>/dev/null | sort -z)
+        elif [[ -f "$target" ]]; then
+            local src="$source_dir/${pattern%/}"
+            if [[ ! -f "$src" ]]; then
+                echo "${pattern%/}"
+            fi
+        fi
+    done
+}
+
+# ─── Classify files into new/updated/unchanged/deleted ──────────────────────
+# Sets global arrays: G_NEW, G_UPDATED, G_UNCHANGED, G_DELETED
 G_NEW=()
 G_UPDATED=()
 G_UNCHANGED=()
+G_DELETED=()
 
 classify_files() {
     local source_dir="$1"
@@ -289,9 +327,15 @@ classify_files() {
     G_NEW=()
     G_UPDATED=()
     G_UNCHANGED=()
+    G_DELETED=()
+
+    local -a saved_includes=() saved_excludes=()
+    while [[ $# -gt 0 && "$1" != "--" ]]; do saved_includes+=("$1"); shift; done
+    [[ "${1:-}" == "--" ]] && shift
+    saved_excludes=("$@")
 
     local files
-    files=$(collect_files "$source_dir" "$@")
+    files=$(collect_files "$source_dir" "${saved_includes[@]}" -- "${saved_excludes[@]}")
 
     local total count=0
     total=$(echo "$files" | grep -c . 2>/dev/null || echo 0)
@@ -323,6 +367,17 @@ classify_files() {
         fi
     done <<< "$files"
     printf "\r%*s\r" 50 "" >&2
+
+    if ! $NO_DELETE; then
+        local orphans
+        orphans=$(collect_target_orphans "$source_dir" "$target_dir" \
+                    "${saved_includes[@]}" -- "${saved_excludes[@]}")
+        while IFS= read -r rel; do
+            [[ -z "$rel" ]] && continue
+            G_DELETED+=("$rel")
+            log_dim "  [ORPHAN] $rel → DELETED"
+        done <<< "$orphans"
+    fi
 }
 
 # ─── Component-level diffs via bun run manifest (TS implementation) ──────────────
@@ -375,6 +430,7 @@ print_section() {
     local -n new_arr=$2
     local -n upd_arr=$3
     local -n unch_arr=$4
+    local -n del_arr=$5
 
     echo -e "${BOLD}${label}${NC}"
 
@@ -386,10 +442,14 @@ print_section() {
         echo -e "  ${YELLOW}UPDATED (${#upd_arr[@]}):${NC}"
         for f in "${upd_arr[@]}"; do echo -e "    ${YELLOW}~ $f${NC}"; done
     fi
+    if [[ ${#del_arr[@]} -gt 0 ]]; then
+        echo -e "  ${RED}DELETED (${#del_arr[@]}):${NC}"
+        for f in "${del_arr[@]}"; do echo -e "    ${RED}- $f${NC}"; done
+    fi
     if [[ ${#unch_arr[@]} -gt 0 ]]; then
         echo -e "  ${DIM}UNCHANGED (${#unch_arr[@]})${NC}"
     fi
-    if [[ ${#new_arr[@]} -eq 0 && ${#upd_arr[@]} -eq 0 ]]; then
+    if [[ ${#new_arr[@]} -eq 0 && ${#upd_arr[@]} -eq 0 && ${#del_arr[@]} -eq 0 ]]; then
         echo -e "  ${DIM}Nothing to sync${NC}"
     fi
     echo ""
@@ -404,18 +464,24 @@ classify_files "$SOURCE_SPECIFY" "$TARGET_SPECIFY" "${SPECIFY_INCLUDES[@]}" -- "
 SPEC_NEW=("${G_NEW[@]}")
 SPEC_UPDATED=("${G_UPDATED[@]}")
 SPEC_UNCHANGED=("${G_UNCHANGED[@]}")
-print_section ".specify/ files" SPEC_NEW SPEC_UPDATED SPEC_UNCHANGED
+SPEC_DELETED=("${G_DELETED[@]}")
+print_section ".specify/ files" SPEC_NEW SPEC_UPDATED SPEC_UNCHANGED SPEC_DELETED
 
 # Classify .claude/ files (only with --with-claude)
 CLAUDE_NEW=()
 CLAUDE_UPDATED=()
 CLAUDE_UNCHANGED=()
+CLAUDE_DELETED=()
 if $WITH_CLAUDE && [[ -d "$SOURCE_CLAUDE" ]]; then
+    saved_no_delete=$NO_DELETE
+    NO_DELETE=true
     classify_files "$SOURCE_CLAUDE" "$TARGET_CLAUDE" "${CLAUDE_INCLUDES[@]}" -- "${CLAUDE_EXCLUDES[@]}"
+    NO_DELETE=$saved_no_delete
     CLAUDE_NEW=("${G_NEW[@]}")
     CLAUDE_UPDATED=("${G_UPDATED[@]}")
     CLAUDE_UNCHANGED=("${G_UNCHANGED[@]}")
-    print_section ".claude/ files" CLAUDE_NEW CLAUDE_UPDATED CLAUDE_UNCHANGED
+    CLAUDE_DELETED=()
+    print_section ".claude/ files" CLAUDE_NEW CLAUDE_UPDATED CLAUDE_UNCHANGED CLAUDE_DELETED
 fi
 
 # Show skill-level diffs
@@ -425,13 +491,16 @@ show_skill_diffs
 TOTAL_NEW=$(( ${#SPEC_NEW[@]} + ${#CLAUDE_NEW[@]} ))
 TOTAL_UPDATED=$(( ${#SPEC_UPDATED[@]} + ${#CLAUDE_UPDATED[@]} ))
 TOTAL_UNCHANGED=$(( ${#SPEC_UNCHANGED[@]} + ${#CLAUDE_UNCHANGED[@]} ))
-TOTAL_CHANGES=$(( TOTAL_NEW + TOTAL_UPDATED ))
+TOTAL_DELETED=$(( ${#SPEC_DELETED[@]} + ${#CLAUDE_DELETED[@]} ))
+TOTAL_CHANGES=$(( TOTAL_NEW + TOTAL_UPDATED + TOTAL_DELETED ))
 
 log "${BOLD}${CYAN}━━━ Summary ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "  ${GREEN}New:${NC}       $TOTAL_NEW files"
 echo -e "  ${YELLOW}Updated:${NC}   $TOTAL_UPDATED files"
+echo -e "  ${RED}Deleted:${NC}   $TOTAL_DELETED files"
 echo -e "  ${DIM}Unchanged: $TOTAL_UNCHANGED files${NC}"
+[[ $TOTAL_DELETED -gt 0 ]] && echo -e "  ${RED}  ⚠ Marked files will be REMOVED from target${NC}"
 echo ""
 
 # ─── Nothing to do? ──────────────────────────────────────────────────────────
@@ -458,6 +527,19 @@ if ! $AUTO_YES; then
     echo ""
 fi
 
+# ─── Phase 3b: Separate delete confirmation ─────────────────────────────────
+if [[ $TOTAL_DELETED -gt 0 ]] && ! $AUTO_YES_DELETE; then
+    echo -e "${RED}⚠ $TOTAL_DELETED files will be permanently DELETED from target.${NC}"
+    echo -e -n "${WHITE}Type 'delete' to confirm removal: ${NC}"
+    read -r delete_confirm
+    if [[ "$delete_confirm" != "delete" ]]; then
+        echo -e "${YELLOW}Deletions skipped. Only new/updated files will be synced.${NC}"
+        SPEC_DELETED=()
+        TOTAL_DELETED=0
+    fi
+    echo ""
+fi
+
 # ─── Phase 4: Execute sync ───────────────────────────────────────────────────
 log "${BOLD}${CYAN}━━━ Syncing files ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
@@ -465,6 +547,7 @@ echo ""
 ERROR_COUNT=0
 ERRORS=()
 COPIED_COUNT=0
+DELETED_COUNT=0
 
 # Copy a single file with logging
 copy_one() {
@@ -489,6 +572,19 @@ copy_one() {
     fi
 }
 
+# Delete a single file with logging
+delete_one() {
+    local dst="$1" rel="$2" label="$3"
+    if rm -f "$dst" 2>/dev/null; then
+        ((DELETED_COUNT+=1))
+        echo -e "  ${RED}✗${NC} [$label] $rel (deleted)"
+    else
+        ERRORS+=("delete failed: $rel")
+        ((ERROR_COUNT+=1))
+        echo -e "  ${RED}✗ [$label] $rel (delete failed)${NC}"
+    fi
+}
+
 # Sync .specify/ new + updated
 for rel in "${SPEC_NEW[@]}" "${SPEC_UPDATED[@]}"; do
     copy_one "$SOURCE_SPECIFY/$rel" "$TARGET_SPECIFY/$rel" "$rel" ".specify"
@@ -499,6 +595,21 @@ if $WITH_CLAUDE; then
     for rel in "${CLAUDE_NEW[@]}" "${CLAUDE_UPDATED[@]}"; do
         copy_one "$SOURCE_CLAUDE/$rel" "$TARGET_CLAUDE/$rel" "$rel" ".claude"
     done
+fi
+
+# Delete .specify/ orphans (copy first, delete after)
+for rel in "${SPEC_DELETED[@]}"; do
+    delete_one "$TARGET_SPECIFY/$rel" "$rel" ".specify"
+done
+
+# Clean up empty directories (scoped to include-pattern subtrees only)
+if [[ $DELETED_COUNT -gt 0 ]]; then
+    for pattern in "${SPECIFY_INCLUDES[@]}"; do
+        pdir="$TARGET_SPECIFY/${pattern%/}"
+        [[ -d "$pdir" ]] || continue
+        find "$pdir" -mindepth 1 -type d -empty -delete 2>/dev/null || true
+    done
+    log_dim "Cleaned up empty directories"
 fi
 
 # ─── Phase 5: Result ─────────────────────────────────────────────────────────
@@ -513,5 +624,5 @@ if [[ $ERROR_COUNT -gt 0 ]]; then
     echo -e "${RED}Distribution completed with $ERROR_COUNT errors.${NC}"
     exit 1
 else
-    echo -e "${GREEN}Distribution complete! $COPIED_COUNT files synced to $TARGET_ROOT${NC}"
+    echo -e "${GREEN}Distribution complete! $COPIED_COUNT files synced, $DELETED_COUNT files removed from $TARGET_ROOT${NC}"
 fi
