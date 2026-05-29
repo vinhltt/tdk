@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.10.4] - 2026-05-29
+
+### Changed
+- brainstorming: normalize script README guidance and reference the installed skill by name
+
 ## [1.10.3] - 2026-05-24
 
 ### Changed

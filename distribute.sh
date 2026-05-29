@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # distribute.sh — Distribute/update TDK from source to a target project
 #
-# One-way sync of .specify/ and .claude/ files from TDK source to target project.
+# One-way sync of .specify/ substrate from TDK source to target project.
+# Legacy .claude/ sync remains available, but explicit harness mutation should use
+# `bun src/index.ts harness install --harness claude` from the consumer .specify/scripts/ts dir.
 # Reads include/exclude rules from sync-config.yaml. Compares files by MD5.
 # Always shows dry-run summary first, then asks for confirmation before writing.
 #
@@ -13,7 +15,7 @@
 # OPTIONS:
 #   --dry-run         Show diff only, skip confirmation and writing
 #   --yes             Skip confirmation prompt (auto-approve)
-#   --with-claude     Also sync .claude/ files (skills, hooks, settings)
+#   --with-claude     Legacy: also sync .claude/ files (prefer `tdk harness install`)
 #   --force           Overwrite all files (skip MD5 comparison)
 #   --no-delete       Skip orphan removal (don't delete files missing from source)
 #   --yes-delete      Auto-approve file deletions (skip 'type delete' prompt)
@@ -23,7 +25,7 @@
 # Examples:
 #   bash distribute.sh                                      # interactive
 #   bash distribute.sh /path/to/my-project                  # sync .specify/ only
-#   bash distribute.sh /path/to/my-project --with-claude    # sync both
+#   bash distribute.sh /path/to/my-project --with-claude    # legacy .claude sync
 #   bash distribute.sh /path/to/my-project --dry-run        # preview changes
 
 set -euo pipefail
@@ -172,8 +174,13 @@ echo -e "${BOLD}${CYAN}╚══════════════════
 echo ""
 echo -e "  ${WHITE}Source:${NC}  $SOURCE_ROOT"
 echo -e "  ${WHITE}Target:${NC}  $TARGET_ROOT"
-$WITH_CLAUDE && echo -e "  ${WHITE}Scope:${NC}   .specify/ + .claude/"
-$WITH_CLAUDE || echo -e "  ${WHITE}Scope:${NC}   .specify/ only (use --with-claude for .claude/)"
+if $WITH_CLAUDE; then
+    echo -e "  ${WHITE}Scope:${NC}   .specify/ + legacy .claude/"
+    echo -e "  ${YELLOW}Note:${NC}    Prefer 'tdk harness install --harness claude' for explicit harness mutation"
+else
+    echo -e "  ${WHITE}Scope:${NC}   .specify/ only"
+    echo -e "  ${WHITE}Next:${NC}    cd .specify/scripts/ts && bun src/index.ts harness install --harness claude --plugins tdk-core --dry-run"
+fi
 $FORCE && echo -e "  ${YELLOW}Mode:    --force (skip MD5 comparison)${NC}"
 $NO_DELETE && echo -e "  ${YELLOW}Mode:    --no-delete (skip orphan removal)${NC}"
 echo ""

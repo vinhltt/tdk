@@ -10,6 +10,20 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.55.0] - 2026-05-29
+
+### Added
+- **[Scripts]** Claude harness installer command suite
+  - Adds `tdk harness install --harness claude` command wiring.
+  - Discovers selected plugins from the manifest, plans managed `.claude/` file writes, merges plugin hooks, tracks ownership, detects collisions and drift, and supports dry-run output.
+  - Adds tests for CLI behavior, plugin discovery, hook merging, install planning, install writing, and consumer root resolution.
+- **[tdk-memory]** Adds Codex and Cursor plugin manifest mirrors alongside the Claude plugin manifest.
+
+### Changed
+- **[Claude Skills]** Aligns marketplace path references with the installed `.specify/plugins/` directory in tdk-bump tests, tdk-distribute sync, and tdk-skill-docs-sync scanning.
+- **[tdk-memory]** Corrects checksum helper command paths for installed plugin layout in init and update flows.
+- **[tdk-utils]** `brainstorming`: normalizes script README guidance formatting and references the installed skill by name.
+
 ## [1.54.0] - 2026-05-24
 
 ### Added

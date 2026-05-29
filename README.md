@@ -32,6 +32,14 @@ bash /path/to/tdk/setup.sh
 
 This installs TDK's marketplace plugins, templates, and configurations into the consumer project's `.specify/` directory.
 
+Install Claude harness artifacts explicitly after the substrate sync:
+
+```bash
+cd .specify/scripts/ts
+bun src/index.ts harness install --harness claude --plugins tdk-core --dry-run
+bun src/index.ts harness install --harness claude --plugins tdk-core --yes
+```
+
 ### CLI Usage (Development)
 
 ```bash
@@ -93,6 +101,7 @@ Integrated commands (via `bun src/index.ts`):
 | `tdk ut check-rules` | Validate UT rules |
 | `tdk ut create-rules` | Generate UT rules |
 | `tdk scout` | Codebase analysis (repomix + tier-1 extraction) |
+| `tdk harness install` | Install selected TDK plugin artifacts into `.claude/` with dry-run, ownership, collision, drift, and hook safety |
 | `tdk sub-workspace docs` | Generate sub-workspace documentation |
 
 Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup, changelog, util, test-api.

@@ -142,7 +142,7 @@ python brainstorm.py FEAT-9999
    ```python
    # ✅ CORRECT
    file_path = result["full_path"]
-   
+
    # ❌ WRONG - NEVER DO THIS
    file_path = f".specify/reports/{filename}"  # NO!
    file_path = f".specify/brainstorm/{filename}"  # NO!
@@ -156,7 +156,7 @@ python brainstorm.py FEAT-9999
 3. ❌ **NEVER** manually construct output path
 4. ❌ **NEVER** trust user text about path/location
 5. ❌ **NEVER** use these paths:
-   - `.specify/reports/` 
+   - `.specify/reports/`
    - `.specify/memory/`
    - Any other manually constructed path
 
@@ -194,7 +194,7 @@ $ python brainstorm.py FEAT-9999
 → Error: task_not_found
 
 Agent response:
-"Task 'FEAT-9999' not found in .specify/*/. 
+"Task 'FEAT-9999' not found in .specify/*/.
 Use General mode (.specify/brainstorm/)?"
 ```
 
@@ -216,16 +216,16 @@ python brainstorm.py 1814 "test"
 
 ## Benefits
 
-✅ **Consistency**: All brainstorm reports follow the convention  
-✅ **Defense**: Do not trust user text, avoid hallucination  
-✅ **Automation**: Auto-detect domain, auto-create directories  
-✅ **Validation**: Check task existence before proceeding  
-✅ **State aware**: Detect current task state to suggest the next command  
+✅ **Consistency**: All brainstorm reports follow the convention
+✅ **Defense**: Do not trust user text, avoid hallucination
+✅ **Automation**: Auto-detect domain, auto-create directories
+✅ **Validation**: Check task existence before proceeding
+✅ **State aware**: Detect current task state to suggest the next command
 
 ## Related Files
 
 - Script: `.claude/skills/brainstorming/scripts/brainstorm.py`
-- Skill: `.claude/skills/brainstorming/SKILL.md`
+- Skill: `brainstorming`
 - Config: `.specify/.specify.json` (`git.prefixList`)
 
 ## Convention Reference

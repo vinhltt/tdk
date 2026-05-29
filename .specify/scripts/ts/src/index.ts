@@ -8,6 +8,7 @@ import { createDetectConfigCommand } from './commands/detect-config';
 import { createUtCommandGroup } from './commands/ut/index';
 import { createScoutCommand } from './commands/scout/index';
 import { createDocsCommand } from './commands/sub-workspace/docs';
+import { createHarnessCommandGroup } from './commands/harness/index';
 
 const program = new Command()
   .name('tdk')
@@ -27,6 +28,9 @@ program.addCommand(createUtCommandGroup());
 
 // Scout command: tdk scout --scope <dir> | --from-pack <file>
 program.addCommand(createScoutCommand());
+
+// Harness command: tdk harness install --harness claude
+program.addCommand(createHarnessCommandGroup());
 
 // Sub-workspace command group: tdk sub-workspace <docs|...>
 const subWsGroup = new Command('sub-workspace')
