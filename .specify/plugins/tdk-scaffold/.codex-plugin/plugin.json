@@ -1,7 +1,7 @@
 {
   "name": "tdk-scaffold",
-  "version": "0.1.0",
-  "description": "Architecture-aware skill/agent recommendations based on .specify/.specify.json config and project docs.",
+  "version": "0.3.0",
+  "description": "Architecture-aware scaffolding: recommend automations from project config + docs, then scaffold skill/agent files from approved recommendations",
   "author": {
     "name": "VinhLTT"
   },

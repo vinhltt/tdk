@@ -10,6 +10,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.56.0] - 2026-05-29
+
+### Added
+- **[tdk-scaffold]** Adds `tdk-scaffold-from-recommendation` for turning approved recommendation reports into skill and agent scaffolds.
+  - Generates `SKILL.md` files and reference stubs for approved skill recommendations.
+  - Generates `agent.md` files for approved agent recommendations.
+  - Adds reusable skill and agent output pattern references for generated files.
+
+### Changed
+- **[Marketplace]** Registers `tdk-scaffold` in the marketplace catalog with strict loading enabled.
+- **[tdk-scaffold]** Updates Claude, Codex, and Cursor plugin descriptions to cover both recommendation and scaffolding workflows.
+
 ## [1.55.0] - 2026-05-29
 
 ### Added

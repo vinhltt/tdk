@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "TDK project plugin marketplace",
-    "version": "1.55.0"
+    "version": "1.56.0"
   },
   "plugins": [
     {
@@ -31,6 +31,12 @@
       "name": "tdk-utils",
       "description": "Utility skills for TDK workflow: brainstorming, planning, problem solving, and more",
       "source": "./.specify/plugins/tdk-utils",
+      "strict": true
+    },
+    {
+      "name": "tdk-scaffold",
+      "description": "Architecture-aware scaffolding: recommend automations from project config + docs, then scaffold skill/agent files from approved recommendations",
+      "source": "./.specify/plugins/tdk-scaffold",
       "strict": true
     }
   ]
