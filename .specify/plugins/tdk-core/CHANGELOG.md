@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.3.1] - 2026-05-30
+
+### Changed
+- Updated handle-existing-plan.md reference to include status vocabulary validation step (Step 8b) using new plan-status-validator CLI tool
+
 ## [3.3.0] - 2026-05-24
 
 ### Added

@@ -10,6 +10,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.57.0] - 2026-05-30
+
+### Added
+- **[Scripts]** Plan status validator CLI tool
+  - New `plan-status-validator` command validates plan.md phase table status cells against enforced vocabulary (`todo|in_progress|done|skipped|blocked|cancelled`)
+  - Test fixtures and comprehensive test suite for validator validation
+
+### Changed
+- **[tdk-plan]** Updated `handle-existing-plan.md` reference to include status vocabulary validation step (Step 8b) using new plan-status-validator CLI tool
+- **[planning]** Updated status vocabulary in `output-standards.md` from legacy values (`pending|in-progress|completed|cancelled`) to enforced values (`todo|in_progress|done|skipped|blocked|cancelled`)
+- **[Scripts]** Enhanced phases-table-parser test coverage for new validator integration
+
 ## [1.56.0] - 2026-05-29
 
 ### Added

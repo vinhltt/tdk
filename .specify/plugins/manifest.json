@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-05-29T13:13:42Z",
+  "generated_at": "2026-05-30T07:21:31Z",
   "plugins": {
     "tdk-core": {
-      "version": "3.3.0",
+      "version": "3.3.1",
       "components": {
         "skills": {
           "tdk-analyze": {
@@ -31,7 +31,7 @@
             "version": "3.0.0"
           },
           "tdk-plan": {
-            "version": "2.1.0"
+            "version": "2.1.1"
           },
           "tdk-specify": {
             "version": "3.3.0"
@@ -254,7 +254,7 @@
       }
     },
     "tdk-utils": {
-      "version": "1.10.4",
+      "version": "1.10.5",
       "components": {
         "skills": {
           "brainstorming": {
@@ -273,7 +273,7 @@
             "version": "0.1.0"
           },
           "planning": {
-            "version": "1.10.2"
+            "version": "1.10.5"
           },
           "problem-solving": {
             "version": "0.1.0"

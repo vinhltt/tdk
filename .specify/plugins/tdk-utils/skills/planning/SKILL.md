@@ -3,7 +3,7 @@ name: planning
 description: Plan implementations, design architectures, create technical roadmaps with detailed phases
 user-invocable: false
 metadata:
-  version: "1.10.2"
+  version: "1.10.5"
 ---
 
 # Planning Skill

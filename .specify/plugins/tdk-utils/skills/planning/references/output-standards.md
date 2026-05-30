@@ -10,7 +10,7 @@ All `plan.md` files MUST include YAML frontmatter:
 ---
 title: "{Brief plan title}"
 description: "{One-sentence summary}"
-status: pending  # pending | in-progress | completed | cancelled
+status: todo     # todo | in_progress | done | skipped | blocked | cancelled
 priority: P2     # P1 (High) | P2 (Medium) | P3 (Low)
 effort: 4h       # Estimated total effort
 issue: 74        # GitHub issue number (if applicable)
@@ -25,7 +25,7 @@ created: 2025-12-16
 When creating plans, auto-populate:
 - **title**: Extract from task description
 - **description**: First sentence of Overview
-- **status**: Always `pending` for new plans
+- **status**: Always `todo` for new plans
 - **priority**: From user request or default `P2`
 - **effort**: Sum of phase estimates
 - **tags**: Infer from task keywords (frontend, backend, api, auth)
@@ -65,7 +65,7 @@ List affected files with:
 ---
 title: "Feature Implementation Plan"
 description: "Add user authentication with OAuth2 support"
-status: pending
+status: todo
 priority: P1
 effort: 8h
 issue: 123

@@ -105,6 +105,15 @@ describe('parsePhasesTable', () => {
     expect(vocabError!.message).toContain("did you mean 'done'?");
   });
 
+  it('rejects not-started as unknown status', () => {
+    const md = fixture('plan-not-started-status.md');
+    const { errors, phases } = parsePhasesTable(md);
+    const vocabError = errors.find(e => e.message.includes('not-started'));
+    expect(vocabError).toBeDefined();
+    expect(vocabError!.message).toContain("unknown status 'not-started'");
+    expect(phases[0]?.status).toBe('todo');
+  });
+
   it('collects all vocab errors (non-short-circuit), legacy aliases pass through', () => {
     const md = fixture('plan-invalid-status-vocab.md');
     const { errors, phases } = parsePhasesTable(md);

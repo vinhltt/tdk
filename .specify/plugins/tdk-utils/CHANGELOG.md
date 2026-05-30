@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.10.5] - 2026-05-30
+
+### Changed
+- Updated status vocabulary in output-standards.md to enforce new status values (todo|in_progress|done|skipped|blocked|cancelled)
+
 ## [1.10.4] - 2026-05-29
 
 ### Changed

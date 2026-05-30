@@ -68,6 +68,7 @@ Use **AskUserQuestion** tool:
    - Output: `Error: phases/phase-${NN}-${slug}.md already exists. Aborting to prevent data loss.`
 6. **Write phase file** using the phase-file-content template (below).
 7. **Append ONLY a table row** to `## Phases` in `plan.md` with defaults:
+   - **VALID_STATUSES (enforced):** `todo | in_progress | done | skipped | blocked | cancelled`. Default for new phases = `todo`. NEVER use `not-started`, `pending`, `planned`, `new`, or any other value — Step 8b validator WILL reject it.
    - `Status = todo`, `Blocks = —`, `BlockedBy = —`.
    - File column: `[phase-${NN}-${slug}](phases/phase-${NN}-${slug}.md)` (lowercase path).
 
@@ -82,6 +83,15 @@ Use **AskUserQuestion** tool:
      - Keep `phases/phase-${NN}-${slug}.md` (no data loss on the phase file).
      - Output violations to user (section, line, snippet for each).
      - **ABORT** the append.
+   - If `ok === true`: continue to Step 8b.
+8b. **Validate status vocabulary** — run:
+   `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/plan-status-validator.ts <plan-md-path> --json`
+   Parse JSON output.
+   - If `ok === false`:
+     - Report parser errors and invalid statuses to user (`phaseNumber`, line number, raw value, valid options).
+     - Use AskUserQuestion: "Status vocabulary violation detected. How to proceed?"
+       - "(a) Auto-fix — replace invalid status with `todo`" → Edit the table row in `plan.md`, replace invalid status with `todo`, continue to Step 9.
+       - "(b) Abort — rollback plan.md from snapshot" → Restore from `planMdBefore`, keep phase file, ABORT.
    - If `ok === true`: continue to Step 9.
 9. **Run `validateDependencies`** (from `phases-table-parser.ts`) against the updated table.
    - If errors → report to user and abort the append (row + file already written — user must manually clean up).
