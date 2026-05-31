@@ -184,14 +184,14 @@ describe('runDocs (integration)', () => {
       expect(t.mode).toBe('init');
       expect(t.tokenCount).toBe(1234);
       expect(t.existingFiles).toEqual([]);
-      expect(t.outputDir).toContain('sub-workspaces/apps/frontend');
+      expect(t.outputDir).toContain('sub-workspaces/frontend');
       expect(env.cleanupCandidates[0]).toContain('.specify/cache/tdk-docs');
     }
   });
 
   it('detects update mode when existing doc files present', () => {
     setupConfig([{ name: 'frontend', path: 'apps/frontend' }]);
-    const docDir = join(tmp, 'docs/sub-workspaces/apps/frontend');
+    const docDir = join(tmp, 'docs/sub-workspaces/frontend');
     mkdirSync(docDir, { recursive: true });
     writeFileSync(join(docDir, 'codebase-summary.md'), '# old');
     const env = runDocs(
@@ -208,7 +208,7 @@ describe('runDocs (integration)', () => {
 
   it('force flag overrides existing files to mode=force', () => {
     setupConfig([{ name: 'frontend', path: 'apps/frontend' }]);
-    const docDir = join(tmp, 'docs/sub-workspaces/apps/frontend');
+    const docDir = join(tmp, 'docs/sub-workspaces/frontend');
     mkdirSync(docDir, { recursive: true });
     writeFileSync(join(docDir, 'README.md'), '');
     const env = runDocs(

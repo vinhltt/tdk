@@ -2,7 +2,7 @@
 name: tdk-status
 description: "Track Workflow Progress"
 metadata: 
-  version: "1.1.1"
+  version: "3.3.2"
 ---
 
 # /tdk-status - Track Workflow Progress
@@ -14,6 +14,27 @@ If ANY script returns an error, STOP immediately and report to user. Do NOT atte
 Display comprehensive status for any ErcSpec feature workflow. **Read-only command - never modifies files.**
 
 Source of truth: `plan.md` `## Phases` table. Missing `plan.md` or missing `## Phases` section → clear error.
+
+## Shared JSON Contract
+
+The status collector is also the read-only preflight contract for other skills, including `/tdk-implement-from-plan`.
+
+Consumers should call the collector directly:
+
+```bash
+cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/feature/status.ts <feature-id>
+```
+
+Use structured JSON fields, not this skill's formatted report or recommendation prose:
+
+- `feature_status`: `empty` | `specified` | `planned` | `in_progress` | `complete` | `blocked`
+- `phases.total`, `phases.done`, `phases.skipped`, `phases.inProgress`, `phases.todo`, `phases.blocked`, `phases.percent`
+- `phases.currentPhase`: first `in_progress` phase file, or empty string
+- `phases.nextPhase`: first `todo` phase file, or empty string
+- `phases.rows[].phase_status`
+- `error` and `phasesParseError` for stop conditions
+
+The collector reads `plan.md` `## Phases`; appended phase files are visible only after they are added to that table.
 
 ## Step 1: Validate Task ID
 

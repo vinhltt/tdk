@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.3.2] - 2026-05-31
+
+### Changed
+- tdk-implement-from-plan: add read-only Status Preflight (decision table by feature_status); convert F3 stale in_progress abort into interactive recovery gate (retry/mark done/skip/cancel); renumber steps
+- tdk-status: add Shared JSON Contract section — status collector is the read-only preflight contract for other skills
+- tdk-sub-workspace-docs: write docs under sub-workspaces/<name>/ (was <wsPath>/)
+
 ## [3.3.1] - 2026-05-30
 
 ### Changed

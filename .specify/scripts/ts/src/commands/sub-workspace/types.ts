@@ -6,7 +6,7 @@ export type DocsMode = 'init' | 'update' | 'force';
 export type DocsTarget = {
   name: string;
   wsPath: string;       // relative to workspace root
-  outputDir: string;    // absolute path: <docsPath>/sub-workspaces/<wsPath>/
+  outputDir: string;    // absolute path: <docsPath>/sub-workspaces/<name>/
   packedFile: string;   // absolute path to repomix output
   tokenCount: number;   // -1 if parse failed
   mode: DocsMode;

@@ -2,7 +2,7 @@
 name: tdk-implement-from-plan
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata: 
-  version: "3.0.0"
+  version: "3.3.2"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -29,7 +29,7 @@ This skill reads plan.md and executes phases using the `## Phases` table as the 
 - **Primary implementation path**: executes all phases in row order, updating Status cells in the `## Phases` table
 - **Status tracking**: reads/writes Status column via `updatePhaseStatus` — no HTML comment markers
 - **Dependency enforcement**: validates BlockedBy before each phase; aborts on unsatisfied deps
-- **F3 crash recovery**: detects stale `in_progress` rows at startup and aborts with recovery instructions
+- **F3 crash recovery**: detects stale `in_progress` rows at startup and requires explicit recovery choice before any status mutation
 
 ---
 
@@ -60,7 +60,50 @@ Parse JSON output. Then:
   STOP.
 
 
-### Step 2: Parse Phases Table
+### Step 2: Status Preflight
+
+Run the same read-only status collector used by `/tdk-status` before reading phase files or mutating statuses:
+
+```bash
+cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/feature/status.ts {TASK_ID}
+```
+
+Parse JSON output. If `error` or `phasesParseError` exists → report the exact message and STOP.
+
+Use structured fields only. Do NOT invoke `/tdk-status` and do NOT parse formatted status output or recommendation prose.
+
+Store:
+- `feature_status`
+- `phases.total`, `phases.done`, `phases.skipped`, `phases.inProgress`, `phases.todo`, `phases.blocked`, `phases.percent`
+- `phases.currentPhase` — first `in_progress` phase file, or empty string
+- `phases.nextPhase` — first `todo` phase file, or empty string
+- `phases.rows[]`
+
+Decision table:
+
+| Status result | Behavior |
+|---|---|
+| `planned` | Show todo count and first todo phase; continue to parse/confirm. |
+| `in_progress` + `nextPhase` + no `currentPhase` | Show progress and resume target; continue to parse/confirm from `nextPhase`. |
+| `in_progress` + `currentPhase` | Continue to parse, then enter F3 recovery gate before any status mutation. |
+| `blocked` | STOP. Show blocked rows and recommend `/tdk-plan {TASK_ID}` or manual dependency/status repair. |
+| `complete` | STOP. Report complete. Appended phases must be present in `plan.md` `## Phases` to be detected. |
+| `specified` | STOP. Recommend `/tdk-plan {TASK_ID}`. |
+| `empty` | STOP. Recommend `/tdk-specify {TASK_ID}`. |
+
+Compact preflight summary:
+
+```text
+Status preflight: {feature_status}
+Progress: {done}/{total - skipped} ({percent}%)
+Counts: todo={todo}, in_progress={inProgress}, blocked={blocked}, skipped={skipped}
+Current: {currentPhase || "none"}
+Next: {nextPhase || "none"}
+```
+
+This preflight is read-only. The phase parser below remains the execution source of truth before writes.
+
+### Step 3: Parse Phases Table
 
 Parse phases table:
 ```bash
@@ -85,33 +128,62 @@ cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/update-phase
 - If `result.errors` is non-empty → report parse errors → STOP.
 - Store `rows = result.phases` (sorted ascending by `row.number`).
 
-### Step 3: F3 Pre-scan — Stale in_progress Detection
+### Step 4: F3 Recovery Gate — Stale in_progress Detection
 
 Before entering the main execution loop, scan all rows:
 
 ```
 for each row in rows:
   if row.status === 'in_progress':
-    EMIT: "Phase NN currently in_progress. Either (a) resume by marking status='todo' to retry, (b) mark status='done' if manually completed, or (c) mark status='skipped' to bypass. Then re-run."
-    EXIT non-zero — do NOT continue execution
+    EMIT: "Phase NN currently in_progress. Likely previous run interrupted."
+    ask explicit recovery action before any mutation
 ```
 
 Where `NN` = `row.number` (zero-padded two digits, e.g. `01`, `02`).
 
-If any stale `in_progress` row is found → abort with the message above. Do NOT proceed to Step 4.
+Use **AskUserQuestion**:
+```json
+{
+  "questions": [{
+    "question": "Phase NN is already in_progress. How should implementation recover?",
+    "header": "Recover Phase NN",
+    "options": [
+      {"label": "Retry this phase", "description": "Set phase NN back to todo, then continue"},
+      {"label": "Mark done", "description": "Set phase NN done, then continue to next todo"},
+      {"label": "Mark skipped", "description": "Set phase NN skipped, then continue"},
+      {"label": "Cancel", "description": "Stop without changing status"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
 
-On phase-work failure during execution (Step 4), before exiting emit:
+Recovery writes MUST use the same order as normal status transitions:
+
+Set `phasePath = join(FEATURE_DIR, row.file)` for the selected row, then:
+
+1. `update-phase-frontmatter-status.ts "{phasePath}" {todo|done|skipped}`
+2. `update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} {todo|done|skipped}`
+
+If user selects cancel → STOP. After any recovery write, re-run `parse-phases-table.ts` and restart this scan before proceeding.
+
+On phase-work failure during execution (Step 6), before exiting emit:
 ```
 "Phase NN left in_progress. Recover as described above."
 ```
 
-### Step 4: Confirm Before Executing
+### Step 5: Confirm Before Executing
 
-Display phase list and ask user to confirm:
+Display compact preflight summary plus phase list from parsed rows. Do not read phase files before this confirmation.
 
 ```
 📋 Implementation Plan: {task_id}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status: {feature_status}
+Progress: {done}/{total - skipped} ({percent}%)
+Current: {currentPhase || "none"}
+Next: {nextPhase || "none"}
+
 Phases to execute (from plan.md ## Phases table):
   {#}. {phase file label} [{status}]
   ...
@@ -134,24 +206,26 @@ Use **AskUserQuestion**:
 
 If user cancels → STOP.
 
-### Step 5: Execute Phases — Row Order
+### Step 6: Execute Phases — Row Order
 
 Execution pseudo-code (ascending `row.number`):
 
 ```
 1. Run `parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json` → parse phases array from JSON output
 2. If exit code 1 → report errors → STOP
-3. PRE-LOOP: scan rows for any in_progress → emit F3 recovery warning + abort non-zero (stale detection)
+3. PRE-LOOP: scan rows for any in_progress → run F3 recovery gate, reparse, and restart scan
 4. For each row ascending # order:
    phasePath = join(FEATURE_DIR, row.file)
    a. Status === 'skipped' → continue (bypass silently)
-   b. BlockedBy check: ∀id ∈ row.blockedBy, rows[id].status ∈ {'done', 'skipped'} else abort
+   b. Status === 'done' → continue (already complete)
+   c. Status !== 'todo' → continue unless F3 gate already handled it
+   d. BlockedBy check: ∀id ∈ row.blockedBy, rows[id].status ∈ {'done', 'skipped'} else abort
       Error message: "phase NN blocked by MM which is status='X' — run phase MM first or mark phase NN skipped"
       (F14: skipped blocker satisfies dependency — no friction)
-   c. Run: `bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" in_progress` → phase file FIRST
+   e. Run: `bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" in_progress` → phase file FIRST
       Run: `bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} in_progress` → plan.md SECOND
-   d. Execute phase (per phase-NN-*.md instructions)
-   e. Run: `bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done` → phase file FIRST
+   f. Execute phase (per phase-NN-*.md instructions)
+   g. Run: `bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done` → phase file FIRST
       Run: `bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} done` → plan.md SECOND
 ```
 
@@ -238,7 +312,7 @@ Writing tests inline defeats the purpose of structured test generation (plan →
 
 **If downstream skill reports sub-workspace mismatch** → AskUserQuestion to correct.
 
-**Reminder:** This AskUserQuestion is NOT optional — even if user said "Yes, execute all phases" in Step 4, you MUST still pause here and ask.
+**Reminder:** This AskUserQuestion is NOT optional — even if user said "Yes, execute all phases" in Step 5, you MUST still pause here and ask.
 
 ---
 
@@ -260,7 +334,7 @@ For each implementation phase:
 
 **DO NOT** just read the plan and report what it says — you must **write code, edit files, and produce working implementation**.
 
-### Step 6: Completion Summary
+### Step 7: Completion Summary
 
 After all phases:
 

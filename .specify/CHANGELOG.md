@@ -10,6 +10,23 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.57.1] - 2026-05-31
+
+### Added
+- **[Scripts]** Agent-version normalizer + contract tests
+  - `normalize-agent-version.ts`: fold a stray top-level agent `version:` into `metadata.version` (line-based edit, preserves folded multi-line description blocks)
+  - `normalize-agent-version.test.ts`: cover fold / create-block / idempotent / multi-line / malformed-frontmatter cases
+  - `status-preflight-skill-contract.test.ts`: assert `tdk-implement-from-plan` consumes the `/tdk-status` collector JSON contract
+
+### Changed
+- **[Embedded Skills]** Status-aware implementation flow
+  - `tdk-implement-from-plan`: add read-only Status Preflight step (decision table keyed on `feature_status`); convert F3 stale-`in_progress` hard abort into an interactive recovery gate (retry / mark done / skip / cancel); renumber steps 2–7
+  - `tdk-status`: add Shared JSON Contract section — the status collector is the read-only preflight contract for other skills
+  - `tdk-sub-workspace-docs`: write docs under `sub-workspaces/<name>/` (was `<wsPath>/`)
+- **[Scripts]** Sub-workspace docs output-path alignment
+  - `sub-workspace/types.ts`: update `outputDir` comment to the `<name>` path
+  - `docs.test.ts`: update path expectations to `sub-workspaces/frontend`
+
 ## [1.57.0] - 2026-05-30
 
 ### Added

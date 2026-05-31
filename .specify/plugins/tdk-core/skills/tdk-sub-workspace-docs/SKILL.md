@@ -1,10 +1,10 @@
 ---
 name: tdk-sub-workspace-docs
-description: "Smart skill: init or update 4 codebase-derived doc files per sub-workspace (codebase-summary, code-standards, system-architecture, README). Pipes repomix pack + tdk-scout report into the tdk-docs-writer agent and writes results under <docsPath>/sub-workspaces/<wsPath>/. Replaces claudekit /ck:docs init for sub-workspace docs."
+description: "Smart skill: init or update 4 codebase-derived doc files per sub-workspace (codebase-summary, code-standards, system-architecture, README). Pipes repomix pack + tdk-scout report into the tdk-docs-writer agent and writes results under <docsPath>/sub-workspaces/<name>/. Replaces claudekit /ck:docs init for sub-workspace docs."
 user-invocable: true
 argument-hint: "[--sub-workspace NAME | --all] [--force]"
 metadata:
-  version: "1.0.0"
+  version: "3.3.2"
   author: "VinhLTT"
   category: docs
 ---
