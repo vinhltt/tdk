@@ -56,7 +56,7 @@ Type in Claude Code chat:
 /tdk-implement-from-plan feat-001
 ```
 
-**What happens**: Claude reads the plan's `## Phases` table and executes implementation phase-by-phase. Setup first, then tests (TDD), core features, integration, and polish. Each completed phase is marked `[X]` in plan.md's phases table. UT phases auto-delegate to `/tdk-ut-backfill-auto`.
+**What happens**: Claude reads the plan's `## Phases` table and executes implementation phase-by-phase. Setup first, then tests (TDD), core features, integration, and polish. Each completed phase is marked in plan.md's phases table. UT phase files delegate to the consumer test skill listed in `## Delegate Skills`.
 
 ### 6. Track progress
 

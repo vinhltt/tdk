@@ -10,6 +10,24 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.58.0] - 2026-05-31
+
+### Changed
+- **[Skills]** Route unit-test implementation to consumer skills via `plan-skill-routing.md`
+  - tdk-plan: UT planning delegates to `/tdk-ut-backfill-plan`; generated UT phase files receive consumer test skills through `plan-skill-routing.md`
+  - tdk-implement-from-plan: executes `## Delegate Skills` before generic implementation; stops UT phases lacking a routed test delegate
+  - tdk-ut-backfill-plan: reads the shared skill-routing contract and injects matched `test` skills into `ut/phases/*.md`
+- **[Templates]** Align UT/routing templates with consumer-skill routing
+  - plan-skill-routing-template: `test` domain points to a consumer unit-test skill
+  - ut-phase-template: add `## Delegate Skills` section populated from routing
+  - ut-plan-template: next-step points to `/tdk-implement-from-plan`
+- **[Guides]** Update UT workflow docs for routed test implementation (command-reference, document-flow, evolution-comparison, migration-ut-rule-to-skill, tdk-ut-backfill-skills-usage, scenarios 01/04/05/06/07/13)
+
+### Deprecated
+- **[Skills]** Unit-test execution skills replaced by routed consumer workflow
+  - tdk-ut-backfill-auto: replaced by `/tdk-plan` + `/tdk-implement-from-plan`
+  - tdk-ut-backfill-impl: replaced by consumer test skills mapped in `plan-skill-routing.md`
+
 ## [1.57.1] - 2026-05-31
 
 ### Added

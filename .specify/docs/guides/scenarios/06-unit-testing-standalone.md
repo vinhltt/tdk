@@ -5,13 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-ut-backfill-plan --standalone → /tdk-ut-backfill-impl
-```
-
-Or automated:
-
-```
-/tdk-ut-backfill-auto (with --standalone flag on ut:plan)
+/tdk-ut-backfill-plan --standalone → /tdk-implement-from-plan
 ```
 
 ## Step-by-Step
@@ -26,16 +20,10 @@ Or automated:
 
 The `--standalone` flag tells the planner that `spec.md` is optional. It derives test targets from the source code itself.
 
-### 3. Generate and run tests
+### 2. Implement and run tests
 
 ```
-/tdk-ut-backfill-impl feat-001 --sub-workspace backend
-```
-
-Or combine everything with `ut:auto`:
-
-```
-/tdk-ut-backfill-auto feat-001 --sub-workspace backend
+/tdk-implement-from-plan feat-001
 ```
 
 ## Tips
@@ -43,4 +31,4 @@ Or combine everything with `ut:auto`:
 - `--standalone` is the key differentiator — it makes `spec.md` optional for UT planning.
 - This is ideal for adding test coverage to legacy modules or third-party integrations.
 - You still need a task ID for file organization, even without a spec.
-- A consumer UT skill (`.claude/skills/{name}/SKILL.md`) is always required regardless of standalone mode.
+- A consumer test skill (`.claude/skills/{name}/SKILL.md`) mapped in `plan-skill-routing.md` is required for routed implementation.

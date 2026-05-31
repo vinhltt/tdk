@@ -1,15 +1,15 @@
 ---
 name: tdk-ut-backfill-plan
-description: "Generate unit test plan using templates. Creates `ut/plan.md` + phase files at `ut/phases/{module}.md` for implementation by `/tdk-ut-backfill-impl`."
+description: "Generate unit test plan using templates. Creates `ut/plan.md` + phase files at `ut/phases/{module}.md` and injects the routed consumer test skill from `plan-skill-routing.md`."
 metadata:
-  version: "2.1.0"
+  version: "2.2.0"
 ---
 
 # /tdk-ut-backfill-plan - Create Unit Test Plan
 
 ## Purpose
 
-Generate unit test plan using templates. Creates `ut/plan.md` + phase files at `ut/phases/{module}.md` for implementation by `/tdk-ut-backfill-impl`.
+Generate unit test plan using templates. Creates `ut/plan.md` + phase files at `ut/phases/{module}.md`. Implementation is handled later by the consumer test skill selected from `{docs.path}/custom-workflow/plan-skill-routing.md`.
 
 ---
 
@@ -162,16 +162,36 @@ If `PROJECT_CONTEXT.configFound` is false: Auto-detect from sub-workspace files 
 
 ---
 
-### Step 0.2: Resolve UT Skill (Consumer Conventions)
+### Step 0.2: Load Skill Routing for Implementation Delegate
 
-Read UT conventions from the consumer's skill in `.claude/skills/`:
+Read the same routing file used by `/tdk-plan`:
 
-1. If `/tdk-ut-backfill-auto` passed `UT_SKILL_PATH` → Read that file directly
-2. Otherwise → Glob `.claude/skills/*/SKILL.md`, match by: skill name contains `-ut` or `-test`, OR frontmatter contains `domain: unit-test`
-3. If found → extract `## Framework`, `## Coverage Target`, `## Naming Conventions`, `## Test Structure` sections
-4. If not found → continue with framework auto-detection in Step 2
+1. Resolve `{docs.path}/custom-workflow/plan-skill-routing.md` from `PROJECT_CONTEXT.docs.path` (default `.specify/configurations`).
+2. If the file exists, parse markdown sections:
+   - `## {sub-workspace-name}` = sub-workspace-specific routing
+   - `## global` = fallback routing
+   - bullet format: `- {domain}: {skill-name} [, {skill-name}]`
+3. Resolve `UT_IMPLEMENT_SKILLS` using this lookup order:
+   - matched sub-workspace section's `test` entry
+   - `global.test`
+4. If no routing file or no `test` entry exists, emit a warning and continue:
+   ```
+   Warning: no consumer test skill found in plan-skill-routing.md. UT phase files will be generated without implementation delegates.
+   ```
+
+Do not ask the user and do not invent a skill. Missing routing is non-blocking for planning.
+
+### Step 0.3: Resolve UT Skill (Consumer Conventions)
+
+Read UT conventions from the routed consumer skill when available:
+
+1. If `UT_IMPLEMENT_SKILLS` contains one or more consumer skills, strip the leading slash and resolve each `/skill-name` to `.claude/skills/{skill-name}/SKILL.md` when present and read it.
+2. Otherwise, glob `.claude/skills/*/SKILL.md`, match by: skill name contains `-ut` or `-test`, OR frontmatter contains `domain: unit-test`.
+3. If found, extract `## Framework`, `## Coverage Target`, `## Naming Conventions`, `## Test Structure` sections.
+4. If not found, continue with framework auto-detection in Step 2.
 
 Store extracted conventions for plan generation (Step 5).
+Store `UT_IMPLEMENT_SKILLS` for phase generation (Step 6).
 
 ---
 
@@ -338,8 +358,18 @@ For each module identified in Step 4:
 | `{path/to/module/}` | Source directory |
 | Test Matrix rows | From spec.md requirements + codebase scan |
 | Mocks & Fixtures | From dependency analysis |
+| Delegate Skills | From `UT_IMPLEMENT_SKILLS` |
 
-3. **Write**: `.specify/specs/{feature-id}/ut/phases/{module-name}.md`
+3. **Inject `## Delegate Skills`** when `UT_IMPLEMENT_SKILLS` is non-empty:
+
+```markdown
+## Delegate Skills
+- `/your-consumer-unit-test-skill` - implement and run the test cases in this UT phase
+```
+
+One bullet per skill, ordered as listed in routing. If no routed test skill was found, omit the section and keep the warning from Step 0.2 visible in the output summary.
+
+4. **Write**: `.specify/specs/{feature-id}/ut/phases/{module-name}.md`
 
 **Naming convention**:
 - `ut/phases/{module-name}.md` — one file per module (e.g. `auth.md`, `org-service.md`)
@@ -365,7 +395,8 @@ Modules: {n} total
   - P1 Critical: {n}
   - P2-P3: {n}
 
-Next: /tdk-ut-backfill-impl {feature-id}
+Next: /tdk-implement-from-plan {feature-id}
+Implementation: routed consumer test skill from `## Delegate Skills` in each UT phase file
 ```
 
 ---
@@ -432,5 +463,5 @@ Confirm -> Update files
 
 ## Related
 
-- `/tdk-ut-backfill-impl` — generate test files from plan
-- `/tdk-ut-backfill-auto` — automated workflow (plan + generate + run)
+- `/tdk-plan` — creates the feature implementation plan and triggers UT planning when needed
+- `/tdk-implement-from-plan` — executes generated phases and delegates consumer test skills

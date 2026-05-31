@@ -51,13 +51,13 @@ These capabilities are not present in the original frameworks.
 
 ### Unit Testing Framework
 
-Three dedicated commands cover the full test automation cycle:
+Unit-test planning is handled by TDK. Test implementation is routed to consumer-owned skills through `plan-skill-routing.md`.
 
 | Command | Role |
 |---------|------|
-| `/tdk-ut-backfill-auto` | Orchestrates the full pipeline in one command |
 | `/tdk-ut-backfill-plan` | Generates test plan + phase files from spec or existing code |
-| `/tdk-ut-backfill-impl` | Generates test code from UT plan |
+| `/tdk-implement-from-plan` | Executes phases and runs `## Delegate Skills` before generic implementation |
+| consumer test skill | Generates/runs tests according to project conventions |
 
 ### Sub-Workspace Isolation
 
@@ -105,10 +105,10 @@ The Tihon command suite provides a **specification-driven development** workflow
   └──────────────┘    └──────────┘    └────────────────┘    └───────────────────┘
          │                  │                │                       |
          v                  v                v                       |
-    ┌──────────┐     ┌──────────────┐  ┌─────────────┐        ┌──────────┐
-    │checklist │     │ba-requirement│  │api-design   │        │ ut:auto  │
-    │(optional)│     │  (Approval)  │  │db-design    │        │(auto UT) │
-    └──────────┘     └──────────────┘  │ (Approval)  │        └──────────┘
+    ┌──────────┐     ┌──────────────┐  ┌─────────────┐        ┌──────────────┐
+    │checklist │     │ba-requirement│  │api-design   │        │routed test   │
+    │(optional)│     │  (Approval)  │  │db-design    │        │skill         │
+    └──────────┘     └──────────────┘  │ (Approval)  │        └──────────────┘
                                        └─────────────┘
 
   Design Documents
@@ -151,9 +151,7 @@ Each command reads the output of the previous one, building a chain of artifacts
 | 12 | `/tdk-checklist <id> [focus]` | Generate quality checklist for requirements |
 | 13 | `/tdk-constitution` | Create/update project architecture principles |
 | — | **Unit Testing** | |
-| 15 | `/tdk-ut-backfill-auto <id>` | Automated full unit test workflow |
 | 16 | `/tdk-ut-backfill-plan <id>` | Generate unit test plan and phase files |
-| 17 | `/tdk-ut-backfill-impl <id>` | Generate test code from UT plan |
 | — | **Config & Workspace** | |
 | 20 | `/tdk-config-diff` | Compare workspace vs sub-workspace docs |
 | 21 | `/tdk-config-sync` | Sync docs between workspace and sub-workspaces |
@@ -210,15 +208,17 @@ Generates `plan.md` with architecture decisions, file structure, tech stack, and
 /tdk-implement-from-plan feat-001
 ```
 
-Executes implementation directly from `plan.md ## Phases` table. Lightweight approach for small to medium features. Marks completion via status comments in `plan.md`. UT phases auto-delegate to `/tdk-ut-backfill-auto`.
+Executes implementation directly from `plan.md ## Phases` table. Lightweight approach for small to medium features. Marks completion in the `plan.md` phases table. UT phase files delegate to the consumer test skill listed in `## Delegate Skills`.
 
 ### Step 5 — Run unit tests (optional)
 
+Map the `test` domain in `{docs.path}/custom-workflow/plan-skill-routing.md`, then run:
+
 ```
-/tdk-ut-backfill-auto feat-001 --sub-workspace backend
+/tdk-implement-from-plan feat-001
 ```
 
-Reads UT conventions from the consumer UT skill, creates test plan, and generates test code. See [04-unit-testing-full-pipeline.md](scenarios/04-unit-testing-full-pipeline.md) for a detailed walkthrough.
+`/tdk-plan` triggers `/tdk-ut-backfill-plan` when UT planning is needed. The generated `ut/phases/*.md` files delegate implementation to the routed consumer test skill. See [04-unit-testing-full-pipeline.md](scenarios/04-unit-testing-full-pipeline.md) for a detailed walkthrough.
 
 ### Check progress any time
 
@@ -262,9 +262,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| ut:auto | `/tdk-ut-backfill-auto <id>` | `--sub-workspace`, `--skip-run`, `--plan-only`, `--force` | `spec.md` (opt), consumer UT skill | `ut-plan.md`, phase files, test files | None |
-| ut:plan | `/tdk-ut-backfill-plan <id>` | `--sub-workspace`, `--review`, `--force`, `--standalone` | `spec.md` (opt), consumer UT skill | `ut-plan.md`, `ut-phase-*.md` | None |
-| ut:generate | `/tdk-ut-backfill-impl <id>` | `--sub-workspace` | `ut-plan.md`, `ut-phase-*.md`, consumer UT skill | Test files (`.test.ts`, `test_*.py`, etc.) | ut:plan |
+| ut:plan | `/tdk-ut-backfill-plan <id>` | `--sub-workspace`, `--review`, `--force`, `--standalone` | `spec.md` (opt), consumer test skill routing | `ut/plan.md`, `ut/phases/*.md` | plan or direct invocation |
 
 ### Config Commands
 

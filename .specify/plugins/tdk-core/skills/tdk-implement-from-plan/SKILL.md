@@ -2,7 +2,7 @@
 name: tdk-implement-from-plan
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata: 
-  version: "3.3.2"
+  version: "3.4.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -231,88 +231,55 @@ Execution pseudo-code (ascending `row.number`):
 
 For each phase:
 
-1. Determine phase type: **UT phase** or **Implementation phase** (see 5A / 5B below)
-2. Execute accordingly
-3. Log: `"✓ Phase {N}: {name} — complete"`
+1. Read the phase file referenced in `row.file` (relative to `FEATURE_DIR`).
+2. If the phase file contains `## Delegate Skills`, execute those delegates first (see 5A).
+3. If the phase appears to be a unit-test phase but has no usable `## Delegate Skills`, STOP with the unit-test guard message in 5A.
+4. Otherwise execute as a generic implementation phase (see 5C).
+5. Log: `"✓ Phase {N}: {name} — complete"`
 
 ---
 
-#### 5A. Phase Classification
+#### 5A. Delegate Skills Phase — Auto-continue
 
-Check if phase name contains any of these keywords (case-insensitive):
-`test`, `testing`, `unit test`, `UT`, `spec`
-OR phase description contains `Delegate to:` + `/tdk-ut-backfill-plan` or `/tdk-ut-backfill-auto` or `/tdk-ut-backfill-impl`
+If the phase file contains a `## Delegate Skills` section, execute it before generic implementation.
 
-- **Match → UT phase** (go to 5B)
-- **No match → Implementation phase** (go to 5C)
+**Parsing rules:**
+1. Find heading `^## Delegate Skills$`.
+2. Read bullet lines until the next `^## ` heading or EOF.
+3. For each bullet, extract the first backticked slash-prefixed token, e.g. `` `/my-test-skill` ``.
+4. If no backticked token exists, extract the first raw slash-prefixed token, e.g. `/my-test-skill`.
+5. Ignore placeholder bullets containing `{`, `}`, `your-`, or `(default`.
+6. Preserve bullet order and deduplicate exact skill names.
 
----
-
-#### 5B. UT Phase — MANDATORY PAUSE (NEVER write tests inline)
-
-⛔ **NEVER write unit tests yourself.** MUST delegate to `/tdk-ut-backfill-impl` or `/tdk-ut-backfill-auto`.
-Writing tests inline defeats the purpose of structured test generation (plan → generate → execute).
-
-**Before delegating:**
-
-1. **Auto-detect sub-workspace** from `PROJECT_CONTEXT` (loaded in Step 0.1 via `tdk-load-project-context`):
-   - Use `PROJECT_CONTEXT.subWorkspaces` list (name + path) — already parsed from `.specify.json`
-   - If `PROJECT_CONTEXT.targetSubWorkspace` is set → use it directly
-   - Otherwise, analyze phase content for file paths → match against sub-workspace paths
-   - If ALL paths map to 1 sub-workspace → auto-resolve: `--sub-workspace {name}`
-   - If ambiguous (paths span multiple sub-workspaces) → include sub-workspace choice in AskUserQuestion
-   - If no sub-workspaces configured → omit `--sub-workspace` flag
-2. **Check if `{FEATURE_DIR}/ut-plan.md` exists**
-
-**Always** display and use **AskUserQuestion**:
+**Execution context for each delegate:**
 
 ```
-⏸️  Phase {N}: {name} — Unit Test phase detected
-   Sub-workspace: {auto-detected or "ambiguous"}
-   UT Plan: {exists / missing}
+/{skill-name} {TASK_ID}
+
+Context:
+- FEATURE_DIR: {FEATURE_DIR}
+- phasePath: {phasePath}
+- phaseNumber: {row.number}
+- phaseFile: {row.file}
+- phaseTitle: {row.fileLabel}
+- subWorkspace: {detected from PROJECT_CONTEXT if unambiguous, otherwise empty}
 ```
 
-**If ut-plan.md EXISTS:**
-```json
-{
-  "questions": [{
-    "question": "How do you want to handle this test phase?",
-    "header": "Phase {N}: {name}",
-    "options": [
-      {"label": "Delegate to /tdk-ut-backfill-impl", "description": "UT plan exists — generate test code + run (recommended)"},
-      {"label": "Delegate to /tdk-ut-backfill-auto", "description": "Full re-plan + generate + run"},
-      {"label": "Manual test first", "description": "I will run tests manually, then report back"},
-      {"label": "Skip this phase", "description": "Skip testing and continue to next phase"}
-    ],
-    "multiSelect": false
-  }]
-}
+**Required behavior:**
+- Run delegates in the order listed.
+- Do not invent, auto-discover, or replace missing delegate skills.
+- If a listed skill is unavailable, STOP with:
+  ```
+  Delegate skill not found: /{skill-name}
+  Phase NN left in_progress. Add/fix the skill in plan-skill-routing.md or edit this phase's ## Delegate Skills, then rerun /tdk-implement-from-plan {TASK_ID}.
+  ```
+- If a delegate fails, STOP and report the delegate's error. Leave the phase `in_progress` and emit the normal F3 recovery reminder.
+- If every delegate completes, validate the phase success criteria if present, then mark the phase done.
+
+**Unit-test guard:** If the phase appears to be a unit-test phase but has no usable `## Delegate Skills`, do not write tests inline. STOP with:
 ```
-
-**If ut-plan.md MISSING:**
-```json
-{
-  "questions": [{
-    "question": "How do you want to handle this test phase?",
-    "header": "Phase {N}: {name}",
-    "options": [
-      {"label": "Delegate to /tdk-ut-backfill-auto", "description": "Full workflow: plan → generate → run (recommended)"},
-      {"label": "Manual test first", "description": "I will run tests manually, then report back"},
-      {"label": "Skip this phase", "description": "Skip testing and continue to next phase"}
-    ],
-    "multiSelect": false
-  }]
-}
+Unit-test phase has no delegate skill. Run /tdk-ut-backfill-plan {TASK_ID} after adding a test entry to plan-skill-routing.md, or add ## Delegate Skills manually.
 ```
-
-- **Delegate /tdk-ut-backfill-impl**: Invoke `/tdk-ut-backfill-impl {task_id} --sub-workspace {detected}` → wait → mark phase done: run `bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done` THEN `bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} done` → continue
-- **Delegate /tdk-ut-backfill-auto**: Invoke `/tdk-ut-backfill-auto {task_id} --sub-workspace {detected}` → wait → mark phase done: run `bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done` THEN `bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} done` → continue
-- **Manual**: STOP and wait for user to report back before continuing
-- **Skip**: Log `"⏭️  Phase {N} skipped by user"` → run `bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" skipped` THEN `bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} skipped` → continue
-
-**If downstream skill reports sub-workspace mismatch** → AskUserQuestion to correct.
-
-**Reminder:** This AskUserQuestion is NOT optional — even if user said "Yes, execute all phases" in Step 5, you MUST still pause here and ask.
 
 ---
 

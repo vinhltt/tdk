@@ -165,18 +165,18 @@ flowchart TD
         UT_PHASES["ut/phases/{module1}.md<br/>ut/phases/{module2}.md<br/>..."]
     end
 
-    subgraph GENERATION_UT["Code Generation"]
-        UT_GEN["/tdk-ut-backfill-impl id<br/>--sub-workspace name"]
+    subgraph GENERATION_UT["Routed Test Implementation"]
+        UT_GEN["consumer test skill<br/>from ## Delegate Skills"]
         TEST_FILES["*.test.ts / test_*.py<br/>*Test.php + fixtures"]
     end
 
-    UT_AUTO["/tdk-ut-backfill-auto id<br/>Orchestrates all steps"]
+    ROUTING["plan-skill-routing.md<br/>test domain"]
 
+    ROUTING -->|selects test skill| UT_PLAN_CMD
     UT_SKILL -->|conventions| UT_PLAN_CMD
     UT_PLAN_CMD --> UT_PLAN
     UT_PLAN_CMD --> UT_PHASES
-    UT_PLAN -->|input| UT_GEN
-    UT_PHASES -->|input| UT_GEN
+    UT_PHASES -->|## Delegate Skills| UT_GEN
     UT_SKILL -.->|conventions| UT_GEN
     UT_GEN --> TEST_FILES
     UT_AUTO -.->|"automates"| UT_PLAN_CMD
@@ -263,9 +263,9 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `test-viewpoint.csv` | `/tdk-test-viewpoint` | `spec.md`, `ba-requirement.md` | Manual reference | After ba-requirement |
 | `backend/src/**` | `/tdk-implement-from-plan` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement-from-plan` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
-| `ut/plan.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), consumer UT skill | `/tdk-ut-backfill-impl` | Feature UT |
-| `ut/phases/{module}.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), consumer UT skill | `/tdk-ut-backfill-impl` | Feature UT |
-| `*.test.ts` / `test_*.py` etc. | `/tdk-ut-backfill-impl` | `ut/plan.md`, `ut/phases/{module}.md` | Test runner | Feature UT |
+| `ut/plan.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), consumer test skill routing | `/tdk-implement-from-plan` | Feature UT |
+| `ut/phases/{module}.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), `plan-skill-routing.md` | consumer test skill via `## Delegate Skills` | Feature UT |
+| `*.test.ts` / `test_*.py` etc. | consumer test skill | `ut/phases/{module}.md` | Test runner | Feature UT |
 | `.specify.yaml` | `/tdk-sub-workdspace-init` | Project config | `config:*`, `ut:*` | Project setup |
 | `document-manager.md` | `/tdk-config-index` | All docs files | Manual reference, LLM tools | On demand |
 

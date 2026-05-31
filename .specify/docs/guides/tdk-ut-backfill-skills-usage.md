@@ -1,42 +1,66 @@
 # tdk-ut Skills — Usage Guide
 
-How to configure and use the `tdk-ut-*` skills family for test planning and automatic test generation inside a tdk workspace.
+How to configure unit-test planning and routed test implementation inside a tdk workspace.
 
 ## 1. Overview
 
-`tdk-ut-*` is the tdk sub-plugin for **unit-test automation**. UT conventions are defined in consumer `.claude/skills/{name}/SKILL.md` files. The `/tdk-ut-backfill-auto` skill resolves these at runtime and drives test planning + generation from those conventions.
+`/tdk-ut-backfill-plan` is the TDK adapter for **unit-test planning**. It creates `ut/plan.md` and `ut/phases/*.md` artifacts. Test implementation is handled later by the consumer test skill selected from `{docs.path}/custom-workflow/plan-skill-routing.md`.
 
 Entry points:
 
-- `/tdk-ut-backfill-auto` — end-to-end: plan + generate (reads consumer UT skill for conventions).
-- `/tdk-ut-backfill-plan` — generate test plan against target module.
-- `/tdk-ut-backfill-impl` — write test files from the plan.
+- `/tdk-plan` — detects when UT planning is needed and triggers `/tdk-ut-backfill-plan`.
+- `/tdk-ut-backfill-plan` — generates test plan artifacts and injects the routed consumer `test` skill into UT phase files.
+- `/tdk-implement-from-plan` — executes phases; when a phase contains `## Delegate Skills`, it runs those consumer skills before generic implementation.
 
 ## 2. Skills at a glance
 
 | Skill | Purpose | Typical scope |
 |-------|---------|---------------|
-| tdk-ut-backfill-auto | One-shot: plan → generate | Workspace or SW |
-| tdk-ut-backfill-plan | Produce test plan JSON | Module or SW |
-| tdk-ut-backfill-impl | Emit test files from plan | Module |
+| tdk-ut-backfill-plan | Produce UT plan and per-module phase files | Module or SW |
+| consumer test skill | Implement/run tests from a UT phase file | Module or SW |
+| tdk-implement-from-plan | Executes plan phases and delegates listed skills | Feature |
 
 ## 3. Quick start
 
-```bash
-# 1. Ensure a consumer UT skill exists at .claude/skills/{name}/SKILL.md
-#    with framework, coverage targets, naming conventions.
+1. Ensure a consumer test skill exists at `.claude/skills/{name}/SKILL.md` with framework, coverage targets, and naming conventions.
 
-# 2. Plan + generate tests for a specific module:
-/tdk-ut-backfill-plan --sub-workspace backend --module api
-/tdk-ut-backfill-impl --sub-workspace backend --module api
+2. Map the `test` domain in `{docs.path}/custom-workflow/plan-skill-routing.md`:
 
-# Or run the full pipeline in one command:
-/tdk-ut-backfill-auto --sub-workspace backend
+```markdown
+## backend
+- test: /your-backend-unit-test-skill
 ```
 
-## 4. UT convention source
+3. Generate the implementation plan. UT planning is delegated when needed:
 
-UT conventions (framework, naming patterns, coverage targets, mocking strategies) are defined in the consumer's `.claude/skills/{name}/SKILL.md`. The `/tdk-ut-backfill-auto` skill discovers and reads these files at runtime.
+```text
+/tdk-plan feat-001
+```
+
+4. Execute implementation. UT phase files delegate to the routed test skill:
+
+```text
+/tdk-implement-from-plan feat-001
+```
+
+## 4. UT convention source and routing
+
+UT conventions (framework, naming patterns, coverage targets, mocking strategies) are defined in the consumer's `.claude/skills/{name}/SKILL.md`.
+
+Routing is declared in `{docs.path}/custom-workflow/plan-skill-routing.md`:
+
+```markdown
+## global
+- test: /your-consumer-unit-test-skill
+
+## backend
+- test: /your-backend-unit-test-skill
+```
+
+`/tdk-ut-backfill-plan` reads the same routing file as `/tdk-plan`:
+- matched sub-workspace `test` entry wins;
+- `global.test` is the fallback;
+- missing routing produces a warning and still generates UT plan artifacts without an implementation delegate.
 
 ## 5. Config shape
 
@@ -133,7 +157,7 @@ One module, one `test/` tree. Validator detects stale test files whose source wa
 }
 ```
 
-`apps/web/test/Button.test.ts` requires `apps/web/components/Button.ts`. When `components/Button.ts` is deleted, `/tdk-ut-backfill-auto` surfaces the orphan and asks per-item fix / exclude / ignore.
+`apps/web/test/Button.test.ts` requires `apps/web/components/Button.ts`. When `components/Button.ts` is deleted, the routed consumer test skill should surface the orphan and ask per-item fix / exclude / ignore according to its own convention.
 
 ## 8. Decision flowchart
 

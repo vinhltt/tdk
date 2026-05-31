@@ -5,8 +5,7 @@
 <!--
 Module: {module-name}
 Source path: {path/to/module/}
-Agent: [v2: assigned agent — placeholder, not active in MVR]
-Skill: [v2: tdk-ut-backfill-impl or custom — placeholder, not active in MVR]
+Delegate skills: {UT_IMPLEMENT_SKILLS or "none - add plan-skill-routing.md test entry"}
 
 MVR scope: tracking table = Module | Phase File | Status | Progress.
 v2 will add Agent | Skill columns when subagent dispatch lands.
@@ -15,6 +14,15 @@ MVR active transitions: 🟡 → 🔵 → 🟢 only.
 🟠 (subagent failure) reserved for v2 dispatcher.
 🔴 (drift) reserved for v2 drift detection.
 -->
+
+## Delegate Skills
+
+<!--
+Populated by /tdk-ut-backfill-plan from {docs.path}/custom-workflow/plan-skill-routing.md.
+If no routed test skill exists, remove this section or leave a warning in the generated phase.
+-->
+
+- `{UT_IMPLEMENT_SKILL}` - implement and run the test cases in this UT phase
 
 ## §1 Code Summary
 

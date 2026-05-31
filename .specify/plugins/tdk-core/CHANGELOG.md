@@ -4,6 +4,17 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.0] - 2026-05-31
+
+### Changed
+- tdk-plan: UT planning now delegates to `/tdk-ut-backfill-plan`; generated UT phase files receive consumer test skills through `plan-skill-routing.md`
+- tdk-implement-from-plan: executes explicit `## Delegate Skills` before generic implementation and stops UT phases that lack a routed test delegate
+- tdk-ut-backfill-plan: reads the shared skill-routing contract and injects matched `test` skills into `ut/phases/*.md`
+
+### Deprecated
+- tdk-ut-backfill-auto: replaced by `/tdk-plan` + `/tdk-implement-from-plan` routed workflow
+- tdk-ut-backfill-impl: replaced by consumer test skills mapped in `plan-skill-routing.md`
+
 ## [3.3.2] - 2026-05-31
 
 ### Changed

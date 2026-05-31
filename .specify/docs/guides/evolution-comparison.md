@@ -112,9 +112,8 @@ Commands not present in any predecessor (15 total):
 |---------|----------|-------|
 | `/tdk-specify --fast` | Specification | **Token-efficient fast mode**, skips brainstorm |
 | `/tdk-status` | Workflow | **Project/feature status overview** |
-| `/tdk-ut-backfill-auto` | Unit Testing | **Full UT pipeline in one command** |
 | `/tdk-ut-backfill-plan` | Unit Testing | **Framework-aware test plan** with phase files |
-| `/tdk-ut-backfill-impl` | Unit Testing | **Code generation from UT plan** |
+| consumer test skill routing | Unit Testing | **Code generation and execution via `plan-skill-routing.md`** |
 | `/tdk-config-diff` | Config Mgmt | **Compare** workspace vs sub-workspace docs |
 | `/tdk-config-sync` | Config Mgmt | **Bidirectional sync** with dry-run |
 | `/tdk-config-index` | Config Mgmt | **LLM-discoverable** doc index |
@@ -147,7 +146,7 @@ CommonDragon elevates the `plan.md` file's `## Phases` table as the primary sour
 
 ### Validation-First
 
-Two-layer validation gates ensure quality before proceeding: `/tdk-checklist` blocks implementation until resolved → `/tdk-analyze` checks cross-artifact consistency. UT conventions are defined in consumer `.claude/skills/{name}/SKILL.md` files and resolved at runtime by `/tdk-ut-backfill-auto`. Every phase has a quality gate, not just a final review.
+Two-layer validation gates ensure quality before proceeding: `/tdk-checklist` blocks implementation until resolved → `/tdk-analyze` checks cross-artifact consistency. UT conventions are defined in consumer `.claude/skills/{name}/SKILL.md` files and routed through `{docs.path}/custom-workflow/plan-skill-routing.md`. Every phase has a quality gate, not just a final review.
 
 ### Native Integration > Scripted Workarounds
 

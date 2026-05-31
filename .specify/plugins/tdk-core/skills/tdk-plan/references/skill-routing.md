@@ -1,6 +1,6 @@
 # Skill Routing Reference
 
-Instructions for loading, parsing, and injecting per-project skill routing into `/tdk-plan` phase bodies.
+Instructions for loading, parsing, and injecting per-project skill routing into `/tdk-plan` and UT phase bodies.
 
 ## File Resolution
 
@@ -26,19 +26,23 @@ Parse the markdown structure:
 ```markdown
 ## global
 - research: (default - no special skill)
-- test: /tdk-ut-backfill-auto
+- test: /your-consumer-unit-test-skill
 
 ## backend
 - implement: /your-backend-skill
 - database: /your-database-skill
+- test: /your-backend-unit-test-skill
 ```
 
 **Resulting conceptual map** (stored as `SKILL_ROUTING` — in-memory, not a file):
-- `global.test` → `["/tdk-ut-backfill-auto"]`
+- `global.test` → `["/your-consumer-unit-test-skill"]`
 - `backend.implement` → `["/your-backend-skill"]`
 - `backend.database` → `["/your-database-skill"]`
+- `backend.test` → `["/your-backend-unit-test-skill"]`
 
-Domains are freeform strings (e.g. research, implement, test, database, design, clarify, styling). No fixed enum — user defines what makes sense for their project.
+Domains are freeform strings (e.g. research, implement, test, database, design, clarify, styling). The built-in unit-test implementation lookup uses the single `test` domain only. Do not introduce separate `test-plan` or `test-implement` domains.
+
+`/tdk-ut-backfill-plan` is not listed in the routing file. It is the TDK planning adapter that reads this file, resolves the matching `test` skill, and writes that consumer implementation skill into generated `ut/phases/*.md` files.
 
 ## Sub-workspace Matching
 
@@ -92,6 +96,12 @@ Test reference: `erc_spec_kit` has 3 subWorkspaces (ErcWebPage, ErcWebApi, ErcWe
 
 Before injecting skills in Step 3b, re-read `{docs.path}/custom-workflow/plan-skill-routing.md` to refresh `SKILL_ROUTING`. Intermediate steps (memory, research, cross-plan deps) loaded between Step 0.1b and 3b can drift context. Low cost (~15 lines read), prevents stale routing data.
 
-## UT Phase Exclusion
+## Unit Test Phase Routing
 
-UT auto-generated phases (containing `Delegate to: /tdk-ut-backfill-plan`) are excluded from skill routing injection. These already have their own delegation mechanism — injecting `## Delegate Skills` would create double-delegation conflict.
+`/tdk-plan` may delegate UT artifact creation to `/tdk-ut-backfill-plan {TASK_ID}` when unit-test planning is required. The generated UT phase files then receive `## Delegate Skills` from the matched `test` entry:
+
+1. Prefer the matched sub-workspace section's `test` entry.
+2. Fall back to `global.test`.
+3. If neither exists, emit a warning and generate UT phase files without an implementation delegate.
+
+This keeps UT planning inside TDK and UT implementation inside the consumer project skill selected by `plan-skill-routing.md`.

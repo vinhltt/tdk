@@ -11,7 +11,7 @@ The 4-layer `ut-rule.md` cascade has been replaced by consumer-owned skills.
 |---------|-------------|
 | `rules/test/ut-rule.md` files (4 levels: global, sw-parent, sw-own, module) | Single `.claude/skills/{name}/SKILL.md` per project |
 | `/tdk-ut-backfill-create-rules` skill | Manual skill creation (one-time) |
-| `/tdk-ut-backfill-check-rules` skill | Skill resolution built into `/tdk-ut-backfill-auto` |
+| `/tdk-ut-backfill-check-rules` skill | Skill resolution through `plan-skill-routing.md` and `/tdk-ut-backfill-plan` |
 | `resolveRulesCascade()` 4-level resolver | Glob-based skill discovery at runtime |
 | CLI output fields: `rulesFile`, `utRulesFiles`, `framework`, `coverageTarget`, `hasUtRules` | Read directly from UT skill SKILL.md |
 
@@ -82,12 +82,13 @@ Map sections from your `ut-rule.md` to the SKILL.md format:
 
 Additional sections not in the template → copy as-is into SKILL.md under appropriate headings.
 
-### 4. Update plan-skill-routing-template.tpl (optional)
+### 4. Update plan-skill-routing.md
 
-If your project uses skill routing, update the `test` domain:
+Map the `test` domain to your consumer skill:
 
-```
-- test: /tdk-ut-backfill-auto  # UT skill: {your-skill-name} in .claude/skills/
+```markdown
+## global
+- test: /{your-skill-name}
 ```
 
 ### 5. Delete old ut-rule.md files
@@ -100,7 +101,7 @@ find . -path "*/rules/test/ut-rule.md" -delete
 
 ### 6. Test
 
-Run `/tdk-ut-backfill-auto` on a feature to verify the new skill is discovered and used.
+Run `/tdk-ut-backfill-plan` on a feature and verify generated `ut/phases/*.md` files contain `## Delegate Skills` with your consumer test skill. Then run `/tdk-implement-from-plan` to execute the routed implementation.
 
 ## Per-Module Overrides (Removed)
 
@@ -130,7 +131,7 @@ If you parse `tdk ut check-rules` JSON output in CI scripts or automation:
 
 ### Still available
 
-`outputRoot`, `subWorkspaces` — available via `tdk ut backfill auto` or `tdk ut backfill plan` CLI output.
+`outputRoot`, `subWorkspaces` — available via `tdk ut backfill plan` CLI output.
 
 ### Alternative
 
@@ -145,7 +146,7 @@ grep -A5 "## Coverage Target" .claude/skills/your-skill/SKILL.md
 
 | Issue | Solution |
 |-------|----------|
-| "No UT skill found" from `/tdk-ut-backfill-auto` | Create skill per steps above |
+| Missing `## Delegate Skills` in generated UT phase | Add a `test` entry to `plan-skill-routing.md`, then rerun `/tdk-ut-backfill-plan` |
 | "Framework not detected" | Add `## Framework` section to SKILL.md |
 | "Coverage not detected" | Add `## Coverage Target` section to SKILL.md |
 | Old `ut-rule.md` still on disk | Safe to delete — TDK no longer reads it |

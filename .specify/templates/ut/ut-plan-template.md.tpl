@@ -79,4 +79,4 @@ List unresolved questions, shared fixture conflicts, cross-module mocking decisi
 
 ## Next Step
 
-Run `/tdk-ut-backfill-impl {feature-id}` to generate test files from phase plans.
+Run `/tdk-implement-from-plan {feature-id}`. Each `ut/phases/*.md` file delegates implementation to the consumer test skill selected by `plan-skill-routing.md`.

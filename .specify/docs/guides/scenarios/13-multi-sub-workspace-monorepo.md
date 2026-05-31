@@ -30,7 +30,7 @@
 
 ### 3. Set up UT conventions per sub-workspace
 
-Create a consumer UT skill at `.claude/skills/{name}/SKILL.md` for each sub-workspace, defining test conventions (framework, naming patterns, coverage targets). The `/tdk-ut-backfill-auto` skill resolves these at runtime.
+Create a consumer test skill at `.claude/skills/{name}/SKILL.md` for each sub-workspace, defining test conventions (framework, naming patterns, coverage targets). Map each skill with the `test` domain in `{docs.path}/custom-workflow/plan-skill-routing.md`.
 
 ### 4. Compare documentation between workspaces
 

@@ -1,59 +1,44 @@
-# Scenario: Unit Testing — Automated
+# Scenario: Unit Testing — Routed Implementation
 
-> **When to use**: You want a single command to handle the entire UT workflow — plan, generate, run, and report.
+> **When to use**: You want TDK to create UT planning artifacts, then let the consumer project skill implement and run tests.
 
 ## Command Sequence
 
 ```
-/tdk-ut-backfill-auto
+/tdk-plan → /tdk-implement-from-plan
 ```
 
 ## Step-by-Step
 
-### 1. Run the automated UT workflow
+### 1. Configure test routing
 
-```
-/tdk-ut-backfill-auto feat-001 --sub-workspace backend
-```
+Add a `test` entry to `{docs.path}/custom-workflow/plan-skill-routing.md`:
 
-**What happens**: Claude runs the full UT pipeline automatically:
-
-1. **Create/update UT plan** — generates `ut-plan.md` and phase files from consumer UT skill conventions
-2. **Generate test code** — writes test files per UT plan
-3. **Run tests** — executes the test suite
-4. **Update plan** — marks completed items in `ut-plan.md`
-
-**Output**: `ut-plan.md`, `ut-phase-*.md`, test files, test results report
-
-### 2. Review results
-
-Claude reports test results with pass/fail counts. Failed tests are flagged for manual review.
-
-## Key Flags
-
-| Flag | Purpose |
-|------|---------|
-| `--sub-workspace <name>` | Target sub-workspace (e.g., `backend`, `frontend`) |
-| `--skip-run` | Generate tests but don't execute them |
-| `--plan-only` | Only create/update the UT plan, skip generation |
-| `--force` | Overwrite existing UT artifacts |
-
-## Examples
-
-Generate tests for frontend without running them:
-
-```
-/tdk-ut-backfill-auto feat-001 --sub-workspace frontend --skip-run
+```markdown
+## global
+- test: /your-consumer-unit-test-skill
 ```
 
-Only update the UT plan:
+Use sub-workspace sections when different services need different test skills.
+
+### 2. Generate the implementation plan
 
 ```
-/tdk-ut-backfill-auto feat-001 --sub-workspace backend --plan-only
+/tdk-plan feat-001
 ```
+
+**What happens**: When UT planning is needed, `/tdk-plan` triggers `/tdk-ut-backfill-plan`. The UT planner creates `ut/plan.md` and `ut/phases/*.md`, then injects the routed consumer test skill into each UT phase's `## Delegate Skills`.
+
+### 3. Execute the plan
+
+```
+/tdk-implement-from-plan feat-001
+```
+
+**What happens**: `/tdk-implement-from-plan` executes phases in order. When a phase contains `## Delegate Skills`, it invokes those skills before generic implementation.
 
 ## Tips
 
-- `ut-auto` is called automatically by `/tdk-implement-from-plan` when it encounters a UT phase in the plan's `## Phases` table — you don't need to run it manually during implementation.
-- If you want review points between plan and generation, use the [full pipeline](04-unit-testing-full-pipeline.md) instead.
-- UT conventions are read from the consumer UT skill (`.claude/skills/{name}/SKILL.md`). If no UT skill is found, `ut-auto` will prompt you to create one before proceeding.
+- Use `/tdk-ut-backfill-plan feat-001 --standalone` when adding tests to existing code without a spec.
+- The routed consumer test skill owns framework-specific code generation, assertions, mocks, fixtures, and test execution.
+- `/tdk-ut-backfill-auto` is deprecated and kept only as a temporary compatibility shim.

@@ -120,14 +120,13 @@ After all implementation phases are defined, check if a Unit Test phase should b
 ```markdown
 ### Phase N: Unit Test Planning
 **Delegate to:** `/tdk-ut-backfill-plan {task_id}`
-**Purpose:** Generate UT plan (ut-plan.md) — test strategy, test cases, coverage targets.
-**Note:** This phase creates the TEST PLAN only — no test code generated here.
-When implementing, `/tdk-implement-from-plan` will auto-delegate
-to `/tdk-ut-backfill-impl` (if ut-plan exists) or `/tdk-ut-backfill-auto` (if not).
+**Purpose:** Generate `ut/plan.md` and `ut/phases/*.md` — test strategy, test cases, coverage targets.
+**Note:** This phase creates test planning artifacts only. `/tdk-ut-backfill-plan` reads `plan-skill-routing.md` and injects the matched consumer `test` skill into generated UT phase files.
 
 **Success Criteria:**
-- [ ] ut-plan.md created with test matrix
-- [ ] Phase files created for each test suite
+- [ ] `ut/plan.md` created with test matrix
+- [ ] `ut/phases/*.md` created for each test suite
+- [ ] Generated UT phase files include `## Delegate Skills` when `plan-skill-routing.md` has a matching `test` entry
 ```
 
 **If condition not met** → skip UT phase (no test requirements detected).
