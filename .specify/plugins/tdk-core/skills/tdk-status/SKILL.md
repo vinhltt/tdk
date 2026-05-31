@@ -2,7 +2,7 @@
 name: tdk-status
 description: "Track Workflow Progress"
 metadata: 
-  version: "3.3.2"
+  version: "3.4.1"
 ---
 
 # /tdk-status - Track Workflow Progress
@@ -17,7 +17,7 @@ Source of truth: `plan.md` `## Phases` table. Missing `plan.md` or missing `## P
 
 ## Shared JSON Contract
 
-The status collector is also the read-only preflight contract for other skills, including `/tdk-implement-from-plan`.
+The status collector is also the read-only preflight contract for other skills, including `/tdk-implement`.
 
 Consumers should call the collector directly:
 

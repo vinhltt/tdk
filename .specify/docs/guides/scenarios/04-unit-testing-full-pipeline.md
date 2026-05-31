@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-ut-backfill-plan → /tdk-implement-from-plan
+/tdk-ut-backfill-plan → /tdk-implement
 ```
 
 ## Step-by-Step
@@ -29,10 +29,10 @@ To review/update an existing plan:
 ### 2. Implement via routed test skill
 
 ```
-/tdk-implement-from-plan feat-001
+/tdk-implement feat-001
 ```
 
-**What happens**: Claude reads the implementation plan. UT phase files contain `## Delegate Skills`, so `/tdk-implement-from-plan` invokes the routed consumer test skill before generic implementation.
+**What happens**: Claude reads the implementation plan. UT phase files contain `## Delegate Skills`, so `/tdk-implement` invokes the routed consumer test skill before generic implementation.
 
 **Output**: Test files (e.g., `*.test.ts`, `test_*.py`, `*Test.php`) and fixtures
 

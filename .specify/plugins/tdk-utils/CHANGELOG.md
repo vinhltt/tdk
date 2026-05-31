@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.10.6] - 2026-05-31
+
+### Changed
+- planning: update implementation handoff guidance to /tdk-implement
+- tdk-red-team-skeptic: check integration gaps against /tdk-implement artifacts
+- tdk-load-project-context and tdk-validate-task-id: recognize tdk-implement as a host skill
+
 ## [1.10.5] - 2026-05-30
 
 ### Changed

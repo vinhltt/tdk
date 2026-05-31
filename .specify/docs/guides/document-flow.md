@@ -38,8 +38,8 @@ flowchart TD
     PAGEDESIGNS -.->|Approval| PAGEDESIGNS
 
     %% Phase 2: Implementation (Solo Path - Primary)
-    PLAN -->|/tdk-implement-from-plan| CODE_BE[backend/src/<br/>Backend Code]
-    PLAN -->|/tdk-implement-from-plan| CODE_FE[frontend/pages/<br/>Frontend Code]
+    PLAN -->|/tdk-implement| CODE_BE[backend/src/<br/>Backend Code]
+    PLAN -->|/tdk-implement| CODE_FE[frontend/pages/<br/>Frontend Code]
 
     %% Styling
     classDef phase0 fill:#e1f5ff,stroke:#01579b,stroke-width:2px
@@ -143,7 +143,7 @@ flowchart TD
         TESTS[tests/]
     end
 
-    PLAN -->|"/tdk-implement-from-plan"| IMPL_OUTPUT
+    PLAN -->|"/tdk-implement"| IMPL_OUTPUT
 
     classDef input fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
@@ -254,16 +254,16 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `spec.md` | `/tdk-specify` | User description | `/tdk-plan`, all downstream | Feature start |
 | `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-ba-requirement` | After specify |
 | `ba-requirement.md` | `/tdk-ba-requirement` | `spec.md` | `/tdk-plan` | For Approval |
-| `plan.md` | `/tdk-plan` | `ba-requirement.md`, `constitution.md` | `plan.md ## Phases`, `/tdk-implement-from-plan` | Feature start |
-| `plan.md ## Phases` | `/tdk-plan` | `ba-requirement.md`, design artifacts | `/tdk-implement-from-plan` | Feature start |
+| `plan.md` | `/tdk-plan` | `ba-requirement.md`, `constitution.md` | `plan.md ## Phases`, `/tdk-implement` | Feature start |
+| `plan.md ## Phases` | `/tdk-plan` | `ba-requirement.md`, design artifacts | `/tdk-implement` | Feature start |
 | `research.md` | `/tdk-plan` | `ba-requirement.md` | Reference | Feature start |
 | `data-model.md` | `/tdk-plan` | `ba-requirement.md` | Reference | Feature start |
 | `api_design.md` | `/tdk-api-design` | `plan.md` | Reference | For Approval |
 | `batch-design.md` | `/tdk-batch-design` | `spec.md`, `research.md`, `data-model.md` | Reference | For Approval |
 | `test-viewpoint.csv` | `/tdk-test-viewpoint` | `spec.md`, `ba-requirement.md` | Manual reference | After ba-requirement |
-| `backend/src/**` | `/tdk-implement-from-plan` | `plan.md ## Phases` | Testing | Implementation |
-| `frontend/pages/**` | `/tdk-implement-from-plan` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
-| `ut/plan.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), consumer test skill routing | `/tdk-implement-from-plan` | Feature UT |
+| `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
+| `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
+| `ut/plan.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), consumer test skill routing | `/tdk-implement` | Feature UT |
 | `ut/phases/{module}.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), `plan-skill-routing.md` | consumer test skill via `## Delegate Skills` | Feature UT |
 | `*.test.ts` / `test_*.py` etc. | consumer test skill | `ut/phases/{module}.md` | Test runner | Feature UT |
 | `.specify.yaml` | `/tdk-sub-workdspace-init` | Project config | `config:*`, `ut:*` | Project setup |
@@ -313,7 +313,7 @@ flowchart TD
 
     SPECIFY --> CLARIFY[tdk-clarify]
     CLARIFY --> PLAN[tdk-plan]
-    PLAN --> IMPLEMENT[tdk-implement-from-plan]
+    PLAN --> IMPLEMENT[tdk-implement]
     
     UPDATE_CONTRACT --> PLAN
 

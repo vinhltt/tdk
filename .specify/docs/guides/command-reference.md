@@ -56,7 +56,7 @@ Unit-test planning is handled by TDK. Test implementation is routed to consumer-
 | Command | Role |
 |---------|------|
 | `/tdk-ut-backfill-plan` | Generates test plan + phase files from spec or existing code |
-| `/tdk-implement-from-plan` | Executes phases and runs `## Delegate Skills` before generic implementation |
+| `/tdk-implement` | Executes phases and runs `## Delegate Skills` before generic implementation |
 | consumer test skill | Generates/runs tests according to project conventions |
 
 ### Sub-Workspace Isolation
@@ -100,7 +100,7 @@ The Tihon command suite provides a **specification-driven development** workflow
 
   Phase 0                Phase 1              Phase 2                Phase 3
   ┌──────────────┐    ┌──────────┐    ┌────────────────┐    ┌───────────────────┐
-  │   specify    │───>│ clarify  │───>│      plan      │───>│implement-from-plan│
+  │   specify    │───>│ clarify  │───>│      plan      │───>│implement│
   │  (--fast)    │    │ (should) │    │                │    │                   │
   └──────────────┘    └──────────┘    └────────────────┘    └───────────────────┘
          │                  │                │                       |
@@ -119,7 +119,7 @@ The Tihon command suite provides a **specification-driven development** workflow
 
   Primary Implementation
   ┌───────────────────────┐
-  │implement-from-plan    │
+  │implement    │
   │(plan.md ## Phases)    │
   └───────────────────────┘
 
@@ -130,7 +130,7 @@ The Tihon command suite provides a **specification-driven development** workflow
                       └─────────────────────┘
 ```
 
-**Primary flow**: `specify` → `clarify` → `plan` → `implement-from-plan`
+**Primary flow**: `specify` → `clarify` → `plan` → `implement`
 
 Each command reads the output of the previous one, building a chain of artifacts: `spec.md` → `plan.md` (with ## Phases table) → source code.
 
@@ -164,7 +164,7 @@ Each command reads the output of the previous one, building a chain of artifacts
 | — | **Test Viewpoints** | |
 | 27 | `/tdk-test-viewpoint <id>` | Generate high-level test viewpoints (観点) from spec |
 | — | **Primary Implementation** | |
-| 28 | `/tdk-implement-from-plan <id>` | Execute implementation directly from plan.md ## Phases (recommended) |
+| 28 | `/tdk-implement <id>` | Execute implementation directly from plan.md ## Phases (recommended) |
 
 ---
 
@@ -205,7 +205,7 @@ Generates `plan.md` with architecture decisions, file structure, tech stack, and
 ### Step 4 — Implement (Recommended Path)
 
 ```
-/tdk-implement-from-plan feat-001
+/tdk-implement feat-001
 ```
 
 Executes implementation directly from `plan.md ## Phases` table. Lightweight approach for small to medium features. Marks completion in the `plan.md` phases table. UT phase files delegate to the consumer test skill listed in `## Delegate Skills`.
@@ -215,7 +215,7 @@ Executes implementation directly from `plan.md ## Phases` table. Lightweight app
 Map the `test` domain in `{docs.path}/custom-workflow/plan-skill-routing.md`, then run:
 
 ```
-/tdk-implement-from-plan feat-001
+/tdk-implement feat-001
 ```
 
 `/tdk-plan` triggers `/tdk-ut-backfill-plan` when UT planning is needed. The generated `ut/phases/*.md` files delegate implementation to the routed consumer test skill. See [04-unit-testing-full-pipeline.md](scenarios/04-unit-testing-full-pipeline.md) for a detailed walkthrough.
@@ -254,7 +254,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | ba-requirement | `/tdk-ba-requirement <id>` | `--figma-pc`, `--figma-sp`, `--output` | `spec.md` | `ba-requirement.md` | clarify |
 | plan | `/tdk-plan <id>` | — | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research.md`, `data-model.md`, `contracts/` | ba-requirement |
 | api-design | `/tdk-api-design <id>` | `--scenario A|B` | `spec.md`, `research.md` | `api_design.md` (incl. DB schema) | plan |
-| implement-from-plan | `/tdk-implement-from-plan <id>` | — | `plan.md` | Source code, `plan.md` (with status markers) | plan |
+| implement | `/tdk-implement <id>` | — | `plan.md` | Source code, `plan.md` (with status markers) | plan |
 | analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report (no file created) | specify |
 
@@ -307,13 +307,13 @@ Detection: `--scenario A|B` flag explicit, else `research.md` exists → B, othe
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| implement-from-plan | `/tdk-implement-from-plan <id>` | — | `plan.md` with ## Phases | Source code, `plan.md` (with status markers) | plan |
+| implement | `/tdk-implement <id>` | — | `plan.md` with ## Phases | Source code, `plan.md` (with status markers) | plan |
 
-`/tdk-implement-from-plan` reads the `## Phases` table from `plan.md` and executes implementation phase-by-phase, marking completion via `<!-- status:done -->` comments. Best for small/medium features completable in one session.
+`/tdk-implement` reads the `## Phases` table from `plan.md` and executes implementation phase-by-phase, marking completion via `<!-- status:done -->` comments. Best for small/medium features completable in one session.
 
 **Re-running `/tdk-plan` after implementation:**
 - **(a) Update phases only** — When feature scope expands or phases change: re-run `/tdk-plan <id>` (overwrites plan.md; you lose status markers)
-- **(b) Append new phases** — When adding follow-up work: manually add rows to the existing `## Phases` table in plan.md, then resume with `/tdk-implement-from-plan <id>`
+- **(b) Append new phases** — When adding follow-up work: manually add rows to the existing `## Phases` table in plan.md, then resume with `/tdk-implement <id>`
 
 ## Document Flow
 
@@ -327,7 +327,7 @@ req → /specify → spec.md → /clarify → spec.md (clarified)
   → /api-design → api_design.md (Approval)
   → /batch-design → batch-design.md (Approval)
   → /db-design → db_design.md (Approval)
-  → /implement-from-plan → source code
+  → /implement → source code
 ```
 
 ---
@@ -427,7 +427,7 @@ ba-requirement (for Approval)  →  test-viewpoint (optional)
      ↓
    plan (generates ## Phases table)  →  api-design  →  batch-design  →  db-design (as needed)
      ↓
- implement-from-plan  →  status (any time)
+ implement  →  status (any time)
 ```
 
 Each command requires the output of commands above it in the chain.

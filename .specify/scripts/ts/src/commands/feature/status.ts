@@ -322,11 +322,6 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
     if (existsSync(join(featureDir, 'test-results.md'))) utState = 'executed';
   }
 
-  // legacy-read: Phase 05 compat shim — detect deprecated legacy tasks file for optional fallback hint only.
-  // Constant holds the filename so grep for literal 'tasks.md' returns only comment context.
-  const LEGACY_TASKS_FILE = ['tasks', 'md'].join('.'); // kept out of grep scope intentionally
-  const hasLegacyTasks = existsSync(join(featureDir, LEGACY_TASKS_FILE));
-
   // Recommendation — mapped to new feature_status vocab
   const rec: { primary: { command: string; reason: string }; alternative?: { command: string; reason: string } } = {
     primary: { command: '', reason: '' },
@@ -340,19 +335,13 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
       rec.alternative = { command: `/tdk-ut-backfill-plan ${id}`, reason: 'TDD: write tests first' };
       break;
     case 'planned':
-      rec.primary = { command: `/tdk-implement-from-plan ${id}`, reason: 'Plan ready, start implementing from plan' };
-      if (hasLegacyTasks) {
-        rec.alternative = { command: `/tdk-implement-task ${id}`, reason: 'Legacy task file exists — use task-based implementation' };
-      }
+      rec.primary = { command: `/tdk-implement ${id}`, reason: 'Plan ready, start implementing from plan' };
       break;
     case 'in_progress':
       rec.primary = {
-        command: `/tdk-implement-from-plan ${id}`,
+        command: `/tdk-implement ${id}`,
         reason: `${phasesData.percent}% done, next phase: ${phasesData.nextPhase || phasesData.currentPhase || 'see phases'}`,
       };
-      if (hasLegacyTasks) {
-        rec.alternative = { command: `/tdk-implement-task ${id}`, reason: 'Legacy task file exists — use task-based implementation' };
-      }
       break;
     case 'blocked':
       rec.primary = { command: `/tdk-plan ${id}`, reason: 'Phases blocked — re-evaluate dependencies in plan' };

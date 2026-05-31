@@ -2,11 +2,11 @@
 name: tdk-analyze
 description: "Perform a non-destructive cross-artifact consistency and quality analysis across spec.md and plan.md. Reads the ## Phases table from plan.md as the single source of truth for phase definitions."
 argument-hint: "[task-id] (optional if context allows inference)"
-compatibility: "Requires successful completion of /tdk-plan with a valid plan.md. Should be run before /tdk-implement-from-plan."
+compatibility: "Requires successful completion of /tdk-plan with a valid plan.md. Should be run before /tdk-implement."
 user-invocable: true
 license: MIT
 metadata:
-  version: "2.1.0"
+  version: "3.4.1"
   category: "Analysis & Review"
   requires:
     - tdk-plan (for prerequisite plan.md with ## Phases table)
@@ -292,7 +292,7 @@ Output a Markdown report (no file writes) with the following structure:
 
 At end of report, output a concise Next Actions block:
 
-- If CRITICAL issues exist: Recommend resolving before `/tdk-implement-from-plan`
+- If CRITICAL issues exist: Recommend resolving before `/tdk-implement`
 - If only LOW/MEDIUM: User may proceed, but provide improvement suggestions
 - Provide explicit command suggestions: e.g., "Run /tdk-specify with refinement", "Run /tdk-plan to adjust architecture", "Manually create missing phase file phase-NN-*.md"
 - If Pass G found missing phase files: suggest running `/tdk-plan` to regenerate missing phase file stubs

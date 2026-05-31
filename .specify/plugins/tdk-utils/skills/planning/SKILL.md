@@ -3,7 +3,7 @@ name: planning
 description: Plan implementations, design architectures, create technical roadmaps with detailed phases
 user-invocable: false
 metadata:
-  version: "1.10.5"
+  version: "1.10.6"
 ---
 
 # Planning Skill
@@ -106,7 +106,7 @@ GitHub Copilot supports subagents in VS Code with manual continuation:
 - Report paths to generated files
 - Summarize key decisions from research
 - Note any remaining questions or risks
-- Guide user to next step: `/tdk-implement-from-plan {task-id}`
+- Guide user to next step: `/tdk-implement {task-id}`
 
 ### Plan Directory Structure
 

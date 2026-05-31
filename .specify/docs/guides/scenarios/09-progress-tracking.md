@@ -45,7 +45,7 @@ Phases (from plan.md ## Phases):
   · Phase 4: Integration (0/7)
   · Phase 5: Polish (0/5)
 
-Next: Continue with /tdk-implement-from-plan feat-001
+Next: Continue with /tdk-implement feat-001
 ```
 
 ## Tips

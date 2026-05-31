@@ -10,7 +10,7 @@ Entry points:
 
 - `/tdk-plan` — detects when UT planning is needed and triggers `/tdk-ut-backfill-plan`.
 - `/tdk-ut-backfill-plan` — generates test plan artifacts and injects the routed consumer `test` skill into UT phase files.
-- `/tdk-implement-from-plan` — executes phases; when a phase contains `## Delegate Skills`, it runs those consumer skills before generic implementation.
+- `/tdk-implement` — executes phases; when a phase contains `## Delegate Skills`, it runs those consumer skills before generic implementation.
 
 ## 2. Skills at a glance
 
@@ -18,7 +18,7 @@ Entry points:
 |-------|---------|---------------|
 | tdk-ut-backfill-plan | Produce UT plan and per-module phase files | Module or SW |
 | consumer test skill | Implement/run tests from a UT phase file | Module or SW |
-| tdk-implement-from-plan | Executes plan phases and delegates listed skills | Feature |
+| tdk-implement | Executes plan phases and delegates listed skills | Feature |
 
 ## 3. Quick start
 
@@ -40,7 +40,7 @@ Entry points:
 4. Execute implementation. UT phase files delegate to the routed test skill:
 
 ```text
-/tdk-implement-from-plan feat-001
+/tdk-implement feat-001
 ```
 
 ## 4. UT convention source and routing

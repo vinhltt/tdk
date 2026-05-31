@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-specify --fast → /tdk-plan → /tdk-implement-from-plan
+/tdk-specify --fast → /tdk-plan → /tdk-implement
 ```
 
 ## When to Choose `--fast` vs Default
@@ -42,7 +42,7 @@
 ### 3. Implement from the plan
 
 ```
-/tdk-implement-from-plan bug-042
+/tdk-implement bug-042
 ```
 
 **What happens**: Claude executes the phases defined in `plan.md`, using the phases table as the source-of-truth.
@@ -52,5 +52,5 @@
 - The only difference is brainstorm enrichment is skipped. All other steps are identical.
 - If you realize the spec needs more depth after using `--fast`, run `/tdk-clarify` to fill gaps.
 - Both `--fast` and default modes produce the same artifact structure — downstream commands work identically.
-- Use `/tdk-implement-from-plan` to execute from the plan's `## Phases` table (primary workflow).
+- Use `/tdk-implement` to execute from the plan's `## Phases` table (primary workflow).
 

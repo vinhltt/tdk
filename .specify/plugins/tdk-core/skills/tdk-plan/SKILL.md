@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "2.2.0"
+  version: "3.4.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -44,7 +44,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 - Write implementation code.
 - Execute tests.
 - Create PRs or commits.
-- Write unit tests (delegates UT planning to `/tdk-ut-backfill-plan`; UT implementation is handled by `/tdk-implement-from-plan` through `## Delegate Skills` in generated UT phase files).
+- Write unit tests (delegates UT planning to `/tdk-ut-backfill-plan`; UT implementation is handled by `/tdk-implement` through `## Delegate Skills` in generated UT phase files).
 
 ## When to Use
 

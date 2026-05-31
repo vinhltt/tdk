@@ -2,7 +2,7 @@
 name: tdk-ut-backfill-plan
 description: "Generate unit test plan using templates. Creates `ut/plan.md` + phase files at `ut/phases/{module}.md` and injects the routed consumer test skill from `plan-skill-routing.md`."
 metadata:
-  version: "2.2.0"
+  version: "3.4.1"
 ---
 
 # /tdk-ut-backfill-plan - Create Unit Test Plan
@@ -395,7 +395,7 @@ Modules: {n} total
   - P1 Critical: {n}
   - P2-P3: {n}
 
-Next: /tdk-implement-from-plan {feature-id}
+Next: /tdk-implement {feature-id}
 Implementation: routed consumer test skill from `## Delegate Skills` in each UT phase file
 ```
 
@@ -464,4 +464,4 @@ Confirm -> Update files
 ## Related
 
 - `/tdk-plan` — creates the feature implementation plan and triggers UT planning when needed
-- `/tdk-implement-from-plan` — executes generated phases and delegates consumer test skills
+- `/tdk-implement` — executes generated phases and delegates consumer test skills

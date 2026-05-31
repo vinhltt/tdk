@@ -1,8 +1,8 @@
 ---
 name: tdk-ut-backfill-auto
-description: "Deprecated compatibility shim. Use /tdk-plan + /tdk-implement-from-plan with consumer test skill routing instead."
+description: "Deprecated compatibility shim. Use /tdk-plan + /tdk-implement with consumer test skill routing instead."
 metadata:
-  version: "3.4.0"
+  version: "3.4.1"
   deprecated: true
 ---
 
@@ -21,7 +21,7 @@ Do not use it for new work. The routed UT architecture is now:
    - test: /your-consumer-unit-test-skill
    ```
 3. Run `/tdk-plan {feature-id}`.
-4. Run `/tdk-implement-from-plan {feature-id}`.
+4. Run `/tdk-implement {feature-id}`.
 
 `/tdk-plan` triggers `/tdk-ut-backfill-plan` when UT planning is needed. `/tdk-ut-backfill-plan` creates `ut/plan.md` and `ut/phases/*.md`, then injects the routed consumer test skill into each UT phase's `## Delegate Skills` section.
 
@@ -34,7 +34,7 @@ If a user invokes this skill directly:
 3. Point the user to:
    - `/tdk-plan {feature-id}`
    - `/tdk-ut-backfill-plan {feature-id}` for UT planning only
-   - `/tdk-implement-from-plan {feature-id}` for routed execution
+   - `/tdk-implement {feature-id}` for routed execution
    - `{docs.path}/custom-workflow/plan-skill-routing.md` for consumer test skill selection
 
 ## Removal Window

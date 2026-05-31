@@ -79,4 +79,4 @@ List unresolved questions, shared fixture conflicts, cross-module mocking decisi
 
 ## Next Step
 
-Run `/tdk-implement-from-plan {feature-id}`. Each `ut/phases/*.md` file delegates implementation to the consumer test skill selected by `plan-skill-routing.md`.
+Run `/tdk-implement {feature-id}`. Each `ut/phases/*.md` file delegates implementation to the consumer test skill selected by `plan-skill-routing.md`.

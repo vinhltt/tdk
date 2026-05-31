@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-status → /tdk-implement-from-plan
+/tdk-status → /tdk-implement
 ```
 
 ## Step-by-Step
@@ -21,7 +21,7 @@
 ### 2. Resume implementation
 
 ```
-/tdk-implement-from-plan feat-001
+/tdk-implement feat-001
 ```
 
 **What happens**: Claude reads `plan.md ## Phases` (primary source of truth), finds the first uncompleted phase, and continues execution from there. Already completed phases are skipped.
@@ -48,10 +48,10 @@ If `status` shows warnings (>7 days stale):
 
 ### "Implementation was interrupted mid-phase"
 
-`/tdk-implement-from-plan` resumes from the last uncompleted phase in `plan.md ## Phases`. If a partially-completed phase caused issues, you may need to manually fix the state before continuing.
+`/tdk-implement` resumes from the last uncompleted phase in `plan.md ## Phases`. If a partially-completed phase caused issues, you may need to manually fix the state before continuing.
 
 ## Tips
 
 - `status` is your starting point after any break — it tells you exactly where things stand.
-- `implement-from-plan` is idempotent for completed phases — re-running it skips completed items safely.
+- `implement` is idempotent for completed phases — re-running it skips completed items safely.
 - If you're in a new chat session, provide the task ID explicitly since Claude won't have conversation context.

@@ -29,7 +29,7 @@ You can run this multiple times with different focus areas:
 
 ### 2. Complete checklist items
 
-Review each checklist item and mark them `[x]` as you verify each requirement is properly specified. Incomplete checklists will trigger a confirmation gate during `/tdk-implement-from-plan`.
+Review each checklist item and mark them `[x]` as you verify each requirement is properly specified. Incomplete checklists will trigger a confirmation gate during `/tdk-implement`.
 
 ### 3. Run cross-artifact analysis
 
@@ -50,7 +50,7 @@ Review each checklist item and mark them `[x]` as you verify each requirement is
 
 ### 4. Fix issues
 
-If critical findings are reported, Claude offers remediation suggestions. You can approve fixes or address them manually before running `/tdk-implement-from-plan`.
+If critical findings are reported, Claude offers remediation suggestions. You can approve fixes or address them manually before running `/tdk-implement`.
 
 ## Tips
 
@@ -58,4 +58,4 @@ If critical findings are reported, Claude offers remediation suggestions. You ca
 - Run `analyze` after any manual edits to spec or plan to catch drift.
 - Checklist items are "unit tests for requirements" — they validate spec quality, not code.
 - Max 50 findings per analysis run. Constitution violations are auto-flagged as CRITICAL.
-- After analysis, use `/tdk-implement-from-plan` to execute the plan's `## Phases` table.
+- After analysis, use `/tdk-implement` to execute the plan's `## Phases` table.

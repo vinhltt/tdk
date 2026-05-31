@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-specify → /tdk-clarify → /tdk-plan → /tdk-implement-from-plan
+/tdk-specify → /tdk-clarify → /tdk-plan → /tdk-implement
 ```
 
 ## Step-by-Step
@@ -53,7 +53,7 @@ Type in Claude Code chat:
 ### 5. Implement from plan
 
 ```
-/tdk-implement-from-plan feat-001
+/tdk-implement feat-001
 ```
 
 **What happens**: Claude reads the plan's `## Phases` table and executes implementation phase-by-phase. Setup first, then tests (TDD), core features, integration, and polish. Each completed phase is marked in plan.md's phases table. UT phase files delegate to the consumer test skill listed in `## Delegate Skills`.
@@ -69,7 +69,7 @@ Run at any point to see a progress bar, completed phases, and recommendations.
 ## Tips
 
 - If your feature is small and well-understood, skip `clarify` and go straight to `plan`.
-- Run `analyze` before `implement-from-plan` to catch inconsistencies early.
+- Run `analyze` before `implement` to catch inconsistencies early.
 - Use `status` after interruptions to see where you left off.
 - Task IDs must use prefixes from `.specify/.specify.env` (e.g., `feat`, `spec`, `docs`, `bug`).
-- The plan's `## Phases` table is the source-of-truth for implementation work — use `/tdk-implement-from-plan` to execute from it.
+- The plan's `## Phases` table is the source-of-truth for implementation work — use `/tdk-implement` to execute from it.

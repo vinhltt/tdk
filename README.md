@@ -10,7 +10,7 @@ TDK structures the full development loop:
 
 1. **Specify** — generate feature specs from natural language (`/tdk:specify`)
 2. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
-3. **Implement** — execute plans with guided task tracking (`/tdk:implement-from-plan`)
+3. **Implement** — execute plans with guided task tracking (`/tdk-implement`)
 4. **Verify** — auto-backfill unit tests, check rules, validate coverage (`/tdk:ut-backfill-auto`)
 5. **Track** — status dashboards, checklists, progress sync (`/tdk:status`, `/tdk:tasks`)
 

@@ -124,5 +124,5 @@ If no findings: omit the `## Cross-Plan Dependencies` section entirely (avoid no
 
 ## Semantics (v1)
 
-- **Soft / advisory only** (Validation S1 D4): `blockedBy` never blocks `/tdk-plan` or `/tdk-implement-from-plan` execution. Hard-block gate deferred to a future implementation phase.
+- **Soft / advisory only** (Validation S1 D4): `blockedBy` never blocks `/tdk-plan` or `/tdk-implement` execution. Hard-block gate deferred to a future implementation phase.
 - Non-existent (D4) refs against the **current** TASK_ID are tolerated (it's being created right now).

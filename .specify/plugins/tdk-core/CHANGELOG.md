@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.1] - 2026-05-31
+
+### Changed
+- tdk-implement: rename primary plan implementation skill from tdk-implement-from-plan and update routed workflow references
+- tdk-status: remove legacy tasks.md fallback recommendations and point ready/in-progress plans at /tdk-implement
+- tdk-plan and UT shims: update implementation next-step guidance to /tdk-implement
+
 ## [3.4.0] - 2026-05-31
 
 ### Changed

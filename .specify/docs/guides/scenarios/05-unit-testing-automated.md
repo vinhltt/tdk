@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-plan → /tdk-implement-from-plan
+/tdk-plan → /tdk-implement
 ```
 
 ## Step-by-Step
@@ -32,10 +32,10 @@ Use sub-workspace sections when different services need different test skills.
 ### 3. Execute the plan
 
 ```
-/tdk-implement-from-plan feat-001
+/tdk-implement feat-001
 ```
 
-**What happens**: `/tdk-implement-from-plan` executes phases in order. When a phase contains `## Delegate Skills`, it invokes those skills before generic implementation.
+**What happens**: `/tdk-implement` executes phases in order. When a phase contains `## Delegate Skills`, it invokes those skills before generic implementation.
 
 ## Tips
 

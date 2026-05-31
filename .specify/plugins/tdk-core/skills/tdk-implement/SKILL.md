@@ -1,8 +1,8 @@
 ---
-name: tdk-implement-from-plan
+name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata: 
-  version: "3.4.0"
+  version: "3.4.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -36,7 +36,7 @@ This skill reads plan.md and executes phases using the `## Phases` table as the 
 ## Outline
 
 ### Step 0 — Validate Task ID
-Invoke `tdk-validate-task-id` with `$ARGUMENTS` and host skill name `/tdk-implement-from-plan`.
+Invoke `tdk-validate-task-id` with `$ARGUMENTS` and host skill name `/tdk-implement`.
 If STOP → halt execution.
 Store: `TASK_ID`, `TASK_ID_SOURCE`.
 
@@ -271,7 +271,7 @@ Context:
 - If a listed skill is unavailable, STOP with:
   ```
   Delegate skill not found: /{skill-name}
-  Phase NN left in_progress. Add/fix the skill in plan-skill-routing.md or edit this phase's ## Delegate Skills, then rerun /tdk-implement-from-plan {TASK_ID}.
+  Phase NN left in_progress. Add/fix the skill in plan-skill-routing.md or edit this phase's ## Delegate Skills, then rerun /tdk-implement {TASK_ID}.
   ```
 - If a delegate fails, STOP and report the delegate's error. Leave the phase `in_progress` and emit the normal F3 recovery reminder.
 - If every delegate completes, validate the phase success criteria if present, then mark the phase done.

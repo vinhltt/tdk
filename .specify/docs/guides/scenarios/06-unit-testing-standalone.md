@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-ut-backfill-plan --standalone → /tdk-implement-from-plan
+/tdk-ut-backfill-plan --standalone → /tdk-implement
 ```
 
 ## Step-by-Step
@@ -23,7 +23,7 @@ The `--standalone` flag tells the planner that `spec.md` is optional. It derives
 ### 2. Implement and run tests
 
 ```
-/tdk-implement-from-plan feat-001
+/tdk-implement feat-001
 ```
 
 ## Tips

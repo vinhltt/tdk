@@ -2,12 +2,12 @@
 name: tdk-validate-task-id
 description: "Validate and normalize task ID from $ARGUMENTS or conversation context.
   Called by: tdk-analyze, tdk-checklist, tdk-clarify,
-  tdk-implement-from-plan, tdk-plan,
+  tdk-implement, tdk-plan,
   tdk-specify (supports --fast mode).
   NOT user-invocable."
 user-invocable: false
 metadata:
-  version: "1.10.3"
+  version: "1.10.6"
   category: "Validation"
   input_format: "$ARGUMENTS, host skill name, allow_infer_from_context flag"
   output_format: "TASK_ID (validated, lowercase), TASK_ID_SOURCE (arg|inferred|confirmed)"

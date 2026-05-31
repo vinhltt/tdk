@@ -115,14 +115,14 @@ Artifacts generated:
 - Rate limiting implementation
 
 ## Next Steps
-Run `/tdk-implement-from-plan {task-id}` to begin implementation from the plan.md ## Phases table.
+Run `/tdk-implement {task-id}` to begin implementation from the plan.md ## Phases table.
 ```
 
 **Guidelines:**
 - Keep concise, under 100 lines
 - Summarize research + design, do NOT create implementation steps
 - Link to detailed artifacts (research.md, data-model.md, contracts/)
-- Guide user to `/tdk-implement-from-plan` for implementation from plan.md ## Phases table
+- Guide user to `/tdk-implement` for implementation from plan.md ## Phases table
 
 ### Phase Tracking (plan.md ## Phases — Primary SoT)
 
@@ -135,7 +135,7 @@ Artifacts:
 
 The SpecKit workflow:
 1. `/tdk-plan` creates research + design artifacts and the `plan.md ## Phases` table
-2. `/tdk-implement-from-plan` executes phases from the plan.md ## Phases table
+2. `/tdk-implement` executes phases from the plan.md ## Phases table
 
 ## Writing Style
 

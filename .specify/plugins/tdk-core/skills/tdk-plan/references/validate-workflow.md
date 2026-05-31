@@ -123,7 +123,7 @@ Validation Session {N} — {completed | partial} — Recommendation: {recommenda
 Full Q/A logged in plan.md ## Validation Log.
 ```
 
-If `recommendation == spec-update-needed` → also print `Hint: run /tdk-specify update {TASK_ID} to refresh the spec before /tdk-implement-from-plan.` (auto-invoke deferred to v2).
+If `recommendation == spec-update-needed` → also print `Hint: run /tdk-specify update {TASK_ID} to refresh the spec before /tdk-implement.` (auto-invoke deferred to v2).
 
 ## Counter Safety
 

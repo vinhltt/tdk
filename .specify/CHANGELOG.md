@@ -10,6 +10,16 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.58.1] - 2026-05-31
+
+### Changed
+- **[Skills]** Rename the primary plan implementation command to `/tdk-implement`
+  - tdk-core: rename `tdk-implement-from-plan` to `tdk-implement` and update analyze, plan, status, and UT routing references.
+  - tdk-utils: point planning guidance, context loading, task-id validation, and red-team skepticism references at `/tdk-implement`.
+- **[Guides]** Align command reference, document-flow, migration, UT workflow, and scenario docs with `/tdk-implement` as the implementation command.
+- **[Scripts]** Remove legacy `tasks.md` fallback recommendations from feature status; ready and in-progress plans now recommend `/tdk-implement`.
+- **[Templates]** Point the UT plan template next step at `/tdk-implement`.
+
 ## [1.58.0] - 2026-05-31
 
 ### Changed

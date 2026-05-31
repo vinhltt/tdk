@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 const IMPLEMENT_SKILL = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-implement-from-plan/SKILL.md',
+  '../../../plugins/tdk-core/skills/tdk-implement/SKILL.md',
 );
 
 const STATUS_SKILL = resolve(
@@ -20,13 +20,13 @@ describe('status preflight skill contract', () => {
   const implementSkill = read(IMPLEMENT_SKILL);
   const statusSkill = read(STATUS_SKILL);
 
-  it('tdk-implement-from-plan runs the status collector before execution', () => {
+  it('tdk-implement runs the status collector before execution', () => {
     expect(implementSkill).toContain('### Step 2: Status Preflight');
     expect(implementSkill).toContain('src/commands/feature/status.ts {TASK_ID}');
     expect(implementSkill).toContain('Do NOT invoke `/tdk-status`');
   });
 
-  it('tdk-implement-from-plan branches on structured status fields', () => {
+  it('tdk-implement branches on structured status fields', () => {
     for (const term of [
       'feature_status',
       'phases.currentPhase',
@@ -40,7 +40,7 @@ describe('status preflight skill contract', () => {
     }
   });
 
-  it('tdk-implement-from-plan keeps parser as execution source of truth', () => {
+  it('tdk-implement keeps parser as execution source of truth', () => {
     expect(implementSkill).toContain('This preflight is read-only');
     expect(implementSkill).toContain('phase parser below remains the execution source of truth');
     expect(implementSkill).toContain('parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json');

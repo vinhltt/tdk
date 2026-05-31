@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-clarify → /tdk-plan → /tdk-implement-from-plan
+/tdk-clarify → /tdk-plan → /tdk-implement
 ```
 
 ## Step-by-Step
@@ -29,7 +29,7 @@
 ### 3. Resume implementation
 
 ```
-/tdk-implement-from-plan feat-001
+/tdk-implement feat-001
 ```
 
 **What happens**: Claude reads the updated `plan.md ## Phases` table (primary source of truth) and resumes implementation from where it left off, executing only uncompleted phases.

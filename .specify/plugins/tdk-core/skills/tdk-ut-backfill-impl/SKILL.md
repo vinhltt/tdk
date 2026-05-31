@@ -2,7 +2,7 @@
 name: tdk-ut-backfill-impl
 description: "Deprecated compatibility shim. Test implementation is handled by consumer test skills from plan-skill-routing.md."
 metadata:
-  version: "2.1.0"
+  version: "3.4.1"
   deprecated: true
 ---
 
@@ -22,8 +22,8 @@ TDK no longer owns unit-test implementation. It owns UT planning through `/tdk-u
    - test: /your-consumer-unit-test-skill
    ```
 2. Run `/tdk-plan {feature-id}` or `/tdk-ut-backfill-plan {feature-id}` to create UT planning artifacts.
-3. Run `/tdk-implement-from-plan {feature-id}`.
-4. `/tdk-implement-from-plan` reads each UT phase file's `## Delegate Skills` and invokes the consumer test skill.
+3. Run `/tdk-implement {feature-id}`.
+4. `/tdk-implement` reads each UT phase file's `## Delegate Skills` and invokes the consumer test skill.
 
 ## Direct Invocation Behavior
 
@@ -33,7 +33,7 @@ If a user invokes this skill directly:
 2. Do not generate test files.
 3. Point the user to:
    - `/tdk-ut-backfill-plan {feature-id}` for UT planning
-   - `/tdk-implement-from-plan {feature-id}` for routed execution
+   - `/tdk-implement {feature-id}` for routed execution
    - `{docs.path}/custom-workflow/plan-skill-routing.md` for implementation skill selection
 
 ## Removal Window
