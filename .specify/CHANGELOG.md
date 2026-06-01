@@ -10,6 +10,13 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.58.2] - 2026-05-31
+
+### Changed
+- **[tdk-plan]** Merge plan output layout and output standards into `plan-output-contract.md`.
+- **[tdk-plan]** Add a hard gate that stops plan artifact writes unless the merged output contract is loaded.
+- **[Tests]** Add a contract test for active `tdk-plan` reference loading and hard-gate wording.
+
 ## [1.58.1] - 2026-05-31
 
 ### Changed

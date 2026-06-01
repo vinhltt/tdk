@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "3.4.1"
+  version: "3.4.2"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -132,9 +132,8 @@ Load: `references/design-phase.md`
 Includes Solution Design, Embedded Brainstorming, Sequential Thinking for phase decomposition, and UT Phase Auto-inclusion.
 
 #### 3c — Plan Layout & Output
-Load: `references/plan-organization.md`
-Load: `references/output-standards.md`
-Reserves the closed YAML frontmatter schema (S3.F6). Quality checklist + Decisions Made table + sanitization rules.
+Load: `references/plan-output-contract.md`
+STOP before writing `plan.md`, `phases/*.md`, `research.md`, `data-model.md`, or `contracts/` unless `references/plan-output-contract.md` has been loaded successfully in this step. Use the loaded contract as the only source for output layout, frontmatter, phase file conventions, quality checklist, Decisions Made table, and sanitization rules; do not guess or reconstruct the layout from memory.
 
 ### Phase 0.guardian — Business Logic Validation
 Load: `references/gates.md` <!-- semantics in same file as Step 0.memory -->
@@ -152,9 +151,17 @@ Skip if `MODE in {default, fast}` AND `--red-team` not set. Otherwise spawn the 
 Load: `references/validate-workflow.md`
 Skip if `MODE == "fast"`. Otherwise: orphan-detect any prior `(in-progress)` session (Resume / Discard / Cancel via AskUserQuestion + trust-ask). On fresh run, prompt user `Run validation interview? [y/N]` (auto-yes on `--validate` action). Generate 3–8 questions via template framework, batch in groups of 4, write `## Validation Log` with `(in-progress) → (completed | partial)` marker + `validation_cursor` resume state. Bumps `validation_session: N`.
 
-## Reference Stub Safety
+## Required Reference Load Contract
 
-References under `references/` may be **stubs** populated by later phases of the hybrid refactor. As of this commit, all current references are filled; the marker check below remains in force as a defensive policy for any future stubs added by downstream phases. Before issuing any new `Load: references/X.md` directive, the orchestrator MUST `head -1` the target and STOP with a user-friendly message if it begins with `<!-- DO NOT LOAD`.
+For every internal `Load: references/X.md` directive, resolve the target from `SKILL_BASE_DIR`, the directory containing this `SKILL.md`, to the expected absolute path `SKILL_BASE_DIR/references/X.md`. Before proceeding with the current step:
+
+1. Verify the expected absolute path exists and is readable.
+2. Read the first line and STOP if it begins with `<!-- DO NOT LOAD`.
+3. Read the full file successfully before using any instruction from that reference.
+
+On missing, unreadable, or stubbed internal references, STOP and report the expected absolute path and current step. Do not try alternate paths, fallback layouts, or partial reconstruction from memory.
+
+This contract applies only to internal `references/*.md` loads. Project-specific files governed by `references/skill-routing.md` keep their documented AskUserQuestion / skip behavior.
 
 ## Subcommands
 

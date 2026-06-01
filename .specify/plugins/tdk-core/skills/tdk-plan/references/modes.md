@@ -44,7 +44,7 @@ Single source of truth for `/tdk-plan` flag dispatch. SKILL.md only routes; this
 
 - `mode: fast` — written only on `--fast`.
 - `mode: hard` — written only on `--hard`.
-- No-flag default → omit `mode:` (or leave the reserved default per `output-standards.md`).
+- No-flag default → omit `mode:` (or leave the reserved default per `plan-output-contract.md`).
 - `--red-team` / `--validate` invocations don't change `mode:`; they bump `red_team_session` / `validation_session`.
 
 ## Conflict Handling

@@ -1,6 +1,6 @@
 {
   "name": "tdk-core",
-  "version": "3.4.1",
+  "version": "3.4.2",
   "description": "Core TDK workflow skills: specify, plan, implement, fix, review, analyze, config, tests",
   "author": {
     "name": "Tihon"
