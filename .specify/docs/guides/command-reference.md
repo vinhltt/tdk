@@ -200,7 +200,7 @@ Claude identifies underspecified areas and asks up to 5 targeted questions. Answ
 /tdk-plan feat-001
 ```
 
-Generates `plan.md` with architecture decisions, file structure, tech stack, and design artifacts (`data-model.md`, `contracts/`, `research.md`). The plan includes a `## Phases` table for implementation.
+Generates `plan.md` with architecture decisions, file structure, tech stack, and design artifacts (`data-model.md`, `contracts/`, `research/`). The plan includes a `## Phases` table for implementation.
 
 ### Step 4 — Implement (Recommended Path)
 
@@ -234,7 +234,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 .specify/specs/feat-001/
 ├── spec.md              ← Step 1
 ├── plan.md              ← Step 3 (includes ## Phases table)
-├── research.md          ← Step 3 (if needed)
+├── research/            ← Step 3 (if needed)
 ├── data-model.md        ← Step 3 (if needed)
 ├── contracts/           ← Step 3 (if needed)
 └── checklists/          ← /tdk-checklist (optional)
@@ -252,8 +252,8 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | specify (fast) | `/tdk-specify <id> <desc> --fast` | `--fast` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
 | ba-requirement | `/tdk-ba-requirement <id>` | `--figma-pc`, `--figma-sp`, `--output` | `spec.md` | `ba-requirement.md` | clarify |
-| plan | `/tdk-plan <id>` | — | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research.md`, `data-model.md`, `contracts/` | ba-requirement |
-| api-design | `/tdk-api-design <id>` | `--scenario A|B` | `spec.md`, `research.md` | `api_design.md` (incl. DB schema) | plan |
+| plan | `/tdk-plan <id>` | — | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | ba-requirement |
+| api-design | `/tdk-api-design <id>` | `--scenario A|B` | `spec.md`, `research/` | `api_design.md` (incl. DB schema) | plan |
 | implement | `/tdk-implement <id>` | — | `plan.md` | Source code, `plan.md` (with status markers) | plan |
 | analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report (no file created) | specify |
@@ -291,17 +291,17 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| batch-design | `/tdk-batch-design <id>` | `--scenario A\|B` | `spec.md`, `research.md`, `data-model.md` | `batch-design.md` | plan |
+| batch-design | `/tdk-batch-design <id>` | `--scenario A\|B` | `spec.md`, `research/`, `data-model.md` | `batch-design.md` | plan |
 | test-viewpoint | `/tdk-test-viewpoint <id>` | — | `spec.md`, `ba-requirement.md` | `test-viewpoint.csv` | ba-requirement |
 
 **`/tdk-batch-design` scenarios:**
 
 | Scenario | Trigger | Data Sources |
 |----------|---------|--------------|
-| **A: New Batch** | No existing endpoint impact | spec.md, research.md |
-| **B: With Impact** | Modifies/extends existing batch or tables | spec.md, data-model.md, research.md |
+| **A: New Batch** | No existing endpoint impact | spec.md, research/ |
+| **B: With Impact** | Modifies/extends existing batch or tables | spec.md, data-model.md, research/ |
 
-Detection: `--scenario A|B` flag explicit, else `research.md` exists → B, otherwise → A.
+Detection: `--scenario A|B` flag explicit, else `research/` has reports → B, otherwise → A.
 
 ### Primary Implementation Path
 
@@ -323,7 +323,7 @@ See [tdk-document-flow.md](document-flow.md) for full Mermaid flow diagrams show
 ```
 req → /specify → spec.md → /clarify → spec.md (clarified)
   → /ba-requirement → ba-requirement.md (Approval)
-  → /plan → plan.md (with ## Phases table), research.md, data-model.md, contracts/, wireframes/
+  → /plan → plan.md (with ## Phases table), research/, data-model.md, contracts/, wireframes/
   → /api-design → api_design.md (Approval)
   → /batch-design → batch-design.md (Approval)
   → /db-design → db_design.md (Approval)

@@ -3,7 +3,7 @@ name: planning
 description: Plan implementations, design architectures, create technical roadmaps with detailed phases
 user-invocable: false
 metadata:
-  version: "1.10.6"
+  version: "1.10.8"
 ---
 
 # Planning Skill
@@ -39,12 +39,12 @@ Load: `references/research-phase.md`
 - Identify NEEDS CLARIFICATION from Technical Context
 - Research approaches using tools (@workspace, gh, web search)
 - Delegate complex research to subagents (optional)
-- Generate `research.md` with decisions, rationale, alternatives
+- Generate `research/yyMMdd-HHmmss-{slug}.md` reports with decisions, rationale, alternatives
 
 ### Phase 1: Design & Contracts
 Load: `references/design-phase.md`
 
-**Prerequisites:** research.md complete, all NEEDS CLARIFICATION resolved
+**Prerequisites:** `research/` reports complete, all NEEDS CLARIFICATION resolved
 
 **Activities:**
 - Extract entities from spec → `data-model.md`
@@ -91,7 +91,7 @@ GitHub Copilot supports subagents in VS Code with manual continuation:
 
 **What this skill produces:**
 - `plan.md` - Summary of research + design decisions (NOT task breakdown)
-- `research.md` - Phase 0 output with decisions/rationale/alternatives
+- `research/` - Phase 0 researcher reports with decisions/rationale/alternatives
 - `data-model.md` - Phase 1 output with entities/relationships
 - `contracts/` - Phase 1 API specifications
 - `quickstart.md` - Phase 1 integration scenarios
@@ -116,9 +116,8 @@ GitHub Copilot supports subagents in VS Code with manual continuation:
 .specify/specs/{task-id}/
 ├── spec.md                          # Feature specification (input)
 ├── research/
-│   └── researcher-XX-report.md      # Subagent research outputs
+│   └── yyMMdd-HHmmss-{slug}.md      # Subagent research outputs
 ├── plan.md                          # Phase 0 + Phase 1 summary (THIS command output)
-├── research.md                      # Phase 0: Research findings (THIS command output)
 ├── data-model.md                    # Phase 1: Entities & relationships (THIS command output)
 ├── contracts/                       # Phase 1: API specs (THIS command output)
 │   └── *.yaml or *.json

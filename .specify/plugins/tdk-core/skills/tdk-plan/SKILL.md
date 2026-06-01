@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "3.4.2"
+  version: "3.4.4"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -36,7 +36,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 **This command produces:**
 - Implementation plan (`plan.md`)
-- Research documentation (`research.md`)
+- Research documentation (`research/yyMMdd-HHmmss-{slug}.md`)
 - Data models (`data-model.md`)
 - API contracts (`contracts/`)
 
@@ -133,7 +133,7 @@ Includes Solution Design, Embedded Brainstorming, Sequential Thinking for phase 
 
 #### 3c — Plan Layout & Output
 Load: `references/plan-output-contract.md`
-STOP before writing `plan.md`, `phases/*.md`, `research.md`, `data-model.md`, or `contracts/` unless `references/plan-output-contract.md` has been loaded successfully in this step. Use the loaded contract as the only source for output layout, frontmatter, phase file conventions, quality checklist, Decisions Made table, and sanitization rules; do not guess or reconstruct the layout from memory.
+STOP before writing `plan.md`, `phases/*.md`, `research/*.md`, `data-model.md`, or `contracts/` unless `references/plan-output-contract.md` has been loaded successfully in this step. Use the loaded contract as the only source for output layout, frontmatter, phase file conventions, quality checklist, Decisions Made table, and sanitization rules; do not guess or reconstruct the layout from memory.
 
 ### Phase 0.guardian — Business Logic Validation
 Load: `references/gates.md` <!-- semantics in same file as Step 0.memory -->

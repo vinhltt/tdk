@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "TDK project plugin marketplace",
-    "version": "1.58.3"
+    "version": "1.59.0"
   },
   "plugins": [
     {
@@ -31,6 +31,12 @@
       "name": "tdk-utils",
       "description": "Utility skills for TDK workflow: brainstorming, planning, problem solving, and more",
       "source": "./.specify/plugins/tdk-utils",
+      "strict": true
+    },
+    {
+      "name": "tdk-retro",
+      "description": "Retrospective learning loop: collect implementation feedback, propose learning deltas, and apply approved technical or memory updates",
+      "source": "./.specify/plugins/tdk-retro",
       "strict": true
     },
     {

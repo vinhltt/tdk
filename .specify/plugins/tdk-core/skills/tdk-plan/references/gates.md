@@ -9,7 +9,7 @@
 ## Before Design Phase
 
 - [ ] All NEEDS CLARIFICATION resolved
-- [ ] `research.md` complete with decisions / rationale
+- [ ] `research/` reports complete with decisions / rationale
 - [ ] Dependencies identified
 
 ## Before Completion

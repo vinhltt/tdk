@@ -43,8 +43,20 @@ describe('tdk-plan reference contract', () => {
 
   it('hard-gates plan artifact writes on loading the output contract', () => {
     expect(step3c).toContain('STOP before writing');
-    expect(step3c).toContain('`plan.md`, `phases/*.md`, `research.md`, `data-model.md`, or `contracts/`');
+    expect(step3c).toContain('`plan.md`, `phases/*.md`, `research/*.md`, `data-model.md`, or `contracts/`');
     expect(step3c).toContain('do not guess or reconstruct the layout');
+  });
+
+  it('documents timestamped research report output instead of top-level research.md', () => {
+    const outputContract = read(resolve(REFERENCES_DIR, 'plan-output-contract.md'));
+    const researchPhase = read(resolve(REFERENCES_DIR, 'research-phase.md'));
+
+    expect(outputContract).toContain('research/');
+    expect(outputContract).toContain('yyMMdd-HHmmss-{slug}.md');
+    expect(outputContract).not.toContain('researcher-NN-{topic}.md');
+    expect(researchPhase).toContain('Spawn `N` `researcher` subagents in parallel');
+    expect(researchPhase).toContain('{FEATURE_DIR}/research/yyMMdd-HHmmss-{slug}.md');
+    expect(researchPhase).toContain('do not create a top-level `research.md`');
   });
 
   it('defines deterministic required-reference loading behavior', () => {

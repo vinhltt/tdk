@@ -10,6 +10,28 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.59.0] - 2026-06-01
+
+### Added
+- **[tdk-retro]** Add a retrospective self-learning plugin with collect, propose, and apply skills.
+  - Collects evidence-backed feedback from reviews, phase drift, UT results, optional Langfuse traces, and user feedback into `retro-feedback.md`.
+  - Proposes up to 10 technical or memory learning deltas in `learning-delta.md` with explicit target routing and evidence.
+  - Applies only user-approved technical edits and delegates memory updates through `/tdk-memory-update`.
+- **[Examples]** Add the `RETRO-TEST` fixture spec with phases, review findings, sessions, and UT results for validating the retro workflow.
+- **[Tests]** Cover retro skill command contracts and timestamped research report expectations.
+
+### Changed
+- **[tdk-plan]** Move planning research output from top-level `research.md` to timestamped `research/yyMMdd-HHmmss-{slug}.md` reports.
+  - Update required output contracts, gates, regeneration scope locks, and research phase instructions.
+  - Require parallel researcher subagents to receive explicit output paths and wait for all reports before design.
+- **[tdk-utils]** Align shared planning and research guidance with the `research/` directory report model.
+  - Update the `researcher` agent invocation contract, self-resolved output naming, and skill dependencies.
+  - Update planning output standards and research skill path resolution to avoid `researcher-XX-{topic}.md`.
+- **[Scripts]** Check `research/` as a directory prerequisite instead of `research.md`.
+- **[Templates]** Document `research/` as the Phase 0 output location in the plan template.
+- **[Guides]** Update command reference, document flow diagrams, and full-feature scenario docs to reference `research/` reports.
+- **[Marketplace]** Register `tdk-retro` in the plugin marketplace catalog.
+
 ## [1.58.3] - 2026-06-01
 
 ### Changed

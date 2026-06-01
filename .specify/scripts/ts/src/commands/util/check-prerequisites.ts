@@ -61,7 +61,7 @@ const program = new Command()
     const featureSpec = paths['featureSpec'] as string;
     const implPlan = paths['implPlan'] as string;
     const tasks = paths['tasks'] as string;
-    const research = paths['research'] as string;
+    const researchDir = join(featureDir, 'research');
     const dataModel = paths['dataModel'] as string;
     const contractsDir = paths['contractsDir'] as string;
     const quickstart = paths['quickstart'] as string;
@@ -124,7 +124,7 @@ const program = new Command()
       console.log(`TASK_ID: ${taskId}`);
       console.log(`FEATURE_DIR: ${featureDir}`);
       console.log('AVAILABLE_DOCS:');
-      checkFile(research, 'research.md');
+      checkDir(researchDir, 'research/');
       checkFile(dataModel, 'data-model.md');
       checkDir(contractsDir, 'contracts/');
       checkFile(quickstart, 'quickstart.md');

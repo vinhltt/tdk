@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.10.8] - 2026-06-01
+
+### Changed
+- researcher: accept explicit output_path and self-resolve timestamped research report paths under research/
+- planning and research: align planning output standards and research guidance with research/ report directories
+
 ## [1.10.7] - 2026-06-01
 
 ### Changed

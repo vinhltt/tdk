@@ -52,7 +52,7 @@ Document any necessary deviations with rationale in Complexity Tracking section 
 ```text
 .specify/specs/aa-###/
 ├── plan.md              # This file (/tdk-plan command output)
-├── research.md          # Phase 0 output (/tdk-plan command)
+├── research/            # Phase 0 researcher reports (/tdk-plan command)
 ├── data-model.md        # Phase 1 output (/tdk-plan command)
 ├── quickstart.md        # Phase 1 output (/tdk-plan command)
 ├── contracts/           # Phase 1 output (/tdk-plan command)

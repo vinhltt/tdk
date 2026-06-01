@@ -17,6 +17,21 @@ const LOAD_PROJECT_CONTEXT_SKILL = resolve(
   '../../../plugins/tdk-utils/skills/tdk-load-project-context/SKILL.md',
 );
 
+const RETRO_COLLECT_SKILL = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-retro/skills/tdk-retro-collect/SKILL.md',
+);
+
+const RETRO_PROPOSE_SKILL = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-retro/skills/tdk-retro-propose/SKILL.md',
+);
+
+const RETRO_APPLY_SKILL = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-retro/skills/tdk-retro-apply/SKILL.md',
+);
+
 const ROOT_RESOLVER =
   'PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"';
 
@@ -37,6 +52,9 @@ describe('cwd-independent skill command contract', () => {
   const implementSkill = read(IMPLEMENT_SKILL);
   const statusSkill = read(STATUS_SKILL);
   const loadProjectContextSkill = read(LOAD_PROJECT_CONTEXT_SKILL);
+  const retroCollectSkill = read(RETRO_COLLECT_SKILL);
+  const retroProposeSkill = read(RETRO_PROPOSE_SKILL);
+  const retroApplySkill = read(RETRO_APPLY_SKILL);
 
   it('tdk-implement resolves project root portably before script calls', () => {
     expectPortableRootResolver(implementSkill);
@@ -73,5 +91,17 @@ describe('cwd-independent skill command contract', () => {
 
     expectSafeScriptCommand(statusSkill, 'src/commands/feature/status.ts <feature-id>');
     expectSafeScriptCommand(loadProjectContextSkill, 'src/commands/detect-config.ts');
+  });
+
+  it('retro skills use the same portable script command contract', () => {
+    for (const skillText of [retroCollectSkill, retroProposeSkill, retroApplySkill]) {
+      expectPortableRootResolver(skillText);
+    }
+
+    expectSafeScriptCommand(retroCollectSkill, 'src/commands/util/check-prerequisites.ts {task_id} --json');
+    expectSafeScriptCommand(retroProposeSkill, 'src/commands/util/check-prerequisites.ts {task_id} --paths-only --json');
+    expectSafeScriptCommand(retroApplySkill, 'src/commands/util/check-prerequisites.ts {task_id} --paths-only --json');
+    expectSafeScriptCommand(retroCollectSkill, 'src/commands/util/parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json');
+    expect(retroCollectSkill).toContain('(cd "$PROJECT_DIR" && langfuse --env .env api traces list --session-id "{session_id}")');
   });
 });

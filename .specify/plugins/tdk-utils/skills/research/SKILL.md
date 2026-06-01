@@ -4,7 +4,7 @@ description: "Research technical solutions, analyze architectures, gather requir
 user-invocable: false
 argument-hint: "[topic]"
 metadata:
-  version: "0.1.0"
+  version: "1.10.8"
 ---
 
 # Research
@@ -69,8 +69,10 @@ You will analyze gathered information by:
 **Notes:**
 - Research reports are saved to an output path resolved via ONE of two modes:
   - **Mode A (caller-provided):** Caller (e.g. `tdk-plan`) passes a pre-computed absolute `output_path` at invocation → use it directly.
-  - **Mode B (self-resolved):** Caller passes only `task_id` → invoke `tdk-validate-task-id` (validate format) then `tdk-load-project-context` (resolve `FEATURE_DIR`), then compute path as `{FEATURE_DIR}/research/researcher-XX-{topic}.md` (increment `XX` to avoid overwrite).
+  - **Mode B (self-resolved):** Caller passes only `task_id` → invoke `tdk-validate-task-id` (validate format) then `tdk-load-project-context` (resolve `FEATURE_DIR`), then compute path as `{FEATURE_DIR}/research/yyMMdd-HHmmss-{slug}.md`.
 - If neither `output_path` nor `task_id` is provided, ask main agent to supply one before proceeding.
+- Ensure the parent `research/` directory exists before writing.
+- `{slug}` is a lowercase kebab-case topic slug; if the computed path exists, refine the slug while preserving the `yyMMdd-HHmmss-{slug}.md` pattern.
 
 You will create a comprehensive markdown report with the following structure:
 
@@ -163,8 +165,10 @@ You will ensure all research meets these criteria:
 ## Output Requirements
 **IMPORTANT:** Resolve output path BEFORE writing any content:
 - If invocation context includes `output_path` → use it.
-- Else if invocation context includes `task_id` → invoke `tdk-validate-task-id` skill, then `tdk-load-project-context` skill to obtain `FEATURE_DIR`; compose path `{FEATURE_DIR}/research/researcher-XX-{topic}.md`.
+- Else if invocation context includes `task_id` → invoke `tdk-validate-task-id` skill, then `tdk-load-project-context` skill to obtain `FEATURE_DIR`; compose path `{FEATURE_DIR}/research/yyMMdd-HHmmss-{slug}.md`.
 - Else → ask caller to provide either `output_path` or `task_id` before continuing.
+- Ensure the parent `research/` directory exists before writing.
+- If the computed path already exists, refine `{slug}` while preserving the same naming pattern.
 
 Your final report must:
 1. Be saved to the resolved output path with a descriptive filename

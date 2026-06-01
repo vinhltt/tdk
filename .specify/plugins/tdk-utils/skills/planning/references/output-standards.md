@@ -91,12 +91,12 @@ Brief description of what this plan accomplishes, extracted from spec.md and res
 [Gates determined from .specify/memory/constitution.md]
 
 ## Phase 0: Research
-Summary of key decisions from research.md:
+Summary of key decisions from `research/` reports:
 - Approach: OAuth2 with JWT tokens
 - Rationale: Industry standard, good library support
 - Alternatives rejected: Session-based (doesn't scale), custom auth (security risk)
 
-See: [research.md](./research.md)
+See: [research/](./research/)
 
 ## Phase 1: Design
 Artifacts generated:
@@ -121,7 +121,7 @@ Run `/tdk-implement {task-id}` to begin implementation from the plan.md ## Phase
 **Guidelines:**
 - Keep concise, under 100 lines
 - Summarize research + design, do NOT create implementation steps
-- Link to detailed artifacts (research.md, data-model.md, contracts/)
+- Link to detailed artifacts (`research/`, data-model.md, contracts/)
 - Guide user to `/tdk-implement` for implementation from plan.md ## Phases table
 
 ### Phase Tracking (plan.md ## Phases — Primary SoT)
@@ -129,7 +129,7 @@ Run `/tdk-implement {task-id}` to begin implementation from the plan.md ## Phase
 **Important:** SpecKit uses `plan.md ## Phases` table for phase/task tracking. `phase-XX-name.md` files and `tasks.md` are not used in SpecKit.
 
 Artifacts:
-- Research findings → `research.md`
+- Research findings → `research/yyMMdd-HHmmss-{slug}.md`
 - Design artifacts → `data-model.md`, `contracts/`, `quickstart.md`
 - Task/phase tracking → `plan.md ## Phases` table (primary SoT)
 

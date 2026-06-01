@@ -41,7 +41,7 @@ Use **AskUserQuestion** tool:
    - If `N` or empty → output: `Aborted. Uncommitted changes preserved.` → **STOP**.
 3. If clean (no dirty plan/phase files) → show standard confirm: `"Rewrite plan.md and all phases/phase-NN-*.md? This cannot be undone. [y/N]"` → default `N`, explicit `y` proceeds.
 
-**Scope lock:** rewrite targets `plan.md` + `phases/phase-NN-*.md` files **ONLY**. Do NOT touch `research.md`, `data-model.md`, `contracts/`, or any other files.
+**Scope lock:** rewrite targets `plan.md` + `phases/phase-NN-*.md` files **ONLY**. Do NOT touch `research/`, `data-model.md`, `contracts/`, or any other files.
 
 **On proceed:** re-run `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/setup-plan.ts {task_id} --force --json` from repo root, then continue to Step 2 with **REGENERATE mode** (fresh template).
 

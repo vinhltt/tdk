@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.4] - 2026-06-01
+
+### Changed
+- tdk-plan: update the planning flow to write timestamped research reports under research/ instead of a top-level research.md, including output contracts, gates, regeneration scope, and researcher orchestration
+
 ## [3.4.3] - 2026-06-01
 
 ### Changed

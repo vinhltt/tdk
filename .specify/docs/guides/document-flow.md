@@ -21,7 +21,7 @@ flowchart TD
 
     %% Phase 1: Architecture & Design
     BA_REQ -->|/tdk-plan| PLAN[plan.md<br/>Implementation Plan]
-    BA_REQ -->|/tdk-plan| RESEARCH[research.md<br/>Technology Research]
+    BA_REQ -->|/tdk-plan| RESEARCH[research/<br/>Technology Research]
     BA_REQ -->|/tdk-plan| DATAMODEL[data-model.md<br/>+ Enum Definitions]
     BA_REQ -->|/tdk-plan| STATETRANS[state-transitions.md<br/>State Transitions]
     BA_REQ -->|/tdk-plan| CONTRACTS[contracts/<br/>API Specs YAML/MD]
@@ -101,7 +101,7 @@ flowchart TD
 
     subgraph PLAN_OUTPUT["/tdk-plan output"]
         PLAN[plan.md]
-        RESEARCH[research.md]
+        RESEARCH[research/]
         DATAMODEL[data-model.md]
         STATE[state-transitions.md]
         CONTRACTS[contracts/]
@@ -256,10 +256,10 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `ba-requirement.md` | `/tdk-ba-requirement` | `spec.md` | `/tdk-plan` | For Approval |
 | `plan.md` | `/tdk-plan` | `ba-requirement.md`, `constitution.md` | `plan.md ## Phases`, `/tdk-implement` | Feature start |
 | `plan.md ## Phases` | `/tdk-plan` | `ba-requirement.md`, design artifacts | `/tdk-implement` | Feature start |
-| `research.md` | `/tdk-plan` | `ba-requirement.md` | Reference | Feature start |
+| `research/` | `/tdk-plan` | `ba-requirement.md` | Reference | Feature start |
 | `data-model.md` | `/tdk-plan` | `ba-requirement.md` | Reference | Feature start |
 | `api_design.md` | `/tdk-api-design` | `plan.md` | Reference | For Approval |
-| `batch-design.md` | `/tdk-batch-design` | `spec.md`, `research.md`, `data-model.md` | Reference | For Approval |
+| `batch-design.md` | `/tdk-batch-design` | `spec.md`, `research/`, `data-model.md` | Reference | For Approval |
 | `test-viewpoint.csv` | `/tdk-test-viewpoint` | `spec.md`, `ba-requirement.md` | Manual reference | After ba-requirement |
 | `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
@@ -331,7 +331,7 @@ flowchart TD
 .specify/specs/{task-id}/
 ├── spec.md                             # Phase 0: Feature specification
 ├── plan.md                             # Phase 1: Implementation plan
-├── research.md                         # Phase 1: Technology research
+├── research/                           # Phase 1: Technology research
 ├── data-model.md                       # Phase 1: Entity definitions + enums
 ├── state-transitions.md                # Phase 1: State machine definitions
 ├── quickstart.md                       # Phase 1: Setup guide

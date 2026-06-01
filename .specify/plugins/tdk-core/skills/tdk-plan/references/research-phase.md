@@ -13,12 +13,23 @@
 
 ## Subagent Delegation
 
-```
+Spawn `N` `researcher` subagents in parallel, one per independent research topic.
+
+- `N` = number of distinct unresolved technical questions or approach areas.
+- Default to 1 when only one topic exists; cap at 5 unless the user explicitly asks for more.
+- Give each researcher a caller-provided absolute `output_path`.
+- Ensure `{FEATURE_DIR}/research/` exists before spawning researchers.
+- Output path format: `{FEATURE_DIR}/research/yyMMdd-HHmmss-{slug}.md`.
+- `{slug}` is a lowercase kebab-case topic slug. Make it unique per researcher by using a specific topic slug, not an agent index.
+
+Prompt pattern:
+
+```text
 Research: [specific topic]
-Output: .specify/specs/{task-id}/research/researcher-01-{topic}.md
+Output: {FEATURE_DIR}/research/yyMMdd-HHmmss-{slug}.md
 ```
 
-User continues manually when subagent completes.
+Wait for all researcher reports before continuing to design. If any researcher returns BLOCKED or NEEDS_CONTEXT, summarize the blocker and ask user before proceeding.
 
 ## Project Knowledge Sources
 
@@ -66,4 +77,4 @@ Output: .specify/specs/{task-id}/reports/scout-{area}.md
 
 ## Output
 
-`research.md` with Decision, Rationale, Alternatives, References for every ## 9. Unresolved Questions item.
+`research/yyMMdd-HHmmss-{slug}.md` reports with Decision, Rationale, Alternatives, References for every relevant `## 9. Unresolved Questions` item. Synthesize only the key decisions into `plan.md`; do not create a top-level `research.md`.

@@ -40,7 +40,7 @@ Type in Claude Code chat:
 
 **What happens**: Claude reads the spec, researches technical options (Phase 0), then designs the architecture (Phase 1). Produces a plan with file structure, tech decisions, and design artifacts. The plan includes a `## Phases` table that defines the implementation workflow.
 
-**Output**: `plan.md`, `research.md`, `data-model.md`, `contracts/` (as needed)
+**Output**: `plan.md`, `research/`, `data-model.md`, `contracts/` (as needed)
 
 ### 4. (Optional) Quality gate — analyze
 

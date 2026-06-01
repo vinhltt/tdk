@@ -75,7 +75,7 @@ For complex research requiring isolated context:
 1. **Delegate to subagent:**
    ```
    Research: [specific topic]
-   Output: .specify/specs/{task-id}/research/researcher-01-{topic}.md
+   Output: .specify/specs/{task-id}/research/yyMMdd-HHmmss-{slug}.md
    ```
 
 2. **User continues manually** when subagent completes
@@ -84,7 +84,7 @@ For complex research requiring isolated context:
 
 ## Research Output Format
 
-Create `research.md` with:
+Create `research/yyMMdd-HHmmss-{slug}.md` reports with:
 
 ```markdown
 # Research Report
