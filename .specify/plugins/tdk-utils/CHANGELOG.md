@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.10.7] - 2026-06-01
+
+### Changed
+- tdk-load-project-context: make script commands CWD-independent — resolve project root via CLAUDE_PROJECT_DIR / GITHUB_WORKSPACE / git rev-parse and run detect-config in a $PROJECT_DIR/.specify/scripts/ts subshell.
+
 ## [1.10.6] - 2026-05-31
 
 ### Changed

@@ -10,6 +10,17 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.58.3] - 2026-06-01
+
+### Changed
+- **[Skills]** Make TDK script commands CWD-independent — resolve the project root via `CLAUDE_PROJECT_DIR` / `GITHUB_WORKSPACE` / `git rev-parse --show-toplevel` and run scripts in a `$PROJECT_DIR/.specify/scripts/ts` subshell instead of `cd $CLAUDE_PROJECT_DIR/...`.
+  - tdk-implement: add a Script Command Contract section; wrap check-prerequisites, status, parse-phases-table, and phase-status update calls in the portable subshell.
+  - tdk-status: resolve the project root portably before status-collector calls.
+  - tdk-load-project-context: resolve the project root portably before the detect-config call.
+
+### Added
+- **[Tests]** Add `cwd-independent-skill-contract.test.ts` asserting the portable root resolver and subshell command contract across tdk-implement, tdk-status, and tdk-load-project-context.
+
 ## [1.58.2] - 2026-05-31
 
 ### Changed

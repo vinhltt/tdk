@@ -7,7 +7,7 @@ description: "Load project configuration and resolve feature directory from vali
   NOT user-invocable."
 user-invocable: false
 metadata: 
-  version: "1.10.6"
+  version: "1.10.7"
   category: "Configuration"
   input_format: "Validated TASK_ID, require_feature_dir flag (default true), require_prefix_validation flag (default true)"
   output_format: "PROJECT_CONTEXT object, FEATURE_DIR path"
@@ -21,7 +21,12 @@ Receive a validated `TASK_ID` from the calling skill (output of `tdk-validate-ta
 
 Execute from repo root:
 ```bash
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/detect-config.ts
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+if [ -z "$PROJECT_DIR" ]; then
+  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/detect-config.ts)
 ```
 
 Parse JSON output into `PROJECT_CONTEXT`.

@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.3] - 2026-06-01
+
+### Changed
+- Make script commands CWD-independent — resolve project root via CLAUDE_PROJECT_DIR / GITHUB_WORKSPACE / git rev-parse and run scripts in a $PROJECT_DIR/.specify/scripts/ts subshell.
+- tdk-implement: add Script Command Contract section; wrap check-prerequisites, status, parse-phases-table, and phase-status update calls in the portable subshell.
+- tdk-status: resolve project root portably before status-collector calls.
+
 ## [3.4.2] - 2026-05-31
 
 ### Changed

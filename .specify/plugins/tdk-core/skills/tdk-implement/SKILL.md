@@ -1,8 +1,8 @@
 ---
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
-metadata: 
-  version: "3.4.1"
+metadata:
+  version: "3.4.3"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -44,10 +44,35 @@ Store: `TASK_ID`, `TASK_ID_SOURCE`.
 Invoke `tdk-load-project-context` with validated `TASK_ID`.
 Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
+### Script Command Contract
+
+Before any direct TDK TypeScript script call, resolve the project root portably:
+
+```bash
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+if [ -z "$PROJECT_DIR" ]; then
+  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+  exit 1
+fi
+```
+
+Then run scripts from `.specify/scripts/ts` in a subshell:
+
+```bash
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/<path>.ts ...)
+```
+
+Do not run TDK scripts by changing into the scripts directory with a relative path, and do not assume `$CLAUDE_PROJECT_DIR` exists outside Claude Code.
+
 ### Step 1: Check Prerequisites
 
 ```bash
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/check-prerequisites.ts {task_id} --json
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+if [ -z "$PROJECT_DIR" ]; then
+  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --json)
 ```
 
 Parse JSON output. Then:
@@ -65,7 +90,12 @@ Parse JSON output. Then:
 Run the same read-only status collector used by `/tdk-status` before reading phase files or mutating statuses:
 
 ```bash
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/feature/status.ts {TASK_ID}
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+if [ -z "$PROJECT_DIR" ]; then
+  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/feature/status.ts {TASK_ID})
 ```
 
 Parse JSON output. If `error` or `phasesParseError` exists → report the exact message and STOP.
@@ -107,7 +137,12 @@ This preflight is read-only. The phase parser below remains the execution source
 
 Parse phases table:
 ```bash
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+if [ -z "$PROJECT_DIR" ]; then
+  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json)
 ```
 
 Parse JSON output. If exit code 1 → report errors → STOP.
@@ -116,12 +151,22 @@ JSON shape: `{ "phases": [{ "number": 1, "file": "phase-01-x.md", "fileLabel": "
 
 Phase frontmatter sync CLI (call before plan.md write at every status transition):
 ```bash
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" {status}
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+if [ -z "$PROJECT_DIR" ]; then
+  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" {status})
 ```
 
 Update phase status in plan.md table:
 ```bash
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {phaseNumber} {status}
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+if [ -z "$PROJECT_DIR" ]; then
+  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {phaseNumber} {status})
 ```
 
 - If `## Phases` section is missing → ERROR: `"plan.md has no ## Phases table section. Regenerate with /tdk-plan."` → STOP.
@@ -222,11 +267,11 @@ Execution pseudo-code (ascending `row.number`):
    d. BlockedBy check: ∀id ∈ row.blockedBy, rows[id].status ∈ {'done', 'skipped'} else abort
       Error message: "phase NN blocked by MM which is status='X' — run phase MM first or mark phase NN skipped"
       (F14: skipped blocker satisfies dependency — no friction)
-   e. Run: `bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" in_progress` → phase file FIRST
-      Run: `bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} in_progress` → plan.md SECOND
+   e. Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" in_progress)` → phase file FIRST
+      Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} in_progress)` → plan.md SECOND
    f. Execute phase (per phase-NN-*.md instructions)
-   g. Run: `bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done` → phase file FIRST
-      Run: `bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} done` → plan.md SECOND
+   g. Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done)` → phase file FIRST
+      Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} done)` → plan.md SECOND
 ```
 
 For each phase:
@@ -296,7 +341,7 @@ For each implementation phase:
    - Follow project rules loaded in Step 0.1
 3. **After each file change**, run compile/lint check to verify no errors
 4. **Validate against Success Criteria** listed in the phase (if any)
-5. **Mark phase done**: run `bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done` THEN `bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} done`
+5. **Mark phase done**: run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done)` THEN `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} done)`
 6. Log progress: `"✓ Phase {N}: {name} — complete"`
 
 **DO NOT** just read the plan and report what it says — you must **write code, edit files, and produce working implementation**.

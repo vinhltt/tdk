@@ -1,8 +1,8 @@
 ---
 name: tdk-status
 description: "Track Workflow Progress"
-metadata: 
-  version: "3.4.1"
+metadata:
+  version: "3.4.3"
 ---
 
 # /tdk-status - Track Workflow Progress
@@ -22,7 +22,12 @@ The status collector is also the read-only preflight contract for other skills, 
 Consumers should call the collector directly:
 
 ```bash
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/feature/status.ts <feature-id>
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+if [ -z "$PROJECT_DIR" ]; then
+  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/feature/status.ts <feature-id>)
 ```
 
 Use structured JSON fields, not this skill's formatted report or recommendation prose:
@@ -51,7 +56,12 @@ Parse `$ARGUMENTS` for feature ID:
 ## Step 2: Run Status Collector
 
 ```bash
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/feature/status.ts <feature-id>
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+if [ -z "$PROJECT_DIR" ]; then
+  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/feature/status.ts <feature-id>)
 ```
 
 Parse the JSON output. If `error` or `phasesParseError` field exists, display error message and STOP.
