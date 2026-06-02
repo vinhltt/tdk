@@ -7,7 +7,7 @@ Local Claude Code plugin marketplace for the CommonDragon project.
 | Plugin | Skills | Description |
 |--------|--------|-------------|
 | `tdk-core` | tdk-* commands (~31) | Core SpecKit commands for feature specs, planning, review, and workflow |
-| `tdk-utils` | brainstorming, planning, code-review, docs-seeker, sequential-thinking, problem-solving, mcp-builder, repomix, obsidian-brain, context-engineering, common | Utility skills: use independently or alongside tdk-core |
+| `tdk-utils` | brainstorming, research, tdk-scout, docs-seeker, context-engineering, problem-solving, repomix, obsidian-brain, shard-doc, common, setup guides | Utility skills: use independently or alongside tdk-core |
 | `tdk-memory` | tdk-memory-* (4 skills, query deferred) | Persistent project knowledge base: init/update/checksum/changelog .specify/memory/ (query: future Obsidian MCP skill) |
 
 ---

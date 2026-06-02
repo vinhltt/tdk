@@ -48,6 +48,10 @@ Wait for all researcher reports before continuing to design. If any researcher r
 - Writer: search → read context → draft with project terminology
 - Reviewer: verify consistency, warn on conflicts
 
+Before completing project-knowledge research, verify relevant `.specify/memory/`
+files were read, terminology conflicts were checked, and prior feature plans were
+searched when the feature area overlaps existing work.
+
 ### Project Tech Baseline (SOT Pre-load)
 
 **MUST DO BEFORE filling `## Technical Context` of plan.md:**
@@ -67,6 +71,10 @@ Wait for all researcher reports before continuing to design. If any researcher r
 - `./.specify/memory/development-rules.md` — conventions, standards
 - `./.specify/memory/codebase-summary.md` — architecture overview
 - `./.specify/memory/code-standards.md` — coding patterns
+
+Before phase design, identify the existing patterns the implementation must
+match: architecture boundaries, error handling, state management, API shape,
+test organization, dependencies, config files, and verification scripts.
 
 **Scout Delegation:**
 

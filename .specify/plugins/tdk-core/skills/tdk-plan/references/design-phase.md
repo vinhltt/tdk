@@ -6,6 +6,7 @@
 - **Security:** OWASP Top 10, auth/authz, input validation, API security.
 - **Performance:** bottlenecks, caching, async, scalability.
 - **Edge Cases:** error scenarios, network failures, retry/fallback, race conditions.
+- **Operability:** testability, monitoring, deployment impact, and rollback path.
 
 ## Steps
 
@@ -24,6 +25,8 @@
 2. Define API contracts from ## 6. Functional Requirements → `contracts/`.
 3. Plan file structure based on framework.
 4. Identify dependencies and risks (also read ## 8. Risks & Mitigations from spec).
+5. Record deployment, rollback, and observability notes when the implementation
+   changes runtime behavior, public interfaces, or operational workflows.
 
 **Output:** `data-model.md`, `contracts/`, `quickstart.md`.
 

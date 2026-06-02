@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.5] - 2026-06-02
+
+### Changed
+- tdk-plan: strengthen research and design guidance with project-memory checks, pattern scouting, and operability notes
+
 ## [3.4.4] - 2026-06-01
 
 ### Changed

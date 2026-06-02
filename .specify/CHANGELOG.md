@@ -10,6 +10,20 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.60.0] - 2026-06-02
+
+### Changed
+- **[tdk-plan]** Strengthen planning research and design guidance.
+  - Require project-memory checks, previous plan search, and terminology conflict review before project-knowledge research.
+  - Require scouts to identify implementation patterns, test organization, config, dependencies, and verification scripts before design.
+  - Add operability considerations for testability, monitoring, deployment impact, rollback, and observability when runtime behavior changes.
+- **[tdk-utils]** Retarget plugin metadata from the retired planning utility toward research, scouting, and problem solving.
+- **[Tests]** Assert the retired `tdk-utils/planning` skill is absent from the manifest and no longer referenced by `tdk-plan`.
+- **[Docs]** Align marketplace setup and README plugin summaries with the remaining utility skills and current skill counts.
+
+### Removed
+- **[tdk-utils]** Remove retired `planning` skill (was 1.10.8) and its standalone planning reference docs after its guidance moved into `tdk-plan`.
+
 ## [1.59.0] - 2026-06-01
 
 ### Added

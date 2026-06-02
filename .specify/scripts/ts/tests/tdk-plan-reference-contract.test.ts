@@ -7,6 +7,9 @@ const PLAN_SKILL = resolve(
   '../../../plugins/tdk-core/skills/tdk-plan/SKILL.md',
 );
 const REFERENCES_DIR = resolve(dirname(PLAN_SKILL), 'references');
+const PLUGINS_DIR = resolve(import.meta.dir, '../../../plugins');
+const MANIFEST = resolve(PLUGINS_DIR, 'manifest.json');
+const UTILS_PLANNING_SKILL = resolve(PLUGINS_DIR, 'tdk-utils/skills/planning');
 
 function read(path: string): string {
   return readFileSync(path, 'utf-8');
@@ -73,6 +76,36 @@ describe('tdk-plan reference contract', () => {
 
       expect(existsSync(absolutePath), `${referencePath} should exist`).toBe(true);
       expect(read(absolutePath).split('\n')[0]).not.toStartWith('<!-- DO NOT LOAD');
+    }
+  });
+
+  it('does not keep the retired tdk-utils planning skill packaged', () => {
+    const manifest = JSON.parse(read(MANIFEST)) as {
+      plugins?: Record<string, {
+        components?: { skills?: Record<string, unknown> };
+        files?: Record<string, unknown>;
+      }>;
+    };
+    const utils = manifest.plugins?.['tdk-utils'];
+
+    expect(existsSync(UTILS_PLANNING_SKILL)).toBe(false);
+    expect(utils?.components?.skills ?? {}).not.toHaveProperty('planning');
+    expect(Object.keys(utils?.files ?? {})).not.toContain('skills/planning/SKILL.md');
+    expect(Object.keys(utils?.files ?? {}).some((file) => file.startsWith('skills/planning/'))).toBe(false);
+  });
+
+  it('does not depend on the retired tdk-utils planning references', () => {
+    const planFiles = [
+      PLAN_SKILL,
+      ...extractReferenceLoads(skill).map((referencePath) =>
+        resolve(REFERENCES_DIR, referencePath.replace('references/', '')),
+      ),
+    ];
+
+    for (const planFile of planFiles) {
+      const content = read(planFile);
+      expect(content).not.toContain('tdk-utils/skills/planning');
+      expect(content).not.toContain('planning/references/output-standards.md');
     }
   });
 });

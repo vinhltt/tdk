@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.11.0] - 2026-06-02
+
+### Changed
+- Retarget plugin metadata toward research, scouting, and problem solving
+
+### Removed
+- planning: remove retired planning skill and standalone reference docs
+
 ## [1.10.8] - 2026-06-01
 
 ### Changed
