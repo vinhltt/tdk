@@ -4,6 +4,19 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.6] - 2026-06-02
+
+### Added
+- Add spec-plan-drift.ts CLI entry point for structured drift finding output
+- Add spec-plan-drift-model.ts with type definitions, severity/type ranks, question IDs, and action option mappings
+- Add spec-plan-drift-markdown.ts with markdown parsing utilities for spec and phase file analysis
+- Add spec-plan-drift.test.ts with test coverage for drift detection logic
+
+### Changed
+- validate-workflow.md: add drift preflight step, persist drift rows, reuse persisted rows on resume, update file paths to canonical phases/phase-NN-*.md
+- validate-question-framework.md: document all 5 drift question types with action options, remove fixed 8-question hard cap, batch at most 4 questions per AskUserQuestion call
+- tdk-plan-reference-contract.test.ts: add 4 contract assertions covering drift preflight, resume behavior, severity-driven batching, and drift-type action mapping
+
 ## [3.4.5] - 2026-06-02
 
 ### Changed

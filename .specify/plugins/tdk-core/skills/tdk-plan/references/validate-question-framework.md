@@ -20,20 +20,46 @@ Template-based deterministic question generation (Validation S4 D18). Same plan 
 ## Generation Algorithm
 
 ```
-1. Read plan.md + every phase-*.md.
-2. For each category:
+1. Read persisted `#### Spec-Plan Drift Preflight` rows, plan.md, and every `phases/phase-NN-*.md`.
+2. Generate drift questions first from persisted rows:
+     group by questionId, preserve D# order, and sort by severity already emitted by the helper.
+3. For each generic category:
      hits = sum(content.lowerCase().occurrences(kw)) for kw in category.keywords
-3. Drop categories with hits < 2 (false-positive guard — single-word matches don't count).
-4. Sort surviving categories by (priority, hits desc) — tdk layers always rank above ck layers when both have hits.
-5. Take top min(5, surviving.length) categories.
-6. For each selected category, instantiate 1–2 questions from the templates below
+4. Drop categories with hits < 2 (false-positive guard — single-word matches don't count).
+5. Sort surviving categories by (priority, hits desc) — tdk layers always rank above ck layers when both have hits.
+6. Take top min(5, surviving.length) generic categories.
+7. For each selected category, instantiate 1–2 questions from the templates below
    (rule: 2 if category has >= 5 hits AND any phase has >= 2 hits in that category;
    else 1).
-7. If total < 3 questions → pad with general Coverage / Risks templates to reach 3.
-8. Hard cap total at 8.
+8. If total < 3 questions → pad with general Coverage / Risks templates to reach 3.
+9. No global hard total is applied. Runtime must batch at most 4 questions per AskUserQuestion call and offer Continue / Stop after each batch.
 ```
 
 Determinism property: identical plan content → identical question set. (Different YAML formatting / whitespace doesn't change keyword counts because the scan is `.toLowerCase()` on the raw text.)
+
+## Spec-Plan Drift Questions
+
+Spec-plan drift rows are produced by `src/commands/util/spec-plan-drift.ts`. They are deterministic facts, not LLM-generated guesses. Question generation consumes the persisted rows in the current `## Validation Log`; resume must not recompute them mid-session.
+
+No global hard total is applied to drift questions because a real plan may have more than 8 material drift findings. To keep the interview usable, batch at most 4 questions, then ask whether to `Continue` or stop and mark the session `partial`.
+
+| Drift Type | Question ID | Option | Action |
+|---|---|---|---|
+| `missing-fr-coverage` | `speckit.missing_fr_coverage` | spec is stale; add or update spec requirement | `spec-update-needed` |
+| `missing-fr-coverage` | `speckit.missing_fr_coverage` | plan needs a phase/task covering this requirement | `revise` |
+| `missing-fr-coverage` | `speckit.missing_fr_coverage` | false positive or already covered | `no-op` |
+| `plan-only-phase` | `speckit.plan_only_phase` | spec should include this scope | `spec-update-needed` |
+| `plan-only-phase` | `speckit.plan_only_phase` | phase is out of scope and should be removed/revised | `revise` |
+| `plan-only-phase` | `speckit.plan_only_phase` | accepted follow-up already documented | `no-op` |
+| `out-of-scope-contradiction` | `speckit.scope_drift` | spec out-of-scope is correct | `revise` |
+| `out-of-scope-contradiction` | `speckit.scope_drift` | plan scope is correct; spec is stale | `spec-update-needed` |
+| `out-of-scope-contradiction` | `speckit.scope_drift` | false positive | `no-op` |
+| `impact-mismatch` | `speckit.impact_surface_drift` | spec impact surface is stale | `spec-update-needed` |
+| `impact-mismatch` | `speckit.impact_surface_drift` | phase related files or scope are wrong | `revise` |
+| `impact-mismatch` | `speckit.impact_surface_drift` | false positive | `no-op` |
+| `new-entity-or-contract` | `speckit.new_entity_contract` | spec is missing this entity/contract | `spec-update-needed` |
+| `new-entity-or-contract` | `speckit.new_entity_contract` | plan introduced the wrong entity/contract | `revise` |
+| `new-entity-or-contract` | `speckit.new_entity_contract` | false positive or existing contract | `no-op` |
 
 ## Question Templates
 

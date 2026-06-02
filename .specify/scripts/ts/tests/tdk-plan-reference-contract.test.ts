@@ -7,6 +7,8 @@ const PLAN_SKILL = resolve(
   '../../../plugins/tdk-core/skills/tdk-plan/SKILL.md',
 );
 const REFERENCES_DIR = resolve(dirname(PLAN_SKILL), 'references');
+const VALIDATE_WORKFLOW = resolve(REFERENCES_DIR, 'validate-workflow.md');
+const VALIDATE_QUESTION_FRAMEWORK = resolve(REFERENCES_DIR, 'validate-question-framework.md');
 const PLUGINS_DIR = resolve(import.meta.dir, '../../../plugins');
 const MANIFEST = resolve(PLUGINS_DIR, 'manifest.json');
 const UTILS_PLANNING_SKILL = resolve(PLUGINS_DIR, 'tdk-utils/skills/planning');
@@ -107,5 +109,52 @@ describe('tdk-plan reference contract', () => {
       expect(content).not.toContain('tdk-utils/skills/planning');
       expect(content).not.toContain('planning/references/output-standards.md');
     }
+  });
+
+  it('documents spec-plan drift preflight over spec.md and canonical phase files', () => {
+    const workflow = read(VALIDATE_WORKFLOW);
+
+    expect(workflow).toContain('Load `spec.md`, `plan.md`, and every `phases/phase-NN-*.md`');
+    expect(workflow).toContain('spec-plan-drift.ts');
+    expect(workflow).toContain('--spec "{FEATURE_DIR}/spec.md"');
+    expect(workflow).toContain('#### Spec-Plan Drift Preflight');
+    expect(workflow).not.toContain('Load plan.md + every `phase-*.md`');
+  });
+
+  it('persists drift rows before validation questions and resumes from persisted rows', () => {
+    const workflow = read(VALIDATE_WORKFLOW);
+
+    expect(workflow).toContain('Persist the full drift rows before the Q/A table');
+    expect(workflow).toContain('reuse the persisted drift table');
+    expect(workflow).toContain('do not recompute drift during resume');
+    expect(workflow).toContain('force Discard path');
+  });
+
+  it('uses severity-driven validation questions without fixed total caps', () => {
+    const framework = read(VALIDATE_QUESTION_FRAMEWORK);
+
+    expect(framework).toContain('No global hard total is applied');
+    expect(framework).toContain('batch at most 4 questions');
+    expect(framework).toContain('Continue');
+    expect(framework).toContain('partial');
+    expect(framework).not.toContain('Hard cap total at 8');
+    expect(framework).not.toContain('Cap at 8');
+  });
+
+  it('maps every drift question family to explicit actions', () => {
+    const framework = read(VALIDATE_QUESTION_FRAMEWORK);
+
+    for (const id of [
+      'speckit.missing_fr_coverage',
+      'speckit.plan_only_phase',
+      'speckit.scope_drift',
+      'speckit.impact_surface_drift',
+      'speckit.new_entity_contract',
+    ]) {
+      expect(framework).toContain(id);
+    }
+    expect(framework).toContain('spec-update-needed');
+    expect(framework).toContain('revise');
+    expect(framework).toContain('no-op');
   });
 });

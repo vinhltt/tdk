@@ -10,6 +10,21 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.61.0] - 2026-06-02
+
+### Added
+- **[Scripts]** Add `spec-plan-drift` utility suite for deterministic spec-plan drift detection
+  - `spec-plan-drift.ts` — CLI entry point; reads spec.md, plan.md, and canonical phase files; outputs structured JSON drift findings
+  - `spec-plan-drift-model.ts` — Type definitions, severity/type ranks, question IDs, and action option mappings
+  - `spec-plan-drift-markdown.ts` — Markdown parsing utilities (parseSpec, alignPlanPhases, matchesRequirement, extractEntityTerms)
+  - `spec-plan-drift.test.ts` — Test coverage for drift detection logic
+
+### Changed
+- **[tdk-plan]** Extend validation workflow and question framework with spec-plan drift preflight
+  - `validate-workflow.md`: add drift preflight step (run `spec-plan-drift.ts` before questions), persist drift rows to `#### Spec-Plan Drift Preflight` table, reuse persisted rows on resume, update file paths to canonical `phases/phase-NN-*.md`
+  - `validate-question-framework.md`: document all 5 drift question types with action options, remove fixed 8-question hard cap, batch at most 4 questions per AskUserQuestion call
+- **[Tests]** Add 4 contract assertions in `tdk-plan-reference-contract.test.ts` covering drift preflight, resume behavior, severity-driven batching, and drift-type action mapping
+
 ## [1.60.0] - 2026-06-02
 
 ### Changed

@@ -27,14 +27,16 @@ Prior session N is in-progress (cursor at Q{cursor}, {cursor-1}/{N_total} answer
 ### Resume path
 
 1. Print partial Q/A summary (Q1..Q{cursor-1} from plan.md so user remembers where they were).
-2. **Trust-ask (Validation S2 D5 / S2.F13):** AskUserQuestion `"Have you edited plan.md or any phase-*.md since the last suspend?"` `[No, content unchanged]` / `[Yes, content changed]`.
+2. If the in-progress session has `#### Spec-Plan Drift Preflight`, reuse the persisted drift table and do not recompute drift during resume.
+3. If the in-progress session lacks a drift table and `validation_cursor > 0`, force Discard path because the prior question set cannot be reconstructed safely.
+4. **Trust-ask (Validation S2 D5 / S2.F13):** AskUserQuestion `"Have you edited spec.md, plan.md, or any phases/phase-NN-*.md since the last suspend?"` `[No, content unchanged]` / `[Yes, content changed]`.
    - **No** → proceed; skip Q1..Q{cursor-1}; loop continues at Q{cursor}.
    - **Yes** → force Discard path (prior answers may now be stale — safer to regenerate).
-3. Solo-dev rationale: trust user self-report over an automated content-hash check. User edits mid-session are expected to be declared.
+5. Solo-dev rationale: trust user self-report over an automated content-hash check. User edits mid-session are expected to be declared.
 
 ### Discard path
 
-1. Grep all `phase-*.md` for `<!-- Updated: Validation Session {N} -->` markers; remove every match (orphan cleanup).
+1. Grep all `phases/phase-NN-*.md` for `<!-- Updated: Validation Session {N} -->` markers; remove every match (orphan cleanup).
 2. Delete the in-progress `### Session {N}` block from plan.md.
 3. Increment `validation_session: N+1`.
 4. Reset `validation_cursor: 0`.
@@ -47,7 +49,7 @@ Exit immediately. No file mutations, no counter bump.
 ## Session Setup (no orphan detected)
 
 1. Validate TASK_ID, locate spec dir.
-2. Load plan.md + every `phase-*.md`.
+2. Load `spec.md`, `plan.md`, and every `phases/phase-NN-*.md`.
 2b. **Skill Routing Inline Load**: if plan has `## Delegate Skills` sections, read `{docs.path}/custom-workflow/plan-skill-routing.md` into `SKILL_ROUTING` so validation interview can include skill-routing questions. Skip silently if file missing.
 3. Increment `validation_session: N` in plan.md frontmatter (via Edit tool — Session 2 #12 frontmatter mutations are framework-managed; do NOT add a custom bun writer).
 4. Reset `validation_cursor: 0`.
@@ -57,13 +59,31 @@ Exit immediately. No file mutations, no counter bump.
 
    ### Session {N} — {ISO8601} (in-progress)
    **Mode trigger:** {hard | manual}
-   **Questions:** ...
+   **Spec-plan drift:** pending
+
+   #### Spec-Plan Drift Preflight
+
+   | ID | Severity | Type | Spec Anchor | Plan Anchor | Summary | Suggested Action |
+   |---|---|---|---|---|---|---|
+
+   **Questions:** generated after drift rows are persisted
 
    | # | Category | Layer | Question | Answer | Action |
    |---|---|---|---|---|---|
    ```
    Without this, a Ctrl-C between counter bump and first answer would leave orphan phase markers with no `## Validation Log` to detect on next run.
-6. Generate questions per `validate-question-framework.md` algorithm. Cap at 8.
+6. Run deterministic spec-plan drift preflight:
+   ```bash
+   cd "$CLAUDE_PROJECT_DIR/.specify/scripts/ts" &&
+   bun src/commands/util/spec-plan-drift.ts \
+     --spec "{FEATURE_DIR}/spec.md" \
+     --plan "{FEATURE_DIR}/plan.md" \
+     --phases-root "{FEATURE_DIR}/phases" \
+     --json
+   ```
+   If the helper errors, STOP and report the exact stderr/stdout. Do not generate questions from incomplete drift data.
+7. Persist the full drift rows before the Q/A table. These rows are the source of truth for resume and final recommendation.
+8. Generate questions per `validate-question-framework.md` algorithm. No fixed total cap is applied; question flow is severity-driven and batched by 4.
 
 ## Interview Loop
 
@@ -77,16 +97,16 @@ for batch in chunks(questions, 4):                         # AskUserQuestion max
     cursor += 1
     write_frontmatter(plan.md, validation_cursor=cursor)   # via Edit tool
   if cursor < total:
-    cont = AskUserQuestion("Continue with next batch, or skip remaining?",
-                            options=["Continue", "Skip remaining"])
-    if cont == "Skip remaining": break
+    cont = AskUserQuestion("Continue with next batch, or stop validation as partial?",
+                            options=["Continue", "Stop - mark partial"])
+    if cont == "Stop - mark partial": break
 ```
 
 `AskUserQuestion` accepts 1–4 questions per call → batches are size 4 (or final-batch remainder).
 
 ## Completion
 
-On normal completion (`cursor == total`) OR after `Skip remaining`:
+On normal completion (`cursor == total`) OR after `Stop - mark partial`:
 
 1. Compute `recommendation` from collected actions per `validate-question-framework.md`:
    - `proceed` if all `no-op`.
