@@ -10,6 +10,14 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.61.1] - 2026-06-03
+
+### Changed
+- **[tdk-core]** Align existing-plan follow-up phase generation with the standard phase-file contract
+  - Replaced the legacy follow-up phase template with YAML frontmatter, context links, success criteria, risk, security, next-step, and unresolved-question sections.
+  - Added tests that validate frontmatter parsing, placeholder substitution, quoted titles, required section order, and removal of the legacy bold status block.
+- **[Scripts]** Extend handle-existing-plan path-convention tests to cover phase template structure and YAML validity.
+
 ## [1.61.0] - 2026-06-02
 
 ### Added

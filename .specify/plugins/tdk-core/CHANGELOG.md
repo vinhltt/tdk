@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.7] - 2026-06-03
+
+### Changed
+- Align existing-plan follow-up phase generation with the standard phase-file contract: replace the legacy follow-up phase template with YAML frontmatter and required phase sections.
+
 ## [3.4.6] - 2026-06-02
 
 ### Added

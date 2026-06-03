@@ -106,29 +106,83 @@ Output: `Aborted. No changes made.` → **STOP**.
 
 Used by Branch A new-spec generation and Branch B append.
 
-```markdown
-# Phase NN: {Phase Name}
+Before writing, replace placeholders with concrete values:
+- `{N}` -> numeric phase number (e.g., `3`, not `{N}`).
+- `{NN}` -> zero-padded phase number for display (e.g., `03`).
+- `{Phase Title YAML}` -> YAML string literal for the phase title (e.g., `"Add \"OAuth2\" login"`).
+- `{Phase Name}` -> plain markdown phase title.
 
-**Status:** todo
-**Depends on:** —
-**Blocks:** —
+```markdown
+---
+phase: {N}
+title: {Phase Title YAML}
+status: todo
+priority: P2
+effort: "1h"
+dependencies: []
+---
+
+# Phase {NN}: {Phase Name}
+
+## Context Links
+
+- Plan: `../plan.md`
+- Spec: `../spec.md`
 
 ## Overview
 
 [Brief description of this phase's purpose and deliverables.]
 
+## Key Insights
+
+- [Important finding or constraint.]
+
+<!-- Insert ## Delegate Skills here only when skill routing applies. -->
+
 ## Requirements
 
-- [ ] [Requirement 1]
-- [ ] [Requirement 2]
+- Functional: [Requirement 1]
+- Functional: [Requirement 2]
+- Non-functional: [Quality/security/performance requirement]
+
+## Architecture
+
+[System design, component interaction, or data flow for this phase.]
+
+## Related Code Files
+
+- Modify: `[path/to/file]`
+- Create: `[path/to/file]`
+- Delete: `[path/to/file]`
 
 ## Implementation Steps
 
 1. [Step 1]
 2. [Step 2]
 
-## Acceptance Criteria (AC)
+## Todo List
 
-- [ ] [AC 1]
-- [ ] [AC 2]
+- [ ] [Todo 1]
+- [ ] [Todo 2]
+
+## Success Criteria
+
+- [ ] [Success criterion 1]
+- [ ] [Success criterion 2]
+
+## Risk Assessment
+
+[Risk and mitigation.]
+
+## Security Considerations
+
+[Security or data protection considerations, or `None.`]
+
+## Next Steps
+
+[Follow-up phase or handoff.]
+
+## Unresolved Questions
+
+[List unresolved questions, or `None.`]
 ```
