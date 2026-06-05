@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "3.4.3"
+  version: "3.4.8"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -27,20 +27,51 @@ You **MUST** consider the user input before proceeding (if not empty).
 This skill reads plan.md and executes phases using the `## Phases` table as the single source of truth (SoT).
 
 - **Primary implementation path**: executes all phases in row order, updating Status cells in the `## Phases` table
+- **Selected phase path**: optional `--phase NN` / `--phase=NN` executes one numeric phase only
 - **Status tracking**: reads/writes Status column via `updatePhaseStatus` — no HTML comment markers
 - **Dependency enforcement**: validates BlockedBy before each phase; aborts on unsatisfied deps
 - **F3 crash recovery**: detects stale `in_progress` rows at startup and requires explicit recovery choice before any status mutation
+- **Future worker routing**: selected mode is serial per invocation; parallel phase workers need separate status/recovery design
 
 ---
 
 ## Outline
 
-### Step 0 — Validate Task ID
-Invoke `tdk-validate-task-id` with `$ARGUMENTS` and host skill name `/tdk-implement`.
+### Step 0 — Parse Args
+
+Parse user input before project context loading or status mutation.
+
+Accepted forms:
+- `/tdk-implement <TASK_ID>`
+- `/tdk-implement <TASK_ID> --phase NN`
+- `/tdk-implement <TASK_ID> --phase=NN`
+
+Contract:
+
+```text
+INPUT_TOKENS = split $ARGUMENTS
+TASK_ID = first positional token
+PHASE_FILTER = optional numeric value from --phase NN or --phase=NN
+PHASE_FILTER_PRESENT = true when --phase is provided
+```
+
+Reject and STOP before task-id validation if any of these are present:
+- missing `TASK_ID`
+- unknown flags
+- duplicate --phase
+- missing value
+- non-numeric value
+- non-positive value
+- extra positional tokens
+
+Normalize `PHASE_FILTER` to a positive number. Display may use padded or unpadded phase numbers, but comparisons MUST use the numeric value.
+
+### Step 0.1 — Validate Task ID
+Invoke `tdk-validate-task-id` with cleaned `TASK_ID` and host skill name `/tdk-implement`, not raw `$ARGUMENTS`.
 If STOP → halt execution.
 Store: `TASK_ID`, `TASK_ID_SOURCE`.
 
-### Step 0.1 — Load Project Context
+### Step 0.2 — Load Project Context
 Invoke `tdk-load-project-context` with validated `TASK_ID`.
 Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
@@ -175,7 +206,7 @@ fi
 
 ### Step 4: F3 Recovery Gate — Stale in_progress Detection
 
-Before entering the main execution loop, scan all rows:
+Before resolving selected targets or entering the main execution loop, scan all rows:
 
 ```
 for each row in rows:
@@ -212,12 +243,32 @@ Set `phasePath = join(FEATURE_DIR, row.file)` for the selected row, then:
 
 If user selects cancel → STOP. After any recovery write, re-run `parse-phases-table.ts` and restart this scan before proceeding.
 
-On phase-work failure during execution (Step 6), before exiting emit:
+On phase-work failure during execution (Step 7), before exiting emit:
 ```
 "Phase NN left in_progress. Recover as described above."
 ```
 
-### Step 5: Confirm Before Executing
+### Step 5: Resolve Target Rows
+
+After parsing rows and completing global F3 recovery, build a phase-number lookup and target list:
+
+```text
+phaseByNumber = new Map(rows.map(row => [row.number, row]))
+TARGET_ROWS = PHASE_FILTER_PRESENT
+  ? rows.filter(row => row.number === PHASE_FILTER)
+  : rows
+```
+
+If `PHASE_FILTER` is set and no matching row exists → STOP:
+```
+No phase found for --phase {PHASE_FILTER}.
+```
+
+If `PHASE_FILTER` is set and the selected row is `done`, `skipped`, `blocked`, or `cancelled` → report no runnable selected phase and STOP without mutation.
+
+Dependency checks must read blocker rows from `phaseByNumber.get(id)`. Missing blockers or blockers with status other than `done` / `skipped` stop execution. Do not auto-run dependencies for selected mode.
+
+### Step 6: Confirm Before Executing
 
 Display compact preflight summary plus phase list from parsed rows. Do not read phase files before this confirmation.
 
@@ -234,7 +285,9 @@ Phases to execute (from plan.md ## Phases table):
   ...
 ```
 
-Use **AskUserQuestion**:
+If `PHASE_FILTER` exists, list only `TARGET_ROWS` and label the mode as selected phase execution. Otherwise list all rows and keep the default all-phase wording.
+
+Use **AskUserQuestion** with the relevant confirmation option for the current mode:
 ```json
 {
   "questions": [{
@@ -242,6 +295,7 @@ Use **AskUserQuestion**:
     "header": "Confirm Execution",
     "options": [
       {"label": "Yes, execute all phases", "description": "Proceed phase by phase in row order"},
+      {"label": "Yes, execute selected phase", "description": "Proceed with the selected phase only"},
       {"label": "No, cancel", "description": "Stop without changes"}
     ],
     "multiSelect": false
@@ -251,7 +305,7 @@ Use **AskUserQuestion**:
 
 If user cancels → STOP.
 
-### Step 6: Execute Phases — Row Order
+### Step 7: Execute Phases — Row Order
 
 Execution pseudo-code (ascending `row.number`):
 
@@ -259,12 +313,15 @@ Execution pseudo-code (ascending `row.number`):
 1. Run `parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json` → parse phases array from JSON output
 2. If exit code 1 → report errors → STOP
 3. PRE-LOOP: scan rows for any in_progress → run F3 recovery gate, reparse, and restart scan
-4. For each row ascending # order:
+4. Build `phaseByNumber = new Map(rows.map(row => [row.number, row]))`
+5. Resolve `TARGET_ROWS = PHASE_FILTER_PRESENT ? rows.filter(row => row.number === PHASE_FILTER) : rows`
+6. If selected mode has no runnable row → report why and STOP without mutation
+7. For each row in TARGET_ROWS ascending # order:
    phasePath = join(FEATURE_DIR, row.file)
    a. Status === 'skipped' → continue (bypass silently)
    b. Status === 'done' → continue (already complete)
    c. Status !== 'todo' → continue unless F3 gate already handled it
-   d. BlockedBy check: ∀id ∈ row.blockedBy, rows[id].status ∈ {'done', 'skipped'} else abort
+   d. BlockedBy check: ∀id ∈ row.blockedBy, phaseByNumber.get(id)?.status ∈ {'done', 'skipped'} else abort
       Error message: "phase NN blocked by MM which is status='X' — run phase MM first or mark phase NN skipped"
       (F14: skipped blocker satisfies dependency — no friction)
    e. Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" in_progress)` → phase file FIRST
@@ -277,14 +334,14 @@ Execution pseudo-code (ascending `row.number`):
 For each phase:
 
 1. Read the phase file referenced in `row.file` (relative to `FEATURE_DIR`).
-2. If the phase file contains `## Delegate Skills`, execute those delegates first (see 5A).
-3. If the phase appears to be a unit-test phase but has no usable `## Delegate Skills`, STOP with the unit-test guard message in 5A.
-4. Otherwise execute as a generic implementation phase (see 5C).
+2. If the phase file contains `## Delegate Skills`, execute those delegates first (see 7A).
+3. If the phase appears to be a unit-test phase but has no usable `## Delegate Skills`, STOP with the unit-test guard message in 7A.
+4. Otherwise execute as a generic implementation phase (see 7C).
 5. Log: `"✓ Phase {N}: {name} — complete"`
 
 ---
 
-#### 5A. Delegate Skills Phase — Auto-continue
+#### 7A. Delegate Skills Phase — Auto-continue
 
 If the phase file contains a `## Delegate Skills` section, execute it before generic implementation.
 
@@ -328,7 +385,7 @@ Unit-test phase has no delegate skill. Run /tdk-ut-backfill-plan {TASK_ID} after
 
 ---
 
-#### 5C. Implementation Phase — Auto-continue (no confirmation gate)
+#### 7C. Implementation Phase — Auto-continue (no confirmation gate)
 
 **CRITICAL: You MUST actually implement the code — not just read and summarize the plan.**
 
@@ -338,7 +395,7 @@ For each implementation phase:
 2. **Implement every step** described in the phase:
    - Create/modify files as specified
    - Write actual production code (no mocks, no placeholders, no TODOs)
-   - Follow project rules loaded in Step 0.1
+   - Follow project rules loaded in Step 0.2
 3. **After each file change**, run compile/lint check to verify no errors
 4. **Validate against Success Criteria** listed in the phase (if any)
 5. **Mark phase done**: run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done)` THEN `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} done)`
@@ -346,7 +403,7 @@ For each implementation phase:
 
 **DO NOT** just read the plan and report what it says — you must **write code, edit files, and produce working implementation**.
 
-### Step 7: Completion Summary
+### Step 8: Completion Summary
 
 After all phases:
 

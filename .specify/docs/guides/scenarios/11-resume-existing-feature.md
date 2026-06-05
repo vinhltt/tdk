@@ -24,7 +24,7 @@
 /tdk-implement feat-001
 ```
 
-**What happens**: Claude reads `plan.md ## Phases` (primary source of truth), finds the first uncompleted phase, and continues execution from there. Already completed phases are skipped.
+**What happens**: Claude reads `plan.md ## Phases` (primary source of truth), finds the first uncompleted phase, and continues execution from there. Already completed phases are skipped. Use `/tdk-implement feat-001 --phase NN` to target one phase instead.
 
 ## Common Situations
 
@@ -48,7 +48,7 @@ If `status` shows warnings (>7 days stale):
 
 ### "Implementation was interrupted mid-phase"
 
-`/tdk-implement` resumes from the last uncompleted phase in `plan.md ## Phases`. If a partially-completed phase caused issues, you may need to manually fix the state before continuing.
+`/tdk-implement` resumes from the last uncompleted phase in `plan.md ## Phases`, or targets one phase with `--phase NN`. If a partially-completed phase caused issues, stale `in_progress` recovery runs before any new mutation.
 
 ## Tips
 

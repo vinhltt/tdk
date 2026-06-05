@@ -35,7 +35,7 @@ Use sub-workspace sections when different services need different test skills.
 /tdk-implement feat-001
 ```
 
-**What happens**: `/tdk-implement` executes phases in order. When a phase contains `## Delegate Skills`, it invokes those skills before generic implementation.
+**What happens**: `/tdk-implement` executes all runnable phases in order by default. Add `--phase NN` to execute one phase only. When a phase contains `## Delegate Skills`, it invokes those skills before generic implementation.
 
 ## Tips
 

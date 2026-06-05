@@ -1,6 +1,6 @@
 # Tihon Command Suite Guide
 
-> **Last updated**: 2026-04-21
+> **Last updated**: 2026-06-05
 >
 > **Terminology**: In this guide, `/tdk-*` items are called "commands." Internally they are Claude Code plugin skills. Both terms refer to the same thing.
 >
@@ -56,7 +56,7 @@ Unit-test planning is handled by TDK. Test implementation is routed to consumer-
 | Command | Role |
 |---------|------|
 | `/tdk-ut-backfill-plan` | Generates test plan + phase files from spec or existing code |
-| `/tdk-implement` | Executes phases and runs `## Delegate Skills` before generic implementation |
+| `/tdk-implement` | Executes all runnable phases, or one selected phase with `--phase NN`; runs `## Delegate Skills` before generic implementation |
 | consumer test skill | Generates/runs tests according to project conventions |
 
 ### Sub-Workspace Isolation
@@ -164,7 +164,7 @@ Each command reads the output of the previous one, building a chain of artifacts
 | — | **Test Viewpoints** | |
 | 27 | `/tdk-test-viewpoint <id>` | Generate high-level test viewpoints (観点) from spec |
 | — | **Primary Implementation** | |
-| 28 | `/tdk-implement <id>` | Execute implementation directly from plan.md ## Phases (recommended) |
+| 28 | `/tdk-implement <id> [--phase NN]` | Execute implementation directly from plan.md ## Phases (recommended) |
 
 ---
 
@@ -210,6 +210,14 @@ Generates `plan.md` with architecture decisions, file structure, tech stack, and
 
 Executes implementation directly from `plan.md ## Phases` table. Lightweight approach for small to medium features. Marks completion in the `plan.md` phases table. UT phase files delegate to the consumer test skill listed in `## Delegate Skills`.
 
+To execute one phase only:
+
+```
+/tdk-implement feat-001 --phase 03
+```
+
+Selected mode still honors dependencies and stale `in_progress` recovery.
+
 ### Step 5 — Run unit tests (optional)
 
 Map the `test` domain in `{docs.path}/custom-workflow/plan-skill-routing.md`, then run:
@@ -254,7 +262,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | ba-requirement | `/tdk-ba-requirement <id>` | `--figma-pc`, `--figma-sp`, `--output` | `spec.md` | `ba-requirement.md` | clarify |
 | plan | `/tdk-plan <id>` | — | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | ba-requirement |
 | api-design | `/tdk-api-design <id>` | `--scenario A|B` | `spec.md`, `research/` | `api_design.md` (incl. DB schema) | plan |
-| implement | `/tdk-implement <id>` | — | `plan.md` | Source code, `plan.md` (with status markers) | plan |
+| implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
 | analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report (no file created) | specify |
 
@@ -307,13 +315,13 @@ Detection: `--scenario A|B` flag explicit, else `research/` has reports → B, o
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| implement | `/tdk-implement <id>` | — | `plan.md` with ## Phases | Source code, `plan.md` (with status markers) | plan |
+| implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` with ## Phases | Source code, `plan.md` Status column | plan |
 
-`/tdk-implement` reads the `## Phases` table from `plan.md` and executes implementation phase-by-phase, marking completion via `<!-- status:done -->` comments. Best for small/medium features completable in one session.
+`/tdk-implement` reads the `## Phases` table from `plan.md` and executes all runnable phases by default, marking progress in the table's Status column. Use `/tdk-implement <id> --phase NN` to execute one numeric phase only; selected mode does not auto-run dependencies. Best for small/medium features completable in one session.
 
 **Re-running `/tdk-plan` after implementation:**
-- **(a) Update phases only** — When feature scope expands or phases change: re-run `/tdk-plan <id>` (overwrites plan.md; you lose status markers)
-- **(b) Append new phases** — When adding follow-up work: manually add rows to the existing `## Phases` table in plan.md, then resume with `/tdk-implement <id>`
+- **(a) Update phases only** — When feature scope expands or phases change: re-run `/tdk-plan <id>` (overwrites plan.md; you lose current Status-column progress)
+- **(b) Append new phases** — When adding follow-up work: manually add rows to the existing `## Phases` table in plan.md, then resume with `/tdk-implement <id> [--phase NN]`
 
 ## Document Flow
 

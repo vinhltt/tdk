@@ -121,7 +121,7 @@ Commands not present in any predecessor (15 total):
 | `/tdk-sub-workspace-list` | Workspace | **Workspace inventory** |
 | `/tdk-batch-design` | Design | **Batch processing design** for approval |
 | `/tdk-test-viewpoint` | Testing | **High-level test viewpoints** (観点) from spec |
-| `/tdk-implement` | Implementation | **Primary path: lightweight implement** from plan.md ## Phases, no tasks.md required |
+| `/tdk-implement` | Implementation | **Primary path: lightweight implement** from plan.md ## Phases, optional `--phase NN`, no tasks.md required |
 
 ---
 

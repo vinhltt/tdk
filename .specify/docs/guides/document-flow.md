@@ -38,8 +38,8 @@ flowchart TD
     PAGEDESIGNS -.->|Approval| PAGEDESIGNS
 
     %% Phase 2: Implementation (Solo Path - Primary)
-    PLAN -->|/tdk-implement| CODE_BE[backend/src/<br/>Backend Code]
-    PLAN -->|/tdk-implement| CODE_FE[frontend/pages/<br/>Frontend Code]
+    PLAN -->|/tdk-implement<br/>or --phase NN| CODE_BE[backend/src/<br/>Backend Code]
+    PLAN -->|/tdk-implement<br/>or --phase NN| CODE_FE[frontend/pages/<br/>Frontend Code]
 
     %% Styling
     classDef phase0 fill:#e1f5ff,stroke:#01579b,stroke-width:2px
@@ -143,7 +143,7 @@ flowchart TD
         TESTS[tests/]
     end
 
-    PLAN -->|"/tdk-implement"| IMPL_OUTPUT
+    PLAN -->|"/tdk-implement<br/>[--phase NN]"| IMPL_OUTPUT
 
     classDef input fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
@@ -151,6 +151,9 @@ flowchart TD
     class PLAN input
     class CODE_BE,CODE_FE,TESTS code
 ```
+
+`/tdk-implement <id>` runs all runnable rows from `plan.md ## Phases`.
+`/tdk-implement <id> --phase NN` runs one selected phase while still honoring dependencies and global stale `in_progress` recovery.
 
 ### Unit Testing Pipeline
 
@@ -254,8 +257,8 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `spec.md` | `/tdk-specify` | User description | `/tdk-plan`, all downstream | Feature start |
 | `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-ba-requirement` | After specify |
 | `ba-requirement.md` | `/tdk-ba-requirement` | `spec.md` | `/tdk-plan` | For Approval |
-| `plan.md` | `/tdk-plan` | `ba-requirement.md`, `constitution.md` | `plan.md ## Phases`, `/tdk-implement` | Feature start |
-| `plan.md ## Phases` | `/tdk-plan` | `ba-requirement.md`, design artifacts | `/tdk-implement` | Feature start |
+| `plan.md` | `/tdk-plan` | `ba-requirement.md`, `constitution.md` | `plan.md ## Phases`, `/tdk-implement [--phase NN]` | Feature start |
+| `plan.md ## Phases` | `/tdk-plan` | `ba-requirement.md`, design artifacts | `/tdk-implement [--phase NN]` | Feature start |
 | `research/` | `/tdk-plan` | `ba-requirement.md` | Reference | Feature start |
 | `data-model.md` | `/tdk-plan` | `ba-requirement.md` | Reference | Feature start |
 | `api_design.md` | `/tdk-api-design` | `plan.md` | Reference | For Approval |

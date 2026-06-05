@@ -32,7 +32,7 @@ To review/update an existing plan:
 /tdk-implement feat-001
 ```
 
-**What happens**: Claude reads the implementation plan. UT phase files contain `## Delegate Skills`, so `/tdk-implement` invokes the routed consumer test skill before generic implementation.
+**What happens**: Claude reads the implementation plan. UT phase files contain `## Delegate Skills`, so `/tdk-implement` invokes the routed consumer test skill before generic implementation. Use `/tdk-implement feat-001 --phase NN` to run one UT phase only.
 
 **Output**: Test files (e.g., `*.test.ts`, `test_*.py`, `*Test.php`) and fixtures
 

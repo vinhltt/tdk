@@ -56,7 +56,13 @@ Type in Claude Code chat:
 /tdk-implement feat-001
 ```
 
-**What happens**: Claude reads the plan's `## Phases` table and executes implementation phase-by-phase. Setup first, then tests (TDD), core features, integration, and polish. Each completed phase is marked in plan.md's phases table. UT phase files delegate to the consumer test skill listed in `## Delegate Skills`.
+**What happens**: Claude reads the plan's `## Phases` table and executes all runnable phases by default. Setup first, then tests (TDD), core features, integration, and polish. Each completed phase is marked in plan.md's phases table. UT phase files delegate to the consumer test skill listed in `## Delegate Skills`.
+
+To run one phase only:
+
+```
+/tdk-implement feat-001 --phase 03
+```
 
 ### 6. Track progress
 
@@ -72,4 +78,4 @@ Run at any point to see a progress bar, completed phases, and recommendations.
 - Run `analyze` before `implement` to catch inconsistencies early.
 - Use `status` after interruptions to see where you left off.
 - Task IDs must use prefixes from `.specify/.specify.env` (e.g., `feat`, `spec`, `docs`, `bug`).
-- The plan's `## Phases` table is the source-of-truth for implementation work — use `/tdk-implement` to execute from it.
+- The plan's `## Phases` table is the source-of-truth for implementation work — use `/tdk-implement` to execute all runnable phases or `/tdk-implement <id> --phase NN` for one phase.

@@ -26,6 +26,8 @@ The `--standalone` flag tells the planner that `spec.md` is optional. It derives
 /tdk-implement feat-001
 ```
 
+Add `--phase NN` to run one generated test phase only.
+
 ## Tips
 
 - `--standalone` is the key differentiator — it makes `spec.md` optional for UT planning.

@@ -101,7 +101,7 @@ find . -path "*/rules/test/ut-rule.md" -delete
 
 ### 6. Test
 
-Run `/tdk-ut-backfill-plan` on a feature and verify generated `ut/phases/*.md` files contain `## Delegate Skills` with your consumer test skill. Then run `/tdk-implement` to execute the routed implementation.
+Run `/tdk-ut-backfill-plan` on a feature and verify generated `ut/phases/*.md` files contain `## Delegate Skills` with your consumer test skill. Then run `/tdk-implement` to execute the routed implementation, or `/tdk-implement <id> --phase NN` for one phase.
 
 ## Per-Module Overrides (Removed)
 

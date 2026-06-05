@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.8] - 2026-06-05
+
+### Added
+- Contract test tdk-implement-phase-selection-contract.test.ts asserting parse-before-validate ordering and --phase NN behaviors
+
+### Changed
+- tdk-implement skill: add --phase NN / --phase=NN single-phase selection mode; Step 0 split into parse + validate + load-context; new Resolve Target Rows step; phaseByNumber map replaces index-based blocker lookup
+
 ## [3.4.7] - 2026-06-03
 
 ### Changed

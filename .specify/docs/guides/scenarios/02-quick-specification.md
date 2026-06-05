@@ -46,11 +46,11 @@
 ```
 
 **What happens**: Claude executes the phases defined in `plan.md`, using the phases table as the source-of-truth.
+Use `/tdk-implement bug-042 --phase NN` to execute one phase only.
 
 ## Tips
 
 - The only difference is brainstorm enrichment is skipped. All other steps are identical.
 - If you realize the spec needs more depth after using `--fast`, run `/tdk-clarify` to fill gaps.
 - Both `--fast` and default modes produce the same artifact structure — downstream commands work identically.
-- Use `/tdk-implement` to execute from the plan's `## Phases` table (primary workflow).
-
+- Use `/tdk-implement` to execute all runnable phases from the plan's `## Phases` table, or add `--phase NN` for one phase.

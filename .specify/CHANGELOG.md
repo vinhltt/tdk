@@ -10,6 +10,15 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.62.0] - 2026-06-05
+
+### Added
+- **[Scripts]** Contract test `tdk-implement-phase-selection-contract.test.ts` asserting parse-before-validate ordering and `--phase NN` / `--phase=NN` behaviors
+
+### Changed
+- **[tdk-core]** `tdk-implement` skill: add `--phase NN` / `--phase=NN` single-phase selection mode; Step 0 split into parse (Step 0) + validate (Step 0.1) + load-context (Step 0.2); new Step 5 `Resolve Target Rows`; `phaseByNumber` map replaces index-based blocker lookup; dependency checks in selected mode do not auto-run missing blockers; downstream steps renumbered accordingly
+- **[Guides]** Updated command-reference, document-flow, evolution-comparison, migration-ut-rule-to-skill, scenarios 01/02/04/05/06/11, and tdk-ut-backfill-skills-usage to reflect `--phase NN` flag, new step numbering, and Status-column wording
+
 ## [1.61.1] - 2026-06-03
 
 ### Changed
