@@ -89,7 +89,7 @@ export interface Collision {
 }
 
 export interface RequiredPrompt {
-  type: 'managed-drift-overwrite';
+  type: 'managed-drift-overwrite' | 'unmanaged-target-overwrite';
   path: string;
   targetRelativePath: string;
 }
@@ -124,7 +124,7 @@ export interface BuildPlanInput {
 export interface ApplyOptions {
   yes: boolean;
   interactive: boolean;
-  approveDrift?: (prompt: RequiredPrompt) => Promise<boolean>;
+  approveOverwrite?: (prompt: RequiredPrompt) => Promise<boolean>;
 }
 
 export interface ApplyResult {

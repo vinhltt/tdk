@@ -76,7 +76,21 @@ function classifyFile(params: {
   }
 
   if (!params.previous) {
-    return { collision: { kind: 'unmanaged-target-exists', path: target, plugin: params.file.plugin, message: `Unmanaged target already exists: ${params.file.targetRelativePath}` } };
+    const currentChecksum = sha256File(target);
+    return {
+      write: {
+        plugin: params.file.plugin,
+        sourcePath: params.file.sourcePath,
+        sourceRelativePath: params.file.sourceRelativePath,
+        targetPath: target,
+        targetRelativePath: params.file.targetRelativePath,
+        sourceChecksum: params.file.sourceChecksum,
+        expectedTargetChecksum: currentChecksum,
+        action: 'update',
+      },
+      collision: { kind: 'unmanaged-target-exists', path: target, plugin: params.file.plugin, message: `Unmanaged target already exists: ${params.file.targetRelativePath}` },
+      prompt: { type: 'unmanaged-target-overwrite', path: target, targetRelativePath: params.file.targetRelativePath },
+    };
   }
 
   const currentChecksum = sha256File(target);
@@ -92,12 +106,12 @@ function classifyFile(params: {
       plugin: params.file.plugin,
       sourcePath: params.file.sourcePath,
       sourceRelativePath: params.file.sourceRelativePath,
-        targetPath: target,
-        targetRelativePath: params.file.targetRelativePath,
-        sourceChecksum: params.file.sourceChecksum,
-        expectedTargetChecksum: params.previous.installedChecksum,
-        action: 'update',
-      },
+      targetPath: target,
+      targetRelativePath: params.file.targetRelativePath,
+      sourceChecksum: params.file.sourceChecksum,
+      expectedTargetChecksum: params.previous.installedChecksum,
+      action: 'update',
+    },
   };
 }
 

@@ -10,6 +10,21 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.62.3] - 2026-06-06
+
+### Added
+- **[Scripts]** `collisions.ts` — new module with `blockingCollisions` / `isPromptableCollision` helpers to separate promptable from hard-blocking collision entries
+
+### Changed
+- **[Scripts]** Harness install: unmanaged target files now trigger an interactive overwrite prompt instead of a hard block
+  - `install-plan.ts`: unmanaged target collision now produces both a `write` and a `prompt` entry (previously collision-only)
+  - `install-writer.ts`: uses `blockingCollisions` helper; `--yes` no longer approves unmanaged target overwrites; renamed `approveDrift` → `approveOverwrite`
+  - `install.ts`: dry-run exit code now uses `blockingCollisions`; renamed `confirmDriftOverwrite` → `confirmOverwrite`
+  - `render.ts`: added separate Prompts section in plan output; Blockers section now only shows non-promptable collisions
+  - `types.ts`: extended `RequiredPrompt.type` to include `'unmanaged-target-overwrite'`; renamed `approveDrift` → `approveOverwrite` in `ApplyOptions`
+  - `prompt.ts`: added interactive checkbox plugin selector (raw mode, Up/Down/j/k navigation, Space toggle, `a` to select/clear all, Enter confirm, Esc cancel)
+  - Tests: added coverage for interactive overwrite approval, `--yes` rejection of unmanaged targets, and dry-run prompt display
+
 ## [1.62.2] - 2026-06-06
 
 ### Added

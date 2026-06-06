@@ -1,11 +1,12 @@
 import { Command } from 'commander';
+import { blockingCollisions } from './collisions';
 import { resolveConsumerRoot } from './root-resolution';
 import { discoverPluginInventory, listManifestPluginNames } from './plugin-discovery';
 import { loadHarnessManifest } from './manifest-store';
 import { readSettings } from './hook-merge';
 import { buildClaudeInstallPlan } from './install-plan';
 import { applyInstallPlan } from './install-writer';
-import { confirmDriftOverwrite, selectPluginsInteractively } from './prompt';
+import { confirmOverwrite, selectPluginsInteractively } from './prompt';
 import { renderApplyResult, renderInstallPlan } from './render';
 
 interface InstallOptions {
@@ -63,14 +64,14 @@ export function createHarnessInstallCommand(): Command {
 
         process.stdout.write(renderInstallPlan(plan));
         if (opts.dryRun) {
-          if (plan.collisions.length > 0) process.exitCode = 1;
+          if (blockingCollisions(plan.collisions, plan.prompts).length > 0) process.exitCode = 1;
           return;
         }
 
         const result = await applyInstallPlan(plan, {
           yes: Boolean(opts.yes),
           interactive: Boolean(process.stdin.isTTY),
-          approveDrift: confirmDriftOverwrite,
+          approveOverwrite: confirmOverwrite,
         });
         process.stdout.write(renderApplyResult(result));
       } catch (err) {

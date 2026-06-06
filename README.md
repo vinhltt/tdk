@@ -40,6 +40,8 @@ bun src/index.ts harness install --harness claude --plugins tdk-core --dry-run
 bun src/index.ts harness install --harness claude --plugins tdk-core --yes
 ```
 
+Omit `--plugins` to select plugins interactively with Space and Enter. Existing unmanaged `.claude/` files require explicit interactive overwrite approval; `--yes` does not approve those overwrites.
+
 ### CLI Usage (Development)
 
 ```bash

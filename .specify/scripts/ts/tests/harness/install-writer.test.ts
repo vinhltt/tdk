@@ -52,4 +52,51 @@ describe('applyInstallPlan', () => {
 
     await expect(applyInstallPlan(secondPlan, { yes: true, interactive: false })).rejects.toThrow(/changed after planning/);
   });
+
+  test('backs up and overwrites unmanaged target after interactive approval', async () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const target = path.join(consumer.root, '.claude', 'skills', 'demo', 'SKILL.md');
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, 'user content', 'utf-8');
+
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+    });
+
+    const result = await applyInstallPlan(plan, {
+      yes: false,
+      interactive: true,
+      approveOverwrite: async () => true,
+    });
+
+    expect(result.backedUp).toHaveLength(1);
+    expect(fs.readFileSync(result.backedUp[0]!, 'utf-8')).toBe('user content');
+    expect(fs.readFileSync(target, 'utf-8')).toBe('# Skill\n');
+    expect(loadHarnessManifest(consumer.root).managedFiles.some((file) => file.targetRelativePath.endsWith(path.join('skills', 'demo', 'SKILL.md')))).toBe(true);
+  });
+
+  test('--yes does not approve unmanaged target overwrite', async () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const target = path.join(consumer.root, '.claude', 'skills', 'demo', 'SKILL.md');
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, 'user content', 'utf-8');
+
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+    });
+
+    await expect(applyInstallPlan(plan, { yes: true, interactive: false })).rejects.toThrow(/Unmanaged target already exists/);
+  });
 });

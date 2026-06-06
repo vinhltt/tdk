@@ -28,7 +28,7 @@ describe('buildClaudeInstallPlan', () => {
     expect(fs.existsSync(path.join(consumer.root, '.claude', 'skills', 'demo', 'SKILL.md'))).toBe(false);
   });
 
-  test('blocks unmanaged target collision', () => {
+  test('requires prompt for unmanaged target collision', () => {
     const consumer = makeConsumer();
     writeBasicPlugin(consumer);
     const target = path.join(consumer.root, '.claude', 'skills', 'demo', 'SKILL.md');
@@ -38,5 +38,7 @@ describe('buildClaudeInstallPlan', () => {
     const plan = buildPlan(consumer.root);
 
     expect(plan.collisions.some((collision) => collision.kind === 'unmanaged-target-exists')).toBe(true);
+    expect(plan.prompts.some((prompt) => prompt.type === 'unmanaged-target-overwrite')).toBe(true);
+    expect(plan.writes.some((write) => write.targetRelativePath.endsWith(path.join('skills', 'demo', 'SKILL.md')))).toBe(true);
   });
 });

@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { sha256File } from './checksum';
+import { blockingCollisions, isPromptableCollision } from './collisions';
 import { manifestPathFor, saveHarnessManifest } from './manifest-store';
 import type { ApplyOptions, ApplyResult, InstallPlan, PlannedWrite, RequiredPrompt } from './types';
 
@@ -36,9 +37,9 @@ function assertCleanBeforeWrite(write: PlannedWrite): void {
 }
 
 export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions): Promise<ApplyResult> {
-  const blocking = options.yes
+  const blocking = options.yes || !options.interactive
     ? plan.collisions
-    : plan.collisions.filter((collision) => collision.kind !== 'managed-drift');
+    : blockingCollisions(plan.collisions, plan.prompts);
   if (blocking.length > 0) {
     throw new Error(`Install plan has blockers:\n${blocking.map((collision) => `- ${collision.message}`).join('\n')}`);
   }
@@ -46,13 +47,18 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
   const backedUp: string[] = [];
   if (plan.prompts.length > 0) {
     if (!options.interactive || options.yes) {
-      throw new Error('Managed drift requires an interactive overwrite confirmation; --yes cannot approve drift.');
+      throw new Error('Overwriting existing files requires interactive confirmation; --yes cannot approve overwrites.');
     }
     for (const prompt of plan.prompts) {
-      const approved = await options.approveDrift?.(prompt);
+      const approved = await options.approveOverwrite?.(prompt);
       if (!approved) throw new Error(`Cancelled overwrite for ${prompt.targetRelativePath}`);
       backedUp.push(backupFile(plan.consumerRoot, prompt));
     }
+  }
+
+  const promptableCollisions = plan.collisions.filter((collision) => isPromptableCollision(collision, plan.prompts));
+  if (promptableCollisions.length > plan.prompts.length) {
+    throw new Error('Internal error: promptable collision count does not match overwrite prompts.');
   }
 
   for (const write of plan.writes) assertCleanBeforeWrite(write);

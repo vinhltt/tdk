@@ -1,7 +1,9 @@
 import type { ApplyResult, InstallPlan } from './types';
+import { blockingCollisions } from './collisions';
 
 export function renderInstallPlan(plan: InstallPlan): string {
   const lines: string[] = [];
+  const blockers = blockingCollisions(plan.collisions, plan.prompts);
   lines.push(`Harness install plan: ${plan.selectedPlugins.join(', ') || '(none)'}`);
   lines.push(`Writes: ${plan.writes.length}`);
   for (const write of plan.writes) {
@@ -21,9 +23,13 @@ export function renderInstallPlan(plan: InstallPlan): string {
     lines.push('Warnings:');
     for (const warning of plan.warnings) lines.push(`  - ${warning}`);
   }
-  if (plan.collisions.length > 0) {
+  if (plan.prompts.length > 0) {
+    lines.push('Prompts:');
+    for (const prompt of plan.prompts) lines.push(`  - overwrite: ${prompt.targetRelativePath}`);
+  }
+  if (blockers.length > 0) {
     lines.push('Blockers:');
-    for (const collision of plan.collisions) lines.push(`  - ${collision.message}`);
+    for (const collision of blockers) lines.push(`  - ${collision.message}`);
   }
   return `${lines.join('\n')}\n`;
 }
