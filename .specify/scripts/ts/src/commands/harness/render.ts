@@ -25,7 +25,10 @@ export function renderInstallPlan(plan: InstallPlan): string {
   }
   if (plan.prompts.length > 0) {
     lines.push('Prompts:');
-    for (const prompt of plan.prompts) lines.push(`  - overwrite: ${prompt.targetRelativePath}`);
+    for (const prompt of plan.prompts) {
+      const action = prompt.type === 'unmanaged-stale-hooks-json-cleanup' ? 'cleanup' : 'overwrite';
+      lines.push(`  - ${action}: ${prompt.targetRelativePath}`);
+    }
   }
   if (blockers.length > 0) {
     lines.push('Blockers:');

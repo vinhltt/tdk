@@ -29,7 +29,8 @@ function targetFor(plugin: string, sourceRelativePath: string): string | undefin
     case 'agents':
       return path.join('.claude', 'agents', rest);
     case 'hooks':
-      return path.join('.claude', 'hooks', rest);
+      if (rest === 'hooks.json') return undefined;
+      return path.join('.claude', 'hooks', plugin, rest);
     case 'commands':
       return path.join('.claude', 'commands', rest);
     case 'lib':

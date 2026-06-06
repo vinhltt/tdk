@@ -5,9 +5,9 @@ function promptKey(kind: Collision['kind'], pathValue: string | undefined): stri
 }
 
 function promptKind(prompt: RequiredPrompt): Collision['kind'] {
-  return prompt.type === 'managed-drift-overwrite'
-    ? 'managed-drift'
-    : 'unmanaged-target-exists';
+  if (prompt.type === 'managed-drift-overwrite') return 'managed-drift';
+  if (prompt.type === 'unmanaged-stale-hooks-json-cleanup') return 'unmanaged-stale-hooks-json';
+  return 'unmanaged-target-exists';
 }
 
 export function isPromptableCollision(collision: Collision, prompts: RequiredPrompt[]): boolean {

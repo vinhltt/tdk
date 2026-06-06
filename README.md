@@ -52,6 +52,8 @@ bun src/index.ts harness install --harness claude --plugins tdk-core --yes
 
 Omit `--plugins` to select plugins interactively with Space and Enter. Existing unmanaged `.claude/` files require explicit interactive overwrite approval; `--yes` does not approve those overwrites.
 
+Claude hook runtime entries are merged into `.claude/settings.json`. Hook scripts are installed under plugin-scoped paths like `.claude/hooks/tdk-core/`; plugin `hooks/hooks.json` files stay source declarations and are not installed as `.claude/hooks/hooks.json`.
+
 ### CLI Usage (Development)
 
 ```bash
@@ -113,7 +115,7 @@ Integrated commands (via `bun src/index.ts`):
 | `tdk ut check-rules` | Validate UT rules |
 | `tdk ut create-rules` | Generate UT rules |
 | `tdk scout` | Codebase analysis (repomix + tier-1 extraction) |
-| `tdk harness install` | Install selected TDK plugin artifacts into `.claude/` with dry-run, ownership, collision, drift, and hook safety |
+| `tdk harness install` | Install selected TDK plugin artifacts into `.claude/` with dry-run, ownership, collision, drift, plugin-scoped hook scripts, and settings merge safety |
 | `tdk sub-workspace docs` | Generate sub-workspace documentation |
 
 Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup, changelog, util, test-api.

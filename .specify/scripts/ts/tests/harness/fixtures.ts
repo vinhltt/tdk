@@ -23,24 +23,36 @@ export function makeConsumer(prefix = 'tdk-harness-'): FixtureConsumer {
   return { root, scriptsDir, pluginRoot };
 }
 
-export function writePluginFile(consumer: FixtureConsumer, relativePath: string, content: string): void {
-  const filePath = path.join(consumer.pluginRoot, relativePath);
+export function pluginRoot(consumer: FixtureConsumer, plugin = 'tdk-core'): string {
+  return path.join(consumer.root, '.specify', 'plugins', plugin);
+}
+
+export function writePluginFile(consumer: FixtureConsumer, relativePath: string, content: string, plugin = 'tdk-core'): void {
+  const filePath = path.join(pluginRoot(consumer, plugin), relativePath);
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, content, 'utf-8');
 }
 
 export function writeManifest(consumer: FixtureConsumer, files: Record<string, string>): void {
+  writeMultiPluginManifest(consumer, {
+    'tdk-core': { version: '1.0.0', files },
+  });
+}
+
+export function writeMultiPluginManifest(consumer: FixtureConsumer, plugins: Record<string, { version: string; files: Record<string, string> }>): void {
   const manifestPath = path.join(consumer.root, '.specify', 'plugins', 'manifest.json');
+  const manifestPlugins: Record<string, unknown> = {};
+  for (const [name, plugin] of Object.entries(plugins)) {
+    manifestPlugins[name] = {
+      version: plugin.version,
+      components: { skills: {}, agents: {}, hooks: {}, commands: {} },
+      files: plugin.files,
+    };
+  }
   fs.writeFileSync(manifestPath, JSON.stringify({
     algorithm: 'sha256',
     generated_at: '2026-05-29T00:00:00Z',
-    plugins: {
-      'tdk-core': {
-        version: '1.0.0',
-        components: { skills: {}, agents: {}, hooks: {}, commands: {} },
-        files,
-      },
-    },
+    plugins: manifestPlugins,
   }, null, 2), 'utf-8');
 }
 
@@ -77,4 +89,22 @@ export function writeBasicPlugin(consumer: FixtureConsumer): void {
     'lib/demo.cjs': sha256(lib),
     'scripts/demo.js': sha256(script),
   });
+}
+
+export function writeHookOnlyPlugin(consumer: FixtureConsumer, plugin: string, hookName = 'shared-gateway.cjs'): void {
+  const gateway = `#!/usr/bin/env node\nconsole.log("${plugin}");\n`;
+  const hooksJson = JSON.stringify({
+    hooks: {
+      UserPromptSubmit: [
+        {
+          matcher: '*',
+          hooks: [
+            { type: 'command', command: `node "\${CLAUDE_PLUGIN_ROOT}/hooks/${hookName}" ${plugin}` },
+          ],
+        },
+      ],
+    },
+  }, null, 2);
+  writePluginFile(consumer, `hooks/${hookName}`, gateway, plugin);
+  writePluginFile(consumer, 'hooks/hooks.json', hooksJson, plugin);
 }

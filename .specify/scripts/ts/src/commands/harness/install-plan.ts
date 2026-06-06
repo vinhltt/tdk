@@ -1,11 +1,12 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { sha256File } from './checksum';
+import { classifyFile } from './file-write-plan';
 import { buildHookMerge } from './hook-merge';
+import { planLegacyHooksJsonInspection } from './legacy-hooks-json-cleanup';
 import type {
   BuildPlanInput,
   Collision,
-  DiscoveredPluginFile,
   HarnessInstallManifest,
   InstallPlan,
   ManagedFile,
@@ -26,93 +27,8 @@ function targetPath(consumerRoot: string, targetRelativePath: string): string {
   return path.join(consumerRoot, targetRelativePath);
 }
 
-function isInside(parent: string, child: string): boolean {
-  const relative = path.relative(parent, child);
-  return relative === '' || (!!relative && !relative.startsWith('..') && !path.isAbsolute(relative));
-}
-
 function previousByTarget(previous: ManagedFile[]): Map<string, ManagedFile> {
   return new Map(previous.map((file) => [file.targetRelativePath, file]));
-}
-
-function classifyFile(params: {
-  consumerRoot: string;
-  file: DiscoveredPluginFile;
-  previous?: ManagedFile;
-}): { write?: PlannedWrite; collision?: Collision; prompt?: RequiredPrompt } {
-  const target = targetPath(params.consumerRoot, params.file.targetRelativePath);
-  const claudeRoot = path.join(params.consumerRoot, '.claude');
-  if (!isInside(claudeRoot, target)) {
-    return { collision: { kind: 'path-traversal', path: target, plugin: params.file.plugin, message: `Target escapes .claude: ${params.file.targetRelativePath}` } };
-  }
-
-  let stat: fs.Stats | undefined;
-  try {
-    stat = fs.lstatSync(target);
-  } catch {
-    stat = undefined;
-  }
-
-  if (stat?.isSymbolicLink()) {
-    return { collision: { kind: 'unsafe-symlink', path: target, plugin: params.file.plugin, message: `Refusing to write through symlink: ${params.file.targetRelativePath}` } };
-  }
-
-  if (stat?.isDirectory()) {
-    return { collision: { kind: 'directory-file-conflict', path: target, plugin: params.file.plugin, message: `Target is a directory: ${params.file.targetRelativePath}` } };
-  }
-
-  if (!stat) {
-    return {
-      write: {
-        plugin: params.file.plugin,
-        sourcePath: params.file.sourcePath,
-        sourceRelativePath: params.file.sourceRelativePath,
-        targetPath: target,
-        targetRelativePath: params.file.targetRelativePath,
-        sourceChecksum: params.file.sourceChecksum,
-        action: 'create',
-      },
-    };
-  }
-
-  if (!params.previous) {
-    const currentChecksum = sha256File(target);
-    return {
-      write: {
-        plugin: params.file.plugin,
-        sourcePath: params.file.sourcePath,
-        sourceRelativePath: params.file.sourceRelativePath,
-        targetPath: target,
-        targetRelativePath: params.file.targetRelativePath,
-        sourceChecksum: params.file.sourceChecksum,
-        expectedTargetChecksum: currentChecksum,
-        action: 'update',
-      },
-      collision: { kind: 'unmanaged-target-exists', path: target, plugin: params.file.plugin, message: `Unmanaged target already exists: ${params.file.targetRelativePath}` },
-      prompt: { type: 'unmanaged-target-overwrite', path: target, targetRelativePath: params.file.targetRelativePath },
-    };
-  }
-
-  const currentChecksum = sha256File(target);
-  if (currentChecksum !== params.previous.installedChecksum) {
-    return {
-      collision: { kind: 'managed-drift', path: target, plugin: params.file.plugin, message: `Managed target drifted: ${params.file.targetRelativePath}` },
-      prompt: { type: 'managed-drift-overwrite', path: target, targetRelativePath: params.file.targetRelativePath },
-    };
-  }
-
-  return {
-    write: {
-      plugin: params.file.plugin,
-      sourcePath: params.file.sourcePath,
-      sourceRelativePath: params.file.sourceRelativePath,
-      targetPath: target,
-      targetRelativePath: params.file.targetRelativePath,
-      sourceChecksum: params.file.sourceChecksum,
-      expectedTargetChecksum: params.previous.installedChecksum,
-      action: 'update',
-    },
-  };
 }
 
 function planRemovals(consumerRoot: string, previous: HarnessInstallManifest, desiredTargets: Set<string>): { removals: PlannedRemoval[]; collisions: Collision[] } {
@@ -159,6 +75,10 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
 
   const removalPlan = planRemovals(input.consumerRoot, previous, desiredTargets);
   collisions.push(...removalPlan.collisions);
+  const legacyHooksJsonPlan = planLegacyHooksJsonInspection(input, previousMap);
+  collisions.push(...legacyHooksJsonPlan.collisions);
+  prompts.push(...legacyHooksJsonPlan.prompts);
+  warnings.push(...legacyHooksJsonPlan.warnings);
 
   const pluginRoots = new Map(input.plugins.map((plugin) => [plugin.name, plugin.root]));
   const hookMerge = buildHookMerge({
@@ -200,5 +120,6 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
     warnings,
     nextManifest,
     nextSettings: hookMerge.nextSettings,
+    settingsChanged: hookMerge.settingsChanged,
   };
 }

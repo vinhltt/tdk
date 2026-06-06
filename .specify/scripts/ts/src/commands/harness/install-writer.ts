@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { sha256File } from './checksum';
 import { blockingCollisions, isPromptableCollision } from './collisions';
 import { manifestPathFor, saveHarnessManifest } from './manifest-store';
-import type { ApplyOptions, ApplyResult, InstallPlan, PlannedWrite, RequiredPrompt } from './types';
+import type { ApplyOptions, ApplyResult, InstallPlan, PlannedRemoval, PlannedWrite, RequiredPrompt } from './types';
 
 function writeFileAtomic(target: string, data: Buffer | string): void {
   fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -24,6 +24,10 @@ function backupFile(consumerRoot: string, prompt: RequiredPrompt): string {
   return backup;
 }
 
+function isCleanupPrompt(prompt: RequiredPrompt): boolean {
+  return prompt.type === 'unmanaged-stale-hooks-json-cleanup';
+}
+
 function assertCleanBeforeWrite(write: PlannedWrite): void {
   if (!fs.existsSync(write.targetPath)) return;
   const stat = fs.lstatSync(write.targetPath);
@@ -36,6 +40,26 @@ function assertCleanBeforeWrite(write: PlannedWrite): void {
   }
 }
 
+function assertCleanBeforePrompt(prompt: RequiredPrompt): void {
+  if (!prompt.expectedTargetChecksum || !fs.existsSync(prompt.path)) return;
+  const stat = fs.lstatSync(prompt.path);
+  if (!stat.isFile()) throw new Error(`Prompt target is not a file: ${prompt.targetRelativePath}`);
+  const currentChecksum = sha256File(prompt.path);
+  if (currentChecksum !== prompt.expectedTargetChecksum) {
+    throw new Error(`Prompt target changed after planning: ${prompt.targetRelativePath}`);
+  }
+}
+
+function assertCleanBeforeRemoval(removal: PlannedRemoval): void {
+  if (!fs.existsSync(removal.targetPath)) return;
+  const stat = fs.lstatSync(removal.targetPath);
+  if (!stat.isFile()) throw new Error(`Managed target is not a file: ${removal.targetRelativePath}`);
+  const currentChecksum = sha256File(removal.targetPath);
+  if (currentChecksum !== removal.previous.installedChecksum) {
+    throw new Error(`Managed target changed after planning: ${removal.targetRelativePath}`);
+  }
+}
+
 export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions): Promise<ApplyResult> {
   const blocking = options.yes || !options.interactive
     ? plan.collisions
@@ -45,14 +69,17 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
   }
 
   const backedUp: string[] = [];
+  const approvedCleanupPrompts: RequiredPrompt[] = [];
   if (plan.prompts.length > 0) {
     if (!options.interactive || options.yes) {
-      throw new Error('Overwriting existing files requires interactive confirmation; --yes cannot approve overwrites.');
+      throw new Error('Overwriting or cleaning existing files requires interactive confirmation; --yes cannot approve these changes.');
     }
     for (const prompt of plan.prompts) {
       const approved = await options.approveOverwrite?.(prompt);
       if (!approved) throw new Error(`Cancelled overwrite for ${prompt.targetRelativePath}`);
+      assertCleanBeforePrompt(prompt);
       backedUp.push(backupFile(plan.consumerRoot, prompt));
+      if (isCleanupPrompt(prompt)) approvedCleanupPrompts.push(prompt);
     }
   }
 
@@ -62,6 +89,7 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
   }
 
   for (const write of plan.writes) assertCleanBeforeWrite(write);
+  for (const removal of plan.removals) assertCleanBeforeRemoval(removal);
 
   const written: string[] = [];
   for (const write of plan.writes) {
@@ -73,18 +101,25 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
     written.push(write.targetRelativePath);
   }
 
+  const removed: string[] = [];
   let settingsWritten = false;
-  if (plan.nextSettings !== undefined && plan.hookMutations.length > 0) {
+  if (plan.nextSettings !== undefined && plan.settingsChanged) {
     const settingsPath = path.join(plan.consumerRoot, '.claude', 'settings.json');
     writeFileAtomic(settingsPath, `${JSON.stringify(plan.nextSettings, null, 2)}\n`);
     settingsWritten = true;
   }
 
-  const removed: string[] = [];
   for (const removal of plan.removals) {
     if (fs.existsSync(removal.targetPath)) {
       fs.unlinkSync(removal.targetPath);
       removed.push(removal.targetRelativePath);
+    }
+  }
+  for (const prompt of approvedCleanupPrompts) {
+    assertCleanBeforePrompt(prompt);
+    if (fs.existsSync(prompt.path)) {
+      fs.unlinkSync(prompt.path);
+      removed.push(prompt.targetRelativePath);
     }
   }
 

@@ -107,8 +107,11 @@ export async function confirmOverwrite(prompt: RequiredPrompt): Promise<boolean>
   try {
     const label = prompt.type === 'managed-drift-overwrite'
       ? 'drifted managed file'
-      : 'existing unmanaged file';
-    const answer = await rl.question(`Overwrite ${label} ${prompt.targetRelativePath}? Existing file will be backed up. Type yes to continue: `);
+      : prompt.type === 'unmanaged-stale-hooks-json-cleanup'
+        ? 'stale generated hook config'
+        : 'existing unmanaged file';
+    const action = prompt.type === 'unmanaged-stale-hooks-json-cleanup' ? 'Remove' : 'Overwrite';
+    const answer = await rl.question(`${action} ${label} ${prompt.targetRelativePath}? Existing file will be backed up. Type yes to continue: `);
     return answer.trim().toLowerCase() === 'yes';
   } finally {
     rl.close();

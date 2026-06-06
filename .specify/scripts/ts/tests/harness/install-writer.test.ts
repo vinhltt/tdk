@@ -53,6 +53,69 @@ describe('applyInstallPlan', () => {
     await expect(applyInstallPlan(secondPlan, { yes: true, interactive: false })).rejects.toThrow(/changed after planning/);
   });
 
+  test('backs up and repairs managed drift after interactive approval', async () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+    const firstPlan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+    });
+    await applyInstallPlan(firstPlan, { yes: true, interactive: false });
+
+    const target = path.join(consumer.root, '.claude', 'skills', 'demo', 'SKILL.md');
+    fs.writeFileSync(target, 'user changed managed file', 'utf-8');
+    const secondPlan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: loadHarnessManifest(consumer.root),
+      settings: JSON.parse(fs.readFileSync(path.join(consumer.root, '.claude', 'settings.json'), 'utf-8')),
+    });
+
+    expect(secondPlan.prompts.some((prompt) => prompt.type === 'managed-drift-overwrite')).toBe(true);
+    expect(secondPlan.writes.some((write) => write.targetRelativePath.endsWith(path.join('skills', 'demo', 'SKILL.md')))).toBe(true);
+    const result = await applyInstallPlan(secondPlan, {
+      yes: false,
+      interactive: true,
+      approveOverwrite: async () => true,
+    });
+
+    expect(result.backedUp).toHaveLength(1);
+    expect(fs.readFileSync(result.backedUp[0]!, 'utf-8')).toBe('user changed managed file');
+    expect(fs.readFileSync(target, 'utf-8')).toBe('# Skill\n');
+  });
+
+  test('revalidates managed removal checksum immediately before delete', async () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+    const firstPlan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+    });
+    await applyInstallPlan(firstPlan, { yes: true, interactive: false });
+
+    const target = path.join(consumer.root, '.claude', 'skills', 'demo', 'SKILL.md');
+    const removalPlan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: [],
+      plugins: [],
+      previousManifest: loadHarnessManifest(consumer.root),
+      settings: JSON.parse(fs.readFileSync(path.join(consumer.root, '.claude', 'settings.json'), 'utf-8')),
+    });
+    fs.writeFileSync(target, 'changed after removal plan', 'utf-8');
+
+    await expect(applyInstallPlan(removalPlan, { yes: true, interactive: false })).rejects.toThrow(/changed after planning/);
+    expect(fs.readFileSync(target, 'utf-8')).toBe('changed after removal plan');
+  });
+
   test('backs up and overwrites unmanaged target after interactive approval', async () => {
     const consumer = makeConsumer();
     writeBasicPlugin(consumer);
@@ -98,5 +161,90 @@ describe('applyInstallPlan', () => {
     });
 
     await expect(applyInstallPlan(plan, { yes: true, interactive: false })).rejects.toThrow(/Unmanaged target already exists/);
+  });
+
+  test('writes repaired settings when managed hook is missing but ownership is unchanged', async () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+    const firstPlan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+    });
+    const previous = {
+      ...emptyHarnessManifest(),
+      selectedPlugins: ['tdk-core'],
+      managedHooks: firstPlan.nextManifest.managedHooks,
+    };
+    const repairPlan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: previous,
+      settings: {},
+    });
+
+    expect(repairPlan.hookMutations).toEqual([]);
+    expect(repairPlan.settingsChanged).toBe(true);
+    const result = await applyInstallPlan(repairPlan, { yes: true, interactive: false });
+
+    expect(result.settingsWritten).toBe(true);
+    expect(fs.readFileSync(path.join(consumer.root, '.claude', 'settings.json'), 'utf-8')).toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+  });
+
+  test('backs up and removes unmanaged stale generated hooks json after approval', async () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const target = path.join(consumer.root, '.claude', 'hooks', 'hooks.json');
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.copyFileSync(path.join(consumer.pluginRoot, 'hooks', 'hooks.json'), target);
+
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+    });
+
+    const result = await applyInstallPlan(plan, {
+      yes: false,
+      interactive: true,
+      approveOverwrite: async () => true,
+    });
+
+    expect(result.backedUp).toHaveLength(1);
+    expect(result.removed).toContain(path.join('.claude', 'hooks', 'hooks.json'));
+    expect(fs.existsSync(target)).toBe(false);
+  });
+
+  test('revalidates stale generated hooks json before cleanup delete', async () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const target = path.join(consumer.root, '.claude', 'hooks', 'hooks.json');
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.copyFileSync(path.join(consumer.pluginRoot, 'hooks', 'hooks.json'), target);
+
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+    });
+    fs.writeFileSync(target, '{"hooks":{"Custom":[]}}\n', 'utf-8');
+
+    await expect(applyInstallPlan(plan, {
+      yes: false,
+      interactive: true,
+      approveOverwrite: async () => true,
+    })).rejects.toThrow(/changed after planning/);
+    expect(fs.existsSync(target)).toBe(true);
+    expect(fs.readFileSync(target, 'utf-8')).toBe('{"hooks":{"Custom":[]}}\n');
   });
 });

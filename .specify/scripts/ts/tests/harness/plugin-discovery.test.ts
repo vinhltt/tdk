@@ -13,7 +13,8 @@ describe('discoverPluginInventory', () => {
 
     expect(targets).toContain(path.join('.claude', 'skills', 'demo', 'SKILL.md'));
     expect(targets).toContain(path.join('.claude', 'agents', 'demo.md'));
-    expect(targets).toContain(path.join('.claude', 'hooks', 'hook-gateway.cjs'));
+    expect(targets).toContain(path.join('.claude', 'hooks', 'tdk-core', 'hook-gateway.cjs'));
+    expect(targets).not.toContain(path.join('.claude', 'hooks', 'hooks.json'));
     expect(targets).toContain(path.join('.claude', 'scripts', 'tdk-core', 'demo.js'));
   });
 });

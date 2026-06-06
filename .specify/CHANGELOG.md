@@ -10,6 +10,26 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.62.4] - 2026-06-06
+
+### Added
+- **[Scripts]** Harness install: new modules extracted from `install-plan.ts` and `hook-merge.ts` for cleaner separation of concerns
+  - `file-write-plan.ts` — `classifyFile` logic for file write planning (path-traversal, symlink, directory-conflict, unmanaged target, managed drift detection)
+  - `hook-path-rewrite.ts` — hook handler path rewriting for all hook types (`command`, `http`, `mcp_tool`, `prompt`, `agent`); validates and rewrites `${CLAUDE_PLUGIN_ROOT}/hooks/` and `${CLAUDE_PLUGIN_ROOT}/scripts/` references in any field
+  - `hook-reconcile.ts` — hook key management and add/remove operations (`managedHookKey`, `addHook`, `removeHook`, `actualHookKeys`)
+  - `legacy-hooks-json-cleanup.ts` — detects and plans removal of stale `hooks.json` files left over from old plugin installations under `.claude/hooks/`
+
+### Changed
+- **[Scripts]** `hook-merge.ts`: major refactor using new hook-path-rewrite and hook-reconcile modules
+  - All hook types (`command`, `http`, `mcp_tool`, `prompt`, `agent`) now supported in settings merge (previously only `command`)
+  - Hook identity uses normalized full handler JSON instead of command string only
+  - `buildHookMerge` now returns `settingsChanged: boolean` — callers can skip writes when settings are unchanged
+  - Plugin hooks processed in sorted order for deterministic output
+- **[Scripts]** `collisions.ts`: added `unmanaged-stale-hooks-json-cleanup` collision kind for legacy hooks.json detection
+- **[Scripts]** `install-plan.ts`: delegates file classification to `file-write-plan.ts`; integrates legacy hooks.json cleanup planning
+- **[Scripts]** Test suite expanded: multi-plugin manifest fixtures, non-command hook type coverage, path rewriting validation, install-writer scenarios
+- **[Docs]** `README.md`: clarified that hook scripts are installed under plugin-scoped paths (`.claude/hooks/<plugin>/`) and `hooks.json` files are source declarations only
+
 ## [1.62.3] - 2026-06-06
 
 ### Added

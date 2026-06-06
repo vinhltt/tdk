@@ -2,6 +2,8 @@ export type HarnessName = 'claude';
 
 export type InstallAction = 'create' | 'update';
 
+export type HookHandler = Record<string, unknown> & { type: string };
+
 export type CollisionKind =
   | 'unmanaged-target-exists'
   | 'managed-drift'
@@ -9,6 +11,7 @@ export type CollisionKind =
   | 'unsafe-symlink'
   | 'path-traversal'
   | 'unmanaged-duplicate-hook'
+  | 'unmanaged-stale-hooks-json'
   | 'invalid-manifest'
   | 'invalid-hook-config'
   | 'unknown-hook-command'
@@ -37,8 +40,9 @@ export interface ManagedHook {
   plugin: string;
   event: string;
   matcher: string;
-  type: 'command';
-  command: string;
+  type: string;
+  handler?: HookHandler;
+  command?: string;
 }
 
 export interface DiscoveredPluginFile {
@@ -89,9 +93,10 @@ export interface Collision {
 }
 
 export interface RequiredPrompt {
-  type: 'managed-drift-overwrite' | 'unmanaged-target-overwrite';
+  type: 'managed-drift-overwrite' | 'unmanaged-target-overwrite' | 'unmanaged-stale-hooks-json-cleanup';
   path: string;
   targetRelativePath: string;
+  expectedTargetChecksum?: string;
 }
 
 export interface PlannedHookMutation {
@@ -111,6 +116,7 @@ export interface InstallPlan {
   warnings: string[];
   nextManifest: HarnessInstallManifest;
   nextSettings?: unknown;
+  settingsChanged: boolean;
 }
 
 export interface BuildPlanInput {

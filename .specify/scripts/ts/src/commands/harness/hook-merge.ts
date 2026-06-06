@@ -2,21 +2,22 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { z } from 'zod';
 import { sha256Text } from './checksum';
-import type { Collision, ManagedHook, PlannedHookMutation } from './types';
+import { normalizeHookHandler, rewriteHookHandler } from './hook-path-rewrite';
+import { actualHookKeys, addHook, managedHookKey, removeHook, type HookEntry } from './hook-reconcile';
+import type { Collision, HookHandler, ManagedHook, PlannedHookMutation } from './types';
 
-const CommandHookSchema = z.object({
-  type: z.literal('command'),
-  command: z.string(),
-});
+const HookHandlerSchema = z.object({
+  type: z.string(),
+}).passthrough();
 
 const HookEntrySchema = z.object({
   matcher: z.string().default(''),
-  hooks: z.array(CommandHookSchema),
-});
+  hooks: z.array(HookHandlerSchema),
+}).passthrough();
 
 const SourceHooksSchema = z.object({
   hooks: z.record(z.array(HookEntrySchema)),
-});
+}).passthrough();
 
 const SettingsSchema = z.object({
   hooks: z.record(z.array(HookEntrySchema)).optional(),
@@ -29,19 +30,17 @@ function normalizeCommand(command: string): string {
 }
 
 export function rewriteHookCommand(command: string): string {
-  const match = command.match(/^node\s+"?\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/([A-Za-z0-9_.-]+\.cjs)"?\s+([A-Za-z0-9_.-]+)$/);
-  if (!match) {
-    throw new Error(`Unsupported hook command template: ${command}`);
-  }
-  return `cd "$CLAUDE_PROJECT_DIR" && node "$CLAUDE_PROJECT_DIR/.claude/hooks/${match[1]}" ${match[2]}`;
+  const handler = rewriteHookHandler('tdk-core', { type: 'command', command });
+  if (typeof handler.command !== 'string') throw new Error(`Unsupported hook command template: ${command}`);
+  return handler.command;
 }
 
-function hookId(plugin: string, event: string, matcher: string, command: string): string {
-  return `tdk:${plugin}:${event}:${matcher}:${sha256Text(normalizeCommand(command)).slice(0, 16)}`;
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function hookKey(event: string, matcher: string, command: string): string {
-  return `${event}\0${matcher}\0${normalizeCommand(command)}`;
+function hookId(plugin: string, event: string, matcher: string, handler: HookHandler): string {
+  return `tdk:${plugin}:${event}:${matcher}:${sha256Text(normalizeHookHandler(handler)).slice(0, 16)}`;
 }
 
 export function readSettings(consumerRoot: string): unknown {
@@ -56,7 +55,7 @@ export function buildHookMerge(params: {
   pluginRoots: Map<string, string>;
   previousHooks: ManagedHook[];
   settings: unknown;
-}): { nextSettings: unknown; managedHooks: ManagedHook[]; mutations: PlannedHookMutation[]; collisions: Collision[] } {
+}): { nextSettings: unknown; managedHooks: ManagedHook[]; mutations: PlannedHookMutation[]; collisions: Collision[]; settingsChanged: boolean } {
   const parsedSettings = SettingsSchema.safeParse(params.settings ?? {});
   if (!parsedSettings.success) {
     return {
@@ -64,17 +63,18 @@ export function buildHookMerge(params: {
       managedHooks: params.previousHooks,
       mutations: [],
       collisions: [{ kind: 'invalid-hook-config', message: 'Existing .claude/settings.json hooks shape is invalid.' }],
+      settingsChanged: false,
     };
   }
 
-  const settings: Settings = { ...parsedSettings.data, hooks: { ...(parsedSettings.data.hooks ?? {}) } };
-  const settingsHooks = settings.hooks!;
+  const beforeSettings = cloneJson(parsedSettings.data);
+  const settings = cloneJson(parsedSettings.data) as Settings;
+  const settingsHooks: Record<string, HookEntry[]> = settings.hooks ?? {};
   const previousIds = new Set(params.previousHooks.map((hook) => hook.id));
-  const selected = new Set(params.selectedPlugins);
   const desiredHooks: ManagedHook[] = [];
   const collisions: Collision[] = [];
 
-  for (const plugin of params.selectedPlugins) {
+  for (const plugin of [...params.selectedPlugins].sort()) {
     const pluginRoot = params.pluginRoots.get(plugin);
     if (!pluginRoot) continue;
     const hooksPath = path.join(pluginRoot, 'hooks', 'hooks.json');
@@ -90,14 +90,15 @@ export function buildHookMerge(params: {
       for (const entry of entries) {
         for (const hook of entry.hooks) {
           try {
-            const command = rewriteHookCommand(hook.command);
+            const handler = rewriteHookHandler(plugin, hook as HookHandler);
             desiredHooks.push({
-              id: hookId(plugin, event, entry.matcher, command),
+              id: hookId(plugin, event, entry.matcher, handler),
               plugin,
               event,
               matcher: entry.matcher,
-              type: 'command',
-              command,
+              type: handler.type,
+              handler,
+              command: typeof handler.command === 'string' ? normalizeCommand(handler.command) : undefined,
             });
           } catch (err) {
             collisions.push({ kind: 'unknown-hook-command', plugin, path: hooksPath, message: (err as Error).message });
@@ -107,27 +108,33 @@ export function buildHookMerge(params: {
     }
   }
 
-  const desiredByKey = new Map(desiredHooks.map((hook) => [hookKey(hook.event, hook.matcher, hook.command), hook]));
-  const existingManagedById = new Set(params.previousHooks.filter((hook) => selected.has(hook.plugin)).map((hook) => hook.id));
+  const desiredByKey = new Map<string, ManagedHook>();
+  for (const hook of desiredHooks) {
+    const key = managedHookKey(hook);
+    if (!desiredByKey.has(key)) desiredByKey.set(key, hook);
+  }
+  const desiredKeys = new Set(desiredByKey.keys());
+  const previousKeys = new Set(params.previousHooks.map(managedHookKey));
   const mutations: PlannedHookMutation[] = [];
+  const desiredIds = new Set(desiredHooks.map((hook) => hook.id));
 
   for (const hook of params.previousHooks) {
-    if (!selected.has(hook.plugin)) {
+    if (!desiredIds.has(hook.id)) {
       mutations.push({ action: 'remove', hook });
     }
   }
 
   for (const hook of desiredHooks) {
-    if (!existingManagedById.has(hook.id)) {
+    if (!previousIds.has(hook.id)) {
       mutations.push({ action: 'add', hook });
     }
   }
 
-  for (const [event, entries] of Object.entries(settings.hooks ?? {})) {
+  for (const [event, entries] of Object.entries(settingsHooks)) {
     for (const entry of entries) {
       for (const hook of entry.hooks) {
-        const key = hookKey(event, entry.matcher, hook.command);
-        if (desiredByKey.has(key) && !previousIds.has(desiredByKey.get(key)!.id)) {
+        const key = `${event}\0${entry.matcher}\0${normalizeHookHandler(hook as HookHandler)}`;
+        if (desiredKeys.has(key) && !previousKeys.has(key)) {
           collisions.push({
             kind: 'unmanaged-duplicate-hook',
             message: `Unmanaged duplicate hook exists for ${event}:${entry.matcher}.`,
@@ -138,40 +145,25 @@ export function buildHookMerge(params: {
   }
 
   if (collisions.length > 0) {
-    return { nextSettings: settings, managedHooks: params.previousHooks, mutations, collisions };
+    return { nextSettings: beforeSettings, managedHooks: params.previousHooks, mutations, collisions, settingsChanged: false };
   }
 
-  for (const mutation of mutations.filter((m) => m.action === 'remove')) {
-    const entries = settingsHooks[mutation.hook.event] ?? [];
-    settingsHooks[mutation.hook.event] = entries
-      .map((entry) => ({
-        ...entry,
-        hooks: entry.matcher === mutation.hook.matcher
-          ? entry.hooks.filter((hook) => normalizeCommand(hook.command) !== normalizeCommand(mutation.hook.command))
-          : entry.hooks,
-      }))
-      .filter((entry) => entry.hooks.length > 0);
-    if (settingsHooks[mutation.hook.event]?.length === 0) delete settingsHooks[mutation.hook.event];
+  for (const hook of params.previousHooks) {
+    if (!desiredKeys.has(managedHookKey(hook))) removeHook(settingsHooks, hook);
   }
 
-  for (const hook of desiredHooks) {
-    const entries = settingsHooks[hook.event] ?? [];
-    const existingEntry = entries.find((entry) => entry.matcher === hook.matcher);
-    if (existingEntry) {
-      if (!existingEntry.hooks.some((entryHook) => normalizeCommand(entryHook.command) === normalizeCommand(hook.command))) {
-        existingEntry.hooks.push({ type: 'command', command: hook.command });
-      }
-    } else {
-      entries.push({ matcher: hook.matcher, hooks: [{ type: 'command', command: hook.command }] });
+  let keysAfterRemoval = actualHookKeys(settingsHooks);
+  for (const hook of desiredByKey.values()) {
+    if (!keysAfterRemoval.has(managedHookKey(hook))) {
+      addHook(settingsHooks, hook);
+      keysAfterRemoval = actualHookKeys(settingsHooks);
     }
-    settingsHooks[hook.event] = entries;
   }
 
-  const sortedHooks: Record<string, unknown> = {};
-  for (const event of Object.keys(settingsHooks).sort()) {
-    sortedHooks[event] = (settingsHooks[event] ?? []).sort((a, b) => a.matcher.localeCompare(b.matcher));
-  }
-  settings.hooks = sortedHooks as Settings['hooks'];
+  if (Object.keys(settingsHooks).length > 0) settings.hooks = settingsHooks as Settings['hooks'];
+  else delete settings.hooks;
 
-  return { nextSettings: settings, managedHooks: desiredHooks, mutations, collisions };
+  const settingsChanged = JSON.stringify(beforeSettings) !== JSON.stringify(settings);
+
+  return { nextSettings: settings, managedHooks: desiredHooks, mutations, collisions, settingsChanged };
 }
