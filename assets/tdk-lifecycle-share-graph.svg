@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<defs>
+<marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>
+</marker>
+<marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" fill="#9333ea"/>
+</marker>
+<marker id="arrow-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" fill="#0284c7"/>
+</marker>
+<marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" fill="#d97706"/>
+</marker>
+</defs>
+<rect x="0" y="0" width="1600" height="1000" rx="0" fill="#ffffff" stroke="#ffffff" stroke-width="0"/>
+<text x="800.0" y="46" font-size="28" fill="#111827" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">TDK Lifecycle - Build, Learn, Compound</text>
+<text x="800.0" y="76" font-size="15" fill="#6b7280" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Spec-driven development with a closed retrospective loop; every feature teaches the next session</text>
+<rect x="70" y="110" width="1460" height="230" rx="18" fill="#f6f9ff" stroke="#bcd2f5" stroke-width="1" stroke-dasharray="6,5"/>
+<rect x="70" y="110" width="260" height="30" rx="8" fill="#2563eb" stroke="#2563eb" stroke-width="1.5"/>
+<text x="88" y="130" font-size="13" fill="#ffffff" text-anchor="start" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">1. BUILD - ship the feature</text>
+<rect x="105" y="155" width="285" height="138" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<circle cx="127" cy="178" r="13" fill="#2563eb"/>
+<text x="127" y="182" font-size="13" fill="#ffffff" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">1</text>
+<text x="247.5" y="189" font-size="17" fill="#111827" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">/tdk-specify</text>
+<text x="247.5" y="218" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Create feature spec</text>
+<text x="247.5" y="236" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">from natural language</text>
+<text x="247.5" y="273" font-size="10.8" fill="#6b7280" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">-&gt; spec.md + requirements</text>
+<rect x="455" y="155" width="285" height="138" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<circle cx="477" cy="178" r="13" fill="#2563eb"/>
+<text x="477" y="182" font-size="13" fill="#ffffff" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">2</text>
+<text x="597.5" y="189" font-size="17" fill="#111827" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">/tdk-plan</text>
+<text x="597.5" y="218" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Load context + routing</text>
+<text x="597.5" y="236" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">research + design phases</text>
+<text x="597.5" y="273" font-size="10.8" fill="#6b7280" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">-&gt; plan.md + phase files</text>
+<rect x="805" y="155" width="285" height="138" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<circle cx="827" cy="178" r="13" fill="#2563eb"/>
+<text x="827" y="182" font-size="13" fill="#ffffff" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">3</text>
+<text x="947.5" y="189" font-size="17" fill="#111827" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">/tdk-implement</text>
+<text x="947.5" y="218" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Execute phases</text>
+<text x="947.5" y="236" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">delegate skills in order</text>
+<text x="947.5" y="273" font-size="10.8" fill="#6b7280" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">-&gt; source + tests + memory</text>
+<rect x="1155" y="155" width="285" height="138" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<circle cx="1177" cy="178" r="13" fill="#2563eb"/>
+<text x="1177" y="182" font-size="13" fill="#ffffff" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">4</text>
+<text x="1297.5" y="189" font-size="17" fill="#111827" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">/tdk-status</text>
+<text x="1297.5" y="218" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Read-only progress</text>
+<text x="1297.5" y="236" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">then review point</text>
+<text x="1297.5" y="273" font-size="10.8" fill="#6b7280" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">-&gt; done / paused / ready</text>
+<line x1="390" y1="224" x2="450" y2="224" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
+<line x1="740" y1="224" x2="800" y2="224" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
+<line x1="1090" y1="224" x2="1150" y2="224" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
+<rect x="734" y="199" width="72" height="18" rx="4" fill="#ffffff" stroke="#ffffff" stroke-width="0" opacity="0.96"/>
+<text x="770.0" y="211" font-size="10" fill="#9333ea" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">delegates</text>
+<rect x="105" y="305" width="720" height="28" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+<text x="465" y="324" font-size="11.5" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Optional gates: /tdk-clarify, /tdk-checklist, /tdk-analyze, /tdk-ut-backfill-plan</text>
+<rect x="125" y="370" width="1350" height="74" rx="12" fill="#fff7e6" stroke="#d97706" stroke-width="2"/>
+<text x="800" y="393" font-size="13" fill="#92400e" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Skill Routing bridge</text>
+<text x="800" y="416" font-size="11.5" fill="#374151" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">plan-skill-routing.md maps domain to project skill; /tdk-plan injects Delegate Skills</text>
+<text x="800" y="433" font-size="11.5" fill="#374151" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">/tdk-implement executes approved skills in order; unknown domains block instead of guessing</text>
+<rect x="70" y="485" width="1460" height="240" rx="18" fill="#faf6ff" stroke="#dcc7f2" stroke-width="1" stroke-dasharray="6,5"/>
+<rect x="70" y="485" width="350" height="30" rx="8" fill="#9333ea" stroke="#9333ea" stroke-width="1.5"/>
+<text x="88" y="505" font-size="13" fill="#ffffff" text-anchor="start" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">2. LEARN - retrospective self-learning</text>
+<rect x="1155" y="540" width="285" height="138" rx="12" fill="#f3e8ff" stroke="#9333ea" stroke-width="1.5"/>
+<circle cx="1177" cy="563" r="13" fill="#9333ea"/>
+<text x="1177" y="567" font-size="13" fill="#ffffff" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">5</text>
+<text x="1297.5" y="574" font-size="17" fill="#111827" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">/tdk-retro-collect</text>
+<text x="1297.5" y="603" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Gather evidence only</text>
+<text x="1297.5" y="621" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">no fixes proposed</text>
+<text x="1297.5" y="658" font-size="10.8" fill="#6b7280" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">-&gt; retro-feedback.md</text>
+<rect x="805" y="540" width="285" height="138" rx="12" fill="#f3e8ff" stroke="#9333ea" stroke-width="1.5"/>
+<circle cx="827" cy="563" r="13" fill="#9333ea"/>
+<text x="827" y="567" font-size="13" fill="#ffffff" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">6</text>
+<text x="947.5" y="574" font-size="17" fill="#111827" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">/tdk-retro-propose</text>
+<text x="947.5" y="603" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Classify signals into</text>
+<text x="947.5" y="621" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">reviewable deltas</text>
+<text x="947.5" y="658" font-size="10.8" fill="#6b7280" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">-&gt; learning-delta.md (max 10)</text>
+<rect x="455" y="540" width="285" height="138" rx="12" fill="#f3e8ff" stroke="#9333ea" stroke-width="1.5"/>
+<circle cx="477" cy="563" r="13" fill="#9333ea"/>
+<text x="477" y="567" font-size="13" fill="#ffffff" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">7</text>
+<text x="597.5" y="574" font-size="17" fill="#111827" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">/tdk-retro-apply</text>
+<text x="597.5" y="603" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">User approves each delta:</text>
+<text x="597.5" y="621" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">approve / reject / skip</text>
+<text x="597.5" y="658" font-size="10.8" fill="#6b7280" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">-&gt; updated targets</text>
+<rect x="105" y="540" width="285" height="138" rx="12" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+<circle cx="127" cy="563" r="13" fill="#0284c7"/>
+<text x="127" y="567" font-size="10" fill="#ffffff" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">loop</text>
+<text x="247.5" y="574" font-size="17" fill="#111827" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Next TDK session</text>
+<text x="247.5" y="603" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Improved context + behavior</text>
+<text x="247.5" y="621" font-size="11.8" fill="#111827" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">learnings compound</text>
+<text x="247.5" y="658" font-size="10.8" fill="#6b7280" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">-&gt; better next feature</text>
+<line x1="1155" y1="609" x2="1095" y2="609" stroke="#9333ea" stroke-width="2" marker-end="url(#arrow-purple)"/>
+<line x1="805" y1="609" x2="745" y2="609" stroke="#9333ea" stroke-width="2" marker-end="url(#arrow-purple)"/>
+<line x1="455" y1="609" x2="395" y2="609" stroke="#9333ea" stroke-width="2" marker-end="url(#arrow-purple)"/>
+<path d="M 1440 224 L 1560 224 L 1560 609 L 1440 609" fill="none" stroke="#0284c7" stroke-width="2.6" marker-end="url(#arrow-cyan)" stroke-dasharray="8,5"/>
+<rect x="1492" y="404" width="96" height="44" rx="8" fill="#ffffff" stroke="#0284c7" stroke-width="1.5"/>
+<text x="1540" y="421" font-size="11" fill="#0369a1" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">review</text>
+<text x="1540" y="437" font-size="11" fill="#0369a1" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">point</text>
+<path d="M 105 609 L 40 609 L 40 224 L 100 224" fill="none" stroke="#0284c7" stroke-width="2.8" marker-end="url(#arrow-cyan)" stroke-dasharray="8,5"/>
+<text x="30" y="425" font-size="12" fill="#0369a1" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" transform="rotate(-90 30 425)">closed self-learning loop</text>
+<rect x="105" y="755" width="690" height="90" rx="10" fill="#f7f3fb" stroke="#9333ea" stroke-width="1.5"/>
+<text x="450" y="779" font-size="12.5" fill="#9333ea" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Signal sources</text>
+<text x="450" y="803" font-size="11" fill="#374151" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">reviews, phase drift, UT failures, routing gaps, memory sync</text>
+<text x="450" y="822" font-size="11" fill="#374151" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Langfuse optional, user feedback tagged as UF-###</text>
+<rect x="845" y="755" width="690" height="90" rx="10" fill="#f7f3fb" stroke="#9333ea" stroke-width="1.5"/>
+<text x="1190" y="779" font-size="12.5" fill="#9333ea" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Learning targets</text>
+<text x="1190" y="803" font-size="11" fill="#374151" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Technical: CLAUDE.md, rules, configs, test skills, routing</text>
+<text x="1190" y="822" font-size="11" fill="#374151" text-anchor="middle" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Memory: K1/K2 goes through /tdk-memory-update; unknown domain blocks</text>
+<rect x="410" y="870" width="780" height="44" rx="22" fill="#ecfdf5" stroke="#16a34a" stroke-width="1.5"/>
+<text x="800" y="897" font-size="12.8" fill="#065f46" text-anchor="middle" font-weight="bold" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Approved learnings feed the next /tdk-specify, so the system compounds over time.</text>
+<rect x="250" y="940" width="16" height="16" rx="3" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+<text x="274" y="953" font-size="11.5" fill="#111827" text-anchor="start" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Core command</text>
+<rect x="470" y="940" width="16" height="16" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+<text x="494" y="953" font-size="11.5" fill="#111827" text-anchor="start" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Optional gate / bridge</text>
+<rect x="730" y="940" width="16" height="16" rx="3" fill="#f3e8ff" stroke="#9333ea" stroke-width="1.5"/>
+<text x="754" y="953" font-size="11.5" fill="#111827" text-anchor="start" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Retro phase</text>
+<rect x="950" y="940" width="16" height="16" rx="3" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+<text x="974" y="953" font-size="11.5" fill="#111827" text-anchor="start" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Loop / next session</text>
+<rect x="1210" y="940" width="16" height="16" rx="3" fill="#ecfdf5" stroke="#16a34a" stroke-width="1.5"/>
+<text x="1234" y="953" font-size="11.5" fill="#111827" text-anchor="start" font-weight="normal" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Approved learning</text>
+</svg>

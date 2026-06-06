@@ -4,6 +4,16 @@
 
 Core philosophy: **SDD (Specification-Driven Development)** — every feature starts from a formal spec, flows through structured plans and tasks, and is verified against the spec before shipping.
 
+## Workflow Overview
+
+TDK works as a closed development loop:
+
+- **Build**: turn intent into specs, plans, implementation phases, tests, and status.
+- **Learn**: collect evidence after implementation, propose reviewable deltas, and apply only approved learnings.
+- **Compound**: approved learnings improve the next TDK session instead of staying as one-off feedback.
+
+![TDK lifecycle workflow](assets/tdk-lifecycle-share-graph.svg)
+
 ## What It Does
 
 TDK structures the full development loop:
