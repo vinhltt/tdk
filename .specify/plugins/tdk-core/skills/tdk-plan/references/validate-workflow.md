@@ -7,6 +7,8 @@ User-in-the-loop interview over an existing plan. Template-based question genera
 | Invocation | Behavior |
 |---|---|
 | `/tdk-plan <ID> --validate` | Subcommand short-circuit (Step 1.7). Skips Steps 2–4. Runs unconditionally. |
+| `/tdk-plan <ID> --validate <USER_CONTENT>` | Same short-circuit, with `USER_CONTENT` as validation focus. |
+| `/tdk-plan <ID> <USER_CONTENT> --validate` | Same short-circuit, with `USER_CONTENT` as validation focus. |
 | `/tdk-plan <ID> --hard` | After Step 4.5 (red-team), prompt user `Run validation interview? [y/N]`. Default N. |
 | `/tdk-plan <ID>` (default) | Same prompt as `--hard` (no auto-run). |
 | `/tdk-plan <ID> --fast` | Step 4.7 SKIPPED. |
@@ -51,14 +53,16 @@ Exit immediately. No file mutations, no counter bump.
 1. Validate TASK_ID, locate spec dir.
 2. Load `spec.md`, `plan.md`, and every `phases/phase-NN-*.md`.
 2b. **Skill Routing Inline Load**: if plan has `## Delegate Skills` sections, read `{docs.path}/custom-workflow/plan-skill-routing.md` into `SKILL_ROUTING` so validation interview can include skill-routing questions. Skip silently if file missing.
-3. Increment `validation_session: N` in plan.md frontmatter (via Edit tool — Session 2 #12 frontmatter mutations are framework-managed; do NOT add a custom bun writer).
-4. Reset `validation_cursor: 0`.
-5. **Write `## Validation Log` header IMMEDIATELY** with `(in-progress)` marker (S1.F14):
+3. If `USER_CONTENT` is non-empty, store it as validation focus and bias generated questions toward that focus. The focus narrows priority; severe drift still takes precedence.
+4. Increment `validation_session: N` in plan.md frontmatter (via Edit tool — Session 2 #12 frontmatter mutations are framework-managed; do NOT add a custom bun writer).
+5. Reset `validation_cursor: 0`.
+6. **Write `## Validation Log` header IMMEDIATELY** with `(in-progress)` marker (S1.F14):
    ```markdown
    ## Validation Log
 
    ### Session {N} — {ISO8601} (in-progress)
    **Mode trigger:** {hard | manual}
+   **Validation focus:** {USER_CONTENT or none}
    **Spec-plan drift:** pending
 
    #### Spec-Plan Drift Preflight
@@ -72,18 +76,17 @@ Exit immediately. No file mutations, no counter bump.
    |---|---|---|---|---|---|
    ```
    Without this, a Ctrl-C between counter bump and first answer would leave orphan phase markers with no `## Validation Log` to detect on next run.
-6. Run deterministic spec-plan drift preflight:
+7. Run deterministic spec-plan drift preflight:
    ```bash
-   cd "$CLAUDE_PROJECT_DIR/.specify/scripts/ts" &&
-   bun src/commands/util/spec-plan-drift.ts \
+   (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/spec-plan-drift.ts \
      --spec "{FEATURE_DIR}/spec.md" \
      --plan "{FEATURE_DIR}/plan.md" \
      --phases-root "{FEATURE_DIR}/phases" \
-     --json
+     --json)
    ```
    If the helper errors, STOP and report the exact stderr/stdout. Do not generate questions from incomplete drift data.
-7. Persist the full drift rows before the Q/A table. These rows are the source of truth for resume and final recommendation.
-8. Generate questions per `validate-question-framework.md` algorithm. No fixed total cap is applied; question flow is severity-driven and batched by 4.
+8. Persist the full drift rows before the Q/A table. These rows are the source of truth for resume and final recommendation.
+9. Generate questions per `validate-question-framework.md` algorithm. No fixed total cap is applied; question flow is severity-driven and batched by 4. Use `USER_CONTENT` as validation focus when choosing among otherwise equal question candidates.
 
 ## Interview Loop
 

@@ -10,6 +10,19 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.62.1] - 2026-06-06
+
+### Changed
+
+- **[tdk-plan]** `USER_CONTENT` support and portable script invocations
+  - `/tdk-plan <id> [content] [flags]` accepts freeform content after `TASK_ID`; routed as planning instruction (`default`/`--fast`/`--hard`), review focus (`--red-team`), or validation focus (`--validate`)
+  - Replaced fragile `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts` pattern with portable `PROJECT_DIR` resolver (`CLAUDE_PROJECT_DIR → GITHUB_WORKSPACE → git rev-parse`) across SKILL.md and all 6 reference files
+  - `modes.md`: added USER_CONTENT routing table, `<TASK_ID> <content>` dispatch examples, and STOP cases for `--foo=bar` / `--phase=02` patterns
+  - `red-team-workflow.md`: `USER_CONTENT` injected as review focus in every reviewer prompt
+  - `validate-workflow.md`: `USER_CONTENT` biases question selection; focus logged in Validation Log header
+- **[Scripts]** Added tdk-plan CWD-independent contract tests with `expectNoFragilePlanCommand` helper and USER_CONTENT mode-routing tests
+- **[Guides]** Updated `/tdk-plan` syntax from `<id>` to `<id> [content] [flags]` with per-mode routing note
+
 ## [1.62.0] - 2026-06-05
 
 ### Added

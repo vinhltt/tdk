@@ -20,8 +20,7 @@ D4 excludes the current TASK_ID being created (it doesn't exist on disk yet).
 ## Invocation Contract
 
 ```
-bun .specify/scripts/ts/src/commands/util/scan-cross-plan-deps.ts \
-  --current <TASK_ID> --json
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/scan-cross-plan-deps.ts --current <TASK_ID> --json)
 ```
 
 Output JSON shape:
@@ -97,9 +96,9 @@ Hash covers canonical fields only (`task_id, status, blocks, blockedBy, mode`). 
    - Capture `pre_state_dirty` flag for the conditional rollback below.
    - If non-empty → AskUserQuestion: `[Continue auto-fix]` / `[Abort, commit/stash first]`. On Abort → STOP.
    - **NEVER** run `git stash` — risk of `stash drop` data loss accepted only via the conditional rollback path below.
-6. Invoke `bun .../scan-cross-plan-deps.ts --current <ID> --fix-d1 <comma-separated-ids> --json`. Capture `fix_results`.
+6. Invoke `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/scan-cross-plan-deps.ts --current <ID> --fix-d1 <comma-separated-ids> --json)`. Capture `fix_results`.
 7. Per-fix schema gate: any `fix_results[i].ok === false` with `reason: "schema_version <2 — migrate manually"` → log to user; that plan stays untouched (S2.F10).
-8. **Verify** — invoke `bun .../scan-cross-plan-deps.ts --current <ID> --verify`.
+8. **Verify** — invoke `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/scan-cross-plan-deps.ts --current <ID> --verify)`.
    - Exit 0 → done. Append `## Cross-Plan Dependencies` to current plan.md.
    - Exit 1:
      - `pre_state_dirty == false` → safe rollback: `git -C projects/tdk checkout -- .` (only auto-fix touched files; no user WIP at risk). Log fail report.

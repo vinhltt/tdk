@@ -7,6 +7,8 @@ const PLAN_SKILL = resolve(
   '../../../plugins/tdk-core/skills/tdk-plan/SKILL.md',
 );
 const REFERENCES_DIR = resolve(dirname(PLAN_SKILL), 'references');
+const MODES_REFERENCE = resolve(REFERENCES_DIR, 'modes.md');
+const RED_TEAM_WORKFLOW = resolve(REFERENCES_DIR, 'red-team-workflow.md');
 const VALIDATE_WORKFLOW = resolve(REFERENCES_DIR, 'validate-workflow.md');
 const VALIDATE_QUESTION_FRAMEWORK = resolve(REFERENCES_DIR, 'validate-question-framework.md');
 const PLUGINS_DIR = resolve(import.meta.dir, '../../../plugins');
@@ -156,5 +158,37 @@ describe('tdk-plan reference contract', () => {
     expect(framework).toContain('spec-update-needed');
     expect(framework).toContain('revise');
     expect(framework).toContain('no-op');
+  });
+
+  it('accepts USER_CONTENT in every tdk-plan mode while keeping flag errors strict', () => {
+    const modes = read(MODES_REFERENCE);
+
+    expect(skill).toContain('USER_CONTENT');
+    expect(skill).toContain('first argument token');
+    expect(skill).toContain('remaining non-flag text');
+    expect(modes).toContain('USER_CONTENT');
+    expect(modes).toContain('<TASK_ID> <content>');
+    expect(modes).toContain('<TASK_ID> --validate <content>');
+    expect(modes).toContain('<TASK_ID> <content> --red-team');
+    expect(modes).toContain('default, `--fast`, `--hard`');
+    expect(modes).toContain('unknown flag --foo');
+    expect(modes).toContain('unknown flag --foo=bar');
+    expect(modes).toContain('unknown flag --phase=02');
+    expect(modes).toContain('known mode flags must appear after TASK_ID');
+    expect(modes).toContain('--fast and --hard are mutually exclusive');
+  });
+
+  it('routes USER_CONTENT as planning, red-team, or validation focus text', () => {
+    const modes = read(MODES_REFERENCE);
+    const redTeamWorkflow = read(RED_TEAM_WORKFLOW);
+    const validateWorkflow = read(VALIDATE_WORKFLOW);
+
+    expect(modes).toContain('planning instruction');
+    expect(modes).toContain('red-team focus');
+    expect(modes).toContain('validation focus');
+    expect(redTeamWorkflow).toContain('USER_CONTENT');
+    expect(redTeamWorkflow).toContain('review focus');
+    expect(validateWorkflow).toContain('USER_CONTENT');
+    expect(validateWorkflow).toContain('validation focus');
   });
 });

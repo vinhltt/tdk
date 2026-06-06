@@ -5,14 +5,23 @@ Single source of truth for `/tdk-plan` flag dispatch. SKILL.md only routes; this
 ## Grammar
 
 ```
-/tdk-plan <TASK_ID> [--fast | --hard | --red-team | --validate]
+/tdk-plan <TASK_ID> [USER_CONTENT...] [--fast | --hard | --red-team | --validate] [USER_CONTENT...]
 ```
 
-- `<TASK_ID>` — first positional, mandatory. Regex: `^([a-zA-Z]+/)?([a-zA-Z]+)-([0-9]+)$`.
-- Space separator between TASK_ID and any flag.
+- `<TASK_ID>` — first argument token, mandatory. Regex: `^([a-zA-Z]+/)?([a-zA-Z]+)-([0-9]+)$`.
+- `USER_CONTENT` — optional freeform text after `<TASK_ID>`. Preserve order after removing known flags.
+- Known mode flags may appear anywhere after `<TASK_ID>`.
 - Action flags are **mutually exclusive**. Multiple → STOP with error.
-- Tokens that match `--[a-z-]+` but aren't whitelisted → STOP with error.
+- Any token beginning with `--` that is not an exact whitelisted mode flag → STOP with error.
 - No `--auto` flag. No auto-detection. No-flag invocation = default full flow.
+
+## USER_CONTENT Routing
+
+| Mode | Routing |
+|---|---|
+| default, `--fast`, `--hard` | Treat `USER_CONTENT` as planning instruction for Step 2/3 and append/update intent. |
+| `--red-team` | Treat `USER_CONTENT` as red-team focus for reviewer prompts. |
+| `--validate` | Treat `USER_CONTENT` as validation focus for question generation. |
 
 ## Per-Mode Matrix
 
@@ -52,13 +61,22 @@ Single source of truth for `/tdk-plan` flag dispatch. SKILL.md only routes; this
 | Input | Result |
 |---|---|
 | `<TASK_ID>` | dispatch default |
+| `<TASK_ID> <content>` | dispatch default with `USER_CONTENT` as planning instruction |
 | `<TASK_ID> --fast` | dispatch fast |
+| `<TASK_ID> --fast <content>` | dispatch fast with `USER_CONTENT` as planning instruction |
 | `<TASK_ID> --hard` | dispatch hard |
+| `<TASK_ID> <content> --hard` | dispatch hard with `USER_CONTENT` as planning instruction |
 | `<TASK_ID> --red-team` | dispatch red-team subcommand |
+| `<TASK_ID> <content> --red-team` | dispatch red-team subcommand with `USER_CONTENT` as red-team focus |
 | `<TASK_ID> --validate` | dispatch validate subcommand |
+| `<TASK_ID> --validate <content>` | dispatch validate subcommand with `USER_CONTENT` as validation focus |
 | `<TASK_ID> --fast --hard` | STOP — `Error: --fast and --hard are mutually exclusive.` |
 | `<TASK_ID> --foo` | STOP — `Error: unknown flag --foo. Allowed: --fast, --hard, --red-team, --validate.` |
-| `<TASK_ID> --fast extra` | STOP — `Error: unexpected positional argument after flag.` |
+| `<TASK_ID> --foo=bar` | STOP — `Error: unknown flag --foo=bar. Allowed: --fast, --hard, --red-team, --validate.` |
+| `<TASK_ID> --phase=02` | STOP — `Error: unknown flag --phase=02. Allowed: --fast, --hard, --red-team, --validate.` |
+| `<TASK_ID> --fast=true` | STOP — `Error: unknown flag --fast=true. Allowed: --fast, --hard, --red-team, --validate.` |
+| `<TASK_ID> --fast --foo <content>` | STOP — `Error: unknown flag --foo. Allowed: --fast, --hard, --red-team, --validate.` |
+| `<content> <TASK_ID>` | STOP — `Error: TASK_ID must be the first argument; known mode flags must appear after TASK_ID.` |
 
 ## Banner Output
 

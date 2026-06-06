@@ -87,8 +87,8 @@ Status vocabulary: `todo`, `in_progress`, `done`, `skipped`, `blocked`, `cancell
 
 Update phase status with:
 
-1. `bun src/commands/util/update-phase-frontmatter-status.ts`
-2. `bun src/commands/util/update-phase-status.ts`
+1. `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" {status})`
+2. `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {phaseNumber} {status})`
 
 ## Phase File Conventions
 

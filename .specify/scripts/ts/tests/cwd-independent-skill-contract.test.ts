@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const IMPLEMENT_SKILL = resolve(
@@ -11,6 +11,20 @@ const STATUS_SKILL = resolve(
   import.meta.dir,
   '../../../plugins/tdk-core/skills/tdk-status/SKILL.md',
 );
+
+const PLAN_SKILL = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-core/skills/tdk-plan/SKILL.md',
+);
+
+const PLAN_REFERENCES_DIR = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-core/skills/tdk-plan/references',
+);
+
+const PLAN_REFERENCES = readdirSync(PLAN_REFERENCES_DIR)
+  .filter((file) => file.endsWith('.md'))
+  .map((file) => resolve(PLAN_REFERENCES_DIR, file));
 
 const LOAD_PROJECT_CONTEXT_SKILL = resolve(
   import.meta.dir,
@@ -48,9 +62,18 @@ function expectSafeScriptCommand(skillText: string, command: string): void {
   expect(skillText).toContain(`(cd "$PROJECT_DIR/.specify/scripts/ts" && bun ${command})`);
 }
 
+function expectNoFragilePlanCommand(skillText: string): void {
+  expect(skillText).not.toContain('cd .specify/scripts/ts');
+  expect(skillText).not.toContain('cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts');
+  expect(skillText).not.toContain('cd "$CLAUDE_PROJECT_DIR/.specify/scripts/ts"');
+  expect(skillText).not.toContain('bun .specify/scripts/ts/src/commands/');
+}
+
 describe('cwd-independent skill command contract', () => {
   const implementSkill = read(IMPLEMENT_SKILL);
   const statusSkill = read(STATUS_SKILL);
+  const planSkill = read(PLAN_SKILL);
+  const planReferenceText = PLAN_REFERENCES.map((path) => read(path)).join('\n');
   const loadProjectContextSkill = read(LOAD_PROJECT_CONTEXT_SKILL);
   const retroCollectSkill = read(RETRO_COLLECT_SKILL);
   const retroProposeSkill = read(RETRO_PROPOSE_SKILL);
@@ -91,6 +114,32 @@ describe('cwd-independent skill command contract', () => {
 
     expectSafeScriptCommand(statusSkill, 'src/commands/feature/status.ts <feature-id>');
     expectSafeScriptCommand(loadProjectContextSkill, 'src/commands/detect-config.ts');
+  });
+
+  it('tdk-plan uses the same portable script command contract', () => {
+    const allPlanText = `${planSkill}\n${planReferenceText}`;
+
+    expectPortableRootResolver(planSkill);
+    expectSafeScriptCommand(
+      planSkill,
+      'src/commands/util/scan-cross-plan-deps.ts --current <TASK_ID> --json',
+    );
+    expectSafeScriptCommand(planSkill, 'src/commands/util/setup-plan.ts {task_id} --json');
+    expectSafeScriptCommand(planReferenceText, 'src/commands/util/setup-plan.ts {task_id} --force --json');
+    expectSafeScriptCommand(planReferenceText, 'src/commands/util/plan-prose-validator.ts <plan-md-path> --json');
+    expectSafeScriptCommand(planReferenceText, 'src/commands/util/plan-status-validator.ts <plan-md-path> --json');
+    expect(planReferenceText).toContain(
+      '(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/spec-plan-drift.ts',
+    );
+    expectSafeScriptCommand(
+      planReferenceText,
+      'src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" {status}',
+    );
+    expectSafeScriptCommand(
+      planReferenceText,
+      'src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {phaseNumber} {status}',
+    );
+    expectNoFragilePlanCommand(allPlanText);
   });
 
   it('retro skills use the same portable script command contract', () => {

@@ -43,7 +43,7 @@ Use **AskUserQuestion** tool:
 
 **Scope lock:** rewrite targets `plan.md` + `phases/phase-NN-*.md` files **ONLY**. Do NOT touch `research/`, `data-model.md`, `contracts/`, or any other files.
 
-**On proceed:** re-run `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/setup-plan.ts {task_id} --force --json` from repo root, then continue to Step 2 with **REGENERATE mode** (fresh template).
+**On proceed:** re-run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/setup-plan.ts {task_id} --force --json)`, then continue to Step 2 with **REGENERATE mode** (fresh template).
 
 ## Option (b) Append Phase
 
@@ -76,7 +76,7 @@ Use **AskUserQuestion** tool:
 
    **PROHIBITED:** Do NOT add any prose, narrative, or description anywhere in `plan.md`. All phase context belongs exclusively in the phase file's `## Overview` section. Step 8 validator will reject violations and restore the snapshot.
 8. **Validate no prose injected** — run:
-   `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/plan-prose-validator.ts <plan-md-path> --json`
+   `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/plan-prose-validator.ts <plan-md-path> --json)`
    Parse JSON output.
    - If `ok === false`:
      - Restore `plan.md` from the Step 7 snapshot (write `planMdBefore` back to disk).
@@ -85,7 +85,7 @@ Use **AskUserQuestion** tool:
      - **ABORT** the append.
    - If `ok === true`: continue to Step 8b.
 8b. **Validate status vocabulary** — run:
-   `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/plan-status-validator.ts <plan-md-path> --json`
+   `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/plan-status-validator.ts <plan-md-path> --json)`
    Parse JSON output.
    - If `ok === false`:
      - Report parser errors and invalid statuses to user (`phaseNumber`, line number, raw value, valid options).

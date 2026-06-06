@@ -144,7 +144,7 @@ Each command reads the output of the previous one, building a chain of artifacts
 | 2 | `/tdk-specify <id> <desc> --fast` | Quick specification (skips brainstorm, fewer tokens) |
 | 3 | `/tdk-clarify <id>` | Ask up to 5 targeted questions to fill spec gaps |
 | 4 | `/tdk-ba-requirement <id>` | Generate BA requirement document for stakeholder approval |
-| 5 | `/tdk-plan <id>` | Generate implementation plan with design artifacts |
+| 5 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
 | 6 | `/tdk-api-design <id>` | Generate detailed API design (Scenario A/B) with DB schema for approval |
 | 10 | `/tdk-analyze <id>` | Cross-artifact consistency and quality analysis |
 | 11 | `/tdk-status <id>` | Show workflow progress (read-only, any time) |
@@ -260,11 +260,13 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | specify (fast) | `/tdk-specify <id> <desc> --fast` | `--fast` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
 | ba-requirement | `/tdk-ba-requirement <id>` | `--figma-pc`, `--figma-sp`, `--output` | `spec.md` | `ba-requirement.md` | clarify |
-| plan | `/tdk-plan <id>` | — | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | ba-requirement |
+| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--red-team`, `--validate` | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | ba-requirement |
 | api-design | `/tdk-api-design <id>` | `--scenario A|B` | `spec.md`, `research/` | `api_design.md` (incl. DB schema) | plan |
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
 | analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report (no file created) | specify |
+
+`/tdk-plan` accepts freeform content after `<id>` in every mode. Default, `--fast`, and `--hard` treat content as planning instruction; `--red-team` treats it as review focus; `--validate` treats it as validation focus. Known mode flags can appear after `<id>` before or after the content.
 
 ### UT Commands
 

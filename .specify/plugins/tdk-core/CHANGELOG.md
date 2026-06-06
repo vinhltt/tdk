@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.9] - 2026-06-06
+
+### Changed
+- tdk-plan: USER_CONTENT support - accepts freeform content after TASK_ID, routed as planning instruction (default/fast/hard), review focus (--red-team), or validation focus (--validate)
+- tdk-plan: replaced fragile cd $CLAUDE_PROJECT_DIR pattern with portable PROJECT_DIR resolver across SKILL.md and all 6 reference files
+- tdk-plan modes.md: added USER_CONTENT routing table, <TASK_ID> <content> dispatch examples, STOP cases for unknown flags with = patterns
+
 ## [3.4.8] - 2026-06-05
 
 ### Added

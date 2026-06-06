@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "3.4.7"
+  version: "3.4.9"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -82,7 +82,27 @@ flowchart TD
 
 ### Step 0 — Parse Arguments & Validate Task ID
 **Inline.** <!-- safety-critical: deterministic split before any script invocation -->
-Split `$ARGUMENTS` into `TASK_ID` (first positional) and `FLAGS` (remaining `--[a-z-]+` tokens). Reject anything else with STOP. Allowed flags: `--fast | --hard | --red-team | --validate` — mutually exclusive. Multiple flags or unknown flag → STOP with explicit error (see `references/modes.md`). Then invoke `tdk-validate-task-id` with `TASK_ID` and host skill name `/tdk-plan`. If STOP → halt. Store: `TASK_ID`, `TASK_ID_SOURCE`, `FLAGS`.
+Split `$ARGUMENTS` into `TASK_ID`, `FLAGS`, and `USER_CONTENT`.
+
+- `TASK_ID`: first argument token. It must be a valid task ID. Validate only this cleaned token with `tdk-validate-task-id` and host skill name `/tdk-plan`.
+- `FLAGS`: known mode flags `--fast | --hard | --red-team | --validate`, allowed anywhere after `TASK_ID`.
+- `USER_CONTENT`: remaining non-flag text after `TASK_ID`, preserving order. Empty string if no content was supplied.
+
+Reject with STOP if the first argument token is missing or invalid, a known mode flag appears before `TASK_ID`, any token beginning with `--` is not an exact whitelisted mode flag, or multiple mode flags are present. Multiple flags or unknown flag → STOP with explicit error (see `references/modes.md`). If `tdk-validate-task-id` STOPs → halt. Store: `TASK_ID`, `TASK_ID_SOURCE`, `FLAGS`, `USER_CONTENT`.
+
+### Script Command Contract
+**Inline.** <!-- script invocation contract -->
+Before any direct Bun script command in this skill or its references, resolve project root portably:
+
+```bash
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+if [ -z "$PROJECT_DIR" ]; then
+  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE." >&2
+  exit 1
+fi
+```
+
+Invoke scripts from the resolved root with `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/...)`. If the command exits non-zero, follow the critical error handling rule above.
 
 ### Step 0.1 — Load Project Context
 **Inline.** <!-- script invocation -->
@@ -102,11 +122,11 @@ Skip if `--fast`, spec.md `$ARGUMENTS` <20 words, "just plan / quick / already d
 
 ### Step 0.deps — Cross-Plan Dependencies Scan
 Load: `references/cross-plan-deps.md`
-Skip if `--fast` in `FLAGS` (Step 1.7 hasn't resolved `MODE` yet at this point in the flow). Otherwise invoke `bun .specify/scripts/ts/src/commands/util/scan-cross-plan-deps.ts --current <TASK_ID> --json`, parse findings, optionally auto-fix D1 bidirectional gaps via AskUserQuestion + dirty-tree gate (Validation S3 D12). Advisory only — never STOPs plan creation.
+Skip if `--fast` in `FLAGS` (Step 1.7 hasn't resolved `MODE` yet at this point in the flow). Otherwise invoke `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/scan-cross-plan-deps.ts --current <TASK_ID> --json)`, parse findings, optionally auto-fix D1 bidirectional gaps via AskUserQuestion + dirty-tree gate (Validation S3 D12). Advisory only — never STOPs plan creation.
 
 ### Step 1 — Setup
 **Inline.** <!-- safety-critical script invocation -->
-Run `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/setup-plan.ts {task_id} --json` from repo root. Parse JSON for `taskId`, `featureSpec`, `implPlan`, `featureDir`, `hasGit`, **`planExists`**.
+Run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/setup-plan.ts {task_id} --json)`. Parse JSON for `taskId`, `featureSpec`, `implPlan`, `featureDir`, `hasGit`, **`planExists`**.
 
 ### Step 1.5 — Handle Existing Plan
 Load: `references/handle-existing-plan.md`
@@ -114,7 +134,7 @@ Load: `references/handle-existing-plan.md`
 
 ### Step 1.7 — Mode Detection
 Load: `references/modes.md`
-Resolve `MODE` from `FLAGS`: `fast` | `hard` | `red-team` | `validate` | `default` (no flag). Conflict / unknown → already STOPped at Step 0. `--red-team` / `--validate` short-circuit to Phase 06 / 07 over the existing plan and skip Steps 2–4. Other modes continue to Step 2.
+Resolve `MODE` from `FLAGS`: `fast` | `hard` | `red-team` | `validate` | `default` (no flag). Conflict / unknown → already STOPped at Step 0. `--red-team` / `--validate` short-circuit to Phase 06 / 07 over the existing plan and skip Steps 2–4, using `USER_CONTENT` as focus text when non-empty. Other modes continue to Step 2 and use `USER_CONTENT` as planning instruction when non-empty.
 
 ### Step 2 — Load Context
 Load: `references/gates.md`
@@ -145,11 +165,11 @@ Command ends after Phase 1 design. Report: branch, `implPlan` path, generated ar
 
 ### Step 4.5 — Red Team Review
 Load: `references/red-team-workflow.md`
-Skip if `MODE in {default, fast}` AND `--red-team` not set. Otherwise spawn the 3 hostile personas (skeptic + security + reliability) in parallel, adjudicate via markdown-table + free-text reply, apply accepted findings as session-prefixed markers, append `## Red Team Review` to `plan.md`. Bumps `red_team_session: N`.
+Skip if `MODE in {default, fast}` AND `--red-team` not set. Otherwise spawn the 3 hostile personas (skeptic + security + reliability) in parallel, adjudicate via markdown-table + free-text reply, apply accepted findings as session-prefixed markers, append `## Red Team Review` to `plan.md`. Use `USER_CONTENT` as reviewer focus when non-empty. Bumps `red_team_session: N`.
 
 ### Step 4.7 — Validation Interview
 Load: `references/validate-workflow.md`
-Skip if `MODE == "fast"`. Otherwise: orphan-detect any prior `(in-progress)` session (Resume / Discard / Cancel via AskUserQuestion + trust-ask). On fresh run, prompt user `Run validation interview? [y/N]` (auto-yes on `--validate` action). Generate 3–8 questions via template framework, batch in groups of 4, write `## Validation Log` with `(in-progress) → (completed | partial)` marker + `validation_cursor` resume state. Bumps `validation_session: N`.
+Skip if `MODE == "fast"`. Otherwise: orphan-detect any prior `(in-progress)` session (Resume / Discard / Cancel via AskUserQuestion + trust-ask). On fresh run, prompt user `Run validation interview? [y/N]` (auto-yes on `--validate` action). Generate 3–8 questions via template framework, biasing toward `USER_CONTENT` as validation focus when non-empty, batch in groups of 4, write `## Validation Log` with `(in-progress) → (completed | partial)` marker + `validation_cursor` resume state. Bumps `validation_session: N`.
 
 ## Required Reference Load Contract
 
