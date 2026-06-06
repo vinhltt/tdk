@@ -28,6 +28,7 @@ describe('plan-status-validator CLI', () => {
     expect(result.ok).toBe(true);
     expect(result.errors).toHaveLength(0);
     expect(result.invalidStatuses).toHaveLength(0);
+    expect(stdout).toBe(`${JSON.stringify(result)}\n`);
   });
 
   it('not-started status -> exit 1 + parser error and invalid status', async () => {
@@ -41,6 +42,7 @@ describe('plan-status-validator CLI', () => {
       raw: 'not-started',
     });
     expect(result.invalidStatuses[0].expected).toContain('todo');
+    expect(stdout).toBe(`${JSON.stringify(result)}\n`);
   });
 
   it('pending legacy alias -> exit 1 even though parser accepts it', async () => {
@@ -53,5 +55,6 @@ describe('plan-status-validator CLI', () => {
       phaseNumber: 1,
       raw: 'pending',
     });
+    expect(stdout).toBe(`${JSON.stringify(result)}\n`);
   });
 });

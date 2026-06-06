@@ -1,10 +1,10 @@
 // sync-modes.ts
 // Three sync mode implementations for sync-docs: from-sub, to-sub, all
-// JSON output shapes match bash/sync-docs.sh heredocs exactly (field order matters for Phase 4 snapshots)
+// JSON output shapes preserve bash/sync-docs.sh field order for compatibility.
 
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { parseConfig, type ConfigResult } from '../../../utils/index';
+import { parseConfig, writeAgentJson, type ConfigResult } from '../../../utils/index';
 import { syncFile, type SyncDirection } from './sync-file';
 import { walkFiles } from './walk-files';
 
@@ -69,14 +69,14 @@ export function syncFromSubWorkspace(subWorkspaceName: string, cfg: ConfigResult
   }
 
   // No DIRECTION field for from-sub-workspace (matches bash heredoc)
-  process.stdout.write(JSON.stringify({
+  writeAgentJson({
     SUCCESS: true,
     SUB_WORKSPACE: subWorkspaceName,
     SOURCE: sourceDir,
     TARGET: targetDir,
     FILES_SYNCED: files.length,
     DRY_RUN: opts.dryRun,
-  }, null, 2) + '\n');
+  });
 }
 
 /**
@@ -95,7 +95,7 @@ export function syncToSubWorkspace(subWorkspaceName: string, cfg: ConfigResult, 
     process.stderr.write(`No shared docs found for sub-workspace: ${subWorkspaceName}\n`);
     process.stderr.write(`Expected: ${sourceDir}\n`);
     // Source missing — emit JSON with MESSAGE (matches bash lines 249-260)
-    process.stdout.write(JSON.stringify({
+    writeAgentJson({
       SUCCESS: true,
       DIRECTION: 'to-sub-workspace',
       SUB_WORKSPACE: subWorkspaceName,
@@ -104,7 +104,7 @@ export function syncToSubWorkspace(subWorkspaceName: string, cfg: ConfigResult, 
       FILES_SYNCED: 0,
       MESSAGE: 'No shared docs found in parent',
       DRY_RUN: opts.dryRun,
-    }, null, 2) + '\n');
+    });
     return;
   }
 
@@ -118,7 +118,7 @@ export function syncToSubWorkspace(subWorkspaceName: string, cfg: ConfigResult, 
   }
 
   // With DIRECTION field (matches bash lines 273-283)
-  process.stdout.write(JSON.stringify({
+  writeAgentJson({
     SUCCESS: true,
     DIRECTION: 'to-sub-workspace',
     SUB_WORKSPACE: subWorkspaceName,
@@ -126,7 +126,7 @@ export function syncToSubWorkspace(subWorkspaceName: string, cfg: ConfigResult, 
     TARGET: targetDir,
     FILES_SYNCED: files.length,
     DRY_RUN: opts.dryRun,
-  }, null, 2) + '\n');
+  });
 }
 
 /**
@@ -137,12 +137,12 @@ export function syncAllSubWorkspaces(cfg: ConfigResult, opts: SyncOptions): void
   if (cfg.subWorkspaces.length === 0) {
     process.stderr.write('No sub-workspaces defined in workspace config\n');
     // No DRY_RUN field in no-subs shape — matches bash lines 293-300 exactly
-    process.stdout.write(JSON.stringify({
+    writeAgentJson({
       SUCCESS: true,
       DIRECTION: 'all',
       MESSAGE: 'No sub-workspaces defined',
       SUB_WORKSPACES_SYNCED: 0,
-    }, null, 2) + '\n');
+    });
     return;
   }
 
@@ -169,10 +169,10 @@ export function syncAllSubWorkspaces(cfg: ConfigResult, opts: SyncOptions): void
   }
 
   // Matches bash lines 347-354
-  process.stdout.write(JSON.stringify({
+  writeAgentJson({
     SUCCESS: true,
     DIRECTION: 'all',
     SUB_WORKSPACES_SYNCED: subWorkspacesSynced,
     DRY_RUN: opts.dryRun,
-  }, null, 2) + '\n');
+  });
 }

@@ -68,6 +68,12 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 Your role is to analyze user requirements, delegate tasks to appropriate sub-agents, and ensure cohesive delivery of features that meet specifications and architectural standards
 
+## TypeScript Agent Output
+
+For `projects/tdk/.specify/scripts/ts`, stdout is machine data. Agent-facing success payloads MUST use `writeAgentJson(payload)` from `src/utils/agent-output.ts`: compact one-line JSON with one trailing newline. Do not remove fields for token savings; only remove unnecessary spaces/newlines.
+
+Logs, progress, and normal errors go to stderr. Do not use `writeAgentJson()` for error payloads; only commands with an explicit JSON error contract may write compact JSON errors via `formatAgentJson()`.
+
 ## Hook Response Protocol
 
 ### Privacy Block Hook (`@@PRIVACY_PROMPT@@`)
@@ -111,4 +117,3 @@ When a tool call is blocked by the privacy-block hook, the output contains a JSO
 - When not to modularize: Markdown files, plain text files, bash scripts, configuration files, environment variables files, etc.
 
 **IMPORTANT:** *MUST READ* and *MUST COMPLY* all *INSTRUCTIONS* in project `./CLAUDE.md`, especially *WORKFLOWS* section is *CRITICALLY IMPORTANT*, this rule is *MANDATORY. NON-NEGOTIABLE. NO EXCEPTIONS. MUST REMEMBER AT ALL TIMES!!!*
-

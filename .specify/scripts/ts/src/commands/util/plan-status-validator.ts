@@ -2,6 +2,7 @@
 // Usage: bun src/commands/util/plan-status-validator.ts <plan-path> [--json]
 
 import { readFileSync } from 'node:fs';
+import { writeAgentJson } from '../../utils/index';
 import { parsePhasesTable, VALID_STATUSES } from './phases-table-parser';
 
 const args = process.argv.slice(2);
@@ -38,7 +39,7 @@ const output = {
 };
 
 if (jsonFlag) {
-  console.log(JSON.stringify(output, null, 2));
+  writeAgentJson(output);
 } else {
   for (const err of output.errors) {
     console.error(`error line ${err.line}: ${err.message}`);

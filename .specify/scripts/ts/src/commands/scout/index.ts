@@ -7,6 +7,7 @@ import { validateArgs, type ResolvedArgs } from './args-validator';
 import { resolveCachePaths, isTier1CacheValid } from './cache-resolver';
 import { runRepomix } from './repomix-runner';
 import { extractPack } from './extract';
+import { writeAgentJson } from '../../utils/index';
 
 export interface RunDeps {
   runRepomix?: typeof runRepomix;
@@ -82,7 +83,7 @@ export function createScoutCommand(): Command {
           forceRefresh: opts['forceRefresh'] as boolean | undefined,
         });
         const result = runScout(args);
-        process.stdout.write(`${JSON.stringify(result)}\n`);
+        writeAgentJson(result);
       } catch (err) {
         process.stderr.write(`[tdk-scout] error: ${(err as Error).message}\n`);
         process.exit(1);

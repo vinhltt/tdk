@@ -8,6 +8,7 @@
 
 import { readFileSync } from 'node:fs';
 import { parseAutoGenSections, spliceAutoGenSections } from './auto-gen-markers';
+import { writeAgentJson } from '../utils/index';
 
 function fail(msg: string): never {
   process.stderr.write(`auto-gen-markers-cli: ${msg}\n`);
@@ -28,7 +29,7 @@ function main(argv: string[]): void {
       startLine: s.startLine,
       endLine: s.endLine,
     }));
-    process.stdout.write(`${JSON.stringify(sections)}\n`);
+    writeAgentJson(sections);
     return;
   }
   if (cmd === 'splice') {
@@ -53,7 +54,7 @@ function main(argv: string[]): void {
       map.set(k, v as string);
     }
     const result = spliceAutoGenSections(content, map);
-    process.stdout.write(`${JSON.stringify(result)}\n`);
+    writeAgentJson(result);
     return;
   }
   fail(`unknown command "${cmd ?? ''}". Use: parse | splice`);

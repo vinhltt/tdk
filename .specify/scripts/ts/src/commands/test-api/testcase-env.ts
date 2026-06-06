@@ -3,6 +3,7 @@
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { writeAgentJson } from '../../utils/index';
 import { parseTestApiArgs, setupTestApiEnv, findFilesRecursive } from './test-api-shared-setup';
 
 try {
@@ -18,7 +19,7 @@ try {
 
   const testcaseFiles = findFilesRecursive(env.apiTestDir, /\.testcases\.md$/).slice(0, 20);
 
-  console.log(JSON.stringify({
+  writeAgentJson({
     WORKSPACE_ROOT: env.workspaceRoot,
     OUTPUT_ROOT: env.outputRoot,
     FEATURE_ID: env.featureId,
@@ -34,7 +35,7 @@ try {
     EXISTING_TESTCASES: testcaseFiles.join(','),
     FORCE_MODE: env.forceMode,
     CONFIG_FOUND: true,
-  }, null, 2));
+  });
 } catch (e) {
   process.stderr.write(`Error: ${(e as Error).message}\n`);
   process.exit(1);

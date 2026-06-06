@@ -12,6 +12,7 @@
 
 import * as fs from "node:fs";
 import { parseArgs } from "node:util";
+import { writeAgentJson } from "./agent-output";
 
 const { positionals, values } = parseArgs({
   args: Bun.argv.slice(2),
@@ -46,7 +47,11 @@ function setNestedValue(obj: Record<string, unknown>, keys: string[], value: str
 if (command === "get") {
   const val = getNestedValue(data, keys);
   if (val === undefined) { console.error(`Field "${dotPath}" not found`); process.exit(1); }
-  console.log(values.json ? JSON.stringify(val, null, 2) : String(val));
+  if (values.json) {
+    writeAgentJson(val);
+  } else {
+    console.log(String(val));
+  }
 } else if (command === "set") {
   if (newValue === undefined) { console.error("Missing value for set"); process.exit(1); }
   setNestedValue(data, keys, newValue);

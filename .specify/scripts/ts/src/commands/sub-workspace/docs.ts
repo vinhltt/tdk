@@ -5,7 +5,7 @@
 import { Command } from 'commander';
 import { existsSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { detectConfig } from '../../utils/index';
+import { detectConfig, writeAgentJson } from '../../utils/index';
 import {
   DocsError,
   EXPECTED_DOC_FILES,
@@ -184,7 +184,7 @@ export function createDocsCommand(): Command {
         all: opts['all'] as boolean | undefined,
         force: opts['force'] as boolean | undefined,
       });
-      process.stdout.write(`${JSON.stringify(envelope)}\n`);
+      writeAgentJson(envelope);
       if (!envelope.ok) process.exit(1);
     });
 }

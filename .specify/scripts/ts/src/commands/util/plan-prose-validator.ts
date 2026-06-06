@@ -11,6 +11,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { writeAgentJson } from '../../utils/index';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -158,7 +159,7 @@ function main(): void {
   const result = validatePlanProse(content);
 
   if (wantJson) {
-    process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+    writeAgentJson(result);
   } else {
     if (result.ok) {
       process.stdout.write('ok: no prose violations in guarded sections\n');

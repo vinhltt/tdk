@@ -13,6 +13,7 @@ import { seedVersionsFromChecksums } from './seed-versions';
 import { findProjectRoot } from './find-project-root';
 import { readComponentVersionFromSource } from './read-component-version';
 import { COMPONENT_TYPES } from './types';
+import { formatAgentJson, writeAgentJson } from '../../utils/index';
 import type { Manifest, ManifestEntry, PluginComparison, PluginComponents } from './types';
 
 // ---------------------------------------------------------------------------
@@ -150,7 +151,7 @@ function main(): void {
       (c) => c.new_files.length > 0 || c.changed_files.length > 0 || c.removed_files.length > 0,
     );
     if (hasDrift) {
-      process.stdout.write(opts.output === 'table' ? formatTable(comparisonResults) + '\n' : JSON.stringify(comparisonResults, null, 2) + '\n');
+      process.stdout.write(opts.output === 'table' ? formatTable(comparisonResults) + '\n' : formatAgentJson(comparisonResults));
       process.exit(1);
     } else {
       process.stderr.write('OK: manifest.json is up to date\n');
@@ -159,7 +160,11 @@ function main(): void {
   }
 
   // Default: output comparison results
-  process.stdout.write(opts.output === 'table' ? formatTable(comparisonResults) + '\n' : JSON.stringify(comparisonResults, null, 2) + '\n');
+  if (opts.output === 'table') {
+    process.stdout.write(`${formatTable(comparisonResults)}\n`);
+  } else {
+    writeAgentJson(comparisonResults);
+  }
 }
 
 main();

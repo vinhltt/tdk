@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { writeAgentJson } from '../../utils/index';
 import {
   alignPlanPhases,
   extractEntityTerms,
@@ -111,7 +112,11 @@ function main(): void {
       planMd: readRequired(planPath),
       phases: loadPhases(phasesRoot),
     });
-    console.log(json ? JSON.stringify(result, null, 2) : `${result.summary.total} spec-plan drift finding(s)`);
+    if (json) {
+      writeAgentJson(result);
+    } else {
+      console.log(`${result.summary.total} spec-plan drift finding(s)`);
+    }
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);

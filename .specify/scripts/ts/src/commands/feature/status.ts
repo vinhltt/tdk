@@ -7,7 +7,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { Command } from 'commander';
-import { loadFeatureEnv, getRepoRoot } from '../../utils/index';
+import { loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson } from '../../utils/index';
 import { parsePhasesTable, type PhaseRow } from '../util/phases-table-parser';
 
 // ---------------------------------------------------------------------------
@@ -175,7 +175,7 @@ export function parsePhasesStatus(planFile: string): PhasesStatus {
 
 function listFeatures(featuresDir: string): void {
   if (!existsSync(featuresDir)) {
-    console.log(JSON.stringify({ features: [] }, null, 2));
+    writeAgentJson({ features: [] });
     return;
   }
 
@@ -224,7 +224,7 @@ function listFeatures(featuresDir: string): void {
 
     features.push({ id, title, feature_status, total, done, percent });
   }
-  console.log(JSON.stringify({ features }, null, 2));
+  writeAgentJson({ features });
 }
 
 // ---------------------------------------------------------------------------
@@ -265,7 +265,7 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
   if (!existsSync(featureDir)) {
     const available: string[] = [];
     try { readdirSync(featuresDir, { withFileTypes: true }).filter(e => e.isDirectory()).forEach(e => available.push(e.name)); } catch { /* ignore */ }
-    console.log(JSON.stringify({ error: 'Feature not found', featureId: id, available }));
+    process.stdout.write(formatAgentJson({ error: 'Feature not found', featureId: id, available }));
     process.exit(1);
   }
 
@@ -399,7 +399,7 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
     output['phasesParseError'] = phasesParseError;
   }
 
-  console.log(JSON.stringify(output, null, 2));
+  writeAgentJson(output);
 }
 
 // ---------------------------------------------------------------------------

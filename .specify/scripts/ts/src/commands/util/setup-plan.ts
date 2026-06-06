@@ -4,7 +4,7 @@
 import { existsSync, mkdirSync, copyFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { loadFeatureEnv, getRepoRoot, getFeaturePaths } from '../../utils/index';
+import { loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson } from '../../utils/index';
 
 const program = new Command()
   .name('setup-plan')
@@ -53,14 +53,14 @@ const program = new Command()
     }
 
     if (opts.json) {
-      console.log(JSON.stringify({
+      writeAgentJson({
         taskId,
         featureSpec,
         implPlan,
         featureDir,
         hasGit,
         planExists,
-      }, null, 2));
+      });
     } else {
       console.log(`TASK_ID: ${taskId}`);
       console.log(`FEATURE_SPEC: ${featureSpec}`);

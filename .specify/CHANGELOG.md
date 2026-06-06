@@ -10,6 +10,24 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.62.2] - 2026-06-06
+
+### Added
+- **[Scripts]** `agent-output.ts` utility with `writeAgentJson`, `formatAgentJson`, `writeStderrLine` for standardized compact JSON stdout
+  - `src/utils/agent-output.ts` — core utility
+  - `tests/utils/agent-output.test.ts` — unit tests
+
+### Changed
+- **[Scripts]** Migrated all agent-facing CLI commands from `console.log(JSON.stringify(..., null, 2))` to `writeAgentJson()` for consistent compact single-line JSON output
+  - `commands/config/diff.ts`, `commands/config/index.ts`
+  - `commands/detect-config.ts`, `commands/feature/status.ts`, `commands/manifest/compute.ts`
+  - `commands/scout/index.ts`, `commands/sub-workspace/docs.ts`
+  - `commands/test-api/codegen-env.ts`, `plan-env.ts`, `testcase-env.ts`
+  - `commands/ut/backfill/auto.ts`, `impl.ts`, `plan.ts`
+  - `commands/util/check-prerequisites.ts`, `parse-phases-table.ts`, `plan-prose-validator.ts`, `plan-status-validator.ts`, `scan-cross-plan-deps.ts`, `setup-plan.ts`, `spec-plan-drift.ts`, `sync-docs-helpers/sync-modes.ts`
+  - `lib/auto-gen-markers-cli.ts`, `utils/index.ts`, `utils/json-field.ts`
+  - Tests updated with compact JSON format assertions
+
 ## [1.62.1] - 2026-06-06
 
 ### Changed

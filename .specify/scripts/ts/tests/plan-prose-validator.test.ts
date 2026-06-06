@@ -6,6 +6,9 @@
  */
 
 import { describe, it, expect } from 'bun:test';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   validatePlanProse,
   type ProseValidationResult,
@@ -263,5 +266,39 @@ describe('validatePlanProse — output shape', () => {
     const md = CLEAN_PLAN.replace(/\n/g, '\r\n');
     const result = validatePlanProse(md);
     expect(result.ok).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// describe: CLI JSON output
+// ---------------------------------------------------------------------------
+
+async function runCli(args: string[]): Promise<{ stdout: string; stderr: string; exitCode: number }> {
+  const cli = join(import.meta.dir, '../src/commands/util/plan-prose-validator.ts');
+  const proc = Bun.spawn(['bun', cli, ...args], { stdout: 'pipe', stderr: 'pipe' });
+  const [stdout, stderr] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+  ]);
+  const exitCode = await proc.exited;
+  return { stdout, stderr, exitCode };
+}
+
+describe('plan-prose-validator CLI', () => {
+  it('--json emits compact JSON', async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'tdk-plan-prose-'));
+    try {
+      const planPath = join(tempDir, 'plan.md');
+      writeFileSync(planPath, CLEAN_PLAN);
+
+      const { exitCode, stdout } = await runCli([planPath, '--json']);
+      const result = JSON.parse(stdout);
+
+      expect(exitCode).toBe(0);
+      expect(result.ok).toBe(true);
+      expect(stdout).toBe(`${JSON.stringify(result)}\n`);
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
   });
 });

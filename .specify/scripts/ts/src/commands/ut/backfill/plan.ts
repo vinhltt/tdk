@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot } from '../../../utils/index';
+import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson } from '../../../utils/index';
 import { handleCliError } from '../cli-error-handler';
 
 /** Create ut-plan command for CLI registration (group: tdk ut plan) */
@@ -26,7 +26,7 @@ export function createPlanCommand(): Command {
 
     const cliError = handleCliError(config, opts);
     if (cliError) {
-      console.log(JSON.stringify(cliError));
+      process.stdout.write(formatAgentJson(cliError));
       process.exit(1);
     }
 
@@ -81,7 +81,7 @@ export function createPlanCommand(): Command {
       output.testStrategy = config.testStrategy ?? '';
     }
 
-    console.log(JSON.stringify(output, null, 2));
+    writeAgentJson(output);
   });
 }
 

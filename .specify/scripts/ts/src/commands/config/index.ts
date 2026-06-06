@@ -4,7 +4,7 @@
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { Command } from 'commander';
-import { detectConfig } from '../../utils/index';
+import { detectConfig, writeAgentJson } from '../../utils/index';
 
 /** Recursively find all .md files with metadata */
 function scanMdFiles(dir: string, base: string = dir): { path: string; size: number; modified: number }[] {
@@ -69,7 +69,7 @@ export function createConfigIndexCommand(): Command {
         subWorkspaces: config.subWorkspaces,
       };
 
-      console.log(JSON.stringify(output, null, 2));
+      writeAgentJson(output);
     });
 }
 

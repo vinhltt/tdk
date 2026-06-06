@@ -6,7 +6,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { Command } from 'commander';
-import { loadFeatureEnv, getRepoRoot, getFeaturePaths } from '../../utils/index';
+import { loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson } from '../../utils/index';
 
 function checkTool(name: string): boolean {
   try {
@@ -69,7 +69,7 @@ const program = new Command()
     // Paths-only mode
     if (opts.pathsOnly) {
       if (opts.json) {
-        console.log(JSON.stringify({ taskId, repoRoot, featureDir, featureSpec, implPlan, tasks }, null, 2));
+        writeAgentJson({ taskId, repoRoot, featureDir, featureSpec, implPlan, tasks });
       } else {
         console.log(`TASK_ID: ${taskId}`);
         console.log(`REPO_ROOT: ${repoRoot}`);
@@ -119,7 +119,7 @@ const program = new Command()
     } catch { /* ignore */ }
 
     if (opts.json) {
-      console.log(JSON.stringify({ taskId, featureDir, availableDocs: docs }, null, 2));
+      writeAgentJson({ taskId, featureDir, availableDocs: docs });
     } else {
       console.log(`TASK_ID: ${taskId}`);
       console.log(`FEATURE_DIR: ${featureDir}`);

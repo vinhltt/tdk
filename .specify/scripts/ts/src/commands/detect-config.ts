@@ -8,6 +8,8 @@ import {
   parseConfig,
   loadFeatureEnv,
   readTestApiConfig,
+  formatAgentJson,
+  writeAgentJson,
 } from '../utils/index';
 
 /** Create detect-config command for CLI registration */
@@ -28,8 +30,11 @@ export function createDetectConfigCommand(): Command {
         featureEnv: loadFeatureEnv(configFile ?? undefined),
         testConfig: readTestApiConfig(config ?? undefined),
       };
-      console.log(JSON.stringify(output, null, 2));
-      if (result.error) process.exit(1);
+      if (result.error) {
+        process.stdout.write(formatAgentJson(output));
+        process.exit(1);
+      }
+      writeAgentJson(output);
     });
 }
 

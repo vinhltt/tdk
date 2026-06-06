@@ -2,6 +2,7 @@
 // Usage: bun src/commands/util/parse-phases-table.ts <plan-path> [--json]
 
 import { readFileSync } from 'node:fs';
+import { writeAgentJson } from '../../utils/index';
 import { parsePhasesTable } from './phases-table-parser';
 
 const args = process.argv.slice(2);
@@ -24,7 +25,7 @@ try {
 const result = parsePhasesTable(md);
 
 if (jsonFlag) {
-  console.log(JSON.stringify(result, null, 2));
+  writeAgentJson(result);
 } else {
   for (const row of result.phases) {
     const num = String(row.number).padStart(2, '0');

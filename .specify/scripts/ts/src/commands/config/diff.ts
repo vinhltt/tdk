@@ -6,7 +6,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { Command } from 'commander';
-import { detectConfig } from '../../utils/index';
+import { detectConfig, writeAgentJson } from '../../utils/index';
 
 // [RT2-3] Validate git ref format — allowlist only safe characters
 const GIT_REF_REGEX = /^[a-zA-Z0-9._/~^@{}\-]+$/;
@@ -129,7 +129,7 @@ export function createConfigDiffCommand(): Command {
       files,
     };
 
-    console.log(JSON.stringify(output, null, 2));
+    writeAgentJson(output);
   });
 }
 

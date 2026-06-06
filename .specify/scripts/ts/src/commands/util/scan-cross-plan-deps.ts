@@ -8,7 +8,7 @@
 import { readFileSync, writeFileSync, renameSync, existsSync, statSync, readdirSync, mkdirSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { Command } from 'commander';
-import { loadFeatureEnv, getRepoRoot } from '../../utils/index';
+import { loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson } from '../../utils/index';
 import { extractFrontmatter, type FrontmatterResult } from './parse-plan-frontmatter';
 import { detectAll, applyD1Fix, type PlanIndexEntry } from './cross-plan-deps-detectors';
 
@@ -144,9 +144,11 @@ function main(): void {
     findings,
     fix_results: fixResults,
   };
-  process.stdout.write(JSON.stringify(output, null, 2) + '\n');
-
-  if (opts.verify && findings.length > 0) process.exit(1);
+  if (opts.verify && findings.length > 0) {
+    process.stdout.write(formatAgentJson(output));
+    process.exit(1);
+  }
+  writeAgentJson(output);
 }
 
 main();

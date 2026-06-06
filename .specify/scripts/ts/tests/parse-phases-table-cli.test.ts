@@ -36,6 +36,7 @@ describe('parse-phases-table CLI', () => {
     expect(result.phases).toHaveLength(3);
     expect(result.errors).toHaveLength(0);
     expect(result.phases[0].status).toBe('done');
+    expect(stdout).toBe(`${JSON.stringify(result)}\n`);
   });
 
   it('missing file → exit 1 + error on stderr', async () => {
