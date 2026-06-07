@@ -1,20 +1,68 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { sha256File } from './checksum';
+import { randomBytes } from 'node:crypto';
+import { sha256Buffer, sha256File } from './checksum';
 import { blockingCollisions, isPromptableCollision } from './collisions';
-import { manifestPathFor, saveHarnessManifest } from './manifest-store';
 import type { ApplyOptions, ApplyResult, InstallPlan, PlannedRemoval, PlannedWrite, RequiredPrompt } from './types';
-
-function writeFileAtomic(target: string, data: Buffer | string): void {
+function writeFileAtomic(target: string, data: Buffer | string, expectedChecksum?: string): void {
   fs.mkdirSync(path.dirname(target), { recursive: true });
-  const tmp = `${target}.tmp-${process.pid}`;
-  fs.writeFileSync(tmp, data);
-  fs.renameSync(tmp, target);
+  const payload = Buffer.isBuffer(data) ? data : Buffer.from(data, 'utf-8');
+  const tmp = `${target}.tmp-${process.pid}-${Date.now()}-${randomBytes(6).toString('hex')}`;
+  let fd: number | undefined;
+  try {
+    fd = fs.openSync(tmp, fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_WRONLY, 0o600);
+    fs.writeFileSync(fd, payload);
+    fs.fsyncSync(fd);
+    fs.closeSync(fd);
+    fd = undefined;
+    const replacingExisting = fs.existsSync(target);
+    if (replacingExisting) {
+      const stat = fs.lstatSync(target);
+      if (stat.isSymbolicLink()) throw new Error(`Refusing to replace symlink: ${target}`);
+      if (!stat.isFile()) throw new Error(`Target is not a file: ${target}`);
+    }
+    fs.renameSync(tmp, target);
+    const expected = expectedChecksum ?? sha256Buffer(payload);
+    const installed = sha256File(target);
+    if (installed !== expected) {
+      if (!replacingExisting) fs.unlinkSync(target);
+      throw new Error(`Checksum mismatch after writing ${target}`);
+    }
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+    if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
+  }
 }
 
 function backupPath(consumerRoot: string, targetRelativePath: string): string {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   return path.join(consumerRoot, '.specify', 'state', 'harness-install', 'backups', stamp, targetRelativePath);
+}
+
+function migrationJournalPath(consumerRoot: string): string {
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  return path.join(consumerRoot, '.specify', 'state', 'harness-install', 'migrations', `claude-prefix-${stamp}.json`);
+}
+
+function writeMigrationJournal(plan: InstallPlan): string | undefined {
+  if (!plan.migration) return undefined;
+  const journalPath = migrationJournalPath(plan.consumerRoot);
+  writeFileAtomic(journalPath, `${JSON.stringify({
+    version: 1,
+    harness: plan.harness,
+    fromPrefix: plan.migration.fromPrefix,
+    toPrefix: plan.migration.toPrefix,
+    createdAt: new Date().toISOString(),
+    writes: plan.writes.map((write) => ({
+      targetRelativePath: write.targetRelativePath,
+      installedChecksum: write.installedChecksum,
+    })),
+    removals: plan.removals.map((removal) => ({
+      targetRelativePath: removal.targetRelativePath,
+      installedChecksum: removal.previous.installedChecksum,
+    })),
+  }, null, 2)}\n`);
+  return journalPath;
 }
 
 function backupFile(consumerRoot: string, prompt: RequiredPrompt): string {
@@ -91,28 +139,42 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
   for (const write of plan.writes) assertCleanBeforeWrite(write);
   for (const removal of plan.removals) assertCleanBeforeRemoval(removal);
 
+  const migrationJournalPath = writeMigrationJournal(plan);
   const written: string[] = [];
   for (const write of plan.writes) {
-    writeFileAtomic(write.targetPath, fs.readFileSync(write.sourcePath));
-    const installed = sha256File(write.targetPath);
-    if (installed !== write.sourceChecksum) {
-      throw new Error(`Checksum mismatch after writing ${write.targetRelativePath}`);
-    }
+    writeFileAtomic(write.targetPath, write.content, write.installedChecksum);
     written.push(write.targetRelativePath);
   }
 
   const removed: string[] = [];
+  const warnings: string[] = [];
   let settingsWritten = false;
   if (plan.nextSettings !== undefined && plan.settingsChanged) {
-    const settingsPath = path.join(plan.consumerRoot, '.claude', 'settings.json');
-    writeFileAtomic(settingsPath, `${JSON.stringify(plan.nextSettings, null, 2)}\n`);
+    writeFileAtomic(path.join(plan.consumerRoot, plan.claudeSettingsPath), `${JSON.stringify(plan.nextSettings, null, 2)}\n`);
     settingsWritten = true;
   }
 
+  let installSettingsWritten = false;
+  if (plan.nextInstallSettings !== undefined && plan.installSettingsChanged) {
+    if (!plan.installSettingsPath) throw new Error('Install settings path is missing from plan.');
+    writeFileAtomic(plan.installSettingsPath, `${JSON.stringify(plan.nextInstallSettings, null, 2)}\n`);
+    installSettingsWritten = true;
+  }
+
+  const writeManifest = () => {
+    writeFileAtomic(plan.manifestPath, `${JSON.stringify(plan.nextManifest, null, 2)}\n`);
+  };
+  if (plan.migration) writeManifest();
+
   for (const removal of plan.removals) {
-    if (fs.existsSync(removal.targetPath)) {
-      fs.unlinkSync(removal.targetPath);
-      removed.push(removal.targetRelativePath);
+    try {
+      if (fs.existsSync(removal.targetPath)) {
+        fs.unlinkSync(removal.targetPath);
+        removed.push(removal.targetRelativePath);
+      }
+    } catch (err) {
+      if (!plan.migration) throw err;
+      warnings.push(`Cleanup failed for old managed file ${removal.targetRelativePath}: ${(err as Error).message}`);
     }
   }
   for (const prompt of approvedCleanupPrompts) {
@@ -123,13 +185,16 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
     }
   }
 
-  saveHarnessManifest(plan.consumerRoot, plan.nextManifest);
+  if (!plan.migration) writeManifest();
 
   return {
     written,
     removed,
     backedUp,
-    manifestPath: manifestPathFor(plan.consumerRoot),
+    manifestPath: plan.manifestPath,
     settingsWritten,
+    installSettingsWritten,
+    migrationJournalPath,
+    warnings,
   };
 }

@@ -48,9 +48,12 @@ Install Claude harness artifacts explicitly after the substrate sync:
 cd .specify/scripts/ts
 bun src/index.ts harness install --harness claude --plugins tdk-core --dry-run
 bun src/index.ts harness install --harness claude --plugins tdk-core --yes
+bun src/index.ts harness install --harness claude --plugins tdk-core --prefix pav --yes
 ```
 
-Omit `--plugins` to select plugins interactively with Space and Enter. Existing unmanaged `.claude/` files require explicit interactive overwrite approval; `--yes` does not approve those overwrites.
+Omit `--plugins` to select plugins interactively with Space and Enter. Successful installs persist `.specify/install-settings.json`, so later runs can reuse saved plugin selection and prefix. Existing installs require `--migrate-prefix <prefix>` for prefix changes.
+
+Existing unmanaged `.claude/` files require explicit interactive overwrite approval; `--yes` does not approve those overwrites.
 
 Claude hook runtime entries are merged into `.claude/settings.json`. Hook scripts are installed under plugin-scoped paths like `.claude/hooks/tdk-core/`; plugin `hooks/hooks.json` files stay source declarations and are not installed as `.claude/hooks/hooks.json`.
 
@@ -115,7 +118,7 @@ Integrated commands (via `bun src/index.ts`):
 | `tdk ut check-rules` | Validate UT rules |
 | `tdk ut create-rules` | Generate UT rules |
 | `tdk scout` | Codebase analysis (repomix + tier-1 extraction) |
-| `tdk harness install` | Install selected TDK plugin artifacts into `.claude/` with dry-run, ownership, collision, drift, plugin-scoped hook scripts, and settings merge safety |
+| `tdk harness install` | Install selected TDK plugin artifacts into `.claude/` with dry-run, saved install settings, prefix rewrite/migration, ownership, collision, drift, plugin-scoped hook scripts, and settings merge safety |
 | `tdk sub-workspace docs` | Generate sub-workspace documentation |
 
 Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup, changelog, util, test-api.

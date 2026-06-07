@@ -1,4 +1,6 @@
-export type HarnessName = 'claude';
+import type { ManifestEntry } from '../changelog/checks/types';
+
+export type HarnessName = 'claude' | 'codex';
 
 export type InstallAction = 'create' | 'update';
 
@@ -43,6 +45,10 @@ export interface ManagedHook {
   type: string;
   handler?: HookHandler;
   command?: string;
+  sourceRelativePath?: string;
+  sourceChecksum?: string;
+  handlerChecksum?: string;
+  ownershipKey?: string;
 }
 
 export interface DiscoveredPluginFile {
@@ -53,9 +59,16 @@ export interface DiscoveredPluginFile {
   targetRelativePath: string;
 }
 
+export interface TransformedPluginFile extends DiscoveredPluginFile {
+  installedChecksum: string;
+  content: Buffer;
+}
+
 export interface DiscoveredPlugin {
   name: string;
   version: string;
+  components?: ManifestEntry['components'];
+  hookConfigChecksum?: string;
   root: string;
   files: DiscoveredPluginFile[];
 }
@@ -75,6 +88,8 @@ export interface PlannedWrite {
   targetPath: string;
   targetRelativePath: string;
   sourceChecksum: string;
+  installedChecksum: string;
+  content: Buffer;
   expectedTargetChecksum?: string;
   action: InstallAction;
 }
@@ -108,6 +123,10 @@ export interface InstallPlan {
   harness: HarnessName;
   consumerRoot: string;
   selectedPlugins: string[];
+  targetDir: string;
+  claudeSettingsPath: string;
+  manifestPath: string;
+  installSettingsPath?: string;
   writes: PlannedWrite[];
   removals: PlannedRemoval[];
   hookMutations: PlannedHookMutation[];
@@ -117,6 +136,9 @@ export interface InstallPlan {
   nextManifest: HarnessInstallManifest;
   nextSettings?: unknown;
   settingsChanged: boolean;
+  nextInstallSettings?: unknown;
+  installSettingsChanged: boolean;
+  migration?: PrefixMigrationPlan;
 }
 
 export interface BuildPlanInput {
@@ -125,6 +147,18 @@ export interface BuildPlanInput {
   plugins: DiscoveredPlugin[];
   previousManifest: HarnessInstallManifest;
   settings: unknown;
+  sourcePrefix?: string;
+  targetPrefix?: string;
+  rewrite?: {
+    paths: boolean;
+    textFiles: boolean;
+    hooks: boolean;
+  };
+  targetDir?: string;
+  settingsPath?: string;
+  installSettingsPath?: string;
+  nextInstallSettings?: unknown;
+  migration?: PrefixMigrationPlan;
 }
 
 export interface ApplyOptions {
@@ -139,4 +173,12 @@ export interface ApplyResult {
   backedUp: string[];
   manifestPath: string;
   settingsWritten: boolean;
+  installSettingsWritten: boolean;
+  migrationJournalPath?: string;
+  warnings: string[];
+}
+
+export interface PrefixMigrationPlan {
+  fromPrefix: string;
+  toPrefix: string;
 }

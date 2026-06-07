@@ -91,6 +91,17 @@ export function writeBasicPlugin(consumer: FixtureConsumer): void {
   });
 }
 
+export function writePrefixedSkillPlugin(consumer: FixtureConsumer, plugin = 'tdk-core'): void {
+  const skill = '# tdk-demo\nUse tdk-demo from command text.\n';
+  writePluginFile(consumer, 'skills/tdk-demo/SKILL.md', skill, plugin);
+  writeMultiPluginManifest(consumer, {
+    [plugin]: {
+      version: '1.0.0',
+      files: { 'skills/tdk-demo/SKILL.md': sha256(skill) },
+    },
+  });
+}
+
 export function writeHookOnlyPlugin(consumer: FixtureConsumer, plugin: string, hookName = 'shared-gateway.cjs'): void {
   const gateway = `#!/usr/bin/env node\nconsole.log("${plugin}");\n`;
   const hooksJson = JSON.stringify({

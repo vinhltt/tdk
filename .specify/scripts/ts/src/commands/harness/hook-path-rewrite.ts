@@ -4,6 +4,18 @@ import type { HookHandler } from './types';
 const SUPPORTED_HOOK_TYPES = new Set(['command', 'http', 'mcp_tool', 'prompt', 'agent']);
 const PATH_END = /[\s"'`]/;
 
+export interface HookRewritePaths {
+  hookRoot: string;
+  scriptRoot: string;
+}
+
+function defaultRewritePaths(plugin: string): HookRewritePaths {
+  return {
+    hookRoot: `.claude/hooks/${plugin}`,
+    scriptRoot: `.claude/scripts/${plugin}`,
+  };
+}
+
 function sortJson(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sortJson);
   if (value && typeof value === 'object') {
@@ -55,16 +67,16 @@ function rewritePrefixedPath(value: string, sourcePrefix: string, targetPrefix: 
   return result;
 }
 
-function rewriteString(value: string, plugin: string): string {
+function rewriteString(value: string, plugin: string, paths = defaultRewritePaths(plugin)): string {
   const withHooks = rewritePrefixedPath(
     value,
     '${CLAUDE_PLUGIN_ROOT}/hooks/',
-    `\${CLAUDE_PROJECT_DIR}/.claude/hooks/${plugin}/`,
+    `\${CLAUDE_PROJECT_DIR}/${paths.hookRoot}/`,
   );
   const rewritten = rewritePrefixedPath(
     withHooks,
     '${CLAUDE_PLUGIN_ROOT}/scripts/',
-    `\${CLAUDE_PROJECT_DIR}/.claude/scripts/${plugin}/`,
+    `\${CLAUDE_PROJECT_DIR}/${paths.scriptRoot}/`,
   );
 
   if (
@@ -78,13 +90,13 @@ function rewriteString(value: string, plugin: string): string {
   return rewritten;
 }
 
-function rewriteValue(value: unknown, plugin: string): unknown {
-  if (typeof value === 'string') return rewriteString(value, plugin);
-  if (Array.isArray(value)) return value.map((item) => rewriteValue(item, plugin));
+function rewriteValue(value: unknown, plugin: string, paths?: HookRewritePaths): unknown {
+  if (typeof value === 'string') return rewriteString(value, plugin, paths);
+  if (Array.isArray(value)) return value.map((item) => rewriteValue(item, plugin, paths));
   if (value && typeof value === 'object') {
     const result: Record<string, unknown> = {};
     for (const [key, item] of Object.entries(value)) {
-      result[key] = rewriteValue(item, plugin);
+      result[key] = rewriteValue(item, plugin, paths);
     }
     return result;
   }
@@ -120,13 +132,13 @@ function usesExecForm(handler: HookHandler): boolean {
   return Array.isArray(handler.args) || handler.shell === false;
 }
 
-export function rewriteHookHandler(plugin: string, handler: HookHandler): HookHandler {
+export function rewriteHookHandler(plugin: string, handler: HookHandler, paths?: HookRewritePaths): HookHandler {
   if (!SUPPORTED_HOOK_TYPES.has(handler.type)) {
     throw new Error(`Unsupported hook type "${handler.type}"`);
   }
   validateRequiredFields(handler);
 
-  const rewritten = rewriteValue(handler, plugin) as HookHandler;
+  const rewritten = rewriteValue(handler, plugin, paths) as HookHandler;
   if (
     handler.type === 'command' &&
     typeof handler.command === 'string' &&

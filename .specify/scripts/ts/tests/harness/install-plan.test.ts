@@ -114,4 +114,21 @@ describe('buildClaudeInstallPlan', () => {
     expect(plan.collisions.some((collision) => collision.kind === 'unmanaged-stale-hooks-json')).toBe(true);
     expect(plan.prompts.some((prompt) => prompt.type === 'unmanaged-stale-hooks-json-cleanup')).toBe(true);
   });
+
+  test('blocks hook config checksum mismatch after discovery', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+    fs.writeFileSync(path.join(consumer.pluginRoot, 'hooks', 'hooks.json'), '{"hooks":{}}\n', 'utf-8');
+
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+    });
+
+    expect(plan.collisions.some((collision) => collision.message.includes('Hook config checksum mismatch'))).toBe(true);
+  });
 });

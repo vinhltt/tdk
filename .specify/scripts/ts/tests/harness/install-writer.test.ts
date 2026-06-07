@@ -53,6 +53,24 @@ describe('applyInstallPlan', () => {
     await expect(applyInstallPlan(secondPlan, { yes: true, interactive: false })).rejects.toThrow(/changed after planning/);
   });
 
+  test('writes captured planned bytes instead of re-reading source files', async () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+    });
+    fs.writeFileSync(path.join(consumer.pluginRoot, 'skills', 'demo', 'SKILL.md'), 'changed source after plan', 'utf-8');
+
+    await applyInstallPlan(plan, { yes: true, interactive: false });
+
+    expect(fs.readFileSync(path.join(consumer.root, '.claude', 'skills', 'demo', 'SKILL.md'), 'utf-8')).toBe('# Skill\n');
+  });
+
   test('backs up and repairs managed drift after interactive approval', async () => {
     const consumer = makeConsumer();
     writeBasicPlugin(consumer);

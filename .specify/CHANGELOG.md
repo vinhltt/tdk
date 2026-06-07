@@ -10,6 +10,32 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.62.5] - 2026-06-07
+
+### Added
+- **[Scripts]** Harness install: 4 new modules extending the install subsystem
+  - `claude-target-mapper.ts` — `HarnessTargetMapper` abstraction + `claudeTargetMapper` impl; decouples target path resolution from plugin-discovery
+  - `install-settings-paths.ts` — Secure path validation: symlink ancestor detection, protected root/file guards, `validateContainedNoFollowPath`, `validateSafeSegment`
+  - `install-settings.ts` — Install settings persistence (v1 schema via zod): `loadInstallSettings`, `resolveClaudeSettings`, prefix normalization, multi-harness config
+  - `prefix-transform.ts` — Prefix rewrite/transform engine for skill/agent/command names in target paths, file text content, and hook declarations
+- **[Scripts]** Harness install: 4 new test files
+  - `cli-settings-flow.test.ts` — End-to-end CLI settings flow
+  - `install-settings.test.ts` — Install settings load/save/resolve
+  - `manifest-store-migration.test.ts` — Legacy → per-harness manifest migration
+  - `prefix-transform.test.ts` — Prefix transform logic
+
+### Changed
+- **[Scripts]** Harness install: extended existing modules with prefix transform, install settings integration, and per-harness manifests
+  - `types.ts` — `HarnessName` adds `'codex'`; new `PrefixMigrationPlan`, `TransformedPluginFile` types; extended `PlannedWrite`, `InstallPlan`, `BuildPlanInput`, `ApplyResult`
+  - `install.ts` — `--prefix` / `--migrate-prefix` CLI options; interactive prefix prompt; settings saved post-apply
+  - `manifest-store.ts` — Per-harness manifest path (`harness-install/{harness}.json`) with legacy fallback
+  - `install-plan.ts` — Source byte verification, prefix transform pipeline, duplicate target collision detection
+  - `install-writer.ts` — Writes transformed content; persists install settings; migration journal output
+  - `plugin-discovery.ts` — Delegates target path resolution to `claudeTargetMapper`
+  - `checksum.ts` — Added `sha256Buffer`; `hook-merge.ts` passes rewrite map + hook checksums through
+  - `render.ts` — Display updates for new plan fields
+  - Updated tests: `install-plan.test.ts`, `install-writer.test.ts`, `fixtures.ts`
+
 ## [1.62.4] - 2026-06-06
 
 ### Added

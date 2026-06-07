@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { sha256File } from './checksum';
-import type { Collision, DiscoveredPluginFile, ManagedFile, PlannedWrite, RequiredPrompt } from './types';
+import type { Collision, ManagedFile, PlannedWrite, RequiredPrompt, TransformedPluginFile } from './types';
 
 function targetPath(consumerRoot: string, targetRelativePath: string): string {
   return path.join(consumerRoot, targetRelativePath);
@@ -14,11 +14,12 @@ function isInside(parent: string, child: string): boolean {
 
 export function classifyFile(params: {
   consumerRoot: string;
-  file: DiscoveredPluginFile;
+  targetDir?: string;
+  file: TransformedPluginFile;
   previous?: ManagedFile;
 }): { write?: PlannedWrite; collision?: Collision; prompt?: RequiredPrompt } {
   const target = targetPath(params.consumerRoot, params.file.targetRelativePath);
-  const claudeRoot = path.join(params.consumerRoot, '.claude');
+  const claudeRoot = path.join(params.consumerRoot, params.targetDir ?? '.claude');
   if (!isInside(claudeRoot, target)) {
     return { collision: { kind: 'path-traversal', path: target, plugin: params.file.plugin, message: `Target escapes .claude: ${params.file.targetRelativePath}` } };
   }
@@ -45,6 +46,8 @@ export function classifyFile(params: {
         targetPath: target,
         targetRelativePath: params.file.targetRelativePath,
         sourceChecksum: params.file.sourceChecksum,
+        installedChecksum: params.file.installedChecksum,
+        content: params.file.content,
         action: 'create',
       },
     };
@@ -52,6 +55,7 @@ export function classifyFile(params: {
 
   const currentChecksum = sha256File(target);
   if (!params.previous) {
+    if (currentChecksum === params.file.installedChecksum) return {};
     return {
       write: {
         plugin: params.file.plugin,
@@ -60,6 +64,8 @@ export function classifyFile(params: {
         targetPath: target,
         targetRelativePath: params.file.targetRelativePath,
         sourceChecksum: params.file.sourceChecksum,
+        installedChecksum: params.file.installedChecksum,
+        content: params.file.content,
         expectedTargetChecksum: currentChecksum,
         action: 'update',
       },
@@ -77,6 +83,8 @@ export function classifyFile(params: {
         targetPath: target,
         targetRelativePath: params.file.targetRelativePath,
         sourceChecksum: params.file.sourceChecksum,
+        installedChecksum: params.file.installedChecksum,
+        content: params.file.content,
         expectedTargetChecksum: currentChecksum,
         action: 'update',
       },
@@ -93,6 +101,8 @@ export function classifyFile(params: {
       targetPath: target,
       targetRelativePath: params.file.targetRelativePath,
       sourceChecksum: params.file.sourceChecksum,
+      installedChecksum: params.file.installedChecksum,
+      content: params.file.content,
       expectedTargetChecksum: params.previous.installedChecksum,
       action: 'update',
     },

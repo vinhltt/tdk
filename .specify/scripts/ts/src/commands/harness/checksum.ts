@@ -1,6 +1,10 @@
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 
+export function sha256Buffer(value: Buffer): string {
+  return createHash('sha256').update(value).digest('hex');
+}
+
 export function sha256File(filePath: string): string {
   return createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
 }

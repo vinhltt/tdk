@@ -1,6 +1,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { Manifest, ManifestEntry } from '../changelog/checks/types';
+import { claudeTargetMapper } from './claude-target-mapper';
+import { validateSafeSegment } from './install-settings-paths';
 import type { DiscoveredPlugin, DiscoveredPluginFile, PluginInventory } from './types';
 
 const INSTALLABLE_PREFIXES = ['skills/', 'agents/', 'hooks/', 'commands/', 'lib/', 'scripts/'];
@@ -17,45 +19,23 @@ function isInstallableFile(relativePath: string): boolean {
   return INSTALLABLE_PREFIXES.some((prefix) => relativePath.startsWith(prefix));
 }
 
-function targetFor(plugin: string, sourceRelativePath: string): string | undefined {
-  const parts = sourceRelativePath.split('/');
-  const family = parts[0];
-  const rest = parts.slice(1).join('/');
-  if (!rest) return undefined;
-
-  switch (family) {
-    case 'skills':
-      return path.join('.claude', 'skills', rest);
-    case 'agents':
-      return path.join('.claude', 'agents', rest);
-    case 'hooks':
-      if (rest === 'hooks.json') return undefined;
-      return path.join('.claude', 'hooks', plugin, rest);
-    case 'commands':
-      return path.join('.claude', 'commands', rest);
-    case 'lib':
-      return path.join('.claude', 'lib', rest);
-    case 'scripts':
-      return path.join('.claude', 'scripts', plugin, rest);
-    default:
-      return undefined;
-  }
-}
-
 function discoverPlugin(pluginsDir: string, name: string, entry: ManifestEntry): DiscoveredPlugin {
+  validateSafeSegment(name, 'plugin id');
   const root = path.join(pluginsDir, name);
   if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) {
     throw new Error(`Selected plugin "${name}" is missing at ${root}. Rerun distribute.sh to sync .specify/plugins.`);
   }
 
   const files: DiscoveredPluginFile[] = [];
+  let hookConfigChecksum: string | undefined;
   for (const [sourceRelativePath, sourceChecksum] of Object.entries(entry.files ?? {})) {
     if (!isInstallableFile(sourceRelativePath)) continue;
     if (path.isAbsolute(sourceRelativePath) || sourceRelativePath.split('/').includes('..')) {
       throw new Error(`Unsafe manifest path for plugin "${name}": ${sourceRelativePath}`);
     }
+    if (sourceRelativePath === 'hooks/hooks.json') hookConfigChecksum = sourceChecksum;
 
-    const targetRelativePath = targetFor(name, sourceRelativePath);
+    const targetRelativePath = claudeTargetMapper.mapTargetPath(name, sourceRelativePath);
     if (!targetRelativePath) continue;
 
     const sourcePath = path.join(root, sourceRelativePath);
@@ -73,7 +53,7 @@ function discoverPlugin(pluginsDir: string, name: string, entry: ManifestEntry):
   }
 
   files.sort((a, b) => a.targetRelativePath.localeCompare(b.targetRelativePath));
-  return { name, version: entry.version, root, files };
+  return { name, version: entry.version, components: entry.components, hookConfigChecksum, root, files };
 }
 
 function readMarketplacePluginNames(pluginsDir: string): string[] {

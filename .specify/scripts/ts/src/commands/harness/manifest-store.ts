@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { HarnessInstallManifest } from './types';
+import type { HarnessInstallManifest, HarnessName } from './types';
 
 export function emptyHarnessManifest(): HarnessInstallManifest {
   return {
@@ -14,22 +14,36 @@ export function emptyHarnessManifest(): HarnessInstallManifest {
   };
 }
 
-export function manifestPathFor(consumerRoot: string): string {
+export function legacyManifestPathFor(consumerRoot: string): string {
   return path.join(consumerRoot, '.specify', 'state', 'harness-install.json');
+}
+
+export function manifestPathFor(consumerRoot: string, harness: HarnessName = 'claude'): string {
+  return path.join(consumerRoot, '.specify', 'state', 'harness-install', `${harness}.json`);
+}
+
+function readManifest(manifestPath: string): HarnessInstallManifest {
+  const data = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as HarnessInstallManifest;
+  if (data.version !== 1 || data.harness !== 'claude' || !Array.isArray(data.managedFiles) || !Array.isArray(data.managedHooks)) {
+    throw new Error('unexpected manifest shape');
+  }
+  return data;
 }
 
 export function loadHarnessManifest(consumerRoot: string): HarnessInstallManifest {
   const manifestPath = manifestPathFor(consumerRoot);
-  if (!fs.existsSync(manifestPath)) return emptyHarnessManifest();
+  const legacyManifestPath = legacyManifestPathFor(consumerRoot);
+  const existingPath = fs.existsSync(manifestPath)
+    ? manifestPath
+    : fs.existsSync(legacyManifestPath)
+      ? legacyManifestPath
+      : undefined;
+  if (!existingPath) return emptyHarnessManifest();
 
   try {
-    const data = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as HarnessInstallManifest;
-    if (data.version !== 1 || data.harness !== 'claude' || !Array.isArray(data.managedFiles) || !Array.isArray(data.managedHooks)) {
-      throw new Error('unexpected manifest shape');
-    }
-    return data;
+    return readManifest(existingPath);
   } catch (err) {
-    throw new Error(`Invalid ownership manifest at ${manifestPath}. Inspect or delete it manually before rerunning. ${String((err as Error).message)}`);
+    throw new Error(`Invalid ownership manifest at ${existingPath}. Inspect or delete it manually before rerunning. ${String((err as Error).message)}`);
   }
 }
 

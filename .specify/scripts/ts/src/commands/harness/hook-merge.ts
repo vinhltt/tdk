@@ -1,9 +1,10 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { z } from 'zod';
-import { sha256Text } from './checksum';
+import { sha256File, sha256Text } from './checksum';
 import { normalizeHookHandler, rewriteHookHandler } from './hook-path-rewrite';
 import { actualHookKeys, addHook, managedHookKey, removeHook, type HookEntry } from './hook-reconcile';
+import { transformHookHandler } from './prefix-transform';
 import type { Collision, HookHandler, ManagedHook, PlannedHookMutation } from './types';
 
 const HookHandlerSchema = z.object({
@@ -39,12 +40,16 @@ function cloneJson<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
 }
 
-function hookId(plugin: string, event: string, matcher: string, handler: HookHandler): string {
-  return `tdk:${plugin}:${event}:${matcher}:${sha256Text(normalizeHookHandler(handler)).slice(0, 16)}`;
+function hookOwnershipKey(plugin: string, event: string, matcher: string, handler: HookHandler): string {
+  return sha256Text(['claude', plugin, event, matcher, normalizeHookHandler(handler)].join('\0'));
 }
 
-export function readSettings(consumerRoot: string): unknown {
-  const settingsPath = path.join(consumerRoot, '.claude', 'settings.json');
+function hookId(plugin: string, event: string, matcher: string, handler: HookHandler): string {
+  return `hook:${hookOwnershipKey(plugin, event, matcher, handler).slice(0, 24)}`;
+}
+
+export function readSettings(consumerRoot: string, settingsRelativePath = path.join('.claude', 'settings.json')): unknown {
+  const settingsPath = path.join(consumerRoot, settingsRelativePath);
   if (!fs.existsSync(settingsPath)) return {};
   return JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
 }
@@ -55,6 +60,8 @@ export function buildHookMerge(params: {
   pluginRoots: Map<string, string>;
   previousHooks: ManagedHook[];
   settings: unknown;
+  rewriteMap?: Map<string, string>;
+  hookChecksums?: Map<string, string>;
 }): { nextSettings: unknown; managedHooks: ManagedHook[]; mutations: PlannedHookMutation[]; collisions: Collision[]; settingsChanged: boolean } {
   const parsedSettings = SettingsSchema.safeParse(params.settings ?? {});
   if (!parsedSettings.success) {
@@ -70,7 +77,6 @@ export function buildHookMerge(params: {
   const beforeSettings = cloneJson(parsedSettings.data);
   const settings = cloneJson(parsedSettings.data) as Settings;
   const settingsHooks: Record<string, HookEntry[]> = settings.hooks ?? {};
-  const previousIds = new Set(params.previousHooks.map((hook) => hook.id));
   const desiredHooks: ManagedHook[] = [];
   const collisions: Collision[] = [];
 
@@ -79,6 +85,16 @@ export function buildHookMerge(params: {
     if (!pluginRoot) continue;
     const hooksPath = path.join(pluginRoot, 'hooks', 'hooks.json');
     if (!fs.existsSync(hooksPath)) continue;
+    const sourceStat = fs.lstatSync(hooksPath);
+    if (sourceStat.isSymbolicLink() || !sourceStat.isFile()) {
+      collisions.push({ kind: 'invalid-hook-config', plugin, path: hooksPath, message: `Unsafe hook config for plugin "${plugin}".` });
+      continue;
+    }
+    const sourceChecksum = sha256File(hooksPath);
+    if (params.hookChecksums?.get(plugin) && params.hookChecksums.get(plugin) !== sourceChecksum) {
+      collisions.push({ kind: 'invalid-hook-config', plugin, path: hooksPath, message: `Hook config checksum mismatch for plugin "${plugin}".` });
+      continue;
+    }
 
     const source = SourceHooksSchema.safeParse(JSON.parse(fs.readFileSync(hooksPath, 'utf-8')));
     if (!source.success) {
@@ -90,7 +106,10 @@ export function buildHookMerge(params: {
       for (const entry of entries) {
         for (const hook of entry.hooks) {
           try {
-            const handler = rewriteHookHandler(plugin, hook as HookHandler);
+            const transformedHook = transformHookHandler(hook as HookHandler, params.rewriteMap ?? new Map());
+            const handler = rewriteHookHandler(plugin, transformedHook);
+            const handlerChecksum = sha256Text(normalizeHookHandler(handler));
+            const ownershipKey = hookOwnershipKey(plugin, event, entry.matcher, handler);
             desiredHooks.push({
               id: hookId(plugin, event, entry.matcher, handler),
               plugin,
@@ -99,6 +118,10 @@ export function buildHookMerge(params: {
               type: handler.type,
               handler,
               command: typeof handler.command === 'string' ? normalizeCommand(handler.command) : undefined,
+              sourceRelativePath: 'hooks/hooks.json',
+              sourceChecksum,
+              handlerChecksum,
+              ownershipKey,
             });
           } catch (err) {
             collisions.push({ kind: 'unknown-hook-command', plugin, path: hooksPath, message: (err as Error).message });
@@ -116,16 +139,15 @@ export function buildHookMerge(params: {
   const desiredKeys = new Set(desiredByKey.keys());
   const previousKeys = new Set(params.previousHooks.map(managedHookKey));
   const mutations: PlannedHookMutation[] = [];
-  const desiredIds = new Set(desiredHooks.map((hook) => hook.id));
 
   for (const hook of params.previousHooks) {
-    if (!desiredIds.has(hook.id)) {
+    if (!desiredKeys.has(managedHookKey(hook))) {
       mutations.push({ action: 'remove', hook });
     }
   }
 
   for (const hook of desiredHooks) {
-    if (!previousIds.has(hook.id)) {
+    if (!previousKeys.has(managedHookKey(hook))) {
       mutations.push({ action: 'add', hook });
     }
   }

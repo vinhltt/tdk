@@ -1,5 +1,6 @@
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
+import { normalizePrefix } from './install-settings';
 import type { RequiredPrompt } from './types';
 
 function parsePluginSelection(answer: string, pluginNames: string[]): string[] {
@@ -112,6 +113,37 @@ export async function confirmOverwrite(prompt: RequiredPrompt): Promise<boolean>
         : 'existing unmanaged file';
     const action = prompt.type === 'unmanaged-stale-hooks-json-cleanup' ? 'Remove' : 'Overwrite';
     const answer = await rl.question(`${action} ${label} ${prompt.targetRelativePath}? Existing file will be backed up. Type yes to continue: `);
+    return answer.trim().toLowerCase() === 'yes';
+  } finally {
+    rl.close();
+  }
+}
+
+export async function askPrefixInteractively(defaultPrefix: string): Promise<string> {
+  const rl = readline.createInterface({ input, output });
+  try {
+    const answer = await rl.question(`Target prefix (${defaultPrefix}): `);
+    return answer.trim() === '' ? defaultPrefix : normalizePrefix(answer);
+  } finally {
+    rl.close();
+  }
+}
+
+export async function confirmInstallTarget(details: {
+  consumerRoot: string;
+  targetDir: string;
+  settingsPath: string;
+  targetPrefix: string;
+  selectedPlugins: string[];
+}): Promise<boolean> {
+  const rl = readline.createInterface({ input, output });
+  try {
+    output.write(`Consumer root: ${details.consumerRoot}\n`);
+    output.write(`Target dir: ${details.targetDir}\n`);
+    output.write(`Claude settings: ${details.settingsPath}\n`);
+    output.write(`Target prefix: ${details.targetPrefix}\n`);
+    output.write(`Plugins: ${details.selectedPlugins.join(', ') || '(none)'}\n`);
+    const answer = await rl.question('Apply this harness install? Type yes to continue: ');
     return answer.trim().toLowerCase() === 'yes';
   } finally {
     rl.close();

@@ -5,6 +5,11 @@ export function renderInstallPlan(plan: InstallPlan): string {
   const lines: string[] = [];
   const blockers = blockingCollisions(plan.collisions, plan.prompts);
   lines.push(`Harness install plan: ${plan.selectedPlugins.join(', ') || '(none)'}`);
+  lines.push(`Target dir: ${plan.targetDir}`);
+  lines.push(`Claude settings: ${plan.claudeSettingsPath}`);
+  lines.push(`Manifest: ${plan.manifestPath}`);
+  if (plan.installSettingsPath) lines.push(`Install settings: ${plan.installSettingsPath}`);
+  if (plan.migration) lines.push(`Prefix migration: ${plan.migration.fromPrefix} -> ${plan.migration.toPrefix}`);
   lines.push(`Writes: ${plan.writes.length}`);
   for (const write of plan.writes) {
     lines.push(`  ${write.action}: ${write.targetRelativePath}`);
@@ -44,6 +49,9 @@ export function renderApplyResult(result: ApplyResult): string {
     `Removed: ${result.removed.length}`,
     `Backups: ${result.backedUp.length}`,
     `Settings updated: ${result.settingsWritten ? 'yes' : 'no'}`,
+    `Install settings updated: ${result.installSettingsWritten ? 'yes' : 'no'}`,
     `Manifest: ${result.manifestPath}`,
+    ...(result.migrationJournalPath ? [`Migration journal: ${result.migrationJournalPath}`] : []),
+    ...(result.warnings.length > 0 ? ['Warnings:', ...result.warnings.map((warning) => `  - ${warning}`)] : []),
   ].join('\n') + '\n';
 }
