@@ -128,21 +128,21 @@ After creating canvas file: add entry to `memory.yaml` manifest (see Step 7).
 Compute SHA256 of `memory-index.md`:
 
 ```bash
-$VENV_PY "$(pwd)/.specify/plugins/tdk-memory/scripts/compute-sha256-hashes.py" \
+$VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
   "$(pwd)/.specify/memory/" "memory-index.md"
 ```
 
 For each domain, compute SHA256 of `domains/{domain}/domain-overview.md`:
 
 ```bash
-$VENV_PY "$(pwd)/.specify/plugins/tdk-memory/scripts/compute-sha256-hashes.py" \
+$VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
   "$(pwd)/.specify/memory/" "domains/{domain}/domain-overview.md"
 ```
 
 Compute SHA256 of `memory-map.canvas`:
 
 ```bash
-$VENV_PY "$(pwd)/.specify/plugins/tdk-memory/scripts/compute-sha256-hashes.py" \
+$VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
   "$(pwd)/.specify/memory/" "memory-map.canvas"
 ```
 

@@ -42,16 +42,26 @@ bash /path/to/tdk/setup.sh
 
 This installs TDK's marketplace plugins, templates, and configurations into the consumer project's `.specify/` directory.
 
-Install Claude harness artifacts explicitly after the substrate sync:
+Install Claude harness artifacts explicitly after the substrate sync from the consumer project root:
 
 ```bash
-cd .specify/scripts/ts
-bun src/index.ts harness install --harness claude --plugins tdk-core --dry-run
-bun src/index.ts harness install --harness claude --plugins tdk-core --yes
-bun src/index.ts harness install --harness claude --plugins tdk-core --prefix pav --yes
+# Install one plugin
+bun .specify/scripts/ts/src/index.ts harness install --harness claude --plugins tdk-core --dry-run
+bun .specify/scripts/ts/src/index.ts harness install --harness claude --plugins tdk-core --yes
+
+# Install multiple plugins
+bun .specify/scripts/ts/src/index.ts harness install --harness claude --plugins tdk-core,tdk-memory --dry-run
+bun .specify/scripts/ts/src/index.ts harness install --harness claude --plugins tdk-core,tdk-memory --yes
+
+# Install every plugin listed in .specify/plugins/manifest.json
+bun .specify/scripts/ts/src/index.ts harness install --harness claude --all-plugins --dry-run
+bun .specify/scripts/ts/src/index.ts harness install --harness claude --all-plugins --yes
+
+# Select plugins interactively
+bun .specify/scripts/ts/src/index.ts harness install --harness claude
 ```
 
-Omit `--plugins` to select plugins interactively with Space and Enter. Successful installs persist `.specify/install-settings.json`, so later runs can reuse saved plugin selection and prefix. Existing installs require `--migrate-prefix <prefix>` for prefix changes.
+Omit `--plugins` and `--all-plugins` to select plugins interactively with Space and Enter.
 
 Existing unmanaged `.claude/` files require explicit interactive overwrite approval; `--yes` does not approve those overwrites.
 

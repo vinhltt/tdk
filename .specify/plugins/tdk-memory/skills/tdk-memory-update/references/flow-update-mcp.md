@@ -239,7 +239,7 @@ Load schema: `ToolSearch("select:mcp__smart-obsidian__create_vault_file")`
 
 1. Recompute SHA256:
 ```bash
-$VENV_PY "$(pwd)/.specify/plugins/tdk-memory/scripts/compute-sha256-hashes.py" \
+$VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
   "$(pwd)/.specify/memory/" "{relative-file-path}"
 ```
 

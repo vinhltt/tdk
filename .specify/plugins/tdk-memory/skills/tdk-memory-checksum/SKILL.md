@@ -3,6 +3,7 @@ name: tdk-memory-checksum
 description: "SHA256 integrity check of .specify/memory/ files against memory.yaml manifest. Detects modified, untracked, and missing files. Read-only — never modifies files. Optional --fix flag delegates repairs to tdk-memory-update."
 user-invocable: false
 metadata:
+  version: 0.3.3
   category: "Context & Memory"
   requires:
     - tdk-memory-init
@@ -57,7 +58,7 @@ Read `.specify/memory/memory.yaml`. Parse `files[]` array. Fail fast if absent o
 VENV_PY="$(pwd)/.venv/Scripts/python.exe"
 [ -f "$VENV_PY" ] || VENV_PY="$(pwd)/.venv/bin/python3"
 
-$VENV_PY "$(pwd)/.specify/plugins/tdk-memory/skills/tdk-memory-checksum/scripts/validate-memory-checksums-against-manifest.py" \
+$VENV_PY "${CLAUDE_SKILL_DIR}/scripts/validate-memory-checksums-against-manifest.py" \
   "$(pwd)/.specify/memory/"
 ```
 

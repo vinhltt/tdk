@@ -2,6 +2,7 @@
 name: tdk-memory-changelog
 description: "Record staged .specify/memory/ changes in CHANGELOG.md via git diff --staged. Stage edits first with 'git add .specify/memory/', then run this skill before committing. Requires /tdk-memory-init first."
 metadata: 
+  version: 0.3.3
   category: "Analysis & Review"
   requires:
     - tdk-memory-init
@@ -97,7 +98,7 @@ For each changed file:
 - Deprecated (`D`): file was moved to `_deprecated/` — hash from `_deprecated/{rel-path}`
 
 ```bash
-$VENV_PY "$(pwd)/.specify/plugins/tdk-memory/scripts/compute-sha256-hashes.py" \
+$VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
   "$(pwd)/.specify/memory/" "{relative-file-path}"
 ```
 

@@ -7,6 +7,7 @@ import { settingsPathFor } from './install-settings';
 import { planLegacyHooksJsonInspection } from './legacy-hooks-json-cleanup';
 import { manifestPathFor } from './manifest-store';
 import { buildPrefixRewriteMap, transformFileContent, transformTargetRelativePath } from './prefix-transform';
+import { buildRuntimeAssetMap, transformRuntimeAssetContent } from './runtime-asset-transform';
 import type {
   BuildPlanInput,
   Collision,
@@ -20,9 +21,7 @@ import type {
   TransformedPluginFile,
 } from './types';
 
-function nowIso(): string {
-  return new Date().toISOString();
-}
+function nowIso(): string { return new Date().toISOString(); }
 
 function byTarget<T extends { targetRelativePath: string }>(a: T, b: T): number {
   return a.targetRelativePath.localeCompare(b.targetRelativePath);
@@ -87,24 +86,26 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
   };
   const rewrite = input.rewrite ?? { paths: true, textFiles: true, hooks: true };
   const rewriteMap = buildPrefixRewriteMap(input.plugins, transformSettings);
-  const selectedFiles: TransformedPluginFile[] = input.plugins.flatMap((plugin) => plugin.files.map((file) => {
-    const sourceContent = verifySourceBytes(file);
-    const targetRelativePath = rewrite.paths
-      ? transformTargetRelativePath(file.targetRelativePath, transformSettings)
-      : file.targetRelativePath;
-    const content = rewrite.textFiles
-      ? transformFileContent(file.sourcePath, sourceContent, rewriteMap)
-      : sourceContent;
+  const verifiedFiles = input.plugins.flatMap((plugin) => plugin.files.map((file) => ({
+    ...file,
+    sourceContent: verifySourceBytes(file),
+    targetRelativePath: rewrite.paths ? transformTargetRelativePath(file.targetRelativePath, transformSettings) : file.targetRelativePath,
+  })));
+  const runtimeAssetMap = buildRuntimeAssetMap(verifiedFiles);
+  const selectedFiles: TransformedPluginFile[] = verifiedFiles.map((file) => {
+    const prefixedContent = rewrite.textFiles
+      ? transformFileContent(file.sourcePath, file.sourceContent, rewriteMap)
+      : file.sourceContent;
+    const content = transformRuntimeAssetContent(file, prefixedContent, runtimeAssetMap);
     if (sha256File(file.sourcePath) !== file.sourceChecksum) {
       throw new Error(`Source changed while planning: ${file.sourceRelativePath}`);
     }
     return {
       ...file,
-      targetRelativePath,
       installedChecksum: sha256Buffer(content),
       content,
     };
-  }));
+  });
 
   const seenTargets = new Map<string, TransformedPluginFile>();
   for (const file of selectedFiles) {

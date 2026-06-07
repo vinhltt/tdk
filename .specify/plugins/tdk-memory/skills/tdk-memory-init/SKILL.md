@@ -2,7 +2,7 @@
 name: tdk-memory-init
 description: "This skill should be used when the user asks to 'initialize memory', 'set up project memory', 'create domain structure', 'init speckit memory', 'scaffold memory folders', 'tdk-memory-init', or needs to create .specify/memory/ with domain-based folders. Sets up per-domain scaffold (flows/ directory per domain), generates memory-index.md with routing rules, and writes SHA256 memory.yaml manifest. Idempotent: detects existing domains and presents update vs force-reinit options."
 metadata: 
-  version: 0.3.2
+  version: 0.3.3
   category: "Context & Memory"
   requires: []
   input_format: "Natural language command with optional flags"
@@ -125,4 +125,4 @@ Follow `references/re-run-flow.md` which covers:
 ### External Dependencies
 
 - `.specify/templates/memory/` (6 template files — created during plugin install)
-- `.specify/plugins/tdk-memory/scripts/compute-sha256-hashes.py` — SHA256 computation utility
+- `${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py` — SHA256 computation utility

@@ -12,7 +12,7 @@ Script enforcement to guarantee the correct output path convention for brainstor
 
 ### Task-Specific Brainstorm
 ```bash
-python .claude/skills/brainstorming/scripts/brainstorm.py FEAT-1814 "task-analysis"
+python "${CLAUDE_SKILL_DIR}/scripts/brainstorm.py" FEAT-1814 "task-analysis"
 ```
 
 **Output**:
@@ -36,7 +36,7 @@ python .claude/skills/brainstorming/scripts/brainstorm.py FEAT-1814 "task-analys
 
 ### General Brainstorm
 ```bash
-python .claude/skills/brainstorming/scripts/brainstorm.py "api-design"
+python "${CLAUDE_SKILL_DIR}/scripts/brainstorm.py" "api-design"
 ```
 
 **Output**:
@@ -129,7 +129,7 @@ python brainstorm.py FEAT-9999
 
 2. **Call script** (MANDATORY)
    ```bash
-   python .claude/skills/brainstorming/scripts/brainstorm.py {task_id} {slug}
+   python "${CLAUDE_SKILL_DIR}/scripts/brainstorm.py" {task_id} {slug}
    ```
 
 3. **Parse JSON output**
@@ -224,7 +224,7 @@ python brainstorm.py 1814 "test"
 
 ## Related Files
 
-- Script: `.claude/skills/brainstorming/scripts/brainstorm.py`
+- Script: `${CLAUDE_SKILL_DIR}/scripts/brainstorm.py`
 - Skill: `brainstorming`
 - Config: `.specify/.specify.json` (`git.prefixList`)
 

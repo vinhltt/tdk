@@ -2,7 +2,7 @@
 name: tdk-memory-update
 description: "This skill should be used when the user asks to 'update memory', 'add service to domain', 'update business rules', 'add data model', 'modify domain knowledge', 'deprecate memory file', 'tdk-memory-update', or needs to route natural language updates to .specify/memory/ files. Reads memory-index.md for routing rules, applies section anchor updates (additive or replacement), and regenerates checksums. Only explicit flag: --deprecate [path]."
 metadata:
-  version: 0.3.2
+  version: 0.3.3
   category: "Context & Memory"
   requires:
     - tdk-memory-query
@@ -89,4 +89,4 @@ VENV_PY="$(pwd)/.venv/Scripts/python.exe"
 
 - `../tdk-memory-init/references/domain-extraction-and-confirmation.md` — Shared guards (path restriction, file size, abnormal handling, exclusion list)
 - `.specify/templates/memory/` — Template files (created during plugin install)
-- `.specify/plugins/tdk-memory/scripts/compute-sha256-hashes.py` — SHA256 computation
+- `${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py` — SHA256 computation

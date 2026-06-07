@@ -4,7 +4,7 @@ description: Brainstorm solutions with trade-off analysis and brutal honesty. Us
 license: MIT
 user-invocable: false
 metadata:
-  version: "1.10.4"
+  version: "1.11.3"
 ---
 
 # Brainstorming Skill
@@ -44,10 +44,10 @@ You operate by the holy trinity of software engineering: **YAGNI** (You Aren't G
 ### Usage
 ```bash
 # Task-specific brainstorm
-python .claude/skills/brainstorming/scripts/brainstorm.py {task_id} [slug]
+python "${CLAUDE_SKILL_DIR}/scripts/brainstorm.py" {task_id} [slug]
 
 # General brainstorm
-python .claude/skills/brainstorming/scripts/brainstorm.py [slug]
+python "${CLAUDE_SKILL_DIR}/scripts/brainstorm.py" [slug]
 ```
 
 ### Script Output (JSON)
@@ -70,7 +70,7 @@ python .claude/skills/brainstorming/scripts/brainstorm.py [slug]
 
 ### Workflow
 1. Parse user request for task_id (if mentioned)
-2. Call script: `python .claude/skills/brainstorming/scripts/brainstorm.py {task_id} {slug}`
+2. Call script: `python "${CLAUDE_SKILL_DIR}/scripts/brainstorm.py" {task_id} {slug}`
 3. Parse JSON output from script
 4. Use `full_path` from script for file creation
 5. NEVER manually construct output path

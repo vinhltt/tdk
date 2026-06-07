@@ -187,7 +187,7 @@ Follow `references/regenerate-memory-index-flow.md`.
 
 1. Recompute SHA256:
 ```bash
-$VENV_PY "$(pwd)/.specify/plugins/tdk-memory/scripts/compute-sha256-hashes.py" \
+$VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
   "$(pwd)/.specify/memory/" "{relative-file-path}"
 ```
 

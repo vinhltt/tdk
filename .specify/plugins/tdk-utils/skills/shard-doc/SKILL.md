@@ -5,7 +5,8 @@ description: |
   Replaces extracted sections with Obsidian [[wikilinks]] in the original.
   Use when: document exceeds 200+ lines, needs modularization, or
   sections should be independently navigable.
-version: 1.0.0
+metadata:
+  version: 1.11.3
 user-invocable: false
 ---
 
@@ -32,7 +33,7 @@ Split large markdown documents into smaller section files by heading level, repl
 ## CLI Usage
 
 ```bash
-python .claude/skills/shard-doc/scripts/shard_doc.py <input.md> <output-dir> [options]
+python "${CLAUDE_SKILL_DIR}/scripts/shard_doc.py" <input.md> <output-dir> [options]
 ```
 
 **Note:** `output-dir` is **required** (no default). Agent determines the optimal path.
@@ -52,16 +53,16 @@ python .claude/skills/shard-doc/scripts/shard_doc.py <input.md> <output-dir> [op
 
 ```bash
 # Basic sharding at H2 level with backup
-python scripts/shard_doc.py docs/architecture.md docs/architecture/ --backup --json
+python "${CLAUDE_SKILL_DIR}/scripts/shard_doc.py" docs/architecture.md docs/architecture/ --backup --json
 
 # Dry run preview (no files written)
-python scripts/shard_doc.py docs/big-doc.md docs/big-doc/ --dry-run
+python "${CLAUDE_SKILL_DIR}/scripts/shard_doc.py" docs/big-doc.md docs/big-doc/ --dry-run
 
 # Split at H3 level, no rewrite
-python scripts/shard_doc.py docs/guide.md docs/guide/ --depth 3 --no-rewrite --json
+python "${CLAUDE_SKILL_DIR}/scripts/shard_doc.py" docs/guide.md docs/guide/ --depth 3 --no-rewrite --json
 
 # Reconstruct original from shards (implode)
-python scripts/shard_doc.py docs/architecture/ docs/architecture.md --implode --json
+python "${CLAUDE_SKILL_DIR}/scripts/shard_doc.py" docs/architecture/ docs/architecture.md --implode --json
 ```
 
 ## Output Structure

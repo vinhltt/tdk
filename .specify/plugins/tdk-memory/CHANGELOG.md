@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [0.3.3] - 2026-06-07
+
+### Changed
+- tdk-memory-changelog: replaced hardcoded plugin script path with ${CLAUDE_PLUGIN_ROOT}
+- tdk-memory-checksum: replaced hardcoded skill script path with ${CLAUDE_SKILL_DIR}
+- tdk-memory-init: replaced hardcoded plugin script path with ${CLAUDE_PLUGIN_ROOT} in SKILL.md and fresh-init-flow reference
+- tdk-memory-update: replaced hardcoded plugin script path with ${CLAUDE_PLUGIN_ROOT} in SKILL.md and flow-update reference files
+
 ## [0.3.2] - 2026-05-29
 
 ### Changed

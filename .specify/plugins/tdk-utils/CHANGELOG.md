@@ -4,6 +4,18 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.11.3] - 2026-06-07
+
+### Changed
+- brainstorming: replaced hardcoded .claude/skills/ script paths with ${CLAUDE_SKILL_DIR} in SKILL.md and scripts/README.md
+- shard-doc: replaced hardcoded .claude/skills/ script paths with ${CLAUDE_SKILL_DIR} in SKILL.md
+
+## [1.11.2] - 2026-06-07
+
+### Changed
+- brainstorming: replaced hardcoded .claude/skills/ script paths with ${CLAUDE_SKILL_DIR} in SKILL.md and scripts/README.md
+- shard-doc: replaced hardcoded .claude/skills/ script paths with ${CLAUDE_SKILL_DIR} in SKILL.md
+
 ## [1.11.0] - 2026-06-02
 
 ### Changed

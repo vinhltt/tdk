@@ -10,6 +10,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.63.0] - 2026-06-07
+
+### Added
+- **[Scripts]** Runtime asset transform module and tests
+  - `runtime-asset-transform.ts`: harness module that resolves `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_SKILL_DIR}` references to absolute installed paths at install time via `buildRuntimeAssetMap` / `transformRuntimeAssetContent`
+  - `runtime-asset-transform.test.ts` + `runtime-asset-transform-regression.test.ts`: unit and regression tests
+
+### Changed
+- **[Scripts]** Refactored `install-plan.ts` to delegate runtime path resolution to the new `runtime-asset-transform` module (`buildRuntimeAssetMap`, `transformRuntimeAssetContent`)
+- **[tdk-memory]** Fixed skill script path references across tdk-memory-changelog, tdk-memory-checksum, tdk-memory-init, tdk-memory-update — replaced hardcoded `.specify/plugins/tdk-memory/` paths with `${CLAUDE_PLUGIN_ROOT}` in SKILL.md and reference files
+- **[tdk-utils]** Fixed skill script path references in brainstorming and shard-doc — replaced hardcoded `.claude/skills/` paths with `${CLAUDE_SKILL_DIR}` in SKILL.md and reference docs
+
 ## [1.62.5] - 2026-06-07
 
 ### Added
