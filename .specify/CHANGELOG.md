@@ -10,6 +10,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.63.2] - 2026-06-08
+
+### Changed
+- **[Scripts]** Fixed harness prefix-transform and install-plan bugs for custom-prefix installs
+  - `prefix-transform.ts`: Protect `.specify/plugins/…` source paths from rewriting during text transforms; fix `mapTargetPath` to rewrite `.claude/scripts/` and `.claude/hooks/` directory names; include plugin name itself in rewrite name set; extract `transformUnprotectedText` helper
+  - `install-plan.ts`: Fix transformation order so runtime-asset resolution runs before prefix rewriting; pass full plugin catalog (`rewritePlugins`) instead of filtered selection to `buildPrefixRewriteMap` for correct cross-plugin content rewriting
+  - `install.ts`: Discover and pass `rewritePlugins` catalog to `buildClaudeInstallPlan`
+  - `plugin-discovery.ts`: Add `discoverPrefixRewritePlugins` export to load full manifest plugin catalog for prefix-rewrite scope
+  - `hook-merge.ts`: Fix `rewriteHookHandler` to use transformed plugin id (from `rewriteMap`) rather than original id for hook command root directory
+  - `types.ts`: Add optional `rewritePlugins?: DiscoveredPlugin[]` field to `BuildPlanInput`
+  - Tests: Add comprehensive coverage in `hook-merge.test.ts`, `install-plan.test.ts`, `prefix-transform.test.ts`, `runtime-asset-transform.test.ts`, and `runtime-asset-transform-regression.test.ts`
+
 ## [1.63.1] - 2026-06-08
 
 ### Changed

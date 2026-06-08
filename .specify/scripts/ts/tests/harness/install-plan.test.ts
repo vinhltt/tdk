@@ -87,6 +87,59 @@ describe('buildClaudeInstallPlan', () => {
     expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/tdk-memory/hook-gateway.cjs');
   });
 
+  test('namespaces hook filenames using transformed plugin ids for custom prefixes', () => {
+    const consumer = makeConsumer();
+    writeHookOnlyPlugin(consumer, 'tdk-core', 'hook-gateway.cjs');
+    writeHookOnlyPlugin(consumer, 'tdk-memory', 'hook-gateway.cjs');
+    const gatewayCore = '#!/usr/bin/env node\nconsole.log("tdk-core");\n';
+    const gatewayMemory = '#!/usr/bin/env node\nconsole.log("tdk-memory");\n';
+    const hooksCore = JSON.stringify({
+      hooks: { UserPromptSubmit: [{ matcher: '*', hooks: [{ type: 'command', command: 'node "${CLAUDE_PLUGIN_ROOT}/hooks/hook-gateway.cjs" core' }] }] },
+    }, null, 2);
+    const hooksMemory = JSON.stringify({
+      hooks: { UserPromptSubmit: [{ matcher: '*', hooks: [{ type: 'command', command: 'node "${CLAUDE_PLUGIN_ROOT}/hooks/hook-gateway.cjs" memory' }] }] },
+    }, null, 2);
+    fs.writeFileSync(path.join(consumer.root, '.specify', 'plugins', 'tdk-core', 'hooks', 'hook-gateway.cjs'), gatewayCore);
+    fs.writeFileSync(path.join(consumer.root, '.specify', 'plugins', 'tdk-core', 'hooks', 'hooks.json'), hooksCore);
+    fs.writeFileSync(path.join(consumer.root, '.specify', 'plugins', 'tdk-memory', 'hooks', 'hook-gateway.cjs'), gatewayMemory);
+    fs.writeFileSync(path.join(consumer.root, '.specify', 'plugins', 'tdk-memory', 'hooks', 'hooks.json'), hooksMemory);
+    writeMultiPluginManifest(consumer, {
+      'tdk-core': {
+        version: '1.0.0',
+        files: {
+          'hooks/hook-gateway.cjs': sha256(gatewayCore),
+          'hooks/hooks.json': sha256(hooksCore),
+        },
+      },
+      'tdk-memory': {
+        version: '1.0.0',
+        files: {
+          'hooks/hook-gateway.cjs': sha256(gatewayMemory),
+          'hooks/hooks.json': sha256(hooksMemory),
+        },
+      },
+    });
+
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core', 'tdk-memory']);
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core', 'tdk-memory'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+      sourcePrefix: 'tdk-',
+      targetPrefix: 'erc-',
+    });
+
+    expect(plan.collisions).toEqual([]);
+    expect(plan.writes.map((write) => write.targetRelativePath)).toContain(path.join('.claude', 'hooks', 'erc-core', 'hook-gateway.cjs'));
+    expect(plan.writes.map((write) => write.targetRelativePath)).toContain(path.join('.claude', 'hooks', 'erc-memory', 'hook-gateway.cjs'));
+    expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
+    expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/erc-memory/hook-gateway.cjs');
+    expect(JSON.stringify(plan.nextSettings)).not.toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(JSON.stringify(plan.nextSettings)).not.toContain('.claude/hooks/tdk-memory/hook-gateway.cjs');
+  });
+
   test('requires prompt for unmanaged target collision', () => {
     const consumer = makeConsumer();
     writeBasicPlugin(consumer);

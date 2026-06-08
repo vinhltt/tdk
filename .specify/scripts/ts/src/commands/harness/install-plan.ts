@@ -85,7 +85,7 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
     targetPrefix: input.targetPrefix ?? 'tdk-',
   };
   const rewrite = input.rewrite ?? { paths: true, textFiles: true, hooks: true };
-  const rewriteMap = buildPrefixRewriteMap(input.plugins, transformSettings);
+  const rewriteMap = buildPrefixRewriteMap(input.rewritePlugins ?? input.plugins, transformSettings);
   const verifiedFiles = input.plugins.flatMap((plugin) => plugin.files.map((file) => ({
     ...file,
     sourceContent: verifySourceBytes(file),
@@ -93,10 +93,10 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
   })));
   const runtimeAssetMap = buildRuntimeAssetMap(verifiedFiles);
   const selectedFiles: TransformedPluginFile[] = verifiedFiles.map((file) => {
-    const prefixedContent = rewrite.textFiles
-      ? transformFileContent(file.sourcePath, file.sourceContent, rewriteMap)
-      : file.sourceContent;
-    const content = transformRuntimeAssetContent(file, prefixedContent, runtimeAssetMap);
+    const runtimeContent = transformRuntimeAssetContent(file, file.sourceContent, runtimeAssetMap);
+    const content = rewrite.textFiles
+      ? transformFileContent(file.sourcePath, runtimeContent, rewriteMap)
+      : runtimeContent;
     if (sha256File(file.sourcePath) !== file.sourceChecksum) {
       throw new Error(`Source changed while planning: ${file.sourceRelativePath}`);
     }

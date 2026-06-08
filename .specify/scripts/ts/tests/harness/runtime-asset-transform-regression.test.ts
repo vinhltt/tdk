@@ -138,4 +138,33 @@ describe('runtime asset transform regressions', () => {
       expect(fs.existsSync(path.join(consumer.root, '.claude', scriptPath))).toBe(true);
     }
   });
+
+  test('actual memory plugin custom-prefix install uses transformed script plugin folders', () => {
+    const consumer = makeConsumer();
+    const sourcePlugins = path.resolve('../../plugins');
+    fs.cpSync(path.join(sourcePlugins, 'tdk-memory'), pluginRoot(consumer, 'tdk-memory'), { recursive: true });
+    fs.copyFileSync(
+      path.join(sourcePlugins, 'manifest.json'),
+      path.join(consumer.root, '.specify', 'plugins', 'manifest.json'),
+    );
+
+    const result = Bun.spawnSync({
+      cmd: ['bun', cliPath, 'harness', 'install', '--harness', 'claude', '--plugins', 'tdk-memory', '--prefix', 'erc', '--yes'],
+      cwd: consumer.scriptsDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+    if (result.exitCode !== 0) throw new Error(result.stderr.toString());
+
+    fs.rmSync(pluginRoot(consumer, 'tdk-memory'), { recursive: true, force: true });
+
+    const installedSkill = fs.readFileSync(
+      path.join(consumer.root, '.claude', 'skills', 'erc-memory-init', 'SKILL.md'),
+      'utf-8',
+    );
+    expect(installedSkill).toContain('$(pwd)/.claude/scripts/erc-memory/compute-sha256-hashes.py');
+    expect(installedSkill).not.toContain('.claude/scripts/tdk-memory');
+    expect(fs.existsSync(path.join(consumer.root, '.claude', 'scripts', 'erc-memory', 'compute-sha256-hashes.py'))).toBe(true);
+    expect(fs.existsSync(path.join(consumer.root, '.claude', 'scripts', 'tdk-memory', 'compute-sha256-hashes.py'))).toBe(false);
+  });
 });

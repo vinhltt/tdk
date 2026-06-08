@@ -25,6 +25,7 @@ const EXCLUDED_NAMES = new Set([
   'pnpm-lock.yaml',
   'yarn.lock',
 ]);
+const SOURCE_PLUGIN_PATH = /(?:\.\/)?\.specify\/plugins\/[^\s"'`<>)\]}]+/g;
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -37,7 +38,7 @@ function rewriteName(name: string, settings: PrefixTransformSettings): string {
 }
 
 function collectComponentNames(plugin: DiscoveredPlugin): string[] {
-  const names = new Set<string>();
+  const names = new Set<string>([plugin.name]);
   for (const family of ['skills', 'agents', 'commands'] as const) {
     for (const name of Object.keys(plugin.components?.[family] ?? {})) names.add(name);
   }
@@ -65,8 +66,12 @@ export function buildPrefixRewriteMap(plugins: DiscoveredPlugin[], settings: Pre
 export function transformTargetRelativePath(targetRelativePath: string, settings: PrefixTransformSettings): string {
   const normalized = targetRelativePath.split(/[\\/]/);
   const familyIndex = normalized.findIndex((part) => part === 'skills' || part === 'agents' || part === 'commands');
-  if (familyIndex === -1 || !normalized[familyIndex + 1]) return targetRelativePath;
-  normalized[familyIndex + 1] = rewriteName(normalized[familyIndex + 1]!, settings);
+  if (familyIndex !== -1 && normalized[familyIndex + 1]) {
+    normalized[familyIndex + 1] = rewriteName(normalized[familyIndex + 1]!, settings);
+  }
+  if (normalized[0] === '.claude' && (normalized[1] === 'scripts' || normalized[1] === 'hooks') && normalized[2]) {
+    normalized[2] = rewriteName(normalized[2], settings);
+  }
   return path.join(...normalized);
 }
 
@@ -76,12 +81,28 @@ export function isTextTransformCandidate(filePath: string): boolean {
   return TEXT_EXTENSIONS.has(path.extname(filePath));
 }
 
-export function transformTextContent(text: string, rewriteMap: Map<string, string>): string {
+function transformUnprotectedText(text: string, entries: Array<[string, string]>): string {
   let result = text;
-  const entries = [...rewriteMap.entries()].sort((a, b) => b[0].length - a[0].length);
   for (const [source, target] of entries) {
     result = result.replace(new RegExp(escapeRegExp(source), 'g'), target);
   }
+  return result;
+}
+
+export function transformTextContent(text: string, rewriteMap: Map<string, string>): string {
+  const entries = [...rewriteMap.entries()].sort((a, b) => b[0].length - a[0].length);
+  let result = '';
+  let lastIndex = 0;
+
+  SOURCE_PLUGIN_PATH.lastIndex = 0;
+  for (const match of text.matchAll(SOURCE_PLUGIN_PATH)) {
+    const index = match.index ?? 0;
+    result += transformUnprotectedText(text.slice(lastIndex, index), entries);
+    result += match[0];
+    lastIndex = index + match[0].length;
+  }
+
+  result += transformUnprotectedText(text.slice(lastIndex), entries);
   return result;
 }
 

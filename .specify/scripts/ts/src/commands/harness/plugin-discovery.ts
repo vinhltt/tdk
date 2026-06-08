@@ -56,6 +56,27 @@ function discoverPlugin(pluginsDir: string, name: string, entry: ManifestEntry):
   return { name, version: entry.version, components: entry.components, hookConfigChecksum, root, files };
 }
 
+function discoverPluginCatalogEntry(pluginsDir: string, name: string, entry: ManifestEntry): DiscoveredPlugin {
+  validateSafeSegment(name, 'plugin id');
+  const files: DiscoveredPluginFile[] = [];
+  for (const [sourceRelativePath, sourceChecksum] of Object.entries(entry.files ?? {})) {
+    if (!isInstallableFile(sourceRelativePath)) continue;
+    if (path.isAbsolute(sourceRelativePath) || sourceRelativePath.split('/').includes('..')) {
+      throw new Error(`Unsafe manifest path for plugin "${name}": ${sourceRelativePath}`);
+    }
+    const targetRelativePath = claudeTargetMapper.mapTargetPath(name, sourceRelativePath);
+    if (!targetRelativePath) continue;
+    files.push({
+      plugin: name,
+      sourceRelativePath,
+      sourcePath: path.join(pluginsDir, name, sourceRelativePath),
+      sourceChecksum,
+      targetRelativePath,
+    });
+  }
+  return { name, version: entry.version, components: entry.components, root: path.join(pluginsDir, name), files };
+}
+
 function readMarketplacePluginNames(pluginsDir: string): string[] {
   const marketplacePath = path.join(pluginsDir, 'marketplace.json');
   if (!fs.existsSync(marketplacePath)) return [];
@@ -105,4 +126,13 @@ export function listManifestPluginNames(consumerRoot: string): string[] {
   const manifestPath = path.join(consumerRoot, '.specify', 'plugins', 'manifest.json');
   const manifest = readJson<Manifest>(manifestPath);
   return Object.keys(manifest.plugins ?? {}).sort();
+}
+
+export function discoverPrefixRewritePlugins(consumerRoot: string): DiscoveredPlugin[] {
+  const pluginsDir = path.join(consumerRoot, '.specify', 'plugins');
+  const manifestPath = path.join(pluginsDir, 'manifest.json');
+  const manifest = readJson<Manifest>(manifestPath);
+  return Object.entries(manifest.plugins ?? {})
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, entry]) => discoverPluginCatalogEntry(pluginsDir, name, entry));
 }

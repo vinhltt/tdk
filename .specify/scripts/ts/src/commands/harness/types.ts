@@ -145,6 +145,7 @@ export interface BuildPlanInput {
   consumerRoot: string;
   selectedPlugins: string[];
   plugins: DiscoveredPlugin[];
+  rewritePlugins?: DiscoveredPlugin[];
   previousManifest: HarnessInstallManifest;
   settings: unknown;
   sourcePrefix?: string;

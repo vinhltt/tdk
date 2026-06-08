@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { blockingCollisions } from './collisions';
 import { resolveConsumerRoot } from './root-resolution';
-import { discoverPluginInventory, listManifestPluginNames } from './plugin-discovery';
+import { discoverPluginInventory, discoverPrefixRewritePlugins, listManifestPluginNames } from './plugin-discovery';
 import { loadHarnessManifest } from './manifest-store';
 import { readSettings } from './hook-merge';
 import {
@@ -156,11 +156,13 @@ export function createHarnessInstallCommand(): Command {
         }
         const nextInstallSettings = buildNextInstallSettings(installSettings, resolvedSettings);
         const inventory = discoverPluginInventory(root.consumerRoot, selectedPlugins);
+        const rewritePlugins = discoverPrefixRewritePlugins(root.consumerRoot);
         const settings = readSettings(root.consumerRoot, resolvedSettings.settingsPath);
         const plan = buildClaudeInstallPlan({
           consumerRoot: root.consumerRoot,
           selectedPlugins,
           plugins: inventory.plugins,
+          rewritePlugins,
           previousManifest,
           settings,
           sourcePrefix: resolvedSettings.sourcePrefix,

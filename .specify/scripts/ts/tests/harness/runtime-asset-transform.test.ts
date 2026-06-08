@@ -165,4 +165,20 @@ describe('runtime asset transform planning', () => {
     expect(installedSkill).not.toContain('$(pwd)/.specify/plugins/tdk-memory/scripts');
     expect(fs.existsSync(path.join(consumer.root, '.claude', 'scripts', 'tdk-memory', 'compute-sha256-hashes.py'))).toBe(true);
   });
+
+  test('rewrites plugin-level runtime asset refs to transformed script plugin folders', () => {
+    const consumer = makeConsumer();
+    writeMemoryRuntimePlugin(
+      consumer,
+      '# Skill\nRun "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py"\n',
+    );
+
+    const plan = buildPlan(consumer, ['tdk-memory'], 'erc-');
+    const write = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-memory-init/SKILL.md');
+
+    expect(plan.writes.map((item) => item.targetRelativePath)).toContain(path.join('.claude', 'scripts', 'erc-memory', 'compute-sha256-hashes.py'));
+    expect(write?.targetRelativePath).toBe(path.join('.claude', 'skills', 'erc-memory-init', 'SKILL.md'));
+    expect(write?.content.toString('utf-8')).toContain('$(pwd)/.claude/scripts/erc-memory/compute-sha256-hashes.py');
+    expect(write?.content.toString('utf-8')).not.toContain('.claude/scripts/tdk-memory');
+  });
 });

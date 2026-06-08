@@ -106,8 +106,9 @@ export function buildHookMerge(params: {
       for (const entry of entries) {
         for (const hook of entry.hooks) {
           try {
-            const transformedHook = transformHookHandler(hook as HookHandler, params.rewriteMap ?? new Map());
-            const handler = rewriteHookHandler(plugin, transformedHook);
+            const rewriteMap = params.rewriteMap ?? new Map();
+            const transformedHook = transformHookHandler(hook as HookHandler, rewriteMap);
+            const handler = rewriteHookHandler(rewriteMap.get(plugin) ?? plugin, transformedHook);
             const handlerChecksum = sha256Text(normalizeHookHandler(handler));
             const ownershipKey = hookOwnershipKey(plugin, event, entry.matcher, handler);
             desiredHooks.push({

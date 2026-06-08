@@ -344,4 +344,66 @@ describe('hook merge', () => {
     expect(JSON.stringify(second.nextSettings)).toContain('Check completion');
     expect(second.settingsChanged).toBe(false);
   });
+
+  test('rewrites hook command roots with transformed plugin ids', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+
+    const result = buildHookMerge({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
+      previousHooks: [],
+      settings: {},
+      rewriteMap: new Map([
+        ['tdk-core', 'erc-core'],
+        ['tdk-demo', 'erc-demo'],
+      ]),
+    });
+
+    expect(result.collisions).toEqual([]);
+    const text = JSON.stringify(result.nextSettings);
+    expect(text).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
+    expect(text).not.toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(result.managedHooks[0]?.plugin).toBe('tdk-core');
+  });
+
+  test('migrates managed hook command roots to transformed plugin ids', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const previous = {
+      id: 'tdk:tdk-core:UserPromptSubmit:*:old',
+      plugin: 'tdk-core',
+      event: 'UserPromptSubmit',
+      matcher: '*',
+      type: 'command',
+      command: 'cd "$CLAUDE_PROJECT_DIR" && node "${CLAUDE_PROJECT_DIR}/.claude/hooks/tdk-core/hook-gateway.cjs" dev-context-injector',
+    };
+    const settings = {
+      hooks: {
+        UserPromptSubmit: [
+          {
+            matcher: '*',
+            hooks: [{ type: 'command', command: previous.command }],
+          },
+        ],
+      },
+    };
+
+    const result = buildHookMerge({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
+      previousHooks: [previous],
+      settings,
+      rewriteMap: new Map([['tdk-core', 'erc-core']]),
+    });
+
+    const text = JSON.stringify(result.nextSettings);
+    expect(result.collisions).toEqual([]);
+    expect(result.mutations.map((mutation) => mutation.action)).toEqual(['remove', 'add']);
+    expect(text).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
+    expect(text).not.toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(result.managedHooks[0]?.plugin).toBe('tdk-core');
+  });
 });
