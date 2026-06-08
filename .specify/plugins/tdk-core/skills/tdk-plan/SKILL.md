@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "3.4.9"
+  version: "3.4.10"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -111,6 +111,8 @@ Invoke `tdk-load-project-context` with the validated `TASK_ID`. Store: `PROJECT_
 ### Step 0.1b — Load Skill Routing
 Load: `references/skill-routing.md`
 Resolve skill-routing file per reference. Parse sub-workspace sections. Store: `SKILL_ROUTING` map. Missing file → AskUserQuestion per reference (opt-in create or skip with empty map).
+
+When `FLAGS` contains `--red-team` or `--validate`, do not run the interactive missing-file AskUserQuestion/create flow from this step. Those action flags still MUST always perform exact-path inline routing reads inside their own workflows.
 
 ### Step 0.memory — Memory Pre-load
 Load: `references/gates.md`

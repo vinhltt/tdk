@@ -4,9 +4,11 @@ Instructions for loading, parsing, and injecting per-project skill routing into 
 
 ## File Resolution
 
-1. Resolve path: `{docs.path}/custom-workflow/plan-skill-routing.md` (where `docs.path` comes from `.specify.json`, default `.specify/configurations`).
-2. If file exists → read and parse (next section).
-3. If file missing → **AskUserQuestion**:
+1. Resolve exact path: `ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md` (where `docs.path` comes from `.specify.json`, default `.specify/configurations`). If `docs.path` is relative, resolve it from the project root; if it is absolute (including a Windows drive path), preserve it.
+2. Check existence by reading the exact resolved path. Use the Read tool on `ROUTING_FILE`, or a direct shell file test plus read such as `test -f "$ROUTING_FILE"` then `cat "$ROUTING_FILE"`.
+3. **Do not use Search, Grep, Glob, or a pattern like `custom-workflow/plan-skill-routing.md` to prove absence.** Those tools search file contents or patterns and can return 0 results even when `{docs.path}/custom-workflow/plan-skill-routing.md` exists.
+4. If exact-path read succeeds → parse (next section).
+5. If exact-path read fails because the file is missing → **AskUserQuestion**:
    - Question: "No skill-routing file found. Do you have custom skills to assign per sub-workspace?"
    - Option A: "Yes, I want to create one" → show template path (`.specify/templates/plan/plan-skill-routing-template.tpl`) + instructions: copy to `{docs.path}/custom-workflow/plan-skill-routing.md`, add your `/tdk-*` or project-specific skills, then re-run `/tdk-plan`. **STOP** — do not proceed with plan generation until file exists.
    - Option B: "No, skip skill routing" → set `SKILL_ROUTING = empty`, proceed without injection.
@@ -77,7 +79,7 @@ Instead, these modes inline-load the routing file inside their own workflows:
 - **Red-team (Phase 06)**: re-read `{docs.path}/custom-workflow/plan-skill-routing.md` into `SKILL_ROUTING` so reviewers can assess skill-assignment quality per phase.
 - **Validate (Phase 07)**: load routing file so validation interview can include skill-routing questions (e.g. "Are skills correctly assigned to sub-workspaces?").
 
-This is a lightweight read (not full Step 0.1b) — parse the file if present, skip silently if missing.
+This is a lightweight exact-path read (not full Step 0.1b) — parse the file if present, skip silently if the exact resolved file is missing. Do not AskUserQuestion and do not use Search/Grep/Glob for this inline load.
 
 ## EC-11 Mismatch Warning
 

@@ -10,6 +10,16 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.63.1] - 2026-06-08
+
+### Changed
+- **[tdk-core / tdk-plan]** Enforce exact-path reads for `plan-skill-routing.md` across skill-routing, red-team, and validate workflows
+  - `skill-routing.md`: Added explicit `ROUTING_FILE` resolution steps; prohibit Search/Grep/Glob for absence checks that can return false negatives
+  - `red-team-workflow.md`: Always resolve exact `ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md` path before inline load
+  - `validate-workflow.md`: Use exact-path resolution for skill routing load; assess phase skill assignments
+  - `SKILL.md`: Skip interactive missing-file AskUserQuestion/create flow when `--red-team`/`--validate` flags active
+- **[Scripts]** Added contract test asserting exact-path read requirement for `plan-skill-routing.md` in `tdk-plan-reference-contract.test.ts`
+
 ## [1.63.0] - 2026-06-07
 
 ### Added

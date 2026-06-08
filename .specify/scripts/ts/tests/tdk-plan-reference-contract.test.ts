@@ -9,6 +9,7 @@ const PLAN_SKILL = resolve(
 const REFERENCES_DIR = resolve(dirname(PLAN_SKILL), 'references');
 const MODES_REFERENCE = resolve(REFERENCES_DIR, 'modes.md');
 const RED_TEAM_WORKFLOW = resolve(REFERENCES_DIR, 'red-team-workflow.md');
+const SKILL_ROUTING_REFERENCE = resolve(REFERENCES_DIR, 'skill-routing.md');
 const VALIDATE_WORKFLOW = resolve(REFERENCES_DIR, 'validate-workflow.md');
 const VALIDATE_QUESTION_FRAMEWORK = resolve(REFERENCES_DIR, 'validate-question-framework.md');
 const PLUGINS_DIR = resolve(import.meta.dir, '../../../plugins');
@@ -190,5 +191,24 @@ describe('tdk-plan reference contract', () => {
     expect(redTeamWorkflow).toContain('review focus');
     expect(validateWorkflow).toContain('USER_CONTENT');
     expect(validateWorkflow).toContain('validation focus');
+  });
+
+  it('requires exact-path reads for plan-skill-routing.md instead of search-based absence checks', () => {
+    const routing = read(SKILL_ROUTING_REFERENCE);
+    const redTeamWorkflow = read(RED_TEAM_WORKFLOW);
+    const validateWorkflow = read(VALIDATE_WORKFLOW);
+
+    expect(skill).toContain('do not run the interactive missing-file AskUserQuestion/create flow');
+    expect(skill).toContain('always perform exact-path inline routing reads');
+    expect(routing).toContain('ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md');
+    expect(routing).toContain('reading the exact resolved path');
+    expect(routing).toContain('Do not use Search, Grep, Glob');
+    expect(routing).toContain('can return 0 results even when `{docs.path}/custom-workflow/plan-skill-routing.md` exists');
+    expect(validateWorkflow).toContain('always resolve exact `ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md`');
+    expect(validateWorkflow).toContain('assess whether plan phases have correct skill assignments');
+    expect(validateWorkflow).toContain('Do not use Search/Grep/Glob');
+    expect(redTeamWorkflow).toContain('always resolve exact `ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md`');
+    expect(redTeamWorkflow).toContain('including missing or stale `## Delegate Skills`');
+    expect(redTeamWorkflow).toContain('Do not use Search/Grep/Glob');
   });
 });

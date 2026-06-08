@@ -25,7 +25,7 @@ Adversarial review by 3 personas in parallel. Findings flow raw to a markdown-ta
 
 1. Validate TASK_ID + locate spec dir.
 2. Read `plan.md` + every `phase-*.md` from `.specify/<specsRoot>/<...>/<task_id>/`.
-2b. **Skill Routing Inline Load**: if plan has `## Delegate Skills` sections, read `{docs.path}/custom-workflow/plan-skill-routing.md` into `SKILL_ROUTING` so reviewers can assess skill-assignment quality per phase. Skip silently if file missing.
+2b. **Skill Routing Inline Load**: always resolve exact `ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md` and read that path directly into `SKILL_ROUTING` so reviewers can assess skill-assignment quality per phase, including missing or stale `## Delegate Skills`. Do not use Search/Grep/Glob or a path fragment pattern to check existence. Skip silently only when the exact resolved file is missing.
 3. If `USER_CONTENT` is non-empty, store it as review focus and include it in every reviewer prompt context. The focus narrows attention; reviewers may still report critical issues outside that focus.
 4. Increment `red_team_session: N` (counter bumps **only after ≥1 agent returns parseable output** — S2.F8).
 5. Spawn 3 agents in parallel via Task tool. Use `Promise.allSettled` (NOT `all`); 180 s per-agent ceiling. Timeout / crash on one agent does NOT block the others — surface as `persona: {X} — timeout` in adjudication.

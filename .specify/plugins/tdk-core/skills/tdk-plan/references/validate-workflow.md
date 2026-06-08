@@ -52,7 +52,7 @@ Exit immediately. No file mutations, no counter bump.
 
 1. Validate TASK_ID, locate spec dir.
 2. Load `spec.md`, `plan.md`, and every `phases/phase-NN-*.md`.
-2b. **Skill Routing Inline Load**: if plan has `## Delegate Skills` sections, read `{docs.path}/custom-workflow/plan-skill-routing.md` into `SKILL_ROUTING` so validation interview can include skill-routing questions. Skip silently if file missing.
+2b. **Skill Routing Inline Load**: always resolve exact `ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md` and read that path directly into `SKILL_ROUTING` so validation can assess whether plan phases have correct skill assignments. Do not use Search/Grep/Glob or a path fragment pattern to check existence. Skip silently only when the exact resolved file is missing.
 3. If `USER_CONTENT` is non-empty, store it as validation focus and bias generated questions toward that focus. The focus narrows priority; severe drift still takes precedence.
 4. Increment `validation_session: N` in plan.md frontmatter (via Edit tool — Session 2 #12 frontmatter mutations are framework-managed; do NOT add a custom bun writer).
 5. Reset `validation_cursor: 0`.

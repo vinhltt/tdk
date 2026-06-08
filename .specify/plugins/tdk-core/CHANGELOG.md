@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.10] - 2026-06-08
+
+### Changed
+- tdk-plan: Enforce exact-path reads for plan-skill-routing.md; prohibit Search/Grep/Glob for absence checks
+- tdk-plan: Skip interactive missing-file flow when --red-team/--validate flags active
+
 ## [3.4.9] - 2026-06-06
 
 ### Changed
