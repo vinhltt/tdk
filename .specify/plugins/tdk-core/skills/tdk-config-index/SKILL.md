@@ -1,8 +1,8 @@
 ---
 name: tdk-config-index
 description: "Generate or update the Document Manager index for workspace and sub-workspace docs."
-metadata: 
-  version: "2.0.0"
+metadata:
+  version: "3.4.11"
 ---
 
 # /tdk-config-index - Generate Document Manager Index
@@ -42,11 +42,29 @@ Creates/updates `{docs.path}/document-manager.md`
 
 ```bash
 # If sub-workspace specified:
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/config/index.ts --sub-workspace {SUB_WORKSPACE_NAME} [--full]
+# Add --full when needed.
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/config/index.ts --sub-workspace {SUB_WORKSPACE_NAME})
+' -- "<agent-resolved-project-root>"
 
 # Otherwise (workspace level):
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/config/index.ts [--full]
+# Add --full when needed.
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/config/index.ts)
+' -- "<agent-resolved-project-root>"
 ```
+
+Ask the user for the project root if `<agent-resolved-project-root>` cannot be identified confidently; do not pass the placeholder literally.
 
 **CRITICAL: Handle script errors**:
 - **If exit code != 0**: **STOP IMMEDIATELY**. Do NOT continue or try workarounds.

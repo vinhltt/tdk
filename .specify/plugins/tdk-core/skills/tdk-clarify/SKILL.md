@@ -1,8 +1,8 @@
 ---
 name: tdk-clarify
 description: "Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec."
-metadata: 
-  version: "2.1.0"
+metadata:
+  version: "3.4.11"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -84,7 +84,18 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
 ### Execution Steps
 
-1. Run `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/check-prerequisites.ts {task_id} --json --paths-only` from repo root (pass the validated task_id from Step 0). Parse minimal JSON payload fields:
+1. Run the prerequisite command with an agent-resolved project root (pass the validated task_id from Step 0):
+   ```bash
+   bash -lc '
+   PROJECT_DIR="$1"
+   if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+     echo "Invalid project root: $PROJECT_DIR" >&2
+     exit 1
+   fi
+   (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --json --paths-only)
+   ' -- "<agent-resolved-project-root>"
+   ```
+   Ask the user for the project root if `<agent-resolved-project-root>` cannot be identified confidently; do not pass the placeholder literally. Parse minimal JSON payload fields:
    - `featureDir`
    - `featureSpec`
    - (Optionally capture `IMPL_PLAN`, `TASKS` for future chained flows.)

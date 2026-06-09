@@ -10,6 +10,16 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.63.3] - 2026-06-09
+
+### Added
+- **[Scripts]** New `target-relative-path.ts` utility module — POSIX-safe path helpers (`normalizeTargetRelativePath`, `assertSafeClaudeTargetRelativePath`, `posixTargetPath`) replacing OS-separator-dependent `path.join` calls across the harness
+
+### Changed
+- **[Scripts]** Harness path normalization refactor: 9 files (`claude-target-mapper`, `file-write-plan`, `hook-merge`, `install-plan`, `install-writer`, `legacy-hooks-json-cleanup`, `manifest-store`, `prefix-transform`, `runtime-asset-transform`) now use posix-safe path utils — eliminates Windows backslash variance; adds `.claude/` boundary enforcement on manifest load; 8 test files updated
+- **[tdk-core]** Project root resolution: 11 skills (`tdk-analyze`, `tdk-checklist`, `tdk-clarify`, `tdk-config-diff`, `tdk-config-index`, `tdk-config-sync`, `tdk-implement`, `tdk-plan`, `tdk-status`, `tdk-sub-workspace-docs`, `tdk-ut-backfill-plan`) replace `$CLAUDE_PROJECT_DIR`-based script invocation with `<agent-resolved-project-root>` / `bash -lc` pattern — agent resolves project root from harness context, not a fragile env-var chain
+- **[tdk-utils]** Project root resolution: `tdk-load-project-context`, `tdk-scout`, `tdk-setup-guide` skills adopt same `<agent-resolved-project-root>` pattern
+
 ## [1.63.2] - 2026-06-08
 
 ### Changed

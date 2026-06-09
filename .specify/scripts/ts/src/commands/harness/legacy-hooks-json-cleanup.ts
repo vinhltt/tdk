@@ -1,13 +1,14 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { sha256File } from './checksum';
+import { posixTargetPath } from './target-relative-path';
 import type { BuildPlanInput, Collision, ManagedFile, RequiredPrompt } from './types';
 
 export function planLegacyHooksJsonInspection(
   input: BuildPlanInput,
   previousMap: Map<string, ManagedFile>,
 ): { collisions: Collision[]; prompts: RequiredPrompt[]; warnings: string[] } {
-  const targetRelativePath = path.join('.claude', 'hooks', 'hooks.json');
+  const targetRelativePath = posixTargetPath('.claude', 'hooks', 'hooks.json');
   if (previousMap.has(targetRelativePath)) return { collisions: [], prompts: [], warnings: [] };
 
   const target = path.join(input.consumerRoot, targetRelativePath);

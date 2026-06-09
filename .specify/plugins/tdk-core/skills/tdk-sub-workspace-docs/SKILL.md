@@ -4,7 +4,7 @@ description: "Smart skill: init or update 4 codebase-derived doc files per sub-w
 user-invocable: true
 argument-hint: "[--sub-workspace NAME | --all] [--force]"
 metadata:
-  version: "3.3.2"
+  version: "3.4.11"
   author: "VinhLTT"
   category: docs
 ---
@@ -41,7 +41,7 @@ Origin plan: [`plans/260510-1624-tdk-sub-workspace-docs/`](../../../../../plans/
 
 ## Steps
 
-1. **Locate project root.** Run `Bash`: `git rev-parse --show-toplevel`. `cd` there. All paths below are relative to root.
+1. **Locate project root.** Use `<agent-resolved-project-root>` from the active coding harness/session and `cd` there. Ask the user for the project root if it cannot be identified confidently. All paths below are relative to root.
 
 2. **Pre-check tdk-scout skill is installed.**
    ```bash

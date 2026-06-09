@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "3.4.10"
+  version: "3.4.11"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -92,17 +92,20 @@ Reject with STOP if the first argument token is missing or invalid, a known mode
 
 ### Script Command Contract
 **Inline.** <!-- script invocation contract -->
-Before any direct Bun script command in this skill or its references, resolve project root portably:
+Before any direct Bun script command in this skill or its references, resolve the project root at the agent layer using the active coding harness/session context. Ask the user for the project root if you cannot identify it confidently.
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE." >&2
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
 fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/...)
+' -- "<agent-resolved-project-root>"
 ```
 
-Invoke scripts from the resolved root with `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/...)`. If the command exits non-zero, follow the critical error handling rule above.
+Replace `<agent-resolved-project-root>` with the actual absolute project root; do not pass the placeholder literally. Invoke scripts from the resolved root with `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/...)`. If the Bun command exits non-zero, follow the critical error handling rule above.
 
 ### Step 0.1 — Load Project Context
 **Inline.** <!-- script invocation -->

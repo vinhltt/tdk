@@ -59,7 +59,7 @@ describe('harness install CLI settings flow', () => {
     expect(blocked.stderr.toString()).toContain('--migrate-prefix');
     expect(migration.exitCode).toBe(0);
     expect(migration.stdout.toString()).toContain('Prefix migration: pav- -> ck-');
-    expect(migration.stdout.toString()).toContain(`create: ${path.join('.claude', 'skills', 'ck-demo', 'SKILL.md')}`);
-    expect(migration.stdout.toString()).toContain(`remove: ${path.join('.claude', 'skills', 'pav-demo', 'SKILL.md')}`);
+    expect(migration.stdout.toString()).toContain('create: .claude/skills/ck-demo/SKILL.md');
+    expect(migration.stdout.toString()).toContain('remove: .claude/skills/pav-demo/SKILL.md');
   });
 });

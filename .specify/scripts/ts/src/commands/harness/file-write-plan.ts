@@ -1,10 +1,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { sha256File } from './checksum';
+import { normalizeTargetRelativePath } from './target-relative-path';
 import type { Collision, ManagedFile, PlannedWrite, RequiredPrompt, TransformedPluginFile } from './types';
 
 function targetPath(consumerRoot: string, targetRelativePath: string): string {
-  return path.join(consumerRoot, targetRelativePath);
+  return path.join(consumerRoot, normalizeTargetRelativePath(targetRelativePath));
 }
 
 function isInside(parent: string, child: string): boolean {
@@ -18,10 +19,11 @@ export function classifyFile(params: {
   file: TransformedPluginFile;
   previous?: ManagedFile;
 }): { write?: PlannedWrite; collision?: Collision; prompt?: RequiredPrompt } {
-  const target = targetPath(params.consumerRoot, params.file.targetRelativePath);
+  const targetRelativePath = normalizeTargetRelativePath(params.file.targetRelativePath);
+  const target = targetPath(params.consumerRoot, targetRelativePath);
   const claudeRoot = path.join(params.consumerRoot, params.targetDir ?? '.claude');
   if (!isInside(claudeRoot, target)) {
-    return { collision: { kind: 'path-traversal', path: target, plugin: params.file.plugin, message: `Target escapes .claude: ${params.file.targetRelativePath}` } };
+    return { collision: { kind: 'path-traversal', path: target, plugin: params.file.plugin, message: `Target escapes .claude: ${targetRelativePath}` } };
   }
 
   let stat: fs.Stats | undefined;
@@ -32,10 +34,10 @@ export function classifyFile(params: {
   }
 
   if (stat?.isSymbolicLink()) {
-    return { collision: { kind: 'unsafe-symlink', path: target, plugin: params.file.plugin, message: `Refusing to write through symlink: ${params.file.targetRelativePath}` } };
+    return { collision: { kind: 'unsafe-symlink', path: target, plugin: params.file.plugin, message: `Refusing to write through symlink: ${targetRelativePath}` } };
   }
   if (stat?.isDirectory()) {
-    return { collision: { kind: 'directory-file-conflict', path: target, plugin: params.file.plugin, message: `Target is a directory: ${params.file.targetRelativePath}` } };
+    return { collision: { kind: 'directory-file-conflict', path: target, plugin: params.file.plugin, message: `Target is a directory: ${targetRelativePath}` } };
   }
   if (!stat) {
     return {
@@ -44,7 +46,7 @@ export function classifyFile(params: {
         sourcePath: params.file.sourcePath,
         sourceRelativePath: params.file.sourceRelativePath,
         targetPath: target,
-        targetRelativePath: params.file.targetRelativePath,
+        targetRelativePath,
         sourceChecksum: params.file.sourceChecksum,
         installedChecksum: params.file.installedChecksum,
         content: params.file.content,
@@ -62,15 +64,15 @@ export function classifyFile(params: {
         sourcePath: params.file.sourcePath,
         sourceRelativePath: params.file.sourceRelativePath,
         targetPath: target,
-        targetRelativePath: params.file.targetRelativePath,
+        targetRelativePath,
         sourceChecksum: params.file.sourceChecksum,
         installedChecksum: params.file.installedChecksum,
         content: params.file.content,
         expectedTargetChecksum: currentChecksum,
         action: 'update',
       },
-      collision: { kind: 'unmanaged-target-exists', path: target, plugin: params.file.plugin, message: `Unmanaged target already exists: ${params.file.targetRelativePath}` },
-      prompt: { type: 'unmanaged-target-overwrite', path: target, targetRelativePath: params.file.targetRelativePath },
+      collision: { kind: 'unmanaged-target-exists', path: target, plugin: params.file.plugin, message: `Unmanaged target already exists: ${targetRelativePath}` },
+      prompt: { type: 'unmanaged-target-overwrite', path: target, targetRelativePath },
     };
   }
 
@@ -81,15 +83,15 @@ export function classifyFile(params: {
         sourcePath: params.file.sourcePath,
         sourceRelativePath: params.file.sourceRelativePath,
         targetPath: target,
-        targetRelativePath: params.file.targetRelativePath,
+        targetRelativePath,
         sourceChecksum: params.file.sourceChecksum,
         installedChecksum: params.file.installedChecksum,
         content: params.file.content,
         expectedTargetChecksum: currentChecksum,
         action: 'update',
       },
-      collision: { kind: 'managed-drift', path: target, plugin: params.file.plugin, message: `Managed target drifted: ${params.file.targetRelativePath}` },
-      prompt: { type: 'managed-drift-overwrite', path: target, targetRelativePath: params.file.targetRelativePath },
+      collision: { kind: 'managed-drift', path: target, plugin: params.file.plugin, message: `Managed target drifted: ${targetRelativePath}` },
+      prompt: { type: 'managed-drift-overwrite', path: target, targetRelativePath },
     };
   }
 
@@ -99,7 +101,7 @@ export function classifyFile(params: {
       sourcePath: params.file.sourcePath,
       sourceRelativePath: params.file.sourceRelativePath,
       targetPath: target,
-      targetRelativePath: params.file.targetRelativePath,
+      targetRelativePath,
       sourceChecksum: params.file.sourceChecksum,
       installedChecksum: params.file.installedChecksum,
       content: params.file.content,

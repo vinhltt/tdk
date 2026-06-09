@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.11.4] - 2026-06-09
+
+### Changed
+- Project root resolution: tdk-load-project-context, tdk-scout, tdk-setup-guide skills adopt agent-resolved-project-root / bash -lc pattern
+
 ## [1.11.3] - 2026-06-07
 
 ### Changed

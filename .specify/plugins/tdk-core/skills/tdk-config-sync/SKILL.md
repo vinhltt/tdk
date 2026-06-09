@@ -2,7 +2,7 @@
 name: tdk-config-sync
 description: "Synchronize documentation files between workspace and sub-workspaces."
 metadata:
-  version: "2.0.0"
+  version: "3.4.11"
 ---
 
 # /tdk-config-sync - Sync Documentation Between Workspace and Sub-Workspaces
@@ -46,8 +46,17 @@ If no direction specified:
 
 Run diff script first:
 ```bash
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/config/diff.ts --sub-workspace {SUB_WORKSPACE_NAME}
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/config/diff.ts --sub-workspace {SUB_WORKSPACE_NAME})
+' -- "<agent-resolved-project-root>"
 ```
+
+Ask the user for the project root if `<agent-resolved-project-root>` cannot be identified confidently; do not pass the placeholder literally.
 
 **CRITICAL: Handle script errors**:
 - **If exit code != 0**: **STOP IMMEDIATELY**. Do NOT continue or try workarounds.
@@ -94,13 +103,37 @@ If user selects "Cancel":
 
 ```bash
 # From sub-workspace to parent:
-bun $CLAUDE_PROJECT_DIR/.specify/scripts/ts/src/commands/util/sync-docs.ts --from-sub-workspace {NAME} [--dry-run] [--force]
+# Add --dry-run and/or --force when needed.
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/sync-docs.ts --from-sub-workspace {NAME})
+' -- "<agent-resolved-project-root>"
 
 # From parent to sub-workspace:
-bun $CLAUDE_PROJECT_DIR/.specify/scripts/ts/src/commands/util/sync-docs.ts --to-sub-workspace {NAME} [--dry-run] [--force]
+# Add --dry-run and/or --force when needed.
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/sync-docs.ts --to-sub-workspace {NAME})
+' -- "<agent-resolved-project-root>"
 
 # All sub-workspaces:
-bun $CLAUDE_PROJECT_DIR/.specify/scripts/ts/src/commands/util/sync-docs.ts --all [--dry-run] [--force]
+# Add --dry-run and/or --force when needed.
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/sync-docs.ts --all)
+' -- "<agent-resolved-project-root>"
 ```
 
 **CRITICAL: Handle script errors**:

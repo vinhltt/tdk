@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.11] - 2026-06-09
+
+### Changed
+- Project root resolution: 11 skills (tdk-analyze, tdk-checklist, tdk-clarify, tdk-config-diff, tdk-config-index, tdk-config-sync, tdk-implement, tdk-plan, tdk-status, tdk-sub-workspace-docs, tdk-ut-backfill-plan) replace $CLAUDE_PROJECT_DIR-based script invocation with agent-resolved-project-root / bash -lc pattern
+
 ## [3.4.10] - 2026-06-08
 
 ### Changed

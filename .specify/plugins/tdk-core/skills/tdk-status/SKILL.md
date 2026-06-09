@@ -2,7 +2,7 @@
 name: tdk-status
 description: "Track Workflow Progress"
 metadata:
-  version: "3.4.3"
+  version: "3.4.11"
 ---
 
 # /tdk-status - Track Workflow Progress
@@ -22,13 +22,17 @@ The status collector is also the read-only preflight contract for other skills, 
 Consumers should call the collector directly:
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
 fi
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/feature/status.ts <feature-id>)
+' -- "<agent-resolved-project-root>"
 ```
+
+The agent must resolve `<agent-resolved-project-root>` from the active coding harness/session before running the command. Ask the user for the project root if it is unclear; do not pass the placeholder literally.
 
 Use structured JSON fields, not this skill's formatted report or recommendation prose:
 
@@ -56,12 +60,14 @@ Parse `$ARGUMENTS` for feature ID:
 ## Step 2: Run Status Collector
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
 fi
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/feature/status.ts <feature-id>)
+' -- "<agent-resolved-project-root>"
 ```
 
 Parse the JSON output. If `error` or `phasesParseError` field exists, display error message and STOP.

@@ -34,8 +34,8 @@ describe('buildClaudeInstallPlan', () => {
 
     const plan = buildPlan(consumer.root);
 
-    expect(plan.writes.some((write) => write.targetRelativePath === path.join('.claude', 'hooks', 'hooks.json'))).toBe(false);
-    expect(plan.writes.some((write) => write.targetRelativePath === path.join('.claude', 'hooks', 'tdk-core', 'hook-gateway.cjs'))).toBe(true);
+    expect(plan.writes.some((write) => write.targetRelativePath === '.claude/hooks/hooks.json')).toBe(false);
+    expect(plan.writes.some((write) => write.targetRelativePath === '.claude/hooks/tdk-core/hook-gateway.cjs')).toBe(true);
   });
 
   test('namespaces same hook filenames from multiple plugins', () => {
@@ -81,8 +81,8 @@ describe('buildClaudeInstallPlan', () => {
     });
 
     expect(plan.collisions).toEqual([]);
-    expect(plan.writes.map((write) => write.targetRelativePath)).toContain(path.join('.claude', 'hooks', 'tdk-core', 'hook-gateway.cjs'));
-    expect(plan.writes.map((write) => write.targetRelativePath)).toContain(path.join('.claude', 'hooks', 'tdk-memory', 'hook-gateway.cjs'));
+    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/tdk-memory/hook-gateway.cjs');
     expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
     expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/tdk-memory/hook-gateway.cjs');
   });
@@ -132,8 +132,8 @@ describe('buildClaudeInstallPlan', () => {
     });
 
     expect(plan.collisions).toEqual([]);
-    expect(plan.writes.map((write) => write.targetRelativePath)).toContain(path.join('.claude', 'hooks', 'erc-core', 'hook-gateway.cjs'));
-    expect(plan.writes.map((write) => write.targetRelativePath)).toContain(path.join('.claude', 'hooks', 'erc-memory', 'hook-gateway.cjs'));
+    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
+    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/erc-memory/hook-gateway.cjs');
     expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
     expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/erc-memory/hook-gateway.cjs');
     expect(JSON.stringify(plan.nextSettings)).not.toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
@@ -151,7 +151,7 @@ describe('buildClaudeInstallPlan', () => {
 
     expect(plan.collisions.some((collision) => collision.kind === 'unmanaged-target-exists')).toBe(true);
     expect(plan.prompts.some((prompt) => prompt.type === 'unmanaged-target-overwrite')).toBe(true);
-    expect(plan.writes.some((write) => write.targetRelativePath.endsWith(path.join('skills', 'demo', 'SKILL.md')))).toBe(true);
+    expect(plan.writes.some((write) => write.targetRelativePath.endsWith('skills/demo/SKILL.md'))).toBe(true);
   });
 
   test('prompts cleanup for unmanaged stale generated hooks json', () => {
@@ -183,5 +183,39 @@ describe('buildClaudeInstallPlan', () => {
     });
 
     expect(plan.collisions.some((collision) => collision.message.includes('Hook config checksum mismatch'))).toBe(true);
+  });
+
+  test('normalizes raw legacy backslash manifest targets before diffing removals', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+    const skillFile = inventory.plugins[0]?.files.find((file) => file.sourceRelativePath === 'skills/demo/SKILL.md');
+    expect(skillFile).toBeDefined();
+    const skillContent = fs.readFileSync(skillFile!.sourcePath);
+    const skillChecksum = sha256(skillContent.toString('utf-8'));
+    const target = path.join(consumer.root, '.claude', 'skills', 'demo', 'SKILL.md');
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, skillContent);
+
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: {
+        ...emptyHarnessManifest(),
+        managedFiles: [{
+          plugin: 'tdk-core',
+          sourceRelativePath: 'skills/demo/SKILL.md',
+          targetRelativePath: ['.claude', 'skills', 'demo', 'SKILL.md'].join('\\\\'),
+          sourceChecksum: skillFile!.sourceChecksum,
+          installedChecksum: skillChecksum,
+        }],
+      },
+      settings: {},
+    });
+
+    expect(plan.removals).toEqual([]);
+    expect(plan.nextManifest.managedFiles.some((file) => file.targetRelativePath === '.claude/skills/demo/SKILL.md')).toBe(true);
+    expect(plan.nextManifest.managedFiles.some((file) => file.targetRelativePath.includes('\\'))).toBe(false);
   });
 });

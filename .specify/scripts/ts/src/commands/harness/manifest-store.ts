@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { assertSafeClaudeTargetRelativePath } from './target-relative-path';
 import type { HarnessInstallManifest, HarnessName } from './types';
 
 export function emptyHarnessManifest(): HarnessInstallManifest {
@@ -27,7 +28,13 @@ function readManifest(manifestPath: string): HarnessInstallManifest {
   if (data.version !== 1 || data.harness !== 'claude' || !Array.isArray(data.managedFiles) || !Array.isArray(data.managedHooks)) {
     throw new Error('unexpected manifest shape');
   }
-  return data;
+  return {
+    ...data,
+    managedFiles: data.managedFiles.map((file) => ({
+      ...file,
+      targetRelativePath: assertSafeClaudeTargetRelativePath(file.targetRelativePath, 'managed target path'),
+    })),
+  };
 }
 
 export function loadHarnessManifest(consumerRoot: string): HarnessInstallManifest {

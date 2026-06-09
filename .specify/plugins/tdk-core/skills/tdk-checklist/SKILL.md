@@ -1,8 +1,8 @@
 ---
 name: tdk-checklist
 description: "Generate a custom checklist for the current feature based on user requirements."
-metadata: 
-  version: "2.1.0"
+metadata:
+  version: "3.4.11"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -79,7 +79,19 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
 ### Step 1: Setup
 
-Run `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/check-prerequisites.ts {task_id} --json` from repo root (pass the validated task_id from Step 0). Parse JSON for taskId, featureDir, availableDocs.
+Run the prerequisite command with an agent-resolved project root (pass the validated task_id from Step 0):
+```bash
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --json)
+' -- "<agent-resolved-project-root>"
+```
+
+Ask the user for the project root if `<agent-resolved-project-root>` cannot be identified confidently; do not pass the placeholder literally. Parse JSON for taskId, featureDir, availableDocs.
 - All file paths must be absolute.
 - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
 

@@ -48,7 +48,7 @@ function hookId(plugin: string, event: string, matcher: string, handler: HookHan
   return `hook:${hookOwnershipKey(plugin, event, matcher, handler).slice(0, 24)}`;
 }
 
-export function readSettings(consumerRoot: string, settingsRelativePath = path.join('.claude', 'settings.json')): unknown {
+export function readSettings(consumerRoot: string, settingsRelativePath = '.claude/settings.json'): unknown {
   const settingsPath = path.join(consumerRoot, settingsRelativePath);
   if (!fs.existsSync(settingsPath)) return {};
   return JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));

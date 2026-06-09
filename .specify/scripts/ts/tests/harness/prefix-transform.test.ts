@@ -28,7 +28,7 @@ describe('prefix transform planning', () => {
     });
 
     const write = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-demo/SKILL.md');
-    expect(write?.targetRelativePath).toBe(path.join('.claude', 'skills', 'pav-demo', 'SKILL.md'));
+    expect(write?.targetRelativePath).toBe('.claude/skills/pav-demo/SKILL.md');
     expect(write?.content.toString('utf-8')).toContain('pav-demo');
     expect(write?.sourceChecksum).toBe(sha256('# tdk-demo\nUse tdk-demo from command text.\n'));
     expect(write?.installedChecksum).toBe(sha256('# pav-demo\nUse pav-demo from command text.\n'));
@@ -76,7 +76,7 @@ describe('prefix transform planning', () => {
     });
 
     const write = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-demo/SKILL.md');
-    expect(write?.targetRelativePath).toBe(path.join('.claude', 'skills', 'pav-demo', 'SKILL.md'));
+    expect(write?.targetRelativePath).toBe('.claude/skills/pav-demo/SKILL.md');
     expect(write?.content.toString('utf-8')).toContain('tdk-demo');
   });
 
@@ -114,11 +114,11 @@ describe('prefix transform planning', () => {
 
     const scriptWrite = plan.writes.find((item) => item.sourceRelativePath === 'scripts/compute-sha256-hashes.py');
     expect(scriptWrite?.plugin).toBe('tdk-memory');
-    expect(scriptWrite?.targetRelativePath).toBe(path.join('.claude', 'scripts', 'erc-memory', 'compute-sha256-hashes.py'));
+    expect(scriptWrite?.targetRelativePath).toBe('.claude/scripts/erc-memory/compute-sha256-hashes.py');
 
     const skillWrite = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-memory-init/SKILL.md');
     expect(skillWrite?.plugin).toBe('tdk-memory');
-    expect(skillWrite?.targetRelativePath).toBe(path.join('.claude', 'skills', 'erc-memory-init', 'SKILL.md'));
+    expect(skillWrite?.targetRelativePath).toBe('.claude/skills/erc-memory-init/SKILL.md');
     expect(skillWrite?.content.toString('utf-8')).toContain('Run /erc-memory-update from erc-memory.');
     expect(skillWrite?.content.toString('utf-8')).toContain('.claude/scripts/erc-memory/compute-sha256-hashes.py');
     expect(skillWrite?.sourceRelativePath).toBe('skills/tdk-memory-init/SKILL.md');

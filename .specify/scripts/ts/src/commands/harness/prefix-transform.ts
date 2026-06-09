@@ -1,4 +1,5 @@
 import * as path from 'node:path';
+import { normalizeTargetRelativePath, posixTargetPath } from './target-relative-path';
 import type { DiscoveredPlugin, HookHandler } from './types';
 
 export interface PrefixTransformSettings {
@@ -64,7 +65,7 @@ export function buildPrefixRewriteMap(plugins: DiscoveredPlugin[], settings: Pre
 }
 
 export function transformTargetRelativePath(targetRelativePath: string, settings: PrefixTransformSettings): string {
-  const normalized = targetRelativePath.split(/[\\/]/);
+  const normalized = normalizeTargetRelativePath(targetRelativePath).split('/');
   const familyIndex = normalized.findIndex((part) => part === 'skills' || part === 'agents' || part === 'commands');
   if (familyIndex !== -1 && normalized[familyIndex + 1]) {
     normalized[familyIndex + 1] = rewriteName(normalized[familyIndex + 1]!, settings);
@@ -72,7 +73,7 @@ export function transformTargetRelativePath(targetRelativePath: string, settings
   if (normalized[0] === '.claude' && (normalized[1] === 'scripts' || normalized[1] === 'hooks') && normalized[2]) {
     normalized[2] = rewriteName(normalized[2], settings);
   }
-  return path.join(...normalized);
+  return posixTargetPath(...normalized);
 }
 
 export function isTextTransformCandidate(filePath: string): boolean {

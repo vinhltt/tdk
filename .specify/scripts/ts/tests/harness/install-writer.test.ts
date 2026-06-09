@@ -95,7 +95,7 @@ describe('applyInstallPlan', () => {
     });
 
     expect(secondPlan.prompts.some((prompt) => prompt.type === 'managed-drift-overwrite')).toBe(true);
-    expect(secondPlan.writes.some((write) => write.targetRelativePath.endsWith(path.join('skills', 'demo', 'SKILL.md')))).toBe(true);
+    expect(secondPlan.writes.some((write) => write.targetRelativePath.endsWith('skills/demo/SKILL.md'))).toBe(true);
     const result = await applyInstallPlan(secondPlan, {
       yes: false,
       interactive: true,
@@ -159,7 +159,7 @@ describe('applyInstallPlan', () => {
     expect(result.backedUp).toHaveLength(1);
     expect(fs.readFileSync(result.backedUp[0]!, 'utf-8')).toBe('user content');
     expect(fs.readFileSync(target, 'utf-8')).toBe('# Skill\n');
-    expect(loadHarnessManifest(consumer.root).managedFiles.some((file) => file.targetRelativePath.endsWith(path.join('skills', 'demo', 'SKILL.md')))).toBe(true);
+    expect(loadHarnessManifest(consumer.root).managedFiles.some((file) => file.targetRelativePath.endsWith('skills/demo/SKILL.md'))).toBe(true);
   });
 
   test('--yes does not approve unmanaged target overwrite', async () => {
@@ -236,7 +236,7 @@ describe('applyInstallPlan', () => {
     });
 
     expect(result.backedUp).toHaveLength(1);
-    expect(result.removed).toContain(path.join('.claude', 'hooks', 'hooks.json'));
+    expect(result.removed).toContain('.claude/hooks/hooks.json');
     expect(fs.existsSync(target)).toBe(false);
   });
 

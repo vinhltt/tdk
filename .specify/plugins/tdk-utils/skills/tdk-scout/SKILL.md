@@ -4,7 +4,7 @@ description: "Codebase navigation skill (S4 hierarchical 2-tier). Pre-process a 
 user-invocable: true
 argument-hint: "[--scope DIR | --from-pack FILE] [--task-hint STR] [--sample-budget N] [--output PATH] [--force-refresh]"
 metadata:
-  version: "0.1.0"
+  version: "1.11.4"
   author: "VinhLTT"
   category: utility
 ---
@@ -37,7 +37,7 @@ Self-contained codebase navigation skill. Trade-off: regex-based Tier 1 (no LLM)
 
 ## Steps
 
-1. **Locate project root.** Run `Bash`: `git rev-parse --show-toplevel`. `cd` there. (Tier 1 cache lives under `.specify/cache/tdk-scout/` relative to root.)
+1. **Locate project root.** Use `<agent-resolved-project-root>` from the active coding harness/session and `cd` there. Ask the user for the project root if it cannot be identified confidently. (Tier 1 cache lives under `.specify/cache/tdk-scout/` relative to root.)
 
 2. **Validate args** locally for fast failure: at least one of `--scope`/`--from-pack`, not both. If invalid, surface error and stop.
 

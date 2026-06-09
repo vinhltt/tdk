@@ -36,4 +36,42 @@ describe('ownership manifest migration', () => {
     expect(fs.existsSync(legacyPath)).toBe(true);
     expect(fs.existsSync(manifestPathFor(consumer.root, 'claude'))).toBe(true);
   });
+
+  test('normalizes legacy managed target paths to POSIX separators', () => {
+    const consumer = makeConsumer();
+    const manifestPath = manifestPathFor(consumer.root, 'claude');
+    fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
+    fs.writeFileSync(manifestPath, JSON.stringify({
+      ...emptyHarnessManifest(),
+      managedFiles: [{
+        plugin: 'tdk-core',
+        sourceRelativePath: 'skills/demo/SKILL.md',
+        targetRelativePath: ['.claude', 'skills', 'demo', 'SKILL.md'].join('\\\\'),
+        sourceChecksum: 'source',
+        installedChecksum: 'installed',
+      }],
+    }, null, 2));
+
+    const manifest = loadHarnessManifest(consumer.root);
+
+    expect(manifest.managedFiles[0]?.targetRelativePath).toBe('.claude/skills/demo/SKILL.md');
+  });
+
+  test('rejects manifest targets that escape the Claude target directory', () => {
+    const consumer = makeConsumer();
+    const manifestPath = manifestPathFor(consumer.root, 'claude');
+    fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
+    fs.writeFileSync(manifestPath, JSON.stringify({
+      ...emptyHarnessManifest(),
+      managedFiles: [{
+        plugin: 'tdk-core',
+        sourceRelativePath: 'skills/demo/SKILL.md',
+        targetRelativePath: ['.claude', '..', 'victim.txt'].join('\\\\'),
+        sourceChecksum: 'source',
+        installedChecksum: 'installed',
+      }],
+    }, null, 2));
+
+    expect(() => loadHarnessManifest(consumer.root)).toThrow(/Unsafe managed target path/);
+  });
 });

@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "3.4.8"
+  version: "3.4.11"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -77,33 +77,32 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
 ### Script Command Contract
 
-Before any direct TDK TypeScript script call, resolve the project root portably:
+Before any direct TDK TypeScript script call, resolve the project root at the agent layer using the active coding harness/session context. Ask the user for the project root if you cannot identify it confidently before running the command. Replace `<agent-resolved-project-root>` with the actual absolute project root; do not pass the placeholder literally.
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
 fi
-```
-
-Then run scripts from `.specify/scripts/ts` in a subshell:
-
-```bash
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/<path>.ts ...)
+' -- "<agent-resolved-project-root>"
 ```
 
-Do not run TDK scripts by changing into the scripts directory with a relative path, and do not assume `$CLAUDE_PROJECT_DIR` exists outside Claude Code.
+Do not run TDK scripts by changing into the scripts directory with a relative path.
 
 ### Step 1: Check Prerequisites
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
 fi
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --json)
+' -- "<agent-resolved-project-root>"
 ```
 
 Parse JSON output. Then:
@@ -121,12 +120,14 @@ Parse JSON output. Then:
 Run the same read-only status collector used by `/tdk-status` before reading phase files or mutating statuses:
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
 fi
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/feature/status.ts {TASK_ID})
+' -- "<agent-resolved-project-root>"
 ```
 
 Parse JSON output. If `error` or `phasesParseError` exists → report the exact message and STOP.
@@ -168,12 +169,14 @@ This preflight is read-only. The phase parser below remains the execution source
 
 Parse phases table:
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
 fi
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json)
+' -- "<agent-resolved-project-root>"
 ```
 
 Parse JSON output. If exit code 1 → report errors → STOP.
@@ -182,22 +185,26 @@ JSON shape: `{ "phases": [{ "number": 1, "file": "phase-01-x.md", "fileLabel": "
 
 Phase frontmatter sync CLI (call before plan.md write at every status transition):
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
 fi
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" {status})
+' -- "<agent-resolved-project-root>"
 ```
 
 Update phase status in plan.md table:
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
 fi
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {phaseNumber} {status})
+' -- "<agent-resolved-project-root>"
 ```
 
 - If `## Phases` section is missing → ERROR: `"plan.md has no ## Phases table section. Regenerate with /tdk-plan."` → STOP.

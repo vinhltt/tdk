@@ -46,16 +46,52 @@ const RETRO_APPLY_SKILL = resolve(
   '../../../plugins/tdk-retro/skills/tdk-retro-apply/SKILL.md',
 );
 
-const ROOT_RESOLVER =
-  'PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"';
+const LEGACY_TDK_SCRIPT_SKILLS = [
+  '../../../plugins/tdk-core/skills/tdk-config-sync/SKILL.md',
+  '../../../plugins/tdk-core/skills/tdk-config-diff/SKILL.md',
+  '../../../plugins/tdk-core/skills/tdk-config-index/SKILL.md',
+  '../../../plugins/tdk-core/skills/tdk-analyze/SKILL.md',
+  '../../../plugins/tdk-core/skills/tdk-checklist/SKILL.md',
+  '../../../plugins/tdk-core/skills/tdk-clarify/SKILL.md',
+  '../../../plugins/tdk-core/skills/tdk-ut-backfill-plan/SKILL.md',
+  '../../../plugins/tdk-utils/skills/tdk-setup-guide/SKILL.md',
+].map((path) => resolve(import.meta.dir, path));
+
+const AGENT_ROOT_GUIDANCE_SKILLS = [
+  '../../../plugins/tdk-core/skills/tdk-sub-workspace-docs/SKILL.md',
+  '../../../plugins/tdk-utils/skills/tdk-scout/SKILL.md',
+].map((path) => resolve(import.meta.dir, path));
+
+const AGENT_PROJECT_ROOT_ARG = '-- "<agent-resolved-project-root>"';
 
 function read(path: string): string {
   return readFileSync(path, 'utf-8');
 }
 
-function expectPortableRootResolver(skillText: string): void {
-  expect(skillText).toContain(ROOT_RESOLVER);
-  expect(skillText).toContain('Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE.');
+function expectNoPowerShellSyntax(skillText: string): void {
+  expect(skillText).not.toMatch(/\$env:/);
+  expect(skillText).not.toMatch(/\belseif\b/);
+  expect(skillText).not.toContain('2>$null');
+  expect(skillText).not.toMatch(/\$[A-Z_]+\s+=\s+if \(/);
+}
+
+function expectNoShellRootDiscovery(skillText: string): void {
+  expectNoPowerShellSyntax(skillText);
+  expect(skillText).not.toContain('CLAUDE_PROJECT_DIR');
+  expect(skillText).not.toContain('GITHUB_WORKSPACE');
+  expect(skillText).not.toContain('git rev-parse --show-toplevel');
+  expect(skillText).not.toContain('$PWD');
+  expect(skillText).not.toContain('PROJECT_DIR=""');
+  expect(skillText).not.toContain('Cannot resolve project root. Run from a git workspace');
+}
+
+function expectAgentProvidedProjectRoot(skillText: string): void {
+  expectNoShellRootDiscovery(skillText);
+  expect(skillText).toContain('PROJECT_DIR="$1"');
+  expect(skillText).toContain('[ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]');
+  expect(skillText).toContain('Invalid project root: $PROJECT_DIR');
+  expect(skillText).toContain(AGENT_PROJECT_ROOT_ARG);
+  expect(skillText).toContain('Ask the user for the project root');
 }
 
 function expectSafeScriptCommand(skillText: string, command: string): void {
@@ -78,11 +114,11 @@ describe('cwd-independent skill command contract', () => {
   const retroCollectSkill = read(RETRO_COLLECT_SKILL);
   const retroProposeSkill = read(RETRO_PROPOSE_SKILL);
   const retroApplySkill = read(RETRO_APPLY_SKILL);
+  const legacyTdkScriptSkills = LEGACY_TDK_SCRIPT_SKILLS.map((path) => read(path));
+  const agentRootGuidanceSkills = AGENT_ROOT_GUIDANCE_SKILLS.map((path) => read(path));
 
-  it('tdk-implement resolves project root portably before script calls', () => {
-    expectPortableRootResolver(implementSkill);
-    expect(implementSkill).toContain('GITHUB_WORKSPACE');
-    expect(implementSkill).toContain('git rev-parse --show-toplevel');
+  it('tdk-implement receives project root as an agent-provided argument before script calls', () => {
+    expectAgentProvidedProjectRoot(implementSkill);
   });
 
   it('tdk-implement wraps critical script calls in a PROJECT_DIR subshell', () => {
@@ -109,7 +145,7 @@ describe('cwd-independent skill command contract', () => {
 
   it('helper skills use the same portable script command contract', () => {
     for (const skillText of [statusSkill, loadProjectContextSkill]) {
-      expectPortableRootResolver(skillText);
+      expectAgentProvidedProjectRoot(skillText);
     }
 
     expectSafeScriptCommand(statusSkill, 'src/commands/feature/status.ts <feature-id>');
@@ -119,7 +155,8 @@ describe('cwd-independent skill command contract', () => {
   it('tdk-plan uses the same portable script command contract', () => {
     const allPlanText = `${planSkill}\n${planReferenceText}`;
 
-    expectPortableRootResolver(planSkill);
+    expectAgentProvidedProjectRoot(planSkill);
+    expectNoShellRootDiscovery(planReferenceText);
     expectSafeScriptCommand(
       planSkill,
       'src/commands/util/scan-cross-plan-deps.ts --current <TASK_ID> --json',
@@ -144,7 +181,7 @@ describe('cwd-independent skill command contract', () => {
 
   it('retro skills use the same portable script command contract', () => {
     for (const skillText of [retroCollectSkill, retroProposeSkill, retroApplySkill]) {
-      expectPortableRootResolver(skillText);
+      expectAgentProvidedProjectRoot(skillText);
     }
 
     expectSafeScriptCommand(retroCollectSkill, 'src/commands/util/check-prerequisites.ts {task_id} --json');
@@ -152,5 +189,20 @@ describe('cwd-independent skill command contract', () => {
     expectSafeScriptCommand(retroApplySkill, 'src/commands/util/check-prerequisites.ts {task_id} --paths-only --json');
     expectSafeScriptCommand(retroCollectSkill, 'src/commands/util/parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json');
     expect(retroCollectSkill).toContain('(cd "$PROJECT_DIR" && langfuse --env .env api traces list --session-id "{session_id}")');
+  });
+
+  it('legacy TDK script examples use the agent-provided project root contract', () => {
+    for (const skillText of legacyTdkScriptSkills) {
+      expectAgentProvidedProjectRoot(skillText);
+      expectNoFragilePlanCommand(skillText);
+    }
+  });
+
+  it('project-root guidance examples do not require shell-side root discovery', () => {
+    for (const skillText of agentRootGuidanceSkills) {
+      expectNoShellRootDiscovery(skillText);
+      expect(skillText).toContain('<agent-resolved-project-root>');
+      expect(skillText).toContain('Ask the user for the project root');
+    }
   });
 });

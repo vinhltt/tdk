@@ -1,8 +1,8 @@
 ---
 name: tdk-setup-guide
 description: "Interactive setup guide for TDK environment. Checks prerequisites, verifies config, troubleshoots issues. Use when asking 'how to set up', 'setup help', 'verify setup', 'check prerequisites', 'tdk setup', 'installation guide', 'troubleshoot setup'."
-metadata: 
-  version: "0.1.4"
+metadata:
+  version: "1.11.4"
 ---
 
 # TDK Setup Guide
@@ -100,8 +100,17 @@ ls .venv/Scripts/python.exe 2>/dev/null || ls .venv/bin/python3 2>/dev/null
 ### Step 3 — SpecKit config
 ```bash
 # Check .specify.json exists and is valid
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/detect-config.ts
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/detect-config.ts)
+' -- "<agent-resolved-project-root>"
 ```
+
+Ask the user for the project root if `<agent-resolved-project-root>` cannot be identified confidently; do not pass the placeholder literally.
 
 ### Step 4 — Plugin marketplace
 ```bash

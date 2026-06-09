@@ -8,6 +8,7 @@ import { planLegacyHooksJsonInspection } from './legacy-hooks-json-cleanup';
 import { manifestPathFor } from './manifest-store';
 import { buildPrefixRewriteMap, transformFileContent, transformTargetRelativePath } from './prefix-transform';
 import { buildRuntimeAssetMap, transformRuntimeAssetContent } from './runtime-asset-transform';
+import { assertSafeClaudeTargetRelativePath, normalizeTargetRelativePath, posixTargetPath } from './target-relative-path';
 import type {
   BuildPlanInput,
   Collision,
@@ -28,7 +29,7 @@ function byTarget<T extends { targetRelativePath: string }>(a: T, b: T): number 
 }
 
 function targetPath(consumerRoot: string, targetRelativePath: string): string {
-  return path.join(consumerRoot, targetRelativePath);
+  return path.join(consumerRoot, normalizeTargetRelativePath(targetRelativePath));
 }
 
 function verifySourceBytes(file: DiscoveredPluginFile): Buffer {
@@ -44,6 +45,13 @@ function verifySourceBytes(file: DiscoveredPluginFile): Buffer {
 
 function previousByTarget(previous: ManagedFile[]): Map<string, ManagedFile> {
   return new Map(previous.map((file) => [file.targetRelativePath, file]));
+}
+
+function normalizePreviousManagedFiles(previous: ManagedFile[]): ManagedFile[] {
+  return previous.map((file) => ({
+    ...file,
+    targetRelativePath: assertSafeClaudeTargetRelativePath(file.targetRelativePath, 'managed target path'),
+  }));
 }
 
 function planRemovals(consumerRoot: string, previous: HarnessInstallManifest, desiredTargets: Set<string>): { removals: PlannedRemoval[]; collisions: Collision[] } {
@@ -72,9 +80,11 @@ function planRemovals(consumerRoot: string, previous: HarnessInstallManifest, de
 
 export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
   const previous = input.previousManifest;
+  const previousManagedFiles = normalizePreviousManagedFiles(previous.managedFiles);
+  const normalizedPrevious: HarnessInstallManifest = { ...previous, managedFiles: previousManagedFiles };
   const targetDir = input.targetDir ?? '.claude';
-  const claudeSettingsPath = input.settingsPath ?? path.join(targetDir, 'settings.json');
-  const previousMap = previousByTarget(previous.managedFiles);
+  const claudeSettingsPath = input.settingsPath ?? posixTargetPath(targetDir, 'settings.json');
+  const previousMap = previousByTarget(previousManagedFiles);
   const writes: PlannedWrite[] = [];
   const collisions: Collision[] = [];
   const prompts: RequiredPrompt[] = [];
@@ -89,7 +99,9 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
   const verifiedFiles = input.plugins.flatMap((plugin) => plugin.files.map((file) => ({
     ...file,
     sourceContent: verifySourceBytes(file),
-    targetRelativePath: rewrite.paths ? transformTargetRelativePath(file.targetRelativePath, transformSettings) : file.targetRelativePath,
+    targetRelativePath: normalizeTargetRelativePath(
+      rewrite.paths ? transformTargetRelativePath(file.targetRelativePath, transformSettings) : file.targetRelativePath,
+    ),
   })));
   const runtimeAssetMap = buildRuntimeAssetMap(verifiedFiles);
   const selectedFiles: TransformedPluginFile[] = verifiedFiles.map((file) => {
@@ -135,7 +147,7 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
     if (result.prompt) prompts.push(result.prompt);
   }
 
-  const removalPlan = planRemovals(input.consumerRoot, previous, desiredTargets);
+  const removalPlan = planRemovals(input.consumerRoot, normalizedPrevious, desiredTargets);
   collisions.push(...removalPlan.collisions);
   const legacyHooksJsonPlan = planLegacyHooksJsonInspection(input, previousMap);
   collisions.push(...legacyHooksJsonPlan.collisions);

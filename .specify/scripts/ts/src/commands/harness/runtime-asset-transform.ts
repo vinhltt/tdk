@@ -1,6 +1,7 @@
 import * as path from 'node:path';
 import { validateSafeSegment } from './install-settings-paths';
 import { isTextTransformCandidate } from './prefix-transform';
+import { normalizeTargetRelativePath } from './target-relative-path';
 import type { DiscoveredPluginFile } from './types';
 
 interface RuntimeAssetFile extends DiscoveredPluginFile {
@@ -20,7 +21,7 @@ const relativeSkillScriptRef = new RegExp(`${COMMAND_ARG_PREFIX}${SOURCE_PATH}/$
 const relativePluginScriptRef = new RegExp(`${COMMAND_ARG_PREFIX}${SOURCE_PATH}/${SOURCE_PLUGIN}/scripts/${SCRIPT_REL}`, 'gm');
 
 function commandPath(targetRelativePath: string): string {
-  return `$(pwd)/${targetRelativePath.split(path.sep).join('/')}`;
+  return `$(pwd)/${normalizeTargetRelativePath(targetRelativePath)}`;
 }
 
 function normalizeAssetPath(value: string, label: string): string {

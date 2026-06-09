@@ -2,7 +2,7 @@
 name: tdk-ut-backfill-plan
 description: "Generate unit test plan using templates. Creates `ut/plan.md` + phase files at `ut/phases/{module}.md` and injects the routed consumer test skill from `plan-skill-routing.md`."
 metadata:
-  version: "3.4.1"
+  version: "3.4.11"
 ---
 
 # /tdk-ut-backfill-plan - Create Unit Test Plan
@@ -86,23 +86,67 @@ Also extract `--standalone` flag if present. Store all flags for use in Steps 0.
 
 ```bash
 # Standard mode:
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut backfill plan <feature-id>
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/index.ts ut backfill plan <feature-id>)
+' -- "<agent-resolved-project-root>"
 
 # With sub-workspace:
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut backfill plan <feature-id> --sub-workspace {SUB_WORKSPACE_NAME}
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/index.ts ut backfill plan <feature-id> --sub-workspace {SUB_WORKSPACE_NAME})
+' -- "<agent-resolved-project-root>"
 
 # With module (always include --sub-workspace):
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut backfill plan <feature-id> --sub-workspace {SUB_WORKSPACE_NAME} --module {MODULE_NAME}
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/index.ts ut backfill plan <feature-id> --sub-workspace {SUB_WORKSPACE_NAME} --module {MODULE_NAME})
+' -- "<agent-resolved-project-root>"
 
 # Combined module + standalone:
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut backfill plan <feature-id> --sub-workspace {SUB_WORKSPACE_NAME} --module {MODULE_NAME} --standalone
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/index.ts ut backfill plan <feature-id> --sub-workspace {SUB_WORKSPACE_NAME} --module {MODULE_NAME} --standalone)
+' -- "<agent-resolved-project-root>"
 
 # Standalone mode (no spec required):
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut backfill plan <feature-id> --standalone
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/index.ts ut backfill plan <feature-id> --standalone)
+' -- "<agent-resolved-project-root>"
 
 # Combined:
-cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/index.ts ut backfill plan <feature-id> --sub-workspace {NAME} --standalone
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/index.ts ut backfill plan <feature-id> --sub-workspace {NAME} --standalone)
+' -- "<agent-resolved-project-root>"
 ```
+
+Ask the user for the project root if `<agent-resolved-project-root>` cannot be identified confidently; do not pass the placeholder literally.
 
 Parse JSON output -> Store all fields including `needsStandalonePrompt`, `hasSpecFile`, `standaloneMode`
 
@@ -125,7 +169,7 @@ If error -> STOP and report to user
     a. Ask for module name — validate format: `/^[a-zA-Z0-9._-]+$/` (reject if invalid, ask again)
     b. **Directory picker**: List directories inside the SW root path + a "Create new directory" option. If user picks existing dir → use that path. If user picks "Create new" → ask for directory name (validate: `/^[a-zA-Z0-9._-]+$/`, reject if invalid).
     c. testPath (optional): if SW has `testMapping.strategy` = `separate-project` or `mirror`, ask user to pick test directory too
-    d. Read `.specify.json` from workspace root (`$CLAUDE_PROJECT_DIR/.specify/.specify.json`)
+    d. Read `.specify.json` from workspace root (`$PROJECT_DIR/.specify/.specify.json` after resolving the project root)
     e. Find the sub-workspace entry matching resolved SW name
     f. **Idempotency check**: if `modules[]` already contains entry with same `name` → skip, inform user
     g. If `modules` key absent/null on SW entry → create empty array first

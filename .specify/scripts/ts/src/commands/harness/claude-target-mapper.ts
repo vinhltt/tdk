@@ -1,4 +1,4 @@
-import * as path from 'node:path';
+import { posixTargetPath } from './target-relative-path';
 import type { HarnessName } from './types';
 
 export interface HarnessTargetMapper {
@@ -14,8 +14,8 @@ export const claudeTargetMapper: HarnessTargetMapper = {
   name: 'claude',
   targetDir: () => '.claude',
   settingsPath: () => '.claude/settings.json',
-  hookRoot: (plugin) => path.join('.claude', 'hooks', plugin),
-  scriptRoot: (plugin) => path.join('.claude', 'scripts', plugin),
+  hookRoot: (plugin) => posixTargetPath('.claude', 'hooks', plugin),
+  scriptRoot: (plugin) => posixTargetPath('.claude', 'scripts', plugin),
   mapTargetPath(plugin, sourceRelativePath) {
     const parts = sourceRelativePath.split('/');
     const family = parts[0];
@@ -23,18 +23,18 @@ export const claudeTargetMapper: HarnessTargetMapper = {
     if (!rest) return undefined;
     switch (family) {
       case 'skills':
-        return path.join('.claude', 'skills', rest);
+        return posixTargetPath('.claude', 'skills', rest);
       case 'agents':
-        return path.join('.claude', 'agents', rest);
+        return posixTargetPath('.claude', 'agents', rest);
       case 'hooks':
         if (rest === 'hooks.json') return undefined;
-        return path.join('.claude', 'hooks', plugin, rest);
+        return posixTargetPath('.claude', 'hooks', plugin, rest);
       case 'commands':
-        return path.join('.claude', 'commands', rest);
+        return posixTargetPath('.claude', 'commands', rest);
       case 'lib':
-        return path.join('.claude', 'lib', rest);
+        return posixTargetPath('.claude', 'lib', rest);
       case 'scripts':
-        return path.join('.claude', 'scripts', plugin, rest);
+        return posixTargetPath('.claude', 'scripts', plugin, rest);
       default:
         return undefined;
     }

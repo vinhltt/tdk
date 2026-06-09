@@ -71,7 +71,7 @@ describe('runtime asset transform planning', () => {
     const plan = buildPlan(consumer, ['tdk-memory'], 'pav-');
     const write = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-memory-checksum/SKILL.md');
 
-    expect(write?.targetRelativePath).toBe(path.join('.claude', 'skills', 'pav-memory-checksum', 'SKILL.md'));
+    expect(write?.targetRelativePath).toBe('.claude/skills/pav-memory-checksum/SKILL.md');
     expect(write?.content.toString('utf-8')).toContain('$(pwd)/.claude/skills/pav-memory-checksum/scripts/validate.py');
     expect(write?.content.toString('utf-8')).not.toContain('TDK_SKILL_ROOT');
   });
@@ -176,8 +176,8 @@ describe('runtime asset transform planning', () => {
     const plan = buildPlan(consumer, ['tdk-memory'], 'erc-');
     const write = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-memory-init/SKILL.md');
 
-    expect(plan.writes.map((item) => item.targetRelativePath)).toContain(path.join('.claude', 'scripts', 'erc-memory', 'compute-sha256-hashes.py'));
-    expect(write?.targetRelativePath).toBe(path.join('.claude', 'skills', 'erc-memory-init', 'SKILL.md'));
+    expect(plan.writes.map((item) => item.targetRelativePath)).toContain('.claude/scripts/erc-memory/compute-sha256-hashes.py');
+    expect(write?.targetRelativePath).toBe('.claude/skills/erc-memory-init/SKILL.md');
     expect(write?.content.toString('utf-8')).toContain('$(pwd)/.claude/scripts/erc-memory/compute-sha256-hashes.py');
     expect(write?.content.toString('utf-8')).not.toContain('.claude/scripts/tdk-memory');
   });

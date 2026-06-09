@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { sha256Buffer, sha256File } from './checksum';
 import { blockingCollisions, isPromptableCollision } from './collisions';
+import { normalizeTargetRelativePath } from './target-relative-path';
 import type { ApplyOptions, ApplyResult, InstallPlan, PlannedRemoval, PlannedWrite, RequiredPrompt } from './types';
 function writeFileAtomic(target: string, data: Buffer | string, expectedChecksum?: string): void {
   fs.mkdirSync(path.dirname(target), { recursive: true });
@@ -36,7 +37,7 @@ function writeFileAtomic(target: string, data: Buffer | string, expectedChecksum
 
 function backupPath(consumerRoot: string, targetRelativePath: string): string {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  return path.join(consumerRoot, '.specify', 'state', 'harness-install', 'backups', stamp, targetRelativePath);
+  return path.join(consumerRoot, '.specify', 'state', 'harness-install', 'backups', stamp, normalizeTargetRelativePath(targetRelativePath));
 }
 
 function migrationJournalPath(consumerRoot: string): string {

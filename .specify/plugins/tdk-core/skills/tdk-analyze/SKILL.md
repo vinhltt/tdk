@@ -6,7 +6,7 @@ compatibility: "Requires successful completion of /tdk-plan with a valid plan.md
 user-invocable: true
 license: MIT
 metadata:
-  version: "3.4.1"
+  version: "3.4.11"
   category: "Analysis & Review"
   requires:
     - tdk-plan (for prerequisite plan.md with ## Phases table)
@@ -99,7 +99,19 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
 ### 1. Initialize Analysis Context
 
-Run `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/check-prerequisites.ts {task_id} --json` from repo root (pass the validated task_id from Step 0). Parse JSON for taskId, featureDir, availableDocs.
+Run the prerequisite command with an agent-resolved project root (pass the validated task_id from Step 0):
+```bash
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --json)
+' -- "<agent-resolved-project-root>"
+```
+
+Ask the user for the project root if `<agent-resolved-project-root>` cannot be identified confidently; do not pass the placeholder literally. Parse JSON for taskId, featureDir, availableDocs.
 
 Derive absolute paths:
 
@@ -207,7 +219,18 @@ Apply sequential thinking across all detection passes. For each pass:
 
 Parse the `## Phases` table from plan.md using the CLI wrapper:
 
-1. **Parse plan.md `## Phases` table**: Run `cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts && bun src/commands/util/parse-phases-table.ts "{planPath}" --json`. If exit code 1, report each error as a CRITICAL finding. Parse JSON output → record all phases from `result.phases`.
+1. **Parse plan.md `## Phases` table**: Run:
+   ```bash
+   bash -lc '
+   PROJECT_DIR="$1"
+   if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+     echo "Invalid project root: $PROJECT_DIR" >&2
+     exit 1
+   fi
+   (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parse-phases-table.ts "{planPath}" --json)
+   ' -- "<agent-resolved-project-root>"
+   ```
+   If exit code 1, report each error as a CRITICAL finding. Parse JSON output → record all phases from `result.phases`.
 2. **Scan existing phase files**: Glob `FEATURE_DIR/phase-*.md` to list all existing phase artifact files.
 3. **File-row existence check**: For each `PhaseRow`, check whether `FEATURE_DIR/{row.file}` exists on disk.
    - If the file does **not** exist → flag as **HIGH** (plan.md references phase file that does not exist on disk).
