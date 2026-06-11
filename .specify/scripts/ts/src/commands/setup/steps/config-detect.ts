@@ -26,11 +26,25 @@ export async function runConfigDetect(
   if (exitCode !== 0 && !stdout) return { status: 'fail', message: 'Config detection failed' };
 
   try {
-    const parsed = JSON.parse(stdout) as { configFound?: boolean; workspaceName?: string };
+    const parsed = JSON.parse(stdout) as {
+      configFound?: boolean;
+      workspaceName?: string;
+      error?: string;
+      workspaceRoot?: string;
+    };
     if (parsed.configFound) {
       return { status: 'pass', message: `Config found — workspace: ${parsed.workspaceName ?? 'unknown'}` };
     }
-    return { status: 'fail', message: 'Config detection failed' };
+
+    if (parsed.error) {
+      const trimmedError = parsed.error.replace(/^parse_error:/, '');
+      return { status: 'fail', message: `Config invalid: ${trimmedError}` };
+    }
+
+    return {
+      status: 'skipped',
+      message: 'No .specify/.specify.json found. Create it from .specify.json.example before running setup-config-aware steps.',
+    };
   } catch {
     return { status: 'fail', message: 'Config detection output invalid' };
   }

@@ -2,7 +2,7 @@
 # Setup Python Virtual Environment for Claude Code
 # Location: .venv in project root
 # Compatible with: Linux, macOS, Git Bash, WSL
-# Run from: setup-claude-code/setup-python-venv.sh
+# Run from: scripts/bash/setup-python-venv.sh
 
 set -e  # Exit on error
 
@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 
 # Get project root (script directory parent)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 VENV_PATH="$PROJECT_ROOT/.venv"
 
 echo -e "${CYAN}=== Claude Code Python venv Setup ===${NC}"

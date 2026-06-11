@@ -7,12 +7,12 @@ metadata:
 
 # tdk-distribute
 
-One-way sync of common `.specify/` files from a source project to a target project. Uses skill checksums from `plugin.json` per-plugin for smart diffing — only copies changed/new files.
+One-way sync of common `.specify/` files from a source project to a target project.
 
 ## Usage
 
 ```
-/tdk-distribute [--target <path-to-target-specify-dir>]
+/tdk-distribute [--target <path-to-target-project>]
 ```
 
 ## Workflow
@@ -22,10 +22,10 @@ One-way sync of common `.specify/` files from a source project to a target proje
 If `--target` arg provided: use it directly.
 
 If not provided, use `AskUserQuestion`:
-- **Question**: "What is the path to the target project's `.specify/` directory?"
+- **Question**: "What is the path to the target project root?"
 - Free text input (no preset options)
 
-Validate: path must exist or will be created on sync.
+Validate: target project root must exist; `distribute.sh` creates or updates `.specify/` inside it.
 
 ### Step 2: Resolve source path
 
@@ -36,30 +36,18 @@ Inform user: `"Syncing from: {source_path}"`
 
 ### Step 3: Dry-run
 
-Run sync script in dry-run mode (reads skill checksums from `plugin.json` directly):
+Run `distribute.sh` in dry-run mode. It always prints a summary before applying changes.
 
 ```bash
-python .claude/skills/tdk-distribute/scripts/sync-distribute-common-files.py \
-  --source <source-specify-dir> \
-  --target <target-specify-dir> \
-  --config .claude/skills/tdk-distribute/sync-config.yaml \
-  --dry-run [--with-claude] [--verbose]
+bash "{source_path}/../distribute.sh" <target-project-path> --dry-run
 ```
 
 ### Step 4: Show dry-run summary
 
-Parse JSON output and present to user:
+Review the `distribute.sh` dry-run output and present the key changed files:
 
 ```
-Skills (from plugin.json):
-  NEW:       tdk-distribute (0.1.0)
-  UPDATED:   tdk-bump (checksum changed)
-  UNCHANGED: 5 skills
-
-Other files:
-  NEW:       templates/spec-template.md.tpl (14 files)
-  UPDATED:   CHANGELOG.md (1 file)
-  UNCHANGED: .specify.json (1 file)
+Dry-run output from `distribute.sh` includes files that will be added/updated.
 ```
 
 ### Step 5: Confirm
@@ -75,23 +63,19 @@ If user cancels: stop here.
 ### Step 6: Execute sync
 
 ```bash
-python .claude/skills/tdk-distribute/scripts/sync-distribute-common-files.py \
-  --source <source-specify-dir> \
-  --target <target-specify-dir> \
-  --config .claude/skills/tdk-distribute/sync-config.yaml \
-  [--with-claude] [--force]
+bash "{source_path}/../distribute.sh" <target-project-path> [--force] [--with-claude]
 ```
 
 ### Step 7: Report
 
-Show results: N skills synced, M files synced. Note any errors from the `errors` array in JSON output.
+Summarize what changed (`NEW`/`UPDATED`/`DELETED`), and note any command errors from the dry-run/execute output.
 
 ## Alternative: CLI
 
 For direct terminal usage without Claude skill:
 
 ```bash
-bash distribute.sh [target-path] [--with-claude] [--force] [--dry-run] [--yes] [--log-file path]
+bash <tdk-source-root>/distribute.sh [target-path] [--with-claude] [--force] [--dry-run] [--yes] [--log-file path]
 ```
 
 Interactive mode (no args) prompts for target path and options when stdin is a TTY.

@@ -10,6 +10,16 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.63.4] - 2026-06-11
+
+### Changed
+- **[Setup]** Moved Python bootstrap runtime script from docs to shipped runtime path: `.specify/scripts/bash/setup-python-venv.sh`, updated setup step and docs references.
+- **[Setup]** `config-detect` now distinguishes invalid config (`.specify/.specify.json`) with the concrete validation message from `detect-config.ts`; missing config now returns `SKIP` with actionable guidance.
+- **[Setup]** Canonicalized distribution to bash `distribute.sh` fallback rules and removed retired Python distributor implementation (`sync-distribute-common-files.py` + `sync-config.yaml`) from `tdk-distribute`.
+- **[Setup]** Added `.specify/docs/setup/` to the distributed include set so setup guides are available on downstream setup targets.
+- **[Docs / Skills]** Updated `tdk-distribute` SKILL docs (both `.claude/` and `.agents/` copies) to document the bash-distributor flow.
+- **[Versioning]** Bumped marketplace metadata to `1.63.4`; existing consumers should redistribute to receive the layout and script-path fix.
+
 ## [1.63.3] - 2026-06-09
 
 ### Added

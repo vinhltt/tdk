@@ -15,13 +15,13 @@ Guide to set up the Python environment for Claude Code Skills, Commands, and Spe
 > **Note:** PowerShell script (`.ps1`) is coming soon. Use Git Bash in the meantime:
 
 ```bash
-.specify/docs/setup/claude-code/setup-python-venv.sh
+.specify/scripts/bash/setup-python-venv.sh
 ```
 
 ### Linux/Mac/Git Bash/WSL:
 
 ```bash
-.specify/docs/setup/claude-code/setup-python-venv.sh
+.specify/scripts/bash/setup-python-venv.sh
 ```
 
 ## 📦 What Gets Installed
@@ -80,10 +80,11 @@ This virtual environment is shared among:
 erc_spec_kit/
 ├── .venv/                      ← Shared virtual environment
 ├── requirements.txt            ← Project dependencies
-├── .specify/docs/setup/claude-code/     ← Setup scripts (you are here)
-│   ├── setup-python-venv.ps1   (Windows)
-│   ├── setup-python-venv.sh    (Linux/Mac)
+├── .specify/docs/setup/claude-code/     ← Setup docs (you are here)
+│   ├── setup-python-venv.ps1   (Windows script pending)
 │   └── README.md               (this file)
+├── .specify/scripts/bash/
+│   └── setup-python-venv.sh    (Linux/Mac runtime script)
 ├── .claude/skills/             ← Claude Code skills
 └── .specify/                   ← SpecKit features & docs
 ```
@@ -117,15 +118,15 @@ pip install package-name
 > **Note:** PowerShell script (`.ps1`) is coming soon. Use Git Bash instead:
 
 ```bash
-chmod +x setup-claude-code/setup-python-venv.sh
-./setup-claude-code/setup-python-venv.sh
+chmod +x .specify/scripts/bash/setup-python-venv.sh
+.specify/scripts/bash/setup-python-venv.sh
 ```
 
 ### Permission denied (Linux/Mac)
 
 ```bash
-chmod +x setup-claude-code/setup-python-venv.sh
-./setup-claude-code/setup-python-venv.sh
+chmod +x .specify/scripts/bash/setup-python-venv.sh
+.specify/scripts/bash/setup-python-venv.sh
 ```
 
 ## 📝 Notes

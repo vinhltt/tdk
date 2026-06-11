@@ -11,9 +11,16 @@ function makeCtx(overrides?: Partial<SetupContext>): SetupContext {
 }
 
 function mockRunner(responses: Record<string, { stdout: string; exitCode: number }>): CommandRunner {
+  return makeMockRunner(responses);
+}
+
+function makeMockRunner(responses: Record<string, { stdout: string; exitCode: number }>): CommandRunner & { calls: string[] } {
+  const calls: string[] = [];
   return {
+    calls,
     async run(cmd, args) {
       const key = [cmd, ...args].join(' ');
+      calls.push(key);
       for (const [pattern, resp] of Object.entries(responses)) {
         if (key.includes(pattern)) return resp;
       }
@@ -62,6 +69,9 @@ describe('python-venv step', () => {
       setupScriptExists: true,
     });
     expect(result.status).toBe('pass');
+    expect((runner as { calls: string[] }).calls.some((call) =>
+      call.includes('/.specify/scripts/bash/setup-python-venv.sh'))
+    ).toBe(true);
   });
 
   it('missing venv + no setup script → fail', async () => {

@@ -27,13 +27,14 @@ export async function runPythonVenv(
     if (imports) return { status: 'pass', message: 'Already installed (venv exists, imports OK)', resolvedPythonPath: resolvedPath };
   }
 
+  const setupScriptPath = `${ctx.projectRoot}/.specify/scripts/bash/setup-python-venv.sh`;
   const setupScriptExists = overrides?.setupScriptExists
-    ?? existsSync(`${ctx.projectRoot}/.specify/docs/setup/claude-code/setup-python-venv.sh`);
+    ?? existsSync(setupScriptPath);
 
   if (!setupScriptExists) return { status: 'fail', message: 'setup-python-venv.sh not found' };
 
   const { exitCode } = await runner.run('bash', [
-    `${ctx.projectRoot}/.specify/docs/setup/claude-code/setup-python-venv.sh`,
+    setupScriptPath,
   ]);
 
   if (exitCode === 0) {

@@ -38,12 +38,30 @@ describe('config-detect step', () => {
     expect(result.message).toContain('myproject');
   });
 
-  it('configFound: false → fail', async () => {
+  it('configFound: false + no error → skip with guidance', async () => {
     const runner = mockRunner({
       'detect-config.ts': { stdout: JSON.stringify({ configFound: false }), exitCode: 0 },
     });
     const result = await runConfigDetect(makeOpts(), makeCtx(), runner, { detectScriptExists: true });
+    expect(result.status).toBe('skipped');
+    expect(result.message).toContain('No .specify/.specify.json found.');
+  });
+
+  it('configFound: false + parse error → fail with real error', async () => {
+    const runner = mockRunner({
+      'detect-config.ts': {
+        stdout: JSON.stringify({
+          configFound: false,
+          error: 'parse_error:invalid_enum_value path:["architecture","type"] received:"microservice" options:["backend","frontend","tooling"]',
+        }),
+        exitCode: 1,
+      },
+    });
+    const result = await runConfigDetect(makeOpts(), makeCtx(), runner, { detectScriptExists: true });
     expect(result.status).toBe('fail');
+    expect(result.message).toContain('Config invalid:');
+    expect(result.message).toContain('invalid_enum_value path:["architecture","type"] received:"microservice"');
+    expect(result.message).toContain('options:["backend","frontend","tooling"]');
   });
 
   it('detect script not found → fail', async () => {
