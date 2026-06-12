@@ -39,6 +39,30 @@ describe('parse-phases-table CLI', () => {
     expect(stdout).toBe(`${JSON.stringify(result)}\n`);
   });
 
+  it('valid plan --json --validate-deps → exit 0 + no dependency errors', async () => {
+    const { exitCode, stdout } = await runCli([
+      join(FIXTURES, 'plan-canonical.md'),
+      '--json',
+      '--validate-deps',
+    ]);
+    expect(exitCode).toBe(0);
+    const result = JSON.parse(stdout);
+    expect(result.errors).toHaveLength(0);
+    expect(stdout).toBe(`${JSON.stringify(result)}\n`);
+  });
+
+  it('forward BlockedBy ref with --validate-deps → exit 1 + dependency error', async () => {
+    const { exitCode, stdout } = await runCli([
+      join(FIXTURES, 'plan-forward-ref-blockedby.md'),
+      '--json',
+      '--validate-deps',
+    ]);
+    expect(exitCode).toBe(1);
+    const result = JSON.parse(stdout);
+    expect(result.errors[0].message).toContain('BlockedBy references row 03');
+    expect(stdout).toBe(`${JSON.stringify(result)}\n`);
+  });
+
   it('missing file → exit 1 + error on stderr', async () => {
     const { exitCode, stderr } = await runCli(['/tmp/nonexistent-plan-xyz.md']);
     expect(exitCode).toBe(1);

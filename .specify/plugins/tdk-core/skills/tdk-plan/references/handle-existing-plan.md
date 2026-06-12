@@ -93,8 +93,11 @@ Use **AskUserQuestion** tool:
        - "(a) Auto-fix — replace invalid status with `todo`" → Edit the table row in `plan.md`, replace invalid status with `todo`, continue to Step 9.
        - "(b) Abort — rollback plan.md from snapshot" → Restore from `planMdBefore`, keep phase file, ABORT.
    - If `ok === true`: continue to Step 9.
-9. **Run `validateDependencies`** (from `phases-table-parser.ts`) against the updated table.
-   - If errors → report to user and abort the append (row + file already written — user must manually clean up).
+9. **Validate dependency table** — run:
+   `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parse-phases-table.ts <plan-md-path> --json --validate-deps)`
+   Parse JSON output.
+   - If `errors.length > 0` → report to user and abort the append (row + file already written — user must manually clean up).
+   - Do not use `bun -e` / `bun --eval` snippets or direct imports for this check; Bun eval argv differs from script argv and can drop the plan path.
 
 ## Abort
 

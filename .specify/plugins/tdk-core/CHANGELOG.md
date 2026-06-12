@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.4.12] - 2026-06-12
+
+### Changed
+- tdk-plan/handle-existing-plan.md — replace Bun eval snippet with CLI wrapper call for dependency validation; add note prohibiting bun -e/bun --eval for this check
+
 ## [3.4.11] - 2026-06-09
 
 ### Changed

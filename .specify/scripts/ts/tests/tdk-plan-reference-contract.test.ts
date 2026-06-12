@@ -211,4 +211,13 @@ describe('tdk-plan reference contract', () => {
     expect(redTeamWorkflow).toContain('including missing or stale `## Delegate Skills`');
     expect(redTeamWorkflow).toContain('Do not use Search/Grep/Glob');
   });
+
+  it('documents dependency validation through the CLI wrapper instead of Bun eval snippets', () => {
+    const existingPlanWorkflow = read(resolve(REFERENCES_DIR, 'handle-existing-plan.md'));
+
+    expect(existingPlanWorkflow).toContain(
+      '(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parse-phases-table.ts <plan-md-path> --json --validate-deps)',
+    );
+    expect(existingPlanWorkflow).toContain('Do not use `bun -e` / `bun --eval` snippets');
+  });
 });

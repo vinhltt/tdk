@@ -10,6 +10,15 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.63.5] - 2026-06-12
+
+### Changed
+- **[Skills]** `tdk-plan/handle-existing-plan.md` — replace Bun eval snippet with CLI wrapper call for dependency validation; add note prohibiting `bun -e`/`bun --eval` for this check
+- **[Scripts]** Added `--validate-deps` flag to `parse-phases-table` CLI
+  - `parse-phases-table.ts`: expose `--validate-deps` flag running `validateDependencies` inline
+  - `parse-phases-table-cli.test.ts`: two new tests for `--validate-deps` (valid plan → no errors; forward-ref → error)
+  - `tdk-plan-reference-contract.test.ts`: assert reference doc uses CLI wrapper, not Bun eval, for dep validation
+
 ## [1.63.4] - 2026-06-11
 
 ### Changed
