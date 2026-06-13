@@ -31,6 +31,7 @@ export interface ConfigResult {
   workspaceRoot: string;
   workspaceName: string;
   docsPath: string;
+  memoryPath: string;
   subWorkspaces: SubWorkspace[];
   targetSubWorkspace?: SubWorkspaceInfo;
   targetModule?: ModuleInfo;
@@ -220,7 +221,7 @@ export function detectConfig(opts: DetectConfigOptions = {}): ConfigResult {
   const configPath = findConfigFile(opts.cwd);
 
   const emptyResult: ConfigResult = {
-    configFound: false, workspaceRoot: '', workspaceName: '', docsPath: '',
+    configFound: false, workspaceRoot: '', workspaceName: '', docsPath: '', memoryPath: '.specify/memory',
     subWorkspaces: [], docsSyncBackup: true, docsSyncExclude: [], rulesFiles: [],
     inlineRules: [], metadata: {}, commands: {}, specsRoot: '.specify',
     defaultFolder: 'feature', warnings: [],
@@ -242,6 +243,7 @@ export function detectConfig(opts: DetectConfigOptions = {}): ConfigResult {
     workspaceRoot,
     workspaceName: config.name,
     docsPath: config.docs?.path ?? '.specify/configurations',
+    memoryPath: config.memory?.path ?? '.specify/memory',
     subWorkspaces: config.subWorkspaces ?? [],
     docsSyncBackup: config.docs?.sync?.backup ?? true,
     docsSyncExclude: config.docs?.sync?.exclude ?? [],

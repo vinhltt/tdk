@@ -2,7 +2,7 @@
 name: tdk-retro-collect
 description: "Create or update retrospective feedback after a TDK spec: reviews, phase drift, UT results, Langfuse traces when available, and user feedback. Writes retro-feedback.md and supports adding or removing user feedback entries across repeated collection runs."
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
   category: "TDK Retro"
   requires:
     - tdk-implement
@@ -35,9 +35,10 @@ Parse `$ARGUMENTS` as `TASK_ID`.
 Run the prerequisite check using the shared script command contract:
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR"
+  echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
   exit 1
 fi
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --json)
@@ -50,9 +51,10 @@ Fixture fallback: if the script fails and `$PROJECT_DIR/.specify/examples/specs/
 ## Step 2: Parse Plan Phases
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR"
+  echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
   exit 1
 fi
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json)
@@ -104,7 +106,12 @@ Guard order:
 Run Langfuse from project root so `--env .env` resolves correctly:
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR"
+  echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
+  exit 1
+fi
 (cd "$PROJECT_DIR" && langfuse --env .env api traces list --session-id "{session_id}")
 ```
 

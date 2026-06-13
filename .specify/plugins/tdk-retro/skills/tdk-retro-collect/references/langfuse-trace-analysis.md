@@ -14,7 +14,12 @@ Langfuse is optional. Never block retro collection when trace data is unavailabl
 ## Fetch Commands
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR"
+  echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
+  exit 1
+fi
 (cd "$PROJECT_DIR" && langfuse --env .env api traces list --session-id "{session_id}")
 (cd "$PROJECT_DIR" && langfuse --env .env api traces get "{trace_id}")
 ```

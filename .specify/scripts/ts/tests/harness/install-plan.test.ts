@@ -218,4 +218,68 @@ describe('buildClaudeInstallPlan', () => {
     expect(plan.nextManifest.managedFiles.some((file) => file.targetRelativePath === '.claude/skills/demo/SKILL.md')).toBe(true);
     expect(plan.nextManifest.managedFiles.some((file) => file.targetRelativePath.includes('\\'))).toBe(false);
   });
+
+  test('removes clean managed stale project docs skill when it is no longer desired', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const staleContent = '# old project docs skill\n';
+    const staleSource = ['skills', 'tdk-docs', 'SKILL.md'].join('/');
+    const staleTarget = ['.claude', 'skills', 'tdk-docs', 'SKILL.md'].join('/');
+    const staleTargetPath = path.join(consumer.root, staleTarget);
+    fs.mkdirSync(path.dirname(staleTargetPath), { recursive: true });
+    fs.writeFileSync(staleTargetPath, staleContent);
+
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: discoverPluginInventory(consumer.root, ['tdk-core']).plugins,
+      previousManifest: {
+        ...emptyHarnessManifest(),
+        managedFiles: [{
+          plugin: 'tdk-core',
+          sourceRelativePath: staleSource,
+          targetRelativePath: staleTarget,
+          sourceChecksum: sha256(staleContent),
+          installedChecksum: sha256(staleContent),
+        }],
+      },
+      settings: {},
+    });
+
+    expect(plan.removals.map((removal) => removal.targetRelativePath)).toContain(staleTarget);
+    expect(plan.collisions.some((collision) => collision.kind === 'managed-drift')).toBe(false);
+  });
+
+  test('reports drifted managed stale project docs skill instead of deleting it', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const staleContent = '# old project docs skill\n';
+    const staleSource = ['skills', 'tdk-docs', 'SKILL.md'].join('/');
+    const staleTarget = ['.claude', 'skills', 'tdk-docs', 'SKILL.md'].join('/');
+    const staleTargetPath = path.join(consumer.root, staleTarget);
+    fs.mkdirSync(path.dirname(staleTargetPath), { recursive: true });
+    fs.writeFileSync(staleTargetPath, '# user-edited old project docs skill\n');
+
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: discoverPluginInventory(consumer.root, ['tdk-core']).plugins,
+      previousManifest: {
+        ...emptyHarnessManifest(),
+        managedFiles: [{
+          plugin: 'tdk-core',
+          sourceRelativePath: staleSource,
+          targetRelativePath: staleTarget,
+          sourceChecksum: sha256(staleContent),
+          installedChecksum: sha256(staleContent),
+        }],
+      },
+      settings: {},
+    });
+
+    expect(plan.removals.map((removal) => removal.targetRelativePath)).not.toContain(staleTarget);
+    expect(plan.collisions.some((collision) => (
+      collision.kind === 'managed-drift' && collision.message.includes(staleTarget)
+    ))).toBe(true);
+  });
 });

@@ -89,6 +89,23 @@ describe('config.test.ts', () => {
     expect(parsed?.specs?.root).toBe('.specify');
   });
 
+  it('C-05b: parseConfig accepts optional memory path with default', () => {
+    const specDir = join(tempDir, '.specify');
+    mkdirSync(specDir);
+    const configPath = join(specDir, '.specify.json');
+    writeFileSync(configPath, JSON.stringify({
+      name: 'test-workspace',
+      memory: { path: '.specify/project-memory' },
+    }));
+
+    const { config: parsed, error } = parseConfig(configPath);
+    expect(error).toBeNull();
+    expect(parsed?.memory?.path).toBe('.specify/project-memory');
+
+    const defaulted = SpecifyConfigSchema.parse({ name: 'default-memory' });
+    expect(defaulted.memory?.path).toBe('.specify/memory');
+  });
+
   it('C-06: parseConfig invalid JSON → error', () => {
     const specDir = join(tempDir, '.specify');
     mkdirSync(specDir);

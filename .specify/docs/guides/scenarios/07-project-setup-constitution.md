@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-constitution → /tdk-sub-workdspace-init
+/tdk-constitution --init <brief|file> -> /tdk-sub-workdspace-init
 ```
 
 ## Step-by-Step
@@ -13,20 +13,27 @@
 ### 1. Create the project constitution
 
 ```
-/tdk-constitution
+/tdk-constitution --init "Project brief or principle summary"
 ```
 
-**What happens**: Claude guides you through defining project-level architecture principles (e.g., "YAGNI over premature abstraction", "API-first design"). These principles are checked during `/tdk-plan` and `/tdk-analyze`.
+**What happens**: Claude guides you through defining project-level architecture principles (e.g., "YAGNI over premature abstraction", "API-first design"), bootstraps `.specify/memory/` when missing, and renders project knowledge artifacts from constitution and memory authority. These principles are checked during `/tdk-plan` and `/tdk-analyze`.
 
 You can provide principles directly:
 
 ```
-/tdk-constitution KISS for all services, PostgreSQL only, no ORM magic
+/tdk-constitution --init "KISS for all services, PostgreSQL only, no ORM magic"
 ```
 
-**Output**: `.specify/memory/constitution.md`
+**Output**:
 
-The constitution uses semantic versioning (MAJOR.MINOR.PATCH) and propagates changes across plan/spec/tasks templates for consistency.
+- `.specify/memory/constitution.md`
+- `.specify/memory/memory-index.md`
+- `.specify/memory/memory.yaml`
+- `.specify/memory/project-overview-prd.md`
+- `.specify/memory/system-architecture.md`
+- `.specify/memory/project-roadmap.md`
+
+The constitution uses semantic versioning (MAJOR.MINOR.PATCH). Project knowledge artifacts are rendered outputs; README is human-facing context and cannot silently override constitution or memory.
 
 ### 2. Initialize sub-workspaces
 
@@ -54,6 +61,7 @@ Create a consumer test skill at `.claude/skills/{name}/SKILL.md` for each sub-wo
 ## Tips
 
 - `constitution` is project-level — no task ID needed. Run it once, update as principles evolve.
+- Use `--init` for new project setup. Use plain `/tdk-constitution` for later principle amendments.
 - Sub-workspace names should match your project structure (e.g., `backend`, `frontend`, `mobile`).
 - Constitution violations are flagged as CRITICAL in `/tdk-analyze` reports.
 - Run `constitution` before your first `/tdk-plan` so architecture principles are enforced from the start.

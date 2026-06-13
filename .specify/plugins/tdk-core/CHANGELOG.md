@@ -4,6 +4,18 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.0.0] - 2026-06-13
+
+### Added
+- Added constitution.md.tpl bootstrap template for --init project initialization
+
+### Changed
+- tdk-constitution: major revamp with --init <brief|file> branch — bootstraps memory, renders project-knowledge artifacts
+
+### Removed
+- tdk-ut-backfill-auto skill
+- tdk-ut-backfill-impl skill
+
 ## [3.4.12] - 2026-06-12
 
 ### Changed

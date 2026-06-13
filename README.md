@@ -85,7 +85,7 @@ bun src/commands/manifest/compute.ts --root ../..
 ```
 .specify/
 ├── plugins/              # Marketplace plugins (installed by setup.sh)
-│   ├── tdk-core/            # Core workflow (17 skills)
+│   ├── tdk-core/            # Core workflow (16 skills)
 │   ├── tdk-utils/           # Utilities: scout, research, problem solving (14 skills)
 │   ├── tdk-memory/          # Domain memory management (6 skills)
 │   └── tdk-test-api/        # API test generation (3 skills)
@@ -108,7 +108,7 @@ bun src/commands/manifest/compute.ts --root ../..
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
-| **tdk-core** | 17 | Specify, plan, implement, fix, config, sub-workspace, ut-backfill |
+| **tdk-core** | 16 | Specify, plan, implement, fix, config, sub-workspace, ut-backfill |
 | **tdk-utils** | 14 | Scout, research, brainstorming, docs-seeker, context-engineering, problem-solving |
 | **tdk-memory** | 6 | Domain memory: init, update, checksum, changelog, query, preload |
 | **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |

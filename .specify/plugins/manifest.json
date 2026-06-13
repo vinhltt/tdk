@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-12T07:44:33Z",
+  "generated_at": "2026-06-13T07:36:24Z",
   "plugins": {
     "tdk-core": {
-      "version": "3.4.12",
+      "version": "4.0.0",
       "components": {
         "skills": {
           "tdk-analyze": {
@@ -25,7 +25,7 @@
             "version": "3.4.11"
           },
           "tdk-constitution": {
-            "version": "3.3.0"
+            "version": "4.0.0"
           },
           "tdk-implement": {
             "version": "3.4.11"
@@ -48,12 +48,6 @@
           "tdk-sub-workspace-list": {
             "version": "0.1.0"
           },
-          "tdk-ut-backfill-auto": {
-            "version": "3.4.1"
-          },
-          "tdk-ut-backfill-impl": {
-            "version": "3.4.1"
-          },
           "tdk-ut-backfill-plan": {
             "version": "3.4.11"
           }
@@ -71,10 +65,10 @@
         "commands": {}
       },
       "files": {
-        ".claude-plugin/plugin.json": "69d027aebaf9a2a9a5427002262643c095dcabc21428dea8cf3061522603817c",
-        ".codex-plugin/plugin.json": "cd90ead2a46d89d307c9587f19c1b6ab3266955250c3949693d3275f0556b253",
-        ".cursor-plugin/plugin.json": "69d027aebaf9a2a9a5427002262643c095dcabc21428dea8cf3061522603817c",
-        "CHANGELOG.md": "3db3b0f2ac4f21df192a52af3f4ca5ead952b2fbf751aeb77d07d11ac454b2e8",
+        ".claude-plugin/plugin.json": "fc529f6e68316884b535cda15058ec2dca797e961ed2a24f2cef9850a66c0791",
+        ".codex-plugin/plugin.json": "b0924911d0ae9f01b3898eadef786792cb9ebcca470e3e0c33364a60d9047ec1",
+        ".cursor-plugin/plugin.json": "fc529f6e68316884b535cda15058ec2dca797e961ed2a24f2cef9850a66c0791",
+        "CHANGELOG.md": "7e4abd9d55a54fc8e492346446e9d1b098a3f64289c67fbcb6b51c02fa6e01c7",
         "__tests__/context-builder.test.cjs": "39ea0d403e0154a14cfe8877ef76a6c8fc68ffa046ef2d1f59b152de68440fe2",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
@@ -102,7 +96,8 @@
         "skills/tdk-config-diff/SKILL.md": "d061ef99c3bf16d9a4f1163c50957d177227812584566b87999def38748286d9",
         "skills/tdk-config-index/SKILL.md": "9aeca659b75ec4863a1ffdc1f7f1bf91beddadb7bd554405ae7ea68cbfae1026",
         "skills/tdk-config-sync/SKILL.md": "f28251b269a168bba17983fa028c3f26851236387fd97bbaf364dd00d62e52ba",
-        "skills/tdk-constitution/SKILL.md": "e9551cea14945e67feb98d7afe217cbf72b185b55d31783d93731ead43151486",
+        "skills/tdk-constitution/SKILL.md": "6a7b6ef35856065a338e69dbb31f4376cfd442bcbbd36092564b7cefa60e79e6",
+        "skills/tdk-constitution/templates/constitution.md.tpl": "30f0531720fdc8ff99135bcf7705277f5ba3711bb5aa040dbae2b46e7041cfe6",
         "skills/tdk-implement/SKILL.md": "f470ec9ee9754848359e52e01ba97ed8232d407c1506372953af537fe2250ebf",
         "skills/tdk-plan/SKILL.md": "040ec191862df1ec52c49f8f9d18734dd096c6bbbe9cb9e56c5863f04e5ca5bb",
         "skills/tdk-plan/references/cross-plan-deps.md": "8678be6c9d45e0ac8269a2087fbf40d053ef83ae0cbf95b3e5a2c10f1b512e69",
@@ -126,9 +121,6 @@
         "skills/tdk-sub-workspace-docs/SKILL.md": "d3504339f4850f350c5c890c4e75fb60f7639b8c17f808fc405690c41e4a10a2",
         "skills/tdk-sub-workspace-init/SKILL.md": "addc5fa7f6507d78666406f0c0598fc91adcd67600c9aed9c142142b9f99dc42",
         "skills/tdk-sub-workspace-list/SKILL.md": "048d5207d474ab4e349e4ad9b32d0ed1da3727de44eb49e720e32a8316fbe04e",
-        "skills/tdk-ut-backfill-auto/SKILL.md": "1a2533630f6e87ebead981a9c27e4eaea7d97da9845fa6bec94b2fc6f9af28e7",
-        "skills/tdk-ut-backfill-auto/fixtures/expected-decisions.md": "eeec998819d7c3bcdd2c600a5e78eaa72ab1aded0c04e50da19271854892fde6",
-        "skills/tdk-ut-backfill-impl/SKILL.md": "5e4764b1434caf8a9cd6ba45171f8fcabb2153df2eb3f8a10323154bb596b938",
         "skills/tdk-ut-backfill-plan/SKILL.md": "49ee3011761a91c7fa73b78af225f10447b379c496fb44bbb807f5da81413530"
       }
     },
@@ -196,20 +188,20 @@
       }
     },
     "tdk-retro": {
-      "version": "0.1.0",
+      "version": "0.1.1",
       "components": {
         "skills": {
           "_shared": {
-            "version": "0.1.0"
+            "version": "0.1.1"
           },
           "tdk-retro-apply": {
-            "version": "0.1.0"
+            "version": "0.1.1"
           },
           "tdk-retro-collect": {
-            "version": "0.1.0"
+            "version": "0.1.1"
           },
           "tdk-retro-propose": {
-            "version": "0.1.0"
+            "version": "0.1.1"
           }
         },
         "agents": {},
@@ -217,24 +209,25 @@
         "commands": {}
       },
       "files": {
-        ".claude-plugin/plugin.json": "46baed979c5ee3bb690a6b5a3a7f7cc369f183d0f601cfa47f9b618d9c999021",
-        ".codex-plugin/plugin.json": "46baed979c5ee3bb690a6b5a3a7f7cc369f183d0f601cfa47f9b618d9c999021",
-        ".cursor-plugin/plugin.json": "46baed979c5ee3bb690a6b5a3a7f7cc369f183d0f601cfa47f9b618d9c999021",
-        "CHANGELOG.md": "3869a7d58a51f53ef32ccff939c90901d6b1a2cee32acf8ecde658669aa0f8ab",
+        ".claude-plugin/plugin.json": "85043dc5541939c5225cb4116a57a4d0cc6c03b7782d1ec315d6df256635c432",
+        ".codex-plugin/plugin.json": "85043dc5541939c5225cb4116a57a4d0cc6c03b7782d1ec315d6df256635c432",
+        ".cursor-plugin/plugin.json": "85043dc5541939c5225cb4116a57a4d0cc6c03b7782d1ec315d6df256635c432",
+        "CHANGELOG.md": "1fd3f83d55ae7be80299b6355f434c787a9930f89d289c57b776c88eca87660f",
         "README.md": "c74e7f4263e8aec94548695e08de4d7faf0c899429f5520e1cf57134c2cb0657",
+        "skills/_shared/SKILL.md": "41be8e8be94b54d0ad5dc27eb5a0e535d30002bfbe00ca699d4aa1af22c0d7cc",
         "skills/_shared/consumer-skill-discovery.md": "a319f836aa4d31e04337b5d9185530dae8e931479ec3ffe211afa9c50d6778e4",
         "skills/_shared/learning-delta-schema.md": "75ea06307874ce5e92579e0e8de381c94e7b4ab2f6b5fbe61e7b22dda13b20ba",
         "skills/_shared/retro-feedback-schema.md": "2a459f6a69e424075e6d4bb7027507324652ab11aa9277b97933c6ec36a38aa2",
-        "skills/_shared/script-command-contract.md": "34df8c2813699bb42e2361383503a659f0ae349096dd8086ac04b9e394664506",
+        "skills/_shared/script-command-contract.md": "9bc0cfdc5316b6b19ddd72b6bd3fe267d71d7e6831f35ac15e65533098061116",
         "skills/_shared/signal-target-routing.md": "21ab5e3891dfc63db40429219529a5067eb752f993b60b4b8f7e96d8dd06c867",
-        "skills/tdk-retro-apply/SKILL.md": "feba45eeda3ee15027f925094644e8912f183ac90c6df54713bcdd9a9fb06028",
+        "skills/tdk-retro-apply/SKILL.md": "66a83d1ec6be93090877b0e880a068c52f059b2c682f40be19907be72b9c674f",
         "skills/tdk-retro-apply/references/apply-flow-memory.md": "13a66a5ee193c53232ea56cf9c42c0c914315f33ef3a2c11f6b156dba45b100a",
         "skills/tdk-retro-apply/references/apply-flow-technical.md": "b4d34fb99eee4982007ff3f0c758b069c28d7e871fe3bfacce9b01cc4136809e",
         "skills/tdk-retro-apply/references/memory-delegate-contract.md": "81e9da7995fd021b78262976a47cfed8fc41a9b75e49261582f13edd2f8bf1fa",
-        "skills/tdk-retro-collect/SKILL.md": "3d07abde1345369b05b870a2ce019c64e2e2e2f2e8320c44113a8c6c62cfb441",
-        "skills/tdk-retro-collect/references/langfuse-trace-analysis.md": "21d8389ef1f20db64ded9b9b0a953d029627659b657272144bd9c014511c4878",
+        "skills/tdk-retro-collect/SKILL.md": "c43f2b07bec04adad8189fddec4d5fdbdd888071c1dcc80f6df6990857406eeb",
+        "skills/tdk-retro-collect/references/langfuse-trace-analysis.md": "4c72df23d5165b9b9d7ac91d3c93b45418bd1f59efab1b6f8ab7bcbfef25f1de",
         "skills/tdk-retro-collect/references/phase-drift-detection.md": "a70cea214d69689f5ae481ef81ae714ed94031b2a440c470f33cfa79c7546eab",
-        "skills/tdk-retro-propose/SKILL.md": "cabed71826e884c60d91e9f186198e7adf4d363ca2d508ce7c697e90bdc14944"
+        "skills/tdk-retro-propose/SKILL.md": "6e4f5af1bb0c733053f55d0b8702d527423f9b3f1d2ca93f050a2f861900f504"
       }
     },
     "tdk-scaffold": {

@@ -149,7 +149,7 @@ Each command reads the output of the previous one, building a chain of artifacts
 | 10 | `/tdk-analyze <id>` | Cross-artifact consistency and quality analysis |
 | 11 | `/tdk-status <id>` | Show workflow progress (read-only, any time) |
 | 12 | `/tdk-checklist <id> [focus]` | Generate quality checklist for requirements |
-| 13 | `/tdk-constitution` | Create/update project architecture principles |
+| 13 | `/tdk-constitution [--init <brief|file>]` | Create/update project architecture principles and initialize project memory artifacts |
 | — | **Unit Testing** | |
 | 16 | `/tdk-ut-backfill-plan <id>` | Generate unit test plan and phase files |
 | — | **Config & Workspace** | |

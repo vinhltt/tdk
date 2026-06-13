@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [0.1.1] - 2026-06-13
+
+### Changed
+- Refactored project-root resolution in _shared/script-command-contract.md: replaced env-var/git discovery with explicit agent-provided argument
+- tdk-retro-collect: updated bash snippets for agent-arg project root
+- tdk-retro-apply, tdk-retro-propose: updated per contract change
+
 ## [0.1.0] - 2026-06-01
 
 ### Added

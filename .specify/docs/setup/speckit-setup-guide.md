@@ -109,7 +109,7 @@ sub-workspaces:
 |-------|----------|---------|
 | `version` | Yes | Config schema version (currently `1.0`) |
 | `name` | Yes | Workspace identifier — appears as `WORKSPACE_NAME` in `detect-config.ts` output |
-| `architecture.type` | Yes | Codebase pattern: `monolith`, `modular-monolith`, `microservices`, or `layered-application`. Used by `/tdk-docs-init` for auto-detection |
+| `architecture.type` | Yes | Codebase pattern: `monolith`, `modular-monolith`, `microservices`, or `layered-application`. Used for project-init auto-detection |
 | `docs.path` | Yes | Where SpecKit stores project documentation, relative to repo root |
 | `sub-workspaces` | No | List of child workspaces (`name` + `path`). `detect-config.ts` auto-detects which sub-workspace you're in based on CWD |
 

@@ -4,12 +4,13 @@ Retro skills may call existing TDK TypeScript scripts. They must be safe from an
 
 ## Root Resolver
 
-Always resolve the project root before direct script calls:
+Always pass the agent-resolved project root as the first shell argument before direct script calls:
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR"
+  echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
   exit 1
 fi
 ```
@@ -33,6 +34,6 @@ Langfuse uses project `.env`, so run from `PROJECT_DIR`:
 ## Rules
 
 - Do not use `cd .specify/scripts/ts`.
-- Do not assume `CLAUDE_PROJECT_DIR` exists outside Claude Code.
+- Do not discover project root from shell environment variables or git state.
 - Do not mutate the parent terminal working directory.
 - If a script exits non-zero, stop the current skill step and report the exact error.

@@ -10,6 +10,25 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.64.0] - 2026-06-13
+
+### Added
+- **[tdk-core]** Added `constitution.md.tpl` bootstrap template for `/tdk-constitution --init` project initialization
+- **[Templates]** New `project-docs/` template suite: `project-overview-prd.md.tpl`, `system-architecture.md.tpl`, `project-roadmap.md.tpl`, `README.md.tpl`
+- **[Scripts]** New `project-init-authority-contract.test.ts` — contract test verifying tdk-docs removal and sub-workspace docs preservation
+
+### Changed
+- **[tdk-core/tdk-constitution]** Major revamp: added `--init <brief|file>` branch — bootstraps `.specify/memory/`, renders project-knowledge artifacts (PRD, roadmap, architecture) from constitution authority; updated skill description and execution flow
+- **[tdk-retro]** Refactored project-root resolution across `_shared/script-command-contract.md` and `tdk-retro-collect/SKILL.md`: replaced env-var/git discovery with explicit agent-provided argument; updated `tdk-retro-apply`, `tdk-retro-propose` accordingly
+- **[Scripts]** Added `memoryPath` to `ConfigResult` and `SpecifyConfigSchema`; defaults to `.specify/memory`
+- **[Templates]** Updated `sub-workspace-docs/` templates: README, code-standards, codebase-summary, system-architecture
+- **[Guides]** Updated `command-reference.md` with `--init` flag; updated scenario 07 for `--init` mode; minor `speckit-setup-guide.md` doc reference rename
+- **[Docs]** Updated README skill count 17→16
+
+### Removed
+- **[tdk-core]** Removed `tdk-ut-backfill-auto` skill
+- **[tdk-core]** Removed `tdk-ut-backfill-impl` skill
+
 ## [1.63.5] - 2026-06-12
 
 ### Changed

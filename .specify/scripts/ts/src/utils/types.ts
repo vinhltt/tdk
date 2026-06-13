@@ -79,6 +79,9 @@ export const SpecifyConfigSchema = z.object({
     }).optional(),
     rules: z.array(z.string()).optional(),
   }).optional(),
+  memory: z.object({
+    path: z.string().default('.specify/memory'),
+  }).default({ path: '.specify/memory' }),
   git: z.object({
     mainBranch: z.string().default('master'),
     prefixList: z.string().default('feat'),

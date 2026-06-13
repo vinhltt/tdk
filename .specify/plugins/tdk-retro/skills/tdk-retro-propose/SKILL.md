@@ -2,7 +2,7 @@
 name: tdk-retro-propose
 description: "Read retro-feedback.md and propose concrete technical or memory learning deltas. Writes learning-delta.md."
 metadata:
-  version: "0.1.0"
+  version: "0.1.1"
   category: "TDK Retro"
   requires:
     - tdk-retro-collect
@@ -33,9 +33,10 @@ Transform collected feedback into up to 10 reviewable learning delta entries. Th
 Parse `$ARGUMENTS` as `TASK_ID`.
 
 ```bash
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-${GITHUB_WORKSPACE:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
-if [ -z "$PROJECT_DIR" ]; then
-  echo "Cannot resolve project root. Run from a git workspace or set CLAUDE_PROJECT_DIR/GITHUB_WORKSPACE."
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR"
+  echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
   exit 1
 fi
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --paths-only --json)

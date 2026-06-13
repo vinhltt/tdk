@@ -9,24 +9,41 @@ import {
   spliceAutoGenSections,
 } from '../../src/lib/auto-gen-markers';
 
-const TEMPLATES_DIR = resolve(__dirname, '../../../../templates/sub-workspace-docs');
-
-describe('sub-workspace-docs templates', () => {
-  const templates = readdirSync(TEMPLATES_DIR).filter(f => f.endsWith('.md.tpl'));
-
-  it('found 4 .tpl files', () => {
-    expect(templates.length).toBe(4);
-    expect(templates.sort()).toEqual([
+const TEMPLATE_SUITES = [
+  {
+    name: 'sub-workspace-docs templates',
+    dir: resolve(__dirname, '../../../../templates/sub-workspace-docs'),
+    files: [
       'README.md.tpl',
       'code-standards.md.tpl',
       'codebase-summary.md.tpl',
       'system-architecture.md.tpl',
-    ]);
+    ],
+  },
+  {
+    name: 'project-docs templates',
+    dir: resolve(__dirname, '../../../../templates/project-docs'),
+    files: [
+      'README.md.tpl',
+      'project-overview-prd.md.tpl',
+      'project-roadmap.md.tpl',
+      'system-architecture.md.tpl',
+    ],
+  },
+];
+
+for (const suite of TEMPLATE_SUITES) {
+describe(suite.name, () => {
+  const templates = readdirSync(suite.dir).filter(f => f.endsWith('.md.tpl'));
+
+  it(`found ${suite.files.length} .tpl files`, () => {
+    expect(templates.length).toBe(suite.files.length);
+    expect(templates.sort()).toEqual(suite.files);
   });
 
   for (const file of templates) {
     describe(file, () => {
-      const content = readFileSync(join(TEMPLATES_DIR, file), 'utf-8');
+      const content = readFileSync(join(suite.dir, file), 'utf-8');
 
       it('parses without throwing', () => {
         expect(() => parseAutoGenSections(content)).not.toThrow();
@@ -51,6 +68,14 @@ describe('sub-workspace-docs templates', () => {
         }
       });
 
+      if (suite.name === 'project-docs templates') {
+        it('uses constitution and memory authority wording', () => {
+          expect(content).not.toContain('tdk-docs');
+          expect(content).toContain('constitution');
+          expect(content).toContain('memory');
+        });
+      }
+
       it('round-trips byte-identical with empty replacements', () => {
         const { content: out } = spliceAutoGenSections(content, new Map());
         expect(out).toBe(content);
@@ -65,3 +90,4 @@ describe('sub-workspace-docs templates', () => {
     });
   }
 });
+}
