@@ -10,6 +10,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.65.0] - 2026-06-13
+
+### Added
+- **[Scripts]**
+  - Added `.specify/scripts/ts/tests/commands/plan-env-parser-resolution.test.ts` to validate parser-script candidate resolution order in `plan-env.ts`
+  - Added `.specify/scripts/ts/tests/skill-body-portability.test.ts` regression test to reject forbidden `/ck:` and `plans/` references in source skill/agent bodies
+
+### Changed
+- **[Scripts]** `plan-env.ts` now resolves parser scripts from source, installed default, and custom `*-test-api-plan` plugin paths (deterministic candidate order)
+- **[Skills]** Updated `tdk-sub-workspace-docs` skill documentation to remove a legacy pre-check step and clarify generated artifacts and error-handling expectations
+- **[General]** Regenerated `.specify/plugins/manifest.json` with updated file hashes and timestamp
+
 ## [1.64.0] - 2026-06-13
 
 ### Added

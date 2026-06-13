@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.0.1] - 2026-06-13
+
+### Changed
+- Updated tdk-sub-workspace-docs SKILL.md to clarify generated doc set behavior and simplify execution flow.
+
 ## [4.0.0] - 2026-06-13
 
 ### Added

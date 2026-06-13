@@ -1,10 +1,24 @@
 // CLI: Environment validation for /tdk-test-api-plan skill
 // Replaces: tdk-test-api-plan/scripts/run.sh
 
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { getRepoRoot, writeAgentJson } from '../../utils/index';
 import { parseTestApiArgs, setupTestApiEnv } from './test-api-shared-setup';
+
+function getParserCandidates(repoRoot: string): string[] {
+  const sourceCandidate = '.specify/plugins/tdk-test-api/skills/tdk-test-api-plan/scripts/parse_openapi_spec.py';
+  const installedDefaultCandidate = '.claude/skills/tdk-test-api-plan/scripts/parse_openapi_spec.py';
+  const installedSkillsDir = join(repoRoot, '.claude/skills');
+  const installedCustomCandidates = existsSync(installedSkillsDir)
+    ? readdirSync(installedSkillsDir)
+        .filter((entry) => entry !== 'tdk-test-api-plan' && entry.endsWith('-test-api-plan'))
+        .sort()
+        .map((entry) => `.claude/skills/${entry}/scripts/parse_openapi_spec.py`)
+    : [];
+
+  return [sourceCandidate, installedDefaultCandidate, ...installedCustomCandidates];
+}
 
 try {
   const args = parseTestApiArgs(process.argv.slice(2));
@@ -18,10 +32,10 @@ try {
   }
 
   const repoRoot = getRepoRoot();
-  const parserScript = join(
-    repoRoot,
-    '.specify/plugins/tdk-test-api/skills/tdk-test-api-plan/scripts/parse_openapi_spec.py',
-  );
+  const parserCandidates = getParserCandidates(repoRoot);
+  const parserScript =
+    parserCandidates.map((c) => join(repoRoot, c)).find(existsSync) ??
+    join(repoRoot, parserCandidates[0]!);
 
   mkdirSync(env.apiTestDir, { recursive: true });
 
