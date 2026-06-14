@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-14T04:42:20Z",
+  "generated_at": "2026-06-14T06:32:06Z",
   "plugins": {
     "tdk-core": {
       "version": "4.0.1",
@@ -231,14 +231,14 @@
       }
     },
     "tdk-scaffold": {
-      "version": "0.3.0",
+      "version": "0.3.1",
       "components": {
         "skills": {
           "tdk-recommend-automations": {
             "version": "0.1.0"
           },
           "tdk-scaffold-from-recommendation": {
-            "version": "0.3.0"
+            "version": "0.3.1"
           }
         },
         "agents": {},
@@ -246,13 +246,13 @@
         "commands": {}
       },
       "files": {
-        ".claude-plugin/plugin.json": "0fe351aacbdad7aa4b88b6e7de5327894acb9a87b49af726f59b7d97ee7e1d45",
-        ".codex-plugin/plugin.json": "67b5cc9a7e313cf5b76fb6f4801cb91e8f3b88bc1b38ee4099facf20cabc0453",
-        ".cursor-plugin/plugin.json": "0fe351aacbdad7aa4b88b6e7de5327894acb9a87b49af726f59b7d97ee7e1d45",
-        "CHANGELOG.md": "4390f1ba698a124e3d98acaf709b6e9a486397993619fef5c5e27cf740ba9648",
+        ".claude-plugin/plugin.json": "535b79d188e0eea0b180cfb02a010a3a96334672a060158c9a7f992b786af766",
+        ".codex-plugin/plugin.json": "ae2fc65f87ec3074604dc8c2d7d6eeff59d0ddd67a45d29052891cbfcdd3358a",
+        ".cursor-plugin/plugin.json": "535b79d188e0eea0b180cfb02a010a3a96334672a060158c9a7f992b786af766",
+        "CHANGELOG.md": "7ec969d26655ca2d7bb1022b19110e4f5d5aff8d4103b77b18c8deb4602e25d3",
         "skills/tdk-recommend-automations/SKILL.md": "fc98581f70636cc75cde8fdcd0d8430f319fb3208eec124adfa2ec000528a244",
         "skills/tdk-recommend-automations/references/architecture-presets.md": "ce006dcc1d6d91141362d306bb0103359b60f8877f033c9e195bf1b78f1cbe2f",
-        "skills/tdk-scaffold-from-recommendation/SKILL.md": "0b6ad4cea1749f9ee777c071ee29e416214a0b2e7673ee64d900e3575368ad04",
+        "skills/tdk-scaffold-from-recommendation/SKILL.md": "2d2daa34dbe197757bf8c9a922662e9985a1936e7a84d20338604b193d4e6d79",
         "skills/tdk-scaffold-from-recommendation/references/agent-output-pattern.md": "6627c4769e50c541405e0c3d8db00653e0df4cd023030bf3116b746e5cf7677d",
         "skills/tdk-scaffold-from-recommendation/references/skill-output-pattern.md": "d373008520c731f6ea261a009d1a169da65a73c5441f7ddedfd04f5acf781b16"
       }

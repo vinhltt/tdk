@@ -4,7 +4,7 @@ description: "Read approved recommendation.md → scaffold SKILL.md + references
 user-invocable: true
 argument-hint: "[<path-to-recommendation.md>] [--dry-run] [--skills-only] [--agents-only]"
 metadata:
-  version: "0.3.0"
+  version: "0.3.1"
   author: "VinhLTT"
   category: scaffold
   requires:
@@ -27,7 +27,7 @@ Read an approved `recommendation-<project>.md` file and scaffold SKILL.md + refe
 
 - A `recommendation-<project>.md` file exists in `.specify/reports/`
 - File has `status: approved` in YAML frontmatter
-- `.specify/plugins/tdk-scaffold/` exists (this plugin is installed)
+- The scaffold plugin is installed
 
 ## Args
 

@@ -12,6 +12,7 @@ import { transformTextContent } from '../../src/commands/harness/prefix-transfor
 const TDK_TO_PAV = { sourcePrefix: 'tdk-', targetPrefix: 'pav-' };
 const TDK_TO_TDK = { sourcePrefix: 'tdk-', targetPrefix: 'tdk-' };
 const TDK_TO_ERC = { sourcePrefix: 'tdk-', targetPrefix: 'erc-' };
+const TDK_TO_ACME = { sourcePrefix: 'tdk-', targetPrefix: 'acme-' };
 
 describe('transformTextContent (new settings-based signature)', () => {
   // ── Prefix-equal no-op ──────────────────────────────────────────────────────
@@ -43,6 +44,21 @@ describe('transformTextContent (new settings-based signature)', () => {
 
   test('blanket rewrites prose leading tdk- token', () => {
     expect(transformTextContent('Run tdk-specific to continue', TDK_TO_PAV)).toBe('Run pav-specific to continue');
+  });
+
+  test('brand rewrite converts standalone upper and lower brand words', () => {
+    expect(transformTextContent('TDK Skill Guide', TDK_TO_PAV)).toBe('PAV Skill Guide');
+    expect(transformTextContent('tdk guide', TDK_TO_PAV)).toBe('pav guide');
+  });
+
+  test('brand rewrite leaves prefix tokens and runtime placeholders intact', () => {
+    const text = 'Run tdk-scout with ${TDK}, ${TDK_SKILL_ROOT}, and TDK_PROJECT_ROOT.';
+    const result = transformTextContent(text, TDK_TO_PAV);
+    expect(result).toBe('Run pav-scout with ${TDK}, ${TDK_SKILL_ROOT}, and TDK_PROJECT_ROOT.');
+  });
+
+  test('brand rewrite is derived from configured target prefix', () => {
+    expect(transformTextContent('TDK Skill Guide and tdk guide', TDK_TO_ACME)).toBe('ACME Skill Guide and acme guide');
   });
 
   test('blanket does NOT rewrite letter/digit/hyphen-infix tdk- tokens', () => {
@@ -95,6 +111,18 @@ describe('transformTextContent (new settings-based signature)', () => {
     const text = './.specify/plugins/tdk-utils/skills/tdk-scout/SKILL.md';
     // Output should be .claude/... (no leading ./)
     expect(transformTextContent(text, TDK_TO_PAV)).toBe('.claude/skills/pav-scout/SKILL.md');
+  });
+
+  test('skills family with trailing slash converts and preserves slash', () => {
+    const text = '.specify/plugins/tdk-utils/skills/tdk-scout/';
+    expect(transformTextContent(text, TDK_TO_PAV)).toBe('.claude/skills/pav-scout/');
+  });
+
+  test('placeholder skill and agent refs convert to flat claude paths', () => {
+    expect(transformTextContent('.specify/plugins/tdk-scaffold/skills/<name>/', TDK_TO_PAV)).toBe('.claude/skills/<name>/');
+    expect(transformTextContent('.specify/plugins/tdk-scaffold/agents/<name>.md', TDK_TO_PAV)).toBe(
+      '.claude/agents/<name>.md',
+    );
   });
 
   // ── Mapper-undefined: stays verbatim, NO blanket ──────────────────────────

@@ -10,6 +10,16 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.67.1] - 2026-06-14
+
+### Changed
+- **[General]** Refresh the plugin inventory hash for the updated scaffold skill content
+- **[Embedded Skills]** Clarify the scaffold skill prerequisite wording to refer to the installed scaffold plugin rather than a literal path check
+- **[Scripts]** Prefix transform now rewrites standalone brand words and placeholder plugin paths before install-time checks
+  - Rewrite `tdk` and `TDK` brand tokens using the configured target prefix
+  - Preserve runtime placeholders while converting trailing-slash skill and agent paths into the flat install layout
+  - Extend harness coverage for brand-word rewrites, placeholder refs, and trailing-slash path handling
+
 ## [1.67.0] - 2026-06-14
 
 ### Added

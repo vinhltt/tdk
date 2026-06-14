@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [0.3.1] - 2026-06-14
+
+### Changed
+- tdk-scaffold-from-recommendation: clarify prerequisite wording to refer to the installed scaffold plugin rather than a literal path check
+
 ## [0.3.0] - 2026-05-29
 
 ### Added

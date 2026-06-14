@@ -27,7 +27,7 @@ const EXCLUDED_NAMES = new Set([
   'pnpm-lock.yaml',
   'yarn.lock',
 ]);
-const SOURCE_PLUGIN_PATH = /(?:\.\/)?\.specify\/plugins\/[^\s"'`<>)\]}]+/g;
+const SOURCE_PLUGIN_PATH = /(?:\.\/)?\.specify\/plugins\/[^\s"'`)\]}]+/g;
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -83,15 +83,26 @@ export function isTextTransformCandidate(filePath: string): boolean {
   return TEXT_EXTENSIONS.has(path.extname(filePath));
 }
 
-// Blanket-rewrite: replace all word-boundary sourcePrefix occurrences with targetPrefix.
-// The lookbehind treats letters, digits, AND hyphens as non-boundaries, so hyphen-infix
-// tokens (e.g. builder-tdk-x) stay untouched; only clean left boundaries — start-of-line,
-// '/', backtick, whitespace, '.' — trigger a rewrite.
+// Rewrite sourcePrefix at clean left boundaries; hyphen-infix tokens stay untouched.
 function blanketRewrite(text: string, settings: PrefixTransformSettings): string {
   return text.replace(
     new RegExp(`(?<![a-z0-9-])${escapeRegExp(settings.sourcePrefix)}`, 'g'),
     settings.targetPrefix,
   );
+}
+
+function brandRewrite(text: string, settings: PrefixTransformSettings): string {
+  const source = settings.sourcePrefix.replace(/-$/, '');
+  const target = settings.targetPrefix.replace(/-$/, '');
+  if (!source || !target) return text;
+  let result = text;
+  for (const [from, to] of [
+    [source.toLowerCase(), target.toLowerCase()],
+    [source.toUpperCase(), target.toUpperCase()],
+  ] as const) {
+    result = result.replace(new RegExp(`(?<![\\w\${-])${escapeRegExp(from)}(?![\\w-])`, 'g'), to);
+  }
+  return result;
 }
 
 // Validate a single path segment — reject traversal-like, empty, absolute, or backslash-bearing.
@@ -112,10 +123,12 @@ function convertSourceSegment(segment: string, settings: PrefixTransformSettings
   const punctuationMatch = normalized.match(/([.,;:!?]+)$/);
   const suffix = punctuationMatch ? punctuationMatch[1]! : '';
   const core = suffix ? normalized.slice(0, -suffix.length) : normalized;
+  const trailingSlash = core.endsWith('/');
+  const parseCore = trailingSlash ? core.slice(0, -1) : core;
 
   // Parse: .specify/plugins/<plugin>/<family>/<rest>
   // core = ".specify/plugins/<plugin>/..."
-  const afterPluginsPrefix = core.slice('.specify/plugins/'.length);
+  const afterPluginsPrefix = parseCore.slice('.specify/plugins/'.length);
   const slashIndex = afterPluginsPrefix.indexOf('/');
   if (slashIndex === -1) {
     // Bare plugin dir — mapper would get empty rest → undefined; stay verbatim
@@ -140,7 +153,7 @@ function convertSourceSegment(segment: string, settings: PrefixTransformSettings
   }
 
   // Defined → blanket-rewrite the converted .claude/... path, then reattach punctuation
-  return blanketRewrite(mapped, settings) + suffix;
+  return brandRewrite(blanketRewrite(mapped, settings), settings) + (trailingSlash ? '/' : '') + suffix;
 }
 
 export function transformTextContent(text: string, settings: PrefixTransformSettings): string {
@@ -154,14 +167,14 @@ export function transformTextContent(text: string, settings: PrefixTransformSett
   for (const match of text.matchAll(SOURCE_PLUGIN_PATH)) {
     const index = match.index ?? 0;
     // Unprotected region between last match and this match → blanket only
-    result += blanketRewrite(text.slice(lastIndex, index), settings);
+    result += brandRewrite(blanketRewrite(text.slice(lastIndex, index), settings), settings);
     // Matched .specify/plugins/... segment → convert+blanket or verbatim
     result += convertSourceSegment(match[0]!, settings);
     lastIndex = index + match[0]!.length;
   }
 
   // Trailing unprotected region → blanket only
-  result += blanketRewrite(text.slice(lastIndex), settings);
+  result += brandRewrite(blanketRewrite(text.slice(lastIndex), settings), settings);
   return result;
 }
 
