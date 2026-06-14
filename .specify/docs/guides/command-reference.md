@@ -282,6 +282,15 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | config:sync | `/tdk-config-sync` | `--from-sub-workspace`, `--to-sub-workspace`, `--all`, `--force`, `--dry-run` | Docs paths | Synced files | sub-workspace:init |
 | config:index | `/tdk-config-index` | `--sub-workspace`, `--full` | All docs files | `document-manager.md` | None |
 
+### Harness CLI Commands
+
+| Command | Syntax | Key Flags | Input | Output | Depends On |
+|---------|--------|-----------|-------|--------|------------|
+| harness install | `tdk harness install --harness claude` | `--plugins`, `--all-plugins`, `--prefix`, `--dry-run`, `--yes` | TDK plugin source under `.specify/plugins/` | Managed `.claude/` artifacts + ownership manifest | setup |
+| harness convert-flat | `tdk harness convert-flat [root]` | `--dry-run`, `--force`, `--yes` | Existing flat `.claude/` tree | Additive `.codex/` + `.agents/skills/` artifacts + `.specify/state/harness-install/codex.json` ownership manifest | setup |
+
+`harness convert-flat` never deletes or modifies the source `.claude/` tree. Unknown flat `.claude/` entries are reported and skipped; originals remain in place. Existing unowned `.codex/` targets are conflicts by default and are skipped unless `--force` is passed.
+
 ### Sub-workspace Commands
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |

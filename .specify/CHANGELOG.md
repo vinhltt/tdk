@@ -10,6 +10,20 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.68.0] - 2026-06-14
+
+### Added
+- **[Scripts]**
+  - Add `harness convert-flat` to migrate an existing flat `.claude/` tree into additive Codex `.codex/` and `.agents/skills/` outputs without mutating the source tree
+  - Add Codex reconcile and output writer modules that generate managed targets, merge `config.toml` and `hooks.json`, and record ownership in the harness install manifest
+  - Add harness tests for Codex target mapping, flat Claude inventory conversion, migration reporting, reconcile planning, and output generation
+
+### Changed
+- **[Guides]** Document `harness install` and `harness convert-flat`, including additive migration behavior, conflict handling, and `--force` semantics
+- **[Scripts]**
+  - Harden harness writes with atomic replacement, post-write checksum verification, and harness-specific manifest loading for Codex installs
+  - Extend target path and prefix rewrite safeguards so Codex-managed paths stay bounded to `.codex/` and `.agents/skills/`, while mapped `.specify/plugins/...` references and standalone brand tokens are rewritten consistently
+
 ## [1.67.1] - 2026-06-14
 
 ### Changed

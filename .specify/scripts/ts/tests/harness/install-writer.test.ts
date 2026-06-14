@@ -5,7 +5,9 @@ import { discoverPluginInventory } from '../../src/commands/harness/plugin-disco
 import { emptyHarnessManifest, loadHarnessManifest } from '../../src/commands/harness/manifest-store';
 import { buildClaudeInstallPlan } from '../../src/commands/harness/install-plan';
 import { applyInstallPlan } from '../../src/commands/harness/install-writer';
+import { sha256Buffer } from '../../src/commands/harness/checksum';
 import { makeConsumer, writeBasicPlugin } from './fixtures';
+import type { InstallPlan } from '../../src/commands/harness/types';
 
 describe('applyInstallPlan', () => {
   test('first install writes files, settings, and ownership manifest', async () => {
@@ -264,5 +266,117 @@ describe('applyInstallPlan', () => {
     })).rejects.toThrow(/changed after planning/);
     expect(fs.existsSync(target)).toBe(true);
     expect(fs.readFileSync(target, 'utf-8')).toBe('{"hooks":{"Custom":[]}}\n');
+  });
+
+  test('rolls back earlier writes when a later write fails before manifest commit', async () => {
+    const consumer = makeConsumer();
+    const firstContent = Buffer.from('first', 'utf-8');
+    const secondContent = Buffer.from('second', 'utf-8');
+    const firstTarget = path.join(consumer.root, '.claude', 'ok.txt');
+    const blockedParent = path.join(consumer.root, '.claude', 'blocked');
+    fs.writeFileSync(blockedParent, 'not a directory', 'utf-8');
+    const plan: InstallPlan = {
+      harness: 'claude',
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      targetDir: '.claude',
+      claudeSettingsPath: '.claude/settings.json',
+      manifestPath: path.join(consumer.root, '.specify', 'state', 'harness-install', 'claude.json'),
+      writes: [
+        {
+          plugin: 'tdk-core',
+          sourcePath: path.join(consumer.root, '.specify', 'source-one.txt'),
+          sourceRelativePath: 'source-one.txt',
+          targetPath: firstTarget,
+          targetRelativePath: '.claude/ok.txt',
+          sourceChecksum: sha256Buffer(firstContent),
+          installedChecksum: sha256Buffer(firstContent),
+          content: firstContent,
+          action: 'create',
+        },
+        {
+          plugin: 'tdk-core',
+          sourcePath: path.join(consumer.root, '.specify', 'source-two.txt'),
+          sourceRelativePath: 'source-two.txt',
+          targetPath: path.join(blockedParent, 'file.txt'),
+          targetRelativePath: '.claude/blocked/file.txt',
+          sourceChecksum: sha256Buffer(secondContent),
+          installedChecksum: sha256Buffer(secondContent),
+          content: secondContent,
+          action: 'create',
+        },
+      ],
+      removals: [],
+      hookMutations: [],
+      collisions: [],
+      prompts: [],
+      warnings: [],
+      nextManifest: emptyHarnessManifest(),
+      settingsChanged: false,
+      installSettingsChanged: false,
+    };
+
+    await expect(applyInstallPlan(plan, { yes: true, interactive: false })).rejects.toThrow();
+
+    expect(fs.existsSync(firstTarget)).toBe(false);
+    expect(fs.existsSync(plan.manifestPath)).toBe(false);
+    expect(fs.readFileSync(blockedParent, 'utf-8')).toBe('not a directory');
+  });
+
+  test('rolls back generated migration journal when apply fails', async () => {
+    const consumer = makeConsumer();
+    const firstContent = Buffer.from('first', 'utf-8');
+    const secondContent = Buffer.from('second', 'utf-8');
+    const blockedParent = path.join(consumer.root, '.claude', 'blocked');
+    fs.writeFileSync(blockedParent, 'not a directory', 'utf-8');
+    const plan: InstallPlan = {
+      harness: 'claude',
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      targetDir: '.claude',
+      claudeSettingsPath: '.claude/settings.json',
+      manifestPath: path.join(consumer.root, '.specify', 'state', 'harness-install', 'claude.json'),
+      writes: [
+        {
+          plugin: 'tdk-core',
+          sourcePath: path.join(consumer.root, '.specify', 'source-one.txt'),
+          sourceRelativePath: 'source-one.txt',
+          targetPath: path.join(consumer.root, '.claude', 'ok.txt'),
+          targetRelativePath: '.claude/ok.txt',
+          sourceChecksum: sha256Buffer(firstContent),
+          installedChecksum: sha256Buffer(firstContent),
+          content: firstContent,
+          action: 'create',
+        },
+        {
+          plugin: 'tdk-core',
+          sourcePath: path.join(consumer.root, '.specify', 'source-two.txt'),
+          sourceRelativePath: 'source-two.txt',
+          targetPath: path.join(blockedParent, 'file.txt'),
+          targetRelativePath: '.claude/blocked/file.txt',
+          sourceChecksum: sha256Buffer(secondContent),
+          installedChecksum: sha256Buffer(secondContent),
+          content: secondContent,
+          action: 'create',
+        },
+      ],
+      removals: [],
+      hookMutations: [],
+      collisions: [],
+      prompts: [],
+      warnings: [],
+      nextManifest: emptyHarnessManifest(),
+      settingsChanged: false,
+      installSettingsChanged: false,
+      migration: {
+        fromPrefix: 'tdk',
+        toPrefix: 'pav',
+      },
+    };
+
+    await expect(applyInstallPlan(plan, { yes: true, interactive: false })).rejects.toThrow();
+
+    const migrationDir = path.join(consumer.root, '.specify', 'state', 'harness-install', 'migrations');
+    expect(fs.existsSync(migrationDir) ? fs.readdirSync(migrationDir) : []).toEqual([]);
   });
 });

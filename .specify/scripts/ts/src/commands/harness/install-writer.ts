@@ -73,6 +73,31 @@ function backupFile(consumerRoot: string, prompt: RequiredPrompt): string {
   return backup;
 }
 
+interface FileSnapshot {
+  path: string;
+  existed: boolean;
+  content?: Buffer;
+}
+
+function snapshotFile(filePath: string): FileSnapshot {
+  if (!fs.existsSync(filePath)) return { path: filePath, existed: false };
+  const stat = fs.lstatSync(filePath);
+  if (!stat.isFile() || stat.isSymbolicLink()) return { path: filePath, existed: false };
+  return { path: filePath, existed: true, content: fs.readFileSync(filePath) };
+}
+
+function restoreSnapshots(snapshots: FileSnapshot[]): void {
+  for (const snapshot of [...snapshots].reverse()) {
+    if (snapshot.existed && snapshot.content !== undefined) {
+      fs.mkdirSync(path.dirname(snapshot.path), { recursive: true });
+      fs.writeFileSync(snapshot.path, snapshot.content);
+    } else if (!snapshot.existed && fs.existsSync(snapshot.path)) {
+      const stat = fs.lstatSync(snapshot.path);
+      if (stat.isFile() && !stat.isSymbolicLink()) fs.unlinkSync(snapshot.path);
+    }
+  }
+}
+
 function isCleanupPrompt(prompt: RequiredPrompt): boolean {
   return prompt.type === 'unmanaged-stale-hooks-json-cleanup';
 }
@@ -140,53 +165,75 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
   for (const write of plan.writes) assertCleanBeforeWrite(write);
   for (const removal of plan.removals) assertCleanBeforeRemoval(removal);
 
-  const migrationJournalPath = writeMigrationJournal(plan);
-  const written: string[] = [];
-  for (const write of plan.writes) {
-    writeFileAtomic(write.targetPath, write.content, write.installedChecksum);
-    written.push(write.targetRelativePath);
-  }
+  const snapshots = new Map<string, FileSnapshot>();
+  const capture = (filePath: string) => {
+    if (!snapshots.has(filePath)) snapshots.set(filePath, snapshotFile(filePath));
+  };
+  for (const write of plan.writes) capture(write.targetPath);
+  if (plan.nextSettings !== undefined && plan.settingsChanged) capture(path.join(plan.consumerRoot, plan.claudeSettingsPath));
+  if (plan.nextInstallSettings !== undefined && plan.installSettingsChanged && plan.installSettingsPath) capture(plan.installSettingsPath);
+  for (const removal of plan.removals) capture(removal.targetPath);
+  for (const prompt of approvedCleanupPrompts) capture(prompt.path);
+  capture(plan.manifestPath);
 
+  let migrationJournalPath: string | undefined;
+  const written: string[] = [];
   const removed: string[] = [];
   const warnings: string[] = [];
   let settingsWritten = false;
-  if (plan.nextSettings !== undefined && plan.settingsChanged) {
-    writeFileAtomic(path.join(plan.consumerRoot, plan.claudeSettingsPath), `${JSON.stringify(plan.nextSettings, null, 2)}\n`);
-    settingsWritten = true;
-  }
-
   let installSettingsWritten = false;
-  if (plan.nextInstallSettings !== undefined && plan.installSettingsChanged) {
-    if (!plan.installSettingsPath) throw new Error('Install settings path is missing from plan.');
-    writeFileAtomic(plan.installSettingsPath, `${JSON.stringify(plan.nextInstallSettings, null, 2)}\n`);
-    installSettingsWritten = true;
-  }
 
   const writeManifest = () => {
     writeFileAtomic(plan.manifestPath, `${JSON.stringify(plan.nextManifest, null, 2)}\n`);
   };
-  if (plan.migration) writeManifest();
 
-  for (const removal of plan.removals) {
-    try {
-      if (fs.existsSync(removal.targetPath)) {
-        fs.unlinkSync(removal.targetPath);
-        removed.push(removal.targetRelativePath);
+  try {
+    migrationJournalPath = writeMigrationJournal(plan);
+    for (const write of plan.writes) {
+      writeFileAtomic(write.targetPath, write.content, write.installedChecksum);
+      written.push(write.targetRelativePath);
+    }
+
+    if (plan.nextSettings !== undefined && plan.settingsChanged) {
+      writeFileAtomic(path.join(plan.consumerRoot, plan.claudeSettingsPath), `${JSON.stringify(plan.nextSettings, null, 2)}\n`);
+      settingsWritten = true;
+    }
+
+    if (plan.nextInstallSettings !== undefined && plan.installSettingsChanged) {
+      if (!plan.installSettingsPath) throw new Error('Install settings path is missing from plan.');
+      writeFileAtomic(plan.installSettingsPath, `${JSON.stringify(plan.nextInstallSettings, null, 2)}\n`);
+      installSettingsWritten = true;
+    }
+
+    if (plan.migration) writeManifest();
+
+    for (const removal of plan.removals) {
+      try {
+        if (fs.existsSync(removal.targetPath)) {
+          fs.unlinkSync(removal.targetPath);
+          removed.push(removal.targetRelativePath);
+        }
+      } catch (err) {
+        if (!plan.migration) throw err;
+        warnings.push(`Cleanup failed for old managed file ${removal.targetRelativePath}: ${(err as Error).message}`);
       }
-    } catch (err) {
-      if (!plan.migration) throw err;
-      warnings.push(`Cleanup failed for old managed file ${removal.targetRelativePath}: ${(err as Error).message}`);
     }
-  }
-  for (const prompt of approvedCleanupPrompts) {
-    assertCleanBeforePrompt(prompt);
-    if (fs.existsSync(prompt.path)) {
-      fs.unlinkSync(prompt.path);
-      removed.push(prompt.targetRelativePath);
+    for (const prompt of approvedCleanupPrompts) {
+      assertCleanBeforePrompt(prompt);
+      if (fs.existsSync(prompt.path)) {
+        fs.unlinkSync(prompt.path);
+        removed.push(prompt.targetRelativePath);
+      }
     }
-  }
 
-  if (!plan.migration) writeManifest();
+    if (!plan.migration) writeManifest();
+  } catch (err) {
+    restoreSnapshots([...snapshots.values()]);
+    if (migrationJournalPath && fs.existsSync(migrationJournalPath)) {
+      fs.unlinkSync(migrationJournalPath);
+    }
+    throw err;
+  }
 
   return {
     written,

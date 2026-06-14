@@ -1,12 +1,12 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { assertSafeClaudeTargetRelativePath } from './target-relative-path';
+import { assertSafeClaudeTargetRelativePath, assertSafeCodexTargetRelativePath } from './target-relative-path';
 import type { HarnessInstallManifest, HarnessName } from './types';
 
-export function emptyHarnessManifest(): HarnessInstallManifest {
+export function emptyHarnessManifest(harness: HarnessName = 'claude'): HarnessInstallManifest {
   return {
     version: 1,
-    harness: 'claude',
+    harness,
     selectedPlugins: [],
     installerVersion: '0.1.0',
     installedAt: '',
@@ -23,39 +23,41 @@ export function manifestPathFor(consumerRoot: string, harness: HarnessName = 'cl
   return path.join(consumerRoot, '.specify', 'state', 'harness-install', `${harness}.json`);
 }
 
-function readManifest(manifestPath: string): HarnessInstallManifest {
+function readManifest(manifestPath: string, expectedHarness: HarnessName): HarnessInstallManifest {
   const data = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as HarnessInstallManifest;
-  if (data.version !== 1 || data.harness !== 'claude' || !Array.isArray(data.managedFiles) || !Array.isArray(data.managedHooks)) {
+  if (data.version !== 1 || data.harness !== expectedHarness || !Array.isArray(data.managedFiles) || !Array.isArray(data.managedHooks)) {
     throw new Error('unexpected manifest shape');
   }
   return {
     ...data,
     managedFiles: data.managedFiles.map((file) => ({
       ...file,
-      targetRelativePath: assertSafeClaudeTargetRelativePath(file.targetRelativePath, 'managed target path'),
+      targetRelativePath: expectedHarness === 'claude'
+        ? assertSafeClaudeTargetRelativePath(file.targetRelativePath, 'managed target path')
+        : assertSafeCodexTargetRelativePath(file.targetRelativePath, 'managed target path'),
     })),
   };
 }
 
-export function loadHarnessManifest(consumerRoot: string): HarnessInstallManifest {
-  const manifestPath = manifestPathFor(consumerRoot);
+export function loadHarnessManifest(consumerRoot: string, harness: HarnessName = 'claude'): HarnessInstallManifest {
+  const manifestPath = manifestPathFor(consumerRoot, harness);
   const legacyManifestPath = legacyManifestPathFor(consumerRoot);
   const existingPath = fs.existsSync(manifestPath)
     ? manifestPath
-    : fs.existsSync(legacyManifestPath)
+    : harness === 'claude' && fs.existsSync(legacyManifestPath)
       ? legacyManifestPath
       : undefined;
-  if (!existingPath) return emptyHarnessManifest();
+  if (!existingPath) return emptyHarnessManifest(harness);
 
   try {
-    return readManifest(existingPath);
+    return readManifest(existingPath, harness);
   } catch (err) {
     throw new Error(`Invalid ownership manifest at ${existingPath}. Inspect or delete it manually before rerunning. ${String((err as Error).message)}`);
   }
 }
 
-export function saveHarnessManifest(consumerRoot: string, data: HarnessInstallManifest): void {
-  const manifestPath = manifestPathFor(consumerRoot);
+export function saveHarnessManifest(consumerRoot: string, data: HarnessInstallManifest, harness: HarnessName = data.harness): void {
+  const manifestPath = manifestPathFor(consumerRoot, harness);
   fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
   const tmpPath = `${manifestPath}.tmp`;
   fs.writeFileSync(tmpPath, `${JSON.stringify(data, null, 2)}\n`, 'utf-8');

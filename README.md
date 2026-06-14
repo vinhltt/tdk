@@ -59,7 +59,13 @@ bun .specify/scripts/ts/src/index.ts harness install --harness claude --all-plug
 
 # Select plugins interactively
 bun .specify/scripts/ts/src/index.ts harness install --harness claude
+
+# Migrate an existing flat .claude/ tree to Codex artifacts
+bun .specify/scripts/ts/src/index.ts harness convert-flat --dry-run
+bun .specify/scripts/ts/src/index.ts harness convert-flat --yes
 ```
+
+`convert-flat` leaves the source `.claude/` tree untouched, reports unknown entries as skipped, and writes Codex ownership state to `.specify/state/harness-install/codex.json`. Use `--force` to overwrite conflicts on unowned or user-edited `.codex/` targets.
 
 Omit `--plugins` and `--all-plugins` to select plugins interactively with Space and Enter.
 
@@ -129,6 +135,7 @@ Integrated commands (via `bun src/index.ts`):
 | `tdk ut create-rules` | Generate UT rules |
 | `tdk scout` | Codebase analysis (repomix + tier-1 extraction) |
 | `tdk harness install` | Install selected TDK plugin artifacts into `.claude/` with dry-run, saved install settings, prefix rewrite/migration, ownership, collision, drift, plugin-scoped hook scripts, and settings merge safety |
+| `tdk harness convert-flat` | Convert an existing flat `.claude/` tree into additive `.codex/` and `.agents/skills/` artifacts with dry-run, conflict reporting, and `.specify/state/harness-install/codex.json` ownership manifest |
 | `tdk sub-workspace docs` | Generate sub-workspace documentation |
 
 Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup, changelog, util, test-api.
