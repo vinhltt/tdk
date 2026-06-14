@@ -124,12 +124,17 @@ describe('prefix transform planning', () => {
     expect(skillWrite?.sourceRelativePath).toBe('skills/tdk-memory-init/SKILL.md');
   });
 
-  test('preserves official source plugin paths under custom prefix', () => {
+  test('converts mapper-defined source plugin paths to .claude paths; preserves mapper-undefined source refs under custom prefix', () => {
+    // Installed skill docs self-reference via .claude paths: a .specify/plugins/<plugin>/skills/...
+    // segment whose family is mapper-defined (skills) converts to .claude/skills/<name>/ with the target prefix.
+    // Manifest refs and hooks/hooks.json refs are genuine source pointers — mapper-undefined — and stay verbatim.
     const consumer = makeConsumer();
     const skill = [
       '# tdk-sub-workspace-docs',
       'Use tdk-scout to inspect docs.',
       'Source check: ls .specify/plugins/tdk-utils/skills/tdk-scout/SKILL.md',
+      'Plugin manifest: .specify/plugins/tdk-utils/manifest.json',
+      'Hook source: .specify/plugins/tdk-utils/hooks/hooks.json.',
       '',
     ].join('\n');
     writePluginFile(consumer, 'skills/tdk-sub-workspace-docs/SKILL.md', skill, 'tdk-core');
@@ -159,9 +164,18 @@ describe('prefix transform planning', () => {
     const content = plan.writes
       .find((item) => item.sourceRelativePath === 'skills/tdk-sub-workspace-docs/SKILL.md')
       ?.content.toString('utf-8');
+    // Prose tdk- token gets blanket-rewritten
     expect(content).toContain('Use erc-scout to inspect docs.');
-    expect(content).toContain('Source check: ls .specify/plugins/tdk-utils/skills/tdk-scout/SKILL.md');
+    // skills family is mapper-defined → drops plugin segment, converts to .claude/skills/erc-scout/SKILL.md
+    expect(content).toContain('Source check: ls .claude/skills/erc-scout/SKILL.md');
+    // manifest.json is mapper-undefined → stays verbatim as tdk-utils source ref (not converted, not blanketed)
+    expect(content).toContain('.specify/plugins/tdk-utils/manifest.json');
+    // hooks/hooks.json (with trailing punctuation) is mapper-undefined → stays verbatim
+    expect(content).toContain('.specify/plugins/tdk-utils/hooks/hooks.json.');
+    // Blanket never produces erc-utils as a plugin dir (plugin segment is dropped on conversion)
     expect(content).not.toContain('.specify/plugins/erc-utils/skills/erc-scout');
+    // Manifest verbatim ref must not be converted to an erc-utils path
+    expect(content).not.toContain('erc-utils');
   });
 
   test('rewrites cross-plugin content refs during subset custom-prefix installs', () => {

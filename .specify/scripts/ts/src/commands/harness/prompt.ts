@@ -1,7 +1,8 @@
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { normalizePrefix } from './install-settings';
-import type { RequiredPrompt } from './types';
+import type { RequiredPrompt, HarnessName } from './types';
+import { selectFromCheckbox, canUseCheckboxPrompt } from './checkbox-prompt';
 
 function parsePluginSelection(answer: string, pluginNames: string[]): string[] {
   const tokens = answer.split(',').map((token) => token.trim()).filter(Boolean);
@@ -24,83 +25,16 @@ async function selectPluginsByQuestion(pluginNames: string[]): Promise<string[]>
   }
 }
 
-function canUseCheckboxPrompt(): boolean {
-  return Boolean(input.isTTY && output.isTTY && typeof input.setRawMode === 'function');
-}
-
-function renderCheckboxPrompt(pluginNames: string[], selected: Set<number>, cursor: number, message: string): void {
-  output.write('\x1b[?25l\x1b[H\x1b[2J');
-  output.write('Select plugins to install\n');
-  output.write('Use Up/Down or j/k to move, Space to toggle, a to select/clear all, Enter to install, Esc to cancel.\n\n');
-  pluginNames.forEach((name, index) => {
-    const pointer = index === cursor ? '>' : ' ';
-    const mark = selected.has(index) ? '[x]' : '[ ]';
-    output.write(`${pointer} ${mark} ${name}\n`);
-  });
-  if (message) output.write(`\n${message}\n`);
-}
-
-async function selectPluginsByCheckbox(pluginNames: string[]): Promise<string[]> {
-  const selected = new Set<number>();
-  let cursor = 0;
-  let message = '';
-  const wasRaw = input.isRaw;
-  const wasPaused = input.isPaused();
-
-  input.setRawMode(true);
-  input.resume();
-  input.setEncoding('utf8');
-
-  return new Promise((resolve, reject) => {
-    let onData: (key: string | Buffer) => void;
-    const cleanup = () => {
-      input.off('data', onData);
-      input.setRawMode(Boolean(wasRaw));
-      if (wasPaused) input.pause();
-      output.write('\x1b[?25h');
-    };
-    const finish = () => {
-      if (selected.size === 0) {
-        message = 'Select at least one plugin.';
-        renderCheckboxPrompt(pluginNames, selected, cursor, message);
-        return;
-      }
-      const names = pluginNames.filter((_, index) => selected.has(index));
-      cleanup();
-      output.write(`Selected plugins: ${names.join(', ')}\n`);
-      resolve(names);
-    };
-    const cancel = () => {
-      cleanup();
-      reject(new Error('Plugin selection cancelled.'));
-    };
-    onData = (key: string | Buffer) => {
-      const value = String(key);
-      message = '';
-      if (value === '\u0003' || value === '\u001b') return cancel();
-      if (value === '\r' || value === '\n') return finish();
-      if (value === ' ' || value === '\t') {
-        selected.has(cursor) ? selected.delete(cursor) : selected.add(cursor);
-      } else if (value === 'a' || value === 'A') {
-        if (selected.size === pluginNames.length) selected.clear();
-        else pluginNames.forEach((_, index) => selected.add(index));
-      } else if (value === '\u001b[A' || value === 'k' || value === 'K') {
-        cursor = (cursor - 1 + pluginNames.length) % pluginNames.length;
-      } else if (value === '\u001b[B' || value === 'j' || value === 'J') {
-        cursor = (cursor + 1) % pluginNames.length;
-      }
-      renderCheckboxPrompt(pluginNames, selected, cursor, message);
-    };
-
-    input.on('data', onData);
-    renderCheckboxPrompt(pluginNames, selected, cursor, message);
-  });
-}
-
 export async function selectPluginsInteractively(pluginNames: string[]): Promise<string[]> {
   if (pluginNames.length === 0) throw new Error('No plugins are available in .specify/plugins/manifest.json.');
-  if (!canUseCheckboxPrompt()) return selectPluginsByQuestion(pluginNames);
-  return selectPluginsByCheckbox(pluginNames);
+  if (!canUseCheckboxPrompt(input, output)) return selectPluginsByQuestion(pluginNames);
+  return selectFromCheckbox(pluginNames, {
+    title: 'Select plugins to install',
+    hint: 'Use Up/Down or j/k to move, Space to toggle, a to select/clear all, Enter to install, Esc to cancel.',
+    emptyMsg: 'Select at least one plugin.',
+    selectedMsgPrefix: 'Selected plugins: ',
+    cancelMsg: 'Plugin selection cancelled.',
+  });
 }
 
 export async function confirmOverwrite(prompt: RequiredPrompt): Promise<boolean> {
@@ -148,4 +82,16 @@ export async function confirmInstallTarget(details: {
   } finally {
     rl.close();
   }
+}
+
+export async function selectHarnessInteractively(names: HarnessName[]): Promise<HarnessName[]> {
+  const selected = await selectFromCheckbox(names, {
+    title: 'Select harness(es) to install',
+    hint: 'Use Up/Down or j/k to move, Space to toggle, a to select/clear all, Enter to install, Esc to cancel.',
+    emptyMsg: 'Select at least one harness.',
+    selectedMsgPrefix: 'Selected harness: ',
+    cancelMsg: 'Harness selection cancelled.',
+  });
+  // source items are fixed to the two known names; validate/cast on return
+  return selected.filter((name): name is HarnessName => name === 'claude' || name === 'codex');
 }

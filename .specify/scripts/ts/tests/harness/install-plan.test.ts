@@ -4,7 +4,8 @@ import * as path from 'node:path';
 import { discoverPluginInventory } from '../../src/commands/harness/plugin-discovery';
 import { emptyHarnessManifest } from '../../src/commands/harness/manifest-store';
 import { buildClaudeInstallPlan } from '../../src/commands/harness/install-plan';
-import { makeConsumer, sha256, writeBasicPlugin, writeHookOnlyPlugin, writeMultiPluginManifest } from './fixtures';
+import { makeConsumer, sha256, writeBasicPlugin, writeHookOnlyPlugin, writeMultiPluginManifest, writePluginFile, writePrefixedSkillPlugin } from './fixtures';
+import { discoverPrefixRewritePlugins } from '../../src/commands/harness/plugin-discovery';
 
 function buildPlan(root: string) {
   const inventory = discoverPluginInventory(root, ['tdk-core']);
@@ -281,5 +282,93 @@ describe('buildClaudeInstallPlan', () => {
     expect(plan.collisions.some((collision) => (
       collision.kind === 'managed-drift' && collision.message.includes(staleTarget)
     ))).toBe(true);
+  });
+});
+
+describe('prefix migration install-level', () => {
+  test('default prefix (tdk→tdk) produces byte-identical installed content (no-op)', () => {
+    // When sourcePrefix === targetPrefix the transform is gated off; installed bytes must equal source bytes.
+    const consumer = makeConsumer();
+    writePrefixedSkillPlugin(consumer);
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+
+    // Explicit equal prefixes (same result as omitting both — defaults are tdk-/tdk-)
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+      sourcePrefix: 'tdk-',
+      targetPrefix: 'tdk-',
+    });
+
+    const write = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-demo/SKILL.md');
+    expect(write).toBeDefined();
+    // Installed content must equal source content byte-for-byte
+    expect(write!.content.toString('utf-8')).toBe('# tdk-demo\nUse tdk-demo from command text.\n');
+    expect(write!.sourceChecksum).toBe(write!.installedChecksum);
+  });
+
+  test('no residual tdk- in transformable regions after pav- migration; mapper-undefined source refs preserved', () => {
+    // After migration to pav-: all tdk- tokens in prose/converted paths must be replaced.
+    // Intentional exception: mapper-undefined source refs (.specify/plugins/tdk-utils/manifest.json,
+    // hooks/hooks.json) stay verbatim and are excluded from the no-residual assertion.
+    const consumer = makeConsumer();
+    const skill = [
+      '# tdk-sub-workspace',
+      'Run /tdk-* to bootstrap.',
+      'Status: `tdk-status` is ready.',
+      'Job ID: tdk-001 for tdk-specific tasks.',
+      'Source: .specify/plugins/tdk-utils/skills/tdk-scout/SKILL.md',
+      'Manifest ref: .specify/plugins/tdk-utils/manifest.json',
+      '',
+    ].join('\n');
+    writePluginFile(consumer, 'skills/tdk-sub-workspace/SKILL.md', skill, 'tdk-core');
+    writeMultiPluginManifest(consumer, {
+      'tdk-core': {
+        version: '1.0.0',
+        files: { 'skills/tdk-sub-workspace/SKILL.md': sha256(skill) },
+      },
+      'tdk-utils': {
+        version: '1.0.0',
+        files: { 'skills/tdk-scout/SKILL.md': sha256('# tdk-scout\n') },
+      },
+    });
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      rewritePlugins: discoverPrefixRewritePlugins(consumer.root),
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+      sourcePrefix: 'tdk-',
+      targetPrefix: 'pav-',
+    });
+
+    const content = plan.writes
+      .find((item) => item.sourceRelativePath === 'skills/tdk-sub-workspace/SKILL.md')
+      ?.content.toString('utf-8');
+    expect(content).toBeDefined();
+
+    // Mapper-undefined manifest ref stays verbatim — pull it out before the no-residual check
+    const lines = content!.split('\n');
+    const manifestLine = lines.find((line) => line.includes('manifest.json'));
+    expect(manifestLine).toContain('.specify/plugins/tdk-utils/manifest.json');
+
+    // Transformable regions (all lines except the verbatim manifest line) must have no residual tdk-
+    const transformableLines = lines.filter((line) => !line.includes('.specify/plugins/'));
+    const transformableText = transformableLines.join('\n');
+    expect(transformableText).not.toContain('tdk-');
+
+    // Positive spot-checks: blanket rewrites fired
+    expect(content).toContain('/pav-*');
+    expect(content).toContain('`pav-status`');
+    expect(content).toContain('pav-001');
+    expect(content).toContain('pav-specific');
+    // Mapper-defined skills ref converted correctly
+    expect(content).toContain('.claude/skills/pav-scout/SKILL.md');
   });
 });

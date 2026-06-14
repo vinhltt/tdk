@@ -10,6 +10,24 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.66.0] - 2026-06-14
+
+### Added
+- **[Scripts]** New `checkbox-prompt.ts` module — extracts reusable checkbox picker logic (`selectFromCheckbox`, `canUseCheckboxPrompt`) with configurable title/hint/messages, decoupled from plugin-specific copy
+- **[Scripts]** `selectHarnessInteractively()` added to `prompt.ts` for interactive harness selection via checkbox picker
+- **[Scripts]** New test files covering harness install CLI behavior, picker seam, prefix-transform settings signature, and prompt helpers
+  - `cli-harness-select.test.ts` — omitted/codex-only/combined harness scenarios
+  - `harness-select-picker.test.ts` — mock.module picker seam for checkbox-capable TTY
+  - `prefix-transform-segment-rewrite.test.ts` — settings-based `transformTextContent` signature
+  - `prompt.test.ts` — `selectPluginsInteractively` and `selectHarnessInteractively`
+
+### Changed
+- **[Scripts]** `install.ts` — `--harness` option made optional; TTY-capable terminals show interactive checkbox picker; codex harness emits "coming soon" notice on stderr and exits 0 without installing
+- **[Scripts]** `prefix-transform.ts` — refactored to `PrefixTransformSettings`-based signature; blanket-rewrite uses lookbehind to avoid hyphen-infix token rewrites; `claudeTargetMapper` handles `.specify/plugins/...` segment conversion
+- **[Scripts]** `hook-merge.ts` — added `prefixSettings: PrefixTransformSettings` parameter replacing raw rewriteMap for hook-body text transforms
+- **[Scripts]** `install-plan.ts` — passes `PrefixTransformSettings` to `transformFileContent` and `buildHookMerge`; uses identity settings (equal prefixes) when hooks/text rewrite is disabled
+- **[Scripts]** Tests updated for `defaultPrefixSettings` fixture, hooks rewrite on/off coverage, and prefix migration scenarios
+
 ## [1.65.0] - 2026-06-13
 
 ### Added

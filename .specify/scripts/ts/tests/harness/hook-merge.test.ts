@@ -4,6 +4,10 @@ import * as path from 'node:path';
 import { buildHookMerge, rewriteHookCommand } from '../../src/commands/harness/hook-merge';
 import { makeConsumer, pluginRoot, writeBasicPlugin, writePluginFile } from './fixtures';
 
+// Default equal-prefix settings for call sites that don't test prefix migration.
+// prefixSettings is required on buildHookMerge; equal prefixes → no-op text rewrite.
+const defaultPrefixSettings = { sourcePrefix: 'tdk-', targetPrefix: 'tdk-' };
+
 describe('hook merge', () => {
   test('rewrites CLAUDE_PLUGIN_ROOT command through CLAUDE_PROJECT_DIR cwd', () => {
     const rewritten = rewriteHookCommand('node "${CLAUDE_PLUGIN_ROOT}/hooks/hook-gateway.cjs" dev-context-injector');
@@ -32,6 +36,7 @@ describe('hook merge', () => {
       pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
       previousHooks: [],
       settings,
+      prefixSettings: defaultPrefixSettings,
     });
 
     expect(result.collisions).toEqual([]);
@@ -69,6 +74,7 @@ describe('hook merge', () => {
       pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
       previousHooks: [],
       settings: {},
+      prefixSettings: defaultPrefixSettings,
     });
 
     expect(result.collisions).toEqual([]);
@@ -107,6 +113,7 @@ describe('hook merge', () => {
       pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
       previousHooks: [],
       settings: {},
+      prefixSettings: defaultPrefixSettings,
     });
 
     expect(result.collisions).toEqual([]);
@@ -143,6 +150,7 @@ describe('hook merge', () => {
       pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
       previousHooks: [],
       settings: {},
+      prefixSettings: defaultPrefixSettings,
     });
 
     expect(result.collisions).toEqual([]);
@@ -173,6 +181,7 @@ describe('hook merge', () => {
       pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
       previousHooks: [],
       settings: {},
+      prefixSettings: defaultPrefixSettings,
     });
 
     expect(result.collisions.some((collision) => collision.kind === 'unknown-hook-command')).toBe(true);
@@ -199,6 +208,7 @@ describe('hook merge', () => {
       pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
       previousHooks: [],
       settings: {},
+      prefixSettings: defaultPrefixSettings,
     });
 
     expect(result.collisions.some((collision) => collision.kind === 'unknown-hook-command')).toBe(true);
@@ -225,6 +235,7 @@ describe('hook merge', () => {
       pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
       previousHooks: [],
       settings: {},
+      prefixSettings: defaultPrefixSettings,
     });
 
     expect(result.collisions.some((collision) => collision.kind === 'unknown-hook-command')).toBe(true);
@@ -261,6 +272,7 @@ describe('hook merge', () => {
       pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
       previousHooks: [previous],
       settings,
+      prefixSettings: defaultPrefixSettings,
     });
 
     const text = JSON.stringify(result.nextSettings);
@@ -295,6 +307,7 @@ describe('hook merge', () => {
       pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
       previousHooks: [],
       settings,
+      prefixSettings: defaultPrefixSettings,
     });
 
     expect(result.collisions.some((collision) => collision.kind === 'unmanaged-duplicate-hook')).toBe(true);
@@ -325,6 +338,7 @@ describe('hook merge', () => {
       pluginRoots,
       previousHooks: [],
       settings: {},
+      prefixSettings: defaultPrefixSettings,
     });
 
     expect(first.collisions).toEqual([]);
@@ -337,6 +351,7 @@ describe('hook merge', () => {
       pluginRoots,
       previousHooks: first.managedHooks,
       settings: first.nextSettings,
+      prefixSettings: defaultPrefixSettings,
     });
 
     expect(second.collisions).toEqual([]);
@@ -359,6 +374,7 @@ describe('hook merge', () => {
         ['tdk-core', 'erc-core'],
         ['tdk-demo', 'erc-demo'],
       ]),
+      prefixSettings: defaultPrefixSettings,
     });
 
     expect(result.collisions).toEqual([]);
@@ -366,6 +382,77 @@ describe('hook merge', () => {
     expect(text).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
     expect(text).not.toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
     expect(result.managedHooks[0]?.plugin).toBe('tdk-core');
+  });
+
+  test('rewrite.hooks=false suppresses both plugin-id remapping and hook-body text rewrite', () => {
+    // When hooks rewrite is disabled the install layer passes new Map() as rewriteMap (no plugin-id remap)
+    // and equal-prefix settings as prefixSettings (no text rewrite). Both concerns must be off together.
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const hooksPath = path.join(consumer.pluginRoot, 'hooks', 'hooks.json');
+    // Use a command body that contains a tdk- token so we can assert text rewrite is suppressed
+    fs.writeFileSync(hooksPath, JSON.stringify({
+      hooks: {
+        UserPromptSubmit: [{
+          matcher: '*',
+          hooks: [{ type: 'command', command: 'node "${CLAUDE_PLUGIN_ROOT}/hooks/hook-gateway.cjs" tdk-context' }],
+        }],
+      },
+    }), 'utf-8');
+
+    // hooks=false: empty rewriteMap (no plugin-id remap) + equal-prefix settings (no text rewrite)
+    const result = buildHookMerge({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
+      previousHooks: [],
+      settings: {},
+      rewriteMap: new Map(),
+      prefixSettings: { sourcePrefix: 'tdk-', targetPrefix: 'tdk-' },
+    });
+
+    expect(result.collisions).toEqual([]);
+    const text = JSON.stringify(result.nextSettings);
+    // Hook body tdk- token must NOT be rewritten (text rewrite suppressed via equal-prefix)
+    expect(text).toContain('tdk-context');
+    expect(text).not.toContain('erc-context');
+    // Plugin-id segment in path uses original tdk-core (not remapped via rewriteMap)
+    expect(text).toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(text).not.toContain('.claude/hooks/erc-core/hook-gateway.cjs');
+  });
+
+  test('rewrite.hooks=true rewrites both hook-body text and plugin-id path', () => {
+    // hooks=true: non-empty rewriteMap (plugin-id remap) + migration prefixSettings (text rewrite on)
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const hooksPath = path.join(consumer.pluginRoot, 'hooks', 'hooks.json');
+    fs.writeFileSync(hooksPath, JSON.stringify({
+      hooks: {
+        UserPromptSubmit: [{
+          matcher: '*',
+          hooks: [{ type: 'command', command: 'node "${CLAUDE_PLUGIN_ROOT}/hooks/hook-gateway.cjs" tdk-context' }],
+        }],
+      },
+    }), 'utf-8');
+
+    const result = buildHookMerge({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      pluginRoots: new Map([['tdk-core', consumer.pluginRoot]]),
+      previousHooks: [],
+      settings: {},
+      rewriteMap: new Map([['tdk-core', 'erc-core']]),
+      prefixSettings: { sourcePrefix: 'tdk-', targetPrefix: 'erc-' },
+    });
+
+    expect(result.collisions).toEqual([]);
+    const text = JSON.stringify(result.nextSettings);
+    // Hook body tdk- token IS rewritten
+    expect(text).toContain('erc-context');
+    expect(text).not.toContain('tdk-context');
+    // Plugin-id segment is remapped via rewriteMap
+    expect(text).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
+    expect(text).not.toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
   });
 
   test('migrates managed hook command roots to transformed plugin ids', () => {
@@ -397,6 +484,7 @@ describe('hook merge', () => {
       previousHooks: [previous],
       settings,
       rewriteMap: new Map([['tdk-core', 'erc-core']]),
+      prefixSettings: defaultPrefixSettings,
     });
 
     const text = JSON.stringify(result.nextSettings);

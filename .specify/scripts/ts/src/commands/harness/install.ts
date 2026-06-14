@@ -16,9 +16,10 @@ import {
 } from './install-settings';
 import { buildClaudeInstallPlan } from './install-plan';
 import { applyInstallPlan } from './install-writer';
-import { askPrefixInteractively, confirmInstallTarget, confirmOverwrite, selectPluginsInteractively } from './prompt';
+import { askPrefixInteractively, confirmInstallTarget, confirmOverwrite, selectHarnessInteractively, selectPluginsInteractively } from './prompt';
+import { canUseCheckboxPrompt } from './checkbox-prompt';
 import { renderApplyResult, renderInstallPlan } from './render';
-import type { PrefixMigrationPlan } from './types';
+import type { HarnessName, PrefixMigrationPlan } from './types';
 
 interface InstallOptions {
   harness?: string;
@@ -56,14 +57,12 @@ async function resolveSelection(consumerRoot: string, opts: InstallOptions, save
   }
   return selectPluginsInteractively(listManifestPluginNames(consumerRoot));
 }
-function resolveHarnessOption(value: string | undefined): 'claude' {
-  if (!value) throw new Error('--harness is required.');
-  const harnesses = parseHarnessList(value);
-  const unsupported = harnesses.filter((harness) => harness !== 'claude');
-  if (unsupported.length > 0) {
-    throw new Error(`Harness "${unsupported.join(',')}" is recognized but not implemented yet. Current install supports --harness claude only.`);
+async function resolveHarnessOption(value: string | undefined): Promise<HarnessName[]> {
+  if (value) return parseHarnessList(value);
+  if (canUseCheckboxPrompt(process.stdin, process.stdout)) {
+    return selectHarnessInteractively(['claude', 'codex']);
   }
-  return 'claude';
+  throw new Error('No harness provided. Use --harness claude.');
 }
 function buildNextInstallSettings(settings: InstallSettings | undefined, resolved: ResolvedClaudeSettings): InstallSettings {
   const base = settings ?? defaultInstallSettings();
@@ -114,7 +113,7 @@ async function resolveTargetPrefix(opts: InstallOptions, base: ResolvedClaudeSet
 export function createHarnessInstallCommand(): Command {
   return new Command('install')
     .description('Install selected TDK plugin artifacts into a Claude harness')
-    .requiredOption('--harness <names>', 'target harness list (comma-separated; currently claude only)')
+    .option('--harness <names>', 'target harness list (comma-separated; optional — claude installs, codex coming soon)')
     .option('--plugins <names>', 'comma-separated plugin names')
     .option('--all-plugins', 'install all plugins listed in .specify/plugins/manifest.json')
     .option('--prefix <prefix>', 'target prefix for first installs')
@@ -123,7 +122,11 @@ export function createHarnessInstallCommand(): Command {
     .option('--yes', 'approve clean writes/updates/removals without prompting')
     .action(async (opts: InstallOptions) => {
       try {
-        resolveHarnessOption(opts.harness);
+        const harnesses = await resolveHarnessOption(opts.harness);
+        if (harnesses.includes('codex')) {
+          process.stderr.write('Codex harness: coming soon (not yet implemented)\n');
+        }
+        if (!harnesses.includes('claude')) return; // only-codex: exit 0, nothing to install
         const root = resolveConsumerRoot(process.cwd());
         const installSettings = loadInstallSettings(root.consumerRoot);
         const previousManifest = loadHarnessManifest(root.consumerRoot);

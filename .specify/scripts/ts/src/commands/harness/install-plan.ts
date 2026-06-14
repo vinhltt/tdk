@@ -106,9 +106,11 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
   const runtimeAssetMap = buildRuntimeAssetMap(verifiedFiles);
   const selectedFiles: TransformedPluginFile[] = verifiedFiles.map((file) => {
     const runtimeContent = transformRuntimeAssetContent(file, file.sourceContent, runtimeAssetMap);
-    const content = rewrite.textFiles
-      ? transformFileContent(file.sourcePath, runtimeContent, rewriteMap)
-      : runtimeContent;
+    const content = transformFileContent(
+      file.sourcePath,
+      runtimeContent,
+      rewrite.textFiles ? transformSettings : { sourcePrefix: transformSettings.sourcePrefix, targetPrefix: transformSettings.sourcePrefix },
+    );
     if (sha256File(file.sourcePath) !== file.sourceChecksum) {
       throw new Error(`Source changed while planning: ${file.sourceRelativePath}`);
     }
@@ -165,6 +167,7 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
     previousHooks: previous.managedHooks,
     settings: input.settings,
     rewriteMap: rewrite.hooks ? rewriteMap : new Map(),
+    prefixSettings: rewrite.hooks ? transformSettings : { sourcePrefix: transformSettings.sourcePrefix, targetPrefix: transformSettings.sourcePrefix },
     hookChecksums,
   });
   collisions.push(...hookMerge.collisions);

@@ -5,6 +5,7 @@ import { sha256File, sha256Text } from './checksum';
 import { normalizeHookHandler, rewriteHookHandler } from './hook-path-rewrite';
 import { actualHookKeys, addHook, managedHookKey, removeHook, type HookEntry } from './hook-reconcile';
 import { transformHookHandler } from './prefix-transform';
+import type { PrefixTransformSettings } from './prefix-transform';
 import type { Collision, HookHandler, ManagedHook, PlannedHookMutation } from './types';
 
 const HookHandlerSchema = z.object({
@@ -61,6 +62,7 @@ export function buildHookMerge(params: {
   previousHooks: ManagedHook[];
   settings: unknown;
   rewriteMap?: Map<string, string>;
+  prefixSettings: PrefixTransformSettings;
   hookChecksums?: Map<string, string>;
 }): { nextSettings: unknown; managedHooks: ManagedHook[]; mutations: PlannedHookMutation[]; collisions: Collision[]; settingsChanged: boolean } {
   const parsedSettings = SettingsSchema.safeParse(params.settings ?? {});
@@ -107,7 +109,7 @@ export function buildHookMerge(params: {
         for (const hook of entry.hooks) {
           try {
             const rewriteMap = params.rewriteMap ?? new Map();
-            const transformedHook = transformHookHandler(hook as HookHandler, rewriteMap);
+            const transformedHook = transformHookHandler(hook as HookHandler, params.prefixSettings);
             const handler = rewriteHookHandler(rewriteMap.get(plugin) ?? plugin, transformedHook);
             const handlerChecksum = sha256Text(normalizeHookHandler(handler));
             const ownershipKey = hookOwnershipKey(plugin, event, entry.matcher, handler);
