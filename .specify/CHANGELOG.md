@@ -10,6 +10,25 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.67.0] - 2026-06-14
+
+### Added
+- **[Scripts]** Added Codex migration and compatibility transform modules for harness and hook assets
+  - New `agent-to-codex-toml.ts` exports `convertAgentToCodexToml` and `buildCodexConfigEntry`, including model/toml mapping + sandbox derivation
+  - New `codex-capabilities.ts` introduces Codex event capability tables, version detection utilities, and event support metadata
+  - New `codex-hook-wrapper.ts` generates deny-aware hook wrapper scripts with event-level scrub rules and JSON passthrough behavior
+  - New `codex-slug.ts` provides deterministic slug generation with safe Unicode normalization and hashing fallback
+  - New `command-to-codex-skill.ts` adds command-to-skill conversion helpers with metadata validation and warning reporting
+  - New `config-toml-merge.ts` and `features-flag-block.ts` add Codex `config.toml` merge helpers and managed `[features]` block synthesis
+  - New `hooks-json-fragment.ts` builds Codex `hooks.json` fragments with managed wrapper resolution and origin metadata
+  - New `index.ts` + `model-taxonomy.ts`/`model-taxonomy.json` introduce Codex model taxonomy wiring for the migration pipeline
+- **[Scripts]** Added comprehensive harness transform tests for new Codex conversion and compatibility behavior
+  - `agent-to-codex-toml.test.ts`
+  - `codex-capabilities.test.ts`
+  - `codex-hook-wrapper.test.ts`
+  - `output-writer-primitives.test.ts`
+  - `purity-invariant.test.ts`
+
 ## [1.66.0] - 2026-06-14
 
 ### Added

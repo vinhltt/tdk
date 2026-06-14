@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "source": "ported from claudekit portable model-taxonomy.ts",
+    "updated": "2026-06-14",
+    "notes": "Plan 0 build-time data only; runtime consumer overrides are deferred to installer/consumer plans."
+  },
+  "sourceTiers": {
+    "opus": "heavy",
+    "sonnet": "balanced",
+    "haiku": "light"
+  },
+  "codex": {
+    "heavy": {
+      "codexModel": "gpt-5.4",
+      "reasoningEffort": "xhigh"
+    },
+    "balanced": {
+      "codexModel": "gpt-5.4",
+      "reasoningEffort": "high"
+    },
+    "light": {
+      "codexModel": "gpt-5.4-mini",
+      "reasoningEffort": "medium"
+    }
+  }
+}
