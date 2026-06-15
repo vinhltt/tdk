@@ -58,6 +58,18 @@ describe("convertAgentToCodexToml", () => {
 		expect(result.toml).toContain('# model = "custom-model"');
 		expect(result.warnings.some((warning) => warning.includes("Unknown model"))).toBe(true);
 	});
+
+	it("fails closed to read-only when tools are missing, malformed, empty, or unknown", () => {
+		for (const tools of [undefined, ["Read"], "", "UnknownTool"]) {
+			const result = convertAgentToCodexToml({
+				name: "guarded",
+				frontmatter: { tools },
+				body: "Work.",
+			});
+			expect(result.toml).toContain('sandbox_mode = "read-only"');
+			expect(result.warnings.some((warning) => warning.includes("read-only"))).toBe(true);
+		}
+	});
 });
 
 describe("model taxonomy and config entry", () => {

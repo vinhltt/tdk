@@ -1,0 +1,157 @@
+# Validate Workflow (Step 4.7 / `--validate` action)
+
+User-in-the-loop interview over an existing plan. Template-based question generation (see `validate-question-framework.md`). Supports mid-interview suspend with `validation_cursor` resume state.
+
+## Trigger
+
+| Invocation | Behavior |
+|---|---|
+| `/tdk-plan <ID> --validate` | Subcommand short-circuit (Step 1.7). Skips Steps 2–4. Runs unconditionally. |
+| `/tdk-plan <ID> --validate <USER_CONTENT>` | Same short-circuit, with `USER_CONTENT` as validation focus. |
+| `/tdk-plan <ID> <USER_CONTENT> --validate` | Same short-circuit, with `USER_CONTENT` as validation focus. |
+| `/tdk-plan <ID> --hard` | After Step 4.5 (red-team), prompt user `Run validation interview? [y/N]`. Default N. |
+| `/tdk-plan <ID>` (default) | Same prompt as `--hard` (no auto-run). |
+| `/tdk-plan <ID> --fast` | Step 4.7 SKIPPED. |
+
+## Orphan Detection (FIRST step every invocation)
+
+Before generating any new question, scan plan.md for `## Validation Log` containing `### Session N — ... (in-progress)`.
+
+**If found** → AskUserQuestion (Validation S1 D5):
+
+```
+Prior session N is in-progress (cursor at Q{cursor}, {cursor-1}/{N_total} answered).
+[Resume — continue Q{cursor}, preserve prior answers, same Session N]
+[Discard + restart — delete partial section + orphan markers, start Session N+1]
+[Cancel — exit; resolve manually]
+```
+
+### Resume path
+
+1. Print partial Q/A summary (Q1..Q{cursor-1} from plan.md so user remembers where they were).
+2. If the in-progress session has `#### Spec-Plan Drift Preflight`, reuse the persisted drift table and do not recompute drift during resume.
+3. If the in-progress session lacks a drift table and `validation_cursor > 0`, force Discard path because the prior question set cannot be reconstructed safely.
+4. **Trust-ask (Validation S2 D5 / S2.F13):** AskUserQuestion `"Have you edited spec.md, plan.md, or any phases/phase-NN-*.md since the last suspend?"` `[No, content unchanged]` / `[Yes, content changed]`.
+   - **No** → proceed; skip Q1..Q{cursor-1}; loop continues at Q{cursor}.
+   - **Yes** → force Discard path (prior answers may now be stale — safer to regenerate).
+5. Solo-dev rationale: trust user self-report over an automated content-hash check. User edits mid-session are expected to be declared.
+
+### Discard path
+
+1. Grep all `phases/phase-NN-*.md` for `<!-- Updated: Validation Session {N} -->` markers; remove every match (orphan cleanup).
+2. Delete the in-progress `### Session {N}` block from plan.md.
+3. Increment `validation_session: N+1`.
+4. Reset `validation_cursor: 0`.
+5. Continue with fresh question generation (next section).
+
+### Cancel path
+
+Exit immediately. No file mutations, no counter bump.
+
+## Session Setup (no orphan detected)
+
+1. Validate TASK_ID, locate spec dir.
+2. Load `spec.md`, `plan.md`, and every `phases/phase-NN-*.md`.
+2b. **Skill Routing Inline Load**: always resolve exact `ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md` and read that path directly into `SKILL_ROUTING` so validation can assess whether plan phases have correct skill assignments. Do not use Search/Grep/Glob or a path fragment pattern to check existence. Skip silently only when the exact resolved file is missing.
+3. If `USER_CONTENT` is non-empty, store it as validation focus and bias generated questions toward that focus. The focus narrows priority; severe drift still takes precedence.
+4. Increment `validation_session: N` in plan.md frontmatter (via Edit tool — Session 2 #12 frontmatter mutations are framework-managed; do NOT add a custom bun writer).
+5. Reset `validation_cursor: 0`.
+6. **Write `## Validation Log` header IMMEDIATELY** with `(in-progress)` marker (S1.F14):
+   ```markdown
+   ## Validation Log
+
+   ### Session {N} — {ISO8601} (in-progress)
+   **Mode trigger:** {hard | manual}
+   **Validation focus:** {USER_CONTENT or none}
+   **Spec-plan drift:** pending
+
+   #### Spec-Plan Drift Preflight
+
+   | ID | Severity | Type | Spec Anchor | Plan Anchor | Summary | Suggested Action |
+   |---|---|---|---|---|---|---|
+
+   **Questions:** generated after drift rows are persisted
+
+   | # | Category | Layer | Question | Answer | Action |
+   |---|---|---|---|---|---|
+   ```
+   Without this, a Ctrl-C between counter bump and first answer would leave orphan phase markers with no `## Validation Log` to detect on next run.
+7. Run deterministic spec-plan drift preflight:
+   ```bash
+   (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/spec-plan-drift.ts \
+     --spec "{FEATURE_DIR}/spec.md" \
+     --plan "{FEATURE_DIR}/plan.md" \
+     --phases-root "{FEATURE_DIR}/phases" \
+     --json)
+   ```
+   If the helper errors, STOP and report the exact stderr/stdout. Do not generate questions from incomplete drift data.
+8. Persist the full drift rows before the Q/A table. These rows are the source of truth for resume and final recommendation.
+9. Generate questions per `validate-question-framework.md` algorithm. No fixed total cap is applied; question flow is severity-driven and batched by 4. Use `USER_CONTENT` as validation focus when choosing among otherwise equal question candidates.
+
+## Interview Loop
+
+```
+for batch in chunks(questions, 4):                         # AskUserQuestion max = 4
+  ask = AskUserQuestion(batch)
+  for (q, a) in zip(batch, ask.answers):
+    append_row(plan.md `## Validation Log` Session N table, q, a)
+    if a.action triggers a phase change:
+      append_marker(target_phase, "<!-- Updated: Validation Session {N} — {short summary} -->")
+    cursor += 1
+    write_frontmatter(plan.md, validation_cursor=cursor)   # via Edit tool
+  if cursor < total:
+    cont = AskUserQuestion("Continue with next batch, or stop validation as partial?",
+                            options=["Continue", "Stop - mark partial"])
+    if cont == "Stop - mark partial": break
+```
+
+`AskUserQuestion` accepts 1–4 questions per call → batches are size 4 (or final-batch remainder).
+
+## Completion
+
+On normal completion (`cursor == total`) OR after `Stop - mark partial`:
+
+1. Compute `recommendation` from collected actions per `validate-question-framework.md`:
+   - `proceed` if all `no-op`.
+   - `revise` if any `revise` (and none `spec-update-needed`).
+   - `spec-update-needed` if any `spec-update-needed`.
+   - `partial` if early-exit (cursor < total) regardless.
+2. Replace the Session header `(in-progress)` → `(completed)` (or `(partial)` on early-exit).
+3. Write trailing summary block before the `### Session N+1` boundary:
+   ```markdown
+   **Answered:** {cursor}/{total}{ — early exit if partial}
+   **Recommendation:** {proceed | revise | spec-update-needed | partial}
+   ```
+4. Reset `validation_cursor: 0` (signal that no resume is pending).
+
+## Phase File Markers
+
+Append at end of phase file (or below frontmatter for `plan.md`):
+
+```html
+<!-- Updated: Validation Session {N} — {short summary, ≤120 chars} -->
+```
+
+`{summary}` is the question's `id` + the chosen answer's `label`, truncated. Same sanitizer as Phase 06 (`-->`, `<!--`, `<`, `>`, newline strip; pipe escape).
+
+Discard-path orphan cleanup uses `grep -l '<!-- Updated: Validation Session {N} -->'` to find these.
+
+## Recommendation Output
+
+After completion, print to terminal:
+
+```
+Validation Session {N} — {completed | partial} — Recommendation: {recommendation}
+{cursor}/{total} questions answered.
+Full Q/A logged in plan.md ## Validation Log.
+```
+
+If `recommendation == spec-update-needed` → also print `Hint: run /tdk-specify update {TASK_ID} to refresh the spec before /tdk-implement.` (auto-invoke deferred to v2).
+
+## Counter Safety
+
+`validation_session` is bumped at session setup step 3 — BEFORE the first AskUserQuestion. The matching `(in-progress)` header is written at step 5 in the same Edit batch. If the user Ctrl-Cs between step 3 and step 5, the header is still missing → next invocation goes straight to fresh question generation (no false-positive orphan detection). The cursor stays 0; counter increments are monotonic and a single missed session number is acceptable.
+
+## Reports
+
+Validation logs live **inline in plan.md** (single source of truth, easier diff in PRs). No separate `reports/validate-*.md` file by design — different from red-team which dumps full per-agent transcripts.

@@ -4,7 +4,7 @@
 //   <root>/.specify/CHANGELOG.md
 //   <root>/.specify/plugins/manifest.json
 //   <root>/.specify/plugins/<plugin>/.claude-plugin/plugin.json     (anchor — required)
-//   <root>/.specify/plugins/<plugin>/.codex-plugin/plugin.json      (Codex — optional)
+//   <root>/.specify/codex-plugins/<plugin>/.codex-plugin/plugin.json (Codex — optional, sibling dir)
 //   <root>/.specify/plugins/<plugin>/.cursor-plugin/plugin.json     (Cursor — optional)
 //   <root>/.specify/plugins/<plugin>/skills/<skill>/SKILL.md
 // [RT4-7] execFileSync + array args only; never string interpolation into shell.
@@ -40,11 +40,17 @@ export type ManifestFormat = 'claude' | 'codex' | 'cursor';
 export interface ManifestTarget {
   format: ManifestFormat;
   dir: string;
+  /** Optional: override the plugin base dir resolver (defaults to PLUGIN_DIR). */
+  pluginDir?: (root: string, plugin: string) => string;
 }
+
+/** Codex package root: sibling to the source plugin dir post-migration. */
+const CODEX_PLUGIN_DIR = (root: string, plugin: string) =>
+  join(root, '.specify', 'codex-plugins', plugin);
 
 export const MANIFEST_FORMATS: readonly ManifestTarget[] = [
   { format: 'claude', dir: '.claude-plugin' },
-  { format: 'codex',  dir: '.codex-plugin' },
+  { format: 'codex',  dir: '.codex-plugin', pluginDir: CODEX_PLUGIN_DIR },
   { format: 'cursor', dir: '.cursor-plugin' },
 ] as const;
 
@@ -57,12 +63,16 @@ export function resolvePluginJson(root: string, plugin: string): string | null {
 /**
  * Resolve every existing plugin.json across all manifest formats for a plugin.
  * Returns empty array if none exist. Order matches MANIFEST_FORMATS (claude first).
+ *
+ * Codex plugin.json lives at .specify/codex-plugins/<plugin>/.codex-plugin/plugin.json
+ * (sibling layout, post-migration) rather than under the source plugin dir.
  */
 export function resolveAllPluginJson(root: string, plugin: string): Array<{ format: ManifestFormat; path: string }> {
   const out: Array<{ format: ManifestFormat; path: string }> = [];
   for (const target of MANIFEST_FORMATS) {
-    const path = join(PLUGIN_DIR(root, plugin), target.dir, 'plugin.json');
-    if (existsSync(path)) out.push({ format: target.format, path });
+    const baseDir = target.pluginDir ? target.pluginDir(root, plugin) : PLUGIN_DIR(root, plugin);
+    const pluginJsonPath = join(baseDir, target.dir, 'plugin.json');
+    if (existsSync(pluginJsonPath)) out.push({ format: target.format, path: pluginJsonPath });
   }
   return out;
 }

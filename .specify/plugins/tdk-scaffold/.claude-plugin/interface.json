@@ -1,0 +1,14 @@
+{
+  "displayName": "TDK Scaffold",
+  "shortDescription": "Architecture-aware automation recommendations.",
+  "longDescription": "Reads .specify/.specify.json architecture type + project docs + community skills to generate skill/agent recommendation files tailored to project architecture.",
+  "developerName": "VinhLTT",
+  "category": "Development",
+  "capabilities": [
+    "Skills"
+  ],
+  "defaultPrompt": [
+    "Recommend automations for this project based on its architecture."
+  ],
+  "brandColor": "#10B981"
+}

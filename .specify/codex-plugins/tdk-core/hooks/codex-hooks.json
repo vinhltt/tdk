@@ -1,0 +1,16 @@
+{
+  "PreToolUse": [
+    {
+      "_origin": "tdk-core",
+      "command": "node \"hooks/wrappers/47d224a7-bun.cjs\"",
+      "matcher": "Read|Edit|Write"
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "_origin": "tdk-core",
+      "command": "node \"hooks/wrappers/54986a7c-bun.cjs\"",
+      "matcher": "*"
+    }
+  ]
+}

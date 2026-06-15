@@ -10,10 +10,13 @@ import {
   normalizePrefix,
   parseHarnessList,
   resolveClaudeSettings,
+  resolveCodexSettings,
   settingsPathFor,
   type InstallSettings,
   type ResolvedClaudeSettings,
+  type ResolvedCodexSettings,
 } from './install-settings';
+import { buildCodexInstallPlan } from './codex-install-plan';
 import { buildClaudeInstallPlan } from './install-plan';
 import { applyInstallPlan } from './install-writer';
 import { askPrefixInteractively, confirmInstallTarget, confirmOverwrite, selectHarnessInteractively, selectPluginsInteractively } from './prompt';
@@ -64,8 +67,24 @@ async function resolveHarnessOption(value: string | undefined): Promise<HarnessN
   }
   throw new Error('No harness provided. Use --harness claude.');
 }
-function buildNextInstallSettings(settings: InstallSettings | undefined, resolved: ResolvedClaudeSettings): InstallSettings {
+function buildNextInstallSettings(settings: InstallSettings | undefined, resolved: ResolvedClaudeSettings | ResolvedCodexSettings): InstallSettings {
   const base = settings ?? defaultInstallSettings();
+  const harnesses = resolved.harness === 'claude'
+    ? {
+      ...base.harnesses,
+      claude: {
+        enabled: true,
+        targetDir: resolved.targetDir,
+        settingsPath: resolved.settingsPath,
+      },
+    }
+    : {
+      ...base.harnesses,
+      codex: {
+        enabled: true,
+        targetDir: resolved.targetDir,
+      },
+    };
   return {
     version: 1,
     defaults: {
@@ -74,17 +93,10 @@ function buildNextInstallSettings(settings: InstallSettings | undefined, resolve
       selectedPlugins: [...resolved.selectedPlugins].sort(),
       rewrite: resolved.rewrite,
     },
-    harnesses: {
-      ...base.harnesses,
-      claude: {
-        enabled: true,
-        targetDir: resolved.targetDir,
-        settingsPath: resolved.settingsPath,
-      },
-    },
+    harnesses,
   };
 }
-async function resolveTargetPrefix(opts: InstallOptions, base: ResolvedClaudeSettings): Promise<{ targetPrefix: string; migration?: PrefixMigrationPlan }> {
+async function resolveTargetPrefix(opts: InstallOptions, base: ResolvedClaudeSettings | ResolvedCodexSettings): Promise<{ targetPrefix: string; migration?: PrefixMigrationPlan }> {
   if (opts.prefix && opts.migratePrefix) {
     throw new Error('--prefix conflicts with --migrate-prefix');
   }
@@ -113,7 +125,7 @@ async function resolveTargetPrefix(opts: InstallOptions, base: ResolvedClaudeSet
 export function createHarnessInstallCommand(): Command {
   return new Command('install')
     .description('Install selected TDK plugin artifacts into a Claude harness')
-    .option('--harness <names>', 'target harness list (comma-separated; optional — claude installs, codex coming soon)')
+    .option('--harness <names>', 'target harness list (comma-separated; claude or codex)')
     .option('--plugins <names>', 'comma-separated plugin names')
     .option('--all-plugins', 'install all plugins listed in .specify/plugins/manifest.json')
     .option('--prefix <prefix>', 'target prefix for first installs')
@@ -123,14 +135,18 @@ export function createHarnessInstallCommand(): Command {
     .action(async (opts: InstallOptions) => {
       try {
         const harnesses = await resolveHarnessOption(opts.harness);
-        if (harnesses.includes('codex')) {
-          process.stderr.write('Codex harness: coming soon (not yet implemented)\n');
+        if (harnesses.length > 1 && harnesses.includes('codex')) {
+          throw new Error('Combined Claude+Codex installs are not supported in v1. Run one harness at a time.');
         }
-        if (!harnesses.includes('claude')) return; // only-codex: exit 0, nothing to install
         const root = resolveConsumerRoot(process.cwd());
         const installSettings = loadInstallSettings(root.consumerRoot);
-        const previousManifest = loadHarnessManifest(root.consumerRoot);
-        const baseSettings = resolveClaudeSettings({
+        const targetHarness = harnesses.includes('codex') ? 'codex' : 'claude';
+        const previousManifest = loadHarnessManifest(root.consumerRoot, targetHarness);
+        const baseSettings = targetHarness === 'codex' ? resolveCodexSettings({
+          root: root.consumerRoot,
+          settings: installSettings,
+          oldManifest: previousManifest,
+        }) : resolveClaudeSettings({
           root: root.consumerRoot,
           settings: installSettings,
           oldManifest: previousManifest,
@@ -142,7 +158,7 @@ export function createHarnessInstallCommand(): Command {
           manifestHasState(previousManifest),
         );
         const prefix = await resolveTargetPrefix(opts, baseSettings);
-        const resolvedSettings: ResolvedClaudeSettings = {
+        const resolvedSettings = {
           ...baseSettings,
           selectedPlugins,
           targetPrefix: prefix.targetPrefix,
@@ -151,33 +167,47 @@ export function createHarnessInstallCommand(): Command {
           const confirmed = await confirmInstallTarget({
             consumerRoot: root.consumerRoot,
             targetDir: resolvedSettings.targetDir,
-            settingsPath: resolvedSettings.settingsPath,
+            settingsPath: resolvedSettings.harness === 'claude' ? resolvedSettings.settingsPath : '.codex/config.toml',
             targetPrefix: resolvedSettings.targetPrefix,
             selectedPlugins,
           });
           if (!confirmed) throw new Error('Install cancelled.');
         }
         const nextInstallSettings = buildNextInstallSettings(installSettings, resolvedSettings);
-        const inventory = discoverPluginInventory(root.consumerRoot, selectedPlugins);
-        const rewritePlugins = discoverPrefixRewritePlugins(root.consumerRoot);
-        const settings = readSettings(root.consumerRoot, resolvedSettings.settingsPath);
-        const plan = buildClaudeInstallPlan({
-          consumerRoot: root.consumerRoot,
-          selectedPlugins,
-          plugins: inventory.plugins,
-          rewritePlugins,
-          previousManifest,
-          settings,
-          sourcePrefix: resolvedSettings.sourcePrefix,
-          targetPrefix: resolvedSettings.targetPrefix,
-          rewrite: resolvedSettings.rewrite,
-          targetDir: resolvedSettings.targetDir,
-          settingsPath: resolvedSettings.settingsPath,
-          installSettingsPath: settingsPathFor(root.consumerRoot),
-          nextInstallSettings,
-          migration: prefix.migration,
-        });
-        plan.warnings.push(...root.warnings, ...inventory.warnings);
+        const plan = resolvedSettings.harness === 'codex'
+          ? buildCodexInstallPlan({
+            consumerRoot: root.consumerRoot,
+            selectedPlugins,
+            previousManifest,
+            sourcePrefix: resolvedSettings.sourcePrefix,
+            targetPrefix: resolvedSettings.targetPrefix,
+            installSettingsPath: settingsPathFor(root.consumerRoot),
+            nextInstallSettings,
+          })
+          : (() => {
+            const inventory = discoverPluginInventory(root.consumerRoot, selectedPlugins);
+            const rewritePlugins = discoverPrefixRewritePlugins(root.consumerRoot);
+            const settings = readSettings(root.consumerRoot, resolvedSettings.settingsPath);
+            const claudePlan = buildClaudeInstallPlan({
+              consumerRoot: root.consumerRoot,
+              selectedPlugins,
+              plugins: inventory.plugins,
+              rewritePlugins,
+              previousManifest,
+              settings,
+              sourcePrefix: resolvedSettings.sourcePrefix,
+              targetPrefix: resolvedSettings.targetPrefix,
+              rewrite: resolvedSettings.rewrite,
+              targetDir: resolvedSettings.targetDir,
+              settingsPath: resolvedSettings.settingsPath,
+              installSettingsPath: settingsPathFor(root.consumerRoot),
+              nextInstallSettings,
+              migration: prefix.migration,
+            });
+            claudePlan.warnings.push(...inventory.warnings);
+            return claudePlan;
+          })();
+        plan.warnings.push(...root.warnings);
 
         process.stdout.write(renderInstallPlan(plan));
         if (opts.dryRun) {

@@ -42,6 +42,16 @@ export interface ResolvedClaudeSettings {
   existingInstall: boolean;
 }
 
+export interface ResolvedCodexSettings {
+  harness: 'codex';
+  sourcePrefix: string;
+  targetPrefix: string;
+  selectedPlugins: string[];
+  targetDir: '.codex';
+  rewrite: RewriteSettings;
+  existingInstall: boolean;
+}
+
 const RewriteSchema = z.object({
   paths: z.boolean().default(true),
   textFiles: z.boolean().default(true),
@@ -88,6 +98,12 @@ export function assertAllowedHarnessTargetDir(root: string, targetDir: string): 
   return '.claude';
 }
 
+export function assertAllowedCodexTargetDir(root: string, targetDir: string): '.codex' {
+  validateContainedNoFollowPath(root, targetDir, 'Codex target dir');
+  if (targetDir !== '.codex') throw new Error('Only .codex targetDir is supported for Codex install settings v1.');
+  return '.codex';
+}
+
 export function defaultInstallSettings(selectedPlugins: string[] = []): InstallSettings {
   return {
     version: 1,
@@ -129,16 +145,14 @@ function validateSettings(root: string, input: unknown): InstallSettings {
   validateContainedNoFollowPath(root, '.claude/settings.json', 'Claude settings path');
 
   const codex = raw.harnesses.codex;
-  if (codex?.targetDir && codex.targetDir !== '.codex') {
-    throw new Error('Only .codex targetDir is accepted for disabled Codex settings.');
-  }
+  const codexTargetDir = codex ? assertAllowedCodexTargetDir(root, codex.targetDir) : undefined;
 
   return {
     version: 1,
     defaults: { sourcePrefix, targetPrefix, selectedPlugins, rewrite: raw.defaults.rewrite },
     harnesses: {
       claude: { enabled: claude.enabled ?? true, targetDir, settingsPath: '.claude/settings.json' },
-      ...(codex ? { codex: { enabled: Boolean(codex.enabled), targetDir: '.codex' as const } } : {}),
+      ...(codex ? { codex: { enabled: Boolean(codex.enabled), targetDir: codexTargetDir! } } : {}),
     },
   };
 }
@@ -181,6 +195,31 @@ export function resolveClaudeSettings(params: {
     settingsPath: settings.harnesses.claude.settingsPath,
     rewrite: settings.defaults.rewrite,
     existingInstall: Boolean(params.settings || legacy),
+  };
+}
+
+export function resolveCodexSettings(params: {
+  root: string;
+  settings?: InstallSettings;
+  oldManifest?: HarnessInstallManifest;
+  cliPrefix?: string;
+  cliPlugins?: string[];
+}): ResolvedCodexSettings {
+  const settings = params.settings ?? defaultInstallSettings();
+  const codex = params.settings?.harnesses.codex ?? { enabled: true, targetDir: '.codex' as const };
+  if (!codex.enabled) throw new Error('Codex harness is disabled in install settings.');
+  const targetPrefix = params.cliPrefix ? normalizePrefix(params.cliPrefix) : settings.defaults.targetPrefix;
+  const selectedPlugins = params.cliPlugins && params.cliPlugins.length > 0
+    ? params.cliPlugins.map((plugin) => validateSafeSegment(plugin, 'plugin id'))
+    : settings.defaults.selectedPlugins;
+  return {
+    harness: 'codex',
+    sourcePrefix: settings.defaults.sourcePrefix,
+    targetPrefix,
+    selectedPlugins,
+    targetDir: codex.targetDir,
+    rewrite: settings.defaults.rewrite,
+    existingInstall: Boolean(params.settings || (params.oldManifest && (params.oldManifest.selectedPlugins.length > 0 || params.oldManifest.managedFiles.length > 0))),
   };
 }
 

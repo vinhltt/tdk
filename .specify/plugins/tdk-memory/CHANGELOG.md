@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.0.0] - 2026-06-15
+
+### Added
+- Add .claude-plugin/interface.json interface definition
+
+### Removed
+- Move .codex-plugin/plugin.json to codex-plugins registry
+
 ## [0.3.3] - 2026-06-07
 
 ### Changed

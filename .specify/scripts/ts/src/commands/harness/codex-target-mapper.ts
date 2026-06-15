@@ -21,6 +21,10 @@ export function codexHookWrapperTarget(filename: string): string {
   return posixTargetPath('.codex', 'hooks', 'wrappers', filename);
 }
 
+export function codexLibTarget(libRelativePath: string): string {
+  return posixTargetPath('.codex', 'lib', libRelativePath);
+}
+
 export function codexSkillRoot(name: string): string {
   return posixTargetPath('.agents', 'skills', toCodexSlug(name));
 }

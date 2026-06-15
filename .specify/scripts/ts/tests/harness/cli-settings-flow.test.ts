@@ -37,15 +37,15 @@ describe('harness install CLI settings flow', () => {
     expect(result.stdout.toString()).toContain('Harness install plan: tdk-core');
   });
 
-  test('claude,codex emits codex notice on stderr and runs claude pipeline', () => {
+  test('claude,codex rejects combined harness installs for v1', () => {
     const consumer = makeConsumer();
     writePrefixedSkillPlugin(consumer);
 
     const result = runInstall(consumer, ['--harness', 'claude,codex', '--plugins', 'tdk-core', '--dry-run']);
 
-    expect(result.exitCode).toBe(0);
-    expect(result.stderr.toString()).toContain('Codex harness: coming soon (not yet implemented)');
-    expect(result.stdout.toString()).toContain('Harness install plan');
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr.toString()).toContain('Combined Claude+Codex installs are not supported');
+    expect(result.stdout.toString()).not.toContain('Harness install plan');
   });
 
   test('blocks existing prefix changes unless explicit migration flag is used', () => {

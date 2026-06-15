@@ -1,0 +1,14 @@
+{
+  "brandColor": "#2563EB",
+  "capabilities": [
+    "Skills"
+  ],
+  "category": "Development",
+  "defaultPrompt": [
+    "Use tdk-test-api for this task."
+  ],
+  "developerName": "Tihon",
+  "displayName": "Tdk Test Api",
+  "longDescription": "API test generation skills: test plan, testcase generation, Playwright TypeScript code generation from OpenAPI specs or codebase scouting",
+  "shortDescription": "API test generation skills: test plan, testcase generation, Playwright TypeScript code generation from OpenAPI specs or codebase scouting"
+}

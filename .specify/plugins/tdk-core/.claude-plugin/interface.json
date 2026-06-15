@@ -1,0 +1,16 @@
+{
+  "displayName": "TDK Core",
+  "shortDescription": "Core TDK workflow skills for daily engineering tasks.",
+  "longDescription": "The main Speckit plugin for specification, planning, implementation, debugging, review, configuration, and test-oriented development workflows.",
+  "developerName": "Tihon",
+  "category": "Development",
+  "capabilities": [
+    "Skills"
+  ],
+  "defaultPrompt": [
+    "Use Speckit to plan this feature before coding.",
+    "Help me review or fix an implementation with the core workflow.",
+    "Generate a task-oriented execution plan for this repo."
+  ],
+  "brandColor": "#1D4ED8"
+}

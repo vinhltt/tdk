@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-14T10:07:43Z",
+  "generated_at": "2026-06-15T13:28:01Z",
   "plugins": {
     "tdk-core": {
-      "version": "4.0.1",
+      "version": "5.0.0",
       "components": {
         "skills": {
           "tdk-analyze": {
@@ -65,10 +65,11 @@
         "commands": {}
       },
       "files": {
-        ".claude-plugin/plugin.json": "1d5aaca657ee6347ffdd0b365386f3e45531a7e702eaf8a7c6cd3aa0019edf5c",
-        ".codex-plugin/plugin.json": "97d265d16d0a0a752cb41f24909a75fdc9f499ce0777828abfb9c94c41fb1500",
-        ".cursor-plugin/plugin.json": "1d5aaca657ee6347ffdd0b365386f3e45531a7e702eaf8a7c6cd3aa0019edf5c",
-        "CHANGELOG.md": "d851ef297bd706e40ef487603fc3b9f6b21d9a04b76083fbf2a7fcbd117c324b",
+        ".claude-plugin/interface.json": "2e33cdc14ebf20e5074ae949db076e4e04d51a31ec94d99ef1c3d6278c4c929e",
+        ".claude-plugin/plugin.json": "330ea6b577b7b36aee28faa24f5bdce1d5f26d128370ecc44630a7730b943015",
+        ".codex-plugin/plugin.json": "330ea6b577b7b36aee28faa24f5bdce1d5f26d128370ecc44630a7730b943015",
+        ".cursor-plugin/plugin.json": "330ea6b577b7b36aee28faa24f5bdce1d5f26d128370ecc44630a7730b943015",
+        "CHANGELOG.md": "1911a19e8f05463df0b6363ef363cd4b7858b885014ec5ce012db8a5a28d19c1",
         "__tests__/context-builder.test.cjs": "39ea0d403e0154a14cfe8877ef76a6c8fc68ffa046ef2d1f59b152de68440fe2",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
@@ -125,7 +126,7 @@
       }
     },
     "tdk-memory": {
-      "version": "0.3.3",
+      "version": "1.0.0",
       "components": {
         "skills": {
           "tdk-memory-changelog": {
@@ -156,10 +157,11 @@
         "commands": {}
       },
       "files": {
-        ".claude-plugin/plugin.json": "d06927eba77ca1a9bd9224509169906cd4120a56db40120be4b6c238b831caa4",
-        ".codex-plugin/plugin.json": "d06927eba77ca1a9bd9224509169906cd4120a56db40120be4b6c238b831caa4",
-        ".cursor-plugin/plugin.json": "d06927eba77ca1a9bd9224509169906cd4120a56db40120be4b6c238b831caa4",
-        "CHANGELOG.md": "0bf2152b55cd1442c33bc2d231365e87233596ab153b96acc72b251d8c02c9fb",
+        ".claude-plugin/interface.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+        ".claude-plugin/plugin.json": "32ec8f3cc46d07730fba103a3b6af8d9b95e0f665db3445f2d3ba801a16e3884",
+        ".codex-plugin/plugin.json": "32ec8f3cc46d07730fba103a3b6af8d9b95e0f665db3445f2d3ba801a16e3884",
+        ".cursor-plugin/plugin.json": "32ec8f3cc46d07730fba103a3b6af8d9b95e0f665db3445f2d3ba801a16e3884",
+        "CHANGELOG.md": "3e3fb2d3ca072221b3fbb61909a7f9f84073f201369f71c86bcea5af889fa435",
         "agents/memory-guardian.md": "1aaafcabb349ba0cf8c027b8273af1cc74bff1e3662e9231bb8812bf9304bcfd",
         "scripts/compute-sha256-hashes.py": "4b83064465684846d07778a36374e9414e2c6679b68acf6cddef76a527970f53",
         "skills/tdk-memory-changelog/SKILL.md": "e7240e6276bcfbdc7b6baafac5004489b97c10af3c98c0c5571a19e11eee9ee6",
@@ -188,7 +190,7 @@
       }
     },
     "tdk-retro": {
-      "version": "0.1.1",
+      "version": "1.0.0",
       "components": {
         "skills": {
           "_shared": {
@@ -209,10 +211,11 @@
         "commands": {}
       },
       "files": {
-        ".claude-plugin/plugin.json": "85043dc5541939c5225cb4116a57a4d0cc6c03b7782d1ec315d6df256635c432",
-        ".codex-plugin/plugin.json": "85043dc5541939c5225cb4116a57a4d0cc6c03b7782d1ec315d6df256635c432",
-        ".cursor-plugin/plugin.json": "85043dc5541939c5225cb4116a57a4d0cc6c03b7782d1ec315d6df256635c432",
-        "CHANGELOG.md": "1fd3f83d55ae7be80299b6355f434c787a9930f89d289c57b776c88eca87660f",
+        ".claude-plugin/interface.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+        ".claude-plugin/plugin.json": "c69a9a695af0b12632a40e8939b352fe3e3297379d5db4b1c28966ca9016ce37",
+        ".codex-plugin/plugin.json": "c69a9a695af0b12632a40e8939b352fe3e3297379d5db4b1c28966ca9016ce37",
+        ".cursor-plugin/plugin.json": "c69a9a695af0b12632a40e8939b352fe3e3297379d5db4b1c28966ca9016ce37",
+        "CHANGELOG.md": "a2212b2079db84b8811791712a942db02aa0a8fa90de6cf339faa89f406c2459",
         "README.md": "c74e7f4263e8aec94548695e08de4d7faf0c899429f5520e1cf57134c2cb0657",
         "skills/_shared/SKILL.md": "41be8e8be94b54d0ad5dc27eb5a0e535d30002bfbe00ca699d4aa1af22c0d7cc",
         "skills/_shared/consumer-skill-discovery.md": "a319f836aa4d31e04337b5d9185530dae8e931479ec3ffe211afa9c50d6778e4",
@@ -231,7 +234,7 @@
       }
     },
     "tdk-scaffold": {
-      "version": "0.3.1",
+      "version": "1.0.0",
       "components": {
         "skills": {
           "tdk-recommend-automations": {
@@ -246,10 +249,11 @@
         "commands": {}
       },
       "files": {
-        ".claude-plugin/plugin.json": "535b79d188e0eea0b180cfb02a010a3a96334672a060158c9a7f992b786af766",
-        ".codex-plugin/plugin.json": "ae2fc65f87ec3074604dc8c2d7d6eeff59d0ddd67a45d29052891cbfcdd3358a",
-        ".cursor-plugin/plugin.json": "535b79d188e0eea0b180cfb02a010a3a96334672a060158c9a7f992b786af766",
-        "CHANGELOG.md": "7ec969d26655ca2d7bb1022b19110e4f5d5aff8d4103b77b18c8deb4602e25d3",
+        ".claude-plugin/interface.json": "3331611a6a887f596f918ba01fa37db14061b8d6a9c2bbd382feee73ed72f98a",
+        ".claude-plugin/plugin.json": "885846c73d6226232f13a76b149fb47a1edd868a4f40f1130f1fe796643ee1a6",
+        ".codex-plugin/plugin.json": "885846c73d6226232f13a76b149fb47a1edd868a4f40f1130f1fe796643ee1a6",
+        ".cursor-plugin/plugin.json": "885846c73d6226232f13a76b149fb47a1edd868a4f40f1130f1fe796643ee1a6",
+        "CHANGELOG.md": "8202b38d1c32a1d53abc13e291a4200da1569cd5f9582fc27c4d715ddafe4aa6",
         "skills/tdk-recommend-automations/SKILL.md": "fc98581f70636cc75cde8fdcd0d8430f319fb3208eec124adfa2ec000528a244",
         "skills/tdk-recommend-automations/references/architecture-presets.md": "ce006dcc1d6d91141362d306bb0103359b60f8877f033c9e195bf1b78f1cbe2f",
         "skills/tdk-scaffold-from-recommendation/SKILL.md": "2d2daa34dbe197757bf8c9a922662e9985a1936e7a84d20338604b193d4e6d79",
@@ -258,7 +262,7 @@
       }
     },
     "tdk-test-api": {
-      "version": "1.1.1",
+      "version": "1.2.0",
       "components": {
         "skills": {
           "tdk-test-api-gen-code-playwright-ts": {
@@ -276,8 +280,11 @@
         "commands": {}
       },
       "files": {
-        ".claude-plugin/plugin.json": "b8b1ecd0f567e31b87918b377865aa32cddcc628bc470bfaaa7cf90419a8377f",
-        "CHANGELOG.md": "23d709290fe2837dd0be19676ff82b9546d6a6952369237fec166ab89dc89af3",
+        ".claude-plugin/interface.json": "f5e611f93a445bff5e37d8f8897538d1c14dcd4bfb8e121502b573538a9b6ec8",
+        ".claude-plugin/plugin.json": "9db5774191756a66d574f776810972371b47c3bd3a885a32dfc173a6049dc071",
+        ".codex-plugin/plugin.json": "9db5774191756a66d574f776810972371b47c3bd3a885a32dfc173a6049dc071",
+        ".cursor-plugin/plugin.json": "9db5774191756a66d574f776810972371b47c3bd3a885a32dfc173a6049dc071",
+        "CHANGELOG.md": "c97b6118341beb7524a50f1cefe3d7192bed9b0bd94aaa376141f9e965399ee4",
         "skills/tdk-test-api-gen-code-playwright-ts/SKILL.md": "98c78fb6d8dec93796510316b23ca3d57e6c4c130a35c6c3b383aa9eb68870cd",
         "skills/tdk-test-api-gen-code-playwright-ts/references/auth-strategy-patterns.md": "55862ad639b6168fd58ee36236c010a5e0ee5da4358b6ea2579de61ed6acca27",
         "skills/tdk-test-api-gen-code-playwright-ts/references/playwright-config-patterns.md": "9f287653a46710adf3c8c72f09e7185dca2b81c92fcde7e006a91a2546695c1f",
@@ -288,7 +295,7 @@
       }
     },
     "tdk-utils": {
-      "version": "1.11.4",
+      "version": "2.0.0",
       "components": {
         "skills": {
           "brainstorming": {
@@ -355,10 +362,11 @@
         "commands": {}
       },
       "files": {
-        ".claude-plugin/plugin.json": "5d2ab5cfa318709d0342df87594eb2826c42b5fbb7e9a04cbf22bcbcf29f29f9",
-        ".codex-plugin/plugin.json": "e29157710b33d3f5374c312e39b2f20582feecb96eadecc3eddcd84fab04617e",
-        ".cursor-plugin/plugin.json": "5d2ab5cfa318709d0342df87594eb2826c42b5fbb7e9a04cbf22bcbcf29f29f9",
-        "CHANGELOG.md": "f6e3a2afbfec8ef0f42771d44368db9c8d037f8823462a309481ac13d12c783a",
+        ".claude-plugin/interface.json": "e68f07c43a122d63dbd44fafbd978b0adb4f5f18bb95537f80014e859846f8b4",
+        ".claude-plugin/plugin.json": "634cdad97f0f119e03f6dc6c86e44d39376126c04a4d089cb61df962fa6971b3",
+        ".codex-plugin/plugin.json": "634cdad97f0f119e03f6dc6c86e44d39376126c04a4d089cb61df962fa6971b3",
+        ".cursor-plugin/plugin.json": "634cdad97f0f119e03f6dc6c86e44d39376126c04a4d089cb61df962fa6971b3",
+        "CHANGELOG.md": "4133b97398b909592281063b33f0c52444913b19937e434549f6d76a08cf1aa2",
         "agents/researcher.md": "239051264f41b129ef5c59adb573b7e762a528bb58d0ff8dd1e32eee243baaaf",
         "agents/tdk-red-team-reliability.md": "8585ee27a9d1f6b79b9988fc6020317baa3be7e37f80be9086708bfc35c74ea8",
         "agents/tdk-red-team-security.md": "8e808e7330b21e83e830f70bf6221150ba0e91d235061ba0c6b2a32060ea7a33",

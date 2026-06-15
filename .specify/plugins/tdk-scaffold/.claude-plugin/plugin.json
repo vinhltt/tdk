@@ -1,5 +1,5 @@
 {
   "name": "tdk-scaffold",
   "description": "Architecture-aware scaffolding: recommend automations from project config + docs, then scaffold skill/agent files from approved recommendations",
-  "version": "0.3.1"
+  "version": "1.0.0"
 }

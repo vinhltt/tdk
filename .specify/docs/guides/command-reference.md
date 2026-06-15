@@ -286,8 +286,13 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| harness install | `tdk harness install --harness claude` | `--plugins`, `--all-plugins`, `--prefix`, `--dry-run`, `--yes` | TDK plugin source under `.specify/plugins/` | Managed `.claude/` artifacts + ownership manifest | setup |
+| harness install | `tdk harness install --harness claude` or `--harness codex` | `--plugins`, `--all-plugins`, `--prefix`, `--dry-run`, `--yes` | TDK plugin source under `.specify/plugins/`; Codex uses generated packages under `.specify/codex-plugins/` | Managed `.claude/` artifacts or `.agents/skills/` + `.codex/` artifacts + ownership manifest | setup |
+| harness convert | `tdk harness convert` | `--plugins`, `--all-plugins`, `--dry-run`, `--check` | Maintainer source tree `.specify/plugins/tdk-*` | Generated per-plugin packages under `.specify/codex-plugins/<plugin>/` (official OpenAI layout); `--check` fails on drift | source tree |
 | harness convert-flat | `tdk harness convert-flat [root]` | `--dry-run`, `--force`, `--yes` | Existing flat `.claude/` tree | Additive `.codex/` + `.agents/skills/` artifacts + `.specify/state/harness-install/codex.json` ownership manifest | setup |
+
+`harness convert` is source-tree/maintainer-only. Consumer payloads install the generated `.specify/codex-plugins/<plugin>/` packages with `harness install --harness codex`; install never re-transforms source.
+
+`harness install --harness codex` verifies generated-package checksums from `.specify/codex-plugins/manifest.json`, writes skills to `.agents/skills/` and hooks/lib under `.codex/`, generates `.codex/agents/*.toml` and `.codex/config.toml` at install time from plugin source agents, and rejects combined `--harness claude,codex` in v1.
 
 `harness convert-flat` never deletes or modifies the source `.claude/` tree. Unknown flat `.claude/` entries are reported and skipped; originals remain in place. Existing unowned `.codex/` targets are conflicts by default and are skipped unless `--force` is passed.
 

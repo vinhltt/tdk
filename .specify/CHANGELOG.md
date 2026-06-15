@@ -10,6 +10,22 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.69.0] - 2026-06-15
+
+### Added
+- **[General]**
+  - Add `.claude-plugin/interface.json` to classic plugins (`tdk-core`, `tdk-memory`, `tdk-retro`, `tdk-scaffold`, `tdk-test-api`, `tdk-utils`) to support new interface protocols
+  - Distribute preconverted Codex packages under `.specify/codex-plugins/` for all plugins
+- **[Scripts]**
+  - Add `harness convert` command to transform classic source plugins into OpenAI Codex layout packages under `.specify/codex-plugins/`
+  - Add `harness install --harness codex` to install and verify packages from `.specify/codex-plugins/` into `.agents/skills/` and `.codex/`
+  - Add Codex convert-flat command to migrate flat `.claude/` trees into additive Codex targets
+  - Add comprehensive end-to-end and unit test coverage for Codex conversion, installation, target mapping, and distribution
+- **[Guides]** Document the maintainer `harness convert` command and consumer `harness install --harness codex` commands in `command-reference.md`
+
+### Changed
+- **[Scripts]** Extend manifest compute CLI to support scanning and writing manifests for both classic `.specify/plugins/` and Codex `.specify/codex-plugins/` roots
+
 ## [1.68.0] - 2026-06-14
 
 ### Added

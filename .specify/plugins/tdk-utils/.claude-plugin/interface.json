@@ -1,0 +1,16 @@
+{
+  "displayName": "TDK Utils",
+  "shortDescription": "Utility workflows for research, scouting, and problem solving.",
+  "longDescription": "A supporting utility plugin for brainstorming, research, scouting, structured analysis, and other general-purpose workflow helpers in the TDK stack.",
+  "developerName": "Tihon",
+  "category": "Productivity",
+  "capabilities": [
+    "Skills"
+  ],
+  "defaultPrompt": [
+    "Brainstorm implementation approaches for this task.",
+    "Research and scout the codebase before I change the code.",
+    "Use a utility workflow to reason through this problem."
+  ],
+  "brandColor": "#4F46E5"
+}

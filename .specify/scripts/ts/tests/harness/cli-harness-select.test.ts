@@ -20,7 +20,7 @@ describe('harness install --harness interactive/optional behaviour', () => {
     expect(result.stderr.toString()).toContain('No harness provided. Use --harness claude.');
   });
 
-  test('--harness codex only: exits 0 with coming-soon notice, no install plan on stdout', () => {
+  test('--harness codex only: enters install pipeline and requires plugin selector', () => {
     const consumer = makeConsumer();
 
     const result = Bun.spawnSync({
@@ -30,12 +30,12 @@ describe('harness install --harness interactive/optional behaviour', () => {
       stderr: 'pipe',
     });
 
-    expect(result.exitCode).toBe(0);
-    expect(result.stderr.toString()).toContain('Codex harness: coming soon (not yet implemented)');
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr.toString()).toContain('No plugin selector provided');
     expect(result.stdout.toString()).not.toContain('Harness install plan');
   });
 
-  test('--harness claude,codex with consumer: exits 0, codex notice on stderr, install plan on stdout', () => {
+  test('--harness claude,codex with consumer: rejects combined harness installs for v1', () => {
     const consumer = makeConsumer();
     writeBasicPlugin(consumer);
 
@@ -46,8 +46,8 @@ describe('harness install --harness interactive/optional behaviour', () => {
       stderr: 'pipe',
     });
 
-    expect(result.exitCode).toBe(0);
-    expect(result.stderr.toString()).toContain('Codex harness: coming soon (not yet implemented)');
-    expect(result.stdout.toString()).toContain('Harness install plan');
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr.toString()).toContain('Combined Claude+Codex installs are not supported');
+    expect(result.stdout.toString()).not.toContain('Harness install plan');
   });
 });

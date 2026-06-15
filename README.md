@@ -42,7 +42,7 @@ bash /path/to/tdk/setup.sh
 
 This installs TDK's marketplace plugins, templates, and configurations into the consumer project's `.specify/` directory.
 
-Install Claude harness artifacts explicitly after the substrate sync from the consumer project root:
+Install harness artifacts explicitly after the substrate sync from the consumer project root:
 
 ```bash
 # Install one plugin
@@ -57,13 +57,27 @@ bun .specify/scripts/ts/src/index.ts harness install --harness claude --plugins 
 bun .specify/scripts/ts/src/index.ts harness install --harness claude --all-plugins --dry-run
 bun .specify/scripts/ts/src/index.ts harness install --harness claude --all-plugins --yes
 
+# Install preconverted Codex artifacts
+bun .specify/scripts/ts/src/index.ts harness install --harness codex --plugins tdk-core --dry-run
+bun .specify/scripts/ts/src/index.ts harness install --harness codex --plugins tdk-core --yes
+bun .specify/scripts/ts/src/index.ts harness install --harness codex --all-plugins --dry-run
+
 # Select plugins interactively
 bun .specify/scripts/ts/src/index.ts harness install --harness claude
+
+# Maintainers: regenerate generated Codex packages under .specify/codex-plugins/
+bun .specify/scripts/ts/src/index.ts harness convert --dry-run
+bun .specify/scripts/ts/src/index.ts harness convert
+bun .specify/scripts/ts/src/index.ts harness convert --check
 
 # Migrate an existing flat .claude/ tree to Codex artifacts
 bun .specify/scripts/ts/src/index.ts harness convert-flat --dry-run
 bun .specify/scripts/ts/src/index.ts harness convert-flat --yes
 ```
+
+`harness convert` is source-tree/maintainer-only. It emits generated Codex packages to `.specify/codex-plugins/<plugin>/` following the official OpenAI layout (only `.codex-plugin/plugin.json` inside `.codex-plugin/`; `skills/`, `hooks/`, `lib/` at the package root) from plugin source trees; `--check` re-emits in memory and fails if the committed packages drift from source.
+
+`harness install --harness codex` reads the generated packages from `.specify/codex-plugins/` and verifies them against `.specify/codex-plugins/manifest.json`, writes skills to `.agents/skills/` and hooks/lib to `.codex/`, generates `.codex/agents/*.toml` and `.codex/config.toml` at install time from plugin source agents, merges `.codex/hooks.json`, and writes Codex ownership state to `.specify/state/harness-install/codex.json`.
 
 `convert-flat` leaves the source `.claude/` tree untouched, reports unknown entries as skipped, and writes Codex ownership state to `.specify/state/harness-install/codex.json`. Use `--force` to overwrite conflicts on unowned or user-edited `.codex/` targets.
 
@@ -134,7 +148,8 @@ Integrated commands (via `bun src/index.ts`):
 | `tdk ut check-rules` | Validate UT rules |
 | `tdk ut create-rules` | Generate UT rules |
 | `tdk scout` | Codebase analysis (repomix + tier-1 extraction) |
-| `tdk harness install` | Install selected TDK plugin artifacts into `.claude/` with dry-run, saved install settings, prefix rewrite/migration, ownership, collision, drift, plugin-scoped hook scripts, and settings merge safety |
+| `tdk harness install` | Install selected TDK plugin artifacts into `.claude/` or preconverted `.codex/` + `.agents/skills/` targets with dry-run, saved install settings, prefix rewrite, ownership, collision, and drift safety |
+| `tdk harness convert` | Maintainer-only command that emits generated Codex packages under `.specify/codex-plugins/<plugin>/` and checks converter freshness |
 | `tdk harness convert-flat` | Convert an existing flat `.claude/` tree into additive `.codex/` and `.agents/skills/` artifacts with dry-run, conflict reporting, and `.specify/state/harness-install/codex.json` ownership manifest |
 | `tdk sub-workspace docs` | Generate sub-workspace documentation |
 

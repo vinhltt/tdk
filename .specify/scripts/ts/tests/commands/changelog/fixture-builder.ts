@@ -67,10 +67,11 @@ export function buildFixture(root: string, spec: FixtureSpec): void {
     );
 
     if (p.codexPluginJsonVersion !== undefined) {
-      const codexDir = join(pluginDir, '.codex-plugin');
-      mkdirSync(codexDir, { recursive: true });
+      // Codex plugin.json lives in the sibling codex-plugins tree post-migration
+      const codexPackageDir = join(root, '.specify', 'codex-plugins', p.name, '.codex-plugin');
+      mkdirSync(codexPackageDir, { recursive: true });
       writeFileSync(
-        join(codexDir, 'plugin.json'),
+        join(codexPackageDir, 'plugin.json'),
         JSON.stringify({ name: p.name, version: p.codexPluginJsonVersion }, null, 2),
       );
     }

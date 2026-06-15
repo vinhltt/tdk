@@ -1,0 +1,164 @@
+{
+  "skill_name": "tdk-specify",
+  "description": "Evaluates whether tdk-specify correctly generates 9-section specs in default (full brainstorm with Option A/B) and --fast (single recommendation) modes.",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "tdk-001 Add a user login feature. Users should be able to log in with email and password, see an error if credentials are wrong, and stay logged in after refreshing the page.",
+      "expected_output": "A spec.md file created at .specify/feature/tdk-001/spec.md with 9 numbered sections (Problem Statement, Scope Boundary, Impact Surface, Evaluated Approaches, User Requirements & Testing, Functional Requirements, Success Criteria, Risks & Mitigations, Unresolved Questions) plus a Clarifications section. Checklist at .specify/feature/tdk-001/checklists/requirements.md.",
+      "files": [],
+      "assertions": [
+        "File .specify/feature/tdk-001/spec.md is created",
+        "spec.md contains '## 1. Problem Statement' section with concrete problem description",
+        "spec.md contains '## 2. Scope Boundary' with ≥1 in-scope and ≥1 out-of-scope item",
+        "spec.md contains '## 3. Impact Surface' with a table",
+        "spec.md contains '## 4. Evaluated Approaches' with Option A/B structure",
+        "spec.md contains '## 5. User Requirements & Testing' with at least 2 user requirements",
+        "Each user requirement contains at least one Given/When/Then acceptance scenario",
+        "User requirements contain [subworkspace/module] tags (if Impact Surface is non-empty)",
+        "spec.md contains '## 6. Functional Requirements' section",
+        "Functional requirements contain [subworkspace/module] tags (if Impact Surface is non-empty)",
+        "All functional requirements are testable and unambiguous (no vague terms like 'fast', 'easy')",
+        "spec.md contains '## 7. Success Criteria' with measurable criteria",
+        "Success criteria contain no implementation details (no mention of JWT, Redis, database, React, etc.)",
+        "spec.md contains '## 8. Risks & Mitigations' table",
+        "spec.md contains '## 9. Unresolved Questions' section",
+        "spec.md contains '## Clarifications' section at the end",
+        "spec.md does NOT contain inline [NEEDS CLARIFICATION] markers",
+        "spec.md does NOT mention implementation technologies (no Laravel, Vue, MySQL, API, etc.)",
+        "File .specify/feature/tdk-001/checklists/requirements.md is created"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "tdk-002 thêm chức năng export báo cáo ứng viên ra file excel. Admin có thể chọn khoảng thời gian và lọc theo trạng thái ứng viên trước khi export.",
+      "expected_output": "A spec.md created at .specify/feature/tdk-002/spec.md with 9 sections. The spec must correctly interpret the Vietnamese input — user is an Admin, the feature is exporting candidate reports to Excel with date range filter and status filter. All unresolved questions in ## 9. Unresolved Questions, not inline markers.",
+      "files": [],
+      "assertions": [
+        "File .specify/feature/tdk-002/spec.md is created",
+        "spec.md contains '## 1. Problem Statement' identifying the export need",
+        "spec.md contains '## 2. Scope Boundary' section",
+        "spec.md contains '## 3. Impact Surface' section",
+        "spec.md contains '## 5. User Requirements & Testing' correctly identifying Admin as actor",
+        "spec.md covers the primary flow: Admin selects filters → exports → downloads file",
+        "spec.md includes an acceptance scenario for empty results (no candidates match filters)",
+        "spec.md contains '## 6. Functional Requirements' section",
+        "spec.md contains '## 7. Success Criteria' section",
+        "Success criteria are technology-agnostic (no mention of xlsx library, S3, etc.)",
+        "spec.md contains '## 9. Unresolved Questions' section",
+        "spec.md contains '## Clarifications' section",
+        "spec.md does NOT contain inline [NEEDS CLARIFICATION] markers",
+        "spec.md does NOT contain implementation details",
+        "File .specify/feature/tdk-002/checklists/requirements.md is created"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "tdk-003",
+      "expected_output": "The skill should stop with a clear error message indicating that a feature description is required. No spec.md file should be created. Error message should include usage instructions.",
+      "files": [],
+      "assertions": [
+        "No file .specify/feature/tdk-003/spec.md is created",
+        "Output contains an error message about missing description",
+        "Output includes usage example (e.g., '/tdk-specify tdk-003 \"description\"')"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "tdk-004 Add user registration with API endpoint, database model, and signup page",
+      "expected_output": "A spec.md at .specify/feature/tdk-004/spec.md with Impact Surface covering both backend and frontend subworkspaces. User stories and FR tagged with [sw/module] tags distributed across backend/api, backend/models, frontend/pages.",
+      "files": ["evals/fixtures/multi-sw/.specify.json"],
+      "assertions": [
+        "File .specify/feature/tdk-004/spec.md is created",
+        "spec.md contains '## 3. Impact Surface' table with rows for both backend and frontend subworkspaces",
+        "Impact Surface table contains at least 2 distinct subworkspace names",
+        "spec.md contains '## 5. User Requirements & Testing' with [subworkspace/module] tags",
+        "User requirement tags reference both backend and frontend subworkspaces",
+        "spec.md contains '## 6. Functional Requirements' with [subworkspace/module] tags",
+        "FR tags distribute across backend/api, backend/models, and frontend/pages",
+        "Tags use lowercase/slash format only (e.g. [backend/api], not [Backend/API])",
+        "spec.md contains all 9 numbered sections",
+        "spec.md contains '## Clarifications' section",
+        "spec.md does NOT contain inline [NEEDS CLARIFICATION] markers"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "--fast tdk-005 Add a user login feature. Users should be able to log in with email and password, see an error if credentials are wrong, and stay logged in after refreshing the page.",
+      "expected_output": "A spec.md file created at .specify/feature/tdk-005/spec.md with 9 numbered sections. ## 4. Evaluated Approaches shows single recommended approach only (no Option A/B comparison). Mode: fast (user-specified via --fast).",
+      "files": [],
+      "assertions": [
+        "File .specify/feature/tdk-005/spec.md is created",
+        "spec.md contains '## 1. Problem Statement' section with concrete problem description",
+        "spec.md contains '## 2. Scope Boundary' with ≥1 in-scope and ≥1 out-of-scope item",
+        "spec.md contains '## 3. Impact Surface' with a table",
+        "spec.md contains '## 4. Evaluated Approaches' with single recommended approach (no Option A/B)",
+        "## 4. Evaluated Approaches contains 'Recommended scope' format, not multi-option comparison",
+        "spec.md contains '## 5. User Requirements & Testing' with at least 2 user requirements",
+        "Each user requirement contains at least one Given/When/Then acceptance scenario",
+        "spec.md contains '## 6. Functional Requirements' section",
+        "All functional requirements are testable and unambiguous",
+        "spec.md contains '## 7. Success Criteria' with measurable criteria",
+        "Success criteria contain no implementation details (no mention of JWT, Redis, database, React, etc.)",
+        "spec.md contains '## 8. Risks & Mitigations' table",
+        "spec.md contains '## 9. Unresolved Questions' section",
+        "spec.md contains '## Clarifications' section at the end",
+        "spec.md does NOT contain inline [NEEDS CLARIFICATION] markers",
+        "spec.md does NOT mention implementation technologies",
+        "File .specify/feature/tdk-005/checklists/requirements.md is created"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "--fast tdk-006 thêm chức năng export báo cáo ứng viên ra file excel. Admin có thể chọn khoảng thời gian và lọc theo trạng thái ứng viên trước khi export.",
+      "expected_output": "A spec.md with 9 sections correctly interpreting Vietnamese input. ## 4. Evaluated Approaches shows single recommended approach only. Mode: fast.",
+      "files": [],
+      "assertions": [
+        "File .specify/feature/tdk-006/spec.md is created",
+        "spec.md contains '## 1. Problem Statement' identifying the export need",
+        "spec.md contains '## 2. Scope Boundary' section",
+        "spec.md contains '## 3. Impact Surface' section",
+        "spec.md contains '## 4. Evaluated Approaches' with single recommendation (no Option A/B)",
+        "spec.md contains '## 5. User Requirements & Testing' correctly identifying Admin as actor",
+        "spec.md covers the primary flow: Admin selects filters → exports → downloads file",
+        "spec.md contains '## 7. Success Criteria' section",
+        "Success criteria are technology-agnostic",
+        "spec.md contains '## 9. Unresolved Questions' section",
+        "spec.md contains '## Clarifications' section",
+        "spec.md does NOT contain inline [NEEDS CLARIFICATION] markers",
+        "File .specify/feature/tdk-006/checklists/requirements.md is created"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "--fast tdk-007",
+      "expected_output": "The skill should stop with a clear error message indicating that a feature description is required. No spec.md file should be created.",
+      "files": [],
+      "assertions": [
+        "No file .specify/feature/tdk-007/spec.md is created",
+        "Output contains an error message about missing description",
+        "Output includes usage example (e.g., '/tdk-specify tdk-007 \"description\"')"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "--fast tdk-008 Add user registration with API endpoint, database model, and signup page",
+      "expected_output": "A spec.md with Impact Surface covering backend and frontend subworkspaces. ## 4. Evaluated Approaches shows single recommended approach. Tags distributed across subworkspaces. Mode: fast.",
+      "files": ["evals/fixtures/multi-sw/.specify.json"],
+      "assertions": [
+        "File .specify/feature/tdk-008/spec.md is created",
+        "spec.md contains '## 3. Impact Surface' table with rows for both backend and frontend",
+        "Impact Surface table contains at least 2 distinct subworkspace names",
+        "spec.md contains '## 4. Evaluated Approaches' with single recommendation (no Option A/B)",
+        "spec.md contains '## 5. User Requirements & Testing' with [subworkspace/module] tags",
+        "User requirement tags reference both backend and frontend subworkspaces",
+        "spec.md contains '## 6. Functional Requirements' with [subworkspace/module] tags",
+        "FR tags distribute across backend/api, backend/models, and frontend/pages",
+        "Tags use lowercase/slash format only (e.g. [backend/api], not [Backend/API])",
+        "spec.md contains all 9 numbered sections",
+        "spec.md contains '## Clarifications' section",
+        "spec.md does NOT contain inline [NEEDS CLARIFICATION] markers"
+      ]
+    }
+  ]
+}

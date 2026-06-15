@@ -19,14 +19,24 @@ function escapeTomlMultiline(value: string): string {
 }
 
 function deriveSandboxMode(tools: unknown): { sandboxMode: string | null; warning?: string } {
-	if (tools === undefined || tools === null) return { sandboxMode: null };
-	if (typeof tools !== "string") {
+	if (tools === undefined || tools === null) {
 		return {
-			sandboxMode: null,
-			warning: `Ignored non-string tools frontmatter (${typeof tools}) while deriving sandbox_mode`,
+			sandboxMode: "read-only",
+			warning: "Missing tools frontmatter; defaulted sandbox_mode to read-only",
 		};
 	}
-	if (!tools.trim()) return { sandboxMode: null };
+	if (typeof tools !== "string") {
+		return {
+			sandboxMode: "read-only",
+			warning: `Ignored non-string tools frontmatter (${typeof tools}); defaulted sandbox_mode to read-only`,
+		};
+	}
+	if (!tools.trim()) {
+		return {
+			sandboxMode: "read-only",
+			warning: "Empty tools frontmatter; defaulted sandbox_mode to read-only",
+		};
+	}
 
 	const toolList = tools
 		.split(/[,;|]/)
@@ -40,8 +50,8 @@ function deriveSandboxMode(tools: unknown): { sandboxMode: string | null; warnin
 	if (hasWrite) return { sandboxMode: "workspace-write" };
 	if (hasRead) return { sandboxMode: "read-only" };
 	return {
-		sandboxMode: null,
-		warning: `No known read/write tool found in tools frontmatter: "${tools}"`,
+		sandboxMode: "read-only",
+		warning: `No known read/write tool found in tools frontmatter; defaulted sandbox_mode to read-only: "${tools}"`,
 	};
 }
 

@@ -7,7 +7,7 @@
  * from a non-TTY process without raw-mode or keystroke simulation.
  *
  * The discriminating observable for each picker scenario is whether `resolveConsumerRoot` was
- * reached (claude proceeds into the install pipeline; codex-only exits before it).
+ * reached after interactive harness selection.
  */
 
 import { mock, spyOn, expect, test, describe } from 'bun:test';
@@ -60,23 +60,29 @@ function suppressOutput() {
 }
 
 describe('harness install picker seam (mocked checkbox-capable terminal)', () => {
-  test('omitted --harness + capable checkbox → picker IS called; codex-only → exits before resolveConsumerRoot', async () => {
+  test('omitted --harness + capable checkbox → picker IS called; codex proceeds into install pipeline', async () => {
     pickerResult = ['codex'];
     pickerCalled = false;
     resolveConsumerRootCalled = false;
 
     const restore = suppressOutput();
+    const exitSpy = spyOn(process, 'exit').mockImplementation((() => { throw new Error('exit-stub'); }) as never);
     const cmd = createHarnessInstallCommand() as Command;
-    await cmd.parseAsync([], { from: 'user' });
-    restore();
+    try {
+      await cmd.parseAsync([], { from: 'user' });
+    } catch (_) {
+      // Expected: no plugin selector was provided in this seam test.
+    } finally {
+      restore();
+      exitSpy.mockRestore();
+    }
 
     // Picker was exercised (the checkbox-capable branch of resolveHarnessOption ran).
     expect(pickerCalled).toBe(true);
-    // Codex-only shortcut exits before touching the install pipeline.
-    expect(resolveConsumerRootCalled).toBe(false);
+    expect(resolveConsumerRootCalled).toBe(true);
   });
 
-  test('omitted --harness + capable checkbox + picker returns codex → stderr coming-soon notice emitted', async () => {
+  test('omitted --harness + capable checkbox + picker returns codex → no coming-soon shortcut remains', async () => {
     pickerResult = ['codex'];
 
     const stderrChunks: string[] = [];
@@ -85,14 +91,21 @@ describe('harness install picker seam (mocked checkbox-capable terminal)', () =>
       return true;
     });
     const stdoutSpy = spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const exitSpy = spyOn(process, 'exit').mockImplementation((() => { throw new Error('exit-stub'); }) as never);
 
     const cmd = createHarnessInstallCommand() as Command;
-    await cmd.parseAsync([], { from: 'user' });
+    try {
+      await cmd.parseAsync([], { from: 'user' });
+    } catch (_) {
+      // Expected: no plugin selector was provided in this seam test.
+    }
 
     stderrSpy.mockRestore();
     stdoutSpy.mockRestore();
+    exitSpy.mockRestore();
 
-    expect(stderrChunks.join('')).toContain('Codex harness: coming soon');
+    expect(stderrChunks.join('')).not.toContain('Codex harness: coming soon');
+    expect(stderrChunks.join('')).toContain('No plugin selector provided');
   });
 
   test('omitted --harness + capable checkbox + picker returns claude → resolveConsumerRoot IS called', async () => {

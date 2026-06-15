@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { Manifest, ManifestEntry } from '../changelog/checks/types';
 import { claudeTargetMapper } from './claude-target-mapper';
+import { codexPackageRoot } from './codex-package-root';
 import { validateSafeSegment } from './install-settings-paths';
 import type { DiscoveredPlugin, DiscoveredPluginFile, PluginInventory } from './types';
 
@@ -135,4 +136,21 @@ export function discoverPrefixRewritePlugins(consumerRoot: string): DiscoveredPl
   return Object.entries(manifest.plugins ?? {})
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([name, entry]) => discoverPluginCatalogEntry(pluginsDir, name, entry));
+}
+
+/**
+ * Returns the codex package root for a given plugin in the consumer repo.
+ * Convenience wrapper over codexPackageRoot for callers already importing plugin-discovery.
+ */
+export function discoverCodexPackageRoot(consumerRoot: string, pluginName: string): string {
+  return codexPackageRoot(consumerRoot, pluginName);
+}
+
+/**
+ * Returns the path to the codex manifest (generated artifact index).
+ * This file is produced by manifest-compute (compute.ts --write) and records
+ * SHA-256 hashes for every file in each .specify/codex-plugins/<plugin>/ package.
+ */
+export function codexManifestPath(consumerRoot: string): string {
+  return path.join(consumerRoot, '.specify', 'codex-plugins', 'manifest.json');
 }

@@ -6,7 +6,7 @@ export function renderInstallPlan(plan: InstallPlan): string {
   const blockers = blockingCollisions(plan.collisions, plan.prompts);
   lines.push(`Harness install plan: ${plan.selectedPlugins.join(', ') || '(none)'}`);
   lines.push(`Target dir: ${plan.targetDir}`);
-  lines.push(`Claude settings: ${plan.claudeSettingsPath}`);
+  lines.push(`${plan.harness === 'codex' ? 'Codex config' : 'Claude settings'}: ${plan.claudeSettingsPath}`);
   lines.push(`Manifest: ${plan.manifestPath}`);
   if (plan.installSettingsPath) lines.push(`Install settings: ${plan.installSettingsPath}`);
   if (plan.migration) lines.push(`Prefix migration: ${plan.migration.fromPrefix} -> ${plan.migration.toPrefix}`);
