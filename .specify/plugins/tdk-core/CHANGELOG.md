@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.2.0] - 2026-06-17
+
+### Added
+- Add `/tdk-task-breakdown <id>` skill for portable Markdown work-item artifacts from clarified specs.
+- Add `task-breakdown-output-contract.md` with manifest/task schemas, filename rules, granularity rules, and source requirement citation rules.
+- Add contract coverage for unresolved-question gating, tracker-neutral boundaries, output paths, and `UR-*` / `FR-*` / `SC-*` citations.
+
 ## [5.1.0] - 2026-06-17
 
 ### Added

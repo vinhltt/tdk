@@ -10,6 +10,19 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.72.0] - 2026-06-17
+
+### Added
+- **[tdk-core]** Add `/tdk-task-breakdown <id>` for portable Markdown work-item generation from clarified specs.
+  - Writes `tasks-breakdown/index.md` and `tasks-breakdown/task-NNN-*.md` only.
+  - Strict-blocks when `spec.md ## 9. Unresolved Questions` is not `None`.
+  - Keeps GitHub, GitLab, Backlog, Jira, and other tracker issue creation consumer-owned.
+- **[Scripts]** Add `tdk-task-breakdown-skill-contract.test.ts` to protect the task breakdown skill contract.
+- **[Guides]** Document optional task breakdown in README, command reference, document flow, and full feature scenario.
+
+### Changed
+- **[tdk-core]** Bump plugin metadata to `5.2.0` and regenerate Codex package artifacts.
+
 ## [1.71.0] - 2026-06-17
 
 ### Added

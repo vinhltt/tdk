@@ -1,11 +1,11 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-17T03:30:55Z",
+  "generated_at": "2026-06-17T07:44:42Z",
   "plugins": {
     "tdk-core": {
-      "version": "5.1.0",
+      "version": "5.2.0",
       "files": {
-        ".codex-plugin/plugin.json": "0b2d7200fbce147a04745f1d012dab19bd84d68e0f116be069d036c38f85a9d4",
+        ".codex-plugin/plugin.json": "f9ff5e8be5e0e10fa109025921c9f001430f1f8bf164648bea81a24ead9201ab",
         "hooks/codex-hooks.json": "218a8071c85c110a249cf591026b9aa857daa7658f1863b69c7506e62a023e62",
         "hooks/dev-context-injector.cjs": "95ec8603b65686b85c2fe02e73addce8c753361ad920dbeec8a35bd8b85e3671",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
@@ -54,6 +54,8 @@
         "skills/tdk-sub-workspace-docs/SKILL.md": "9cbac44ba7bf6a8cc3574c3b551b39d7af31380fba2554db73369b54caf3211b",
         "skills/tdk-sub-workspace-init/SKILL.md": "addc5fa7f6507d78666406f0c0598fc91adcd67600c9aed9c142142b9f99dc42",
         "skills/tdk-sub-workspace-list/SKILL.md": "048d5207d474ab4e349e4ad9b32d0ed1da3727de44eb49e720e32a8316fbe04e",
+        "skills/tdk-task-breakdown/SKILL.md": "0fc88ae8a6de8ffaac542d30b4893f02762c29b6c5cb713083186fa852027e58",
+        "skills/tdk-task-breakdown/references/task-breakdown-output-contract.md": "6c8bfe252d2a41c5e2f80d360ca36f7cab6549cc095d0fc5967857cf84bfc9a4",
         "skills/tdk-ut-backfill-plan/SKILL.md": "49ee3011761a91c7fa73b78af225f10447b379c496fb44bbb807f5da81413530"
       }
     },

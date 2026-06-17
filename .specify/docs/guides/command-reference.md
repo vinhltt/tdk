@@ -1,6 +1,6 @@
 # Tihon Command Suite Guide
 
-> **Last updated**: 2026-06-05
+> **Last updated**: 2026-06-17
 >
 > **Terminology**: In this guide, `/tdk-*` items are called "commands." Internally they are Claude Code plugin skills. Both terms refer to the same thing.
 >
@@ -25,7 +25,7 @@
 
 ## Why CommonDragon Tihon?
 
-Tihon (Plan — Act — Verify) is a specification-driven development framework that generates specs, plans, tasks, and code from natural language. You describe a feature; Tihon guides you through the full artifact chain — from requirements to production-ready implementation.
+Tihon (Plan — Act — Verify) is a specification-driven development framework that generates specs, optional portable task breakdowns, plans, and code from natural language. You describe a feature; Tihon guides you through the full artifact chain — from requirements to production-ready implementation.
 
 CommonDragon is the third generation of this framework, built natively for Claude Code.
 
@@ -89,7 +89,7 @@ Runs in the Claude Code CLI and VSCode extension. No GitHub Copilot subscription
 
 ## Overview
 
-The Tihon command suite provides a **specification-driven development** workflow. You describe a feature in natural language, and the commands guide you through specification, planning, task breakdown, and implementation.
+The Tihon command suite provides a **specification-driven development** workflow. You describe a feature in natural language, and the commands guide you through specification, optional task breakdown, planning, and implementation.
 
 ### Workflow Pipeline
 
@@ -98,13 +98,13 @@ The Tihon command suite provides a **specification-driven development** workflow
                     │                   SPECIFICATION-DRIVEN WORKFLOW                     │
                     └─────────────────────────────────────────────────────────────────────┘
 
-  Phase 0                Phase 1              Phase 2                Phase 3
-  ┌──────────────┐    ┌──────────┐    ┌────────────────┐    ┌───────────────────┐
-  │   specify    │───>│ clarify  │───>│      plan      │───>│implement│
+  Phase 0                Phase 1              Optional              Phase 2                Phase 3
+  ┌──────────────┐    ┌──────────┐    ┌────────────────┐    ┌────────────────┐    ┌───────────────────┐
+  │   specify    │───>│ clarify  │───>│task-breakdown  │───>│      plan      │───>│implement│
   │  (--fast)    │    │ (should) │    │                │    │                   │
-  └──────────────┘    └──────────┘    └────────────────┘    └───────────────────┘
-         │                  │                │                       |
-         v                  v                v                       |
+  └──────────────┘    └──────────┘    └────────────────┘    └────────────────┘    └───────────────────┘
+         │                  │                │                       │                       |
+         v                  v                v                       v                       |
     ┌──────────┐     ┌──────────────┐  ┌─────────────┐        ┌──────────────┐
     │checklist │     │ba-requirement│  │api-design   │        │routed test   │
     │(optional)│     │  (Approval)  │  │db-design    │        │skill         │
@@ -130,9 +130,9 @@ The Tihon command suite provides a **specification-driven development** workflow
                       └─────────────────────┘
 ```
 
-**Primary flow**: `specify` → `clarify` → `plan` → `implement`
+**Primary flow**: `specify` -> `clarify` -> optional `task-breakdown` -> `plan` -> `implement`
 
-Each command reads the output of the previous one, building a chain of artifacts: `spec.md` → `plan.md` (with ## Phases table) → source code.
+Each command reads the output of the previous one, building a chain of artifacts: `spec.md` -> optional `tasks-breakdown/` -> `plan.md` (with ## Phases table) -> source code.
 
 ---
 
@@ -143,9 +143,10 @@ Each command reads the output of the previous one, building a chain of artifacts
 | 1 | `/tdk-specify <id> <desc>` | Create feature specification from natural language |
 | 2 | `/tdk-specify <id> <desc> --fast` | Quick specification (skips brainstorm, fewer tokens) |
 | 3 | `/tdk-clarify <id>` | Ask up to 5 targeted questions to fill spec gaps |
-| 4 | `/tdk-ba-requirement <id>` | Generate BA requirement document for stakeholder approval |
-| 5 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
-| 6 | `/tdk-api-design <id>` | Generate detailed API design (Scenario A/B) with DB schema for approval |
+| 4 | `/tdk-task-breakdown <id>` | Generate portable Markdown work-item files from a clarified spec |
+| 5 | `/tdk-ba-requirement <id>` | Generate BA requirement document for stakeholder approval |
+| 6 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
+| 7 | `/tdk-api-design <id>` | Generate detailed API design (Scenario A/B) with DB schema for approval |
 | 10 | `/tdk-analyze <id>` | Cross-artifact consistency and quality analysis |
 | 11 | `/tdk-status <id>` | Show workflow progress (read-only, any time) |
 | 12 | `/tdk-checklist <id> [focus]` | Generate quality checklist for requirements |
@@ -194,7 +195,15 @@ This creates `.specify/specs/feat-001/spec.md` with user stories, requirements, 
 
 Claude identifies underspecified areas and asks up to 5 targeted questions. Answers are encoded back into `spec.md`.
 
-### Step 3 — Plan the implementation
+### Step 3 — Generate portable work items (optional)
+
+```
+/tdk-task-breakdown feat-001
+```
+
+Creates `tasks-breakdown/index.md` and `tasks-breakdown/task-NNN-*.md` files from a clarified spec. This is tracker-neutral Markdown only; GitHub, GitLab, Backlog, Jira, or other issue sync stays consumer-owned.
+
+### Step 4 — Plan the implementation
 
 ```
 /tdk-plan feat-001
@@ -202,7 +211,7 @@ Claude identifies underspecified areas and asks up to 5 targeted questions. Answ
 
 Generates `plan.md` with architecture decisions, file structure, tech stack, and design artifacts (`data-model.md`, `contracts/`, `research/`). The plan includes a `## Phases` table for implementation.
 
-### Step 4 — Implement (Recommended Path)
+### Step 5 — Implement (Recommended Path)
 
 ```
 /tdk-implement feat-001
@@ -218,7 +227,7 @@ To execute one phase only:
 
 Selected mode still honors dependencies and stale `in_progress` recovery.
 
-### Step 5 — Run unit tests (optional)
+### Step 6 — Run unit tests (optional)
 
 Map the `test` domain in `{docs.path}/custom-workflow/plan-skill-routing.md`, then run:
 
@@ -241,10 +250,11 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 ```
 .specify/specs/feat-001/
 ├── spec.md              ← Step 1
-├── plan.md              ← Step 3 (includes ## Phases table)
-├── research/            ← Step 3 (if needed)
-├── data-model.md        ← Step 3 (if needed)
-├── contracts/           ← Step 3 (if needed)
+├── tasks-breakdown/     ← Step 3 optional portable work items
+├── plan.md              ← Step 4 (includes ## Phases table)
+├── research/            ← Step 4 (if needed)
+├── data-model.md        ← Step 4 (if needed)
+├── contracts/           ← Step 4 (if needed)
 └── checklists/          ← /tdk-checklist (optional)
 ```
 
@@ -259,6 +269,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | specify | `/tdk-specify <id> <desc>` | — | `.specify.env` | `spec.md`, `checklists/requirements.md` | None (start here) |
 | specify (fast) | `/tdk-specify <id> <desc> --fast` | `--fast` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
+| task-breakdown | `/tdk-task-breakdown <id>` | — | `spec.md` with unresolved questions set to `None` | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md` | clarify |
 | ba-requirement | `/tdk-ba-requirement <id>` | `--figma-pc`, `--figma-sp`, `--output` | `spec.md` | `ba-requirement.md` | clarify |
 | plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--red-team`, `--validate` | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | ba-requirement |
 | api-design | `/tdk-api-design <id>` | `--scenario A|B` | `spec.md`, `research/` | `api_design.md` (incl. DB schema) | plan |

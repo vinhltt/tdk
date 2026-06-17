@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-specify → /tdk-clarify → /tdk-plan → /tdk-implement
+/tdk-specify -> /tdk-clarify -> optional /tdk-task-breakdown -> /tdk-plan -> /tdk-implement
 ```
 
 ## Step-by-Step
@@ -32,7 +32,17 @@ Type in Claude Code chat:
 
 **Output**: `spec.md` updated with `## Clarifications` section
 
-### 3. Generate the implementation plan
+### 3. Generate portable work items (optional)
+
+```
+/tdk-task-breakdown feat-001
+```
+
+**What happens**: Claude reads the clarified `spec.md`, strict-blocks if `## 9. Unresolved Questions` is not `None`, and writes tracker-neutral Markdown work items under `tasks-breakdown/`.
+
+**Output**: `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md`
+
+### 4. Generate the implementation plan
 
 ```
 /tdk-plan feat-001
@@ -42,7 +52,7 @@ Type in Claude Code chat:
 
 **Output**: `plan.md`, `research/`, `data-model.md`, `contracts/` (as needed)
 
-### 4. (Optional) Quality gate — analyze
+### 5. (Optional) Quality gate — analyze
 
 ```
 /tdk-analyze feat-001
@@ -50,7 +60,7 @@ Type in Claude Code chat:
 
 **What happens**: Non-destructive analysis checks consistency between spec and plan. Reports gaps, contradictions, and coverage issues. No files modified.
 
-### 5. Implement from plan
+### 6. Implement from plan
 
 ```
 /tdk-implement feat-001
@@ -64,7 +74,7 @@ To run one phase only:
 /tdk-implement feat-001 --phase 03
 ```
 
-### 6. Track progress
+### 7. Track progress
 
 ```
 /tdk-status feat-001
@@ -75,6 +85,7 @@ Run at any point to see a progress bar, completed phases, and recommendations.
 ## Tips
 
 - If your feature is small and well-understood, skip `clarify` and go straight to `plan`.
+- Use `task-breakdown` when you need portable issue-sized Markdown files before planning or tracker sync.
 - Run `analyze` before `implement` to catch inconsistencies early.
 - Use `status` after interruptions to see where you left off.
 - Task IDs must use prefixes from `.specify/.specify.env` (e.g., `feat`, `spec`, `docs`, `bug`).
