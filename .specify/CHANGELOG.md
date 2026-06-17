@@ -10,6 +10,20 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.71.0] - 2026-06-17
+
+### Added
+- **[Skills]** Add reference documentation for tdk-implement phase routing
+  - Add `routing-preflight.md` outlining preflight delegate checks
+  - Add `phase-execution.md` and `project-and-phase-contract.md` contracts
+- **[Scripts]** Add `tdk-implement-skill-routing-contract.test.ts` to validate routing preflight behavior
+
+### Changed
+- **[Skills]** Refactor tdk-implement execution workflow
+  - Update `SKILL.md` to run read-only routing preflight before executing phases
+  - Require internal references to be resolved relative to `SKILL_BASE_DIR` and reject `<!-- DO NOT LOAD` stub files
+- **[Scripts]** Align existing contract tests (CWD independence, status preflight, phase selection) with updated routing contracts
+
 ## [1.70.0] - 2026-06-17
 
 ### Added

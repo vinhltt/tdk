@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.1.0] - 2026-06-17
+
+### Added
+- Add reference documentation for tdk-implement phase routing (routing-preflight.md, phase-execution.md, project-and-phase-contract.md)
+
+### Changed
+- Update SKILL.md to run read-only routing preflight before executing phases
+- Require internal references to be resolved relative to SKILL_BASE_DIR and reject <!-- DO NOT LOAD --> stub files
+
 ## [5.0.1] - 2026-06-17
 
 ### Changed

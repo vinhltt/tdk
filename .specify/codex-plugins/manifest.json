@@ -1,11 +1,11 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-17T02:10:41Z",
+  "generated_at": "2026-06-17T03:30:55Z",
   "plugins": {
     "tdk-core": {
-      "version": "5.0.1",
+      "version": "5.1.0",
       "files": {
-        ".codex-plugin/plugin.json": "67dbaea671669579b690a29cf12f6300e3b0cdbe83517eae3f2353c97cd4d87d",
+        ".codex-plugin/plugin.json": "0b2d7200fbce147a04745f1d012dab19bd84d68e0f116be069d036c38f85a9d4",
         "hooks/codex-hooks.json": "218a8071c85c110a249cf591026b9aa857daa7658f1863b69c7506e62a023e62",
         "hooks/dev-context-injector.cjs": "95ec8603b65686b85c2fe02e73addce8c753361ad920dbeec8a35bd8b85e3671",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
@@ -28,7 +28,10 @@
         "skills/tdk-config-sync/SKILL.md": "f28251b269a168bba17983fa028c3f26851236387fd97bbaf364dd00d62e52ba",
         "skills/tdk-constitution/SKILL.md": "6a7b6ef35856065a338e69dbb31f4376cfd442bcbbd36092564b7cefa60e79e6",
         "skills/tdk-constitution/templates/constitution.md.tpl": "30f0531720fdc8ff99135bcf7705277f5ba3711bb5aa040dbae2b46e7041cfe6",
-        "skills/tdk-implement/SKILL.md": "f470ec9ee9754848359e52e01ba97ed8232d407c1506372953af537fe2250ebf",
+        "skills/tdk-implement/SKILL.md": "c4de40f65441e71013f5ff6c1a891f1f65a4c24ba06d46c304035d7ae892014a",
+        "skills/tdk-implement/references/phase-execution.md": "13c49525313e4524c355ca3f620f4fd6d5e06a90be63eb9aa5f99ed4240c4a63",
+        "skills/tdk-implement/references/project-and-phase-contract.md": "93bafb807ab3a4e4272c9264e5c8da1edc9b42a862f29e9a68d4112bb04abbe2",
+        "skills/tdk-implement/references/routing-preflight.md": "794db5940ab7f9f2b928c03dcef6fc8bb8474642ff8244acb544166f727e5de9",
         "skills/tdk-plan/SKILL.md": "fbde916909ee7f65a1d58a934063da323b88592d78496257118256d11b8041f5",
         "skills/tdk-plan/references/cross-plan-deps.md": "8678be6c9d45e0ac8269a2087fbf40d053ef83ae0cbf95b3e5a2c10f1b512e69",
         "skills/tdk-plan/references/design-phase.md": "c12111ef6064fd868fd50dc8e37fd66706e3873000cbf16ff76e7fb2a375d828",

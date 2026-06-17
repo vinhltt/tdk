@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readdirSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 
 const IMPLEMENT_SKILL = resolve(
   import.meta.dir,
   '../../../plugins/tdk-core/skills/tdk-implement/SKILL.md',
 );
+const IMPLEMENT_REFERENCES_DIR = resolve(dirname(IMPLEMENT_SKILL), 'references');
 
 const STATUS_SKILL = resolve(
   import.meta.dir,
@@ -18,12 +19,17 @@ function read(path: string): string {
 
 describe('status preflight skill contract', () => {
   const implementSkill = read(IMPLEMENT_SKILL);
+  const implementReferenceText = readdirSync(IMPLEMENT_REFERENCES_DIR)
+    .filter((file) => file.endsWith('.md'))
+    .map((file) => read(resolve(IMPLEMENT_REFERENCES_DIR, file)))
+    .join('\n');
+  const implementContract = `${implementSkill}\n${implementReferenceText}`;
   const statusSkill = read(STATUS_SKILL);
 
   it('tdk-implement runs the status collector before execution', () => {
     expect(implementSkill).toContain('### Step 2: Status Preflight');
-    expect(implementSkill).toContain('src/commands/feature/status.ts {TASK_ID}');
-    expect(implementSkill).toContain('Do NOT invoke `/tdk-status`');
+    expect(implementContract).toContain('src/commands/feature/status.ts {TASK_ID}');
+    expect(implementContract).toContain('Do NOT invoke `/tdk-status`');
   });
 
   it('tdk-implement branches on structured status fields', () => {
@@ -36,14 +42,14 @@ describe('status preflight skill contract', () => {
       'blocked',
       'complete',
     ]) {
-      expect(implementSkill).toContain(term);
+      expect(implementContract).toContain(term);
     }
   });
 
   it('tdk-implement keeps parser as execution source of truth', () => {
-    expect(implementSkill).toContain('This preflight is read-only');
-    expect(implementSkill).toContain('phase parser below remains the execution source of truth');
-    expect(implementSkill).toContain('parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json');
+    expect(implementContract).toContain('This preflight is read-only');
+    expect(implementContract).toContain('phase parser below remains the execution source of truth');
+    expect(implementContract).toContain('parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json');
   });
 
   it('tdk-status documents the shared JSON contract', () => {

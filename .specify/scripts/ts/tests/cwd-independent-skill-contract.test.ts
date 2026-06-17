@@ -6,6 +6,13 @@ const IMPLEMENT_SKILL = resolve(
   import.meta.dir,
   '../../../plugins/tdk-core/skills/tdk-implement/SKILL.md',
 );
+const IMPLEMENT_REFERENCES_DIR = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-core/skills/tdk-implement/references',
+);
+const IMPLEMENT_REFERENCES = readdirSync(IMPLEMENT_REFERENCES_DIR)
+  .filter((file) => file.endsWith('.md'))
+  .map((file) => resolve(IMPLEMENT_REFERENCES_DIR, file));
 
 const STATUS_SKILL = resolve(
   import.meta.dir,
@@ -107,6 +114,8 @@ function expectNoFragilePlanCommand(skillText: string): void {
 
 describe('cwd-independent skill command contract', () => {
   const implementSkill = read(IMPLEMENT_SKILL);
+  const implementReferenceText = IMPLEMENT_REFERENCES.map((path) => read(path)).join('\n');
+  const implementContract = `${implementSkill}\n${implementReferenceText}`;
   const statusSkill = read(STATUS_SKILL);
   const planSkill = read(PLAN_SKILL);
   const planReferenceText = PLAN_REFERENCES.map((path) => read(path)).join('\n');
@@ -118,7 +127,7 @@ describe('cwd-independent skill command contract', () => {
   const agentRootGuidanceSkills = AGENT_ROOT_GUIDANCE_SKILLS.map((path) => read(path));
 
   it('tdk-implement receives project root as an agent-provided argument before script calls', () => {
-    expectAgentProvidedProjectRoot(implementSkill);
+    expectAgentProvidedProjectRoot(implementContract);
   });
 
   it('tdk-implement wraps critical script calls in a PROJECT_DIR subshell', () => {
@@ -133,14 +142,14 @@ describe('cwd-independent skill command contract', () => {
       'src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done',
       'src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} done',
     ]) {
-      expectSafeScriptCommand(implementSkill, command);
+      expectSafeScriptCommand(implementContract, command);
     }
   });
 
   it('tdk-implement does not use cwd-fragile script command examples', () => {
-    expect(implementSkill).not.toContain('cd .specify/scripts/ts');
-    expect(implementSkill).not.toContain('cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts');
-    expect(implementSkill).not.toContain('cd "$CLAUDE_PROJECT_DIR/.specify/scripts/ts"');
+    expect(implementContract).not.toContain('cd .specify/scripts/ts');
+    expect(implementContract).not.toContain('cd $CLAUDE_PROJECT_DIR/.specify/scripts/ts');
+    expect(implementContract).not.toContain('cd "$CLAUDE_PROJECT_DIR/.specify/scripts/ts"');
   });
 
   it('helper skills use the same portable script command contract', () => {
