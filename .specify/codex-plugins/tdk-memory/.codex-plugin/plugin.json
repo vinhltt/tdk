@@ -1,7 +1,7 @@
 {
-  "description": "Domain-based project memory: init, update, checksum, changelog, query, and preload context. Includes memory-guardian agent for business logic conflict detection.",
+  "description": "Domain-based project memory: init, update, checksum, changelog, query, and context loading. Includes tdk-memory-agent for memory context loading and business logic conflict detection.",
   "interface": {},
   "name": "tdk-memory",
   "skills": "./skills/",
-  "version": "1.0.0"
+  "version": "2.0.0"
 }

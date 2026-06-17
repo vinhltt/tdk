@@ -41,7 +41,7 @@ Wait for all researcher reports before continuing to design. If any researcher r
 - obsidian_batch_get_file_contents                 → batch read related files
 ```
 
-**AI Docs Manager** — `tdk-memory-query` skill OR ask `memory-guardian` agent. Reads `.specify/memory/` based on feature domain.
+**AI Docs Manager** — `tdk-memory-query` skill OR ask `tdk-memory-agent` agent. Reads `.specify/memory/` based on feature domain.
 
 **Obsidian Brain** — modes:
 - Detective: semantic search → grep → infer relations

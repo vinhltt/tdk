@@ -2,7 +2,7 @@
 name: tdk-specify
 description: "Create or update the feature specification from a natural language feature description. Default: full brainstorm with Option A/B. Use --fast for single recommendation without brainstorm."
 metadata: 
-  version: "3.3.0"
+  version: "5.0.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -144,18 +144,24 @@ Store: `FEATURE_DIR`, `SPEC_FILE`, `EXPECTED_BRANCH`, `CURRENT_BRANCH`.
 
 Store: `SPEC_MODE`, `MODE_SOURCE`, `PRELIMINARY_MODE` (only set during auto-detect).
 
-### Step 0.memory: Memory Context Pre-load
+### Step 0.memory: Memory Validation
 
 **Only if `.specify/memory/memory-index.md` exists** (check silently, non-blocking):
 
-1. Invoke `tdk-memory-preload` skill with feature description from `$ARGUMENTS`.
-2. If Context Block returned: use it as reference throughout spec writing.
-   - Respect all CONSTRAINTS & WARNINGS listed in the Context Block.
-   - Note in `spec.md` frontmatter: `memory_context_loaded: true`
-3. If memory not initialized or no relevant context: proceed normally.
+1. Spawn `tdk-memory-agent` agent with `--mode validate` and the raw feature description.
+   - Ask it to detect only high-signal business contradictions at this stage; ambiguity and completion checks stay for `/tdk-clarify`.
+2. Parse the Guardian Report and store it as `MEMORY_VALIDATE_REPORT`.
+   - `Action required: BLOCK_IMPL` → ask one `AskUserQuestion` round for business-conflict resolution. Include conflicts and any warnings as non-blocking review notes in the same round. Store accepted answers as `MEMORY_RESOLUTIONS`.
+   - `Action required: REVIEW` → record warnings as review notes for spec writing; do not block.
+   - `Action required: CLEAR` → continue normally.
+   - `STATUS: MCP_UNAVAILABLE`, memory not initialized, no relevant memory, or agent failure → skip validation without prompting or failing.
+3. Frontmatter semantics:
+   - Note in `spec.md` frontmatter: `memory_context_loaded: true` only when a usable Guardian Report was returned.
    - Note in `spec.md` frontmatter: `memory_context_loaded: false`
+4. When writing `spec.md`, persist accepted `MEMORY_RESOLUTIONS` in `## Clarifications` or as explicit constraints in the relevant section.
+   - Do not ask later stages the same resolved business-conflict again.
 
-**This step MUST NOT block or error.** If `tdk-memory-preload` fails for any reason, skip and continue.
+**This step MUST NOT block or error.** If `tdk-memory-agent` fails for any reason, skip and continue.
 
 ### Step 1: Load `.specify/templates/spec-template.md.tpl` to understand required sections.
 

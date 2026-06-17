@@ -45,7 +45,7 @@ Single source of truth for `/tdk-plan` flag dispatch. SKILL.md only routes; this
 | Step 4.5 Red team (Phase 06) | no | skip | yes |
 | Step 4.7 Validate (Phase 07) | prompt | skip | prompt |
 
-`--fast` keeps Step 0.memory **and** Phase 0.guardian per Key Constraint #2 — memory-guardian is binding-invariant cheap and the regression risk of bypassing it dwarfs the ~500-token cost. See `references/gates.md` Phase 0.guardian for spawn details and MCP_UNAVAILABLE handling. Only research / scope / deps / red-team / validate / UT are skipped in `--fast`.
+`--fast` keeps Step 0.memory **and** Phase 0.guardian per Key Constraint #2 — tdk-memory-agent `--mode validate` is binding-invariant cheap and the regression risk of bypassing it dwarfs the ~500-token cost. See `references/gates.md` Phase 0.guardian for spawn details and MCP_UNAVAILABLE handling. Only research / scope / deps / red-team / validate / UT are skipped in `--fast`.
 
 `--red-team` and `--validate` are subcommand-equivalent action flags. They short-circuit straight into Phase 06 / 07 over an existing plan; they do NOT run Steps 0–4 again. See `red-team-workflow.md` and `validate-workflow.md`.
 

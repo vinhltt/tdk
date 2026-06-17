@@ -230,7 +230,7 @@ describe('prefix transform planning', () => {
     const consumer = makeConsumer();
     const skill = [
       '# tdk-specify',
-      'Preload with tdk-memory-preload before invoking tdk-scout.',
+      'Query with tdk-memory-query before invoking tdk-scout.',
       '',
     ].join('\n');
     writePluginFile(consumer, 'skills/tdk-specify/SKILL.md', skill, 'tdk-core');
@@ -241,7 +241,7 @@ describe('prefix transform planning', () => {
       },
       'tdk-memory': {
         version: '1.0.0',
-        files: { 'skills/tdk-memory-preload/SKILL.md': sha256('# tdk-memory-preload\n') },
+        files: { 'skills/tdk-memory-query/SKILL.md': sha256('# tdk-memory-query\n') },
       },
       'tdk-utils': {
         version: '1.0.0',
@@ -264,8 +264,8 @@ describe('prefix transform planning', () => {
     const content = plan.writes
       .find((item) => item.sourceRelativePath === 'skills/tdk-specify/SKILL.md')
       ?.content.toString('utf-8');
-    expect(content).toContain('Preload with erc-memory-preload before invoking erc-scout.');
-    expect(content).not.toContain('tdk-memory-preload');
+    expect(content).toContain('Query with erc-memory-query before invoking erc-scout.');
+    expect(content).not.toContain('tdk-memory-query');
     expect(content).not.toContain('tdk-scout');
   });
 });

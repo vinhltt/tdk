@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.0.1] - 2026-06-17
+
+### Changed
+- Updated core skills to integrate with the new tdk-memory-agent validation mode
+- Updated tdk-specify to run memory validation and handle business-conflict resolutions
+- Updated tdk-clarify to parse the Guardian Report and generate clarification questions
+- Updated tdk-analyze to write Guardian Report findings to the analysis report
+- Updated tdk-plan to run the new agent in Phase 0.guardian and Step 0.memory
+
 ## [5.0.0] - 2026-06-15
 
 ### Added

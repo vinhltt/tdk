@@ -1,15 +1,12 @@
-// Fresh-consumer distribute e2e.
-// Proves that distribute.sh carries .specify/codex-plugins/ to consumers.
+// Fresh-consumer distribute exclusion guard.
+// Proves distribute.sh intentionally does NOT carry .specify/codex-plugins/ to consumers:
+// generated Codex packages are a local/source artifact, deliberately kept out of the
+// distributed contract (codex-plugins/ is absent from distribute.sh SPECIFY_INCLUDES).
 // Two-dir construction: Dir A is a synthetic source with codex-plugins/ generated via
 // harness convert + compute --write. Dir B is a fresh consumer. distribute.sh is invoked
 // as `bash A/distribute.sh B --yes --no-delete` so BASH_SOURCE[0] resolves SOURCE_ROOT = A.
-// Before the distribute.sh fix this test FAILS because codex-plugins/ is not in SPECIFY_INCLUDES.
-//
-// Deviation from literal phase-05 wording ("run distribute.sh into a temp dir from TDK source"):
-// The real TDK source has no generated .specify/codex-plugins/ (it's runtime-generated).
-// Running the real script against a fresh B would never have codex-plugins/ in the source,
-// making the test permanently red for the wrong reason. We use a synthetic source A that
-// contains the generated tree — this is the correct discriminator.
+// The synthetic source deliberately contains a generated codex-plugins/ tree so the test
+// proves the tree is EXCLUDED from distribution even when present at the source.
 
 import { describe, expect, test } from 'bun:test';
 import * as fs from 'node:fs';
@@ -84,8 +81,8 @@ function buildSyntheticSource(): string {
   return consumer.root;
 }
 
-describe('codex distribute fresh-consumer e2e', () => {
-  test('distribute.sh carries .specify/codex-plugins/ tree into a fresh consumer', () => {
+describe('codex distribute exclusion', () => {
+  test('distribute.sh does NOT carry .specify/codex-plugins/ into a fresh consumer', () => {
     // Graceful skip if distribute.sh is not accessible
     if (!fs.existsSync(distributeShPath)) {
       process.stderr.write(`[skip] distribute.sh not found at ${distributeShPath}\n`);
@@ -100,6 +97,12 @@ describe('codex distribute fresh-consumer e2e', () => {
 
     // Dir A: synthetic source with plugins + generated codex-plugins
     const sourceRoot = buildSyntheticSource();
+    // Sanity: the source genuinely contains a codex-plugins/ tree, otherwise the
+    // exclusion assertion below would pass vacuously.
+    expect(
+      fs.existsSync(path.join(sourceRoot, '.specify', 'codex-plugins', 'tdk-core')),
+      'precondition: synthetic source must contain a generated codex-plugins/ tree',
+    ).toBe(true);
 
     // Copy distribute.sh into Dir A so BASH_SOURCE[0] makes SOURCE_ROOT = sourceRoot
     const localDistributeSh = path.join(sourceRoot, 'distribute.sh');
@@ -121,46 +124,18 @@ describe('codex distribute fresh-consumer e2e', () => {
       `distribute.sh failed:\nstdout: ${distribute.stdout.toString()}\nstderr: ${distribute.stderr.toString()}`,
     ).toBe(0);
 
-    // PRIMARY assertion (RED before fix, GREEN after): codex-plugins/ must arrive in consumer
+    // distribute.sh DID run and carry the Claude source tree (plugins/) — proves the
+    // exclusion below is specific to codex-plugins/, not a wholesale distribute failure.
+    expect(
+      fs.existsSync(path.join(consumerRoot, '.specify', 'plugins', 'tdk-core')),
+      '.specify/plugins/tdk-core/ must be distributed to the consumer',
+    ).toBe(true);
+
+    // PRIMARY guard: codex-plugins/ is intentionally NOT shipped to consumers.
     const codexPluginsDir = path.join(consumerRoot, '.specify', 'codex-plugins');
     expect(
-      fs.existsSync(path.join(codexPluginsDir, 'tdk-core')),
-      '.specify/codex-plugins/tdk-core/ must exist in consumer after distribute',
-    ).toBe(true);
-    expect(
-      fs.existsSync(path.join(codexPluginsDir, 'manifest.json')),
-      '.specify/codex-plugins/manifest.json must exist in consumer after distribute',
-    ).toBe(true);
-
-    // CORROBORATING assertions: run compute --write then harness install in consumer
-    // scriptsDir must exist for CLI to resolve project root
-    const consumerScriptsDir = path.join(consumerRoot, '.specify', 'scripts', 'ts');
-    fs.mkdirSync(consumerScriptsDir, { recursive: true });
-
-    const consumerManifest = Bun.spawnSync({
-      cmd: ['bun', manifestCliPath, '--project-root', consumerRoot, '--write', '--output', 'table'],
-      cwd: consumerScriptsDir,
-      stdout: 'pipe',
-      stderr: 'pipe',
-    });
-    expect(
-      consumerManifest.exitCode,
-      `compute --write in consumer failed: ${consumerManifest.stderr.toString()}`,
-    ).toBe(0);
-
-    const install = Bun.spawnSync({
-      cmd: ['bun', cliPath, 'harness', 'install', '--harness', 'codex', '--plugins', 'tdk-core', '--yes'],
-      cwd: consumerScriptsDir,
-      stdout: 'pipe',
-      stderr: 'pipe',
-    });
-    expect(
-      install.exitCode,
-      `harness install failed: ${install.stderr.toString()}\nstdout: ${install.stdout.toString()}`,
-    ).toBe(0);
-
-    // harness install artifacts
-    expect(fs.existsSync(path.join(consumerRoot, '.agents', 'skills', 'tdk_demo', 'SKILL.md'))).toBe(true);
-    expect(fs.existsSync(path.join(consumerRoot, '.codex', 'agents', 'tdk_helper.toml'))).toBe(true);
+      fs.existsSync(codexPluginsDir),
+      '.specify/codex-plugins/ must NOT be distributed to consumers (intentionally excluded)',
+    ).toBe(false);
   });
 });

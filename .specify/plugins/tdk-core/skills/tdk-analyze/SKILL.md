@@ -6,11 +6,11 @@ compatibility: "Requires successful completion of /tdk-plan with a valid plan.md
 user-invocable: true
 license: MIT
 metadata:
-  version: "3.4.11"
+  version: "5.0.1"
   category: "Analysis & Review"
   requires:
     - tdk-plan (for prerequisite plan.md with ## Phases table)
-    - Optional: tdk-memory-preload (for enhanced context during analysis)
+    - Optional: tdk-memory-agent (for enhanced context during analysis)
   input_format: "[task-id]"
   output_format: "Markdown report with findings table, coverage summary, and next actions."
   examples:
@@ -84,18 +84,24 @@ Store: `TASK_ID`, `TASK_ID_SOURCE`.
 Invoke `tdk-load-project-context` with validated `TASK_ID`.
 Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
-### Step 0.memory: Memory Context Pre-load
+### Step 0.memory: Memory Validation
 
 **Only if `.specify/memory/memory-index.md` exists** (check silently, non-blocking):
 
-1. Invoke `tdk-memory-preload` skill with feature description from the loaded `spec.md`.
-2. If Context Block returned: use it as an additional reference layer during cross-artifact analysis.
-   - Flag any spec/plan claims that contradict CONSTRAINTS & WARNINGS in the Context Block.
-   - Note in analysis report frontmatter: `memory_context_loaded: true`
-3. If memory not initialized or no relevant context: proceed normally.
+1. Gather the available artifact text for validation:
+   - Prefer spec + plan when both `spec.md` and `plan.md` exist.
+   - Use spec-only when `plan.md` is absent, and record that fallback in the analysis report.
+2. Spawn `tdk-memory-agent` agent with `--mode validate` and the gathered artifact text.
+3. Map the Guardian Report into a `Memory Validation` section in the analysis output:
+   - conflicts -> high-priority findings.
+   - warnings -> review findings.
+   - clear -> note that no memory contradictions were found.
+   - `STATUS: MCP_UNAVAILABLE`, memory not initialized, no relevant memory, or agent failure -> skip memory validation without prompting or failing.
+4. Note in analysis report frontmatter:
+   - `memory_context_loaded: true` only when a usable Guardian Report was returned.
    - Note in analysis report frontmatter: `memory_context_loaded: false`
 
-**This step MUST NOT block or error.** If `tdk-memory-preload` fails for any reason, skip and continue.
+**This step MUST NOT block or error.** If `tdk-memory-agent` fails for any reason, skip and continue.
 
 ### 1. Initialize Analysis Context
 

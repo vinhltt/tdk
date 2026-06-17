@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "3.4.12"
+  version: "5.0.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -162,7 +162,8 @@ STOP before writing `plan.md`, `phases/*.md`, `research/*.md`, `data-model.md`, 
 
 ### Phase 0.guardian — Business Logic Validation
 Load: `references/gates.md` <!-- semantics in same file as Step 0.memory -->
-Spawn `memory-guardian` agent. Read Guardian Report; act per `BLOCK_IMPL` / `REVIEW` / `CLEAR` outcome.
+Spawn `tdk-memory-agent` agent with `--mode validate`. Read Guardian Report; act per `BLOCK_IMPL` / `REVIEW` / `CLEAR` outcome.
+If the report returns `STATUS: MCP_UNAVAILABLE`, preserve the guardian fallback behavior from `references/gates.md`; do not weaken the plan blocking gate.
 
 ### Step 4 — Report Results
 **Inline.** <!-- terminal output, <10 lines -->

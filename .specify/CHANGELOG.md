@@ -10,6 +10,26 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.70.0] - 2026-06-17
+
+### Added
+- **[tdk-memory]** Added new `tdk-memory-agent` agent to handle unified memory validation and loading.
+- **[Scripts]** Added contract tests for the new `tdk-memory-agent`.
+
+### Changed
+- **[tdk-core]** Updated core skills to integrate with the new `tdk-memory-agent` validation mode:
+  - Updated `tdk-specify` to run memory validation and handle business-conflict resolutions
+  - Updated `tdk-clarify` to parse the Guardian Report and generate clarification questions
+  - Updated `tdk-analyze` to write Guardian Report findings to the analysis report
+  - Updated `tdk-plan` to run the new agent in Phase 0.guardian and Step 0.memory
+- **[tdk-memory]** Updated `tdk-memory-update` requirements to remove the deleted preload skill.
+- **[Scripts]** Updated test harness for legacy tree removal and prefix transforms.
+
+### Removed
+- **[tdk-memory]** Removed legacy memory components:
+  - `memory-guardian` agent (was 0.1.2)
+  - `tdk-memory-preload` skill (was 0.0.8)
+
 ## [1.69.0] - 2026-06-15
 
 ### Added

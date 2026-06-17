@@ -4,6 +4,17 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.0.0] - 2026-06-17
+
+### Added
+- Added new tdk-memory-agent agent to handle unified memory validation and loading
+
+### Changed
+- Updated tdk-memory-update requirements to remove the deleted preload skill
+
+### Removed
+- Removed legacy memory components: memory-guardian agent (was 0.1.2) and tdk-memory-preload skill (was 0.0.8)
+
 ## [1.0.0] - 2026-06-15
 
 ### Added

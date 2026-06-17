@@ -88,7 +88,7 @@ Each template defines: `question` body, 3 substantive options + 1 `Skip this que
 
 ```yaml
 - id: memory.conflicts
-  question: "Has the memory-guardian's report been addressed for every CONFLICT it raised?"
+  question: "Has the tdk-memory-agent's report been addressed for every CONFLICT it raised?"
   options:
     - { label: "All CONFLICTs resolved or explicitly accepted in plan.md", action: no-op }
     - { label: "Some CONFLICTs deferred — listed under ## Memory Constraints", action: revise }

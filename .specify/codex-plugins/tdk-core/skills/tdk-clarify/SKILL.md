@@ -2,7 +2,7 @@
 name: tdk-clarify
 description: "Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec."
 metadata:
-  version: "3.4.11"
+  version: "5.0.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -69,18 +69,25 @@ Store: `TASK_ID`, `TASK_ID_SOURCE`.
 Invoke `tdk-load-project-context` with validated `TASK_ID`.
 Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
-### Step 0.memory: Memory Context Pre-load
+### Step 0.memory: Memory Validation
 
 **Only if `.specify/memory/memory-index.md` exists** (check silently, non-blocking):
 
-1. Invoke `tdk-memory-preload` skill with feature description from the loaded `spec.md`.
-2. If Context Block returned: use it as reference when generating clarification questions.
-   - Prioritize questions about areas where spec conflicts with or is missing CONSTRAINTS & WARNINGS from Context Block.
-   - Note in `spec.md` frontmatter: `memory_context_loaded: true`
-3. If memory not initialized or no relevant context: proceed normally.
+1. Load the draft `spec.md`, including existing `## Clarifications`.
+2. Spawn `tdk-memory-agent` agent with `--mode validate` and the draft spec content.
+3. Parse the Guardian Report into candidate clarification questions:
+   - conflicts -> clarification questions for missing, ambiguous, or contradictory requirements.
+   - warnings -> optional review questions when the answer would materially reduce downstream rework.
+   - clear -> continue normal clarify flow.
+   - `STATUS: MCP_UNAVAILABLE`, memory not initialized, no relevant memory, or agent failure -> skip memory validation without prompting or failing.
+4. Duplicate prevention:
+   - Read existing `## Clarifications` session content.
+   - If `/tdk-specify` already recorded the same resolution, do not ask again.
+5. Frontmatter semantics:
+   - Note in `spec.md` frontmatter: `memory_context_loaded: true` only when a usable Guardian Report was returned.
    - Note in `spec.md` frontmatter: `memory_context_loaded: false`
 
-**This step MUST NOT block or error.** If `tdk-memory-preload` fails for any reason, skip and continue.
+**This step MUST NOT block or error.** If `tdk-memory-agent` fails for any reason, skip and continue.
 
 ### Execution Steps
 
