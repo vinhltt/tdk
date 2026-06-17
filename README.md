@@ -105,12 +105,14 @@ bun src/commands/manifest/compute.ts --root ../..
 ```
 .specify/
 ├── plugins/              # Marketplace plugins (installed by setup.sh)
-│   ├── tdk-core/            # Core workflow (16 skills)
-│   ├── tdk-utils/           # Utilities: scout, research, problem solving (14 skills)
-│   ├── tdk-memory/          # Domain memory management (6 skills)
-│   └── tdk-test-api/        # API test generation (3 skills)
-├── templates/            # 33 templates (spec, plan, task, test, memory, output, design, docs)
-├── docs/                 # 26 user guides (12 scenario guides + setup guides + reference)
+│   ├── tdk-core/            # Core workflow (15 skills + 1 agent)
+│   ├── tdk-utils/           # Utilities: scout, research, problem solving (14 skills + 5 agents)
+│   ├── tdk-memory/          # Domain memory management (5 skills + 1 agent)
+│   ├── tdk-test-api/        # API test generation (3 skills)
+│   ├── tdk-retro/           # Retrospective learning loop (4 skills)
+│   └── tdk-scaffold/        # Skill/agent scaffolding (2 skills)
+├── templates/            # 34 templates (spec, plan, task, test, memory, output, design, docs)
+├── docs/                 # 25 user guides (12 scenario guides + setup guides + reference)
 ├── configurations/       # Hook configs, sub-workspace configs
 └── scripts/
     ├── ts/               # TypeScript CLI (@tdk/tdk) — primary
@@ -119,7 +121,7 @@ bun src/commands/manifest/compute.ts --root ../..
     │   │   ├── commands/        # 8 command groups + standalone scripts
     │   │   ├── lib/             # Library modules (parsers, generators)
     │   │   └── utils/           # Zod schemas, shared utilities
-    │   └── tests/               # Bun test suite (30+ test files)
+    │   └── tests/               # Bun test suite (89 .test.ts files)
     ├── bash/             # Legacy shell scripts (maintenance-only)
     └── python/           # Legacy Python utilities (maintenance-only)
 ```
@@ -128,10 +130,12 @@ bun src/commands/manifest/compute.ts --root ../..
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
-| **tdk-core** | 16 | Specify, plan, implement, fix, config, sub-workspace, ut-backfill |
-| **tdk-utils** | 14 | Scout, research, brainstorming, docs-seeker, context-engineering, problem-solving |
-| **tdk-memory** | 6 | Domain memory: init, update, checksum, changelog, query, preload |
+| **tdk-core** | 15 skills + 1 agent | Specify, plan, implement, fix, config, sub-workspace, ut-backfill |
+| **tdk-utils** | 14 skills + 5 agents | Scout, research, brainstorming, docs-seeker, context-engineering, problem-solving |
+| **tdk-memory** | 5 skills + 1 agent | Domain memory: init, update, checksum, changelog, query, and tdk-memory-agent |
 | **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |
+| **tdk-retro** | 4 | Retrospective feedback collection, learning proposal, and approved-delta application |
+| **tdk-scaffold** | 2 | Skill/agent scaffolding from approved automation recommendations |
 
 ## CLI Commands
 

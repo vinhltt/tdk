@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'bun:test';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 
+const PROJECT_ROOT = resolve(import.meta.dir, '../../../..');
+const SPECIFY_DIR = resolve(PROJECT_ROOT, '.specify');
 const PLUGINS_DIR = resolve(import.meta.dir, '../../../plugins');
+const CODEX_PLUGINS_DIR = resolve(SPECIFY_DIR, 'codex-plugins');
+const SPECIFY_DOCS_DIR = resolve(SPECIFY_DIR, 'docs');
+const README = resolve(PROJECT_ROOT, 'README.md');
 const AGENT = resolve(PLUGINS_DIR, 'tdk-memory/agents/tdk-memory-agent.md');
 const OLD_AGENT = resolve(PLUGINS_DIR, 'tdk-memory/agents/memory-guardian.md');
 const TDK_SPECIFY = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-specify/SKILL.md');
@@ -10,6 +15,13 @@ const TDK_CLARIFY = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-clarify/SKILL.md')
 const TDK_ANALYZE = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-analyze/SKILL.md');
 const TDK_PLAN = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-plan/SKILL.md');
 const TDK_PLAN_GATES = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-plan/references/gates.md');
+const LEGACY_ACTIVE_TERMS = ['memory-guardian', 'tdk-memory-preload'];
+const ALLOWED_HISTORICAL_LINES = new Map([
+  [
+    resolve(PLUGINS_DIR, 'tdk-memory/CHANGELOG.md'),
+    ['- Removed legacy memory components: memory-guardian agent (was 0.1.2) and tdk-memory-preload skill (was 0.0.8)'],
+  ],
+]);
 
 function read(path: string): string {
   return readFileSync(path, 'utf-8');
@@ -46,6 +58,20 @@ function walkFiles(dir: string): string[] {
     }
   }
   return results;
+}
+
+function walkPaths(path: string): string[] {
+  if (statSync(path).isFile()) return [path];
+
+  const results = [path];
+  for (const entry of readdirSync(path, { withFileTypes: true })) {
+    results.push(...walkPaths(join(path, entry.name)));
+  }
+  return results;
+}
+
+function isAllowedHistoricalLine(file: string, line: string): boolean {
+  return ALLOWED_HISTORICAL_LINES.get(file)?.includes(line.trim()) ?? false;
 }
 
 describe('tdk-memory-agent contract', () => {
@@ -96,13 +122,30 @@ describe('tdk-memory-agent contract', () => {
     expect(validateSection).toContain('Context Block');
   });
 
-  it('no file in plugins/ references tdk-memory-preload', () => {
-    const allFiles = walkFiles(PLUGINS_DIR);
-    for (const file of allFiles) {
-      if (!statSync(file).isFile()) continue;
-      const content = readFileSync(file, 'utf-8');
-      expect(content).not.toContain('tdk-memory-preload');
+  it('active TDK artifacts do not reference stale memory agent names as current behavior', () => {
+    const activeSurfaces = [PLUGINS_DIR, CODEX_PLUGINS_DIR, SPECIFY_DOCS_DIR, README];
+    const violations: string[] = [];
+
+    for (const path of activeSurfaces.flatMap(walkPaths)) {
+      const relativePath = relative(PROJECT_ROOT, path);
+      for (const term of LEGACY_ACTIVE_TERMS) {
+        if (relativePath.includes(term)) {
+          violations.push(`${relativePath}: path contains ${term}`);
+        }
+      }
+
+      if (!statSync(path).isFile()) continue;
+      const content = readFileSync(path, 'utf-8');
+      content.split(/\r?\n/).forEach((line, index) => {
+        for (const term of LEGACY_ACTIVE_TERMS) {
+          if (line.includes(term) && !isAllowedHistoricalLine(path, line)) {
+            violations.push(`${relativePath}:${index + 1}: contains ${term}`);
+          }
+        }
+      });
     }
+
+    expect(violations).toEqual([]);
   });
 
   it('defines Guardian Report taxonomy and action values', () => {
