@@ -10,6 +10,11 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.73.0] - 2026-06-20
+
+### Added
+- **[General]** Added TDK primary workflow routing rules to document canonical order and routing of TDK developer workflow intent to corresponding TDK skills.
+
 ## [1.72.0] - 2026-06-17
 
 ### Added

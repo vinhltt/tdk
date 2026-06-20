@@ -1,8 +1,8 @@
 # TDK - TiHon Development Kit
 
-**TDK (TiHon Development Kit)** is a specification-driven coding workflow toolkit for Claude Code. It generates specs, plans, tasks, and code from natural language — shipped as a set of marketplace plugins + a TypeScript CLI.
+**TDK (TiHon Development Kit)** is a specification-driven coding workflow toolkit for Claude Code. It generates specs, portable task breakdowns, plans, and code from natural language — shipped as a set of marketplace plugins + a TypeScript CLI.
 
-Core philosophy: **SDD (Specification-Driven Development)** — every feature starts from a formal spec, flows through structured plans and tasks, and is verified against the spec before shipping.
+Core philosophy: **SDD (Specification-Driven Development)** — every feature starts from a formal spec, can produce portable work items, flows through structured plans, and is verified against the spec before shipping.
 
 ## Workflow Overview
 
@@ -19,10 +19,11 @@ TDK works as a closed development loop:
 TDK structures the full development loop:
 
 1. **Specify** — generate feature specs from natural language (`/tdk:specify`)
-2. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
-3. **Implement** — execute plans with guided task tracking (`/tdk-implement`)
-4. **Verify** — auto-backfill unit tests, check rules, validate coverage (`/tdk:ut-backfill-auto`)
-5. **Track** — status dashboards, checklists, progress sync (`/tdk:status`, `/tdk:tasks`)
+2. **Break down** — optionally turn clarified specs into portable Markdown work items (`/tdk-task-breakdown`)
+3. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
+4. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
+5. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
+6. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
 
 Additional workflows: config management, sub-workspace docs generation, scout (codebase analysis), memory management, API test generation.
 
@@ -36,11 +37,11 @@ Additional workflows: config management, sub-workspace docs generation, scout (c
 ### Install into a Consumer Project
 
 ```bash
-# From the consumer project root:
-bash /path/to/tdk/setup.sh
+# From the consumer project root after TDK .specify/ is present:
+bash .specify/setup.sh
 ```
 
-This installs TDK's marketplace plugins, templates, and configurations into the consumer project's `.specify/` directory.
+This bootstraps prerequisites, installs TypeScript dependencies, runs setup checks, and registers TDK plugin metadata from the consumer project's `.specify/` directory.
 
 Install harness artifacts explicitly after the substrate sync from the consumer project root:
 
@@ -105,7 +106,7 @@ bun src/commands/manifest/compute.ts --root ../..
 ```
 .specify/
 ├── plugins/              # Marketplace plugins (installed by setup.sh)
-│   ├── tdk-core/            # Core workflow (15 skills + 1 agent)
+│   ├── tdk-core/            # Core workflow (16 skills + 1 agent)
 │   ├── tdk-utils/           # Utilities: scout, research, problem solving (14 skills + 5 agents)
 │   ├── tdk-memory/          # Domain memory management (5 skills + 1 agent)
 │   ├── tdk-test-api/        # API test generation (3 skills)
@@ -118,19 +119,18 @@ bun src/commands/manifest/compute.ts --root ../..
     ├── ts/               # TypeScript CLI (@tdk/tdk) — primary
     │   ├── src/
     │   │   ├── index.ts         # Unified CLI entry
-    │   │   ├── commands/        # 8 command groups + standalone scripts
+    │   │   ├── commands/        # Integrated command groups + standalone scripts
     │   │   ├── lib/             # Library modules (parsers, generators)
     │   │   └── utils/           # Zod schemas, shared utilities
-    │   └── tests/               # Bun test suite (89 .test.ts files)
-    ├── bash/             # Legacy shell scripts (maintenance-only)
-    └── python/           # Legacy Python utilities (maintenance-only)
+    │   └── tests/               # Bun test suite (90 .test.ts files)
+    └── bash/             # Legacy shell scripts (maintenance-only)
 ```
 
 ## Plugins
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
-| **tdk-core** | 15 skills + 1 agent | Specify, plan, implement, fix, config, sub-workspace, ut-backfill |
+| **tdk-core** | 16 skills + 1 agent | Specify, task breakdown, plan, implement, fix, config, sub-workspace, ut-backfill |
 | **tdk-utils** | 14 skills + 5 agents | Scout, research, brainstorming, docs-seeker, context-engineering, problem-solving |
 | **tdk-memory** | 5 skills + 1 agent | Domain memory: init, update, checksum, changelog, query, and tdk-memory-agent |
 | **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |
@@ -146,11 +146,9 @@ Integrated commands (via `bun src/index.ts`):
 | `tdk config detect` | Detect `.specify.json` configuration |
 | `tdk config index` | Index configuration files |
 | `tdk config diff` | Compare docs between workspace and sub-workspace |
-| `tdk ut auto` | Automated unit test backfill |
-| `tdk ut plan` | Plan unit test coverage |
-| `tdk ut impl` | Implement unit tests from plan |
-| `tdk ut check-rules` | Validate UT rules |
-| `tdk ut create-rules` | Generate UT rules |
+| `tdk ut backfill auto` | Automated unit test backfill |
+| `tdk ut backfill plan` | Plan unit test coverage |
+| `tdk ut backfill impl` | Implement unit tests from plan |
 | `tdk scout` | Codebase analysis (repomix + tier-1 extraction) |
 | `tdk harness install` | Install selected TDK plugin artifacts into `.claude/` or preconverted `.codex/` + `.agents/skills/` targets with dry-run, saved install settings, prefix rewrite, ownership, collision, and drift safety |
 | `tdk harness convert` | Maintainer-only command that emits generated Codex packages under `.specify/codex-plugins/<plugin>/` and checks converter freshness |
