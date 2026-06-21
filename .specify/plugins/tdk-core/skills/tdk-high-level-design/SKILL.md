@@ -2,7 +2,7 @@
 name: tdk-high-level-design
 description: "Turn a clarified spec.md into approval-level high-level design artifacts. Use after /tdk-clarify and before /tdk-task-breakdown for greenfield features."
 metadata:
-  version: "5.3.0"
+  version: "5.4.1"
 ---
 
 # tdk-high-level-design
@@ -34,6 +34,7 @@ Trigger: `/tdk-high-level-design <task-id> [--greenfield] [--force]`
 - Create GitHub, GitLab, Backlog, or other tracker issues, or call tracker APIs/CLIs
 
 HLD is approval/product/system design. Implementation execution belongs to `/tdk-plan`.
+HLD enriches existing spec requirements; it does not become a second PRD or requirement source.
 
 ## Skill References
 
@@ -93,7 +94,7 @@ Do not invent file paths, APIs, database tables, owners, estimates, or labels un
 Generate the six artifacts from the templates under `.specify/templates/high-level-design/`, following the contract:
 - Cite `UR-*/FR-*/SC-*` only; enrich existing requirements, never mint new IDs.
 - Originate design detail (technical assumptions, integration, security, operability) only in `project-and-technical-overview.md`, and mark every originated entry `assumed`.
-- Route any genuinely new requirement to `decisions-and-risks.md` as a non-blocking follow-up (re-run specify/clarify).
+- If HLD surfaces a genuinely new requirement, record it only as a non-blocking follow-up in `decisions-and-risks.md`.
 - Text-first; Mermaid optional.
 
 ### Step 6 - Duplicate Directory Handling

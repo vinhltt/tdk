@@ -23,7 +23,7 @@ status: "draft"
 
 | Artifact | Purpose | Primary Spec Sources |
 |----------|---------|----------------------|
-| [requirement-overview.md](./requirement-overview.md) | Problem, actors, scope, requirement map, non-functional goals | §1, §2, §5, §6, §7 |
+| [requirement-overview.md](./requirement-overview.md) | Source references, covered IDs, design implications | §1, §2, §5, §6, §7 |
 | [project-and-technical-overview.md](./project-and-technical-overview.md) | System context, module impact, technical assumptions, integration, security | §3 + originated design detail |
 | [data-flow.md](./data-flow.md) | Key entities, read/write flows, external dependencies, state | §6 Key Entities, §6 FR-* |
 | [screen-flow.md](./screen-flow.md) | Primary journeys, screen list, step table, branch conditions | §5 acceptance + journeys |

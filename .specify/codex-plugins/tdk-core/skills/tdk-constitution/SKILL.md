@@ -2,7 +2,7 @@
 name: tdk-constitution
 description: "Create or update the project constitution and constitution-owned project knowledge artifacts from interactive or provided principle inputs"
 metadata:
-  version: 4.1.0
+  version: 5.4.0
 ---
 
 ## ⛔ CRITICAL: Error Handling

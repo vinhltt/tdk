@@ -2,7 +2,7 @@
 name: tdk-task-breakdown
 description: "Generate portable Markdown work-item artifacts from a clarified spec. Use after /tdk-clarify and before tracker-specific issue sync owned by the consumer project."
 metadata:
-  version: "5.3.0"
+  version: "5.4.0"
 ---
 
 # tdk-task-breakdown

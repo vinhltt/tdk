@@ -2,7 +2,7 @@
 name: tdk-specify
 description: "Create or update the feature specification from a natural language feature description. Default: full brainstorm with Option A/B. Use --fast for single recommendation without brainstorm."
 metadata: 
-  version: "5.4.0"
+  version: "5.4.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -128,6 +128,8 @@ test -f "$DISCOVERY_INDEX" && echo "DISCOVERY_CONTEXT=$DISCOVERY_INDEX" || echo 
 If `discovery/index.md` exists, read it as optional context before spec generation.
 Do not require discovery for normal specify flow.
 Discovery is context only. Only `tdk-specify` mints `UR-*`, `FR-*`, and `SC-*`.
+Use discovery for concise source references in `## 1. Problem Statement` and `## 4. Evaluated Approaches`; do not copy discovery prose wholesale into `spec.md`.
+Do not copy discovery content into `UR-*`, `FR-*`, or `SC-*`; derive explicit spec requirements from it.
 
 ### Step 0.3 — Mode Detection
 
@@ -226,7 +228,7 @@ Store: `SPEC_MODE`, `MODE_SOURCE`, `PRELIMINARY_MODE` (only set during auto-dete
 
     3. Generate all 9 sections in order:
 
-       **## 1. Problem Statement**: Extract from user description — concrete problem, who is affected, why this feature is needed now. Reject vague statements ("improve UX").
+       **## 1. Problem Statement**: Extract from user description — concrete problem, who is affected, why this feature is needed now. If discovery context exists, write a concise PRD problem summary and reference `discovery/problem.md` or `discovery/index.md` instead of copying discovery prose. Without discovery, keep extracting this section directly from user input. Reject vague statements ("improve UX").
 
        **## 2. Scope Boundary**: In-scope items with rationale, out-of-scope items with YAGNI reasoning. Must have ≥1 in-scope + ≥1 out-of-scope.
        - **Full mode**: Apply embedded brainstorm at every scope decision.
@@ -235,6 +237,8 @@ Store: `SPEC_MODE`, `MODE_SOURCE`, `PRELIMINARY_MODE` (only set during auto-dete
        **## 3. Impact Surface**: Insert IMPACT_SURFACE table from Step 1.5. If monolith: "N/A — monolith project".
 
        **## 4. Evaluated Approaches**:
+
+       If discovery context exists, summarize the selected MVP boundary and reference `discovery/mvp-scope.md` or `discovery/index.md` instead of restating full discovery rationale. Without discovery, keep the current full/fast mode behavior below.
 
        **If SPEC_MODE = full:**
        Apply embedded brainstorm technique. 2-3 scope-level options evaluating MVP boundary (what to include vs exclude). **Constraint: scope-level ONLY — no tech/framework/library mentions.** Format:

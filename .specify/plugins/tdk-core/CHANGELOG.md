@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.4.1] - 2026-06-21
+
+### Changed
+- Reframe requirement-overview.md as reference-first design context instead of PRD restatement; clarify HLD enriches existing spec requirements without becoming a second requirement source
+- Add discovery-aware guidance: reference discovery/ artifacts in §1 and §4 instead of copying prose; prevent discovery content from leaking into UR-*/FR-*/SC-* IDs
+- Sync codex mirror version for tdk-constitution (4.1.0 → 5.4.0)
+- Sync codex mirror version for tdk-task-breakdown (5.3.0 → 5.4.0); preserve downstream citation authority
+
 ## [5.4.0] - 2026-06-21
 
 ### Added

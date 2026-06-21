@@ -10,6 +10,23 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.77.0] - 2026-06-21
+
+### Added
+- **[Scripts]** Contract tests for HLD and tdk-specify discovery integration
+  - `tdk-hld-requirement-overview-reference-contract.test.ts` — verifies requirement-overview stays reference-first
+  - `tdk-specify-discovery-cleanup-contract.test.ts` — verifies discovery is optional context, not copied into spec
+
+### Changed
+- **[tdk-high-level-design]** Reframe `requirement-overview.md` as reference-first design context instead of PRD restatement; clarify HLD enriches existing spec requirements without becoming a second requirement source
+- **[tdk-specify]** Add discovery-aware guidance: reference `discovery/` artifacts in §1 and §4 instead of copying prose; prevent discovery content from leaking into UR-*/FR-*/SC-* IDs
+- **[tdk-constitution]** Sync codex mirror version (4.1.0 → 5.4.0)
+- **[tdk-task-breakdown]** Sync codex mirror version (5.3.0 → 5.4.0); preserve downstream citation authority (HLD never becomes citation source)
+- **[Templates]** Update HLD and spec templates for reference-first design context
+  - `requirement-overview.md.tpl` — replace PRD restatement placeholders with source-pointer placeholders
+  - `index.md.tpl` — update artifact table to "Source references, covered IDs, design implications"
+  - `spec-template.md.tpl` — add altitude boundary comment and discovery-aware hints for §1/§4
+
 ## [1.76.0] - 2026-06-21
 
 ### Added

@@ -3,6 +3,7 @@
 This reference is the single source of truth for `/tdk-high-level-design` Markdown artifacts.
 
 High-level design (HLD) is the approval-level design stage between a clarified `spec.md` and `/tdk-task-breakdown`. It turns clarified requirements into product/system design artifacts. It does not produce implementation plans, code, tasks, or tracker issues.
+`requirement-overview.md` is reference-first design context, not a PRD restatement.
 
 ## Output Directory
 
@@ -51,7 +52,7 @@ status: "draft"
 
 | Artifact | Purpose | Primary Spec Sources |
 |----------|---------|----------------------|
-| [requirement-overview.md](./requirement-overview.md) | Problem, actors, scope, requirement map, non-functional goals | §1, §2, §5, §6, §7 |
+| [requirement-overview.md](./requirement-overview.md) | Source references, covered IDs, design implications | §1, §2, §5, §6, §7 |
 | [project-and-technical-overview.md](./project-and-technical-overview.md) | System context, module impact, technical assumptions, integration, security | §3 + originated design detail |
 | [data-flow.md](./data-flow.md) | Key entities, read/write flows, external dependencies, state | §6 Key Entities, §6 FR-* |
 | [screen-flow.md](./screen-flow.md) | Primary journeys, screen list, step table, branch conditions | §5 acceptance + journeys |
@@ -81,6 +82,8 @@ Each artifact is text-first. Mermaid blocks are optional and must be clearly mar
 ## Requirement Map          # UR-* / FR-* / SC-* table, cited from spec
 ## Non-Functional Goals     # measurable outcomes from §7 (SC-*)
 ```
+
+Mapping means source reference and design implication, not copied PRD prose.
 
 ### project-and-technical-overview.md
 

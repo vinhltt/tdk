@@ -13,6 +13,12 @@ schema_version: 1
 ---
 # Feature Specification: [FEATURE NAME]
 
+<!--
+  Product-wide durable facts belong in constitution/product-context.md.
+  Discovery is epic context.
+  Spec is the PRD and requirement-ID source of truth.
+-->
+
 ## 1. Problem Statement *(mandatory)*
 
 <!--
@@ -20,6 +26,7 @@ schema_version: 1
   - Who is affected? (specific actors/roles)
   - What is the current pain point?
   - Why does this feature need to exist now?
+  When discovery exists, summarize the problem and point to `discovery/problem.md` or `discovery/index.md`.
   Avoid vague statements like "improve UX" or "make it better."
 -->
 
@@ -57,6 +64,7 @@ schema_version: 1
 <!--
   Scope-level options ONLY. No implementation details, no tech/framework/library mentions.
   Evaluate MVP boundary: what to include vs exclude.
+  When discovery exists, summarize the selected MVP boundary and point to `discovery/mvp-scope.md` or `discovery/index.md`.
 -->
 
 ### Option A: [Approach Name]
