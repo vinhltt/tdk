@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-specify -> /tdk-clarify -> optional /tdk-task-breakdown -> /tdk-plan -> /tdk-implement
+/tdk-specify -> /tdk-clarify -> optional /tdk-high-level-design -> optional /tdk-task-breakdown -> /tdk-plan -> /tdk-implement
 ```
 
 ## Step-by-Step
@@ -32,17 +32,27 @@ Type in Claude Code chat:
 
 **Output**: `spec.md` updated with `## Clarifications` section
 
-### 3. Generate portable work items (optional)
+### 3. Produce high-level design (optional, greenfield)
+
+```
+/tdk-high-level-design feat-001
+```
+
+**What happens**: For greenfield features, Claude turns the clarified `spec.md` into six approval-level design artifacts under `high-level-design/` (requirement overview, project/technical overview, data flow, screen flow, decisions & risks, plus an `index.md` manifest). Strict-blocks if `## 9. Unresolved Questions` is not `None`. Optional and backward-compatible: existing users can skip straight to `task-breakdown` or `plan`.
+
+**Output**: `high-level-design/index.md` + 5 design artifacts
+
+### 4. Generate portable work items (optional)
 
 ```
 /tdk-task-breakdown feat-001
 ```
 
-**What happens**: Claude reads the clarified `spec.md`, strict-blocks if `## 9. Unresolved Questions` is not `None`, and writes tracker-neutral Markdown work items under `tasks-breakdown/`.
+**What happens**: Claude reads the clarified `spec.md`, strict-blocks if `## 9. Unresolved Questions` is not `None`, and writes tracker-neutral Markdown work items under `tasks-breakdown/`. When `high-level-design/` exists, it is read as optional enrichment context only.
 
 **Output**: `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md`
 
-### 4. Generate the implementation plan
+### 5. Generate the implementation plan
 
 ```
 /tdk-plan feat-001
@@ -52,7 +62,7 @@ Type in Claude Code chat:
 
 **Output**: `plan.md`, `research/`, `data-model.md`, `contracts/` (as needed)
 
-### 5. (Optional) Quality gate — analyze
+### 6. (Optional) Quality gate — analyze
 
 ```
 /tdk-analyze feat-001
@@ -60,7 +70,7 @@ Type in Claude Code chat:
 
 **What happens**: Non-destructive analysis checks consistency between spec and plan. Reports gaps, contradictions, and coverage issues. No files modified.
 
-### 6. Implement from plan
+### 7. Implement from plan
 
 ```
 /tdk-implement feat-001
@@ -74,7 +84,7 @@ To run one phase only:
 /tdk-implement feat-001 --phase 03
 ```
 
-### 7. Track progress
+### 8. Track progress
 
 ```
 /tdk-status feat-001
@@ -85,6 +95,7 @@ Run at any point to see a progress bar, completed phases, and recommendations.
 ## Tips
 
 - If your feature is small and well-understood, skip `clarify` and go straight to `plan`.
+- Use `high-level-design` on greenfield features when stakeholders need an approval-level design before breakdown or planning; it is optional and existing flows are unaffected when skipped.
 - Use `task-breakdown` when you need portable issue-sized Markdown files before planning or tracker sync.
 - Run `analyze` before `implement` to catch inconsistencies early.
 - Use `status` after interruptions to see where you left off.

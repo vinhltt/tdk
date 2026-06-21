@@ -2,7 +2,7 @@
 name: tdk-task-breakdown
 description: "Generate portable Markdown work-item artifacts from a clarified spec. Use after /tdk-clarify and before tracker-specific issue sync owned by the consumer project."
 metadata:
-  version: "5.2.1"
+  version: "5.3.0"
 ---
 
 # tdk-task-breakdown
@@ -56,6 +56,12 @@ Read `{FEATURE_DIR}/spec.md`.
 
 If the file is missing, STOP and tell the user to run `/tdk-specify {TASK_ID}` and `/tdk-clarify {TASK_ID}` first.
 
+### Step 1.5 - Optional HLD Context
+
+If `{FEATURE_DIR}/high-level-design/index.md` exists, read the artifacts it lists as enrichment context. If it is absent, silently continue with no change in behavior.
+
+HLD is enrichment only: it may sharpen task objective, scope, and dependency wording. It is never a citation source and never relaxes the citation rules. Citations remain `UR-*/FR-*/SC-*` from `spec.md`.
+
 ### Step 2 - Unresolved Questions Gate
 
 Find `## 9. Unresolved Questions` in `spec.md`.
@@ -91,6 +97,7 @@ Create issue-sized tasks from the extracted requirements:
 - Each task should be independently understandable outside TDK.
 - Keep plan-phase sequencing out of scope unless the spec already states an ordering constraint.
 - Prefer fewer coherent tasks over fragmented one-line tasks.
+- When HLD context is present (Step 1.5), it may enrich objective, scope, and dependency wording only; citations stay `UR-*/FR-*/SC-*` from the spec.
 
 If a work-item is large enough to be its own sub-feature (its own requirements, clarify, and plan), it can be **promoted** into an independent child spec instead of being tracked as a task here. See `.specify/docs/guides/promote-convention.md` for the manual promote flow and the work-item-vs-child-spec sizing rule.
 

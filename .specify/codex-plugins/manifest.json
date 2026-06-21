@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-21T02:48:14Z",
+  "generated_at": "2026-06-21T05:24:01Z",
   "plugins": {
     "tdk-core": {
       "version": "5.2.1",
@@ -28,6 +28,8 @@
         "skills/tdk-config-sync/SKILL.md": "f28251b269a168bba17983fa028c3f26851236387fd97bbaf364dd00d62e52ba",
         "skills/tdk-constitution/SKILL.md": "6a7b6ef35856065a338e69dbb31f4376cfd442bcbbd36092564b7cefa60e79e6",
         "skills/tdk-constitution/templates/constitution.md.tpl": "30f0531720fdc8ff99135bcf7705277f5ba3711bb5aa040dbae2b46e7041cfe6",
+        "skills/tdk-high-level-design/SKILL.md": "0f16809f58041a026d6e3b24c37140104fc450041cefbaf73ae672a889f42963",
+        "skills/tdk-high-level-design/references/high-level-design-output-contract.md": "4d05697f3289175336c8223e2a5e0ab1b3cf7958110ede3ac67fb84d75e92e3a",
         "skills/tdk-implement/SKILL.md": "c4de40f65441e71013f5ff6c1a891f1f65a4c24ba06d46c304035d7ae892014a",
         "skills/tdk-implement/references/phase-execution.md": "13c49525313e4524c355ca3f620f4fd6d5e06a90be63eb9aa5f99ed4240c4a63",
         "skills/tdk-implement/references/project-and-phase-contract.md": "93bafb807ab3a4e4272c9264e5c8da1edc9b42a862f29e9a68d4112bb04abbe2",
@@ -54,8 +56,8 @@
         "skills/tdk-sub-workspace-docs/SKILL.md": "9cbac44ba7bf6a8cc3574c3b551b39d7af31380fba2554db73369b54caf3211b",
         "skills/tdk-sub-workspace-init/SKILL.md": "addc5fa7f6507d78666406f0c0598fc91adcd67600c9aed9c142142b9f99dc42",
         "skills/tdk-sub-workspace-list/SKILL.md": "048d5207d474ab4e349e4ad9b32d0ed1da3727de44eb49e720e32a8316fbe04e",
-        "skills/tdk-task-breakdown/SKILL.md": "c75be456b367199140d16d29f85736f0245fdb5008881fbec971108678b4df65",
-        "skills/tdk-task-breakdown/references/task-breakdown-output-contract.md": "9ef850f905114a9cc178a0126cfad956cc8791ddef2fc2848caa98f2f18fafb9",
+        "skills/tdk-task-breakdown/SKILL.md": "642d3af865536b0fb2b62344e067c47aac4c8e7dd5353f0d59b0000855dc0659",
+        "skills/tdk-task-breakdown/references/task-breakdown-output-contract.md": "c6756ee9b7536e376561e43c5b30652a5f806c8da2718fffacbb08b3111ad4bc",
         "skills/tdk-ut-backfill-plan/SKILL.md": "49ee3011761a91c7fa73b78af225f10447b379c496fb44bbb807f5da81413530"
       }
     },

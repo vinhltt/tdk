@@ -19,11 +19,12 @@ TDK works as a closed development loop:
 TDK structures the full development loop:
 
 1. **Specify** — generate feature specs from natural language (`/tdk:specify`)
-2. **Break down** — optionally turn clarified specs into portable Markdown work items (`/tdk-task-breakdown`)
-3. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
-4. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
-5. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
-6. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
+2. **Design** — optionally produce approval-level high-level design artifacts for greenfield features (`/tdk-high-level-design`)
+3. **Break down** — optionally turn clarified specs into portable Markdown work items (`/tdk-task-breakdown`)
+4. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
+5. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
+6. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
+7. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
 
 Additional workflows: config management, sub-workspace docs generation, scout (codebase analysis), memory management, API test generation.
 
@@ -106,7 +107,7 @@ bun src/commands/manifest/compute.ts --root ../..
 ```
 .specify/
 ├── plugins/              # Marketplace plugins (installed by setup.sh)
-│   ├── tdk-core/            # Core workflow (16 skills + 1 agent)
+│   ├── tdk-core/            # Core workflow (17 skills + 1 agent)
 │   ├── tdk-utils/           # Utilities: scout, research, problem solving (14 skills + 5 agents)
 │   ├── tdk-memory/          # Domain memory management (5 skills + 1 agent)
 │   ├── tdk-test-api/        # API test generation (3 skills)

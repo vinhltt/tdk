@@ -132,7 +132,7 @@ The Tihon command suite provides a **specification-driven development** workflow
 
 **Primary flow**: `specify` -> `clarify` -> optional `task-breakdown` -> `plan` -> `implement`
 
-Each command reads the output of the previous one, building a chain of artifacts: `spec.md` -> optional `tasks-breakdown/` -> `plan.md` (with ## Phases table) -> source code.
+Each command reads the output of the previous one, building a chain of artifacts: `spec.md` -> optional `high-level-design/` -> optional `tasks-breakdown/` -> `plan.md` (with ## Phases table) -> source code.
 
 ---
 
@@ -143,10 +143,11 @@ Each command reads the output of the previous one, building a chain of artifacts
 | 1 | `/tdk-specify <id> <desc>` | Create feature specification from natural language |
 | 2 | `/tdk-specify <id> <desc> --fast` | Quick specification (skips brainstorm, fewer tokens) |
 | 3 | `/tdk-clarify <id>` | Ask up to 5 targeted questions to fill spec gaps |
-| 4 | `/tdk-task-breakdown <id>` | Generate portable Markdown work-item files from a clarified spec |
-| 5 | `/tdk-ba-requirement <id>` | Generate BA requirement document for stakeholder approval |
-| 6 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
-| 7 | `/tdk-api-design <id>` | Generate detailed API design (Scenario A/B) with DB schema for approval |
+| 4 | `/tdk-high-level-design <id> [--greenfield] [--force]` | Generate approval-level high-level design artifacts from a clarified spec (greenfield, optional) |
+| 5 | `/tdk-task-breakdown <id>` | Generate portable Markdown work-item files from a clarified spec |
+| 6 | `/tdk-ba-requirement <id>` | Generate BA requirement document for stakeholder approval |
+| 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
+| 8 | `/tdk-api-design <id>` | Generate detailed API design (Scenario A/B) with DB schema for approval |
 | 10 | `/tdk-analyze <id>` | Cross-artifact consistency and quality analysis |
 | 11 | `/tdk-status <id>` | Show workflow progress (read-only, any time) |
 | 12 | `/tdk-checklist <id> [focus]` | Generate quality checklist for requirements |
@@ -269,7 +270,8 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | specify | `/tdk-specify <id> <desc>` | — | `.specify.env` | `spec.md`, `checklists/requirements.md` | None (start here) |
 | specify (fast) | `/tdk-specify <id> <desc> --fast` | `--fast` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
-| task-breakdown | `/tdk-task-breakdown <id>` | — | `spec.md` with unresolved questions set to `None` | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md` | clarify |
+| high-level-design | `/tdk-high-level-design <id>` | `--greenfield`, `--force` | `spec.md` with unresolved questions set to `None` | `high-level-design/index.md` + 5 design artifacts | clarify |
+| task-breakdown | `/tdk-task-breakdown <id>` | — | `spec.md` with unresolved questions set to `None`; optional `high-level-design/` | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md` | clarify |
 | ba-requirement | `/tdk-ba-requirement <id>` | `--figma-pc`, `--figma-sp`, `--output` | `spec.md` | `ba-requirement.md` | clarify |
 | plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--red-team`, `--validate` | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | ba-requirement |
 | api-design | `/tdk-api-design <id>` | `--scenario A|B` | `spec.md`, `research/` | `api_design.md` (incl. DB schema) | plan |

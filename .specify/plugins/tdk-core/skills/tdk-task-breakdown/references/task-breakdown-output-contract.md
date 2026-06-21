@@ -157,6 +157,12 @@ Valid citations:
 
 Every task file must include a `## Source Requirements` section with at least one citation. Prefer exact identifiers from the spec. If the spec uses prose without stable IDs, STOP and tell the user to update the spec before generating portable tasks.
 
+## Optional HLD Enrichment
+
+When `{FEATURE_DIR}/high-level-design/index.md` exists, `/tdk-task-breakdown` may read the listed HLD artifacts as enrichment context for task objective, scope, and dependency wording. This is optional and changes nothing when HLD is absent.
+
+HLD never becomes a citation source: citations remain `UR-*/FR-*/SC-*` from `spec.md`. HLD never relaxes the stable-ID STOP rule above. If the spec lacks stable identifiers, STOP regardless of whether HLD exists.
+
 ## Tracker Boundary
 
 Generated task files are tracker-neutral. Downstream GitHub, GitLab, Backlog, Jira, or other issue creation is owned by the consumer project and must not be performed by TDK core.

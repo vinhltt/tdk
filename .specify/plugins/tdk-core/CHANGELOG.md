@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.3.0] - 2026-06-21
+
+### Added
+- Add /tdk-high-level-design <id> [--greenfield] [--force] skill: generates six approval-level high-level design artifacts under high-level-design/ from a clarified spec, between /tdk-clarify and /tdk-task-breakdown for greenfield features.
+
+### Changed
+- Optionally read high-level-design/ as enrichment context when present in tdk-task-breakdown.
+
 ## [5.2.1] - 2026-06-21
 
 ### Changed

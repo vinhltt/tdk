@@ -10,6 +10,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.75.0] - 2026-06-21
+
+### Added
+- **[tdk-core]** Add `/tdk-high-level-design <id> [--greenfield] [--force]` skill: generates six approval-level high-level design artifacts under `high-level-design/` from a clarified spec, between `/tdk-clarify` and `/tdk-task-breakdown` for greenfield features.
+  - Enforces the `## 9. Unresolved Questions` gate before any write; `--force` overwrites the existing directory but never bypasses the gate.
+  - Adds `references/high-level-design-output-contract.md` (six artifacts, spec-section to artifact mapping, enrich-only citation rules, design-detail-as-assumed, greenfield rules).
+- **[Templates]** Add `templates/high-level-design/` with six artifact templates (`index`, `requirement-overview`, `project-and-technical-overview`, `data-flow`, `screen-flow`, `decisions-and-risks`); `data-flow` and `screen-flow` reuse the memory flow/screen-flow table shapes.
+
+### Changed
+- **[tdk-task-breakdown]** Optionally read `high-level-design/` as enrichment context when present (new Step 1.5); behavior is unchanged when absent and citations remain `UR-*`/`FR-*`/`SC-*` from the spec. Bumped to 5.2.2.
+- **[Guides]** Document the high-level-design stage in `command-reference.md`, `scenarios/01-full-feature-development.md`, `document-flow.md`, and the `README.md` lifecycle/skill count; the stage is marked optional and backward-compatible.
+
 ## [1.74.0] - 2026-06-21
 
 ### Added
