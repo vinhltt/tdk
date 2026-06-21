@@ -89,6 +89,19 @@ Required sections:
 candidates for human review, but it is not authority. Product-level facts live
 in `product-context.md` and are updated only through `tdk-constitution`.
 
+## Allowed In-Section Additions
+
+Within the four required artifacts, the following refine existing sections and are NOT new
+outputs:
+
+- MoSCoW tags (`Must` / `Should` / `Could` / `Won't`) inside `## MVP Cutline`.
+- Skip-justification notes inside `## Open Questions` recording why something was
+  deliberately omitted.
+- An advisory, non-blocking readiness checklist inside `## Ready For Specify`.
+
+These add no requirement IDs, no new files, and no tracker records. They refine the existing
+sections only and do not change the allowed output shape.
+
 ## Forbidden outputs
 
 Discovery MUST NOT create or emit:

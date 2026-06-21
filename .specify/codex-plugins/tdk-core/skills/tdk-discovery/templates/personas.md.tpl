@@ -27,4 +27,7 @@ created: "{{CREATED_AT}}"
 
 ## Open Questions
 
+> When discovery deliberately leaves something out, note *why* in one line here instead
+> of dropping it silently.
+
 {{OPEN_QUESTIONS}}

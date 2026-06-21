@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-21T11:00:29Z",
+  "generated_at": "2026-06-21T14:56:39Z",
   "plugins": {
     "tdk-core": {
-      "version": "5.4.1",
+      "version": "5.4.2",
       "components": {
         "skills": {
           "tdk-analyze": {
@@ -28,7 +28,7 @@
             "version": "5.4.0"
           },
           "tdk-discovery": {
-            "version": "5.4.0"
+            "version": "5.4.2"
           },
           "tdk-high-level-design": {
             "version": "5.4.1"
@@ -75,10 +75,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "2e33cdc14ebf20e5074ae949db076e4e04d51a31ec94d99ef1c3d6278c4c929e",
-        ".claude-plugin/plugin.json": "9790cbf0cc1e1c3ae0ef0e72886812415eaadc221598c7e0126913d49b3abec9",
-        ".codex-plugin/plugin.json": "9790cbf0cc1e1c3ae0ef0e72886812415eaadc221598c7e0126913d49b3abec9",
-        ".cursor-plugin/plugin.json": "9790cbf0cc1e1c3ae0ef0e72886812415eaadc221598c7e0126913d49b3abec9",
-        "CHANGELOG.md": "97c6928634b68e40db14773f0b7cf018bbb9e64a8b1d63176823cfb19eabc882",
+        ".claude-plugin/plugin.json": "b2e3ba63df92cf9b7fb694c16bd6b5fb69de8c2f917bb2d56b962603fa354b9b",
+        ".codex-plugin/plugin.json": "b2e3ba63df92cf9b7fb694c16bd6b5fb69de8c2f917bb2d56b962603fa354b9b",
+        ".cursor-plugin/plugin.json": "b2e3ba63df92cf9b7fb694c16bd6b5fb69de8c2f917bb2d56b962603fa354b9b",
+        "CHANGELOG.md": "9682390bfd69415024c705b4e5e22934fdf7531a17679385842e691a97c0e12a",
         "__tests__/context-builder.test.cjs": "39ea0d403e0154a14cfe8877ef76a6c8fc68ffa046ef2d1f59b152de68440fe2",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
@@ -108,12 +108,12 @@
         "skills/tdk-config-sync/SKILL.md": "f28251b269a168bba17983fa028c3f26851236387fd97bbaf364dd00d62e52ba",
         "skills/tdk-constitution/SKILL.md": "ad68c210d575ea0c0637a75d0daef8c2043387749043697b922cd246d98955cc",
         "skills/tdk-constitution/templates/constitution.md.tpl": "30f0531720fdc8ff99135bcf7705277f5ba3711bb5aa040dbae2b46e7041cfe6",
-        "skills/tdk-discovery/SKILL.md": "09038edebaff2f8b480e242f7057fec76f1a9eba765efae5d1ba7fd55ca64d00",
-        "skills/tdk-discovery/references/discovery-output-contract.md": "872011afaa5b2ab13275938bcc89995b5f1e29a3ca8d069aad56f13492e6d797",
-        "skills/tdk-discovery/templates/index.md.tpl": "f7956dc693e672e919bfd1ad8a6ad08a714d8d3ece84e27aeea2a440b0423592",
-        "skills/tdk-discovery/templates/mvp-scope.md.tpl": "f9931a4c6b751878311d2a7080e92c1ae1f2135bdab1b1182866e1edcad620b1",
-        "skills/tdk-discovery/templates/personas.md.tpl": "29c06d9c4c8bc1db31eaa00c296720c4f32dab98542ee8e7efed00fca5e2a2b2",
-        "skills/tdk-discovery/templates/problem.md.tpl": "67ee685d14a4bf01160b7be6ee16a500a2ae95e29e88ee503766af5b6fa0af0a",
+        "skills/tdk-discovery/SKILL.md": "4bdd525855ef0cc48fe34d424355f844db1fba2eac11d7ef013530d6c6eefeeb",
+        "skills/tdk-discovery/references/discovery-output-contract.md": "0690d603309581d22ab99e022532d99989500e13b5b3388373cc8dd211957cf5",
+        "skills/tdk-discovery/templates/index.md.tpl": "1fd4404b613072d520e7bb810b66a165ebc8e19a11e0f133dad6abd5e034abcd",
+        "skills/tdk-discovery/templates/mvp-scope.md.tpl": "ad1ff61616b2de12c20e4304a1aecd7c3e1497599e50dcca52c9c35c17ab2df6",
+        "skills/tdk-discovery/templates/personas.md.tpl": "16376c73ece9680b650eaf59110b265433f76963d5d607dbfbd02d3e37966380",
+        "skills/tdk-discovery/templates/problem.md.tpl": "1773337ceb0c33bdafa178b792a062aa46721fa5e729359ada4fcd354a6f08e8",
         "skills/tdk-high-level-design/SKILL.md": "0520a7974e6e2e9925586aa6b1872cca98a6588db8d8fa676063916ca6686236",
         "skills/tdk-high-level-design/references/high-level-design-output-contract.md": "72e700c5b56e2b8a6e53d18cf1d638567504b14bab9ab42342ca38d6ed4a147c",
         "skills/tdk-implement/SKILL.md": "c4de40f65441e71013f5ff6c1a891f1f65a4c24ba06d46c304035d7ae892014a",

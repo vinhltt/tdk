@@ -10,6 +10,15 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.77.1] - 2026-06-21
+
+### Changed
+- **[tdk-discovery]** Add error recovery guidance and expand templates with explicit instructions
+  - Introduce error recovery situations table to guide resolution of vague briefs or existing directories
+  - Support depth auto-detection based on brief length
+  - Clarify allowed in-section additions (MoSCoW tags, skip-justification notes) in discovery output contract
+  - Expand templates (index, mvp-scope, personas, problem) with explicit cutline instructions, advisory checklist notes, and open-questions justification
+
 ## [1.77.0] - 2026-06-21
 
 ### Added

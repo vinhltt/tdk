@@ -3,7 +3,7 @@ name: tdk-discovery
 description: "EPIC-ONLY v1 discovery entry point that creates context-only problem, persona, MVP, and index artifacts before tdk-specify"
 argument-hint: "<epic-id> <brief|file> [--force]"
 metadata:
-  version: "5.4.0"
+  version: "5.4.2"
 ---
 
 # tdk-discovery
@@ -34,6 +34,21 @@ Feature-sized work skips discovery and starts at `/tdk-specify`.
 
 Load before writing any discovery file:
 - `references/discovery-output-contract.md`
+
+## Error Recovery
+
+Resolve common situations with this table instead of dead-ending. Every action stays within
+discovery's existing capabilities; recovery adds no new execution branch.
+
+| Situation | Action |
+|---|---|
+| Brief is vague or too thin to discover from | Ask targeted clarifying questions until the brief is clear enough for bounded discovery. If the user cannot clarify, STOP instead of inventing scope. |
+| Brief points to a missing, secret, dotenv, credential, token, or outside-workspace file | STOP and refuse, same as Step 2. |
+| `discovery/index.md` already exists, no `--force` | STOP, same as Step 3. The user may move or archive the prior discovery manually, then re-run. |
+| `discovery/index.md` already exists, with `--force` | Reuse the directory and overwrite the four artifacts. |
+
+Recovery is advisory guidance only. Discovery never opens, edits, or closes tracker items,
+and it adds no archive or migration step of its own.
 
 ## Execution Steps
 
@@ -113,6 +128,13 @@ discovery/mvp-scope.md
 discovery/index.md
 ```
 
+**Depth auto-detect (no flag).** Infer discovery depth from one signal: the brief's length
+and structure. A terse one-line brief calls for *light* discovery — concise prose, fewer open
+questions. A multi-paragraph brief with explicit constraints, personas, or scope cues calls
+for *deep* discovery — denser prose, more open questions. This only tunes prose density and
+Open-Questions depth. It is not a mode engine: it adds no `--depth` flag, does not change the
+command signature, and never alters the four-file shape.
+
 Use the discovery brief, project context, memory, and constitution as context.
 Do not create requirement IDs, specification sections, task files, plans, code,
 tracker records, or a `discovery_ref`.
@@ -138,4 +160,6 @@ Report:
 - Files written
 - Whether product-level signal candidates need human review for a future
   `/tdk-constitution --update`
-- Readiness for `/tdk-specify <epic-id> <description>`
+- Readiness for `/tdk-specify <epic-id> <description>`. The `## Ready For Specify` checklist
+  in `index.md` is advisory only: discovery completion and `/tdk-specify` do not depend on
+  it, and no checklist item gates the handoff.

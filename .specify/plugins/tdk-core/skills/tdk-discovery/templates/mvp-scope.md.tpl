@@ -19,6 +19,9 @@ created: "{{CREATED_AT}}"
 
 ## MVP Cutline
 
+> Tag each cutline item **Must** / **Should** / **Could** / **Won't**. Record at least one
+> **Won't** so an intentional exclusion is explicit, not silently dropped.
+
 {{MVP_CUTLINE}}
 
 ## Risks
@@ -26,5 +29,8 @@ created: "{{CREATED_AT}}"
 {{RISKS}}
 
 ## Open Questions
+
+> When discovery deliberately leaves something out, note *why* in one line here instead
+> of dropping it silently.
 
 {{OPEN_QUESTIONS}}

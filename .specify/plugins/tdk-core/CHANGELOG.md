@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.4.2] - 2026-06-21
+
+### Changed
+- [tdk-discovery] Add error recovery situations table to guide resolution of vague briefs or existing directories
+- [tdk-discovery] Support depth auto-detection based on brief length
+- [tdk-discovery] Clarify allowed in-section additions (MoSCoW tags, skip-justification notes) in discovery output contract
+- [tdk-discovery] Expand templates (index, mvp-scope, personas, problem) with explicit cutline instructions, advisory checklist notes, and open-questions justification
+
 ## [5.4.1] - 2026-06-21
 
 ### Changed

@@ -34,7 +34,11 @@ Candidate checklist only. Humans decide whether any item belongs in
 
 ## Ready For Specify
 
-- [ ] Problem context reviewed
-- [ ] Persona context reviewed
-- [ ] MVP cutline reviewed
+Advisory only. This checklist is a human readiness read; it never gates `/tdk-specify`,
+which runs regardless of how many items are checked.
+
+- [ ] Problem context reviewed (problem, affected users, constraints clear)
+- [ ] Persona context reviewed (primary personas + jobs-to-be-done captured)
+- [ ] MVP cutline reviewed (items tagged Must/Should/Could/Won't, with at least one Won't)
+- [ ] Open questions triaged (deliberate omissions justified inline)
 - [ ] No requirement IDs were minted during discovery
