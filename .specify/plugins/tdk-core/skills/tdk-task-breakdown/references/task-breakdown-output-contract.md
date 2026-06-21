@@ -42,9 +42,10 @@ tracker_sync: "consumer-owned"
 
 ## Tasks
 
-| # | Task | Source Requirements | File |
-|---|------|---------------------|------|
-| 001 | Example task title | UR-001, FR-001, SC-001 | [task-001-example-task-title.md](./task-001-example-task-title.md) |
+| # | Task | Source Requirements | File | Status |
+|---|------|---------------------|------|--------|
+| 001 | Example task title | UR-001, FR-001, SC-001 | [task-001-example-task-title.md](./task-001-example-task-title.md) | |
+| 012 | Build importer sub-feature | UR-003, FR-007 | [task-012-build-importer-sub-feature.md](./task-012-build-importer-sub-feature.md) | promoted → feat-123 |
 
 ## Tracker Boundary
 
@@ -54,6 +55,35 @@ These files are portable Markdown work items. TDK core does not create external 
 
 Consumer-owned tracker sync must treat `tasks-breakdown/index.md` as the manifest. Files not listed in the current index are non-authoritative and must not be synced just because they exist in the directory.
 ```
+
+## Promoted Work Items
+
+A work-item large enough to be its own sub-feature may be **promoted** into an
+independent child spec (see `.specify/docs/guides/promote-convention.md`). The
+`Status` column is how the index records that, so a promoted item is never
+double-tracked as both a work-item here and a child spec.
+
+- **Status column.** Trailing column on the `## Tasks` table. Empty means active
+  (the normal case). A promoted row reads `promoted → <child-id>` where
+  `<child-id>` is the child spec's id (e.g. `feat-123`, or `test/aa-100` when the
+  child is in a non-default category).
+- **Back-link.** The child spec carries `promoted_from: "NNN"` in its frontmatter.
+  This is a **best-effort human annotation only, not a machine-resolvable
+  back-link** — regeneration may renumber tasks when the task meaning changes, so
+  `promoted_from` can dangle. The authoritative trace is `parent_spec` (child →
+  parent) plus the `promoted → <child-id>` index marker (parent → child). Do not
+  build tooling that resolves `promoted_from` programmatically.
+- **Regeneration rule.** On regenerate, read the existing `index.md` first. For any
+  row whose `Status` is `promoted → ...`, preserve that row and its marker and do
+  NOT re-emit the item as a normal task or overwrite its task file.
+- **Demote (manual, no command).** To revert a child spec back to a normal
+  work-item: delete or archive `specs/<child-id>/`, close its tracker issue (when
+  consumer tracker-sync exists), and clear the `promoted → <child-id>` marker in
+  the parent index row. Loose coupling (link in frontmatter, not path) makes this
+  safe.
+- **Consumer advisory.** `Status` is appended as the **last** column. Any
+  downstream tool that parses `index.md` by column index must read `Status` as the
+  trailing column; column-name-based parsing is unaffected.
 
 ## Task File Schema
 

@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-20T06:38:30Z",
+  "generated_at": "2026-06-21T02:48:14Z",
   "plugins": {
     "tdk-core": {
-      "version": "5.2.0",
+      "version": "5.2.1",
       "components": {
         "skills": {
           "tdk-analyze": {
@@ -34,7 +34,7 @@
             "version": "5.0.1"
           },
           "tdk-specify": {
-            "version": "5.0.1"
+            "version": "5.2.1"
           },
           "tdk-status": {
             "version": "3.4.11"
@@ -49,7 +49,7 @@
             "version": "0.1.0"
           },
           "tdk-task-breakdown": {
-            "version": "0.1.0"
+            "version": "5.2.1"
           },
           "tdk-ut-backfill-plan": {
             "version": "3.4.11"
@@ -69,10 +69,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "2e33cdc14ebf20e5074ae949db076e4e04d51a31ec94d99ef1c3d6278c4c929e",
-        ".claude-plugin/plugin.json": "073c02882976488df484838d83c83c708b2d802fd4f68a38fbaa40e22f2b0e06",
-        ".codex-plugin/plugin.json": "073c02882976488df484838d83c83c708b2d802fd4f68a38fbaa40e22f2b0e06",
-        ".cursor-plugin/plugin.json": "073c02882976488df484838d83c83c708b2d802fd4f68a38fbaa40e22f2b0e06",
-        "CHANGELOG.md": "536031d4a21343812f04c272939048ea54c96bab4ce4fa74e02c9bdcb464e31f",
+        ".claude-plugin/plugin.json": "85dacb5a51a19bef893f5e2a46735745bbdbe3a3eae8e7cb297985113f0786b5",
+        ".codex-plugin/plugin.json": "85dacb5a51a19bef893f5e2a46735745bbdbe3a3eae8e7cb297985113f0786b5",
+        ".cursor-plugin/plugin.json": "85dacb5a51a19bef893f5e2a46735745bbdbe3a3eae8e7cb297985113f0786b5",
+        "CHANGELOG.md": "318898b0ece7cc28489520f3f22761aa39cac1322a89b6b4e1af69b0165a4176",
         "__tests__/context-builder.test.cjs": "39ea0d403e0154a14cfe8877ef76a6c8fc68ffa046ef2d1f59b152de68440fe2",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
@@ -119,7 +119,7 @@
         "skills/tdk-plan/references/skill-routing.md": "97513d6919cfcc219b65dee7cf40310d72e9aeefd478a387a068a298830d6465",
         "skills/tdk-plan/references/validate-question-framework.md": "eb6972acb7a093ff4253a2af0764681e617a62cbf95b5f3e99d987e4934ae6e6",
         "skills/tdk-plan/references/validate-workflow.md": "504ffc62d2c156f239d7143eab585490365e1c1d32ae85963df195f00867661b",
-        "skills/tdk-specify/SKILL.md": "3bdd89be5e71c4aaae7ff04cebcf6523e3455d69f2500c36e1d5740cc683fe51",
+        "skills/tdk-specify/SKILL.md": "a1bd8397900774bd782c12f054c1ac5fa0b1701cf30e38df72378dec2ed217ed",
         "skills/tdk-specify/evals/evals.json": "6c432121010453d7024c9abff36e5c9517010c7e486f59474a4742b642d526bd",
         "skills/tdk-specify/evals/fixtures/multi-sw/.specify.json": "b8b14e53eea16003f8dc13000c6f9b6c8bfe0dd439eac4e86e58ef8b6f6863b8",
         "skills/tdk-specify/references/spec-quality-guidelines.md": "4cab4632e4408fbb12f1e374b0cad4602a45719613c1a7ba4fec083c2d1889d0",
@@ -128,8 +128,8 @@
         "skills/tdk-sub-workspace-docs/SKILL.md": "9cbac44ba7bf6a8cc3574c3b551b39d7af31380fba2554db73369b54caf3211b",
         "skills/tdk-sub-workspace-init/SKILL.md": "addc5fa7f6507d78666406f0c0598fc91adcd67600c9aed9c142142b9f99dc42",
         "skills/tdk-sub-workspace-list/SKILL.md": "048d5207d474ab4e349e4ad9b32d0ed1da3727de44eb49e720e32a8316fbe04e",
-        "skills/tdk-task-breakdown/SKILL.md": "0fc88ae8a6de8ffaac542d30b4893f02762c29b6c5cb713083186fa852027e58",
-        "skills/tdk-task-breakdown/references/task-breakdown-output-contract.md": "6c8bfe252d2a41c5e2f80d360ca36f7cab6549cc095d0fc5967857cf84bfc9a4",
+        "skills/tdk-task-breakdown/SKILL.md": "c75be456b367199140d16d29f85736f0245fdb5008881fbec971108678b4df65",
+        "skills/tdk-task-breakdown/references/task-breakdown-output-contract.md": "9ef850f905114a9cc178a0126cfad956cc8791ddef2fc2848caa98f2f18fafb9",
         "skills/tdk-ut-backfill-plan/SKILL.md": "49ee3011761a91c7fa73b78af225f10447b379c496fb44bbb807f5da81413530"
       }
     },

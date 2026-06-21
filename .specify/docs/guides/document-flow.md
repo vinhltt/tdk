@@ -90,6 +90,13 @@ flowchart LR
     class CONTENT note
 ```
 
+**Promote a large work-item → child spec.** A work-item big enough to be its own
+sub-feature can be promoted into an independent child spec at `specs/<child-id>/`, linked
+to its parent by a single `parent_spec` frontmatter field (no path nesting). The child
+re-runs this same Phase 0 pipeline. See
+[Promote Convention](./promote-convention.md) for the manual seed flow, the
+`[folder/]ticket` `parent_spec` format rule, and the sizing rule.
+
 ### Phase 1: Design & Architecture
 
 ```mermaid

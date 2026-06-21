@@ -2,7 +2,7 @@
 name: tdk-task-breakdown
 description: "Generate portable Markdown work-item artifacts from a clarified spec. Use after /tdk-clarify and before tracker-specific issue sync owned by the consumer project."
 metadata:
-  version: "0.1.0"
+  version: "5.2.1"
 ---
 
 # tdk-task-breakdown
@@ -92,6 +92,8 @@ Create issue-sized tasks from the extracted requirements:
 - Keep plan-phase sequencing out of scope unless the spec already states an ordering constraint.
 - Prefer fewer coherent tasks over fragmented one-line tasks.
 
+If a work-item is large enough to be its own sub-feature (its own requirements, clarify, and plan), it can be **promoted** into an independent child spec instead of being tracked as a task here. See `.specify/docs/guides/promote-convention.md` for the manual promote flow and the work-item-vs-child-spec sizing rule.
+
 ### Step 6 - Write Markdown Artifacts
 
 Create or update only:
@@ -101,6 +103,8 @@ Create or update only:
 Do not write `tasks.md`, plan files, tracker config, or implementation files.
 
 `index.md` is the authoritative manifest for the current generated set. Consumer tracker sync must read the task files listed in `index.md`, not glob every file in `tasks-breakdown/`.
+
+When regenerating an existing breakdown, read the current `index.md` first. Preserve any row whose `Status` is `promoted → <child-id>`: keep the row and its marker, and do NOT re-emit that item as a normal task or overwrite its task file. A promoted work-item now lives as an independent child spec, so re-emitting it would double-track it (see `references/task-breakdown-output-contract.md` and `.specify/docs/guides/promote-convention.md`).
 
 ### Step 7 - Report Results
 

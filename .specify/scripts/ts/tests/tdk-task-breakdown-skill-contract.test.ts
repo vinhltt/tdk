@@ -49,4 +49,18 @@ describe('tdk-task-breakdown skill contract', () => {
     expect(reference).toContain('SC-*');
     expect(reference).toContain('Source Requirements');
   });
+
+  it('documents the promoted-work-item Status column, marker, and demote checklist', () => {
+    // Reference: output-contract documents the Status column header, promoted marker, back-link field, demote section
+    expect(reference).toContain('| # | Task | Source Requirements | File | Status |');
+    expect(reference).toContain('promoted → ');
+    expect(reference).toContain('promoted_from');
+    expect(reference).toContain('Demote');
+    expect(reference).toContain('parent_spec');
+
+    // Skill: documents regeneration preserve rule, promoted marker format, and crosslink to promote-convention
+    expect(skill).toContain('Preserve any row whose');
+    expect(skill).toContain('promoted → <child-id>');
+    expect(skill).toContain('promote-convention.md');
+  });
 });

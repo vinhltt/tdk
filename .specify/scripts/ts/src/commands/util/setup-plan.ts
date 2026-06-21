@@ -4,7 +4,8 @@
 import { existsSync, mkdirSync, copyFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson } from '../../utils/index';
+import { loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson, parseFeatureId } from '../../utils/index';
+import { extractFrontmatter } from './parse-plan-frontmatter';
 
 const program = new Command()
   .name('setup-plan')
@@ -31,6 +32,33 @@ const program = new Command()
     const featureSpec = paths['featureSpec'] as string;
     const implPlan = paths['implPlan'] as string;
     const hasGit = paths['hasGit'] as boolean;
+
+    // parent_spec link-integrity check: fail-loud before any filesystem side effects.
+    // Uses parseFeatureId (not raw path join) to get traversal-guarded resolution
+    // of the declared parent — a crafted parent_spec must never escape the repo.
+    const childFm = extractFrontmatter(featureSpec, taskId);
+    if (childFm !== null) {
+      const parentSpec = childFm.parsed['parent_spec'];
+      if (typeof parentSpec === 'string' && parentSpec.trim() !== '') {
+        let parentDir: string;
+        try {
+          const parentPaths = parseFeatureId(parentSpec, repoRoot, env.specsRoot, env.defaultFolder);
+          parentDir = parentPaths.featureDir;
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          process.stderr.write(
+            `ERROR: parent_spec '${parentSpec}' is invalid — ${msg}. Fix or clear parent_spec before planning.\n`,
+          );
+          process.exit(1);
+        }
+        if (!existsSync(join(parentDir, 'spec.md'))) {
+          process.stderr.write(
+            `ERROR: parent_spec '${parentSpec}' not found — expected spec.md at ${join(parentDir, 'spec.md')}. Demote the child (clear parent_spec) before planning, or restore the parent.\n`,
+          );
+          process.exit(1);
+        }
+      }
+    }
 
     // Ensure feature directory exists
     mkdirSync(featureDir, { recursive: true });

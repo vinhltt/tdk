@@ -10,6 +10,23 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.74.0] - 2026-06-21
+
+### Added
+- **[Guides]** Added [promote-convention.md](file:///home/vinhuwsl/1_cowork/0_personal/tdk-builder/projects/tdk/.specify/docs/guides/promote-convention.md) guide specifying sizing rules and manual flow for promoting work-items to child specs
+- **[Scripts]** Added test suites [spec-template-frontmatter-contract.test.ts](file:///home/vinhuwsl/1_cowork/0_personal/tdk-builder/projects/tdk/.specify/scripts/ts/tests/spec-template-frontmatter-contract.test.ts) and [setup-plan-parent-spec-link.test.ts](file:///home/vinhuwsl/1_cowork/0_personal/tdk-builder/projects/tdk/.specify/scripts/ts/tests/setup-plan-parent-spec-link.test.ts) to enforce spec YAML frontmatter schema and link integrity
+
+### Changed
+- **[tdk-specify]** Instruct agent to emit YAML frontmatter at the top of the spec including `title`, `status`, `branch`, `created`, `input`, `memory_context_loaded`, and `schema_version: 1`, and support promote link fields (`parent_spec`, `promoted_from`)
+- **[tdk-task-breakdown]** Document work-item promotion and regeneration rules
+  - Add guidance on promoting large work-items to child specs instead of tracking as flat tasks, and document the promoted task row status column format (`promoted -> <child-id>`)
+  - Enforce preservation of promoted tasks and their markers during task-breakdown regeneration
+- **[Guides]** Updated [document-flow.md](file:///home/vinhuwsl/1_cowork/0_personal/tdk-builder/projects/tdk/.specify/docs/guides/document-flow.md) to reference the new promote-convention guide for Phase 0
+- **[Scripts]** Add plan-setup integrity validation and expand tests
+  - Update plan setup command ([setup-plan.ts](file:///home/vinhuwsl/1_cowork/0_personal/tdk-builder/projects/tdk/.specify/scripts/ts/src/commands/util/setup-plan.ts)) to validate declared `parent_spec` link integrity and stop with a loud error if parent spec.md is missing or invalid
+  - Update [tdk-task-breakdown-skill-contract.test.ts](file:///home/vinhuwsl/1_cowork/0_personal/tdk-builder/projects/tdk/.specify/scripts/ts/tests/tdk-task-breakdown-skill-contract.test.ts) to assert coverage of promoted status column, markers, and demote checklists
+- **[Templates]** Migrate [spec-template.md.tpl](file:///home/vinhuwsl/1_cowork/0_personal/tdk-builder/projects/tdk/.specify/templates/spec-template.md.tpl) to use standard YAML frontmatter block for metadata instead of inline bold-header metadata lines, and add placeholder/commented fields for `parent_spec` and `promoted_from` links
+
 ## [1.73.0] - 2026-06-20
 
 ### Added

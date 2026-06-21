@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.2.1] - 2026-06-21
+
+### Changed
+- Instruct agent to emit YAML frontmatter at the top of the spec including title, status, branch, created, input, memory_context_loaded, and schema_version: 1, and support promote link fields (parent_spec, promoted_from)
+- Document work-item promotion and regeneration rules: add guidance on promoting large work-items to child specs and document promoted task status format, and enforce preservation of promoted tasks during regeneration
+
 ## [5.2.0] - 2026-06-17
 
 ### Added
