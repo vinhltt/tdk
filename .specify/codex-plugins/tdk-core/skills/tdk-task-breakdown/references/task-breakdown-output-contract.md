@@ -76,11 +76,14 @@ double-tracked as both a work-item here and a child spec.
 - **Regeneration rule.** On regenerate, read the existing `index.md` first. For any
   row whose `Status` is `promoted → ...`, preserve that row and its marker and do
   NOT re-emit the item as a normal task or overwrite its task file.
-- **Demote (manual, no command).** To revert a child spec back to a normal
-  work-item: delete or archive `specs/<child-id>/`, close its tracker issue (when
-  consumer tracker-sync exists), and clear the `promoted → <child-id>` marker in
-  the parent index row. Loose coupling (link in frontmatter, not path) makes this
-  safe.
+- **Demote — revert promotion (manual, no command).** To turn a child spec back
+  into a normal work-item: delete or archive `specs/<child-id>/`, close its tracker
+  issue (when consumer tracker-sync exists), and clear the `promoted → <child-id>`
+  marker in the parent index row. Loose coupling (link in frontmatter, not path)
+  makes this safe. This is the *revert* path of demote; when only the parent is
+  gone and the child should survive as an independent root spec, use the *unlink*
+  path instead (clear `parent_spec`, keep the child). Both demote paths are defined
+  in `.specify/docs/guides/promote-convention.md`.
 - **Consumer advisory.** `Status` is appended as the **last** column. Any
   downstream tool that parses `index.md` by column index must read `Status` as the
   trailing column; column-name-based parsing is unaffected.
