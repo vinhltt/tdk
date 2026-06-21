@@ -1,6 +1,6 @@
 # Tihon Command Suite Guide
 
-> **Last updated**: 2026-06-17
+> **Last updated**: 2026-06-21
 >
 > **Terminology**: In this guide, `/tdk-*` items are called "commands." Internally they are Claude Code plugin skills. Both terms refer to the same thing.
 >
@@ -89,7 +89,7 @@ Runs in the Claude Code CLI and VSCode extension. No GitHub Copilot subscription
 
 ## Overview
 
-The Tihon command suite provides a **specification-driven development** workflow. You describe a feature in natural language, and the commands guide you through specification, optional task breakdown, planning, and implementation.
+The Tihon command suite provides a **specification-driven development** workflow. You describe a feature in natural language, optionally capture epic discovery context first, and the commands guide you through specification, optional design and task breakdown, planning, and implementation.
 
 ### Workflow Pipeline
 
@@ -130,9 +130,9 @@ The Tihon command suite provides a **specification-driven development** workflow
                       └─────────────────────┘
 ```
 
-**Primary flow**: `specify` -> `clarify` -> optional `task-breakdown` -> `plan` -> `implement`
+**Primary flow**: `constitution` (project-level) -> optional `discovery` -> `specify` -> `clarify` -> optional `high-level-design` -> optional `task-breakdown` -> `plan` -> `implement`
 
-Each command reads the output of the previous one, building a chain of artifacts: `spec.md` -> optional `high-level-design/` -> optional `tasks-breakdown/` -> `plan.md` (with ## Phases table) -> source code.
+Each command reads the output of the previous one, building a chain of artifacts: project-level `product-context.md` -> optional `discovery/` -> `spec.md` -> optional `high-level-design/` -> optional `tasks-breakdown/` -> `plan.md` (with ## Phases table) -> source code.
 
 ---
 
@@ -140,6 +140,7 @@ Each command reads the output of the previous one, building a chain of artifacts
 
 | # | Command | Description |
 |---|---------|-------------|
+| 0 | `/tdk-discovery <epic-id> <brief\|file> [--force]` | Optional epic discovery context before `tdk-specify`; does not mint requirement IDs |
 | 1 | `/tdk-specify <id> <desc>` | Create feature specification from natural language |
 | 2 | `/tdk-specify <id> <desc> --fast` | Quick specification (skips brainstorm, fewer tokens) |
 | 3 | `/tdk-clarify <id>` | Ask up to 5 targeted questions to fill spec gaps |
@@ -181,6 +182,14 @@ Follow this walkthrough to develop your first feature end-to-end.
 - Project initialized with `.specify/.specify.env` configuration file
 
 ### Step 1 — Specify the feature
+
+For a broad epic, optionally capture context before the spec:
+
+```
+/tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and moderation"
+```
+
+This creates `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, and `discovery/index.md`. Discovery is context-only: it does not create `spec.md`, plans, work items, tracker records, or `UR-*` / `FR-*` / `SC-*` IDs. Skip it for small feature-sized work.
 
 ```
 /tdk-specify feat-001 Add user avatar upload with image cropping
@@ -250,7 +259,9 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 ```
 .specify/specs/feat-001/
+├── discovery/           ← Optional epic context before Step 1
 ├── spec.md              ← Step 1
+├── high-level-design/   ← Optional design after clarification
 ├── tasks-breakdown/     ← Step 3 optional portable work items
 ├── plan.md              ← Step 4 (includes ## Phases table)
 ├── research/            ← Step 4 (if needed)
@@ -267,7 +278,8 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| specify | `/tdk-specify <id> <desc>` | — | `.specify.env` | `spec.md`, `checklists/requirements.md` | None (start here) |
+| discovery | `/tdk-discovery <epic-id> <brief\|file> [--force]` | `--force` | Project context, constitution/memory, brief or file | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md` | Optional after constitution, before specify |
+| specify | `/tdk-specify <id> <desc>` | — | `.specify.env`; optional `discovery/index.md` | `spec.md`, `checklists/requirements.md` | None, or discovery context |
 | specify (fast) | `/tdk-specify <id> <desc> --fast` | `--fast` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
 | high-level-design | `/tdk-high-level-design <id>` | `--greenfield`, `--force` | `spec.md` with unresolved questions set to `None` | `high-level-design/index.md` + 5 design artifacts | clarify |
@@ -321,7 +333,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| constitution | `/tdk-constitution [principles]` | — | `constitution.md`, templates | `constitution.md` (created/updated) | None (project-level) |
+| constitution | `/tdk-constitution [principles]` | `--init <brief\|file>` | `constitution.md`, templates | `constitution.md`, `product-context.md`, project docs | None (project-level) |
 | checklist | `/tdk-checklist <id> [focus]` | — | `spec.md`, `plan.md` (opt) | `checklists/{domain}.md` | specify |
 
 ### Design Document Commands
@@ -430,6 +442,7 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 
 | Command | Skip when... |
 |---------|-------------|
+| `discovery` | Work is already feature-sized or the problem/personas/MVP boundary is clear |
 | `clarify` | Spec is already detailed and unambiguous |
 | `checklist` | Feature has no complex quality dimensions (UX, security, API) |
 | `analyze` | Small feature with simple spec/plan/tasks chain |
@@ -444,7 +457,8 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 | "spec.md not found" | Running `plan` or implementation before `specify` | Run `/tdk-specify <id> <description>` first |
 | "plan.md not found" | Running implementation before `plan` | Run `/tdk-plan <id>` first |
 | "Invalid prefix" | Task ID prefix not in allowed list | Check `ERCSPEC_PREFIX_LIST` in `.specify/.specify.env` |
-| "Task ID already exists" | Feature directory already created | Work on existing feature or use a different ID |
+| "Task ID already exists" | `spec.md` or an existing guarded artifact already exists | Work on existing feature or use a different ID. A directory containing only `discovery/` can continue to `/tdk-specify` |
+| "Discovery already exists" | `discovery/index.md` already exists | Re-run `/tdk-discovery ... --force` only when replacing discovery context intentionally |
 | "No UT skill found" | Running UT commands without a consumer UT skill | Create one in `.claude/skills/{name}/SKILL.md` with UT conventions |
 | Script execution fails | Git Bash not available on Windows | Install Git for Windows (includes Git Bash) |
 | "Feature not found" | Wrong task ID or folder | Check `.specify/specs/` for existing features; verify prefix in `.specify.env` |
@@ -457,6 +471,8 @@ If you get a "not found" error, follow this dependency chain:
 **Primary (Recommended) Path:**
 ```
 constitution (optional, project-level)
+     ↓
+discovery (optional, epic-level context)
      ↓
 specify [--fast]  →  clarify (optional)  →  checklist (optional)
      ↓

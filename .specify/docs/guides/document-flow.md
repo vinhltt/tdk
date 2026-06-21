@@ -11,9 +11,15 @@
 flowchart TD
     %% Phase 0: Specification
     REQ[Requirements<br/>Natural Language]
+    PRODUCT_CONTEXT[product-context.md<br/>Project Context]
+    DISCOVERY[discovery/<br/>Epic Context]
 
     %% Phase 0: Feature Specification
+    REQ -.->|/tdk-discovery<br/>optional, epic| DISCOVERY
     REQ -->|/tdk-specify| SPEC[spec.md<br/>Feature Specification]
+    DISCOVERY -.->|context only| SPEC
+    PRODUCT_CONTEXT -.->|project authority| DISCOVERY
+    PRODUCT_CONTEXT -.->|project authority| SPEC
     SPEC -->|/tdk-clarify| SPEC_CLARIFIED[spec.md<br/>+ Clarifications]
     SPEC_CLARIFIED -.->|/tdk-high-level-design<br/>optional, greenfield| HLD[high-level-design/<br/>Design Artifacts]
     SPEC_CLARIFIED -.->|/tdk-task-breakdown<br/>optional| TASK_BREAKDOWN[tasks-breakdown/<br/>Portable Work Items]
@@ -55,10 +61,10 @@ flowchart TD
     classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
     classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px
 
-    class REQ,SPEC,SPEC_CLARIFIED,TASK_BREAKDOWN phase0
+    class REQ,DISCOVERY,SPEC,SPEC_CLARIFIED,TASK_BREAKDOWN phase0
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES,PAGEDESIGNS,BATCH_DESIGN phase1
     class TEST_VP phase0
-    class CONSTITUTION,UIUX,REF_DATAMODEL,REF_STATE reference
+    class PRODUCT_CONTEXT,CONSTITUTION,UIUX,REF_DATAMODEL,REF_STATE reference
     class CODE_BE,CODE_FE,TESTS code
 ```
 
@@ -71,13 +77,16 @@ flowchart TD
 ```mermaid
 flowchart LR
     REQ[Requirements]
+    DISCOVERY[discovery/<br/>Epic Context]
     SPEC[spec.md]
     SPEC_CLAR[spec.md<br/>+ Clarifications]
     HLD[high-level-design/<br/>Design Artifacts]
     TASKS[tasks-breakdown/<br/>Portable Work Items]
     BA_REQ[ba-requirement.md]
 
+    REQ -.->|"/tdk-discovery<br/>epic-id brief"| DISCOVERY
     REQ -->|"/tdk-specify<br/>feature-id desc"| SPEC
+    DISCOVERY -.->|"context only"| SPEC
     SPEC -->|"/tdk-clarify<br/>feature-id"| SPEC_CLAR
     SPEC_CLAR -.->|"/tdk-high-level-design<br/>feature-id"| HLD
     SPEC_CLAR -.->|"/tdk-task-breakdown<br/>feature-id"| TASKS
@@ -91,7 +100,7 @@ flowchart LR
     classDef note fill:#f5f5f5,stroke:#616161,stroke-width:1px
 
     class REQ input
-    class SPEC,SPEC_CLAR,HLD,TASKS,BA_REQ output
+    class DISCOVERY,SPEC,SPEC_CLAR,HLD,TASKS,BA_REQ output
     class CONTENT note
 ```
 
@@ -269,6 +278,8 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 
 | Artifact | Created By | Input From | Used By | Update Frequency |
 |----------|-----------|------------|---------|-----------------|
+| `product-context.md` | `/tdk-constitution --init/update` | constitution, memory, accepted project brief/update feedback | `/tdk-discovery`, `/tdk-specify`, `/tdk-plan` context | Project authority changes |
+| `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution | Optional context for `/tdk-specify` | Optional before specify |
 | `spec.md` | `/tdk-specify` | User description | `/tdk-plan`, all downstream | Feature start |
 | `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-ba-requirement` | After specify |
 | `high-level-design/` | `/tdk-high-level-design` | clarified `spec.md` | `/tdk-task-breakdown` (optional enrichment) | Optional after clarify (greenfield) |
@@ -299,16 +310,21 @@ These files are **read-only references** used by multiple commands but never mod
 flowchart LR
     subgraph TEMPLATES[Reference Files]
         CONST[.specify/memory/<br/>constitution.md]
+        PRODUCT[.specify/memory/<br/>product-context.md]
         UIUX[ui-ux-design.md<br/>Design System]
         REF_DM[.specify/templates/<br/>data-model-template.md.tpl]
         REF_ST[.specify/templates/<br/>state-transitions-template.md.tpl]
     end
 
     subgraph COMMANDS[Commands That Reference]
+        DISCOVERY_CMD[tdk-discovery]
+        SPECIFY_CMD[tdk-specify]
         PLAN[tdk-plan]
     end
 
     CONST -.->|principles| PLAN
+    PRODUCT -.->|product facts| DISCOVERY_CMD
+    PRODUCT -.->|product facts| SPECIFY_CMD
     UIUX -.->|design| PLAN
     REF_DM -.->|enum format| PLAN
     REF_ST -.->|state format| PLAN
@@ -316,8 +332,8 @@ flowchart LR
     classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:2px,stroke-dasharray: 5 5
     classDef command fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
 
-    class CONST,UIUX,REF_DM,REF_ST reference
-    class PLAN command
+    class CONST,PRODUCT,UIUX,REF_DM,REF_ST reference
+    class DISCOVERY_CMD,SPECIFY_CMD,PLAN command
 ```
 
 ---
@@ -328,9 +344,11 @@ flowchart LR
 flowchart TD
     START{Event}
 
+    START -->|New epic| DISCOVERY[tdk-discovery]
     START -->|New feature| SPECIFY[tdk-specify]
     START -->|API change| UPDATE_CONTRACT[contracts/ manual edit]
 
+    DISCOVERY --> SPECIFY
     SPECIFY --> CLARIFY[tdk-clarify]
     CLARIFY --> PLAN[tdk-plan]
     PLAN --> IMPLEMENT[tdk-implement]
@@ -340,7 +358,7 @@ flowchart TD
     classDef event fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef command fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
     class START event
-    class SPECIFY,CLARIFY,PLAN,IMPLEMENT command
+    class DISCOVERY,SPECIFY,CLARIFY,PLAN,IMPLEMENT command
 ```
 
 ---
@@ -349,7 +367,9 @@ flowchart TD
 
 ```
 .specify/specs/{task-id}/
+├── discovery/                          # Optional epic discovery context
 ├── spec.md                             # Phase 0: Feature specification
+├── high-level-design/                  # Optional approval-level design artifacts
 ├── plan.md                             # Phase 1: Implementation plan
 ├── research/                           # Phase 1: Technology research
 ├── data-model.md                       # Phase 1: Entity definitions + enums

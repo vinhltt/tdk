@@ -10,6 +10,29 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.76.0] - 2026-06-21
+
+### Added
+- **[tdk-core]** Add `/tdk-discovery <epic-id> <brief|file> [--force]` skill: EPIC-ONLY v1 context discovery entry point that creates `problem.md`, `personas.md`, `mvp-scope.md`, and `index.md` under `{FEATURE_DIR}/discovery/` before `/tdk-specify`. Tracker-neutral and context-only — does not mint requirement IDs.
+  - Adds `references/discovery-output-contract.md` (allowed output shape, per-artifact sections, forbidden outputs, product-level signals)
+  - Adds 4 discovery templates: `problem.md.tpl`, `personas.md.tpl`, `mvp-scope.md.tpl`, `index.md.tpl`
+- **[Templates]** Add `product-context.md.tpl` project knowledge template with AUTO-GEN sections for market context, business model, audience/personas, competitive context, product constraints, and open questions
+- **[Scripts]** Add contract test suites
+  - `tdk-discovery-skill-contract.test.ts` — validates epic-only boundary, context-only guarantees, tracker-neutrality, and template existence
+  - `tdk-constitution-product-context-contract.test.ts` — verifies product-context rendering as constitution-owned artifact with marker-safe template
+  - `tdk-specify-discovery-first-contract.test.ts` — asserts spec.md-based duplicate guard and optional discovery/index.md context loading
+
+### Changed
+- **[tdk-core]** `tdk-constitution`: render `product-context.md` as a constitution-owned project knowledge artifact; add product-level authority separation from epic discovery (version 4.0.0 → 4.1.0)
+- **[tdk-core]** `tdk-specify`: support discovery-first feature directories by reading `discovery/index.md` as optional context and guarding duplicate specs by `spec.md` existence instead of any feature directory content
+- **[Guides]** Document discovery phase and product-context across guides
+  - `command-reference.md`: add discovery command entry and usage tip
+  - `document-flow.md`: add discovery phase to document lifecycle
+  - `01-full-feature-development.md`: integrate discovery as optional epic-level step
+  - `07-project-setup-constitution.md`: add `product-context.md` to knowledge artifacts list
+- **[General]** `tdk-primary-workflow.md`: add discovery vs specify routing guidance and high-level-design vs plan disambiguation
+- **[Scripts]** `templates-roundtrip.test.ts`: include `product-context.md.tpl` in template roundtrip coverage
+
 ## [1.75.0] - 2026-06-21
 
 ### Added

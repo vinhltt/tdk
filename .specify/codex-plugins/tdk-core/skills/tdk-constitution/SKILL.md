@@ -2,7 +2,7 @@
 name: tdk-constitution
 description: "Create or update the project constitution and constitution-owned project knowledge artifacts from interactive or provided principle inputs"
 metadata:
-  version: 4.0.0
+  version: 4.1.0
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -86,6 +86,7 @@ When running `/tdk-constitution --init <brief|file>`:
 6. Render project knowledge artifacts from `### Project Knowledge Templates` under
    `memory.path` from `.specify/.specify.json`, falling back to `.specify/memory`:
    - `project-overview-prd.md`
+   - `product-context.md`
    - `system-architecture.md`
    - `project-roadmap.md`
 7. Write only AUTO-GEN sections in existing artifacts. Markerless files require
@@ -107,11 +108,15 @@ artifacts. They replace the removed public `tdk-docs` project-docs render path.
 | Template | Target under `memory.path` |
 |----------|----------------------------|
 | `.specify/templates/project-docs/project-overview-prd.md.tpl` | `project-overview-prd.md` |
+| `.specify/templates/project-docs/product-context.md.tpl` | `product-context.md` |
 | `.specify/templates/project-docs/system-architecture.md.tpl` | `system-architecture.md` |
 | `.specify/templates/project-docs/project-roadmap.md.tpl` | `project-roadmap.md` |
 
 Creation/update rules:
 
+- Product-level facts live in `product-context.md` and apply across all epics.
+  Epic discovery may surface candidates, but only this constitution flow updates
+  product-level authority.
 - For a missing target, start from the matching template, then fill AUTO-GEN
   sections from constitution authority, existing memory, and accepted user deltas.
 - For an existing target, update only matching AUTO-GEN sections and preserve
@@ -160,7 +165,9 @@ Follow this execution flow:
      Risks & Mitigations, Unresolved Questions, + Clarifications.
    - Read each command file in `.specify/templates/commands/*.md` (including this one) to verify no outdated references (agent-specific names like CLAUDE only) remain when generic guidance is required.
    - Read any runtime guidance docs (e.g., `README.md`, `docs/quickstart.md`, or agent-specific guidance files if present). Treat them as human-facing context, not as authority over memory.
-   - Validate project knowledge artifacts under `memory.path` or `.specify/memory`: `project-overview-prd.md`, `system-architecture.md`, `project-roadmap.md`.
+   - Validate project knowledge artifacts under `memory.path` or `.specify/memory`:
+     `project-overview-prd.md`, `product-context.md`, `system-architecture.md`,
+     `project-roadmap.md`.
 
 5. Produce a Sync Impact Report (prepend as an HTML comment at top of the constitution file after update):
    - Version change: old → new

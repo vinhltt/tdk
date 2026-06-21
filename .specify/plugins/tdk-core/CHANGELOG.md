@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.4.0] - 2026-06-21
+
+### Added
+- Add /tdk-discovery epic-only v1 context discovery skill with SKILL.md, references/discovery-output-contract.md, and 4 templates (problem, personas, mvp-scope, index)
+
+### Changed
+- tdk-constitution: render product-context.md as constitution-owned project knowledge artifact; add product-level authority separation from epic discovery
+- tdk-specify: support discovery-first feature directories by reading discovery/index.md as optional context and guarding duplicate specs by spec.md existence
+
 ## [5.3.0] - 2026-06-21
 
 ### Added

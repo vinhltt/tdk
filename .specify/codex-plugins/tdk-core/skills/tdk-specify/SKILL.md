@@ -2,7 +2,7 @@
 name: tdk-specify
 description: "Create or update the feature specification from a natural language feature description. Default: full brainstorm with Option A/B. Use --fast for single recommendation without brainstorm."
 metadata: 
-  version: "5.2.1"
+  version: "5.2.2"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -87,11 +87,13 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
    - `FEATURE_DIR` = `$SPECS_ROOT/$FOLDER/$TICKET_ID`
    - `SPEC_FILE` = `$FEATURE_DIR/spec.md`
 
-2. Check duplicate feature directory:
+2. Check duplicate spec file:
    ```bash
-   ls "$FEATURE_DIR" 2>/dev/null && echo "ERROR: Ticket already exists" || echo "OK"
+   SPEC_FILE="$FEATURE_DIR/spec.md"
+   test -f "$SPEC_FILE" && echo "ERROR: Ticket spec already exists" || echo "OK"
    ```
-   If directory exists → ERROR, STOP.
+   If `spec.md` exists -> ERROR, STOP. A feature directory containing only
+   `discovery/` is allowed so discovery-first flow can continue to specify.
 
 3. Check duplicate git branches (non-blocking warning):
    ```bash
@@ -113,6 +115,19 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
    If `CURRENT_BRANCH != EXPECTED_BRANCH` → print warning (non-blocking).
 
 Store: `FEATURE_DIR`, `SPEC_FILE`, `EXPECTED_BRANCH`, `CURRENT_BRANCH`.
+
+### Step 0.2a - Optional Discovery Context
+
+After `FEATURE_DIR` is resolved, check for discovery context:
+
+```bash
+DISCOVERY_INDEX="$FEATURE_DIR/discovery/index.md"
+test -f "$DISCOVERY_INDEX" && echo "DISCOVERY_CONTEXT=$DISCOVERY_INDEX" || echo "NO_DISCOVERY_CONTEXT"
+```
+
+If `discovery/index.md` exists, read it as optional context before spec generation.
+Do not require discovery for normal specify flow.
+Discovery is context only. Only `tdk-specify` mints `UR-*`, `FR-*`, and `SC-*`.
 
 ### Step 0.3 — Mode Detection
 

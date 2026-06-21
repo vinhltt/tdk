@@ -30,10 +30,11 @@ You can provide principles directly:
 - `.specify/memory/memory-index.md`
 - `.specify/memory/memory.yaml`
 - `.specify/memory/project-overview-prd.md`
+- `.specify/memory/product-context.md`
 - `.specify/memory/system-architecture.md`
 - `.specify/memory/project-roadmap.md`
 
-The constitution uses semantic versioning (MAJOR.MINOR.PATCH). Project knowledge artifacts are rendered outputs; README is human-facing context and cannot silently override constitution or memory.
+The constitution uses semantic versioning (MAJOR.MINOR.PATCH). Project knowledge artifacts are rendered outputs; README is human-facing context and cannot silently override constitution or memory. Product-wide facts live in `product-context.md`; epic discovery may surface candidates, but only `/tdk-constitution` updates project authority.
 
 ### 2. Initialize sub-workspaces
 

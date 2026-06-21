@@ -25,6 +25,7 @@ const TEMPLATE_SUITES = [
     dir: resolve(__dirname, '../../../../templates/project-docs'),
     files: [
       'README.md.tpl',
+      'product-context.md.tpl',
       'project-overview-prd.md.tpl',
       'project-roadmap.md.tpl',
       'system-architecture.md.tpl',

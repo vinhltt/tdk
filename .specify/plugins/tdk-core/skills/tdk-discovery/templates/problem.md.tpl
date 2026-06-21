@@ -1,0 +1,30 @@
+---
+source_epic: "{{TASK_ID}}"
+artifact_type: "problem"
+status: draft
+created: "{{CREATED_AT}}"
+---
+
+# Problem Discovery
+
+> Altitude: Epic-level. Product-wide facts belong in product-context.md.
+
+## Problem
+
+{{PROBLEM_SUMMARY}}
+
+## Affected Users
+
+{{AFFECTED_USERS}}
+
+## Current Alternatives
+
+{{CURRENT_ALTERNATIVES}}
+
+## Constraints
+
+{{CONSTRAINTS}}
+
+## Open Questions
+
+{{OPEN_QUESTIONS}}
