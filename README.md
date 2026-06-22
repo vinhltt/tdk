@@ -1,6 +1,6 @@
 # TDK - TiHon Development Kit
 
-**TDK (TiHon Development Kit)** is a specification-driven coding workflow toolkit for Claude Code. It generates specs, portable task breakdowns, plans, and code from natural language — shipped as a set of marketplace plugins + a TypeScript CLI.
+**TDK (TiHon Development Kit)** is a specification-driven coding workflow toolkit for Claude Code with generated Codex harness support. It generates specs, portable task breakdowns, plans, and code from natural language — shipped as a set of marketplace plugins + a TypeScript CLI.
 
 Core philosophy: **SDD (Specification-Driven Development)** — every feature starts from a formal spec, can produce portable work items, flows through structured plans, and is verified against the spec before shipping.
 
@@ -18,15 +18,19 @@ TDK works as a closed development loop:
 
 TDK structures the full development loop:
 
-1. **Specify** — generate feature specs from natural language (`/tdk:specify`)
-2. **Design** — optionally produce approval-level high-level design artifacts for greenfield features (`/tdk-high-level-design`)
-3. **Break down** — optionally turn clarified specs into portable Markdown work items (`/tdk-task-breakdown`)
-4. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
-5. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
-6. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
-7. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
+1. **Discover** — optionally create epic-only context before spec (`/tdk-discovery`)
+2. **Specify** — generate feature specs from natural language and optional discovery refs (`/tdk:specify`)
+3. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
+4. **Design** — optionally produce approval-level HLD artifacts after clarify for greenfield work (`/tdk-high-level-design`)
+5. **Break down** — optionally turn clarified spec/HLD context into portable Markdown work items (`/tdk-task-breakdown`)
+6. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
+7. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
+8. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
+9. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
 
-Additional workflows: config management, sub-workspace docs generation, scout (codebase analysis), memory management, API test generation.
+Additional workflows: constitution-owned `product-context.md`, config management, sub-workspace docs generation, scout (codebase analysis), memory management, API test generation.
+
+Authority boundaries: discovery is context-only and does not mint requirement IDs; `spec.md` owns `UR-*`/`FR-*`/`SC-*`; HLD enriches existing IDs and is not a second requirement source.
 
 ## Quick Start
 
@@ -89,6 +93,8 @@ Existing unmanaged `.claude/` files require explicit interactive overwrite appro
 
 Claude hook runtime entries are merged into `.claude/settings.json`. Hook scripts are installed under plugin-scoped paths like `.claude/hooks/tdk-core/`; plugin `hooks/hooks.json` files stay source declarations and are not installed as `.claude/hooks/hooks.json`.
 
+Claude and Codex harness installs are separate runs. A combined Claude+Codex install is unsupported.
+
 ### CLI Usage (Development)
 
 ```bash
@@ -107,14 +113,15 @@ bun src/commands/manifest/compute.ts --root ../..
 ```
 .specify/
 ├── plugins/              # Marketplace plugins (installed by setup.sh)
-│   ├── tdk-core/            # Core workflow (17 skills + 1 agent)
+│   ├── tdk-core/            # Core workflow (18 skills + 1 agent)
 │   ├── tdk-utils/           # Utilities: scout, research, problem solving (14 skills + 5 agents)
 │   ├── tdk-memory/          # Domain memory management (5 skills + 1 agent)
 │   ├── tdk-test-api/        # API test generation (3 skills)
 │   ├── tdk-retro/           # Retrospective learning loop (4 skills)
 │   └── tdk-scaffold/        # Skill/agent scaffolding (2 skills)
-├── templates/            # 34 templates (spec, plan, task, test, memory, output, design, docs)
-├── docs/                 # 25 user guides (12 scenario guides + setup guides + reference)
+├── codex-plugins/        # Generated Codex packages (6 packages; skills/hooks/lib at package root)
+├── templates/            # 41 templates (spec, plan, task, discovery, HLD, test, memory, output, design, docs)
+├── docs/                 # 26 user guides (scenario guides + setup guides + reference)
 ├── configurations/       # Hook configs, sub-workspace configs
 └── scripts/
     ├── ts/               # TypeScript CLI (@tdk/tdk) — primary
@@ -123,7 +130,7 @@ bun src/commands/manifest/compute.ts --root ../..
     │   │   ├── commands/        # Integrated command groups + standalone scripts
     │   │   ├── lib/             # Library modules (parsers, generators)
     │   │   └── utils/           # Zod schemas, shared utilities
-    │   └── tests/               # Bun test suite (90 .test.ts files)
+    │   └── tests/               # Bun test suite (97 .test.ts files)
     └── bash/             # Legacy shell scripts (maintenance-only)
 ```
 
@@ -131,7 +138,7 @@ bun src/commands/manifest/compute.ts --root ../..
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
-| **tdk-core** | 16 skills + 1 agent | Specify, task breakdown, plan, implement, fix, config, sub-workspace, ut-backfill |
+| **tdk-core** | 18 skills + 1 agent | Constitution, discovery, specify, clarify, HLD, task breakdown, plan, implement, config, sub-workspace, ut-backfill |
 | **tdk-utils** | 14 skills + 5 agents | Scout, research, brainstorming, docs-seeker, context-engineering, problem-solving |
 | **tdk-memory** | 5 skills + 1 agent | Domain memory: init, update, checksum, changelog, query, and tdk-memory-agent |
 | **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |
@@ -140,21 +147,21 @@ bun src/commands/manifest/compute.ts --root ../..
 
 ## CLI Commands
 
-Integrated commands (via `bun src/index.ts`):
+Integrated commands (via `bun src/index.ts`; no installed `tdk` binary yet):
 
 | Command | Description |
 |---------|-------------|
-| `tdk config detect` | Detect `.specify.json` configuration |
-| `tdk config index` | Index configuration files |
-| `tdk config diff` | Compare docs between workspace and sub-workspace |
-| `tdk ut backfill auto` | Automated unit test backfill |
-| `tdk ut backfill plan` | Plan unit test coverage |
-| `tdk ut backfill impl` | Implement unit tests from plan |
-| `tdk scout` | Codebase analysis (repomix + tier-1 extraction) |
-| `tdk harness install` | Install selected TDK plugin artifacts into `.claude/` or preconverted `.codex/` + `.agents/skills/` targets with dry-run, saved install settings, prefix rewrite, ownership, collision, and drift safety |
-| `tdk harness convert` | Maintainer-only command that emits generated Codex packages under `.specify/codex-plugins/<plugin>/` and checks converter freshness |
-| `tdk harness convert-flat` | Convert an existing flat `.claude/` tree into additive `.codex/` and `.agents/skills/` artifacts with dry-run, conflict reporting, and `.specify/state/harness-install/codex.json` ownership manifest |
-| `tdk sub-workspace docs` | Generate sub-workspace documentation |
+| `bun src/index.ts config detect` | Detect `.specify.json` configuration |
+| `bun src/index.ts config index` | Index configuration files |
+| `bun src/index.ts config diff` | Compare docs between workspace and sub-workspace |
+| `bun src/index.ts ut backfill auto` | Automated unit test backfill |
+| `bun src/index.ts ut backfill plan` | Plan unit test coverage |
+| `bun src/index.ts ut backfill impl` | Implement unit tests from plan |
+| `bun src/index.ts scout` | Codebase analysis (repomix + tier-1 extraction) |
+| `bun src/index.ts harness install` | Install selected TDK plugin artifacts into `.claude/` or preconverted `.codex/` + `.agents/skills/` targets with dry-run, saved install settings, prefix rewrite, ownership, collision, and drift safety |
+| `bun src/index.ts harness convert` | Maintainer-only command that emits generated Codex packages under `.specify/codex-plugins/<plugin>/` and checks converter freshness |
+| `bun src/index.ts harness convert-flat` | Convert an existing flat `.claude/` tree into additive `.codex/` and `.agents/skills/` artifacts with dry-run, conflict reporting, and `.specify/state/harness-install/codex.json` ownership manifest |
+| `bun src/index.ts sub-workspace docs` | Generate sub-workspace documentation |
 
 Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup, changelog, util, test-api.
 
