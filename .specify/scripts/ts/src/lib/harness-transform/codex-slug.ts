@@ -9,17 +9,18 @@ function shortHash(value: string): string {
 export function toCodexSlug(name: string): string {
 	const normalized = name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
 	let slug = normalized
-		.replace(/[^a-zA-Z0-9]+/g, "_")
-		.replace(/^_+|_+$/g, "")
+		.replace(/[^a-zA-Z0-9_-]+/g, "-")
+		.replace(/-+/g, "-")
+		.replace(/^[-_]+|[-_]+$/g, "")
 		.toLowerCase();
 
 	if (!slug) {
-		slug = `agent_${shortHash(name)}`;
+		slug = `agent-${shortHash(name)}`;
 	}
 
 	if (slug.length > MAX_CODEX_SLUG_LENGTH) {
-		slug = slug.slice(0, MAX_CODEX_SLUG_LENGTH).replace(/_+$/g, "");
+		slug = slug.slice(0, MAX_CODEX_SLUG_LENGTH).replace(/[-_]+$/g, "");
 	}
 
-	return slug || `agent_${shortHash(name)}`;
+	return slug || `agent-${shortHash(name)}`;
 }

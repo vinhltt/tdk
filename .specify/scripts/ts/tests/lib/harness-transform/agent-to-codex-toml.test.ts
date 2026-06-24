@@ -8,11 +8,11 @@ import { toCodexSlug } from "../../../src/lib/harness-transform/codex-slug";
 
 describe("toCodexSlug", () => {
 	it("normalizes names into Codex-safe slugs", () => {
-		expect(toCodexSlug("code-reviewer")).toBe("code_reviewer");
+		expect(toCodexSlug("code-reviewer")).toBe("code-reviewer");
 		expect(toCodexSlug("MyAgent")).toBe("myagent");
-		expect(toCodexSlug("agent.v2!")).toBe("agent_v2");
+		expect(toCodexSlug("agent.v2!")).toBe("agent-v2");
 		expect(toCodexSlug("-agent-")).toBe("agent");
-		expect(toCodexSlug("🔥🔥")).toMatch(/^agent_[0-9a-f]{8}$/);
+		expect(toCodexSlug("🔥🔥")).toMatch(/^agent-[0-9a-f]{8}$/);
 		expect(toCodexSlug("a".repeat(300)).length).toBeLessThanOrEqual(96);
 	});
 });
@@ -24,7 +24,7 @@ describe("convertAgentToCodexToml", () => {
 			frontmatter: { model: "opus", tools: "Read, Write" },
 			body: "You are a senior code reviewer.",
 		});
-		expect(result.filename).toBe("code_reviewer.toml");
+		expect(result.filename).toBe("code-reviewer.toml");
 		expect(result.toml).toContain('model = "gpt-5.4"');
 		expect(result.toml).toContain('model_reasoning_effort = "xhigh"');
 		expect(result.toml).toContain('sandbox_mode = "workspace-write"');
@@ -82,8 +82,8 @@ describe("model taxonomy and config entry", () => {
 
 	it("builds a registry entry", () => {
 		const entry = buildCodexConfigEntry("code-reviewer", "Reviews code");
-		expect(entry).toContain("[agents.code_reviewer]");
+		expect(entry).toContain("[agents.code-reviewer]");
 		expect(entry).toContain('description = "Reviews code"');
-		expect(entry).toContain('config_file = "agents/code_reviewer.toml"');
+		expect(entry).toContain('config_file = "agents/code-reviewer.toml"');
 	});
 });

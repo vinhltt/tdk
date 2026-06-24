@@ -138,7 +138,7 @@ describe('harness convert-flat', () => {
     const result = runConvertFlat(consumer.root, ['--dry-run']);
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout.toString()).toContain('.codex/agents/code_reviewer.toml');
+    expect(result.stdout.toString()).toContain('.codex/agents/code-reviewer.toml');
     expect(result.stderr.toString()).not.toContain('Nested mappings are not allowed');
   });
 

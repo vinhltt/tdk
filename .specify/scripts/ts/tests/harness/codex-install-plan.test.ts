@@ -99,9 +99,9 @@ describe('codex install plan', () => {
     });
 
     const targets = plan.writes.map((write) => write.targetRelativePath);
-    expect(targets).toContain('.agents/skills/tdk_demo/SKILL.md');
+    expect(targets).toContain('.agents/skills/tdk-demo/SKILL.md');
     // Agent TOML generated at install time from source agents/*.md
-    expect(targets).toContain('.codex/agents/tdk_helper.toml');
+    expect(targets).toContain('.codex/agents/tdk-helper.toml');
     expect(targets).toContain('.codex/hooks/hook-gateway.cjs');
     expect(targets).toContain('.codex/hooks/wrappers/demo.cjs');
     expect(targets).toContain('.codex/lib/demo.cjs');
@@ -123,7 +123,7 @@ describe('codex install plan', () => {
       targetPrefix: 'tdk-',
     });
 
-    const agentWrite = plan.writes.find((w) => w.targetRelativePath === '.codex/agents/tdk_helper.toml');
+    const agentWrite = plan.writes.find((w) => w.targetRelativePath === '.codex/agents/tdk-helper.toml');
     expect(agentWrite).toBeDefined();
     // Content should be TOML from agent conversion (has sandbox_mode)
     const tomlContent = agentWrite!.content.toString('utf-8');
@@ -131,7 +131,7 @@ describe('codex install plan', () => {
     // config.toml must include agent entry
     const configWrite = plan.writes.find((w) => w.targetRelativePath === '.codex/config.toml');
     expect(configWrite).toBeDefined();
-    expect(configWrite!.content.toString('utf-8')).toContain('[agents.tdk_helper]');
+    expect(configWrite!.content.toString('utf-8')).toContain('[agents.tdk-helper]');
   });
 
   test('rewrites custom prefixes across skill dirs, agent files, and config entries', () => {
@@ -145,11 +145,11 @@ describe('codex install plan', () => {
     });
 
     const targets = plan.writes.map((write) => write.targetRelativePath);
-    expect(targets).toContain('.agents/skills/pav_demo/SKILL.md');
-    expect(targets).toContain('.codex/agents/pav_helper.toml');
+    expect(targets).toContain('.agents/skills/pav-demo/SKILL.md');
+    expect(targets).toContain('.codex/agents/pav-helper.toml');
     const config = plan.writes.find((write) => write.targetRelativePath === '.codex/config.toml')?.content.toString('utf-8') ?? '';
-    expect(config).toContain('[agents.pav_helper]');
-    expect(config).toContain('config_file = "agents/pav_helper.toml"');
+    expect(config).toContain('[agents.pav-helper]');
+    expect(config).toContain('config_file = "agents/pav-helper.toml"');
   });
 
   test('rejects source artifacts whose bytes do not match codex manifest checksums', () => {
@@ -188,7 +188,7 @@ describe('codex install plan', () => {
       targetPrefix: 'tdk-',
     });
 
-    const write = plan.writes.find((item) => item.targetRelativePath === '.agents/skills/tdk_demo/assets/data.bin');
+    const write = plan.writes.find((item) => item.targetRelativePath === '.agents/skills/tdk-demo/assets/data.bin');
     expect(write?.content.equals(payload)).toBe(true);
   });
 

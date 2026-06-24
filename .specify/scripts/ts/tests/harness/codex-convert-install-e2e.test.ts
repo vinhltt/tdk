@@ -71,11 +71,11 @@ describe('codex convert/install e2e', () => {
     });
     expect(install.exitCode).toBe(0);
 
-    expect(fs.existsSync(path.join(consumer.root, '.agents', 'skills', 'tdk_demo', 'SKILL.md'))).toBe(true);
-    expect(fs.existsSync(path.join(consumer.root, '.codex', 'agents', 'tdk_helper.toml'))).toBe(true);
+    expect(fs.existsSync(path.join(consumer.root, '.agents', 'skills', 'tdk-demo', 'SKILL.md'))).toBe(true);
+    expect(fs.existsSync(path.join(consumer.root, '.codex', 'agents', 'tdk-helper.toml'))).toBe(true);
     expect(fs.existsSync(path.join(consumer.root, '.codex', 'hooks', 'hook-gateway.cjs'))).toBe(true);
     expect(fs.existsSync(path.join(consumer.root, '.codex', 'lib', 'demo.cjs'))).toBe(true);
-    expect(fs.readFileSync(path.join(consumer.root, '.codex', 'config.toml'), 'utf-8')).toContain('[agents.tdk_helper]');
+    expect(fs.readFileSync(path.join(consumer.root, '.codex', 'config.toml'), 'utf-8')).toContain('[agents.tdk-helper]');
     expect(JSON.parse(fs.readFileSync(path.join(consumer.root, '.codex', 'hooks.json'), 'utf-8')).PreToolUse).toHaveLength(1);
     expect(JSON.parse(fs.readFileSync(path.join(consumer.root, '.specify', 'state', 'harness-install', 'codex.json'), 'utf-8')).selectedPlugins).toEqual(['tdk-core']);
 

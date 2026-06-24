@@ -14,7 +14,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Changed
 - **[Guides]** Updated several guide documents for TDK improvements.
-- **[Scripts]** Modified `flat-claude-adapter.ts` and related test files.
+- **[Scripts]** Transition Codex slug normalization to kebab-case and update tools
+  - Modified `flat-claude-adapter.ts` and related test files.
+  - Update `toCodexSlug` to use hyphens instead of underscores
+  - Support rewriting legacy underscore-based prefixes in `rewriteCodexSlugPrefix` and `rewriteCodexGeneratedText`
+  - Update harness, mapper, plan, and convert-flat tests to reflect kebab-case slugging
 
 ## [1.77.1] - 2026-06-21
 

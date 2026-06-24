@@ -23,7 +23,7 @@ describe('codex target mapper', () => {
   });
 
   test('maps Codex skills through slugged .agents skill roots', () => {
-    expect(codexSkillRoot('Plan Work')).toBe('.agents/skills/plan_work');
-    expect(codexSkillTarget('Plan Work', 'nested\\README.md')).toBe('.agents/skills/plan_work/nested/README.md');
+    expect(codexSkillRoot('Plan Work')).toBe('.agents/skills/plan-work');
+    expect(codexSkillTarget('Plan Work', 'nested\\README.md')).toBe('.agents/skills/plan-work/nested/README.md');
   });
 });

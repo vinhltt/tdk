@@ -87,9 +87,9 @@ describe('harness install CLI', () => {
     });
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout.toString()).toContain('.agents/skills/tdk_demo/SKILL.md');
+    expect(result.stdout.toString()).toContain('.agents/skills/tdk-demo/SKILL.md');
     // Agent generated at install time from source agents/*.md
-    expect(result.stdout.toString()).toContain('.codex/agents/tdk_demo.toml');
+    expect(result.stdout.toString()).toContain('.codex/agents/tdk-demo.toml');
     expect(result.stdout.toString()).toContain('Codex config: .codex/config.toml');
   });
 
