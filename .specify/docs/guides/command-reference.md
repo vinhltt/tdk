@@ -1,6 +1,6 @@
 # Tihon Command Suite Guide
 
-> **Last updated**: 2026-06-21
+> **Last updated**: 2026-06-24
 >
 > **Terminology**: In this guide, `/tdk-*` items are called "commands." Internally they are Claude Code plugin skills. Both terms refer to the same thing.
 >
@@ -76,6 +76,20 @@ Use `--sub-workspace <name>` on all UT and config commands to target a specific 
 | `/tdk-config-index` | Auto-generate `document-manager.md` for LLM discoverability |
 
 Run `diff → sync → index` to keep docs consistent across workspaces.
+
+### Architecture Workflow Inception
+
+| Command | Purpose |
+|---------|---------|
+| `/tdk-greenfield-start` | New-project intake that writes readiness-aware `project-inception.md` and recommends the next command chain without mutating runtime config |
+| `/tdk-brownfield-start` | Observe-first repo onboarding that writes evidence/confidence-based `brownfield-onboarding.md` and recommends scout/topology/docs steps |
+| `/tdk-architecture-advisor` | Project-level architecture advisor that writes report-only options, decision, or recovery artifacts |
+| `/tdk-workspace-topology-apply` | Dry-run preview of `.specify/.specify.json` changes derived from `workspace-topology.json` |
+
+Architecture advisor is report-only. It does not write runtime config, topology
+files, source code, plans, tasks, tracker issues, or ADR files. Topology apply is
+preview-only in this slice. It does not write `.specify/.specify.json`, create
+source directories, or support apply/write flags.
 
 ### Skills Ecosystem
 
@@ -155,21 +169,25 @@ Each command reads the output of the previous one, building a chain of artifacts
 | 11 | `/tdk-status <id>` | Show workflow progress (read-only, any time) |
 | 12 | `/tdk-checklist <id> [focus]` | Generate quality checklist for requirements |
 | 13 | `/tdk-constitution [--init <brief|file>]` | Create/update project architecture principles and initialize project memory artifacts |
+| 14 | `/tdk-greenfield-start [brief|file] [--full|--quick|--unknown]` | New-project intake and routing report |
+| 15 | `/tdk-brownfield-start [repo-root] [--full|--config-only|--unknown]` | Existing-repo onboarding and safe setup recommendations |
+| 16 | `/tdk-architecture-advisor [input|file] [--recover-existing|--unknown]` | Project architecture options, decision, or recovery reports |
 | — | **Unit Testing** | |
-| 16 | `/tdk-ut-backfill-plan <id>` | Generate unit test plan and phase files |
+| 17 | `/tdk-ut-backfill-plan <id>` | Generate unit test plan and phase files |
 | — | **Config & Workspace** | |
 | 20 | `/tdk-config-diff` | Compare workspace vs sub-workspace docs |
 | 21 | `/tdk-config-sync` | Sync docs between workspace and sub-workspaces |
 | 22 | `/tdk-config-index` | Generate/update document manager index |
-| 23 | `/tdk-sub-workdspace-init` | Initialize a new sub-workspace |
-| 24 | `/tdk-sub-workdspace-list` | List all configured sub-workspaces |
-| 25 | `/tdk-sub-workdspace-sync` | ~~Deprecated~~ → use `/tdk-config-sync` instead |
+| 23 | `/tdk-workspace-topology-apply [--dry-run] [--reconcile] [--topology <path>]` | Preview runtime config patch from workspace topology |
+| 24 | `/tdk-sub-workdspace-init` | Initialize a new sub-workspace |
+| 25 | `/tdk-sub-workdspace-list` | List all configured sub-workspaces |
+| 26 | `/tdk-sub-workdspace-sync` | ~~Deprecated~~ → use `/tdk-config-sync` instead |
 | — | **Design Documents** | |
-| 26 | `/tdk-batch-design <id>` | Generate batch processing design document for approval |
+| 27 | `/tdk-batch-design <id>` | Generate batch processing design document for approval |
 | — | **Test Viewpoints** | |
-| 27 | `/tdk-test-viewpoint <id>` | Generate high-level test viewpoints (観点) from spec |
+| 28 | `/tdk-test-viewpoint <id>` | Generate high-level test viewpoints (観点) from spec |
 | — | **Primary Implementation** | |
-| 28 | `/tdk-implement <id> [--phase NN]` | Execute implementation directly from plan.md ## Phases (recommended) |
+| 29 | `/tdk-implement <id> [--phase NN]` | Execute implementation directly from plan.md ## Phases (recommended) |
 
 ---
 
@@ -295,6 +313,34 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 `/tdk-plan` accepts freeform content after `<id>` in every mode. Default, `--fast`, and `--hard` treat content as planning instruction; `--red-team` treats it as review focus; `--validate` treats it as validation focus. Known mode flags can appear after `<id>` before or after the content.
 
+### Project Inception Commands
+
+| Command | Syntax | Key Flags | Input | Output | Depends On |
+|---------|--------|-----------|-------|--------|------------|
+| greenfield:start | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | `--full`, `--quick`, `--unknown` | Project brief, optional README/docs | `.specify/configurations/inception/project-inception.md` with readiness, assumptions, unresolved questions, and recommendation confidence | None |
+| brownfield:start | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | `--full`, `--config-only`, `--unknown` | Existing repo evidence, optional scout output | `.specify/configurations/inception/brownfield-onboarding.md` with observed evidence separated from inferred recommendations | None |
+| architecture:advisor | `/tdk-architecture-advisor [input\|file] [--recover-existing\|--unknown]` | `--recover-existing`, `--unknown` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | `.specify/configurations/architecture/architecture-options.md`, `.specify/configurations/architecture/architecture-decision.md`, or `.specify/configurations/architecture/architecture-recovery.md` | Optional after start/scout/discovery |
+| workspace-topology:apply | `/tdk-workspace-topology-apply [--dry-run] [--reconcile] [--topology <path>]` | `--dry-run`, `--reconcile`, `--topology` | `workspace-topology.json`, current `.specify/.specify.json` | Dry-run patch preview (no file writes) | Optional after start/scout |
+
+Greenfield and brownfield start commands are report/routing entrypoints. They do not create specs, plans, tracker issues, source code, or `.specify/.specify.json`. Greenfield full mode runs a project-inception interview before strong routing. Quick mode records unanswered critical gaps. Unknown mode classifies only unless minimum facts are present. Brownfield full mode uses bounded repo evidence, config-only mode focuses on `.specify` state, and unknown mode recommends one evidence-backed next route.
+
+`/tdk-architecture-advisor` is project-level and report-only. Standard mode
+writes architecture options and a decision artifact. If evidence is insufficient
+for an accepted decision, the decision artifact uses `Status: Deferred`.
+`--recover-existing` writes `architecture-recovery.md` by default and writes or
+updates `architecture-decision.md` only after explicit user confirmation.
+`--unknown` records evidence gaps and recommends the next safe route.
+
+Syntax: `/tdk-architecture-advisor [input|file] [--recover-existing|--unknown]`.
+
+`/tdk-workspace-topology-apply` wraps the TypeScript CLI dry-run:
+
+```bash
+bun src/index.ts config topology apply --dry-run --topology .specify/configurations/workspace-topology/workspace-topology.json
+```
+
+Slice 1 has no apply/write mode. Same-name brownfield config changes are reported as future confirmation candidates.
+
 ### UT Commands
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
@@ -308,6 +354,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | config:diff | `/tdk-config-diff` | `--sub-workspace` (required), `--detailed` | Workspace + sub-workspace docs | Diff table (no file) | sub-workspace:init |
 | config:sync | `/tdk-config-sync` | `--from-sub-workspace`, `--to-sub-workspace`, `--all`, `--force`, `--dry-run` | Docs paths | Synced files | sub-workspace:init |
 | config:index | `/tdk-config-index` | `--sub-workspace`, `--full` | All docs files | `document-manager.md` | None |
+| config topology apply | `bun src/index.ts config topology apply [--dry-run] [--topology <path>]` | `--dry-run`, `--topology` | `workspace-topology.json`, `.specify/.specify.json` | JSON dry-run patch preview (no file writes) | None |
 
 ### Harness CLI Commands
 
@@ -438,7 +485,7 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 |------|---------|---------|
 | `--sub-workspace <name>` | ut:*, config:* | Target a specific sub-workspace (e.g., `frontend`, `backend`) |
 | `--force` | ut:auto, ut:plan, config:sync | Overwrite existing artifacts without confirmation |
-| `--dry-run` | config:sync | Preview changes without writing files |
+| `--dry-run` | config:sync, workspace-topology:apply | Preview changes without writing files |
 | `--standalone` | ut:plan | Generate UT plan for existing code without spec |
 | `--review` | ut:plan | Review and update existing UT plan |
 
@@ -475,6 +522,12 @@ If you get a "not found" error, follow this dependency chain:
 **Primary (Recommended) Path:**
 ```
 constitution (optional, project-level)
+     ↓
+greenfield-start or brownfield-start (optional, project-level)
+     ↓
+architecture-advisor (optional, project-level report-only)
+     ↓
+workspace-topology-apply --dry-run (optional, project-level)
      ↓
 discovery (optional, epic-level context)
      ↓

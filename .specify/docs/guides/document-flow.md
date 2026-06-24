@@ -14,12 +14,25 @@ flowchart TD
     %% Phase 0: Specification
     REQ[Requirements<br/>Natural Language]
     PRODUCT_CONTEXT[product-context.md<br/>Project Context]
+    GREENFIELD_INCEPTION[project-inception.md<br/>Greenfield Intake]
+    BROWNFIELD_ONBOARDING[brownfield-onboarding.md<br/>Brownfield Onboarding]
+    ARCHITECTURE_REPORTS[architecture-options.md<br/>architecture-decision.md<br/>architecture-recovery.md]
+    TOPOLOGY[workspace-topology.json<br/>Topology Proposal]
+    CONFIG_PATCH[config topology apply<br/>Dry-run Patch Preview]
     DISCOVERY[discovery/<br/>Epic Context]
 
     %% Phase 0: Feature Specification
+    REQ -.->|/tdk-greenfield-start<br/>project intake| GREENFIELD_INCEPTION
+    REQ -.->|/tdk-brownfield-start<br/>repo onboarding| BROWNFIELD_ONBOARDING
+    GREENFIELD_INCEPTION -.->|/tdk-architecture-advisor<br/>project decision| ARCHITECTURE_REPORTS
+    BROWNFIELD_ONBOARDING -.->|/tdk-architecture-advisor --recover-existing<br/>recovery report| ARCHITECTURE_REPORTS
+    ARCHITECTURE_REPORTS -.->|future boundary/topology input| TOPOLOGY
+    TOPOLOGY -.->|/tdk-workspace-topology-apply<br/>dry-run only| CONFIG_PATCH
     REQ -.->|/tdk-discovery<br/>optional, epic| DISCOVERY
     REQ -->|/tdk-specify| SPEC[spec.md<br/>Feature Specification]
     DISCOVERY -.->|context only| SPEC
+    PRODUCT_CONTEXT -.->|project authority| GREENFIELD_INCEPTION
+    PRODUCT_CONTEXT -.->|project authority| BROWNFIELD_ONBOARDING
     PRODUCT_CONTEXT -.->|project authority| DISCOVERY
     PRODUCT_CONTEXT -.->|project authority| SPEC
     SPEC -->|/tdk-clarify| SPEC_CLARIFIED[spec.md<br/>+ Clarifications]
@@ -63,7 +76,7 @@ flowchart TD
     classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
     classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px
 
-    class REQ,DISCOVERY,SPEC,SPEC_CLARIFIED,TASK_BREAKDOWN phase0
+    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,DISCOVERY,SPEC,SPEC_CLARIFIED,TASK_BREAKDOWN phase0
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES,PAGEDESIGNS,BATCH_DESIGN phase1
     class TEST_VP phase0
     class PRODUCT_CONTEXT,CONSTITUTION,UIUX,REF_DATAMODEL,REF_STATE reference
@@ -79,6 +92,11 @@ flowchart TD
 ```mermaid
 flowchart LR
     REQ[Requirements]
+    GREENFIELD_INCEPTION[project-inception.md]
+    BROWNFIELD_ONBOARDING[brownfield-onboarding.md]
+    ARCHITECTURE_REPORTS[architecture reports]
+    TOPOLOGY[workspace-topology.json]
+    CONFIG_PATCH[config dry-run patch]
     DISCOVERY[discovery/<br/>Epic Context]
     SPEC[spec.md]
     SPEC_CLAR[spec.md<br/>+ Clarifications]
@@ -86,6 +104,12 @@ flowchart LR
     TASKS[tasks-breakdown/<br/>Portable Work Items]
     BA_REQ[ba-requirement.md]
 
+    REQ -.->|"/tdk-greenfield-start"| GREENFIELD_INCEPTION
+    REQ -.->|"/tdk-brownfield-start"| BROWNFIELD_ONBOARDING
+    GREENFIELD_INCEPTION -.->|"/tdk-architecture-advisor"| ARCHITECTURE_REPORTS
+    BROWNFIELD_ONBOARDING -.->|"/tdk-architecture-advisor --recover-existing"| ARCHITECTURE_REPORTS
+    ARCHITECTURE_REPORTS -.->|"future topology input"| TOPOLOGY
+    TOPOLOGY -.->|"/tdk-workspace-topology-apply<br/>dry-run"| CONFIG_PATCH
     REQ -.->|"/tdk-discovery<br/>epic-id brief"| DISCOVERY
     REQ -->|"/tdk-specify<br/>feature-id desc"| SPEC
     DISCOVERY -.->|"context only"| SPEC
@@ -102,7 +126,7 @@ flowchart LR
     classDef note fill:#f5f5f5,stroke:#616161,stroke-width:1px
 
     class REQ input
-    class DISCOVERY,SPEC,SPEC_CLAR,HLD,TASKS,BA_REQ output
+    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,DISCOVERY,SPEC,SPEC_CLAR,HLD,TASKS,BA_REQ output
     class CONTENT note
 ```
 
@@ -281,6 +305,13 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | Artifact | Created By | Input From | Used By | Update Frequency |
 |----------|-----------|------------|---------|-----------------|
 | `product-context.md` | `/tdk-constitution --init/update` | constitution, memory, accepted project brief/update feedback | `/tdk-discovery`, `/tdk-specify`, `/tdk-plan` context | Project authority changes |
+| `.specify/configurations/inception/project-inception.md` | `/tdk-greenfield-start` | Project brief or workspace-local file plus project-inception questions | Readiness-aware recommended greenfield route | New-project intake |
+| `.specify/configurations/inception/brownfield-onboarding.md` | `/tdk-brownfield-start` | Existing repo evidence, optional scout output | Evidence/confidence-based brownfield onboarding route | Existing-repo intake |
+| `.specify/configurations/architecture/architecture-options.md` | `/tdk-architecture-advisor` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | Architecture decision review | Project architecture options |
+| `.specify/configurations/architecture/architecture-decision.md` | `/tdk-architecture-advisor` | `architecture-options.md` plus accepted assumptions | Future boundary-map/topology work | Project architecture decision |
+| `.specify/configurations/architecture/architecture-recovery.md` | `/tdk-architecture-advisor --recover-existing` | Brownfield onboarding, scout, README, or bounded repo evidence | Brownfield-safe architecture recovery review | Existing-repo recovery |
+| `.specify/configurations/workspace-topology/workspace-topology.json` | Human-authored topology proposal | Inception/onboarding evidence | `/tdk-workspace-topology-apply --dry-run` | Project topology changes |
+| `config topology dry-run patch` | `/tdk-workspace-topology-apply` | `workspace-topology.json`, current `.specify/.specify.json` | Human review; no file write | Preview only |
 | `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution | Optional context for `/tdk-specify` | Optional before specify |
 | `spec.md` | `/tdk-specify` | User description | `/tdk-plan`, all downstream | Feature start |
 | `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-ba-requirement` | After specify |

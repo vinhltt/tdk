@@ -4,6 +4,7 @@
 import { Command } from 'commander';
 import { createConfigIndexCommand } from './commands/config/index';
 import { createConfigDiffCommand } from './commands/config/diff';
+import { createConfigTopologyApplyCommand } from './commands/config/topology/apply';
 import { createDetectConfigCommand } from './commands/detect-config';
 import { createUtCommandGroup } from './commands/ut/index';
 import { createScoutCommand } from './commands/scout/index';
@@ -21,6 +22,10 @@ const configGroup = new Command('config')
 configGroup.addCommand(createDetectConfigCommand());
 configGroup.addCommand(createConfigIndexCommand());
 configGroup.addCommand(createConfigDiffCommand());
+const topologyGroup = new Command('topology')
+  .description('Workspace topology commands');
+topologyGroup.addCommand(createConfigTopologyApplyCommand());
+configGroup.addCommand(topologyGroup);
 program.addCommand(configGroup);
 
 // UT command group: tdk ut <auto|plan|impl>

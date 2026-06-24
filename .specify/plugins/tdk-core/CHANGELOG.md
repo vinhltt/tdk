@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.5.0] - 2026-06-24
+
+### Added
+- Add new Phase 0 intake, architecture advisor, and workspace topology skills (tdk-architecture-advisor, tdk-brownfield-start, tdk-greenfield-start, tdk-workspace-topology-apply)
+
 ## [5.4.2] - 2026-06-21
 
 ### Changed

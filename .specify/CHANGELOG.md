@@ -10,6 +10,22 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.78.0] - 2026-06-24
+
+### Added
+- **[Embedded Skills]** Add new Phase 0 intake, architecture advisor, and workspace topology skills
+  - `tdk-architecture-advisor` — evaluates project inception/onboarding assumptions and drafts architecture reports (options, decision, recovery)
+  - `tdk-brownfield-start` — handles existing repo onboarding and evidence gathering
+  - `tdk-greenfield-start` — handles new greenfield project intake and readiness questions
+  - `tdk-workspace-topology-apply` — dry-runs and applies workspace topology proposals
+- **[Scripts]** Implement workspace topology commands and verification harness
+  - New `config topology apply` command for dry-running workspace topology patch previews
+  - Workspace topology schema definitions and helper utilities for patch generation
+  - Unit tests validating the new topology-apply logic and intake/architecture workflow contracts
+- **[Guides]** Update documentation for Phase 0 integration
+  - `command-reference.md` — documents the four new Phase 0 commands (`/tdk-greenfield-start`, `/tdk-brownfield-start`, `/tdk-architecture-advisor`, and `/tdk-workspace-topology-apply`)
+  - `document-flow.md` — includes intake, architecture, and topology proposal flows in the Phase 0 flowcharts and artifact matrix
+
 ## [1.77.3] - 2026-06-24
 
 ### Changed
