@@ -30,10 +30,12 @@ function expectArchitectureWorkflowVersion(skill: string): void {
 describe('architecture workflow foundation contracts', () => {
   const greenfieldPath = skillPath('tdk-greenfield-start');
   const brownfieldPath = skillPath('tdk-brownfield-start');
+  const boundaryMapPath = skillPath('tdk-boundary-map');
   const topologyPath = skillPath('tdk-workspace-topology-apply');
 
   const greenfield = readIfExists(greenfieldPath);
   const brownfield = readIfExists(brownfieldPath);
+  const boundaryMap = readIfExists(boundaryMapPath);
   const topology = readIfExists(topologyPath);
   const hld = read(skillPath('tdk-high-level-design'));
   const index = read(INDEX_PATH);
@@ -47,6 +49,7 @@ describe('architecture workflow foundation contracts', () => {
   it('keeps new foundation skills at the selected architecture workflow version', () => {
     expectArchitectureWorkflowVersion(greenfield);
     expectArchitectureWorkflowVersion(brownfield);
+    expectArchitectureWorkflowVersion(boundaryMap);
     expectArchitectureWorkflowVersion(topology);
   });
 

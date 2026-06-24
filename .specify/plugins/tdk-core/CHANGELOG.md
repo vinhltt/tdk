@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.6.0] - 2026-06-24
+
+### Added
+- Add tdk-boundary-map skill for project-level workspace boundary proposal workflow.
+
+### Changed
+- Update architecture workflow skills and reference materials (tdk-architecture-advisor, tdk-brownfield-start, tdk-greenfield-start) to incorporate tdk-boundary-map routing.
+
 ## [5.5.0] - 2026-06-24
 
 ### Added

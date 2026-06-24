@@ -24,8 +24,9 @@ Use this workflow for default mode and `--full`.
 - Recommend `/tdk-constitution --init` when project principles or product context do not exist.
 - Recommend `/tdk-discovery` when the work is epic/product-sized and product context needs depth.
 - Recommend `/tdk-architecture-advisor <project-inception.md>` when inception evidence is ready for a project-level architecture decision.
+- Recommend `/tdk-boundary-map <architecture-decision.md>` after architecture advisor evidence is reviewed.
 - Recommend `/tdk-specify` only when the user has a concrete feature-sized objective.
-- Recommend `/tdk-workspace-topology-apply --dry-run` only after topology assumptions are explicit enough to review.
+- Recommend `/tdk-workspace-topology-apply --dry-run` only after boundary-map proposal artifacts are reviewed.
 - Do not route directly to high-level design before specification and clarification.
 
 ## Stop Conditions

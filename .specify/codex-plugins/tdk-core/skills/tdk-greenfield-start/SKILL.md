@@ -3,7 +3,7 @@ name: tdk-greenfield-start
 description: "New-project intake and routing entry point that asks project-inception questions, writes project-inception.md, and recommends safe next TDK routes"
 argument-hint: "[brief|file] [--full|--quick|--unknown]"
 metadata:
-  version: "5.5.0"
+  version: "5.6.0"
 ---
 
 # tdk-greenfield-start

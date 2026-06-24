@@ -9,7 +9,7 @@ related-skills:
   - tdk-workspace-topology-apply
   - tdk-sub-workspace-docs
 metadata:
-  version: "5.5.0"
+  version: "5.6.0"
   author: "VinhLTT"
   category: architecture-workflow
 ---

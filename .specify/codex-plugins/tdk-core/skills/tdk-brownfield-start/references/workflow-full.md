@@ -23,7 +23,8 @@ Use this workflow for default mode and `--full`.
 
 - Recommend `tdk-scout` when repo boundaries, ownership, or file roles are unclear.
 - Recommend `/tdk-architecture-advisor --recover-existing <brownfield-onboarding.md>` after onboarding/scout evidence is ready for architecture recovery.
-- Recommend `/tdk-workspace-topology-apply --dry-run --reconcile` when config evidence and repo shape can be compared safely.
+- Recommend `/tdk-boundary-map --from-existing <architecture-recovery.md>` after recovery evidence is reviewed.
+- Recommend `/tdk-workspace-topology-apply --dry-run --reconcile` only after boundary-map proposal artifacts are reviewed.
 - Recommend `/tdk-sub-workspace-docs --all` only after config evidence exists or topology dry-run is accepted later.
 - Recommend product discovery only as a later route when product intent is missing.
 

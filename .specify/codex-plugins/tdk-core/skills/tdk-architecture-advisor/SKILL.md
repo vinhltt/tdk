@@ -7,9 +7,10 @@ related-skills:
   - tdk-greenfield-start
   - tdk-brownfield-start
   - tdk-scout
+  - tdk-boundary-map
   - tdk-workspace-topology-apply
 metadata:
-  version: "5.5.0"
+  version: "5.6.0"
   author: "VinhLTT"
   category: architecture-workflow
 ---
@@ -37,8 +38,8 @@ does not create or update `.specify/.specify.json` and does not write `workspace
 
 Boundary summary: does not create specs, HLD artifacts, plans, tasks, tracker issues, source code, topology files, ADR files, or `.specify/.specify.json`.
 
-Advisor output is evidence for future boundary-map, topology, scaffold, or
-implementation work. Those later steps require separate commands and review.
+Advisor output is evidence for `/tdk-boundary-map`, topology preview, scaffold,
+or implementation work. Those later steps require separate commands and review.
 
 ## Args
 

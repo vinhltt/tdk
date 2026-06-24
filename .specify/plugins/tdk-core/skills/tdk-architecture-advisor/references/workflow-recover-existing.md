@@ -46,8 +46,10 @@ Do not read secret-like files. Redact sensitive values before report text.
 ## Route Rules
 
 - Recommend `/tdk-scout --scope <repo-root> --task-hint "brownfield architecture recovery"` when repo boundaries are unclear.
+- Recommend `/tdk-boundary-map --from-existing <architecture-recovery.md>` when
+  recovery findings are ready for topology proposal.
 - Recommend `/tdk-workspace-topology-apply --dry-run --reconcile` only as a later
-  preview route after recovery findings are reviewed.
+  preview route after boundary-map proposal artifacts are reviewed.
 - Recommend `/tdk-sub-workspace-docs --all` only when config evidence is enough
   to identify docs targets.
 

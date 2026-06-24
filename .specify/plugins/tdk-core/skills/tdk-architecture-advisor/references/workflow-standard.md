@@ -41,8 +41,8 @@ report text.
 - Recommend `/tdk-discovery` when product/user/workflow context is too shallow.
 - Recommend `/tdk-architecture-advisor --unknown` when architecture evidence is
   insufficient for a decision.
-- Recommend a future boundary-map/topology route only after architecture
-  assumptions are explicit enough to review.
+- Recommend `/tdk-boundary-map <architecture-decision.md>` only after
+  architecture assumptions are explicit enough to review.
 - Do not route directly to feature HLD; HLD remains after `/tdk-specify` and
   `/tdk-clarify`.
 

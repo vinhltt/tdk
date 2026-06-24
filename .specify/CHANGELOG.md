@@ -10,6 +10,22 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.79.0] - 2026-06-24
+
+### Added
+- **[Embedded Skills]** Add `tdk-boundary-map` skill for project-level workspace boundary proposal workflow.
+
+### Changed
+- **[Embedded Skills]** Update architecture workflow skills and reference materials:
+  - `tdk-architecture-advisor` — points advisor output references to `/tdk-boundary-map` as subsequent route
+  - `tdk-brownfield-start` — recommends `/tdk-boundary-map` after recovery evidence is reviewed
+  - `tdk-greenfield-start` — recommends `/tdk-boundary-map` after architecture advisor evidence is reviewed
+- **[Guides]** Update reference documentation:
+  - `command-reference.md` — documents `/tdk-boundary-map` syntax and options
+  - `document-flow.md` — integrates `/tdk-boundary-map` into the architecture workflow flow
+- **[Scripts]** Update test coverage:
+  - Add contract tests for `tdk-boundary-map` and verify foundation skill version matching
+
 ## [1.78.0] - 2026-06-24
 
 ### Added

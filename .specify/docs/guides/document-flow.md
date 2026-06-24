@@ -17,7 +17,7 @@ flowchart TD
     GREENFIELD_INCEPTION[project-inception.md<br/>Greenfield Intake]
     BROWNFIELD_ONBOARDING[brownfield-onboarding.md<br/>Brownfield Onboarding]
     ARCHITECTURE_REPORTS[architecture-options.md<br/>architecture-decision.md<br/>architecture-recovery.md]
-    TOPOLOGY[workspace-topology.json<br/>Topology Proposal]
+    TOPOLOGY[workspace-topology.md/json<br/>Topology Proposal]
     CONFIG_PATCH[config topology apply<br/>Dry-run Patch Preview]
     DISCOVERY[discovery/<br/>Epic Context]
 
@@ -26,7 +26,7 @@ flowchart TD
     REQ -.->|/tdk-brownfield-start<br/>repo onboarding| BROWNFIELD_ONBOARDING
     GREENFIELD_INCEPTION -.->|/tdk-architecture-advisor<br/>project decision| ARCHITECTURE_REPORTS
     BROWNFIELD_ONBOARDING -.->|/tdk-architecture-advisor --recover-existing<br/>recovery report| ARCHITECTURE_REPORTS
-    ARCHITECTURE_REPORTS -.->|future boundary/topology input| TOPOLOGY
+    ARCHITECTURE_REPORTS -.->|/tdk-boundary-map<br/>proposal only| TOPOLOGY
     TOPOLOGY -.->|/tdk-workspace-topology-apply<br/>dry-run only| CONFIG_PATCH
     REQ -.->|/tdk-discovery<br/>optional, epic| DISCOVERY
     REQ -->|/tdk-specify| SPEC[spec.md<br/>Feature Specification]
@@ -95,7 +95,7 @@ flowchart LR
     GREENFIELD_INCEPTION[project-inception.md]
     BROWNFIELD_ONBOARDING[brownfield-onboarding.md]
     ARCHITECTURE_REPORTS[architecture reports]
-    TOPOLOGY[workspace-topology.json]
+    TOPOLOGY[workspace-topology.md/json]
     CONFIG_PATCH[config dry-run patch]
     DISCOVERY[discovery/<br/>Epic Context]
     SPEC[spec.md]
@@ -108,7 +108,7 @@ flowchart LR
     REQ -.->|"/tdk-brownfield-start"| BROWNFIELD_ONBOARDING
     GREENFIELD_INCEPTION -.->|"/tdk-architecture-advisor"| ARCHITECTURE_REPORTS
     BROWNFIELD_ONBOARDING -.->|"/tdk-architecture-advisor --recover-existing"| ARCHITECTURE_REPORTS
-    ARCHITECTURE_REPORTS -.->|"future topology input"| TOPOLOGY
+    ARCHITECTURE_REPORTS -.->|"/tdk-boundary-map"| TOPOLOGY
     TOPOLOGY -.->|"/tdk-workspace-topology-apply<br/>dry-run"| CONFIG_PATCH
     REQ -.->|"/tdk-discovery<br/>epic-id brief"| DISCOVERY
     REQ -->|"/tdk-specify<br/>feature-id desc"| SPEC
@@ -308,9 +308,10 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `.specify/configurations/inception/project-inception.md` | `/tdk-greenfield-start` | Project brief or workspace-local file plus project-inception questions | Readiness-aware recommended greenfield route | New-project intake |
 | `.specify/configurations/inception/brownfield-onboarding.md` | `/tdk-brownfield-start` | Existing repo evidence, optional scout output | Evidence/confidence-based brownfield onboarding route | Existing-repo intake |
 | `.specify/configurations/architecture/architecture-options.md` | `/tdk-architecture-advisor` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | Architecture decision review | Project architecture options |
-| `.specify/configurations/architecture/architecture-decision.md` | `/tdk-architecture-advisor` | `architecture-options.md` plus accepted assumptions | Future boundary-map/topology work | Project architecture decision |
+| `.specify/configurations/architecture/architecture-decision.md` | `/tdk-architecture-advisor` | `architecture-options.md` plus accepted assumptions | `/tdk-boundary-map` or future topology work | Project architecture decision |
 | `.specify/configurations/architecture/architecture-recovery.md` | `/tdk-architecture-advisor --recover-existing` | Brownfield onboarding, scout, README, or bounded repo evidence | Brownfield-safe architecture recovery review | Existing-repo recovery |
-| `.specify/configurations/workspace-topology/workspace-topology.json` | Human-authored topology proposal | Inception/onboarding evidence | `/tdk-workspace-topology-apply --dry-run` | Project topology changes |
+| `.specify/configurations/workspace-topology/workspace-topology.md` | `/tdk-boundary-map` or human-authored topology proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | Human review before dry-run preview | Project topology proposal |
+| `.specify/configurations/workspace-topology/workspace-topology.json` | `/tdk-boundary-map` or human-authored topology proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | `/tdk-workspace-topology-apply --dry-run` | Project topology changes |
 | `config topology dry-run patch` | `/tdk-workspace-topology-apply` | `workspace-topology.json`, current `.specify/.specify.json` | Human review; no file write | Preview only |
 | `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution | Optional context for `/tdk-specify` | Optional before specify |
 | `spec.md` | `/tdk-specify` | User description | `/tdk-plan`, all downstream | Feature start |

@@ -123,7 +123,7 @@ describe('TDK architecture advisor contracts', () => {
     expect(existsSync(skillPath)).toBe(true);
     expect(skill).toContain('name: tdk-architecture-advisor');
     expect(skill).toContain('[input|file] [--recover-existing|--unknown]');
-    expect(skill).toContain('  version: "0.1.0"');
+    expect(skill).toContain('  version: "5.5.0"');
     expect(skill).toContain('.specify/configurations/architecture/architecture-options.md');
     expect(skill).toContain('.specify/configurations/architecture/architecture-decision.md');
     expect(skill).toContain('.specify/configurations/architecture/architecture-recovery.md');
@@ -234,6 +234,6 @@ describe('TDK architecture advisor contracts', () => {
     expect(documentFlow).toContain('.specify/configurations/architecture/architecture-options.md');
     expect(manifest).toContain('"tdk-architecture-advisor"');
     expect(readme).toContain('/tdk-architecture-advisor');
-    expect(readme).toContain('22 skills + 1 agent');
+    expect(readme).toContain('23 skills + 1 agent');
   });
 });
