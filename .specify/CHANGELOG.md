@@ -10,6 +10,12 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.77.2] - 2026-06-24
+
+### Changed
+- **[Guides]** Updated several guide documents for TDK improvements.
+- **[Scripts]** Modified `flat-claude-adapter.ts` and related test files.
+
 ## [1.77.1] - 2026-06-21
 
 ### Changed

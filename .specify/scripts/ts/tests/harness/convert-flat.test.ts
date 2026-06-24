@@ -124,6 +124,24 @@ describe('harness convert-flat', () => {
     expect(fs.existsSync(path.join(consumer.root, '.agents', 'skills', 'demo', 'SKILL.md'))).toBe(false);
   });
 
+  test('dry-run tolerates Claude agent descriptions with unquoted colons', () => {
+    const consumer = makeConsumer('tdk-convert-flat-loose-agent-frontmatter-');
+    writeFile(consumer.root, '.claude/agents/code-reviewer.md', [
+      '---',
+      'name: code-reviewer',
+      'description: Use this agent when you need comprehensive code review and quality assurance. Context: before merging.',
+      'tools: Read, Grep',
+      '---',
+      'Review code.',
+    ].join('\n'));
+
+    const result = runConvertFlat(consumer.root, ['--dry-run']);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout.toString()).toContain('.codex/agents/code_reviewer.toml');
+    expect(result.stderr.toString()).not.toContain('Nested mappings are not allowed');
+  });
+
   test('dev-only ck oracle agrees on known agent and command shapes when available', () => {
     if (!isCommandAvailable('ck')) {
       console.warn('Skipping ck differential oracle: ck is not on PATH.');

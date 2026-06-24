@@ -37,6 +37,27 @@ describe('flat claude adapter', () => {
     expect(inventory.warnings).toEqual([]);
   });
 
+  test('recovers unquoted scalar frontmatter descriptions with colons', () => {
+    const consumer = makeConsumer('tdk-flat-adapter-loose-frontmatter-');
+    writeFile(consumer.root, '.claude/agents/code-reviewer.md', [
+      '---',
+      'name: code-reviewer',
+      'description: Use this agent when you need comprehensive code review and quality assurance. Context: before merging.',
+      'tools: Read, Grep',
+      '---',
+      'Review code.',
+    ].join('\n'));
+
+    const inventory = discoverFlatClaudeInventory(consumer.root);
+    const agent = inventory.records.find((record) => record.kind === 'agent');
+
+    expect(agent?.kind).toBe('agent');
+    if (agent?.kind !== 'agent') throw new Error('Expected agent record');
+    expect(agent.description).toBe('Use this agent when you need comprehensive code review and quality assurance. Context: before merging.');
+    expect(agent.frontmatter.tools).toBe('Read, Grep');
+    expect(agent.body).toBe('Review code.');
+  });
+
   test('surfaces malformed hook shapes as warnings instead of dropping silently', () => {
     const consumer = makeConsumer('tdk-flat-adapter-hook-warnings-');
     writeFile(consumer.root, '.claude/settings.json', JSON.stringify({

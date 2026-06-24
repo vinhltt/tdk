@@ -36,11 +36,45 @@ function parseFrontmatter(content: string): { frontmatter: Record<string, unknow
   const end = content.indexOf(`${newline}---${newline}`, 4);
   if (end === -1) return { frontmatter: {}, body: content };
   const raw = content.slice(4, end);
-  const parsed = parse(raw);
+  const parsed = parseFrontmatterYaml(raw);
   return {
     frontmatter: parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {},
     body: content.slice(end + newline.length + 3 + newline.length),
   };
+}
+
+function parseFrontmatterYaml(raw: string): unknown {
+  try {
+    return parse(raw);
+  } catch {
+    return parseLooseScalarFrontmatter(raw);
+  }
+}
+
+function parseLooseScalarFrontmatter(raw: string): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const line of raw.split(/\r?\n/)) {
+    if (!line.trim() || /^\s/.test(line) || line.trimStart().startsWith('#')) continue;
+    const match = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (!match) continue;
+    result[match[1]!] = unwrapLooseScalar(match[2]!);
+  }
+  return result;
+}
+
+function unwrapLooseScalar(value: string): string {
+  const trimmed = value.trim();
+  if (trimmed.length >= 2 && trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    try {
+      return JSON.parse(trimmed) as string;
+    } catch {
+      return trimmed.slice(1, -1);
+    }
+  }
+  if (trimmed.length >= 2 && trimmed.startsWith("'") && trimmed.endsWith("'")) {
+    return trimmed.slice(1, -1).replace(/''/g, "'");
+  }
+  return trimmed;
 }
 
 function stringField(value: unknown): string | undefined {

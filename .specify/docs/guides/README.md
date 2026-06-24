@@ -10,13 +10,15 @@
 3. **Want a workflow?** → [Scenarios](#scenarios) below
 4. **Setting up Claude Code?** → [Setup Claude Code](../setup/claude-code/README.md)
 
+![TDK lifecycle workflow](/tdk-docs/assets/diagrams/tdk-lifecycle-share-graph-v4.svg)
+
 ## Guides
 
 | Guide | Description |
 |-------|-------------|
 | [Command Reference](command-reference.md) | Full cheat sheet + command details for all `/tdk-*` skills |
 | [Document Flow](document-flow.md) | Artifact lifecycle — what each command produces and consumes |
-| [Evolution Comparison](evolution-comparison.md) | CommonDragon vs speckit-original vs speckit-tdk-jp |
+| [Evolution Comparison](evolution-comparison.md) | TDK vs speckit-original vs speckit-tdk-jp |
 
 ## Setup Docs
 

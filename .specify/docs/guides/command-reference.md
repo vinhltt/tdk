@@ -10,8 +10,8 @@
 
 ## Table of Contents
 
-- [Why CommonDragon Tihon?](#why-commondragon-tihon)
-- [CommonDragon Exclusive Features](#commondragon-exclusive-features)
+- [Why TDK?](#why-tdk)
+- [TDK Native Features](#tdk-native-features)
 - [Overview](#overview)
 - [Cheat Sheet](#cheat-sheet)
 - [Quick Start](#quick-start)
@@ -23,15 +23,15 @@
 
 ---
 
-## Why CommonDragon Tihon?
+## Why TDK?
 
 Tihon (Plan — Act — Verify) is a specification-driven development framework that generates specs, optional portable task breakdowns, plans, and code from natural language. You describe a feature; Tihon guides you through the full artifact chain — from requirements to production-ready implementation.
 
-CommonDragon is the third generation of this framework, built natively for Claude Code.
+TDK is the Claude Code native generation of this framework.
 
 ### Evolution
 
-| Dimension | speckit-original | speckit-tdk-jp | CommonDragon |
+| Dimension | speckit-original | speckit-tdk-jp | TDK |
 |-----------|-----------------|----------------|--------------|
 | Commands | 9 | 18 | **13** (11 TS + 2 bash fallback) |
 | Platform | Agent templates | GitHub Copilot | **Claude Code CLI** |
@@ -45,7 +45,7 @@ CommonDragon is the third generation of this framework, built natively for Claud
 
 ---
 
-## CommonDragon Exclusive Features
+## TDK Native Features
 
 These capabilities are not present in the original frameworks.
 
@@ -79,7 +79,7 @@ Run `diff → sync → index` to keep docs consistent across workspaces.
 
 ### Skills Ecosystem
 
-CommonDragon ships with 10+ skills that extend the Claude Code environment: context engineering, DOCX/PDF/PPTX processing, MCP builder, brainstorming, docs-seeker (Context7 integration), and more. Skills are loaded on demand and can be extended without modifying core commands.
+TDK ships with 10+ skills that extend the Claude Code environment: context engineering, DOCX/PDF/PPTX processing, MCP builder, brainstorming, docs-seeker (Context7 integration), and more. Skills are loaded on demand and can be extended without modifying core commands.
 
 ### Claude Code Native
 
@@ -92,6 +92,8 @@ Runs in the Claude Code CLI and VSCode extension. No GitHub Copilot subscription
 The Tihon command suite provides a **specification-driven development** workflow. You describe a feature in natural language, optionally capture epic discovery context first, and the commands guide you through specification, optional design and task breakdown, planning, and implementation.
 
 ### Workflow Pipeline
+
+![TDK lifecycle workflow](/tdk-docs/assets/diagrams/tdk-lifecycle-share-graph-v4.svg)
 
 ```
                     ┌─────────────────────────────────────────────────────────────────────┐

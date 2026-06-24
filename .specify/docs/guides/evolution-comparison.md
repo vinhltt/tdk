@@ -1,19 +1,19 @@
-# Tihon — CommonDragon vs Predecessors
+# Tihon — TDK vs Predecessors
 
-> **Purpose**: Deep-dive comparison for developers evaluating CommonDragon Tihon.
+> **Purpose**: Deep-dive comparison for developers evaluating TDK.
 > For a quick glance, see the [Evolution table](command-reference.md#evolution) in the command guide.
 
 Three generations of the Tihon framework, each targeting a different AI platform:
 
 - **speckit-original** — 9 commands¹, GitHub Copilot, core workflow only
 - **speckit-tdk-jp** — 18 commands, GitHub Copilot, full dev cycle (hardcoded to one project)
-- **CommonDragon** — 36 commands, Claude Code CLI, multi-workspace, no external deps
+- **TDK** — 36 commands, Claude Code CLI, multi-workspace, no external deps
 
 ---
 
 ## Quick Comparison
 
-| Dimension | speckit-original | speckit-tdk-jp | CommonDragon |
+| Dimension | speckit-original | speckit-tdk-jp | TDK |
 |-----------|-----------------|----------------|--------------|
 | Commands | 9¹ | 18 | **36** |
 | Platform | Agent templates | GitHub Copilot | **Claude Code CLI** |
@@ -27,7 +27,7 @@ Three generations of the Tihon framework, each targeting a different AI platform
 
 ## Detailed Feature Breakdown
 
-| Dimension | speckit-original | speckit-tdk-jp | CommonDragon |
+| Dimension | speckit-original | speckit-tdk-jp | TDK |
 |-----------|:-:|:-:|:-:|
 | **Platform** | | | |
 | Runtime | Agent templates | GitHub Copilot + bash | **Claude Code CLI** |
@@ -91,9 +91,9 @@ Three generations of the Tihon framework, each targeting a different AI platform
 
 ## Core Command Upgrades
 
-Commands present in predecessors, upgraded in CommonDragon (11 total):
+Commands present in predecessors, upgraded in TDK (11 total):
 
-| Command | Predecessor | CommonDragon Upgrade |
+| Command | Predecessor | TDK Upgrade |
 |---------|-------------|----------------------|
 | `/tdk-specify` | Spec + brainstorm | **+ auto `checklists/requirements.md` generation** |
 | `/tdk-clarify` | Up to 5 Q&A | **Deeper integration with spec.md structure** |
@@ -104,7 +104,7 @@ Commands present in predecessors, upgraded in CommonDragon (11 total):
 
 ---
 
-## New Commands in CommonDragon
+## New Commands in TDK
 
 Commands not present in any predecessor (15 total):
 
@@ -127,7 +127,7 @@ Commands not present in any predecessor (15 total):
 
 ## Validation Gates
 
-| Gate | speckit-original | speckit-tdk-jp | CommonDragon |
+| Gate | speckit-original | speckit-tdk-jp | TDK |
 |------|:----------------:|:--------------:|:------------:|
 | `/tdk-checklist` | Advisory² | -- | **Blocks implementation until approved** |
 | `/tdk-analyze` | -- | Basic | **Full cross-artifact: spec↔plan↔tasks** |
@@ -138,11 +138,11 @@ Commands not present in any predecessor (15 total):
 
 ### Flexible Branch Strategy
 
-speckit-original and speckit-tdk-jp auto-created a feature branch per spec (e.g., `feature/feat-001`), forcing linear development. CommonDragon **removed** this constraint — teams apply their own strategy (trunk-based, gitflow, GitHub flow). `--sub-workspace` handles logical isolation at the docs level without requiring git isolation.
+speckit-original and speckit-tdk-jp auto-created a feature branch per spec (e.g., `feature/feat-001`), forcing linear development. TDK **removed** this constraint — teams apply their own strategy (trunk-based, gitflow, GitHub flow). `--sub-workspace` handles logical isolation at the docs level without requiring git isolation.
 
 ### Plan.md ## Phases as Primary SoT
 
-CommonDragon elevates the `plan.md` file's `## Phases` table as the primary source of truth for implementation. This reduces artifact overhead while maintaining phase-based organization.
+TDK elevates the `plan.md` file's `## Phases` table as the primary source of truth for implementation. This reduces artifact overhead while maintaining phase-based organization.
 
 ### Validation-First
 
@@ -150,7 +150,7 @@ Two-layer validation gates ensure quality before proceeding: `/tdk-checklist` bl
 
 ### Native Integration > Scripted Workarounds
 
-speckit-tdk-jp used Playwright MCP but wrapped in bash scripts routed through GitHub Copilot. CommonDragon runs Playwright MCP natively within Claude Code — no bash wrapper, no Copilot intermediary, cross-platform (Windows/Mac/Linux), runs in the AI context directly.
+speckit-tdk-jp used Playwright MCP but wrapped in bash scripts routed through GitHub Copilot. TDK runs Playwright MCP natively within Claude Code — no bash wrapper, no Copilot intermediary, cross-platform (Windows/Mac/Linux), runs in the AI context directly.
 
 ### Artifact Chain
 
@@ -168,4 +168,4 @@ Full traceable chain: requirements → checklist → spec → plan (7+ files wit
 
 *¹ speckit-original command list inferred from codebase analysis; no official documentation exists for the original framework.*
 
-*² speckit-original had `speckit.checklist` for requirements quality testing. Dropped in speckit-tdk-jp, reintroduced as blocking gate in CommonDragon.*
+*² speckit-original had `speckit.checklist` for requirements quality testing. Dropped in speckit-tdk-jp, reintroduced as blocking gate in TDK.*

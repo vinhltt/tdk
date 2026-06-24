@@ -5,6 +5,8 @@
 
 ---
 
+![TDK lifecycle workflow](/tdk-docs/assets/diagrams/tdk-lifecycle-share-graph-v4.svg)
+
 ## Full Workflow Flow
 
 ```mermaid
