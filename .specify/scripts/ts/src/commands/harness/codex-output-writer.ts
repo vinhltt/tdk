@@ -19,6 +19,7 @@ import {
   codexHooksJsonTarget,
   codexHookWrapperTarget,
   codexSkillTarget,
+  isCodexInternalSkillEntrypoint,
 } from './codex-target-mapper';
 import type {
   CodexTargetFile,
@@ -143,6 +144,7 @@ export async function buildCodexWritePlan(inventory: FlatClaudeInventory): Promi
     }
     if (record.kind === 'skill') {
       for (const skillFile of record.files) {
+        if (isCodexInternalSkillEntrypoint(record.skillName, skillFile.skillRelativePath)) continue;
         addUnique(files, plannedFile(
           skillFile.sourcePath,
           skillFile.sourceRelativePath,

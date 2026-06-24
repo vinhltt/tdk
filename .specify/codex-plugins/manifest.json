@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-24T03:18:16Z",
+  "generated_at": "2026-06-24T03:37:59Z",
   "plugins": {
     "tdk-core": {
       "version": "5.4.2",
@@ -97,7 +97,6 @@
       "version": "1.0.0",
       "files": {
         ".codex-plugin/plugin.json": "e0ced1a67072377741fc739f15aab15ae9f48fc38a564db94f79d7e637003d79",
-        "skills/_shared/SKILL.md": "41be8e8be94b54d0ad5dc27eb5a0e535d30002bfbe00ca699d4aa1af22c0d7cc",
         "skills/_shared/consumer-skill-discovery.md": "a319f836aa4d31e04337b5d9185530dae8e931479ec3ffe211afa9c50d6778e4",
         "skills/_shared/learning-delta-schema.md": "75ea06307874ce5e92579e0e8de381c94e7b4ab2f6b5fbe61e7b22dda13b20ba",
         "skills/_shared/retro-feedback-schema.md": "2a459f6a69e424075e6d4bb7027507324652ab11aa9277b97933c6ec36a38aa2",

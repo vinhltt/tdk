@@ -4,6 +4,7 @@ import { parse } from 'yaml';
 import { sha256Buffer } from './checksum';
 import { codexPackageRoot } from './codex-package-root';
 import { discoverPluginInventory } from './plugin-discovery';
+import { isCodexInternalSkillEntrypoint } from './codex-target-mapper';
 import type { Manifest } from '../changelog/checks/types';
 import type {
   CodexConvertFile,
@@ -154,7 +155,10 @@ export function listCodexConvertArtifactPaths(plugin: CodexConvertPlugin): strin
   // agents/*.toml and config.toml are install-only — NOT listed here.
   const paths = new Set<string>(['.codex-plugin/plugin.json']);
   for (const skill of plugin.skills) {
-    for (const file of skill.files) paths.add(file.sourceRelativePath);
+    for (const file of skill.files) {
+      const skillRelativePath = file.sourceRelativePath.split('/').slice(2).join('/');
+      if (!isCodexInternalSkillEntrypoint(skill.name, skillRelativePath)) paths.add(file.sourceRelativePath);
+    }
   }
   for (const file of [...plugin.hooks.files, ...plugin.lib]) paths.add(file.sourceRelativePath);
   if (plugin.hooks.commands.length > 0) {

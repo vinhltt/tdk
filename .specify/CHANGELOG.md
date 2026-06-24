@@ -10,6 +10,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.77.3] - 2026-06-24
+
+### Changed
+- **[Scripts]** Support internal shared skills and improve TOML escaping in Codex integration
+  - Skip internal shared skill `SKILL.md` entrypoint files during conversion and installation.
+  - Escape backslashes in multiline developer instructions when generating Codex TOML configs.
+  - Preserve leading underscores for internal skill target paths.
+- **[Docs]** Update README and command reference to document that `_shared` skill directory entrypoints are not installed as loadable Codex skills.
+
+### Removed
+- **[tdk-retro]** Remove the `_shared` internal skill's `SKILL.md` entrypoint as it is no longer emitted as a loadable Codex skill.
+
 ## [1.77.2] - 2026-06-24
 
 ### Changed

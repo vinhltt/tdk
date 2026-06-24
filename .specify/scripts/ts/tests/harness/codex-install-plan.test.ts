@@ -152,6 +152,38 @@ describe('codex install plan', () => {
     expect(config).toContain('config_file = "agents/pav-helper.toml"');
   });
 
+  test('skips internal shared skill entrypoints while preserving shared reference files', () => {
+    const consumer = writePreconvertedPlugin(makeConsumer('tdk-codex-shared-skill-'));
+    const manifestPath = path.join(consumer.root, '.specify', 'codex-plugins', 'manifest.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+    manifest.plugins['tdk-core'].files['skills/_shared/SKILL.md'] = writeCodexPkgFile(
+      consumer.root,
+      'tdk-core',
+      'skills/_shared/SKILL.md',
+      '---\nmetadata:\n  version: 0.1.0\n---\n\n# _shared\n',
+    );
+    manifest.plugins['tdk-core'].files['skills/_shared/retro-feedback-schema.md'] = writeCodexPkgFile(
+      consumer.root,
+      'tdk-core',
+      'skills/_shared/retro-feedback-schema.md',
+      '# Retro feedback schema\n',
+    );
+    fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf-8');
+
+    const plan = buildCodexInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      previousManifest: emptyHarnessManifest('codex'),
+      sourcePrefix: 'tdk-',
+      targetPrefix: 'tdk-',
+    });
+
+    const targets = plan.writes.map((write) => write.targetRelativePath);
+    expect(targets).not.toContain('.agents/skills/shared/SKILL.md');
+    expect(targets).not.toContain('.agents/skills/_shared/SKILL.md');
+    expect(targets).toContain('.agents/skills/_shared/retro-feedback-schema.md');
+  });
+
   test('rejects source artifacts whose bytes do not match codex manifest checksums', () => {
     const consumer = writePreconvertedPlugin(makeConsumer('tdk-codex-checksum-'));
     // Tamper with a committed codex artifact

@@ -49,6 +49,19 @@ describe("convertAgentToCodexToml", () => {
 		expect(result.toml).toContain('\\"\\"\\"');
 	});
 
+	it("escapes backslashes in developer instructions for TOML basic strings", () => {
+		const result = convertAgentToCodexToml({
+			name: "docs-manager",
+			body: [
+				'1. Verify via `grep -r "function {name}\\|class {name}" src/`',
+				'- `+5` if basename matches `/^(index|main|app|page|layout)\\./`',
+			].join("\n"),
+		});
+
+		expect(result.toml).toContain('function {name}\\\\|class {name}');
+		expect(result.toml).toContain('layout)\\\\./');
+	});
+
 	it("warns on unknown model and preserves it as a comment", () => {
 		const result = convertAgentToCodexToml({
 			name: "custom",

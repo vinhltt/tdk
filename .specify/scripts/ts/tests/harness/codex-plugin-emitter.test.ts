@@ -113,6 +113,29 @@ describe('buildCodexPluginArtifacts - official layout', () => {
     expect(paths.some((p) => p.startsWith('.codex-plugin/skills/'))).toBe(false);
   });
 
+  test('internal shared skill SKILL.md is not emitted as a loadable Codex skill', async () => {
+    const plugin = makePlugin({
+      skills: [{
+        name: '_shared',
+        files: [{
+          sourcePath: '/fake/root/skills/_shared/SKILL.md',
+          sourceRelativePath: 'skills/_shared/SKILL.md',
+          content: buf('---\nmetadata:\n  version: 0.1.0\n---\n\n# _shared\n'),
+          checksum: 'abc',
+        }, {
+          sourcePath: '/fake/root/skills/_shared/retro-feedback-schema.md',
+          sourceRelativePath: 'skills/_shared/retro-feedback-schema.md',
+          content: buf('# Retro feedback schema\n'),
+          checksum: 'def',
+        }],
+      }],
+    });
+    const { artifacts } = await buildCodexPluginArtifacts(plugin);
+    const paths = artifacts.map((a) => a.artifactRelativePath);
+    expect(paths).not.toContain('skills/_shared/SKILL.md');
+    expect(paths).toContain('skills/_shared/retro-feedback-schema.md');
+  });
+
   test('hook files placed at hooks/... not .codex-plugin/hooks/...', async () => {
     const plugin = makePlugin({
       hooks: {

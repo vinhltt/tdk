@@ -13,7 +13,15 @@ import { sha256Buffer, sha256File } from './checksum';
 import { codexPackageRoot } from './codex-package-root';
 import { mergeCodexHooksJson } from './codex-hooks-merge';
 import { rewriteCodexGeneratedText, rewriteCodexSlugPrefix, rewriteHyphenPrefix } from './codex-slug-prefix-rewrite';
-import { codexAgentTarget, codexConfigTarget, codexHookFileTarget, codexHooksJsonTarget, codexLibTarget, codexSkillTarget } from './codex-target-mapper';
+import {
+  codexAgentTarget,
+  codexConfigTarget,
+  codexHookFileTarget,
+  codexHooksJsonTarget,
+  codexLibTarget,
+  codexSkillTarget,
+  isCodexInternalSkillEntrypoint,
+} from './codex-target-mapper';
 import { manifestPathFor } from './manifest-store';
 import { assertSafeCodexTargetRelativePath, normalizeTargetRelativePath } from './target-relative-path';
 import type { Manifest } from '../changelog/checks/types';
@@ -152,15 +160,14 @@ function readArtifacts(input: BuildCodexInstallPlanInput): { artifacts: CodexIns
         continue;
       }
 
-      const content = verifyArtifact(input.consumerRoot, plugin, relativePath, checksum);
-      const sourcePath = path.join(pkgRoot, relativePath);
-
       let targetRelativePath: string | undefined;
       if (relativePath.startsWith('skills/')) {
         const [, skillName, ...rest] = relativePath.split('/');
         if (!skillName || rest.length === 0) throw new Error(`Invalid skill artifact path: ${relativePath}`);
         const rewrittenSkill = rewriteHyphenPrefix(skillName, prefixSettings);
-        targetRelativePath = codexSkillTarget(rewrittenSkill, rest.join('/'));
+        const skillRelativePath = rest.join('/');
+        if (isCodexInternalSkillEntrypoint(rewrittenSkill, skillRelativePath)) continue;
+        targetRelativePath = codexSkillTarget(rewrittenSkill, skillRelativePath);
       } else if (relativePath.startsWith('hooks/')) {
         targetRelativePath = codexHookFileTarget(relativePath.slice('hooks/'.length));
       } else if (relativePath.startsWith('lib/')) {
@@ -168,6 +175,9 @@ function readArtifacts(input: BuildCodexInstallPlanInput): { artifacts: CodexIns
       } else {
         throw new Error(`Unexpected Codex artifact path: ${relativePath}`);
       }
+
+      const content = verifyArtifact(input.consumerRoot, plugin, relativePath, checksum);
+      const sourcePath = path.join(pkgRoot, relativePath);
 
       artifacts.push({
         plugin,

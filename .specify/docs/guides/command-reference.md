@@ -321,6 +321,8 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 `harness install --harness codex` verifies generated-package checksums from `.specify/codex-plugins/manifest.json`, writes skills to `.agents/skills/` and hooks/lib under `.codex/`, generates `.codex/agents/*.toml` and `.codex/config.toml` at install time from plugin source agents, and rejects combined `--harness claude,codex` in v1.
 
+Underscore-prefixed shared skill directories such as `_shared` are copied as reference assets, but their `SKILL.md` entrypoint is not installed as a loadable Codex skill.
+
 `harness convert-flat` never deletes or modifies the source `.claude/` tree. Unknown flat `.claude/` entries are reported and skipped; originals remain in place. Existing unowned `.codex/` targets are conflicts by default and are skipped unless `--force` is passed.
 
 ### Sub-workspace Commands

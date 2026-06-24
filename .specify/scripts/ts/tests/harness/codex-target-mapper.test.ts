@@ -7,6 +7,7 @@ import {
   codexHookWrapperTarget,
   codexSkillRoot,
   codexSkillTarget,
+  isCodexInternalSkillEntrypoint,
 } from '../../src/commands/harness/codex-target-mapper';
 
 describe('codex target mapper', () => {
@@ -25,5 +26,12 @@ describe('codex target mapper', () => {
   test('maps Codex skills through slugged .agents skill roots', () => {
     expect(codexSkillRoot('Plan Work')).toBe('.agents/skills/plan-work');
     expect(codexSkillTarget('Plan Work', 'nested\\README.md')).toBe('.agents/skills/plan-work/nested/README.md');
+  });
+
+  test('preserves leading underscore for internal shared skill assets', () => {
+    expect(codexSkillRoot('_shared')).toBe('.agents/skills/_shared');
+    expect(codexSkillTarget('_shared', 'retro-feedback-schema.md')).toBe('.agents/skills/_shared/retro-feedback-schema.md');
+    expect(isCodexInternalSkillEntrypoint('_shared', 'SKILL.md')).toBe(true);
+    expect(isCodexInternalSkillEntrypoint('_shared', 'retro-feedback-schema.md')).toBe(false);
   });
 });

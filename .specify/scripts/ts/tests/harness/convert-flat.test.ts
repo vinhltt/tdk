@@ -212,6 +212,34 @@ describe('harness convert-flat', () => {
     expect(secondRun.stdout.toString()).toContain('skip: .codex/config.toml');
   });
 
+  test('convert-flat skips internal shared skill entrypoints while preserving shared references', async () => {
+    const consumer = makeConsumer('tdk-convert-flat-shared-skill-');
+    writeFile(consumer.root, '.claude/skills/_shared/SKILL.md', [
+      '---',
+      'metadata:',
+      '  version: 0.1.0',
+      '---',
+      '# _shared',
+    ].join('\n'));
+    writeFile(consumer.root, '.claude/skills/_shared/retro-feedback-schema.md', '# Retro feedback schema\n');
+    writeFile(consumer.root, '.claude/skills/tdk-retro-collect/SKILL.md', [
+      '---',
+      'name: tdk-retro-collect',
+      'description: Collect retro feedback',
+      '---',
+      'Read `../_shared/retro-feedback-schema.md`.',
+    ].join('\n'));
+
+    const inventory = discoverFlatClaudeInventory(consumer.root);
+    const writePlan = await buildCodexWritePlan(inventory);
+    const targets = writePlan.files.map((file) => file.targetRelativePath);
+
+    expect(targets).not.toContain('.agents/skills/shared/SKILL.md');
+    expect(targets).not.toContain('.agents/skills/_shared/SKILL.md');
+    expect(targets).toContain('.agents/skills/_shared/retro-feedback-schema.md');
+    expect(targets).toContain('.agents/skills/tdk-retro-collect/SKILL.md');
+  });
+
   test('unowned existing target conflicts by default and force converts it to an update', () => {
     const consumer = makeConsumer('tdk-convert-flat-conflict-');
     const target = '.codex/agents/reviewer.toml';

@@ -10,6 +10,7 @@ import {
 } from '../../lib/harness-transform';
 import { sha256Buffer } from './checksum';
 import { parseSafeHookGatewayCommand } from './codex-hook-command-parser';
+import { isCodexInternalSkillEntrypoint } from './codex-target-mapper';
 import type { CodexConvertPlugin, CodexPluginArtifact } from './codex-convert-ir';
 
 function sortObject(value: unknown): unknown {
@@ -109,6 +110,8 @@ export async function buildCodexPluginArtifacts(plugin: CodexConvertPlugin): Pro
   // Skills: official layout — no .codex-plugin/ prefix
   for (const skill of plugin.skills) {
     for (const file of skill.files) {
+      const skillRelativePath = file.sourceRelativePath.split('/').slice(2).join('/');
+      if (isCodexInternalSkillEntrypoint(skill.name, skillRelativePath)) continue;
       artifacts.push(artifact(file.sourcePath, file.sourceRelativePath, file.sourceRelativePath, file.content));
     }
   }

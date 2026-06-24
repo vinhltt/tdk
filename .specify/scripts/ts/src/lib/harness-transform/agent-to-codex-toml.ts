@@ -15,7 +15,9 @@ export interface AgentToCodexTomlResult {
 }
 
 function escapeTomlMultiline(value: string): string {
-	return value.replace(/"""/g, '\\"\\"\\"');
+	return value
+		.replace(/\\/g, "\\\\")
+		.replace(/"""/g, '\\"\\"\\"');
 }
 
 function deriveSandboxMode(tools: unknown): { sandboxMode: string | null; warning?: string } {
