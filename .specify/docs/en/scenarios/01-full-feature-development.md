@@ -2,11 +2,15 @@
 
 > **When to use**: You have a new feature to build from scratch and want the complete specification-driven workflow.
 
+> New to the epic flow? Start with the [Epic Start Guide](../epic-start-guide.md) for command purpose, outputs, and readiness gates.
+
 ## Command Sequence
 
 ```
 optional /tdk-discovery -> /tdk-specify -> /tdk-clarify -> optional /tdk-high-level-design -> optional /tdk-task-breakdown -> /tdk-plan -> /tdk-implement
 ```
+
+For feature-sized work, continue from the current spec to `plan` and `implement`. For epic-sized work, use `task-breakdown` as the handoff to tracker sub-issues, then seed each sub-issue into a child spec and run the normal child loop.
 
 ## Step-by-Step
 
@@ -64,6 +68,8 @@ Type in Claude Code chat:
 
 **Output**: `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md`
 
+For epic-sized work, sync these task files to tracker sub-issues with consumer-owned tooling, then seed each sub-issue into a child spec that runs its own `specify -> clarify -> plan -> implement` loop. For feature-sized work, you may continue to plan the current spec directly.
+
 ### 5. Generate the implementation plan
 
 ```
@@ -109,7 +115,7 @@ Run at any point to see a progress bar, completed phases, and recommendations.
 - If your feature is small and well-understood, skip `clarify` and go straight to `plan`.
 - Use `discovery` only for epic-sized ambiguity before specification. Feature-sized work starts at `specify`.
 - Use `high-level-design` on greenfield features when stakeholders need an approval-level design before breakdown or planning; it is optional and existing flows are unaffected when skipped.
-- Use `task-breakdown` when you need portable issue-sized Markdown files before planning or tracker sync.
+- Use `task-breakdown` when you need portable issue-sized Markdown files for tracker sync and child specs.
 - Run `analyze` before `implement` to catch inconsistencies early.
 - Use `status` after interruptions to see where you left off.
 - Task IDs must use prefixes from `.specify/.specify.env` (e.g., `feat`, `spec`, `docs`, `bug`).

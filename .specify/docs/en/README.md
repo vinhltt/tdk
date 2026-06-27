@@ -1,14 +1,15 @@
-# Tihon SpecKit Guides
+# TDK Guides
 
-> Centralized usage documentation for the Tihon skill suite.
+> Centralized usage documentation for the TDK skill suite.
 > Managed alongside `.specify/plugins/` — updated when skills change.
 
 ## Quick Start
 
-1. **New to Tihon?** → [Setup Guide](../setup/speckit-setup-guide.md)
-2. **Need a command?** → [Command Reference](command-reference.md)
-3. **Want a workflow?** → [Scenarios](#scenarios) below
-4. **Setting up Claude Code?** → [Setup Claude Code](../setup/claude-code/README.md)
+1. **New to TDK?** → [Setup Guide](setup/speckit-setup-guide.md)
+2. **Starting a broad epic?** → [Epic Start Guide](epic-start-guide.md)
+3. **Need a command?** → [Command Reference](command-reference.md)
+4. **Want a workflow?** → [Scenarios](#scenarios) below
+5. **Setting up Claude Code?** → [Setup Claude Code](setup/claude-code/README.md)
 
 ![TDK lifecycle workflow](/tdk-docs/assets/diagrams/tdk-lifecycle-share-graph-v4.svg)
 
@@ -16,6 +17,8 @@
 
 | Guide | Description |
 |-------|-------------|
+| [Epic Start Guide](epic-start-guide.md) | Beginner-friendly path from epic brief to spec, clarify, HLD, task breakdown, tracker sub-issues, and child specs |
+| [Hướng Dẫn Bắt Đầu Epic](../vi/epic-start-guide.md) | Vietnamese version of the epic start guide for members less comfortable with English |
 | [Command Reference](command-reference.md) | Full cheat sheet + command details for all `/tdk-*` skills |
 | [Document Flow](document-flow.md) | Artifact lifecycle — what each command produces and consumes |
 | [Evolution Comparison](evolution-comparison.md) | TDK vs speckit-original vs speckit-tdk-jp |
@@ -24,15 +27,15 @@
 
 | Guide | Description |
 |-------|-------------|
-| [SpecKit Setup](../setup/speckit-setup-guide.md) | Prerequisites, installation, verification |
-| [Claude Code Setup](../setup/claude-code/README.md) | Claude Code extension + Obsidian plugin setup |
-| [Context7 MCP Setup](../setup/ctx7-mcp-setup.md) | Context7 MCP server configuration |
-| [GitHub MCP Setup](../setup/github-mcp-setup.md) | GitHub MCP server configuration |
-| [Plugin Marketplace](../setup/plugin-marketplace-setup.md) | Register & manage plugin marketplaces |
+| [TDK Setup](setup/speckit-setup-guide.md) | Prerequisites, installation, verification |
+| [Claude Code Setup](setup/claude-code/README.md) | Claude Code extension + Obsidian plugin setup |
+| [Context7 MCP Setup](setup/ctx7-mcp-setup.md) | Context7 MCP server configuration |
+| [GitHub MCP Setup](setup/github-mcp-setup.md) | GitHub MCP server configuration |
+| [Plugin Marketplace](setup/plugin-marketplace-setup.md) | Register & manage plugin marketplaces |
 
 ## Scenarios
 
-Real-world workflows showing Tihon commands in action:
+Real-world workflows showing TDK commands in action:
 
 <details>
 <summary><strong>Core Development</strong> (3 scenarios)</summary>

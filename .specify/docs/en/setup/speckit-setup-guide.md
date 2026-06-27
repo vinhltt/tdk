@@ -1,8 +1,8 @@
-# SpecKit Setup Guide
+# TDK Setup Guide
 
-Complete guide for setting up tdk-speckit tooling after cloning the commondragon repository.
+Complete guide for setting up TDK tooling after cloning the commondragon repository.
 
-> **Scope:** SpecKit CLI tools, scripts, and Claude Code skills only. For Docker, backend, or frontend setup, see their respective docs.
+> **Scope:** TDK CLI tools, scripts, and Claude Code skills only. For Docker, backend, or frontend setup, see their respective docs.
 
 ## Quick Setup (Recommended)
 
@@ -62,7 +62,7 @@ curl -fsSL https://bun.sh/install | bash
 
 A shared `.venv/` at the project root is used by Claude skills, `.specify/` scripts, and project development.
 
-See full setup instructions: [**Setup Claude Code Environment**](./setup-claude-code/README.md)
+See full setup instructions: [**Setup Claude Code Environment**](claude-code/README.md)
 
 ## 3. Claude Code Installation
 
@@ -85,7 +85,7 @@ After registering, set up the required MCP integrations:
 
 ## 5. .specify.yaml (Reference Only)
 
-The workspace config at [`.specify/.specify.yaml`](../../.specify.yaml) is already committed. No action needed.
+The workspace config at [`.specify/.specify.yaml`](../../../.specify.yaml) is already committed. No action needed.
 
 Simplified view of current config:
 
@@ -110,7 +110,7 @@ sub-workspaces:
 | `version` | Yes | Config schema version (currently `1.0`) |
 | `name` | Yes | Workspace identifier — appears as `WORKSPACE_NAME` in `detect-config.ts` output |
 | `architecture.type` | Yes | Codebase pattern: `monolith`, `modular-monolith`, `microservices`, or `layered-application`. Used for project-init auto-detection |
-| `docs.path` | Yes | Where SpecKit stores project documentation, relative to repo root |
+| `docs.path` | Yes | Where TDK stores project documentation, relative to repo root |
 | `sub-workspaces` | No | List of child workspaces (`name` + `path`). `detect-config.ts` auto-detects which sub-workspace you're in based on CWD |
 
 > **Tip:** See `.specify/.specify.yaml.example` for a full template with all optional fields documented.
@@ -173,9 +173,12 @@ commondragon/
 │   ├── .specify.env.example       # Env template (copy to .specify.env)
 │   ├── scripts/bash/              # Automation scripts
 │   │   └── ...
-│   ├── docs/                      # All SpecKit documentation
-│   │   ├── guides/                # Usage docs, scenarios, command reference
-│   │   └── setup/                 # Installation & configuration guides
+│   ├── docs/                      # All TDK documentation
+│   │   ├── README.md              # Language index
+│   │   ├── en/                    # English docs
+│   │   │   ├── setup/             # Installation & configuration guides
+│   │   │   └── scenarios/         # Workflow scenarios
+│   │   └── vi/                    # Vietnamese docs
 │   ├── configurations/            # Project documentation
 │   ├── plugins/       # Bundled Claude Code plugins & skills
 │   └── templates/                 # Spec templates
@@ -205,5 +208,5 @@ commondragon/
 
 - [Context7 Plugin Setup](ctx7-mcp-setup.md) — docs-seeker MCP integration
 - [GitHub MCP Setup](github-mcp-setup.md) — optional GitHub repo browsing
-- [Setup Claude Code Environment](./setup-claude-code/README.md)
-- [Setup Obsidian Plugins — Windows](./setup-claude-code/setup-obsidian-plugins-windows.md)
+- [Setup Claude Code Environment](claude-code/README.md)
+- [Setup Obsidian Plugins — Windows](claude-code/setup-obsidian-plugins-windows.md)

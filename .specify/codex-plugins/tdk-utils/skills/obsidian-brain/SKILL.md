@@ -1,7 +1,8 @@
 ---
 name: obsidian-brain
-description: Advanced knowledge management for Obsidian vaults.Use when: creating/editing .md notes, .canvas visual maps, .base database views, researching existing docs, or validating content consistency.
-version: 1.2.0
+description: "Advanced knowledge management for Obsidian vaults.Use when: creating/editing .md notes, .canvas visual maps, .base database views, researching existing docs, or validating content consistency."
+metadata:
+  version: "1.2.0"
 user-invocable: false
 ---
 
@@ -77,9 +78,9 @@ Transform the Agent into a "Project Researcher" capable of working with Obsidian
 ## Instructions for Agent
 
 **CRITICAL — Vault Path Rule:** Smart-obsidian vault root = `.specify/`. All paths passed to MCP tools MUST be relative to vault root — NEVER prefix with `.specify/`.
-- CORRECT: `get_vault_file("docs/guides/command-reference.md")`
+- CORRECT: `get_vault_file("docs/en/command-reference.md")`
 - CORRECT: `list_vault_files("plugins")`
-- WRONG: `get_vault_file(".specify/docs/guides/command-reference.md")` ← double-prefix, 404
+- WRONG: `get_vault_file(".specify/docs/en/command-reference.md")` ← double-prefix, 404
 - WRONG: `list_vault_files("")` or `list_vault_files("/")` ← empty path, 404
 - For built-in tools (Read, Glob, Grep): use full filesystem path including `.specify/`
 

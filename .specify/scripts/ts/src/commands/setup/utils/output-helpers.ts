@@ -76,20 +76,20 @@ export function manualSteps(claudeFound: boolean): string {
     lines.push(`${BOLD}2. Register Context7 Marketplace (after installing Claude Code)${NC}`);
     lines.push(`   ${WHITE}claude plugin marketplace add https://github.com/upstash/context7${NC}`);
     lines.push('   Local marketplace (.claude-plugin/) is auto-detected at git root.');
-    lines.push('   Guide: .specify/docs/setup/plugin-marketplace-setup.md');
+    lines.push('   Guide: .specify/docs/en/setup/plugin-marketplace-setup.md');
     lines.push('');
   }
 
   lines.push(`${BOLD}Enable Context7 MCP Plugin in settings${NC}`);
   lines.push('   Add to .claude/settings.json → enabledPlugins:');
   lines.push(`   ${WHITE}"context7-plugin@context7-marketplace": true${NC}`);
-  lines.push('   Guide: .specify/docs/setup/ctx7-mcp-setup.md');
+  lines.push('   Guide: .specify/docs/en/setup/ctx7-mcp-setup.md');
   lines.push('');
   lines.push(`${BOLD}GitHub MCP Plugin (optional — repo browsing)${NC}`);
-  lines.push('   Guide: .specify/docs/setup/github-mcp-setup.md');
+  lines.push('   Guide: .specify/docs/en/setup/github-mcp-setup.md');
   lines.push('');
   lines.push(`${BOLD}Obsidian Plugin Setup (optional)${NC}`);
-  lines.push('   Guide: .specify/docs/setup/claude-code/setup-obsidian-plugins-windows.md');
+  lines.push('   Guide: .specify/docs/en/setup/claude-code/setup-obsidian-plugins-windows.md');
   lines.push('');
 
   return lines.join('\n');
@@ -101,6 +101,6 @@ export function finalMessage(hasFails: boolean): string {
   }
   return [
     `${GREEN}Automated setup complete! Follow manual steps above to finish.${NC}`,
-    `${WHITE}Run '/tdk-' commands in Claude Code to verify SpecKit is ready.${NC}`,
+    `${WHITE}Run '/tdk-' commands in Claude Code to verify TDK is ready.${NC}`,
   ].join('\n');
 }

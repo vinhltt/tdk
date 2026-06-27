@@ -137,9 +137,7 @@ If you accidentally committed the old key:
 
 ## Related
 
-- [Setup for macOS](./setup-obsidian-plugins-macos.md)
-- [Vietnamese version](./setup-obsidian-plugins-windows.vi.md)
 - [Setup Claude Code README](./README.md)
-- [Setup SpecKit Guide](../speckit-setup-guide.md)
+- [TDK Setup Guide](../speckit-setup-guide.md)
 - [Local REST API Plugin](https://github.com/coddingtonbear/obsidian-local-rest-api)
 - [MCP Tools Plugin](https://github.com/jacksteamdev/obsidian-mcp-tools)

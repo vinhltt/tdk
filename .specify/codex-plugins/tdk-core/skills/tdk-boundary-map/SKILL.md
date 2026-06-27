@@ -10,7 +10,7 @@ related-skills:
   - tdk-scout
   - tdk-workspace-topology-apply
 metadata:
-  version: "5.6.0"
+  version: "5.7.0"
   author: "VinhLTT"
   category: architecture-workflow
 ---

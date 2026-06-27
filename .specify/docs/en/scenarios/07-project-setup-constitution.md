@@ -1,6 +1,6 @@
 # Scenario: Project Setup & Constitution
 
-> **When to use**: Setting up a new project or onboarding a team to the Tihon workflow. Establish architecture principles and configure sub-workspaces.
+> **When to use**: Setting up a new project or onboarding a team to the TDK workflow. Establish architecture principles and configure sub-workspaces.
 
 ## Command Sequence
 

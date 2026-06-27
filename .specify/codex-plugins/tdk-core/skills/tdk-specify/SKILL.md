@@ -2,7 +2,7 @@
 name: tdk-specify
 description: "Create or update the feature specification from a natural language feature description. Default: full brainstorm with Option A/B. Use --fast for single recommendation without brainstorm."
 metadata: 
-  version: "5.4.1"
+  version: "5.7.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -279,7 +279,7 @@ Store: `SPEC_MODE`, `MODE_SOURCE`, `PRELIMINARY_MODE` (only set during auto-dete
 
     5. Return: SUCCESS (spec ready for planning)
 
-4. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings. Emit the YAML frontmatter block at the top with `title`, `status`, `branch`, `created`, `input`, `memory_context_loaded` (set per Step 0.memory), and `schema_version: 1`; keep the `# Feature Specification: <title>` H1 line directly below the closing `---` (downstream tooling reads the spec title from that H1). **Promote case:** if this spec is being promoted from a parent work-item (the description was seeded from another spec's work-item), also emit `parent_spec: <[folder/]ticket>` (include the category folder when the parent is non-default, e.g. `test/aa-100`) and `promoted_from: "<work-item-id>"`, and confirm the parent spec directory exists before writing the child (advisory — `/tdk-plan` enforces this with a hard STOP). Omit both fields for a root spec. See `.specify/docs/guides/promote-convention.md`.
+4. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings. Emit the YAML frontmatter block at the top with `title`, `status`, `branch`, `created`, `input`, `memory_context_loaded` (set per Step 0.memory), and `schema_version: 1`; keep the `# Feature Specification: <title>` H1 line directly below the closing `---` (downstream tooling reads the spec title from that H1). **Promote case:** if this spec is being promoted from a parent work-item (the description was seeded from another spec's work-item), also emit `parent_spec: <[folder/]ticket>` (include the category folder when the parent is non-default, e.g. `test/aa-100`) and `promoted_from: "<work-item-id>"`, and confirm the parent spec directory exists before writing the child (advisory — `/tdk-plan` enforces this with a hard STOP). Omit both fields for a root spec. See `.specify/docs/en/promote-convention.md`.
 
 ### Step 3: Handle Unresolved Questions
 

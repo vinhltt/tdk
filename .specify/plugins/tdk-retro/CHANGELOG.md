@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.0.1] - 2026-06-27
+
+### Changed
+- Refactored consumer-skill-discovery.md shared docs.
+
 ## [1.0.0] - 2026-06-15
 
 ### Added

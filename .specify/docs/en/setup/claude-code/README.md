@@ -1,6 +1,6 @@
 # Setup Claude Code Environment
 
-Guide to set up the Python environment for Claude Code Skills, Commands, and SpecKit for new members after cloning the source code.
+Guide to set up the Python environment for Claude Code skills, commands, and TDK for new members after cloning the source code.
 
 ## 📋 Prerequisites
 
@@ -80,13 +80,13 @@ This virtual environment is shared among:
 erc_spec_kit/
 ├── .venv/                      ← Shared virtual environment
 ├── requirements.txt            ← Project dependencies
-├── .specify/docs/setup/claude-code/     ← Setup docs (you are here)
+├── .specify/docs/en/setup/claude-code/     ← Setup docs (you are here)
 │   ├── setup-python-venv.ps1   (Windows script pending)
 │   └── README.md               (this file)
 ├── .specify/scripts/bash/
 │   └── setup-python-venv.sh    (Linux/Mac runtime script)
 ├── .claude/skills/             ← Claude Code skills
-└── .specify/                   ← SpecKit features & docs
+└── .specify/                   ← TDK features & docs
 ```
 
 ## 🔧 Customization
@@ -147,15 +147,15 @@ After finishing setup:
 
 ## 🔗 Related Documentation
 
-- [SpecKit Setup Guide](../speckit-setup-guide.md) — Full speckit tooling setup (prerequisites, jq/yq, environment config, skills, verification). Start here if you're new.
+- [TDK Setup Guide](../speckit-setup-guide.md) — Full TDK tooling setup (prerequisites, jq/yq, environment config, skills, verification). Start here if you're new.
 - **Obsidian MCP Setup:**
   - [Setup Obsidian & Plugins — Windows](./setup-obsidian-plugins-windows.md) — Install Obsidian, Local REST API, MCP Tools and configure `.mcp.json` on Windows.
   - Setup Obsidian & Plugins — macOS *(coming soon)*
 - [Claude Code Documentation](https://github.com/anthropics/claude-code)
-- [SpecKit Documentation](.specify/memory/)
+- [TDK Documentation](.specify/memory/)
 - [Project Rules](.claude/rules/)
 
-> **Note:** This document covers Python venv setup only. For the complete SpecKit tooling setup, see the [SpecKit Setup Guide](../speckit-setup-guide.md).
+> **Note:** This document covers Python venv setup only. For the complete TDK tooling setup, see the [TDK Setup Guide](../speckit-setup-guide.md).
 
 ---
 

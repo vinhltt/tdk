@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.7.0] - 2026-06-27
+
+### Added
+- Added topology-apply-report.md.tpl template to tdk-workspace-topology-apply.
+
+### Changed
+- Bushed tdk-workspace-topology-apply to 5.6.0 supporting physical apply/write, plan hash verification, confirmation gate, and raw backups.
+- Updated documentation/links to point to .specify/docs/en/ across various skills (tdk-specify, tdk-task-breakdown, tdk-brownfield-start, tdk-boundary-map, tdk-greenfield-start).
+
 ## [5.6.0] - 2026-06-24
 
 ### Added

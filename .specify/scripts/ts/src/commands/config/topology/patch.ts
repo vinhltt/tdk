@@ -1,3 +1,4 @@
+import { posix } from 'node:path';
 import {
   ArchitectureSchema,
   SpecifyConfigSchema,
@@ -9,8 +10,10 @@ import type { WorkspaceTopology, WorkspaceTopologySubWorkspace } from './schema'
 
 export interface ConfirmationFinding {
   name: string;
-  fields: Array<'path' | 'docs' | 'testMapping' | 'modules'>;
+  fields: Array<'path' | 'docs' | 'testMapping' | 'modules' | 'architecture.type' | 'pathCollision'>;
 }
+
+type RuntimeConfirmationField = 'path' | 'docs' | 'testMapping' | 'modules';
 
 export interface DerivedConfigResult {
   config: SpecifyConfig;
@@ -38,8 +41,8 @@ function findExistingSubWorkspace(
 function createRuntimeSubWorkspace(
   topologySubWorkspace: WorkspaceTopologySubWorkspace,
   existing?: SubWorkspace,
-): { subWorkspace: SubWorkspace; providedFields: ConfirmationFinding['fields'] } {
-  const providedFields: ConfirmationFinding['fields'] = ['path'];
+): { subWorkspace: SubWorkspace; providedFields: RuntimeConfirmationField[] } {
+  const providedFields: RuntimeConfirmationField[] = ['path'];
   let next: SubWorkspace = {
     ...(existing ?? {}),
     name: existing?.name ?? topologySubWorkspace.name,
@@ -69,15 +72,33 @@ function createRuntimeSubWorkspace(
 function getConfirmationFields(
   existing: SubWorkspace,
   next: SubWorkspace,
-  providedFields: ConfirmationFinding['fields'],
-): ConfirmationFinding['fields'] {
+  providedFields: RuntimeConfirmationField[],
+): RuntimeConfirmationField[] {
   return providedFields.filter((field) => stableStringify(existing[field]) !== stableStringify(next[field]));
+}
+
+function addConfirmationFinding(
+  findings: ConfirmationFinding[],
+  name: string,
+  fields: ConfirmationFinding['fields'],
+): void {
+  const existing = findings.find((entry) => entry.name === name);
+  if (!existing) {
+    findings.push({ name, fields: Array.from(new Set(fields)) });
+    return;
+  }
+  existing.fields = Array.from(new Set([...existing.fields, ...fields]));
+}
+
+function normalizeRuntimePath(path: string): string {
+  return posix.normalize(path.replace(/\\/g, '/')).replace(/\/$/, '').toLocaleLowerCase();
 }
 
 function applyArchitecture(
   config: SpecifyConfig,
   topology: WorkspaceTopology,
   warnings: string[],
+  confirmationFindings: ConfirmationFinding[],
 ): SpecifyConfig {
   const type = topology.architecture?.type;
   if (type === undefined) {
@@ -88,6 +109,10 @@ function applyArchitecture(
   if (!parsedType.success) {
     warnings.push(`Unsupported architecture type ignored: ${type}`);
     return config;
+  }
+
+  if (config.architecture?.type !== undefined && config.architecture.type !== parsedType.data) {
+    addConfirmationFinding(confirmationFindings, 'architecture', ['architecture.type']);
   }
 
   return {
@@ -106,11 +131,11 @@ export function deriveSpecifyConfig(
 ): DerivedConfigResult {
   const before = SpecifyConfigSchema.parse(existing);
   const nextWarnings = [...warnings];
-  let next = applyArchitecture(before, topology, nextWarnings);
+  const confirmationFindings: ConfirmationFinding[] = [];
+  let next = applyArchitecture(before, topology, nextWarnings, confirmationFindings);
 
   const existingSubWorkspaces = before.subWorkspaces ?? [];
   const derivedSubWorkspaces: SubWorkspace[] = [];
-  const confirmationFindings: ConfirmationFinding[] = [];
 
   for (const topologySubWorkspace of topology.subWorkspaces) {
     const existingSubWorkspace = findExistingSubWorkspace(existingSubWorkspaces, topologySubWorkspace);
@@ -120,7 +145,7 @@ export function deriveSpecifyConfig(
     if (existingSubWorkspace) {
       const fields = getConfirmationFields(existingSubWorkspace, subWorkspace, providedFields);
       if (fields.length > 0) {
-        confirmationFindings.push({ name: existingSubWorkspace.name, fields });
+        addConfirmationFinding(confirmationFindings, existingSubWorkspace.name, fields);
       }
     }
   }
@@ -135,6 +160,18 @@ export function deriveSpecifyConfig(
       ...next,
       subWorkspaces: [...derivedSubWorkspaces, ...preservedSubWorkspaces],
     };
+  }
+
+  const pathOwners = new Map<string, string>();
+  for (const subWorkspace of next.subWorkspaces ?? []) {
+    const normalizedPath = normalizeRuntimePath(subWorkspace.path);
+    const existingOwner = pathOwners.get(normalizedPath);
+    if (existingOwner && existingOwner.toLocaleLowerCase() !== subWorkspace.name.toLocaleLowerCase()) {
+      addConfirmationFinding(confirmationFindings, subWorkspace.name, ['pathCollision']);
+      addConfirmationFinding(confirmationFindings, existingOwner, ['pathCollision']);
+    } else {
+      pathOwners.set(normalizedPath, subWorkspace.name);
+    }
   }
 
   return {

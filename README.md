@@ -159,7 +159,7 @@ Integrated commands (via `bun src/index.ts`; no installed `tdk` binary yet):
 | `bun src/index.ts config detect` | Detect `.specify.json` configuration |
 | `bun src/index.ts config index` | Index configuration files |
 | `bun src/index.ts config diff` | Compare docs between workspace and sub-workspace |
-| `bun src/index.ts config topology apply --dry-run` | Preview `.specify/.specify.json` changes derived from `workspace-topology.json` without writing files |
+| `bun src/index.ts config topology apply --dry-run` | Preview `.specify/.specify.json` changes and emit `planHash`; apply with `--yes --expect-hash <planHash>` |
 | `bun src/index.ts ut backfill auto` | Automated unit test backfill |
 | `bun src/index.ts ut backfill plan` | Plan unit test coverage |
 | `bun src/index.ts ut backfill impl` | Implement unit tests from plan |
@@ -182,8 +182,8 @@ Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup,
 
 ## Documentation
 
-- [Command Reference](.specify/docs/guides/command-reference.md) — full CLI documentation
-- [Scenario Guides](.specify/docs/guides/scenarios/) — 12 workflow scenarios
-- [Setup Guide](.specify/docs/setup/speckit-setup-guide.md) — installation and configuration
-- [UT Backfill Usage](.specify/docs/guides/tdk-ut-backfill-skills-usage.md) — unit test workflow
-- [Document Flow](.specify/docs/guides/document-flow.md) — spec → plan → task lifecycle
+- [Command Reference](.specify/docs/en/command-reference.md) — full CLI documentation
+- [Scenario Guides](.specify/docs/en/scenarios/) — 12 workflow scenarios
+- [Setup Guide](.specify/docs/en/setup/speckit-setup-guide.md) — installation and configuration
+- [UT Backfill Usage](.specify/docs/en/tdk-ut-backfill-skills-usage.md) — unit test workflow
+- [Document Flow](.specify/docs/en/document-flow.md) — spec → plan → task lifecycle

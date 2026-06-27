@@ -32,7 +32,8 @@ proposal text.
    `routing` as report-only.
 7. Write `workspace-topology.md` and `workspace-topology.json`.
 8. Recommend `/tdk-workspace-topology-apply --dry-run` only when unresolved
-   questions do not block parser-safe review.
+   questions do not block parser-safe review; guarded apply needs an existing
+   JSON config, parsed `planHash`, and explicit approval for overwrite findings.
 
 ## Route Rules
 
@@ -40,7 +41,8 @@ proposal text.
 - Recommend `/tdk-boundary-map --unknown` when topology evidence is too weak.
 - Recommend `/tdk-scout` when folder/package evidence is unclear.
 - Recommend `/tdk-workspace-topology-apply --dry-run` only as a later preview
-  route after proposal review.
+  route after proposal review. Apply remains a second step with
+  `--yes --expect-hash <planHash>` after approval.
 
 ## Stop Conditions
 

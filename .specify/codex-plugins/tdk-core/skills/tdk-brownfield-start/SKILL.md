@@ -9,7 +9,7 @@ related-skills:
   - tdk-workspace-topology-apply
   - tdk-sub-workspace-docs
 metadata:
-  version: "5.6.0"
+  version: "5.7.0"
   author: "VinhLTT"
   category: architecture-workflow
 ---
@@ -153,15 +153,15 @@ Required report sections:
 | Mode | Behavior |
 |---|---|
 | `--full` | Observe repo shape, current config, docs, tests, CI, and package commands. Write the report and recommend scout, topology dry-run, and docs generation when evidence supports them. |
-| `--config-only` | Inspect `.specify` state and topology-readiness. Write the report with config risks and recommend topology dry-run only. |
+| `--config-only` | Inspect `.specify` state and topology-readiness. Write the report with config risks and recommend topology dry-run first. |
 | `--unknown` | Classify repo shape, write the report, and stop with one recommended next route. |
 
 ## Recommendation Rules
 
 - Recommend `tdk-scout` when repo boundaries, framework ownership, or file roles are unclear.
 - Recommend `/tdk-architecture-advisor --recover-existing <brownfield-onboarding.md>` when repo evidence is ready for architecture recovery.
-- Recommend `tdk-workspace-topology-apply --dry-run --reconcile` when observed repo shape differs from `.specify` config, or when `.specify` config is missing expected sub-workspaces/modules.
-- Recommend `tdk-sub-workspace-docs --all` only after config evidence is present or after topology dry-run is accepted in a future step.
+- Recommend `tdk-workspace-topology-apply --dry-run --reconcile` when observed repo shape differs from `.specify` config, or when `.specify` config is missing expected sub-workspaces/modules. Apply remains a second guarded step with `--yes --expect-hash`.
+- Recommend `tdk-sub-workspace-docs --all` only after config evidence is present or after topology dry-run/apply is accepted.
 - Recommend `tdk-discovery` only when product intent is missing and the user wants product-scope questions.
 - Do not present recommendations as completed work, applied configuration, or source-tree changes.
 
@@ -173,7 +173,7 @@ Required report sections:
 | Secret-like target or evidence cannot be safely redacted | Refuse that source; include the refusal in the report if a report is otherwise safe to write. |
 | `.specify/` is absent | Stop with setup guidance; do not create runtime config. |
 | Multiple modes passed | Ask the user to pick one mode; no report write until resolved. |
-| Existing source layout conflicts with inferred topology | Report as risk/unresolved question; recommend topology dry-run only. |
+| Existing source layout conflicts with inferred topology | Report as risk/unresolved question; recommend topology dry-run first. |
 
 ## Notes
 

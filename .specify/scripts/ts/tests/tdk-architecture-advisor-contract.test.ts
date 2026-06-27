@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
-const DOCS_DIR = resolve(import.meta.dir, '../../../docs/guides');
+const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
 const HLD_PATH = resolve(CORE_SKILLS_DIR, 'tdk-high-level-design/SKILL.md');
@@ -123,7 +123,7 @@ describe('TDK architecture advisor contracts', () => {
     expect(existsSync(skillPath)).toBe(true);
     expect(skill).toContain('name: tdk-architecture-advisor');
     expect(skill).toContain('[input|file] [--recover-existing|--unknown]');
-    expect(skill).toContain('  version: "5.5.0"');
+    expect(skill).toContain('  version: "5.6.0"');
     expect(skill).toContain('.specify/configurations/architecture/architecture-options.md');
     expect(skill).toContain('.specify/configurations/architecture/architecture-decision.md');
     expect(skill).toContain('.specify/configurations/architecture/architecture-recovery.md');

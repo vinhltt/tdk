@@ -1,6 +1,6 @@
 # Scenario: Unit Testing — Standalone
 
-> **When to use**: You have existing code that needs unit tests but no spec or feature ID. Common for legacy code or code written outside the Tihon workflow.
+> **When to use**: You have existing code that needs unit tests but no spec or feature ID. Common for legacy code or code written outside the TDK workflow.
 
 ## Command Sequence
 

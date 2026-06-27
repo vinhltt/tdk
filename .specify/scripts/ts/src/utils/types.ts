@@ -30,7 +30,7 @@ export const TestMappingSchema = z.object({
         const received = String((issue as { received?: unknown }).received ?? '');
         if (received === 'separate-folder') {
           return {
-            message: `Strategy 'separate-folder' has been removed. Migrate to 'mirror' — see docs/guides/tdk-ut-backfill-skills-usage.md section 6.`,
+            message: `Strategy 'separate-folder' has been removed. Migrate to 'mirror' — see docs/en/tdk-ut-backfill-skills-usage.md section 6.`,
           };
         }
         return {

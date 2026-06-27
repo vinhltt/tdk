@@ -174,7 +174,7 @@ Which strategy?
 
 `separate-folder` has been removed. When present in `.specify.json`, schema parsing fails with:
 
-> `Strategy 'separate-folder' has been removed. Migrate to 'mirror' — see docs/guides/tdk-ut-backfill-skills-usage.md section 6.`
+> `Strategy 'separate-folder' has been removed. Migrate to 'mirror' — see docs/en/tdk-ut-backfill-skills-usage.md section 6.`
 
 ### Before
 

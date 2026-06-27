@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 import { parseWorkspaceTopology } from '../src/commands/config/topology/schema';
 
 const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
-const DOCS_DIR = resolve(import.meta.dir, '../../../docs/guides');
+const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
 const BOUNDARY_MAP_NAME = 'tdk-boundary-map';
@@ -85,7 +85,7 @@ describe('TDK boundary-map contracts', () => {
     expect(existsSync(skillPath)).toBe(true);
     expect(skill).toContain('name: tdk-boundary-map');
     expect(skill).toContain('[input|file] [--from-existing|--unknown]');
-    expect(skill).toContain('  version: "5.5.0"');
+    expect(skill).toContain('  version: "5.6.0"');
     expect(skill).toContain('.specify/configurations/workspace-topology/workspace-topology.md');
     expect(skill).toContain('.specify/configurations/workspace-topology/workspace-topology.json');
     expect(skill).toContain('does not create or update `.specify/.specify.json`');
@@ -165,15 +165,17 @@ describe('TDK boundary-map contracts', () => {
     expect(combined).toContain('does not enforce module boundaries');
   });
 
-  it('keeps topology apply dry-run-only while adding boundary-map route docs', () => {
+  it('keeps topology apply dry-run-first while adding boundary-map route docs', () => {
     const topologyApply = read(join(CORE_SKILLS_DIR, 'tdk-workspace-topology-apply/SKILL.md'));
     const commandReference = read(join(DOCS_DIR, 'command-reference.md'));
     const documentFlow = read(join(DOCS_DIR, 'document-flow.md'));
 
     expect(topologyApply).toContain('dry-run is the default');
-    expect(topologyApply).toContain('does not create or update `.specify/.specify.json`');
-    expect(topologyApply).not.toContain('supports `--yes`');
+    expect(topologyApply).toContain('guarded two-step');
+    expect(topologyApply).toContain('`--yes` without `--expect-hash` exits 1');
+    expect(topologyApply).toContain('deferred: first-time config creation');
     expect(commandReference).toContain('/tdk-boundary-map [input|file] [--from-existing|--unknown]');
+    expect(commandReference).toContain('guarded config apply');
     expect(documentFlow).toContain('/tdk-boundary-map');
   });
 

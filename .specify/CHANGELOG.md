@@ -10,6 +10,30 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.80.0] - 2026-06-27
+
+### Added
+- **[Scripts]**
+  - Added `apply-plan.ts`, `apply-security.ts`, and `guarded-writer.ts` to support physical apply for workspace topology.
+  - Added `exit-codes.ts` utility for standardized CLI error handling.
+- **[Skills]** Added `topology-apply-report.md.tpl` template to `tdk-workspace-topology-apply`.
+- **[Docs]**
+  - Added new English guide `epic-start-guide.md` documenting epic/child spec promotion workflow.
+  - Added Vietnamese localization for `README.md`, `epic-start-guide.md`, and `promote-convention.md` under `.specify/docs/vi/`.
+
+### Changed
+- **[Skills]**
+  - Bushed `tdk-workspace-topology-apply` to `5.6.0` supporting physical apply/write, plan hash verification, confirmation gate, and raw backups.
+  - Updated documentation/links to point to `.specify/docs/en/` across various skills (`tdk-specify`, `tdk-task-breakdown`, `tdk-brownfield-start`, `tdk-boundary-map`, `tdk-greenfield-start`, `obsidian-brain`, `tdk-setup-guide`, `tdk-skill-guide`).
+  - Refactored `consumer-skill-discovery.md` shared docs under `tdk-retro`.
+- **[Scripts]**
+  - Updated `deriveSpecifyConfig` to add path collision checks and confirmation finding enhancements.
+  - Updated setup automations and helper paths to point to `.specify/docs/en/`.
+- **[Templates]** Updated `spec-template.md.tpl`.
+- **[Docs]**
+  - Reorganized all English documentation and scenarios from `.specify/docs/guides/` and `.specify/docs/setup/` into `.specify/docs/en/`.
+  - Updated main `.specify/docs/README.md` to reflect the reorganized folder structure and multi-language support.
+
 ## [1.79.0] - 2026-06-24
 
 ### Added

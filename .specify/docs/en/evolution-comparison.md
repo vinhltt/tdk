@@ -1,9 +1,9 @@
-# Tihon — TDK vs Predecessors
+# TDK — Evolution vs Predecessors
 
 > **Purpose**: Deep-dive comparison for developers evaluating TDK.
 > For a quick glance, see the [Evolution table](command-reference.md#evolution) in the command guide.
 
-Three generations of the Tihon framework, each targeting a different AI platform:
+Three generations of the TDK framework, each targeting a different AI platform:
 
 - **speckit-original** — 9 commands¹, GitHub Copilot, core workflow only
 - **speckit-tdk-jp** — 18 commands, GitHub Copilot, full dev cycle (hardcoded to one project)
@@ -162,7 +162,7 @@ Full traceable chain: requirements → checklist → spec → plan (7+ files wit
 
 ---
 
-> **See also**: [Tihon Command Guide](command-reference.md) — full command reference, cheat sheet, and scenarios.
+> **See also**: [TDK Command Guide](command-reference.md) — full command reference, cheat sheet, and scenarios.
 
 ---
 

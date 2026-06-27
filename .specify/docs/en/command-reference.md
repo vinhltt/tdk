@@ -1,4 +1,4 @@
-# Tihon Command Suite Guide
+# TDK Command Suite Guide
 
 > **Last updated**: 2026-06-24
 >
@@ -25,7 +25,7 @@
 
 ## Why TDK?
 
-Tihon (Plan — Act — Verify) is a specification-driven development framework that generates specs, optional portable task breakdowns, plans, and code from natural language. You describe a feature; Tihon guides you through the full artifact chain — from requirements to production-ready implementation.
+TDK is a specification-driven development framework that generates specs, optional portable task breakdowns, plans, and code from natural language. You describe a feature; TDK guides you through the full artifact chain — from requirements to production-ready implementation.
 
 TDK is the Claude Code native generation of this framework.
 
@@ -85,14 +85,14 @@ Run `diff → sync → index` to keep docs consistent across workspaces.
 | `/tdk-brownfield-start` | Observe-first repo onboarding that writes evidence/confidence-based `brownfield-onboarding.md` and recommends scout/topology/docs steps |
 | `/tdk-architecture-advisor` | Project-level architecture advisor that writes report-only options, decision, or recovery artifacts |
 | `/tdk-boundary-map` | Topology proposal workflow that writes `workspace-topology.md` and `workspace-topology.json` without runtime config mutation |
-| `/tdk-workspace-topology-apply` | Dry-run preview of `.specify/.specify.json` changes derived from `workspace-topology.json` |
+| `/tdk-workspace-topology-apply` | Dry-run preview or guarded two-step apply of `.specify/.specify.json` changes derived from `workspace-topology.json` |
 
 Architecture advisor is report-only. It does not write runtime config, topology
 files, source code, plans, tasks, tracker issues, or ADR files. Boundary-map is
 proposal-only: it writes topology markdown/JSON and does not change runtime
-config, source directories, or boundary policy. Topology apply is preview-only in
-this slice. It does not write `.specify/.specify.json`, create source
-directories, or support apply/write flags.
+config, source directories, or boundary policy. Topology apply is dry-run-first:
+dry-run emits `planHash`; guarded apply requires `--yes --expect-hash <planHash>`.
+It does not create source directories or apply `--reconcile`.
 
 ### Skills Ecosystem
 
@@ -106,7 +106,7 @@ Runs in the Claude Code CLI and VSCode extension. No GitHub Copilot subscription
 
 ## Overview
 
-The Tihon command suite provides a **specification-driven development** workflow. You describe a feature in natural language, optionally capture epic discovery context first, and the commands guide you through specification, optional design and task breakdown, planning, and implementation.
+The TDK command suite provides a **specification-driven development** workflow. You describe a feature in natural language, optionally capture epic discovery context first, and the commands guide you through specification, optional design and task breakdown, planning, and implementation.
 
 ### Workflow Pipeline
 
@@ -151,6 +151,8 @@ The Tihon command suite provides a **specification-driven development** workflow
 
 **Primary flow**: `constitution` (project-level) -> optional `discovery` -> `specify` -> `clarify` -> optional `high-level-design` -> optional `task-breakdown` -> `plan` -> `implement`
 
+For feature-sized work, the current spec can continue directly to `plan` and `implement`. For epic-sized work, `task-breakdown` usually becomes the handoff to consumer-owned tracker sub-issues; each sub-issue is then seeded into a child spec that runs its own `specify -> clarify -> plan -> implement` loop.
+
 Each command reads the output of the previous one, building a chain of artifacts: project-level `product-context.md` -> optional `discovery/` -> `spec.md` -> optional `high-level-design/` -> optional `tasks-breakdown/` -> `plan.md` (with ## Phases table) -> source code.
 
 ---
@@ -182,7 +184,7 @@ Each command reads the output of the previous one, building a chain of artifacts
 | 20 | `/tdk-config-diff` | Compare workspace vs sub-workspace docs |
 | 21 | `/tdk-config-sync` | Sync docs between workspace and sub-workspaces |
 | 22 | `/tdk-config-index` | Generate/update document manager index |
-| 24 | `/tdk-workspace-topology-apply [--dry-run] [--reconcile] [--topology <path>]` | Preview runtime config patch from workspace topology |
+| 24 | `/tdk-workspace-topology-apply [--dry-run] [--yes --expect-hash <hash>] [--accept-overwrites] [--reconcile] [--topology <path>]` | Preview or guarded-apply runtime config patch from workspace topology |
 | 25 | `/tdk-sub-workdspace-init` | Initialize a new sub-workspace |
 | 26 | `/tdk-sub-workdspace-list` | List all configured sub-workspaces |
 | 27 | `/tdk-sub-workdspace-sync` | ~~Deprecated~~ → use `/tdk-config-sync` instead |
@@ -198,6 +200,8 @@ Each command reads the output of the previous one, building a chain of artifacts
 ## Quick Start
 
 Follow this walkthrough to develop your first feature end-to-end.
+
+If you are starting from a broad or vague epic, read the [Epic Start Guide](epic-start-guide.md) first. It explains when to use discovery, what each artifact means, and which readiness gates must pass before moving on.
 
 ### Prerequisites
 
@@ -236,6 +240,8 @@ Claude identifies underspecified areas and asks up to 5 targeted questions. Answ
 ```
 
 Creates `tasks-breakdown/index.md` and `tasks-breakdown/task-NNN-*.md` files from a clarified spec. This is tracker-neutral Markdown only; GitHub, GitLab, Backlog, Jira, or other issue sync stays consumer-owned.
+
+For epic-sized work, the task files are usually synced into tracker sub-issues by consumer-owned tooling. Each sub-issue is then seeded into a child spec and runs its own `specify -> clarify -> plan -> implement` loop. For small feature-sized work, you can skip this child-spec loop and plan the current spec directly.
 
 ### Step 4 — Plan the implementation
 
@@ -325,7 +331,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | brownfield:start | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | `--full`, `--config-only`, `--unknown` | Existing repo evidence, optional scout output | `.specify/configurations/inception/brownfield-onboarding.md` with observed evidence separated from inferred recommendations | None |
 | architecture:advisor | `/tdk-architecture-advisor [input\|file] [--recover-existing\|--unknown]` | `--recover-existing`, `--unknown` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | `.specify/configurations/architecture/architecture-options.md`, `.specify/configurations/architecture/architecture-decision.md`, or `.specify/configurations/architecture/architecture-recovery.md` | Optional after start/scout/discovery |
 | boundary:map | `/tdk-boundary-map [input\|file] [--from-existing\|--unknown]` | `--from-existing`, `--unknown` | Architecture reports, inception/onboarding evidence, scout, README, or bounded repo evidence | `.specify/configurations/workspace-topology/workspace-topology.md`, `.specify/configurations/workspace-topology/workspace-topology.json` | Optional after advisor/start/scout |
-| workspace-topology:apply | `/tdk-workspace-topology-apply [--dry-run] [--reconcile] [--topology <path>]` | `--dry-run`, `--reconcile`, `--topology` | `workspace-topology.json`, current `.specify/.specify.json` | Dry-run patch preview (no file writes) | Optional after boundary-map or human-authored proposal |
+| workspace-topology:apply | `/tdk-workspace-topology-apply [--dry-run] [--yes --expect-hash <hash>] [--accept-overwrites] [--reconcile] [--topology <path>]` | `--dry-run`, `--yes`, `--expect-hash`, `--accept-overwrites`, `--reconcile`, `--topology` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | Dry-run patch preview or guarded config apply | Optional after boundary-map or human-authored proposal |
 
 Greenfield and brownfield start commands are report/routing entrypoints. They do not create specs, plans, tracker issues, source code, or `.specify/.specify.json`. Greenfield full mode runs a project-inception interview before strong routing. Quick mode records unanswered critical gaps. Unknown mode classifies only unless minimum facts are present. Brownfield full mode uses bounded repo evidence, config-only mode focuses on `.specify` state, and unknown mode recommends one evidence-backed next route.
 
@@ -346,13 +352,14 @@ and avoids overwriting JSON when evidence is insufficient.
 
 Syntax: `/tdk-boundary-map [input|file] [--from-existing|--unknown]`.
 
-`/tdk-workspace-topology-apply` wraps the TypeScript CLI dry-run:
+`/tdk-workspace-topology-apply` wraps the TypeScript CLI dry-run-first apply flow:
 
 ```bash
 bun src/index.ts config topology apply --dry-run --topology .specify/configurations/workspace-topology/workspace-topology.json
+bun src/index.ts config topology apply --topology .specify/configurations/workspace-topology/workspace-topology.json --yes --expect-hash "$PLAN_HASH"
 ```
 
-Slice 1 has no apply/write mode. Same-name brownfield config changes are reported as future confirmation candidates.
+Apply requires an existing JSON `.specify/.specify.json`, an apply-eligible topology under `.specify/configurations/workspace-topology/`, and a `planHash` parsed from dry-run JSON. Same-name overwrites, architecture type changes, and normalized path collisions require `--accept-overwrites` after explicit user approval. `--reconcile` remains report-only.
 
 ### UT Commands
 
@@ -367,7 +374,7 @@ Slice 1 has no apply/write mode. Same-name brownfield config changes are reporte
 | config:diff | `/tdk-config-diff` | `--sub-workspace` (required), `--detailed` | Workspace + sub-workspace docs | Diff table (no file) | sub-workspace:init |
 | config:sync | `/tdk-config-sync` | `--from-sub-workspace`, `--to-sub-workspace`, `--all`, `--force`, `--dry-run` | Docs paths | Synced files | sub-workspace:init |
 | config:index | `/tdk-config-index` | `--sub-workspace`, `--full` | All docs files | `document-manager.md` | None |
-| config topology apply | `bun src/index.ts config topology apply [--dry-run] [--topology <path>]` | `--dry-run`, `--topology` | `workspace-topology.json`, `.specify/.specify.json` | JSON dry-run patch preview (no file writes) | None |
+| config topology apply | `bun src/index.ts config topology apply [--dry-run] [--reconcile] [--topology <path>] [--yes --expect-hash <hash>] [--accept-overwrites]` | `--dry-run`, `--reconcile`, `--topology`, `--yes`, `--expect-hash`, `--accept-overwrites` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | JSON dry-run patch preview or guarded config write | None |
 
 ### Harness CLI Commands
 
@@ -498,7 +505,7 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 |------|---------|---------|
 | `--sub-workspace <name>` | ut:*, config:* | Target a specific sub-workspace (e.g., `frontend`, `backend`) |
 | `--force` | ut:auto, ut:plan, config:sync | Overwrite existing artifacts without confirmation |
-| `--dry-run` | config:sync, workspace-topology:apply | Preview changes without writing files |
+| `--dry-run` | config:sync, workspace-topology:apply | Preview changes without writing files; topology apply emits `planHash` for guarded apply |
 | `--standalone` | ut:plan | Generate UT plan for existing code without spec |
 | `--review` | ut:plan | Review and update existing UT plan |
 
@@ -542,7 +549,7 @@ architecture-advisor (optional, project-level report-only)
      ↓
 boundary-map (optional, project-level proposal-only)
      ↓
-workspace-topology-apply --dry-run (optional, project-level)
+workspace-topology-apply --dry-run, then --yes --expect-hash when approved (optional, project-level)
      ↓
 discovery (optional, epic-level context)
      ↓

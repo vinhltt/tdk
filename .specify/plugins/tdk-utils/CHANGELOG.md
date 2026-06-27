@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.0.2] - 2026-06-27
+
+### Changed
+- Updated documentation/links to point to .specify/docs/en/ across skills (obsidian-brain, tdk-setup-guide, tdk-skill-guide).
+
 ## [2.0.0] - 2026-06-15
 
 ### Added

@@ -7,7 +7,7 @@ input: 'User description: "$ARGUMENTS"'
 memory_context_loaded: [true/false]
 schema_version: 1
 # Optional promote-link fields — omit entirely for a root spec. Set only when this
-# spec was promoted from a parent work-item (see .specify/docs/guides/promote-convention.md):
+# spec was promoted from a parent work-item (see .specify/docs/en/promote-convention.md):
 #   parent_spec: <[folder/]ticket>   # canonical link to the parent spec; include the category folder when non-default (e.g. test/aa-100)
 #   promoted_from: "<work-item-id>"  # the parent work-item id this child was promoted from
 ---
