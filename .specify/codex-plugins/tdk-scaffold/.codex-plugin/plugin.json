@@ -1,5 +1,5 @@
 {
-  "description": "Architecture-aware scaffolding: recommend automations from project config + docs, then scaffold skill/agent files from approved recommendations",
+  "description": "Architecture-aware scaffolding: recommend automations, scaffold skill/agent files, and produce guarded golden-path skeleton recipes",
   "interface": {
     "brandColor": "#10B981",
     "capabilities": [
@@ -7,14 +7,14 @@
     ],
     "category": "Development",
     "defaultPrompt": [
-      "Recommend automations for this project based on its architecture."
+      "Recommend automations or prepare a guarded golden-path skeleton recipe from approved topology."
     ],
     "developerName": "VinhLTT",
     "displayName": "TDK Scaffold",
-    "longDescription": "Reads .specify/.specify.json architecture type + project docs + community skills to generate skill/agent recommendation files tailored to project architecture.",
-    "shortDescription": "Architecture-aware automation recommendations."
+    "longDescription": "Recommends project-specific skills/agents from architecture evidence, scaffolds approved skill/agent recommendations, and produces dry-run-first golden-path skeleton recipes for approved topology.",
+    "shortDescription": "Architecture-aware automation and guarded golden-path scaffolding."
   },
   "name": "tdk-scaffold",
   "skills": "./skills/",
-  "version": "1.0.0"
+  "version": "1.2.0"
 }

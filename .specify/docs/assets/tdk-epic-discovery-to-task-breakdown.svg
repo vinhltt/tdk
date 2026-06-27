@@ -1,0 +1,225 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2052" height="1292" viewBox="-26 -34 2052 1292">
+<defs><marker id="arrow_76b51680" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#16a34a"/></marker><marker id="arrow_dc366fd1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/></marker><marker id="arrow_db58cf7c" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker><marker id="arrow_87d2b039" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/></marker><marker id="arrow_c733e71d" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626"/></marker><marker id="arrow_b906fbff" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#e03131"/></marker></defs>
+<rect x="-26" y="-34" width="2052" height="1292" fill="#ffffff"/>
+<rect x="24" y="16" width="1952" height="1192" rx="12" ry="12" stroke="#1e1e1e" fill="none" stroke-width="1"/>
+<text x="70" y="76" font-family="Noto Sans Mono" font-size="34" fill="#1e40af" text-anchor="start">
+<tspan x="70" dy="0">TDK Epic Start — Discovery → Task Breakdown</tspan>
+</text>
+<text x="72" y="108" font-family="Noto Sans Mono" font-size="16" fill="#475569" text-anchor="start">
+<tspan x="72" dy="0">Biến epic mơ hồ thành parent spec + portable work items trước khi sync sub-issues</tspan>
+</text>
+<text x="1230" y="68" font-family="Noto Sans Mono" font-size="13" fill="#64748b" text-anchor="start">
+<tspan x="1230" dy="0">Source: .specify/docs/vi/epic-start-guide.md</tspan>
+<tspan x="1230" dy="16.25">Style: tdk-lifecycle-share-graph-v4.excalidraw</tspan>
+</text>
+<rect x="55" y="135" width="1865" height="600" rx="12" ry="12" stroke="#94a3b8" fill="#ffffff" stroke-width="2"/>
+<text x="82" y="172" font-family="Noto Sans Mono" font-size="19" fill="#1e40af" text-anchor="start">
+<tspan x="82" dy="0">PARENT EPIC — trước implementation</tspan>
+</text>
+<text x="82" y="193" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
+<tspan x="82" dy="0">Mục tiêu: làm rõ context, requirements, design, rồi chia thành work items</tspan>
+</text>
+<ellipse cx="190.0" cy="345.0" rx="95.0" ry="41.0" stroke="#2563eb" fill="#e7f5ff" stroke-width="2"/>
+<text x="190.0" y="341.0" font-family="Noto Sans Mono" font-size="16" fill="#1e40af" text-anchor="middle">
+<tspan x="190.0" dy="0">Epic brief</tspan>
+<tspan x="190.0" dy="20.0">ý tưởng lớn</tspan>
+</text>
+<polygon points="405.0,288 470,342.0 405.0,396 340,342.0" stroke="#d97706" fill="#fef3c7" stroke-width="2"/>
+<text x="405.0" y="338.5" font-family="Noto Sans Mono" font-size="14" fill="#92400e" text-anchor="middle">
+<tspan x="405.0" dy="0">Rộng /</tspan>
+<tspan x="405.0" dy="17.5">chưa rõ?</tspan>
+</text>
+<text x="486.0" y="270" font-family="Noto Sans Mono" font-size="12" fill="#d97706" text-anchor="middle">
+<tspan x="486.0" dy="0">Có</tspan>
+</text>
+<text x="637.0" y="240" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="middle">
+<tspan x="637.0" dy="0">Không: skip discovery</tspan>
+</text>
+<rect x="535" y="275" width="245" height="118" rx="12" ry="12" stroke="#d97706" fill="#fef3c7" stroke-width="2"/>
+<text x="657.5" y="320.875" font-family="Noto Sans Mono" font-size="15" fill="#1e40af" text-anchor="middle">
+<tspan x="657.5" dy="0">/tdk-discovery</tspan>
+<tspan x="657.5" dy="18.75">context-only</tspan>
+<tspan x="657.5" dy="18.75">không tạo UR/FR/SC</tspan>
+</text>
+<rect x="495" y="462" width="326" height="145" rx="12" ry="12" stroke="#d97706" fill="#fff7ed" stroke-width="2"/>
+<text x="516" y="493" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="start">
+<tspan x="516" dy="0">Discovery output</tspan>
+</text>
+<text x="516" y="517" font-family="Noto Sans Mono" font-size="12" fill="#374151" text-anchor="start">
+<tspan x="516" dy="0">problem.md</tspan>
+<tspan x="516" dy="15.0">personas.md</tspan>
+<tspan x="516" dy="15.0">mvp-scope.md</tspan>
+<tspan x="516" dy="15.0">index.md = manifest + ready gate</tspan>
+</text>
+<text x="500" y="639" font-family="Noto Sans Mono" font-size="12" fill="#d97706" text-anchor="start">
+<tspan x="500" dy="0">Luật: discovery là context, không phải requirement authority.</tspan>
+</text>
+<rect x="850" y="215" width="450" height="438" rx="12" ry="12" stroke="#16a34a" fill="#f0fdf4" stroke-width="2"/>
+<text x="876" y="248" font-family="Noto Sans Mono" font-size="16" fill="#16a34a" text-anchor="start">
+<tspan x="876" dy="0">REQUIREMENT AUTHORITY</tspan>
+</text>
+<text x="876" y="269" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
+<tspan x="876" dy="0">Chỉ spec.md sở hữu UR-* / FR-* / SC-*</tspan>
+</text>
+<rect x="875" y="304" width="190" height="104" rx="12" ry="12" stroke="#2563eb" fill="#dbeafe" stroke-width="2"/>
+<text x="970.0" y="343.75" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="middle">
+<tspan x="970.0" dy="0">/tdk-specify</tspan>
+<tspan x="970.0" dy="17.5">spec.md</tspan>
+<tspan x="970.0" dy="17.5">+ requirements checklist</tspan>
+</text>
+<rect x="1092" y="304" width="178" height="104" rx="12" ry="12" stroke="#2563eb" fill="#dbeafe" stroke-width="2"/>
+<text x="1181.0" y="343.75" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="middle">
+<tspan x="1181.0" dy="0">/tdk-clarify</tspan>
+<tspan x="1181.0" dy="17.5">answers ghi ngược</tspan>
+<tspan x="1181.0" dy="17.5">vào spec.md</tspan>
+</text>
+<polygon points="1125.0,478 1210,537.0 1125.0,596 1040,537.0" stroke="#dc2626" fill="#fee2e2" stroke-width="2"/>
+<text x="1125.0" y="524.75" font-family="Noto Sans Mono" font-size="14" fill="#991b1b" text-anchor="middle">
+<tspan x="1125.0" dy="0">Unresolved</tspan>
+<tspan x="1125.0" dy="17.5">Questions</tspan>
+<tspan x="1125.0" dy="17.5">= None?</tspan>
+</text>
+<text x="938" y="587" font-family="Noto Sans Mono" font-size="12" fill="#dc2626" text-anchor="start">
+<tspan x="938" dy="0">Không: quay lại clarify</tspan>
+</text>
+<text x="1238.0" y="525" font-family="Noto Sans Mono" font-size="12" fill="#16a34a" text-anchor="middle">
+<tspan x="1238.0" dy="0">Có</tspan>
+</text>
+<rect x="880" y="462" width="145" height="95" rx="12" ry="12" stroke="#16a34a" fill="#dcfce7" stroke-width="2"/>
+<text x="952.5" y="499.0" font-family="Noto Sans Mono" font-size="12" fill="#374151" text-anchor="middle">
+<tspan x="952.5" dy="0">spec.md</tspan>
+<tspan x="952.5" dy="15.0">UR/FR/SC</tspan>
+<tspan x="952.5" dy="15.0">source of truth</tspan>
+</text>
+<rect x="1332" y="285" width="220" height="120" rx="12" ry="12" stroke="#d97706" fill="#fef3c7" stroke-width="2"/>
+<text x="1442.0" y="332.75" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="middle">
+<tspan x="1442.0" dy="0">optional</tspan>
+<tspan x="1442.0" dy="17.5">/tdk-high-level-design</tspan>
+<tspan x="1442.0" dy="17.5">enrich-only HLD</tspan>
+</text>
+<rect x="1285" y="462" width="314" height="148" rx="12" ry="12" stroke="#d97706" fill="#fff7ed" stroke-width="2"/>
+<text x="1305" y="493" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="start">
+<tspan x="1305" dy="0">HLD output</tspan>
+</text>
+<text x="1305" y="516" font-family="Noto Sans Mono" font-size="11" fill="#374151" text-anchor="start">
+<tspan x="1305" dy="0">index.md = manifest</tspan>
+<tspan x="1305" dy="13.75">requirement-overview.md</tspan>
+<tspan x="1305" dy="13.75">project-and-technical-overview.md</tspan>
+<tspan x="1305" dy="13.75">data-flow.md / screen-flow.md</tspan>
+<tspan x="1305" dy="13.75">decisions-and-risks.md</tspan>
+</text>
+<text x="1303" y="640" font-family="Noto Sans Mono" font-size="12" fill="#d97706" text-anchor="start">
+<tspan x="1303" dy="0">Không mint requirement IDs mới.</tspan>
+</text>
+<rect x="1660" y="285" width="220" height="120" rx="12" ry="12" stroke="#d97706" fill="#fef3c7" stroke-width="2"/>
+<text x="1770.0" y="332.75" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="middle">
+<tspan x="1770.0" dy="0">/tdk-task-breakdown</tspan>
+<tspan x="1770.0" dy="17.5">portable work items</tspan>
+<tspan x="1770.0" dy="17.5">không phải plan.md</tspan>
+</text>
+<rect x="1628" y="462" width="270" height="148" rx="12" ry="12" stroke="#d97706" fill="#fff7ed" stroke-width="2"/>
+<text x="1648" y="493" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="start">
+<tspan x="1648" dy="0">Task breakdown output</tspan>
+</text>
+<text x="1648" y="516" font-family="Noto Sans Mono" font-size="11" fill="#374151" text-anchor="start">
+<tspan x="1648" dy="0">tasks-breakdown/index.md</tspan>
+<tspan x="1648" dy="13.75">= manifest authoritative</tspan>
+<tspan x="1648" dy="13.75"></tspan>
+<tspan x="1648" dy="13.75">task-NNN-{slug}.md</tspan>
+<tspan x="1648" dy="13.75">= objective + scope + AC</tspan>
+</text>
+<text x="1638" y="640" font-family="Noto Sans Mono" font-size="12" fill="#d97706" text-anchor="start">
+<tspan x="1638" dy="0">Mỗi task có thể sync thành 1 sub-issue.</tspan>
+</text>
+<path d="M 286 345 L 337 345" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_dc366fd1)"/>
+<path d="M 470 342 L 532 342" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_87d2b039)"/>
+<path d="M 448 292 L 598 227 L 885 292" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_db58cf7c)"/>
+<path d="M 780 342 L 872 342" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_87d2b039)"/>
+<path d="M 1065 356 L 1089 356" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_dc366fd1)"/>
+<path d="M 1180 410 L 1138 475" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_dc366fd1)"/>
+<path d="M 1040 576 L 950 611 L 890 408" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_c733e71d)"/>
+<path d="M 1210 536 L 1278 536 L 1330 370" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_76b51680)"/>
+<path d="M 1552 345 L 1658 345" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_87d2b039)"/>
+<path d="M 655 393 L 565 462" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
+<path d="M 655 393 L 660 462" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
+<path d="M 655 393 L 760 462" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
+<path d="M 970 408 L 952 462" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_76b51680)"/>
+<path d="M 1442 405 L 1442 462" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
+<path d="M 1770 405 L 1770 462" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
+<rect x="55" y="785" width="1865" height="275" rx="12" ry="12" stroke="#94a3b8" fill="#ffffff" stroke-width="2"/>
+<text x="82" y="822" font-family="Noto Sans Mono" font-size="19" fill="#1e40af" text-anchor="start">
+<tspan x="82" dy="0">HANDOFF SAU TASK BREAKDOWN — ngoài phạm vi TDK core</tspan>
+</text>
+<text x="82" y="843" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
+<tspan x="82" dy="0">Task files là input cho tracker sync của consumer project; parent epic không đi thẳng tới implement như một khối lớn.</tspan>
+</text>
+<rect x="115" y="890" width="255" height="92" rx="12" ry="12" stroke="#d97706" fill="#fef3c7" stroke-width="2"/>
+<text x="242.5" y="932.5" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="middle">
+<tspan x="242.5" dy="0">portable task files</tspan>
+<tspan x="242.5" dy="17.5">index.md + task-NNN.md</tspan>
+</text>
+<rect x="485" y="890" width="260" height="92" rx="12" ry="12" stroke="#64748b" fill="#e9ecef" stroke-width="2"/>
+<text x="615.0" y="932.5" font-family="Noto Sans Mono" font-size="14" fill="#374151" text-anchor="middle">
+<tspan x="615.0" dy="0">consumer-owned</tspan>
+<tspan x="615.0" dy="17.5">tracker sync</tspan>
+</text>
+<rect x="865" y="890" width="260" height="92" rx="12" ry="12" stroke="#e03131" fill="#ffc9c9" stroke-width="2"/>
+<text x="995.0" y="932.5" font-family="Noto Sans Mono" font-size="14" fill="#991b1b" text-anchor="middle">
+<tspan x="995.0" dy="0">GitHub / GitLab</tspan>
+<tspan x="995.0" dy="17.5">Backlog sub-issues</tspan>
+</text>
+<rect x="1248" y="890" width="295" height="92" rx="12" ry="12" stroke="#2563eb" fill="#dbeafe" stroke-width="2"/>
+<text x="1395.5" y="932.5" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="middle">
+<tspan x="1395.5" dy="0">mỗi sub-issue</tspan>
+<tspan x="1395.5" dy="17.5">seed thành child spec</tspan>
+</text>
+<rect x="1640" y="890" width="230" height="92" rx="12" ry="12" stroke="#9333ea" fill="#f3e8ff" stroke-width="2"/>
+<text x="1755.0" y="932.75" font-family="Noto Sans Mono" font-size="13" fill="#1e40af" text-anchor="middle">
+<tspan x="1755.0" dy="0">child loop</tspan>
+<tspan x="1755.0" dy="16.25">clarify → plan → implement</tspan>
+</text>
+<path d="M 1765 610 L 1765 785" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
+<path d="M 370 936 L 482 936" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_87d2b039)"/>
+<path d="M 745 936 L 862 936" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_db58cf7c)"/>
+<path d="M 1125 936 L 1245 936" fill="none" stroke="#e03131" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_b906fbff)"/>
+<path d="M 1543 936 L 1637 936" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_dc366fd1)"/>
+<text x="655.0" y="1006" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="middle">
+<tspan x="655.0" dy="0">TDK core không tạo external issue.</tspan>
+</text>
+<text x="1455.0" y="1006" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="middle">
+<tspan x="1455.0" dy="0">Child spec có scope riêng; parent giữ traceability + manifest.</tspan>
+</text>
+<text x="70" y="1111" font-family="Noto Sans Mono" font-size="16" fill="#1e40af" text-anchor="start">
+<tspan x="70" dy="0">Legend</tspan>
+</text>
+<rect x="70" y="1125" width="24" height="18" rx="12" ry="12" stroke="#2563eb" fill="#dbeafe" stroke-width="2"/>
+<text x="105" y="1135" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
+<tspan x="105" dy="0">core command</tspan>
+</text>
+<rect x="250" y="1125" width="24" height="18" rx="12" ry="12" stroke="#d97706" fill="#fef3c7" stroke-width="2"/>
+<text x="285" y="1135" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
+<tspan x="285" dy="0">optional/context/bridge</tspan>
+</text>
+<rect x="520" y="1125" width="24" height="18" rx="12" ry="12" stroke="#16a34a" fill="#dcfce7" stroke-width="2"/>
+<text x="555" y="1135" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
+<tspan x="555" dy="0">requirement authority</tspan>
+</text>
+<rect x="790" y="1125" width="24" height="18" rx="12" ry="12" stroke="#e03131" fill="#ffc9c9" stroke-width="2"/>
+<text x="825" y="1135" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
+<tspan x="825" dy="0">external tracker</tspan>
+</text>
+<text x="70" y="1173" font-family="Noto Sans Mono" font-size="13" fill="#64748b" text-anchor="start">
+<tspan x="70" dy="0">Boundary: discovery = context-only; spec.md = requirement authority; HLD = enrich-only; task breakdown = portable work items for sub-issues.</tspan>
+</text>
+<ellipse cx="190.0" cy="712.0" rx="7.0" ry="7.0" stroke="#2563eb" fill="#2563eb" stroke-width="1"/>
+<ellipse cx="405.0" cy="712.0" rx="7.0" ry="7.0" stroke="#d97706" fill="#d97706" stroke-width="1"/>
+<ellipse cx="655.0" cy="712.0" rx="7.0" ry="7.0" stroke="#d97706" fill="#d97706" stroke-width="1"/>
+<ellipse cx="970.0" cy="712.0" rx="7.0" ry="7.0" stroke="#2563eb" fill="#2563eb" stroke-width="1"/>
+<ellipse cx="1180.0" cy="712.0" rx="7.0" ry="7.0" stroke="#2563eb" fill="#2563eb" stroke-width="1"/>
+<ellipse cx="1442.0" cy="712.0" rx="7.0" ry="7.0" stroke="#d97706" fill="#d97706" stroke-width="1"/>
+<ellipse cx="1770.0" cy="712.0" rx="7.0" ry="7.0" stroke="#d97706" fill="#d97706" stroke-width="1"/>
+<path d="M 190 712 L 1770 712" fill="none" stroke="#64748b" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="995.0" y="702" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="middle">
+<tspan x="995.0" dy="0">Artifact chain trước khi implement</tspan>
+</text>
+</svg>

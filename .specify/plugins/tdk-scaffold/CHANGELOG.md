@@ -4,6 +4,23 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.2.0] - 2026-06-27
+
+### Added
+- Added tdk-golden-path-scaffold skill to support dry-run-first golden-path scaffolding from approved workspace topology
+
+### Changed
+- Updated display name, description, and default prompts to include the new golden-path scaffolding capability
+
+## [1.1.0] - 2026-06-27
+
+### Added
+- tdk-golden-path-scaffold: add guarded dry-run-first scaffold recipe workflow for approved architecture/topology skeletons.
+- Add golden-path output contract, recipe schema, safety gates, dry-run/apply workflows, and report templates.
+
+### Changed
+- Update plugin metadata to include golden-path skeleton scaffolding without business-code generation.
+
 ## [1.0.0] - 2026-06-15
 
 ### Added

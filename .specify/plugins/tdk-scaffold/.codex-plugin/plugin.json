@@ -1,5 +1,5 @@
 {
   "name": "tdk-scaffold",
-  "description": "Architecture-aware scaffolding: recommend automations from project config + docs, then scaffold skill/agent files from approved recommendations",
-  "version": "1.0.0"
+  "description": "Architecture-aware scaffolding: recommend automations, scaffold skill/agent files, and produce guarded golden-path skeleton recipes",
+  "version": "1.2.0"
 }

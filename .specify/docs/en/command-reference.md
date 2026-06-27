@@ -87,6 +87,7 @@ Run `diff → sync → index` to keep docs consistent across workspaces.
 | `/tdk-boundary-map` | Topology proposal workflow that writes `workspace-topology.md` and `workspace-topology.json` without runtime config mutation |
 | `/tdk-workspace-topology-apply` | Dry-run preview or guarded two-step apply of `.specify/.specify.json` changes derived from `workspace-topology.json` |
 | `/tdk-module-boundary-policy` | Optional module boundary policy report and non-applied enforcement snippets from approved topology evidence |
+| `/tdk-golden-path-scaffold` | Dry-run-first scaffold plan and recipe for approved topology skeletons; guarded apply creates only safe empty structure and `.specify` templates |
 
 Architecture advisor is report-only. It does not write runtime config, topology
 files, source code, plans, tasks, tracker issues, or ADR files. Boundary-map is
@@ -96,6 +97,10 @@ dry-run emits `planHash`; guarded apply requires `--yes --expect-hash <planHash>
 It does not create source directories or apply `--reconcile`. Module boundary
 policy follows topology review/apply and writes advisory Markdown only; it never
 changes source, lint, workspace, package manager, routing, or runtime config.
+Golden-path scaffold follows approved topology/policy review and defaults to a
+reviewable dry-run recipe under `.specify/configurations/golden-path/`; `--yes`
+requires `golden-path-recipe.json` to be approved and never creates business
+code.
 
 ### Skills Ecosystem
 
@@ -182,12 +187,13 @@ Each command reads the output of the previous one, building a chain of artifacts
 | 16 | `/tdk-architecture-advisor [input|file] [--recover-existing|--unknown]` | Project architecture options, decision, or recovery reports |
 | 17 | `/tdk-boundary-map [input|file] [--from-existing|--unknown]` | Workspace topology proposal markdown and JSON |
 | 18 | `/tdk-module-boundary-policy [topology|file] [--audit|--suggest]` | Optional module boundary policy report and non-applied enforcement snippets |
+| 19 | `/tdk-golden-path-scaffold [topology|file] [--dry-run|--yes] [--preset <name>]` | Guarded golden-path scaffold plan and recipe |
 | — | **Unit Testing** | |
-| 19 | `/tdk-ut-backfill-plan <id>` | Generate unit test plan and phase files |
+| 20 | `/tdk-ut-backfill-plan <id>` | Generate unit test plan and phase files |
 | — | **Config & Workspace** | |
-| 20 | `/tdk-config-diff` | Compare workspace vs sub-workspace docs |
-| 21 | `/tdk-config-sync` | Sync docs between workspace and sub-workspaces |
-| 22 | `/tdk-config-index` | Generate/update document manager index |
+| 21 | `/tdk-config-diff` | Compare workspace vs sub-workspace docs |
+| 22 | `/tdk-config-sync` | Sync docs between workspace and sub-workspaces |
+| 23 | `/tdk-config-index` | Generate/update document manager index |
 | 24 | `/tdk-workspace-topology-apply [--dry-run] [--yes --expect-hash <hash>] [--accept-overwrites] [--reconcile] [--topology <path>]` | Preview or guarded-apply runtime config patch from workspace topology |
 | 25 | `/tdk-sub-workdspace-init` | Initialize a new sub-workspace |
 | 26 | `/tdk-sub-workdspace-list` | List all configured sub-workspaces |
@@ -337,6 +343,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | boundary:map | `/tdk-boundary-map [input\|file] [--from-existing\|--unknown]` | `--from-existing`, `--unknown` | Architecture reports, inception/onboarding evidence, scout, README, or bounded repo evidence | `.specify/configurations/workspace-topology/workspace-topology.md`, `.specify/configurations/workspace-topology/workspace-topology.json` | Optional after advisor/start/scout |
 | workspace-topology:apply | `/tdk-workspace-topology-apply [--dry-run] [--yes --expect-hash <hash>] [--accept-overwrites] [--reconcile] [--topology <path>]` | `--dry-run`, `--yes`, `--expect-hash`, `--accept-overwrites`, `--reconcile`, `--topology` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | Dry-run patch preview or guarded config apply | Optional after boundary-map or human-authored proposal |
 | module-boundary:policy | `/tdk-module-boundary-policy [topology\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | `workspace-topology.json`, `workspace-topology.md`, `.specify/.specify.json`, repo stack evidence | `module-boundary-policy.md`, optional `enforcement-snippets.md` | Optional after topology review/apply |
+| golden-path:scaffold | `/tdk-golden-path-scaffold [topology\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved topology/config evidence, architecture decision/recovery, optional boundary policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional after topology/policy review |
 
 Greenfield and brownfield start commands are report/routing entrypoints. They do not create specs, plans, tracker issues, source code, or `.specify/.specify.json`. Greenfield full mode runs a project-inception interview before strong routing. Quick mode records unanswered critical gaps. Unknown mode classifies only unless minimum facts are present. Brownfield full mode uses bounded repo evidence, config-only mode focuses on `.specify` state, and unknown mode recommends one evidence-backed next route.
 
@@ -377,6 +384,16 @@ TypeScript ESLint, or dependency-cruiser. Non-JS tools stay manual/deferred
 unless matching repo evidence exists.
 
 Syntax: `/tdk-module-boundary-policy [topology|file] [--audit|--suggest]`.
+
+`/tdk-golden-path-scaffold` is a guarded scaffold workflow after topology review.
+Dry-run writes `.specify/configurations/golden-path/golden-path-scaffold-plan.md`,
+`.specify/configurations/golden-path/golden-path-recipe.json`, and
+`.specify/configurations/golden-path/generated-files-report.md`. Apply mode
+requires `--yes` and `golden-path-recipe.json` with `status: approved`, then
+creates only allowlisted skeleton artifacts such as empty directories,
+`.gitkeep`, `.specify` guidance docs, and explicitly templated config files.
+
+Syntax: `/tdk-golden-path-scaffold [topology|file] [--dry-run|--yes] [--preset <name>]`.
 
 ### UT Commands
 
@@ -567,6 +584,8 @@ architecture-advisor (optional, project-level report-only)
 boundary-map (optional, project-level proposal-only)
      ↓
 workspace-topology-apply --dry-run, then --yes --expect-hash when approved (optional, project-level)
+     ↓
+golden-path-scaffold --dry-run, then --yes when recipe approved (optional, skeleton only)
      ↓
 discovery (optional, epic-level context)
      ↓

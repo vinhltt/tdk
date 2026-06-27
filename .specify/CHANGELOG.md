@@ -10,6 +10,17 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.82.0] - 2026-06-27
+
+### Added
+- **[tdk-scaffold]** Added `tdk-golden-path-scaffold` skill to support dry-run-first golden-path scaffolding from approved workspace topology
+  - Added workflow templates and output contract references
+- **[Scripts]** Added contract tests `tdk-golden-path-scaffold-contract.test.ts` to verify the golden-path scaffolding
+
+### Changed
+- **[tdk-scaffold]** Updated display name, description, and default prompts to include the new golden-path scaffolding capability
+- **[Docs]** Updated README, command reference, and document flow to document `/tdk-golden-path-scaffold` CLI and design contracts
+
 ## [1.81.0] - 2026-06-27
 
 ### Added

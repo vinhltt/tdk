@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-27T10:43:06Z",
+  "generated_at": "2026-06-27T13:29:13Z",
   "plugins": {
     "tdk-core": {
       "version": "5.7.1",
@@ -298,9 +298,12 @@
       }
     },
     "tdk-scaffold": {
-      "version": "1.0.0",
+      "version": "1.2.0",
       "components": {
         "skills": {
+          "tdk-golden-path-scaffold": {
+            "version": "1.2.0"
+          },
           "tdk-recommend-automations": {
             "version": "0.1.0"
           },
@@ -313,11 +316,22 @@
         "commands": {}
       },
       "files": {
-        ".claude-plugin/interface.json": "3331611a6a887f596f918ba01fa37db14061b8d6a9c2bbd382feee73ed72f98a",
-        ".claude-plugin/plugin.json": "885846c73d6226232f13a76b149fb47a1edd868a4f40f1130f1fe796643ee1a6",
-        ".codex-plugin/plugin.json": "885846c73d6226232f13a76b149fb47a1edd868a4f40f1130f1fe796643ee1a6",
-        ".cursor-plugin/plugin.json": "885846c73d6226232f13a76b149fb47a1edd868a4f40f1130f1fe796643ee1a6",
-        "CHANGELOG.md": "8202b38d1c32a1d53abc13e291a4200da1569cd5f9582fc27c4d715ddafe4aa6",
+        ".claude-plugin/interface.json": "68760c7a49cdbe25dff7017c9f3832ac3c3f83758acc1be97d61c6bc2c19967e",
+        ".claude-plugin/plugin.json": "12521dfb54f3b8a6c4daa396894763f6585b63e26ce76f67e6a28b7e1e1f253f",
+        ".codex-plugin/plugin.json": "12521dfb54f3b8a6c4daa396894763f6585b63e26ce76f67e6a28b7e1e1f253f",
+        ".cursor-plugin/plugin.json": "12521dfb54f3b8a6c4daa396894763f6585b63e26ce76f67e6a28b7e1e1f253f",
+        "CHANGELOG.md": "39cc51913721adf55dd780874da24514ca6a4e7466c5dce2b373b771c6d9b945",
+        "skills/tdk-golden-path-scaffold/SKILL.md": "bae911cb4e04ed3d9dc222d7cf4aa55fe4e2d86852f87b384377c9990a0ea44c",
+        "skills/tdk-golden-path-scaffold/references/golden-path-output-contract.md": "e0ae766661c97e79a9352e92a9ec6059d2044ac396922c8328f8fbc1751c2c60",
+        "skills/tdk-golden-path-scaffold/references/golden-path-recipe-schema.md": "10638a7933d1658ac8cc96288a49716ad2c97b7dc8c4ce8ac5cfbc995aa97a68",
+        "skills/tdk-golden-path-scaffold/references/safety-gates.md": "541ddb5ffe40834f03617ba3559e8c42176a911a4c2201bae9d7300c891cace9",
+        "skills/tdk-golden-path-scaffold/references/workflow-apply.md": "99df0c543fe86d19d8bf77d03d0b4d989dea3d592c0a5acc944976f2fd4378a3",
+        "skills/tdk-golden-path-scaffold/references/workflow-dry-run.md": "49bcf3badf0d66cfc6ada1b71165c1650984a4e435d37e9fa9ce84e467647d25",
+        "skills/tdk-golden-path-scaffold/templates/generated-files-report.md.tpl": "e815e432f6cacc84fdba4000710cca6444f4def31c2d0fcff8a4b0ea2db43a35",
+        "skills/tdk-golden-path-scaffold/templates/golden-path-notes.md.tpl": "46aa98586bb6dea224bf4aacb5a1521553b9d22e4a1d9e60b29b5603ec80c5a5",
+        "skills/tdk-golden-path-scaffold/templates/golden-path-recipe.json.tpl": "ea9bb006bb56b228b9885c4f446bf221e15a8434a07239c85f8e8fc25724dec4",
+        "skills/tdk-golden-path-scaffold/templates/golden-path-scaffold-plan.md.tpl": "c8e4714cbad9bd83c78b40526915fb8cbc2952a72275a347d3ac70eb060d90fa",
+        "skills/tdk-golden-path-scaffold/templates/project-structure.md.tpl": "df95624033993e0ff899eb06a60cdfa55105481da98e4d5253b268d23094f1c3",
         "skills/tdk-recommend-automations/SKILL.md": "fc98581f70636cc75cde8fdcd0d8430f319fb3208eec124adfa2ec000528a244",
         "skills/tdk-recommend-automations/references/architecture-presets.md": "ce006dcc1d6d91141362d306bb0103359b60f8877f033c9e195bf1b78f1cbe2f",
         "skills/tdk-scaffold-from-recommendation/SKILL.md": "2d2daa34dbe197757bf8c9a922662e9985a1936e7a84d20338604b193d4e6d79",

@@ -20,6 +20,7 @@ flowchart TD
     TOPOLOGY[workspace-topology.md/json<br/>Topology Proposal]
     CONFIG_PATCH[config topology apply<br/>Dry-run / Guarded Apply]
     POLICY[module-boundary-policy.md<br/>enforcement-snippets.md]
+    GOLDEN_PATH[golden-path-scaffold-plan.md<br/>golden-path-recipe.json]
     DISCOVERY[discovery/<br/>Epic Context]
 
     %% Phase 0: Feature Specification
@@ -30,6 +31,7 @@ flowchart TD
     ARCHITECTURE_REPORTS -.->|/tdk-boundary-map<br/>proposal only| TOPOLOGY
     TOPOLOGY -.->|/tdk-workspace-topology-apply<br/>dry-run first| CONFIG_PATCH
     CONFIG_PATCH -.->|/tdk-module-boundary-policy<br/>policy only| POLICY
+    POLICY -.->|/tdk-golden-path-scaffold<br/>dry-run first| GOLDEN_PATH
     REQ -.->|/tdk-discovery<br/>optional, epic| DISCOVERY
     REQ -->|/tdk-specify| SPEC[spec.md<br/>Feature Specification]
     DISCOVERY -.->|context only| SPEC
@@ -100,6 +102,7 @@ flowchart LR
     TOPOLOGY[workspace-topology.md/json]
     CONFIG_PATCH[config dry-run/apply]
     POLICY[module-boundary-policy.md<br/>enforcement-snippets.md]
+    GOLDEN_PATH[golden-path scaffold<br/>recipe/report]
     DISCOVERY[discovery/<br/>Epic Context]
     SPEC[spec.md]
     SPEC_CLAR[spec.md<br/>+ Clarifications]
@@ -114,6 +117,7 @@ flowchart LR
     ARCHITECTURE_REPORTS -.->|"/tdk-boundary-map"| TOPOLOGY
     TOPOLOGY -.->|"/tdk-workspace-topology-apply<br/>dry-run first"| CONFIG_PATCH
     CONFIG_PATCH -.->|"/tdk-module-boundary-policy<br/>policy only"| POLICY
+    POLICY -.->|"/tdk-golden-path-scaffold<br/>dry-run first"| GOLDEN_PATH
     REQ -.->|"/tdk-discovery<br/>epic-id brief"| DISCOVERY
     REQ -->|"/tdk-specify<br/>feature-id desc"| SPEC
     DISCOVERY -.->|"context only"| SPEC
@@ -319,6 +323,9 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `config topology dry-run/apply` | `/tdk-workspace-topology-apply` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | Human review; `--yes --expect-hash <planHash>` for guarded write | Runtime config preview or guarded config write |
 | `.specify/configurations/module-boundary-policy/module-boundary-policy.md` | `/tdk-module-boundary-policy` | topology artifacts, existing `.specify/.specify.json`, repo stack evidence | Human review of boundary guidance | Optional project boundary policy |
 | `.specify/configurations/module-boundary-policy/enforcement-snippets.md` | `/tdk-module-boundary-policy --suggest` | policy report and detected stack evidence | Human-applied enforcement config candidates | Optional snippet guidance |
+| `.specify/configurations/golden-path/golden-path-scaffold-plan.md` | `/tdk-golden-path-scaffold --dry-run` | approved topology/config evidence, architecture decision/recovery, optional boundary policy | Human review before recipe approval | Optional skeleton plan |
+| `.specify/configurations/golden-path/golden-path-recipe.json` | `/tdk-golden-path-scaffold --dry-run` | scaffold plan and approved topology/config evidence | Set `status: approved` before guarded apply | Optional skeleton recipe |
+| `.specify/configurations/golden-path/generated-files-report.md` | `/tdk-golden-path-scaffold --dry-run` or `--yes` | recipe and safety gates | Review created/skipped/existing/refused paths | Scaffold report |
 | `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution | Optional context for `/tdk-specify` | Optional before specify |
 | `spec.md` | `/tdk-specify` | User description | `/tdk-plan`, all downstream | Feature start |
 | `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-ba-requirement` | After specify |
