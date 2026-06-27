@@ -65,6 +65,8 @@ flowchart TD
 
 Nếu work nhỏ kiểu feature-sized, có thể bỏ qua `task-breakdown` và chạy `/tdk-plan` trực tiếp trên spec hiện tại. Với epic workflow, `task-breakdown` tạo work items để sync sang tracker sub-issues, sau đó mỗi sub-issue có child spec riêng.
 
+![TDK Epic Start - Discovery đến Task Breakdown](../assets/tdk-epic-discovery-to-task-breakdown.png)
+
 ## Nội Dung Output File
 
 Khi đọc output, luôn bắt đầu từ file manifest: `discovery/index.md`, `high-level-design/index.md`, hoặc `tasks-breakdown/index.md`. Đừng glob cả thư mục rồi tự đoán file nào đang còn hiệu lực.

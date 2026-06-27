@@ -2,7 +2,7 @@
 name: tdk-skill-guide
 description: "Interactive guide for TDK skills and commands. Shows usage, scenarios, tips, and skill discovery. Use when asking 'how to use /tdk-*', 'what skills are available', 'show scenario', 'find a skill for X', 'tdk guide', 'tdk help'."
 metadata:
-  version: 2.0.2
+  version: 2.1.0
 ---
 
 # TDK Skill Guide
@@ -108,7 +108,7 @@ Parse `$ARGUMENTS` to determine mode:
    | /tdk-plan | Generate implementation plan |
    | ... |
 
-   ### tdk-utils (12 skills)
+   ### tdk-utils (15 skills)
    | ... |
    ```
 

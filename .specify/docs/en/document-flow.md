@@ -19,6 +19,7 @@ flowchart TD
     ARCHITECTURE_REPORTS[architecture-options.md<br/>architecture-decision.md<br/>architecture-recovery.md]
     TOPOLOGY[workspace-topology.md/json<br/>Topology Proposal]
     CONFIG_PATCH[config topology apply<br/>Dry-run / Guarded Apply]
+    POLICY[module-boundary-policy.md<br/>enforcement-snippets.md]
     DISCOVERY[discovery/<br/>Epic Context]
 
     %% Phase 0: Feature Specification
@@ -28,6 +29,7 @@ flowchart TD
     BROWNFIELD_ONBOARDING -.->|/tdk-architecture-advisor --recover-existing<br/>recovery report| ARCHITECTURE_REPORTS
     ARCHITECTURE_REPORTS -.->|/tdk-boundary-map<br/>proposal only| TOPOLOGY
     TOPOLOGY -.->|/tdk-workspace-topology-apply<br/>dry-run first| CONFIG_PATCH
+    CONFIG_PATCH -.->|/tdk-module-boundary-policy<br/>policy only| POLICY
     REQ -.->|/tdk-discovery<br/>optional, epic| DISCOVERY
     REQ -->|/tdk-specify| SPEC[spec.md<br/>Feature Specification]
     DISCOVERY -.->|context only| SPEC
@@ -76,7 +78,7 @@ flowchart TD
     classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
     classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px
 
-    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,DISCOVERY,SPEC,SPEC_CLARIFIED,TASK_BREAKDOWN phase0
+    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,DISCOVERY,SPEC,SPEC_CLARIFIED,TASK_BREAKDOWN phase0
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES,PAGEDESIGNS,BATCH_DESIGN phase1
     class TEST_VP phase0
     class PRODUCT_CONTEXT,CONSTITUTION,UIUX,REF_DATAMODEL,REF_STATE reference
@@ -97,6 +99,7 @@ flowchart LR
     ARCHITECTURE_REPORTS[architecture reports]
     TOPOLOGY[workspace-topology.md/json]
     CONFIG_PATCH[config dry-run/apply]
+    POLICY[module-boundary-policy.md<br/>enforcement-snippets.md]
     DISCOVERY[discovery/<br/>Epic Context]
     SPEC[spec.md]
     SPEC_CLAR[spec.md<br/>+ Clarifications]
@@ -110,6 +113,7 @@ flowchart LR
     BROWNFIELD_ONBOARDING -.->|"/tdk-architecture-advisor --recover-existing"| ARCHITECTURE_REPORTS
     ARCHITECTURE_REPORTS -.->|"/tdk-boundary-map"| TOPOLOGY
     TOPOLOGY -.->|"/tdk-workspace-topology-apply<br/>dry-run first"| CONFIG_PATCH
+    CONFIG_PATCH -.->|"/tdk-module-boundary-policy<br/>policy only"| POLICY
     REQ -.->|"/tdk-discovery<br/>epic-id brief"| DISCOVERY
     REQ -->|"/tdk-specify<br/>feature-id desc"| SPEC
     DISCOVERY -.->|"context only"| SPEC
@@ -126,7 +130,7 @@ flowchart LR
     classDef note fill:#f5f5f5,stroke:#616161,stroke-width:1px
 
     class REQ input
-    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,DISCOVERY,SPEC,SPEC_CLAR,HLD,TASKS,BA_REQ output
+    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,DISCOVERY,SPEC,SPEC_CLAR,HLD,TASKS,BA_REQ output
     class CONTENT note
 ```
 
@@ -313,6 +317,8 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `.specify/configurations/workspace-topology/workspace-topology.md` | `/tdk-boundary-map` or human-authored topology proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | Human review before dry-run preview | Project topology proposal |
 | `.specify/configurations/workspace-topology/workspace-topology.json` | `/tdk-boundary-map` or human-authored topology proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | `/tdk-workspace-topology-apply --dry-run`, then guarded apply with `--expect-hash` when approved | Project topology changes |
 | `config topology dry-run/apply` | `/tdk-workspace-topology-apply` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | Human review; `--yes --expect-hash <planHash>` for guarded write | Runtime config preview or guarded config write |
+| `.specify/configurations/module-boundary-policy/module-boundary-policy.md` | `/tdk-module-boundary-policy` | topology artifacts, existing `.specify/.specify.json`, repo stack evidence | Human review of boundary guidance | Optional project boundary policy |
+| `.specify/configurations/module-boundary-policy/enforcement-snippets.md` | `/tdk-module-boundary-policy --suggest` | policy report and detected stack evidence | Human-applied enforcement config candidates | Optional snippet guidance |
 | `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution | Optional context for `/tdk-specify` | Optional before specify |
 | `spec.md` | `/tdk-specify` | User description | `/tdk-plan`, all downstream | Feature start |
 | `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-ba-requirement` | After specify |

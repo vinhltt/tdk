@@ -21,15 +21,16 @@ TDK structures the full development loop:
 1. **Start** — classify greenfield or brownfield repo shape and recommend the safe workflow path (`/tdk-greenfield-start`, `/tdk-brownfield-start`)
 2. **Advise** — optionally produce project-level architecture options, decisions, or recovery reports without topology/config writes (`/tdk-architecture-advisor`)
 3. **Map** — optionally produce workspace topology proposal markdown and JSON without runtime config writes (`/tdk-boundary-map`)
-4. **Discover** — optionally create epic-only context before spec (`/tdk-discovery`)
-5. **Specify** — generate feature specs from natural language and optional discovery refs (`/tdk:specify`)
-6. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
-7. **Design** — optionally produce approval-level HLD artifacts after clarify for greenfield work (`/tdk-high-level-design`)
-8. **Break down** — optionally turn clarified spec/HLD context into portable Markdown work items (`/tdk-task-breakdown`)
-9. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
-10. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
-11. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
-12. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
+4. **Guide boundaries** — optionally turn approved topology into module boundary policy and non-applied snippets (`/tdk-module-boundary-policy`)
+5. **Discover** — optionally create epic-only context before spec (`/tdk-discovery`)
+6. **Specify** — generate feature specs from natural language and optional discovery refs (`/tdk:specify`)
+7. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
+8. **Design** — optionally produce approval-level HLD artifacts after clarify for greenfield work (`/tdk-high-level-design`)
+9. **Break down** — optionally turn clarified spec/HLD context into portable Markdown work items (`/tdk-task-breakdown`)
+10. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
+11. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
+12. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
+13. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
 
 Additional workflows: constitution-owned `product-context.md`, topology proposal and dry-run workspace config previews, config management, sub-workspace docs generation, scout (codebase analysis), memory management, API test generation.
 
@@ -119,7 +120,7 @@ bun src/commands/manifest/compute.ts --root ../..
 .specify/
 ├── plugins/              # Marketplace plugins (installed by setup.sh)
 │   ├── tdk-core/            # Core workflow (23 skills + 1 agent)
-│   ├── tdk-utils/           # Utilities: scout, research, problem solving (14 skills + 5 agents)
+│   ├── tdk-utils/           # Utilities: scout, research, boundary policy, problem solving (15 skills + 5 agents)
 │   ├── tdk-memory/          # Domain memory management (5 skills + 1 agent)
 │   ├── tdk-test-api/        # API test generation (3 skills)
 │   ├── tdk-retro/           # Retrospective learning loop (4 skills)
@@ -144,7 +145,7 @@ bun src/commands/manifest/compute.ts --root ../..
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
 | **tdk-core** | 23 skills + 1 agent | Greenfield/brownfield start, architecture advisor, boundary map, topology apply, constitution, discovery, specify, clarify, HLD, task breakdown, plan, implement, config, sub-workspace, ut-backfill |
-| **tdk-utils** | 14 skills + 5 agents | Scout, research, brainstorming, docs-seeker, context-engineering, problem-solving |
+| **tdk-utils** | 15 skills + 5 agents | Scout, research, module boundary policy, brainstorming, docs-seeker, context-engineering, problem-solving |
 | **tdk-memory** | 5 skills + 1 agent | Domain memory: init, update, checksum, changelog, query, and tdk-memory-agent |
 | **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |
 | **tdk-retro** | 4 | Retrospective feedback collection, learning proposal, and approved-delta application |

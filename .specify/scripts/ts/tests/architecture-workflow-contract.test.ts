@@ -25,7 +25,7 @@ function expectNoRuntimeConfigMutation(skill: string): void {
 }
 
 function expectArchitectureWorkflowVersion(skill: string): void {
-  expect(skill).toContain('  version: "5.6.0"');
+  expect(skill).toContain('  version: "5.7.0"');
 }
 
 describe('architecture workflow foundation contracts', () => {

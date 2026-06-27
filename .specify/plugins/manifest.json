@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-27T09:41:38Z",
+  "generated_at": "2026-06-27T10:43:06Z",
   "plugins": {
     "tdk-core": {
-      "version": "5.7.0",
+      "version": "5.7.1",
       "components": {
         "skills": {
           "tdk-analyze": {
@@ -70,7 +70,7 @@
             "version": "5.7.0"
           },
           "tdk-ut-backfill-plan": {
-            "version": "3.4.11"
+            "version": "5.7.1"
           },
           "tdk-workspace-topology-apply": {
             "version": "5.7.0"
@@ -90,10 +90,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "2e33cdc14ebf20e5074ae949db076e4e04d51a31ec94d99ef1c3d6278c4c929e",
-        ".claude-plugin/plugin.json": "c3bb058fb248abeee7012ebcc9726a11ed32b33ca095146bd88225747e1a9203",
-        ".codex-plugin/plugin.json": "c3bb058fb248abeee7012ebcc9726a11ed32b33ca095146bd88225747e1a9203",
-        ".cursor-plugin/plugin.json": "c3bb058fb248abeee7012ebcc9726a11ed32b33ca095146bd88225747e1a9203",
-        "CHANGELOG.md": "fa9509e46a509fbe33dc5239fd491ae7cad97dfb3f1682f32695714f7e69f996",
+        ".claude-plugin/plugin.json": "d62d563d1ca3e05b45b8c15848d8aecd90a0d84238837674bbcfaf3d83b9a0d4",
+        ".codex-plugin/plugin.json": "d62d563d1ca3e05b45b8c15848d8aecd90a0d84238837674bbcfaf3d83b9a0d4",
+        ".cursor-plugin/plugin.json": "d62d563d1ca3e05b45b8c15848d8aecd90a0d84238837674bbcfaf3d83b9a0d4",
+        "CHANGELOG.md": "eb60a8d5ad450960803a063bd5aa07574b80426fe941486116e4bcfd74bae2ed",
         "__tests__/context-builder.test.cjs": "39ea0d403e0154a14cfe8877ef76a6c8fc68ffa046ef2d1f59b152de68440fe2",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
@@ -190,7 +190,7 @@
         "skills/tdk-sub-workspace-list/SKILL.md": "048d5207d474ab4e349e4ad9b32d0ed1da3727de44eb49e720e32a8316fbe04e",
         "skills/tdk-task-breakdown/SKILL.md": "f99817539ce271ee6c689314575133220b30767148872213c237faa07793f1b7",
         "skills/tdk-task-breakdown/references/task-breakdown-output-contract.md": "8ef15913ffb0f074a63933c8a20e5300ff3156fbea0fddece41d5c21d4c9e0e9",
-        "skills/tdk-ut-backfill-plan/SKILL.md": "49ee3011761a91c7fa73b78af225f10447b379c496fb44bbb807f5da81413530",
+        "skills/tdk-ut-backfill-plan/SKILL.md": "d6536ca64010f42789a1c5075ada1be447a82b46f36dfb035e030be0ed595d73",
         "skills/tdk-workspace-topology-apply/SKILL.md": "b481f98d01a512c65da84999da35a2aae868e0613ce7b05443e83473df3efbf4",
         "skills/tdk-workspace-topology-apply/templates/topology-apply-report.md.tpl": "1697848bb41e48a3549dfaa39904d22d8d6632131be9c5ac8071302585f8759b"
       }
@@ -359,7 +359,7 @@
       }
     },
     "tdk-utils": {
-      "version": "2.0.2",
+      "version": "2.1.0",
       "components": {
         "skills": {
           "brainstorming": {
@@ -392,6 +392,9 @@
           "tdk-load-project-context": {
             "version": "1.11.4"
           },
+          "tdk-module-boundary-policy": {
+            "version": "2.1.0"
+          },
           "tdk-scout": {
             "version": "1.11.4"
           },
@@ -399,7 +402,7 @@
             "version": "2.0.2"
           },
           "tdk-skill-guide": {
-            "version": "2.0.2"
+            "version": "2.1.0"
           },
           "tdk-validate-task-id": {
             "version": "1.10.6"
@@ -427,10 +430,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e68f07c43a122d63dbd44fafbd978b0adb4f5f18bb95537f80014e859846f8b4",
-        ".claude-plugin/plugin.json": "9144e4f373b40794aaa5770141d039d538d52579332b763ed2c428fda3fdaa83",
-        ".codex-plugin/plugin.json": "9144e4f373b40794aaa5770141d039d538d52579332b763ed2c428fda3fdaa83",
-        ".cursor-plugin/plugin.json": "9144e4f373b40794aaa5770141d039d538d52579332b763ed2c428fda3fdaa83",
-        "CHANGELOG.md": "89e36f957342844381a12745a2ed5906ce5023d12d03feaa0d9e7773ea0628f4",
+        ".claude-plugin/plugin.json": "94b8c1348118743dd95be3944d2e5834406aa68658a834d56dcb39823a370a84",
+        ".codex-plugin/plugin.json": "94b8c1348118743dd95be3944d2e5834406aa68658a834d56dcb39823a370a84",
+        ".cursor-plugin/plugin.json": "94b8c1348118743dd95be3944d2e5834406aa68658a834d56dcb39823a370a84",
+        "CHANGELOG.md": "ac5d74cf9932297c23d3d7f5a137853a10d32091197d1b5a0cdc9507c0065daa",
         "agents/researcher.md": "239051264f41b129ef5c59adb573b7e762a528bb58d0ff8dd1e32eee243baaaf",
         "agents/tdk-red-team-reliability.md": "8585ee27a9d1f6b79b9988fc6020317baa3be7e37f80be9086708bfc35c74ea8",
         "agents/tdk-red-team-security.md": "8e808e7330b21e83e830f70bf6221150ba0e91d235061ba0c6b2a32060ea7a33",
@@ -488,9 +491,18 @@
         "skills/shard-doc/tests/sample-medium.md": "a6dd023eee4c7e5d2e3f13fca79429d6b85d10a8975ffc5f796511695b455504",
         "skills/shard-doc/tests/sample-small.md": "14c3a01e4f97046ecfbe58ea208d758387561b377a37aad69a71e411d2ea82c3",
         "skills/tdk-load-project-context/SKILL.md": "e035f5425f4f13f2f1fb9f5f8f3db1c05a03f6f1954f536f06ae74b5cd91d501",
+        "skills/tdk-module-boundary-policy/SKILL.md": "e4f2b66048e09112a16ba204df02ed57da9ef8254533f98f11c1dce872ec0b73",
+        "skills/tdk-module-boundary-policy/references/ecosystem-boundary-candidates.md": "b81363436b53619ab8d9c97f9ea76705d93be866e106d0d5eb8f307ee9a986a7",
+        "skills/tdk-module-boundary-policy/references/enforcement-snippet-catalog.md": "4346b5dffca404d856ec09e554c2c94b55e8f718e77757443f45d3e167e6fd4b",
+        "skills/tdk-module-boundary-policy/references/module-boundary-policy-output-contract.md": "79cb1a273a7b1a9b2d1d11c1ecf151692768b9736874b73001bf28babd6b01e4",
+        "skills/tdk-module-boundary-policy/references/workflow-audit.md": "0a6080bd5f0713167a3cca2c167e5f75d54480edc1ded47e451029467a8a2a23",
+        "skills/tdk-module-boundary-policy/references/workflow-standard.md": "22ce759bea691d1095c85622d63055d7c5a28bc8d7679a5a9066c99bfcee62f5",
+        "skills/tdk-module-boundary-policy/references/workflow-suggest.md": "6d6df5ea876832666d08df2b979517e8343daa3215f612f966d420b229356605",
+        "skills/tdk-module-boundary-policy/templates/enforcement-snippets.md.tpl": "6deb87dbadd16fb8f3dd284bdf2722c9660220bcdb7edce88a1de85fbd360d5e",
+        "skills/tdk-module-boundary-policy/templates/module-boundary-policy.md.tpl": "235c7e69fc3c588a38ee2b78755f338485ee70bd725b5498c817a166e9e26c45",
         "skills/tdk-scout/SKILL.md": "3ae073d7c22872345c67d1d8bf69c98fd601d99a49b0c8f8efbe86ce0be8fbf3",
         "skills/tdk-setup-guide/SKILL.md": "9f0077c110dccd67b42d8dd5635d4d5182e272f9781b49b5882da3ec9bf7385a",
-        "skills/tdk-skill-guide/SKILL.md": "ac1db1a5c2fbed47dda043b41eeb67a09eb19e47e0d49aabc83f33d3ec53a577",
+        "skills/tdk-skill-guide/SKILL.md": "b7c4ae40a943e7948bed94b2baa78782b4b6d96f7295a213ae135c47090d611d",
         "skills/tdk-validate-task-id/SKILL.md": "37fd8d518fa3de373b5a93c0384eee5b21fbc45ffe1264b6d490016745275f1b"
       }
     }

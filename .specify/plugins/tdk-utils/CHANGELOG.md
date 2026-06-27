@@ -4,6 +4,19 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.1.0] - 2026-06-27
+
+### Added
+- Added tdk-module-boundary-policy skill to turn approved topology into reviewable boundary guidance and enforcement snippets
+
+### Changed
+- Updated skill guide to include new utility skills
+
+## [2.1.0] - 2026-06-27
+
+### Added
+- Added `tdk-module-boundary-policy` for optional topology-backed module boundary policy reports and non-applied enforcement snippets.
+
 ## [2.0.2] - 2026-06-27
 
 ### Changed

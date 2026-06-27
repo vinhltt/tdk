@@ -2,7 +2,7 @@
 name: tdk-ut-backfill-plan
 description: "Generate unit test plan using templates. Creates `ut/plan.md` + phase files at `ut/phases/{module}.md` and injects the routed consumer test skill from `plan-skill-routing.md`."
 metadata:
-  version: "3.4.11"
+  version: "5.7.1"
 ---
 
 # /tdk-ut-backfill-plan - Create Unit Test Plan
@@ -161,26 +161,14 @@ If error -> STOP and report to user
 **Step 0b: Module detection** (after CLI output parsed, only when sub-workspace resolved):
 - In the CLI JSON output, find the entry in `subWorkspaces[]` matching `subWorkspaceName` → read its `hasModules` flag
 - If `hasModules` is falsy (false/absent):
-  → Ask user: "Sub-workspace {name} doesn't have modules configured. Would you like to:"
-    1. **Create a module** — add a module entry to `.specify.json`
-    2. **Proceed at SW-level** — continue without module targeting (L2 path)
-  → If user picks "Proceed at SW-level" → continue without `--module`
-  → If user picks "Create a module":
-    a. Ask for module name — validate format: `/^[a-zA-Z0-9._-]+$/` (reject if invalid, ask again)
-    b. **Directory picker**: List directories inside the SW root path + a "Create new directory" option. If user picks existing dir → use that path. If user picks "Create new" → ask for directory name (validate: `/^[a-zA-Z0-9._-]+$/`, reject if invalid).
-    c. testPath (optional): if SW has `testMapping.strategy` = `separate-project` or `mirror`, ask user to pick test directory too
-    d. Read `.specify.json` from workspace root (`$PROJECT_DIR/.specify/.specify.json` after resolving the project root)
-    e. Find the sub-workspace entry matching resolved SW name
-    f. **Idempotency check**: if `modules[]` already contains entry with same `name` → skip, inform user
-    g. If `modules` key absent/null on SW entry → create empty array first
-    h. Build new module object: `{ "name": "{name}", "path": "{selected-dir-relative-path}" }` (add `"testPath"` if provided)
-    i. Append module to `modules[]` and set `"hasModules": true` on same SW entry
-    j. **Validate BEFORE writing**: Parse the modified in-memory JSON object. If validation fails → report error and DO NOT write to disk.
-    k. Only if validation passes → write `.specify.json` back (preserve formatting with 2-space indent)
-    l. **Verify**: RE-RUN CLI with `--sub-workspace {SW} --module {MODULE}` — if CLI returns success JSON, the config is valid. If CLI errors, report the error to user.
+  → Ask user: "Sub-workspace {name} does not have modules configured. Would you like to proceed at sub-workspace level or pause for topology ownership?"
+    1. **Proceed at sub-workspace level** — continue without module targeting (L2 path)
+    2. **Pause for topology ownership** — STOP and route durable module ownership through `/tdk-boundary-map`, `/tdk-workspace-topology-apply --dry-run`, and optional `/tdk-module-boundary-policy`
+  → If user picks "Proceed at sub-workspace level" → continue without `--module`
+  → If user picks "Pause for topology ownership" → STOP and explain that UT planning does not edit `.specify/.specify.json`, create modules, or create source directories.
 - If `hasModules=true` AND the matched SW's `modules[]` is empty/absent:
-  → Ask user: "Sub-workspace {name} is configured for modules but none defined yet. Proceed at sub-workspace level? [Yes / No — I'll add modules first]"
-  → If user says No → **STOP** and instruct user to add modules to `.specify.json`
+  → Ask user: "Sub-workspace {name} is configured for modules but none are defined yet. Proceed at sub-workspace level? [Yes / No — I will update topology first]"
+  → If user says No → **STOP** and route module definition through topology proposal/apply, then optional module boundary policy review
   → If user says Yes → proceed without `--module` flag (SW-level)
 - If `hasModules=true` AND `modules[]` has entries AND module not yet resolved (flag/NL/CWD):
   → Ask user: present list of module names from the matched SW's `modules[]` + "Sub-workspace level (apply to all modules)" option

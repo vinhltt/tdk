@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.7.1] - 2026-06-27
+
+### Changed
+- Refined module backfill validation to support routing through boundary policy ownership
+
 ## [5.7.0] - 2026-06-27
 
 ### Added

@@ -90,6 +90,12 @@ Relevant fields in `.specify/.specify.json`:
 }
 ```
 
+Durable module ownership belongs in topology, not ad hoc UT planning. When a
+sub-workspace needs module boundaries, use `/tdk-boundary-map`, review
+`workspace-topology.json`, preview with `/tdk-workspace-topology-apply --dry-run`,
+and optionally run `/tdk-module-boundary-policy` for dependency guidance before
+UT planning targets a specific module.
+
 - `testMapping.strategy` — one of `co-location`, `mirror`, `separate-project`.
 - `testMapping.exclude.source` — glob patterns; orphan tests whose stripped source path matches are ignored.
 - `testMapping.exclude.test` — glob patterns; matching test files are hidden from discovery.

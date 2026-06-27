@@ -85,7 +85,7 @@ describe('TDK boundary-map contracts', () => {
     expect(existsSync(skillPath)).toBe(true);
     expect(skill).toContain('name: tdk-boundary-map');
     expect(skill).toContain('[input|file] [--from-existing|--unknown]');
-    expect(skill).toContain('  version: "5.6.0"');
+    expect(skill).toContain('  version: "5.7.0"');
     expect(skill).toContain('.specify/configurations/workspace-topology/workspace-topology.md');
     expect(skill).toContain('.specify/configurations/workspace-topology/workspace-topology.json');
     expect(skill).toContain('does not create or update `.specify/.specify.json`');

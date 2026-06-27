@@ -10,6 +10,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.81.0] - 2026-06-27
+
+### Added
+- **[tdk-utils]** Added `tdk-module-boundary-policy` skill to turn approved topology into reviewable boundary guidance and enforcement snippets
+  - Added workflow templates and enforcement catalog references
+  - Added contract and routing tests
+
+### Changed
+- **[tdk-core]** Refined module backfill validation to support routing through boundary policy ownership
+- **[tdk-utils]** Updated skill guide to include new utility skills
+- **[Docs]** Updated command reference and guide documents to include `tdk-module-boundary-policy`
+
 ## [1.80.0] - 2026-06-27
 
 ### Added
