@@ -98,6 +98,8 @@ outputs:
 - Skip-justification notes inside `## Open Questions` recording why something was
   deliberately omitted.
 - An advisory, non-blocking readiness checklist inside `## Ready For Specify`.
+- Interview alignment notes from optional `--interview`, folded into the relevant
+  existing problem, persona, MVP-scope, readiness, or open-question section.
 
 These add no requirement IDs, no new files, and no tracker records. They refine the existing
 sections only and do not change the allowed output shape.

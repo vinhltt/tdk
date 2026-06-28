@@ -38,10 +38,11 @@ describe('tdk-discovery skill contract', () => {
     expect(skill).toContain('mkdir -p "$FEATURE_DIR/discovery"');
   });
 
-  it('strips force flag before resolving the brief', () => {
+  it('strips known flags before resolving the brief', () => {
     expect(skill).toContain('### Step 2 - Parse Flags And Resolve Brief');
     expect(skill).toContain('set `FORCE_DISCOVERY=true`');
-    expect(skill).toContain('Strip `--force` from the second argument onward');
+    expect(skill).toContain('set `INTERVIEW_DISCOVERY=true`');
+    expect(skill).toContain('Strip `--force` and `--interview` from the second argument onward');
     expect(skill).toContain('If `discovery/index.md` already exists and `FORCE_DISCOVERY` is not true');
   });
 

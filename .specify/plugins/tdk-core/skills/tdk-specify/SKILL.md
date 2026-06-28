@@ -1,8 +1,9 @@
 ---
 name: tdk-specify
-description: "Create or update the feature specification from a natural language feature description. Default: full brainstorm with Option A/B. Use --fast for single recommendation without brainstorm."
+description: "Create or update the feature specification from a natural language feature description. Default: full brainstorm with Option A/B. Use --fast for single recommendation without brainstorm. Use --interview for optional artifact alignment before unresolved-question handling."
+argument-hint: "<id> <desc> [--fast] [--interview]"
 metadata: 
-  version: "5.7.0"
+  version: "5.9.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -33,6 +34,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 **Load before Step 2:**
 - Read `references/spec-writing-principles.md` for Core Principles (YAGNI/KISS/DRY), Planning Framework, and Embedded Brainstorming rules.
 - Read `references/spec-quality-guidelines.md` for section requirements, AI generation rules, and success criteria guidelines.
+- Read `../_shared/interview-alignment-protocol.md` when `--interview` is set.
 
 ## Boundary Declaration
 
@@ -74,9 +76,9 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 ### Step 0.2: Check Feature Description & Create Feature Directory
 
 - Extract second argument onwards as description
-- When checking if description is empty, treat `--fast` token as non-description text (ignore it for emptiness check only — actual flag stripping happens in Step 0.3)
-- If description EMPTY or MISSING (after ignoring --fast token):
-  ERROR: "Description required. Usage: /tdk-specify {task-id} {description} [--fast]"
+- When checking if description is empty, treat `--fast` and `--interview` tokens as non-description text (ignore them for emptiness check only — actual flag stripping happens in Step 0.3)
+- If description EMPTY or MISSING (after ignoring known flag tokens):
+  ERROR: "Description required. Usage: /tdk-specify {task-id} {description} [--fast] [--interview]"
 
 **Create feature directory:**
 
@@ -136,12 +138,16 @@ Do not copy discovery content into `UR-*`, `FR-*`, or `SC-*`; derive explicit sp
 **This step owns ALL flag parsing and mode decision logic.**
 
 1. **Flag parsing** (highest priority):
-   - Scan $ARGUMENTS for `--fast`
+   - Scan $ARGUMENTS for standalone `--fast` and `--interview`
    - If `--fast` found: set `SPEC_MODE = fast`, `MODE_SOURCE = "user-specified"`, strip flag from description
-   - If not found: proceed to auto-detect (default is full mode)
+   - If `--interview` found: set `SPEC_INTERVIEW=true`, strip flag from description
+   - `--fast --interview` is valid; `--interview` does not force full mode or change `SPEC_MODE`
+   - Unknown flags STOP before specs are written. Report:
+     `Unknown flag: <flag>. Usage: /tdk-specify {task-id} {description} [--fast] [--interview]`.
+   - If `--fast` is not found: proceed to auto-detect (default is full mode)
 
 2. **Auto-detect from description** (when no flag):
-   - Analyze the feature description:
+   - Analyze the cleaned feature description:
      - Count words (excluding task ID)
      - Count distinct actors (roles/users mentioned)
      - Count distinct actions (verbs/operations)
@@ -159,7 +165,7 @@ Do not copy discovery content into `UR-*`, `FR-*`, or `SC-*`; derive explicit sp
      - Options: "Yes, proceed" / "Switch to [other mode]"
      If user switches → update `SPEC_MODE` accordingly.
 
-Store: `SPEC_MODE`, `MODE_SOURCE`, `PRELIMINARY_MODE` (only set during auto-detect).
+Store: `SPEC_MODE`, `SPEC_INTERVIEW`, `MODE_SOURCE`, `PRELIMINARY_MODE` (only set during auto-detect).
 
 ### Step 0.memory: Memory Validation
 
@@ -281,6 +287,36 @@ Store: `SPEC_MODE`, `MODE_SOURCE`, `PRELIMINARY_MODE` (only set during auto-dete
 
 4. Write the specification to SPEC_FILE using the template structure, replacing placeholders with concrete details derived from the feature description (arguments) while preserving section order and headings. Emit the YAML frontmatter block at the top with `title`, `status`, `branch`, `created`, `input`, `memory_context_loaded` (set per Step 0.memory), and `schema_version: 1`; keep the `# Feature Specification: <title>` H1 line directly below the closing `---` (downstream tooling reads the spec title from that H1). **Promote case:** if this spec is being promoted from a parent work-item (the description was seeded from another spec's work-item), also emit `parent_spec: <[folder/]ticket>` (include the category folder when the parent is non-default, e.g. `test/aa-100`) and `promoted_from: "<work-item-id>"`, and confirm the parent spec directory exists before writing the child (advisory — `/tdk-plan` enforces this with a hard STOP). Omit both fields for a root spec. See `.specify/docs/en/promote-convention.md`.
 
+### Step 2.5: Optional Interview Alignment Gate
+
+If `SPEC_INTERVIEW=true`, run the interview after the draft `spec.md` is written
+and before unresolved-question handling:
+
+1. Load `../_shared/interview-alignment-protocol.md`.
+2. Read the current `spec.md` and build an internal claim map from sections 1-9
+   and `## Clarifications`.
+3. Ask 4-6 artifact-grounded questions, one at a time, covering problem, scope, impact surface, top UR/FR/entity, success criteria, risk, and unresolved questions.
+4. For each answer, record classification: `aligned`, `mismatch`, or `unclear`.
+
+Integration rules:
+
+- Problem mismatch -> update `## 1. Problem Statement`.
+- Scope mismatch -> update `## 2. Scope Boundary`.
+- Impact mismatch -> update `## 3. Impact Surface`.
+- UR/FR/entity mismatch -> update `## 5. User Requirements & Testing` or
+  `## 6. Functional Requirements`.
+- Success or risk mismatch -> update `## 7. Success Criteria` or
+  `## 8. Risks & Mitigations`.
+- Unclear answer -> add or retain an item in `## 9. Unresolved Questions` with
+  `Recommend:`.
+- Significant accepted decision -> append a concise bullet under
+  `## Clarifications`.
+
+Any critical mismatch must be integrated into the relevant section or explicitly
+accepted as unresolved before continuing. Do not persist a raw transcript. After
+the interview, continue to Step 3 so remaining unresolved questions use the
+existing resolution loop.
+
 ### Step 3: Handle Unresolved Questions
 
 After writing spec, check ## 9. Unresolved Questions:
@@ -323,4 +359,5 @@ Report completion with:
 - Impact Surface summary (N subworkspaces, M modules touched)
 - Unresolved Questions count (from ## 9. Unresolved Questions — 0 if all resolved)
 - Mode used: `SPEC_MODE` (`MODE_SOURCE`)
+- Interview alignment: enabled or disabled
 - Readiness for next phase (`/tdk-clarify` or `/tdk-plan`)

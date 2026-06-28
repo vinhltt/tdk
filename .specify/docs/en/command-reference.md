@@ -171,9 +171,9 @@ Each command reads the output of the previous one, building a chain of artifacts
 
 | # | Command | Description |
 |---|---------|-------------|
-| 0 | `/tdk-discovery <epic-id> <brief\|file> [--force]` | Optional epic discovery context before `tdk-specify`; does not mint requirement IDs |
-| 1 | `/tdk-specify <id> <desc>` | Create feature specification from natural language |
-| 2 | `/tdk-specify <id> <desc> --fast` | Quick specification (skips brainstorm, fewer tokens) |
+| 0 | `/tdk-discovery <epic-id> <brief\|file> [--force] [--interview]` | Optional epic discovery context before `tdk-specify`; `--interview` checks artifact alignment before completion |
+| 1 | `/tdk-specify <id> <desc> [--interview]` | Create feature specification from natural language |
+| 2 | `/tdk-specify <id> <desc> --fast [--interview]` | Quick specification (skips brainstorm, fewer tokens); `--fast --interview` is valid |
 | 3 | `/tdk-clarify <id>` | Ask up to 5 targeted questions to fill spec gaps |
 | 4 | `/tdk-high-level-design <id> [--greenfield] [--force]` | Generate approval-level high-level design artifacts from a clarified spec (greenfield, optional) |
 | 5 | `/tdk-task-breakdown <id>` | Generate portable Markdown work-item files from a clarified spec |
@@ -231,11 +231,15 @@ For a broad epic, optionally capture context before the spec:
 
 This creates `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, and `discovery/index.md`. Discovery is context-only: it does not create `spec.md`, plans, work items, tracker records, or `UR-*` / `FR-*` / `SC-*` IDs. Skip it for small feature-sized work.
 
+Add `--interview` when the epic is broad or risky enough that you want to challenge the generated discovery text before completion. It folds accepted changes into the same four discovery files and creates no separate interview artifact or tracker record.
+
 ```
 /tdk-specify feat-001 Add user avatar upload with image cropping
 ```
 
 This creates `.specify/specs/feat-001/spec.md` with user stories, requirements, and acceptance criteria. Answer any clarifying questions Claude asks (up to 3).
+
+Use `/tdk-specify <id> <desc> --interview` to review the draft spec against your intent before unresolved-question handling. `--fast --interview` is valid: `--fast` controls draft depth, while `--interview` controls the alignment gate.
 
 ### Step 2 — Clarify gaps (optional but recommended)
 
@@ -326,9 +330,9 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| discovery | `/tdk-discovery <epic-id> <brief\|file> [--force]` | `--force` | Project context, constitution/memory, brief or file | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md` | Optional after constitution, before specify |
-| specify | `/tdk-specify <id> <desc>` | — | `.specify.env`; optional `discovery/index.md` | `spec.md`, `checklists/requirements.md` | None, or discovery context |
-| specify (fast) | `/tdk-specify <id> <desc> --fast` | `--fast` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
+| discovery | `/tdk-discovery <epic-id> <brief\|file> [--force] [--interview]` | `--force`, `--interview` | Project context, constitution/memory, brief or file | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md` | Optional after constitution, before specify |
+| specify | `/tdk-specify <id> <desc> [--interview]` | `--interview` | `.specify.env`; optional `discovery/index.md` | `spec.md`, `checklists/requirements.md` | None, or discovery context |
+| specify (fast) | `/tdk-specify <id> <desc> --fast [--interview]` | `--fast`, `--interview` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
 | high-level-design | `/tdk-high-level-design <id>` | `--greenfield`, `--force` | `spec.md` with unresolved questions set to `None`; optional HLD routing | `high-level-design/index.md` + 5 design artifacts | clarify |
 | task-breakdown | `/tdk-task-breakdown <id>` | — | `spec.md` with unresolved questions set to `None`; optional `high-level-design/` | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md` | clarify |
@@ -537,6 +541,7 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 ### Workflow Efficiency
 
 - **Use `/tdk-specify --fast`** for small, well-understood features. Default mode includes brainstorm exploration for unclear scope. Auto-detect picks mode based on description complexity.
+- **Add `--interview`** when hidden assumptions would be costly. It asks artifact-grounded alignment questions and records only accepted artifact changes or unresolved questions.
 - **Always run `clarify`** before `plan` — it catches ambiguities early, saving rework during implementation.
 - **Run `analyze` before `implement`** — it catches spec-plan-tasks inconsistencies that would cause bugs.
 - **Use `status` liberally** — it's read-only and shows what's done vs. remaining.

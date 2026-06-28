@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.9.0] - 2026-06-28
+
+### Added
+- Added interview alignment protocol (interview-alignment-protocol.md) defining shared artifact-alignment procedures for discovery and specify phases.
+
+### Changed
+- Updated discovery skill to support optional interview mode (--interview flag), parse/strip flags to enable INTERVIEW_DISCOVERY=true, document 3-5 interview questions, and update discovery-output-contract.md.
+- Updated specify skill to support optional interview mode (--interview flag), parse/strip flags to enable SPEC_INTERVIEW=true, and document 4-6 interview questions.
+
 ## [5.8.0] - 2026-06-28
 
 ### Added

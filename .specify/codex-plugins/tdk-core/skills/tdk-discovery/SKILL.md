@@ -1,7 +1,7 @@
 ---
 name: tdk-discovery
 description: "EPIC-ONLY v1 discovery entry point that creates context-only problem, persona, MVP, and index artifacts before tdk-specify"
-argument-hint: "<epic-id> <brief|file> [--force]"
+argument-hint: "<epic-id> <brief|file> [--force] [--interview]"
 metadata:
   version: "5.4.2"
 ---
@@ -10,7 +10,7 @@ metadata:
 
 Create bounded epic discovery context before `/tdk-specify`.
 
-Trigger: `/tdk-discovery <epic-id> <brief|file> [--force]`
+Trigger: `/tdk-discovery <epic-id> <brief|file> [--force] [--interview]`
 
 ## Boundary Declaration
 
@@ -34,6 +34,7 @@ Feature-sized work skips discovery and starts at `/tdk-specify`.
 
 Load before writing any discovery file:
 - `references/discovery-output-contract.md`
+- `../_shared/interview-alignment-protocol.md` when `--interview` is set
 
 ## Error Recovery
 
@@ -90,8 +91,11 @@ Store: `SPECS_ROOT`, `FOLDER`, `TICKET_ID`, `FEATURE_DIR`.
 Parse flags before resolving the brief:
 
 - If `--force` is present, set `FORCE_DISCOVERY=true`.
-- Strip `--force` from the second argument onward before treating the remaining
-  text as the discovery brief or file path.
+- If `--interview` is present, set `INTERVIEW_DISCOVERY=true`.
+- Unknown flags STOP before any file is read or written. Report:
+  `Unknown flag: <flag>. Usage: /tdk-discovery <epic-id> <brief|file> [--force] [--interview]`.
+- Strip `--force` and `--interview` from the second argument onward before
+  treating the remaining text as the discovery brief or file path.
 
 Use the cleaned second argument onward as the discovery brief. If it points to
 a workspace-local Markdown file, read that file as input. Refuse secret-like,
@@ -100,7 +104,7 @@ dotenv, key, credential, token, or outside-workspace paths.
 If the brief is empty, STOP with:
 
 ```text
-Description required. Usage: /tdk-discovery <epic-id> <brief|file> [--force]
+Description required. Usage: /tdk-discovery <epic-id> <brief|file> [--force] [--interview]
 ```
 
 ### Step 3 - Initialize Discovery Directory
@@ -143,11 +147,38 @@ tracker records, or a `discovery_ref`.
 candidate checklist only. Product-level facts live in `product-context.md` and
 are updated only through `tdk-constitution`.
 
+### Step 4.5 - Optional Interview Alignment Gate
+
+If `INTERVIEW_DISCOVERY=true`, run the interview after the four draft artifacts
+exist and before validation:
+
+1. Load `../_shared/interview-alignment-protocol.md`.
+2. Read `problem.md`, `personas.md`, `mvp-scope.md`, and `index.md`.
+3. Build an internal claim map from problem, personas, MVP cutline,
+   out-of-scope, risks, and open questions.
+4. Ask 3-5 artifact-grounded questions, one at a time, covering problem, personas, MVP cutline, out-of-scope, and risk/open question.
+5. For each answer, record classification: `aligned`, `mismatch`, or `unclear`.
+
+Integration rules:
+
+- `aligned`: leave artifacts unchanged unless a concise wording correction
+  materially improves accuracy.
+- `mismatch`: update only the relevant existing section in the four discovery
+  files.
+- `unclear`: add a recommended question to the relevant artifact's
+  `## Open Questions`.
+
+Any critical mismatch must be integrated into the artifact or explicitly
+accepted as an open question before continuing. Persist durable decisions only;
+do not store a raw transcript. No `interview.md`, requirement IDs, specs, plans,
+tasks, tracker records, or other discovery files may be created.
+
 ### Step 5 - Validate Output
 
 Before completion, verify:
 
 - Only the four allowed files exist under `discovery/`.
+- No `interview.md` or any other extra discovery file exists.
 - `index.md` links all three detail artifacts.
 - Product-level signals are candidate notes, not authority.
 - No `UR-*`, `FR-*`, `SC-*`, `discovery_ref`, tracker command, or market/business-model file was created.
@@ -158,6 +189,7 @@ Report:
 
 - Discovery directory path
 - Files written
+- Whether interview alignment ran
 - Whether product-level signal candidates need human review for a future
   `/tdk-constitution --update`
 - Readiness for `/tdk-specify <epic-id> <description>`. The `## Ready For Specify` checklist

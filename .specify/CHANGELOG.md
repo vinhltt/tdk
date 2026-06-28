@@ -8,8 +8,24 @@ All notable changes to the project configuration (.specify/, .claude/, .github/)
 will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
-Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+
+## [1.85.0] - 2026-06-28
+
+### Added
+- **[_shared]** Added interview alignment protocol (`interview-alignment-protocol.md`) defining shared artifact-alignment procedures for discovery and specify phases.
+- **[Scripts]** Added test suite `tdk-discovery-specify-interview-contract.test.ts` to verify the interview contract.
+
+### Changed
+- **[tdk-discovery]** Updated discovery skill to support optional interview mode:
+  - Add optional `--interview` flag and parse to enable `INTERVIEW_DISCOVERY=true`.
+  - Document 3-5 artifact-grounded interview questions covering problem, personas, MVP cutline, out-of-scope, and risks.
+  - Update `discovery-output-contract.md` to reference the shared interview protocol and validation.
+- **[tdk-specify]** Updated specify skill to support optional interview mode:
+  - Add optional `--interview` flag and parse to enable `SPEC_INTERVIEW=true`.
+  - Document 4-6 artifact-grounded interview questions covering problem, scope, impact surface, requirements, success criteria, and risks.
+- **[Docs]** Updated `command-reference.md` and `epic-start-guide.md` to include interview mode information.
+- **[Scripts]** Updated `tdk-discovery-skill-contract.test.ts` to check stripping of `--interview` flag.
 
 ## [1.84.0] - 2026-06-28
 

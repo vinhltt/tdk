@@ -36,6 +36,7 @@ plan.md is implementation sequence for one spec
 | Situation | Start with | Why |
 |---|---|---|
 | The work is broad, vague, or has many possible MVP cuts | `/tdk-discovery` | You need epic-level problem, persona, and MVP context before a spec |
+| The generated discovery/spec could easily encode the wrong intent | Add `--interview` | The command asks artifact-grounded challenge questions before completion |
 | The feature is already clear and small | `/tdk-specify` | Discovery would add ceremony without reducing risk |
 | You are not sure who the users are | `/tdk-discovery` | Persona and jobs-to-be-done context should be captured first |
 | You already know scope, actors, acceptance criteria, and edge cases | `/tdk-specify` | The spec can be written directly |
@@ -156,7 +157,7 @@ Then create a child spec from each sub-issue/task. The child spec output is the 
 
 ## Skill Playbook
 
-### 1. `/tdk-discovery <epic-id> <brief|file> [--force]`
+### 1. `/tdk-discovery <epic-id> <brief|file> [--force] [--interview]`
 
 Use this only for epic-sized context before a feature spec.
 
@@ -174,6 +175,8 @@ Example:
 | Main value | Frames the problem, users, MVP cutline, risks, and open questions |
 | Next command | `/tdk-specify <id> <description>` |
 
+Add `--interview` when the epic is broad, politically sensitive, or likely to hide intent mismatches. It asks targeted questions about the generated discovery artifacts, then folds accepted changes into the same four files. It does not create `discovery/interview.md` or tracker records.
+
 What it does not do:
 
 - Does not create `spec.md`.
@@ -186,7 +189,7 @@ Ready check:
 - Check that problem, personas, and MVP scope are understandable.
 - If the MVP boundary still feels vague, clarify the brief before moving on.
 
-### 2. `/tdk-specify <id> <desc> [--fast]`
+### 2. `/tdk-specify <id> <desc> [--fast] [--interview]`
 
 Use this to create the feature specification. This is the source of truth for requirements.
 
@@ -203,6 +206,8 @@ Example:
 | Creates | `spec.md`, `checklists/requirements.md` |
 | Main value | Defines problem, scope, impact surface, user requirements, functional requirements, success criteria, risks, and unresolved questions |
 | Next command | `/tdk-clarify <id>` |
+
+Add `--interview` when you want to challenge the draft spec against your intent before unresolved-question handling. `--fast --interview` is valid: `--fast` controls draft depth and `--interview` controls the alignment check.
 
 Requirement IDs start here:
 
