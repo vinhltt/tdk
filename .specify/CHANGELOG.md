@@ -13,7 +13,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 ## [1.85.1] - 2026-06-28
 
 ### Changed
-- **[Docs]** Reorganized English and Vietnamese guides under `docs/*/guides/`, moved setup and scenario docs into `guides/setup` and `guides/scenarios`, and updated README, asset, and root links for the new paths and scenario count.
+- **[Docs]** Updated guide organization and setup navigation:
+  - Reorganized English and Vietnamese guides under `docs/*/guides/`, moved setup and scenario docs into `guides/setup` and `guides/scenarios`, and updated README, asset, and root links for the new paths and scenario count.
+  - Added a Vietnamese TDK setup guide covering quick install, prerequisites, Python and Claude Code setup, plugin marketplace registration, `.specify.json` reference, optional skill dependencies, verification, file map, and troubleshooting.
+  - Reworked English and Vietnamese README navigation to put setup-first paths ahead of workflow guides and point Vietnamese users to the new local setup guide instead of the English setup page.
 - **[tdk-core]** Updated promote-flow skill references to `docs/en/guides/promote-convention.md` and revised sub-workspace init migration guidance to remove stale `jq`/`yq` failure wording.
 - **[tdk-retro]** Updated shared consumer skill discovery to point the UT migration suffix convention at `docs/en/guides/migration-ut-rule-to-skill.md`.
 - **[tdk-utils]** Updated Obsidian, setup, and skill guide paths for `docs/en/guides`, setup topics, and scenario discovery, while removing `jq`/`yq` from setup guide prerequisite checks.

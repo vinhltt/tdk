@@ -3,13 +3,23 @@
 > Centralized usage documentation for the TDK skill suite.
 > Managed alongside `.specify/plugins/` — updated when skills change.
 
-## Quick Start
+## Setup First
 
-1. **New to TDK?** → [Setup Guide](guides/setup/README.md)
-2. **Starting a broad epic?** → [Epic Start Guide](guides/epic-start-guide.md)
-3. **Need a command?** → [Command Reference](guides/command-reference.md)
-4. **Want a workflow?** → [Scenarios](#scenarios) below
-5. **Setting up Claude Code?** → [Setup Claude Code](guides/setup/claude-code/README.md)
+If you are new to TDK or just cloned a consumer repository, start here:
+
+- [TDK Setup](guides/setup/README.md) — prerequisites, installation, and verification
+- [Claude Code Setup](guides/setup/claude-code/README.md) — Claude Code extension and Python environment
+- [Context7 MCP Setup](guides/setup/ctx7-mcp-setup.md) — required for docs-seeker
+- [GitHub MCP Setup](guides/setup/github-mcp-setup.md) — optional GitHub repo browsing
+- [Plugin Marketplace](guides/setup/plugin-marketplace-setup.md) — plugin marketplace activation
+
+After setup, use the workflow guides below.
+
+## Quick Start After Setup
+
+1. **Starting a broad epic?** → [Epic Start Guide](guides/epic-start-guide.md)
+2. **Need a command?** → [Command Reference](guides/command-reference.md)
+3. **Want a workflow?** → [Scenarios](#scenarios) below
 
 ![TDK lifecycle workflow](/tdk-docs/assets/diagrams/tdk-lifecycle-share-graph-v4.svg)
 
@@ -21,16 +31,6 @@
 | [Command Reference](guides/command-reference.md) | Full cheat sheet + command details for all `/tdk-*` skills |
 | [Document Flow](guides/document-flow.md) | Artifact lifecycle — what each command produces and consumes |
 | [Evolution Comparison](guides/evolution-comparison.md) | TDK vs speckit-original vs speckit-tdk-jp |
-
-## Setup Docs
-
-| Guide | Description |
-|-------|-------------|
-| [TDK Setup](guides/setup/README.md) | Prerequisites, installation, verification |
-| [Claude Code Setup](guides/setup/claude-code/README.md) | Claude Code extension + Obsidian plugin setup |
-| [Context7 MCP Setup](guides/setup/ctx7-mcp-setup.md) | Context7 MCP server configuration |
-| [GitHub MCP Setup](guides/setup/github-mcp-setup.md) | GitHub MCP server configuration |
-| [Plugin Marketplace](guides/setup/plugin-marketplace-setup.md) | Register & manage plugin marketplaces |
 
 ## Scenarios
 
