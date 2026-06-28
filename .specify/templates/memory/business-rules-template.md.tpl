@@ -4,7 +4,14 @@ aliases:
   - "{Domain} rules"
   - "{domain} constraints"
 type: business-rules
+id: "business-rules.{domain}"
 domain: "{domain}"
+status: active
+authority: memory
+binding: true
+related:
+  - path: domains/{domain}/services.md
+    rel: enforced-by
 tags:
   - memory/business-rules
   - domain/{domain}

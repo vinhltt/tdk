@@ -19,6 +19,22 @@ Read `$ARGUMENTS`. Identify:
 - Scope: single file, whole domain, or cross-domain
 - Output mode: is `--for-agent` flag present?
 
+Normalize `--type` aliases before resolving files:
+
+| Alias | Canonical Type |
+|---|---|
+| `api` | `services` |
+| `schema` | `data-model` |
+| `flow` | `flows` |
+| `screen` | `screens` |
+| `integration` | `integration-contract` |
+| `runbook` | `operations-runbook` |
+| `nfr` | `quality-requirement` |
+| `policy` | `quality-requirement` |
+| `adr` | `decision-record` |
+| `debt` | `risk-debt` |
+| `report` | `report-spec` |
+
 If completely ambiguous AND NOT `--for-agent`: use `AskUserQuestion` to clarify.
 
 If completely ambiguous AND `--for-agent`: return immediately:
@@ -44,14 +60,36 @@ MEMORY_QUERY_RESULT_END
 
 **With `--type` flag:**
 
-- `vault(action="search", query="{type}", searchStrategy="content", ranked=true, includeSnippets=true)` -> build CANDIDATE_FILES.
+- `vault(action="search", query="{canonical-type}", searchStrategy="content", ranked=true, includeSnippets=true)` -> build CANDIDATE_FILES.
 - Post-filter paths to `memory/` and content filenames matching the requested type when possible.
+- Also map canonical types to path prefixes when tags are absent:
+  - `services` -> `memory/domains/*/services.md`
+  - `business-rules` -> `memory/domains/*/business-rules.md`
+  - `data-model` -> `memory/data-model/*.md`
+  - `flows` -> `memory/domains/*/flows/*.md`, `memory/shared-flows/*.md`
+  - `screens` -> `memory/screens/**/*.md`
+  - `screen-flows` -> `memory/screen-flows/*.md`
+  - `integration-contract` -> `memory/integrations/*.md`
+  - `operations-runbook` -> `memory/operations/*.md`
+  - `quality-requirement` -> `memory/quality-requirements/*.md`
+  - `decision-record` -> `memory/decisions/*.md`
+  - `risk-debt` -> `memory/risks-and-debt/*.md`
+  - `report-spec` -> `memory/reports/*.md`
+  - `capability` -> `memory/capabilities/*.md`
+  - `stakeholder-role` -> `memory/stakeholders-and-roles/*.md`
+  - `glossary-term` -> `memory/glossary/*.md`
+  - `decision-table` -> `memory/decision-tables/*.md`
+  - `state-machine` -> `memory/state-machines/*.md`
+  - `arc42-summary` -> `memory/arc42/*.md`
 
 **Natural language (no explicit flags):**
 
 - `vault(action="search", query="{keywords}", searchStrategy="auto", ranked=true, includeSnippets=true)` -> build CANDIDATE_FILES from top results.
 - If the query looks filename-like, also call `vault(action="search", query="{filename keywords}", searchStrategy="filename", ranked=true, includeSnippets=true)`.
 - Post-filter all candidates to paths under `memory/`.
+- If a matched candidate is under `memory/arc42/`, treat it as summary context
+  only. Follow one hop through `related.path` or wikilinks to typed
+  `binding: true` files before returning it as blocking evidence for agents.
 
 If a resolved path does not appear in vault listings or search results: skip with
 note `{file}: not found`.

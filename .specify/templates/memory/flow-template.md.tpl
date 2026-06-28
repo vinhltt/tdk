@@ -4,8 +4,14 @@ aliases:
   - "{FlowName}"
   - "{flow-name} journey"
 type: flow
+id: "flow.{domain}.{flow-name}"
 domain: "{domain}"
 status: active
+authority: memory
+binding: true
+related:
+  - path: domains/{domain}/services.md
+    rel: implementation
 tags:
   - memory/flow
   - domain/{domain}

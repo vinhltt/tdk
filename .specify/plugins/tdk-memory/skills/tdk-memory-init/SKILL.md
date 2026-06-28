@@ -1,15 +1,15 @@
 ---
 name: tdk-memory-init
-description: "This skill should be used when the user asks to 'initialize memory', 'set up project memory', 'create domain structure', 'init speckit memory', 'scaffold memory folders', 'tdk-memory-init', or needs to create .specify/memory/ with domain-based folders. Sets up per-domain scaffold (flows/ directory per domain), generates memory-index.md with routing rules, and writes SHA256 memory.yaml manifest. Idempotent: detects existing domains and presents update vs force-reinit options."
+description: "This skill should be used when the user asks to 'initialize memory', 'set up project memory', 'create domain structure', 'init speckit memory', 'scaffold memory folders', 'tdk-memory-init', or needs to create .specify/memory/. Sets up root memory control files, creates domain-overview files only for confirmed domains, generates memory-index.md with routing rules, and writes SHA256 memory.yaml manifest. Idempotent: detects existing domains and presents update vs force-reinit options."
 metadata: 
-  version: 0.3.3
+  version: 3.0.0
   category: "Context & Memory"
   requires: []
   input_format: "Natural language command with optional flags"
   output_format: "Success or error message"
   examples:
     - input: "Initialize memory for my project with authentication and payment domains. Run /tdk-memory-init"
-      output: "Memory initialized successfully with domains: authentication, payment. Created folder structure, memory-index.md, and memory.yaml manifest."
+      output: "Memory initialized successfully with domains: authentication, payment. Created root control files, domain overviews, memory-index.md, and memory.yaml manifest."
     - input: "Run /tdk-memory-init to set up project memory."
       output: "Memory initialized successfully. No existing domains detected. Created folder structure, memory-index.md, and memory.yaml manifest."
 ---
@@ -34,9 +34,10 @@ metadata:
 
 ## Purpose
 
-Set up `.specify/memory/` knowledge base with domain-based folder structure.
-Create per-domain scaffold (flows/ directory per domain), `memory-index.md` with routing rules,
-and `memory.yaml` SHA256 manifest. Run before any other `tdk-memory-*` skills.
+Set up `.specify/memory/` knowledge base with a small root control plane.
+Create domain-overview files only for confirmed domains, `memory-index.md` with
+routing rules, and `memory.yaml` SHA256 manifest. Run before any other
+`tdk-memory-*` skills.
 
 Idempotent: detects existing domains and presents update vs force-reinit options.
 
@@ -92,7 +93,7 @@ Follow `references/fresh-init-flow.md` which covers:
 | Step | Action |
 |------|--------|
 | 3 | Ask for source files + domain extraction (uses shared `references/domain-extraction-and-confirmation.md`) |
-| 4 | Create folder scaffold |
+| 4 | Create root control files only |
 | 5 | Write `domain-overview.md` per domain (template: `references/domain-overview-template.md`) |
 | 6 | Generate `memory-index.md` (template: `references/memory-index-template.md`) |
 | 7 | Compute SHA256 + write `memory.yaml` |
@@ -124,5 +125,5 @@ Follow `references/re-run-flow.md` which covers:
 
 ### External Dependencies
 
-- `.specify/templates/memory/` (6 template files — created during plugin install)
+- `.specify/templates/memory/` (v3 route templates — created during plugin install)
 - `${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py` — SHA256 computation utility

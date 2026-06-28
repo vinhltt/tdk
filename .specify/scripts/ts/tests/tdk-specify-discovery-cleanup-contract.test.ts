@@ -62,7 +62,10 @@ describe('tdk-specify discovery cleanup contract', () => {
 
   it('documents altitude boundaries between product context, discovery, and spec', () => {
     expect(template).toContain(
-      'Product-wide durable facts belong in constitution/product-context.md.',
+      'Product-wide durable facts belong in constitution and memory v3 typed routes.',
+    );
+    expect(template).toContain(
+      'Use arc42 summaries only as read-model context; binding facts live in typed memory.',
     );
     expect(template).toContain('Discovery is epic context.');
     expect(template).toContain(

@@ -221,6 +221,41 @@ describe('tdk-memory-agent contract', () => {
     expect(reportTemplate).toContain('Action required: {BLOCK_IMPL if CONFLICTS > 0 | REVIEW if WARNINGS > 0 and no CONFLICTS | CLEAR}');
   });
 
+  it('validates memory v3 typed categories without treating arc42 as binding evidence', () => {
+    const content = read(AGENT);
+    const crossReference = markdownSection(content, '### Phase 3: Cross-reference against memory');
+
+    const requiredTokens = [
+      'integrations/{integration-name}.md',
+      'quality-requirements/{policy-name}.md',
+      'operations/{runbook-name}-runbook.md',
+      'quality-requirements/{quality-attribute}.md',
+      'decisions/{decision-id}.md',
+      'reports/{report-name}.md',
+      'risks-and-debt/{risk-or-debt-id}.md',
+      'decision-tables/{decision-table-name}.md',
+      'state-machines/{state-machine-name}.md',
+      'memory/integrations/{integration-name}.md',
+      'memory/quality-requirements/',
+      'memory/operations/',
+      'memory/decisions/',
+      'memory/reports/',
+      'memory/risks-and-debt/',
+    ];
+
+    for (const token of requiredTokens) {
+      expect(crossReference).toContain(token);
+    }
+
+    expect(crossReference).toContain('arc42/` summary files are non-binding');
+    expect(crossReference).toContain('binding: false');
+    expect(crossReference).toContain('binding: true');
+    expect(crossReference).toContain('related.path');
+    expect(crossReference).toContain('one hop');
+    expect(crossReference).toContain('WARNINGS');
+    expect(crossReference).toContain('NOT CHECKED');
+  });
+
   it('tdk-specify validates raw requirements and persists accepted resolutions', () => {
     const content = read(TDK_SPECIFY);
     const memoryStep = markdownSection(content, '### Step 0.memory');

@@ -3,7 +3,7 @@ name: tdk-discovery
 description: "EPIC-ONLY v1 discovery entry point that creates context-only problem, persona, MVP, and index artifacts before tdk-specify"
 argument-hint: "<epic-id> <brief|file> [--force] [--interview]"
 metadata:
-  version: "5.4.2"
+  version: "5.9.0"
 ---
 
 # tdk-discovery

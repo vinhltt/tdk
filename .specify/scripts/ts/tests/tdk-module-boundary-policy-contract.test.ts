@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 
 const UTILS_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-utils/skills');
 const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
-const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en');
+const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en/guides');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
 const POLICY_NAME = 'tdk-module-boundary-policy';

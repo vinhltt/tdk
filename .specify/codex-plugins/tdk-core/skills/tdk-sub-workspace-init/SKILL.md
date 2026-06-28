@@ -1,6 +1,8 @@
 ---
 name: tdk-sub-workspace-init
 description: "Initialize a new sub-workspace configuration in the current directory"
+metadata:
+  version: 5.9.1
 ---
 
 ## Purpose

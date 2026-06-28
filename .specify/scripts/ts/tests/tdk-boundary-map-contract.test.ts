@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 import { parseWorkspaceTopology } from '../src/commands/config/topology/schema';
 
 const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
-const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en');
+const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en/guides');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
 const BOUNDARY_MAP_NAME = 'tdk-boundary-map';

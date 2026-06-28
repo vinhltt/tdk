@@ -5,7 +5,7 @@ import { join, resolve } from 'node:path';
 const SCAFFOLD_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-scaffold/skills');
 const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
 const UTILS_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-utils/skills');
-const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en');
+const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en/guides');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const SCAFFOLD_INTERFACE_PATH = resolve(import.meta.dir, '../../../plugins/tdk-scaffold/.claude-plugin/interface.json');
 const CODEX_SCAFFOLD_PLUGIN_PATH = resolve(import.meta.dir, '../../../codex-plugins/tdk-scaffold/.codex-plugin/plugin.json');
@@ -79,7 +79,7 @@ describe('TDK golden-path scaffold contracts', () => {
     expect(skill).toContain('name: tdk-golden-path-scaffold');
     expect(skill).toContain('[topology|file] [--dry-run|--yes] [--preset <name>]');
     expect(skill).toContain('category: scaffold');
-    expect(skill).toContain('  version: "0.1.0"');
+    expect(skill).toContain('  version: "1.2.0"');
     expect(existsSync(join(CORE_SKILLS_DIR, SKILL_NAME, 'SKILL.md'))).toBe(false);
     expect(existsSync(join(UTILS_SKILLS_DIR, SKILL_NAME, 'SKILL.md'))).toBe(false);
   });

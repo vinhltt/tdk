@@ -10,6 +10,19 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 
+## [1.86.0] - 2026-06-28
+
+### Added
+- **[Templates]** New templates for v3 memory system including arc42 summaries, decision records, integration contracts, operations runbooks, quality requirements, glossary terms, etc.
+- **[Scripts]** Added contract tests for v3 memory routing and flows.
+
+### Changed
+- **[Memory]** Upgraded memory agent and skills to support v3 memory claim extraction, binding checks, and schema layout.
+- **[Configurations]** Updated existing templates with v3 metadata fields (id, status, authority, binding, related).
+- **[Constitution]** Upgraded `tdk-constitution` to render project knowledge via arc42 and typed templates, and added a Legacy Root Project Docs Policy to stub/migrate legacy docs.
+- **[Scripts]** Aligned existing tests with the new v3 Memory and arc42 templates.
+- **[General]** Updated `obsidian-brain`, `tdk-setup-guide`, and `tdk-skill-guide` skills.
+
 ## [1.85.1] - 2026-06-28
 
 ### Changed

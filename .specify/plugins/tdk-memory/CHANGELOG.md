@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.0.0] - 2026-06-28
+
+### Changed
+- Memory: Upgraded memory agent and skills to support v3 memory claim extraction, binding checks, and schema layout.
+- Configurations: Updated existing templates with v3 metadata fields.
+
 ## [2.1.0] - 2026-06-28
 
 ### Added

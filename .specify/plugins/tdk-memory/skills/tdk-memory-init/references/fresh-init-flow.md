@@ -14,25 +14,30 @@ Follow the full **Domain Extraction & Confirmation** flow in `references/domain-
 
 ---
 
-## Step 4: Create Folder Scaffold
+## Step 4: Create Root Control Plane
 
-Create the following structure under `{memory.path}`:
+Create `{memory.path}` and root control files only:
 
 ```
 .specify/memory/
-├── data-model/
-├── domains/
-│   └── {domain}/          <- one per domain from Step 3
-│       └── flows/         <- empty directory
-├── screens/
-├── screen-flows/
-├── shared-flows/
-├── _deprecated/
+├── README.md
 ├── CHANGELOG.md
-└── memory-index.md
+├── memory-index.md
+├── memory-map.canvas
+└── memory.yaml
 ```
 
 Skip creating directories/files that already exist (idempotent).
+Do not create empty optional typed folders (`arc42/`, `data-model/`,
+`integrations/`, `operations/`, `quality-requirements/`, `decisions/`,
+`risks-and-debt/`, `reports/`, `screens/`, `screen-flows/`, `shared-flows/`,
+`capabilities/`, `stakeholders-and-roles/`, `glossary/`, `decision-tables/`,
+`state-machines/`, or `_deprecated/`). Those folders are lazy and are created
+only when `tdk-memory-update` or `tdk-constitution` writes the first file.
+
+Create `README.md` from `.specify/templates/memory/memory-readme-template.md.tpl`.
+Create `CHANGELOG.md` with a short initial entry if it is missing. Later steps
+write `memory-index.md`, `memory-map.canvas`, and `memory.yaml`.
 
 **FORCE_REINIT only:** Before creating new structure, delete each `domains/{name}/` subdirectory listed in Step 2 wipe confirmation.
 
@@ -44,6 +49,9 @@ For each confirmed domain:
 
 **Idempotency check:** If `domains/{domain}/domain-overview.md` already exists: skip (do not overwrite).
 **FORCE_REINIT only:** Overwrite existing `domain-overview.md`.
+
+Create `domains/{domain}/` only when there is a confirmed domain. Do not create
+`domains/{domain}/flows/` during init.
 
 Write `domains/{domain}/domain-overview.md` using template in `references/domain-overview-template.md`.
 
@@ -152,6 +160,14 @@ version: "2"
 generated_at: "{ISO datetime}"
 memory_index_sha256: "{64-char hex}"
 files:
+  - path: "README.md"
+    sha256: "{64-char hex}"
+    updated_at: "{ISO datetime}"
+    updated_by: "tdk-memory-init"
+  - path: "CHANGELOG.md"
+    sha256: "{64-char hex}"
+    updated_at: "{ISO datetime}"
+    updated_by: "tdk-memory-init"
   - path: "domains/{domain}/domain-overview.md"
     sha256: "{64-char hex}"
     updated_at: "{ISO datetime}"
@@ -161,18 +177,21 @@ files:
     updated_at: "{ISO datetime}"
     updated_by: "tdk-memory-init"
 ```
-One `files` entry per domain, plus one entry for `memory-map.canvas`.
+One `files` entry per root control file and per domain overview, plus one entry
+for `memory-map.canvas`. Keep `memory_index_sha256` as the top-level checksum
+for `memory-index.md`.
 
 ---
 
 ## Step 8: Report Summary
 
 ```
-Memory v2 initialized at .specify/memory/
+Memory v3 initialized at .specify/memory/
 
    Domains: {N} ({comma-separated list}) — extracted via {file-based | text description}
-   Files created: {N} domain-overview.md files (1 per domain)
-   SHA256 manifest: memory.yaml (memory_index_sha256 + {N} domain-overview.md + memory-map.canvas checksums recorded)
+   Files created: root control files + {N} domain-overview.md files (1 per domain)
+   Lazy folders: no empty optional typed folders created
+   SHA256 manifest: memory.yaml (memory_index_sha256 + README.md + CHANGELOG.md + {N} domain-overview.md + memory-map.canvas checksums recorded)
    memory-index.md: generated with routing rules + domain map (wikilinks)
    memory-map.canvas: created ({N} domain nodes)
    Obsidian: frontmatter ✓ | aliases ✓ | wikilinks ✓ | tags ✓ | canvas ✓

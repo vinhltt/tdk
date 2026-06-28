@@ -4,9 +4,16 @@ aliases:
   - "{FlowName}"
   - "{flow-name} journey"
 type: screen-flow
+id: "screen-flow.{flow-name}"
 actor: "{actor}"
 trigger: "{trigger}"
 outcome: "{outcome}"
+status: active
+authority: memory
+binding: true
+related:
+  - path: screens/{module}/{screen}.md
+    rel: screen
 tags:
   - memory/screen-flow
 created_at: "{YYYY-MM-DD}"

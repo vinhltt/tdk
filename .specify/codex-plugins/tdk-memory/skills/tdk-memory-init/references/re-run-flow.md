@@ -21,8 +21,9 @@ Follow the full **Domain Extraction & Confirmation** flow in `references/domain-
 ## Step 2: Create New Domain Folders Only
 
 For each NEW domain (not in existing list):
-- Create `domains/{domain}/flows/` directory
+- Create `domains/{domain}/` directory only
 
+Never create empty `flows/` or other optional typed folders during re-run.
 Never touch existing domain folders.
 
 ---

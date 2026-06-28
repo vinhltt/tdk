@@ -4,8 +4,14 @@ Applies to updates targeting domain-level files only:
 - `domains/{domain}/services.md`
 - `domains/{domain}/business-rules.md`
 - `domains/{domain}/flows/{name}-flow.md`
+- `decision-tables/{decision-table-name}.md` when the table is scoped to one domain
+- `state-machines/{state-machine-name}.md` when the lifecycle is scoped to one domain
+- `capabilities/{capability-name}.md` when the capability is scoped to one domain
 
-Does NOT apply to: data-model, screen, screen-flow, shared-flow. Skip for those content types.
+Does NOT apply to: data-model, screen, screen-flow, shared-flow, integrations,
+operations, quality requirements, decisions, risks/debt, reports, stakeholder
+roles, glossary terms, or arc42 summaries unless the routing result explicitly
+requires a domain. Skip for those content types.
 
 **Trigger:** `RESOLVED_TARGET_PATH` (emitted by Step 1) starts with `domains/{domain}/` pattern.
 Step 1 MUST emit this variable before Step 1.5 reads it — never re-derive independently.

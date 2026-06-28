@@ -4,6 +4,13 @@ aliases:
   - "{TableName}"
   - "{table-name} table"
 type: data-model
+id: "data-model.{table-name}"
+status: active
+authority: memory
+binding: true
+related:
+  - path: domains/{domain}/services.md
+    rel: used-by
 tags:
   - memory/data-model
   - data-model/{table-name}

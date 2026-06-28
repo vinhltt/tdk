@@ -11,6 +11,14 @@ function readSpecify(relativePath: string): string {
   return readFileSync(resolve(SPECIFY_ROOT, relativePath), 'utf-8');
 }
 
+function section(content: string, heading: string): string {
+  const start = content.search(new RegExp(`^${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'));
+  expect(start).toBeGreaterThanOrEqual(0);
+  const rest = content.slice(start + heading.length);
+  const next = rest.search(/\n### /);
+  return next === -1 ? rest : rest.slice(0, next);
+}
+
 describe('constitution-driven project init contract', () => {
   it('does not expose tdk-docs as a user-facing skill or manifest component', () => {
     const removedSkillPath = ['plugins/tdk-core/skills', 'tdk-docs', 'SKILL.md'].join('/');
@@ -84,25 +92,50 @@ describe('constitution-driven project init contract', () => {
     expect(skill).not.toContain('always operate on the existing `.specify/memory/constitution.md` file');
   });
 
-  it('wires constitution init to project knowledge templates', () => {
+  it('wires constitution init to arc42 summaries and typed memory templates', () => {
     const skill = readSpecify('plugins/tdk-core/skills/tdk-constitution/SKILL.md');
 
+    const canonicalSection = section(skill, '### Arc42 And Typed Memory Templates');
     const templateTargets = [
-      ['templates/project-docs/project-overview-prd.md.tpl', '.specify/templates/project-docs/project-overview-prd.md.tpl', 'project-overview-prd.md'],
-      ['templates/project-docs/system-architecture.md.tpl', '.specify/templates/project-docs/system-architecture.md.tpl', 'system-architecture.md'],
-      ['templates/project-docs/project-roadmap.md.tpl', '.specify/templates/project-docs/project-roadmap.md.tpl', 'project-roadmap.md'],
+      ['templates/memory/arc42-readme-template.md.tpl', '.specify/templates/memory/arc42-readme-template.md.tpl', 'arc42/README.md'],
+      ['templates/memory/arc42-summary-template.md.tpl', '.specify/templates/memory/arc42-summary-template.md.tpl', 'arc42/01-introduction-and-goals.md'],
+      ['templates/memory/decision-record-template.md.tpl', '.specify/templates/memory/decision-record-template.md.tpl', 'decisions/{decision-id}.md'],
+      ['templates/memory/risk-debt-template.md.tpl', '.specify/templates/memory/risk-debt-template.md.tpl', 'risks-and-debt/{risk-or-debt-id}.md'],
+      ['templates/memory/quality-requirement-template.md.tpl', '.specify/templates/memory/quality-requirement-template.md.tpl', 'quality-requirements/{quality-attribute}.md'],
     ];
 
     for (const [sourcePath, skillPath, target] of templateTargets) {
       expect(existsSync(resolve(SPECIFY_ROOT, sourcePath))).toBe(true);
-      expect(skill).toContain(skillPath);
-      expect(skill).toContain(target);
+      expect(canonicalSection).toContain(skillPath);
+      expect(canonicalSection).toContain(target);
     }
 
-    expect(skill).toContain('start from the matching template');
+    expect(canonicalSection).toContain('binding: false');
+    expect(canonicalSection).toContain('start from the matching memory template');
+    expect(canonicalSection).not.toContain('project-overview-prd.md');
+    expect(canonicalSection).not.toContain('product-context.md');
+    expect(canonicalSection).not.toContain('system-architecture.md');
+    expect(canonicalSection).not.toContain('project-roadmap.md');
+  });
+
+  it('handles legacy root project docs with report plus stub policy', () => {
+    const skill = readSpecify('plugins/tdk-core/skills/tdk-constitution/SKILL.md');
+    const legacySection = section(skill, '### Legacy Root Project Docs Policy');
+
+    for (const legacyFile of [
+      'project-overview-prd.md',
+      'product-context.md',
+      'system-architecture.md',
+      'project-roadmap.md',
+    ]) {
+      expect(legacySection).toContain(legacyFile);
+    }
+
+    expect(legacySection).toContain('Policy: report + stub');
+    expect(legacySection).toContain('markerless');
+    expect(legacySection).toContain('not overwrite');
+    expect(legacySection).toContain('legacy and non-authoritative');
     expect(skill).toContain('update only matching AUTO-GEN sections');
-    expect(skill).toContain('README.md.tpl');
-    expect(skill).toContain('not part of the default');
   });
 
   it('constitution bootstrap template has source and instruction comments', () => {
@@ -124,5 +157,13 @@ describe('constitution-driven project init contract', () => {
     }
     expect(template).toContain('[PROJECT_NAME]');
     expect(template).toContain('[CONSTITUTION_VERSION]');
+  });
+
+  it('spec template points durable facts at memory v3 routes', () => {
+    const template = readSpecify('templates/spec-template.md.tpl');
+
+    expect(template).toContain('constitution and memory v3 typed routes');
+    expect(template).toContain('arc42 summaries only as read-model context');
+    expect(template).not.toContain('constitution/product-context.md');
   });
 });

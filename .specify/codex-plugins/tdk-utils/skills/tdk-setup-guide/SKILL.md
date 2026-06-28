@@ -2,7 +2,7 @@
 name: tdk-setup-guide
 description: "Interactive setup guide for TDK environment. Checks prerequisites, verifies config, troubleshoots issues. Use when asking 'how to set up', 'setup help', 'verify setup', 'check prerequisites', 'tdk setup', 'installation guide', 'troubleshoot setup'."
 metadata:
-  version: "2.0.2"
+  version: "2.1.1"
 ---
 
 # TDK Setup Guide

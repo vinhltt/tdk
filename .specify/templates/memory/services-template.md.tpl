@@ -4,7 +4,14 @@ aliases:
   - "{Domain} API"
   - "{domain} service layer"
 type: services
+id: "services.{domain}"
 domain: "{domain}"
+status: active
+authority: memory
+binding: true
+related:
+  - path: domains/{domain}/business-rules.md
+    rel: constraints
 tags:
   - memory/services
   - domain/{domain}

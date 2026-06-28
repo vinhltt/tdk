@@ -34,6 +34,9 @@ Read user request from `$ARGUMENTS`. Match against Routing Rules table:
 
 | Request describes... | Route to... | Template |
 |---|---|---|
+| Capability or bounded context capability | `capabilities/{capability-name}.md` | `capabilities-template.md.tpl` |
+| Stakeholder, actor, role, permission profile | `stakeholders-and-roles/{role-name}.md` | `stakeholders-and-roles-template.md.tpl` |
+| Glossary term or ubiquitous language | `glossary/{term}.md` | `glossary-template.md.tpl` |
 | Entity, table, model, database schema | `data-model/{table-name}.md` | `data-model-template.md.tpl` |
 | Service method, API endpoint, controller action | `domains/{domain}/services.md` | `services-template.md.tpl` |
 | Business rule, validation, constraint, policy | `domains/{domain}/business-rules.md` | `business-rules-template.md.tpl` |
@@ -41,6 +44,19 @@ Read user request from `$ARGUMENTS`. Match against Routing Rules table:
 | Multi-screen user journey or flow | `screen-flows/{flow-name}.md` | `screen-flow-template.md.tpl` |
 | Complex multi-step flow within domain | `domains/{domain}/flows/{name}-flow.md` | `flow-template.md.tpl` |
 | Cross-domain or shared flow | `shared-flows/{flow-name}.md` | `flow-template.md.tpl` |
+| Integration, API contract, event, webhook | `integrations/{integration-name}.md` | `integration-contract-template.md.tpl` |
+| Security, privacy, compliance policy | `quality-requirements/{policy-name}.md` | `quality-requirement-template.md.tpl` |
+| Operations runbook, deployment procedure | `operations/{runbook-name}-runbook.md` | `operations-runbook-template.md.tpl` |
+| Quality attribute, NFR, SLA | `quality-requirements/{quality-attribute}.md` | `quality-requirement-template.md.tpl` |
+| Architecture decision, ADR | `decisions/{decision-id}.md` | `decision-record-template.md.tpl` |
+| Risk, technical debt, assumption | `risks-and-debt/{risk-or-debt-id}.md` | `risk-debt-template.md.tpl` |
+| Report, dashboard, export | `reports/{report-name}.md` | `report-spec-template.md.tpl` |
+| Decision table | `decision-tables/{decision-table-name}.md` | `decision-table-template.md.tpl` |
+| State machine, lifecycle | `state-machines/{state-machine-name}.md` | `state-machine-template.md.tpl` |
+
+Normalize aliases from `memory-index.md` before route selection:
+`schema`, `api`, `screen`, `flow`, `integration`, `policy`, `nfr`, `adr`,
+`debt`, `report`, and `runbook`.
 
 **If ambiguous:** AskUserQuestion to clarify content type and/or domain.
 
@@ -58,11 +74,13 @@ If missing: STOP "Template not found. Re-run /tdk-memory-init to restore templat
 
 ## Step 4: Domain validation
 
-**For domain-required content** (service, business rule, domain flow):
+**For domain-required content** (service, business rule, domain flow, decision table, state machine, domain-scoped capability):
 - Check domain exists in Domain Map table
 - If NOT found: STOP "Unknown domain: {name}. Valid: [{list}]. To add, re-run /tdk-memory-init."
 
-**For domain-agnostic content** (data-model, screen, screen-flow, shared-flow): skip.
+**For domain-agnostic content** (data-model, screen, screen-flow, shared-flow,
+integration, operations, quality-requirement, decision-record, risk-debt,
+report-spec, stakeholder-role, glossary-term): skip.
 
 ## Step 4.5: Merge vs Replace (domain-level updates only)
 
@@ -146,6 +164,14 @@ separate Obsidian helper skill from this flow.
 | `domains/{d}/business-rules.md` | `[[domain-overview\|Domain Overview]]`, `[[services\|Services]]` |
 | `screens/{m}/{n}.md` | `[[screen-flows/{n}-flow\|User Flow]]` — only if flow file exists |
 | `*-flow.md` | Links to screens mentioned in flow content — only if screen files exist |
+| `integrations/*.md` | `[[domains/{domain}/services\|Related Services]]` if domain identifiable and file exists |
+| `operations/*.md` | Links to related integrations and risks when files exist |
+| `quality-requirements/*.md` | Links to related decisions and risks when files exist |
+| `decisions/*.md` | Links to affected quality requirements, risks, and arc42 summaries when files exist |
+| `risks-and-debt/*.md` | Links to mitigating decisions, runbooks, and quality requirements when files exist |
+| `reports/*.md` | Links to source data models and quality requirements when files exist |
+| `decision-tables/*.md` | Links to business rules when files exist |
+| `state-machines/*.md` | Links to related runtime flows when files exist |
 
 Rule: check file existence via `vault(action="list", directory="{parent-directory}", pageSize=100)` before inserting any wikilink. Skip wikilink if target absent.
 

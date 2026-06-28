@@ -2,7 +2,7 @@
 name: obsidian-brain
 description: "Advanced knowledge management for Obsidian vaults.Use when: creating/editing .md notes, .canvas visual maps, .base database views, researching existing docs, or validating content consistency."
 metadata:
-  version: "1.2.0"
+  version: "2.1.1"
 user-invocable: false
 ---
 

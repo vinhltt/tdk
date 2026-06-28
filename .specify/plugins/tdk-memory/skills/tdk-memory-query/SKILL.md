@@ -1,12 +1,14 @@
 ---
 name: tdk-memory-query
 description: "Query .specify/memory/ knowledge base by natural language. Returns
-  structured context: business rules, services, data models, flows matching the query.
+  structured context: business rules, services, data models, flows, integrations,
+  decisions, quality requirements, reports, operations, risks, and arc42 summaries
+  matching the query.
   Use when asking 'what rules exist for X', 'what services does Y domain have',
   'show data model for Z', or when other skills need memory context before implementing.
   Invocable by user (/tdk-memory-query) and by other skills/agents."
 metadata:
-  version: 2.1.0
+  version: 3.0.0
   category: "Context & Memory"
   requires:
     - tdk-memory-init
@@ -45,7 +47,11 @@ context. Never modifies files.
 - Natural language query: e.g. "what are the auth domain business rules?"
 - Optional flags:
   - `--domain {name}` — restrict to specific domain
-  - `--type {services|business-rules|data-model|flows|screens}` — restrict content type
+  - `--type {services|business-rules|data-model|flows|screens|screen-flows|shared-flows|integration-contract|operations-runbook|quality-requirement|decision-record|risk-debt|report-spec|capability|stakeholder-role|glossary-term|decision-table|state-machine|arc42-summary}` — restrict content type
+  - Type aliases are accepted: `api` -> `services`, `schema` -> `data-model`,
+    `flow` -> `flows`, `screen` -> `screens`, `integration` -> `integration-contract`,
+    `runbook` -> `operations-runbook`, `nfr`/`policy` -> `quality-requirement`,
+    `adr` -> `decision-record`, `debt` -> `risk-debt`, `report` -> `report-spec`
   - `--format {summary|full|list}` — output verbosity (default: summary)
   - `--for-agent` — machine-readable output (no markdown decoration, for inter-skill consumption)
 

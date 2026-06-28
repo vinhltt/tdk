@@ -21,7 +21,7 @@ const TEMPLATE_SUITES = [
     ],
   },
   {
-    name: 'project-docs templates',
+    name: 'legacy project-docs templates',
     dir: resolve(__dirname, '../../../../templates/project-docs'),
     files: [
       'README.md.tpl',
@@ -69,8 +69,8 @@ describe(suite.name, () => {
         }
       });
 
-      if (suite.name === 'project-docs templates') {
-        it('uses constitution and memory authority wording', () => {
+      if (suite.name === 'legacy project-docs templates') {
+        it('uses constitution and memory authority wording for compatibility only', () => {
           expect(content).not.toContain('tdk-docs');
           expect(content).toContain('constitution');
           expect(content).toContain('memory');

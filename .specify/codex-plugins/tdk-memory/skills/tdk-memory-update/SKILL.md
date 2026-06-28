@@ -2,7 +2,7 @@
 name: tdk-memory-update
 description: "This skill should be used when the user asks to 'update memory', 'add service to domain', 'update business rules', 'add data model', 'modify domain knowledge', 'deprecate memory file', 'tdk-memory-update', or needs to route natural language updates to .specify/memory/ files. Reads memory-index.md for routing rules, applies section anchor updates (additive or replacement), and regenerates checksums. Only explicit flag: --deprecate [path]."
 metadata:
-  version: 2.1.0
+  version: 3.0.0
   category: "Context & Memory"
   requires:
     - tdk-memory-query

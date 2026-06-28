@@ -9,7 +9,7 @@ description: "Load relevant memory context (mode load) AND validate spec/plan fo
 color: red
 model: sonnet
 metadata:
-  version: "2.1.0"
+  version: "3.0.0"
 ---
 
 ## Mode
@@ -221,6 +221,13 @@ From the spec/plan content, extract:
 - Business rules being applied or assumed
 - User roles and permissions referenced
 - Flows and their steps/order
+- Integration, event, webhook, and external API contracts
+- Security, auth, privacy, and compliance policy claims
+- Operations, deployment, migration, runbook, and rollback claims
+- Quality attribute, NFR, SLA, performance, reliability, and availability claims
+- Durable decisions or ADR references
+- Report, dashboard, export, and analytics output claims
+- Risk, technical debt, and assumption claims
 
 ### Phase 3: Cross-reference against memory
 
@@ -233,6 +240,23 @@ For each extracted claim, check against loaded memory:
 | Service/API | `domains/{domain}/services.md` | Different signature, missing param, wrong return type |
 | User flow | `domains/{domain}/flows/` | Skips required step, wrong order, missing error case |
 | Permission | `domains/{domain}/business-rules.md` | Role not authorized per existing rules |
+| Integration/API/event/webhook contract | `integrations/{integration-name}.md` | Different payload, missing field, incompatible retry/error behavior |
+| Security/auth/privacy/compliance policy | `quality-requirements/{policy-name}.md` | Weakens policy, omits required control, contradicts compliance constraint |
+| Operations/runbook/deployment | `operations/{runbook-name}-runbook.md` | Missing required procedure, rollback, owner, or operational guard |
+| Quality/NFR/SLA | `quality-requirements/{quality-attribute}.md` | Misses target, weakens threshold, changes measurement |
+| Durable decision/ADR | `decisions/{decision-id}.md` | Reverses accepted decision without superseding record |
+| Report/dashboard/export | `reports/{report-name}.md` | Wrong field, filter, source data, or audience |
+| Risk/debt/assumption | `risks-and-debt/{risk-or-debt-id}.md` | Ignores accepted risk, expands debt, or assumes a contradicted condition |
+| Decision table | `decision-tables/{decision-table-name}.md` | Wrong condition/action mapping |
+| State machine/lifecycle | `state-machines/{state-machine-name}.md` | Invalid state, transition, or terminal condition |
+
+`arc42/` summary files are non-binding read-models by default. Do not produce a
+blocking conflict from arc42 narrative alone. If an arc42 summary is relevant,
+follow `related.path` or verified wikilinks one hop to typed `binding: true`
+files, then evaluate the typed evidence.
+
+Follow at most one hop through `related.path` frontmatter or wikilinks by
+default. Deeper graph traversal requires an explicit caller/user request.
 
 **Tool selection by claim type** (use `vault(action="read")` when path is known):
 
@@ -241,11 +265,22 @@ For each extracted claim, check against loaded memory:
 | Business rule, flow, cross-domain assertion | `vault(action="search", query="{keywords}", searchStrategy="auto", ranked=true, includeSnippets=true)` | Candidate discovery; post-filter to `memory/`, then read evidence |
 | Exact entity → file mapping | `vault(action="read", path="memory/data-model/{entity}.md", raw=true)` | Surgical, when path known from table above |
 | Permission, role check | `vault(action="search", query="{role or permission keyword}", searchStrategy="content", ranked=true, includeSnippets=true)` | Candidate discovery; verify by read |
+| Integration contract | `vault(action="read", path="memory/integrations/{integration-name}.md", raw=true)` | Read exact contract when known; otherwise search `memory/integrations/` |
+| Security/privacy/compliance or quality claim | `vault(action="search", query="{policy or quality keyword}", searchStrategy="content", ranked=true, includeSnippets=true)` | Post-filter to `memory/quality-requirements/`, then read evidence |
+| Operations/runbook claim | `vault(action="search", query="{runbook or operation keyword}", searchStrategy="filename", ranked=true, includeSnippets=true)` | Post-filter to `memory/operations/`, then read evidence |
+| Decision/ADR claim | `vault(action="search", query="{decision keyword}", searchStrategy="auto", ranked=true, includeSnippets=true)` | Post-filter to `memory/decisions/`, then read evidence |
+| Report/export claim | `vault(action="search", query="{report or export keyword}", searchStrategy="auto", ranked=true, includeSnippets=true)` | Post-filter to `memory/reports/`, then read evidence |
+| Risk/debt/assumption claim | `vault(action="search", query="{risk debt assumption keyword}", searchStrategy="auto", ranked=true, includeSnippets=true)` | Post-filter to `memory/risks-and-debt/`, then read evidence |
+| Decision table or state machine | `vault(action="search", query="{rule lifecycle state keyword}", searchStrategy="auto", ranked=true, includeSnippets=true)` | Post-filter to `memory/decision-tables/` or `memory/state-machines/`, then read evidence |
+| arc42 summary | `vault(action="read", path="memory/arc42/{section}.md", raw=true)` | Context only; follow one hop to typed binding facts before conflict output |
 | Fallback (`MCP_AVAILABLE=false`) | `Read(.specify/memory/{path})` / `Glob` | Only when caller confirmed file-based mode |
 
 For each extracted claim:
 - Pick tool per tables above (path mapping + tool preference)
 - Capture evidence (file path + quote) for Guardian Report
+- Confirm the evidence file is typed memory with `binding: true` before
+  producing `CONFLICTS`. If only `binding: false` summary context exists, use
+  `WARNINGS` or `NOT CHECKED`.
 - Aim ≤ 3 MCP calls total for typical plan; if > 5 calls needed, scope too wide — flag in report
 
 ### Phase 4: Render Guardian Report

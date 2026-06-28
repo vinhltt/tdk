@@ -3,7 +3,7 @@ name: tdk-specify
 description: "Create or update the feature specification from a natural language feature description. Default: full brainstorm with Option A/B. Use --fast for single recommendation without brainstorm. Use --interview for optional artifact alignment before unresolved-question handling."
 argument-hint: "<id> <desc> [--fast] [--interview]"
 metadata: 
-  version: "5.7.0"
+  version: "5.9.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const UT_BACKFILL_SKILL = resolve(import.meta.dir, '../../../plugins/tdk-core/skills/tdk-ut-backfill-plan/SKILL.md');
-const UT_USAGE_DOC = resolve(import.meta.dir, '../../../docs/en/tdk-ut-backfill-skills-usage.md');
+const UT_USAGE_DOC = resolve(import.meta.dir, '../../../docs/en/guides/tdk-ut-backfill-skills-usage.md');
 
 function read(path: string): string {
   return readFileSync(path, 'utf-8');

@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.9.2] - 2026-06-28
+
+### Changed
+- Constitution: Upgraded tdk-constitution to render project knowledge via arc42 and typed templates, and added a Legacy Root Project Docs Policy to stub/migrate legacy docs.
+
 ## [5.9.1] - 2026-06-28
 
 ### Changed

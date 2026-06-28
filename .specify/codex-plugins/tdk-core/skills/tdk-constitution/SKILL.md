@@ -2,7 +2,7 @@
 name: tdk-constitution
 description: "Create or update the project constitution and constitution-owned project knowledge artifacts from interactive or provided principle inputs"
 metadata:
-  version: 5.4.0
+  version: 5.9.2
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -83,15 +83,32 @@ When running `/tdk-constitution --init <brief|file>`:
    files usable for later memory flows.
 5. If memory exists, preload it before editing. Use `tdk-memory-update` only after
    `memory-index.md` exists; never use it to create first-time memory.
-6. Render project knowledge artifacts from `### Project Knowledge Templates` under
-   `memory.path` from `.specify/.specify.json`, falling back to `.specify/memory`:
-   - `project-overview-prd.md`
-   - `product-context.md`
-   - `system-architecture.md`
-   - `project-roadmap.md`
-7. Write only AUTO-GEN sections in existing artifacts. Markerless files require
+6. Render project knowledge artifacts from `### Arc42 And Typed Memory Templates`
+   under `memory.path` from `.specify/.specify.json`, falling back to `.specify/memory`:
+   - `arc42/01-introduction-and-goals.md`
+   - `arc42/02-constraints.md`
+   - `arc42/03-context-and-scope.md`
+   - `arc42/04-solution-strategy.md`
+   - `arc42/05-building-block-view.md`
+   - `arc42/06-runtime-view.md`
+   - `arc42/07-deployment-view.md`
+   - `arc42/08-crosscutting-concepts.md`
+   - `arc42/09-architecture-decisions.md`
+   - `arc42/10-quality-requirements.md`
+   - `arc42/11-risks-and-technical-debt.md`
+   - `arc42/12-glossary.md`
+7. Route typed durable facts only when evidence exists:
+   - decisions -> `decisions/{decision-id}.md`
+   - risks/debt/assumptions -> `risks-and-debt/{risk-or-debt-id}.md`
+   - quality/security/privacy/compliance requirements -> `quality-requirements/{quality-attribute}.md`
+   - integrations -> `integrations/{integration-name}.md`
+   - operations -> `operations/{runbook-name}-runbook.md`
+   - glossary terms -> `glossary/{term}.md`
+8. Handle legacy root project-doc files with `### Legacy Root Project Docs Policy`.
+   They are migration inputs or compatibility stubs, not canonical targets.
+9. Write only AUTO-GEN sections in existing artifacts. Markerless files require
    confirmation. Stale legacy targets are reported, not silently overwritten.
-8. README conflicts with constitution or memory authority must stop for confirmation.
+10. README conflicts with constitution or memory authority must stop for confirmation.
    Do not silently derive project authority from README when memory/constitution disagree.
 
 ### Constitution Bootstrap Source
@@ -100,30 +117,65 @@ Use this source only when `.specify/memory/constitution.md` is absent in init mo
 
 Load: `templates/constitution.md.tpl`
 
-### Project Knowledge Templates
+### Arc42 And Typed Memory Templates
 
 Use these repository templates when init mode creates or updates project knowledge
-artifacts. They replace the removed public `tdk-docs` project-docs render path.
+artifacts. Arc42 files are summary read-models (`binding: false`) and must link
+to typed memory files for any binding claim.
 
 | Template | Target under `memory.path` |
 |----------|----------------------------|
-| `.specify/templates/project-docs/project-overview-prd.md.tpl` | `project-overview-prd.md` |
-| `.specify/templates/project-docs/product-context.md.tpl` | `product-context.md` |
-| `.specify/templates/project-docs/system-architecture.md.tpl` | `system-architecture.md` |
-| `.specify/templates/project-docs/project-roadmap.md.tpl` | `project-roadmap.md` |
+| `.specify/templates/memory/arc42-readme-template.md.tpl` | `arc42/README.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/01-introduction-and-goals.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/02-constraints.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/03-context-and-scope.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/04-solution-strategy.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/05-building-block-view.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/06-runtime-view.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/07-deployment-view.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/08-crosscutting-concepts.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/09-architecture-decisions.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/10-quality-requirements.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/11-risks-and-technical-debt.md` |
+| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/12-glossary.md` |
+| `.specify/templates/memory/decision-record-template.md.tpl` | `decisions/{decision-id}.md` |
+| `.specify/templates/memory/risk-debt-template.md.tpl` | `risks-and-debt/{risk-or-debt-id}.md` |
+| `.specify/templates/memory/quality-requirement-template.md.tpl` | `quality-requirements/{quality-attribute}.md` |
+| `.specify/templates/memory/glossary-template.md.tpl` | `glossary/{term}.md` |
 
 Creation/update rules:
 
-- Product-level facts live in `product-context.md` and apply across all epics.
-  Epic discovery may surface candidates, but only this constitution flow updates
-  product-level authority.
-- For a missing target, start from the matching template, then fill AUTO-GEN
-  sections from constitution authority, existing memory, and accepted user deltas.
+- Product-level facts live in constitution plus typed memory routes. Arc42
+  summaries point readers to those typed facts and are non-binding by default.
+- For a missing target, start from the matching memory template, then fill
+  summary content from constitution authority, existing memory, and accepted user
+  deltas.
 - For an existing target, update only matching AUTO-GEN sections and preserve
-  user-edit zones.
+  user-edit zones when markers exist.
 - Markerless existing files require confirmation before conversion.
-- `.specify/templates/project-docs/README.md.tpl` is not part of the default
-  memory authority render; use it only for an explicit human-facing README render.
+- Delivery timelines and roadmap dates stay outside durable memory as binding
+  facts unless the user explicitly accepts them as governance constraints.
+- Root `project-docs` templates are legacy compatibility inputs only; they are
+  not the canonical active render path.
+
+### Legacy Root Project Docs Policy
+
+Legacy root memory files are:
+
+- `project-overview-prd.md`
+- `product-context.md`
+- `system-architecture.md`
+- `project-roadmap.md`
+
+Policy: report + stub.
+
+- If a legacy file has recognized AUTO-GEN sections, migrate safe content into
+  arc42 summaries and typed memory routes, then leave a compatibility stub that
+  points to the new `arc42/` and typed targets.
+- If a legacy file is markerless or user-edited outside AUTO-GEN sections, do
+  not overwrite it. Report it for user review and ask before conversion.
+- If a legacy file is absent, do not recreate it as a canonical target.
+- Stubs must say the file is legacy and non-authoritative.
 
 ### Step 0 — Load Project Context (Optional)
 Invoke `tdk-load-project-context` with `require_feature_dir: false` and `require_prefix_validation: false` (no task ID needed — project-level document).
@@ -166,8 +218,14 @@ Follow this execution flow:
    - Read each command file in `.specify/templates/commands/*.md` (including this one) to verify no outdated references (agent-specific names like CLAUDE only) remain when generic guidance is required.
    - Read any runtime guidance docs (e.g., `README.md`, `docs/quickstart.md`, or agent-specific guidance files if present). Treat them as human-facing context, not as authority over memory.
    - Validate project knowledge artifacts under `memory.path` or `.specify/memory`:
-     `project-overview-prd.md`, `product-context.md`, `system-architecture.md`,
-     `project-roadmap.md`.
+     `arc42/01-introduction-and-goals.md`, `arc42/02-constraints.md`,
+     `arc42/03-context-and-scope.md`, `arc42/04-solution-strategy.md`,
+     `arc42/05-building-block-view.md`, `arc42/06-runtime-view.md`,
+     `arc42/07-deployment-view.md`, `arc42/08-crosscutting-concepts.md`,
+     `arc42/09-architecture-decisions.md`, `arc42/10-quality-requirements.md`,
+     `arc42/11-risks-and-technical-debt.md`, `arc42/12-glossary.md`, plus typed
+     files under `decisions/`, `risks-and-debt/`, `quality-requirements/`, and
+     `glossary/` when evidence exists.
 
 5. Produce a Sync Impact Report (prepend as an HTML comment at top of the constitution file after update):
    - Version change: old → new

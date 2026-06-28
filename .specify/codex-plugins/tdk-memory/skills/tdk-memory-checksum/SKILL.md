@@ -3,7 +3,7 @@ name: tdk-memory-checksum
 description: "SHA256 integrity check of .specify/memory/ files against memory.yaml manifest. Detects modified, untracked, and missing files. Read-only — never modifies files. Optional --fix flag delegates repairs to tdk-memory-update."
 user-invocable: false
 metadata:
-  version: 0.3.3
+  version: 3.0.0
   category: "Context & Memory"
   requires:
     - tdk-memory-init
@@ -84,9 +84,24 @@ Verify all `status: active` files appear in `memory-index.md` active tables:
 - All files in `screens/` appear in `## Screens` table
 - All files in `screen-flows/` appear in `## Screen Flows` table
 - All files in `shared-flows/` appear in `## Shared Flows` table
+- All files in `arc42/` appear in `## arc42 Summaries` table
+- All files in `integrations/` appear in `## Integrations` table
+- All files in `operations/` appear in `## Operations` table
+- All files in `quality-requirements/` appear in `## Quality Requirements` table
+- All files in `decisions/` appear in `## Decisions` table
+- All files in `risks-and-debt/` appear in `## Risks And Debt` table
+- All files in `reports/` appear in `## Reports` table
+- All files in `capabilities/` appear in `## Capabilities` table
+- All files in `stakeholders-and-roles/` appear in `## Stakeholders And Roles` table
+- All files in `glossary/` appear in `## Glossary` table
+- All files in `decision-tables/` appear in `## Decision Tables` table
+- All files in `state-machines/` appear in `## State Machines` table
 - Domain Map entries match actual `domains/` subdirectories on disk
 
 Verify no `_deprecated/` files appear in any active table.
+Verify root control files (`README.md`, `memory-index.md`, `memory.yaml`,
+`memory-map.canvas`, `CHANGELOG.md`, `constitution.md`) are not required in
+active typed tables.
 
 ### Step 5: Render validation report
 

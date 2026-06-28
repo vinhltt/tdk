@@ -4,7 +4,14 @@ aliases:
   - "{ScreenName}"
   - "{name} page"
 type: screen
+id: "screen.{module}.{name}"
 module: "{module}"
+status: active
+authority: memory
+binding: true
+related:
+  - path: screen-flows/{flow-name}.md
+    rel: journey
 tags:
   - memory/screen
   - screen/{module}

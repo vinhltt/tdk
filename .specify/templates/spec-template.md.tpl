@@ -14,7 +14,8 @@ schema_version: 1
 # Feature Specification: [FEATURE NAME]
 
 <!--
-  Product-wide durable facts belong in constitution/product-context.md.
+  Product-wide durable facts belong in constitution and memory v3 typed routes.
+  Use arc42 summaries only as read-model context; binding facts live in typed memory.
   Discovery is epic context.
   Spec is the PRD and requirement-ID source of truth.
 -->
