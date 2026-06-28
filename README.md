@@ -26,7 +26,7 @@ TDK structures the full development loop:
 6. **Discover** — optionally create epic-only context before spec (`/tdk-discovery`)
 7. **Specify** — generate feature specs from natural language and optional discovery refs (`/tdk:specify`)
 8. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
-9. **Design** — optionally produce approval-level HLD artifacts after clarify for greenfield work (`/tdk-high-level-design`)
+9. **Design** — optionally produce approval-level HLD artifacts after clarify for greenfield work, using built-in design lenses and optional HLD-specific advisory routing (`/tdk-high-level-design`)
 10. **Break down** — optionally turn clarified spec/HLD context into portable Markdown work items (`/tdk-task-breakdown`)
 11. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
 12. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)

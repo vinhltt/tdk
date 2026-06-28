@@ -5,6 +5,8 @@ This reference is the single source of truth for `/tdk-high-level-design` Markdo
 High-level design (HLD) is the approval-level design stage between a clarified `spec.md` and `/tdk-task-breakdown`. It turns clarified requirements into product/system design artifacts. It does not produce implementation plans, code, tasks, or tracker issues.
 `requirement-overview.md` is reference-first design context, not a PRD restatement.
 
+Built-in lenses and optional consumer HLD routing may enrich design context before artifact generation. They are advisory design inputs only; they do not change the six-file output set or citation authority.
+
 ## Output Directory
 
 All files are written under:
@@ -143,6 +145,8 @@ Mapping means source reference and design implication, not copied PRD prose.
 | §4 Evaluated Approaches | decisions-and-risks.md | Decisions + Alternatives Rejected |
 
 Non-functional requirements, technical assumptions, the integration map, and security posture have no dedicated spec home by design. HLD originates them as explicit `assumed` entries in `project-and-technical-overview.md`. This is design detail, not requirement invention, and is distinct from the requirements rule below.
+
+Lens or routed-skill findings may be folded into assumptions, risks, decisions, or follow-ups only. They must not create new artifacts or become requirement citations.
 
 ## Unresolved Questions Gate
 

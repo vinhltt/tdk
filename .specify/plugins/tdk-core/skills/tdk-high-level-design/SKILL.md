@@ -2,7 +2,7 @@
 name: tdk-high-level-design
 description: "Turn a clarified spec.md into approval-level high-level design artifacts. Use after /tdk-clarify and before /tdk-task-breakdown for greenfield features."
 metadata:
-  version: "5.4.1"
+  version: "5.8.0"
 ---
 
 # tdk-high-level-design
@@ -40,6 +40,8 @@ HLD enriches existing spec requirements; it does not become a second PRD or requ
 
 Load before generating any artifact:
 - `references/high-level-design-output-contract.md`
+- `references/high-level-design-lenses.md`
+- `references/high-level-design-skill-routing.md`
 
 ## Execution Steps
 
@@ -83,6 +85,28 @@ Use that reference as the single source of truth for:
 - Citation rules (enrich-only) and design-detail rules
 - Greenfield rules
 
+### Step 3.1 - Load Built-In HLD Lenses
+
+Read `references/high-level-design-lenses.md` from this skill directory.
+
+Use the built-in lenses to enrich approval-level design with feature-scoped architecture, quality, security, data/API, UX journey, and operability checks. Lens findings may become assumptions, risks, decisions, or follow-ups only.
+
+### Step 3.2 - Load Optional HLD Skill Routing
+
+Read `references/high-level-design-skill-routing.md` from this skill directory.
+
+Resolve optional project routing from:
+
+```text
+{PROJECT_CONTEXT.docs.path}/custom-workflow/high-level-design-skill-routing.md
+```
+
+The missing HLD routing file is non-blocking; continue with built-in lenses when it does not exist.
+
+When routing exists, read matching consumer `SKILL.md` files as advisory design lenses. Consumer HLD skills are advisory only: they may provide design notes, risks, assumptions, or questions, but they must not write files, create requirement IDs, invoke implementation skills, or change status.
+
+Do not create `## Delegate Skills` in any HLD artifact. Do not write outside the six contracted HLD artifacts.
+
 ### Step 4 - Extract and Map
 
 From `spec.md`, extract only durable identifiers (`UR-*`, `FR-*`, `SC-*`) and Key Entities. Apply the contract's spec-section to artifact mapping.
@@ -94,6 +118,7 @@ Do not invent file paths, APIs, database tables, owners, estimates, or labels un
 Generate the six artifacts from the templates under `.specify/templates/high-level-design/`, following the contract:
 - Cite `UR-*/FR-*/SC-*` only; enrich existing requirements, never mint new IDs.
 - Originate design detail (technical assumptions, integration, security, operability) only in `project-and-technical-overview.md`, and mark every originated entry `assumed`.
+- Fold lens and advisory consumer findings into existing artifact sections as assumptions, risks, decisions, or follow-ups only.
 - If HLD surfaces a genuinely new requirement, record it only as a non-blocking follow-up in `decisions-and-risks.md`.
 - Text-first; Mermaid optional.
 
@@ -118,6 +143,8 @@ Report:
 
 - [ ] `## 9. Unresolved Questions` is `None` before any write
 - [ ] `references/high-level-design-output-contract.md` was loaded
+- [ ] `references/high-level-design-lenses.md` was loaded
+- [ ] `references/high-level-design-skill-routing.md` was loaded
 - [ ] Only the six contracted artifacts under `high-level-design/` were written
 - [ ] Every requirement-derived statement cites a `UR-*`, `FR-*`, or `SC-*`
 - [ ] Originated design detail is marked `assumed`

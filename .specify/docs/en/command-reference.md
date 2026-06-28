@@ -163,6 +163,8 @@ For feature-sized work, the current spec can continue directly to `plan` and `im
 
 Each command reads the output of the previous one, building a chain of artifacts: project-level `product-context.md` -> optional `discovery/` -> `spec.md` -> optional `high-level-design/` -> optional `tasks-breakdown/` -> `plan.md` (with ## Phases table) -> source code.
 
+`/tdk-high-level-design` always uses built-in design lenses and may optionally read `{docs.path}/custom-workflow/high-level-design-skill-routing.md` for advisory consumer design skills. This HLD routing file is separate from `plan-skill-routing.md`, which remains implementation/test routing for planning and UT workflows.
+
 ---
 
 ## Cheat Sheet
@@ -287,6 +289,12 @@ Map the `test` domain in `{docs.path}/custom-workflow/plan-skill-routing.md`, th
 
 `/tdk-plan` triggers `/tdk-ut-backfill-plan` when UT planning is needed. The generated `ut/phases/*.md` files delegate implementation to the routed consumer test skill. See [04-unit-testing-full-pipeline.md](scenarios/04-unit-testing-full-pipeline.md) for a detailed walkthrough.
 
+### Optional HLD design routing
+
+To add project-specific advisory design skills, copy `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` to `{docs.path}/custom-workflow/high-level-design-skill-routing.md` and map lenses such as `architecture`, `security`, `data`, `api`, `ux`, or `operability`.
+
+Missing HLD routing is non-blocking; `/tdk-high-level-design` continues with built-in lenses. Consumer HLD skills are read-only/advisory and do not write artifacts.
+
 ### Check progress any time
 
 ```
@@ -322,7 +330,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | specify | `/tdk-specify <id> <desc>` | — | `.specify.env`; optional `discovery/index.md` | `spec.md`, `checklists/requirements.md` | None, or discovery context |
 | specify (fast) | `/tdk-specify <id> <desc> --fast` | `--fast` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
-| high-level-design | `/tdk-high-level-design <id>` | `--greenfield`, `--force` | `spec.md` with unresolved questions set to `None` | `high-level-design/index.md` + 5 design artifacts | clarify |
+| high-level-design | `/tdk-high-level-design <id>` | `--greenfield`, `--force` | `spec.md` with unresolved questions set to `None`; optional HLD routing | `high-level-design/index.md` + 5 design artifacts | clarify |
 | task-breakdown | `/tdk-task-breakdown <id>` | — | `spec.md` with unresolved questions set to `None`; optional `high-level-design/` | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md` | clarify |
 | ba-requirement | `/tdk-ba-requirement <id>` | `--figma-pc`, `--figma-sp`, `--output` | `spec.md` | `ba-requirement.md` | clarify |
 | plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--red-team`, `--validate` | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | ba-requirement |

@@ -50,11 +50,19 @@ Type in Claude Code chat:
 
 ### 3. Produce high-level design (optional, greenfield)
 
+Optional setup for project-specific advisory design skills:
+
+```
+cp .specify/templates/high-level-design/high-level-design-skill-routing-template.tpl {docs.path}/custom-workflow/high-level-design-skill-routing.md
+```
+
+Skip this setup when built-in HLD lenses are enough. HLD routing is separate from `plan-skill-routing.md`; routed consumer HLD skills are read-only/advisory and do not write files.
+
 ```
 /tdk-high-level-design feat-001
 ```
 
-**What happens**: For greenfield features, Claude turns the clarified `spec.md` into six approval-level design artifacts under `high-level-design/` (requirement overview, project/technical overview, data flow, screen flow, decisions & risks, plus an `index.md` manifest). Strict-blocks if `## 9. Unresolved Questions` is not `None`. Optional and backward-compatible: existing users can skip straight to `task-breakdown` or `plan`.
+**What happens**: For greenfield features, Claude turns the clarified `spec.md` into six approval-level design artifacts under `high-level-design/` (requirement overview, project/technical overview, data flow, screen flow, decisions & risks, plus an `index.md` manifest). It applies built-in design lenses, optionally reads HLD routing, and strict-blocks if `## 9. Unresolved Questions` is not `None`. Optional and backward-compatible: existing users can skip straight to `task-breakdown` or `plan`.
 
 **Output**: `high-level-design/index.md` + 5 design artifacts
 

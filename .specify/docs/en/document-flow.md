@@ -329,7 +329,8 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution | Optional context for `/tdk-specify` | Optional before specify |
 | `spec.md` | `/tdk-specify` | User description | `/tdk-plan`, all downstream | Feature start |
 | `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-ba-requirement` | After specify |
-| `high-level-design/` | `/tdk-high-level-design` | clarified `spec.md` | `/tdk-task-breakdown` (optional enrichment) | Optional after clarify (greenfield) |
+| `{docs.path}/custom-workflow/high-level-design-skill-routing.md` | Human-authored from `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` | Consumer HLD design skills | `/tdk-high-level-design` as advisory read-only routing | Optional project setup |
+| `high-level-design/` | `/tdk-high-level-design` | clarified `spec.md`; built-in lenses; optional HLD routing | `/tdk-task-breakdown` (optional enrichment) | Optional after clarify (greenfield) |
 | `tasks-breakdown/` | `/tdk-task-breakdown` | clarified `spec.md`; optional `high-level-design/` | Consumer-owned tracker sync | Optional after clarify |
 | `ba-requirement.md` | `/tdk-ba-requirement` | `spec.md` | `/tdk-plan` | For Approval |
 | `plan.md` | `/tdk-plan` | `ba-requirement.md`, `constitution.md` | `plan.md ## Phases`, `/tdk-implement [--phase NN]` | Feature start |

@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-28T01:27:10Z",
+  "generated_at": "2026-06-28T02:43:19Z",
   "plugins": {
     "tdk-core": {
-      "version": "5.7.2",
+      "version": "5.8.0",
       "components": {
         "skills": {
           "tdk-analyze": {
@@ -43,7 +43,7 @@
             "version": "5.7.0"
           },
           "tdk-high-level-design": {
-            "version": "5.4.1"
+            "version": "5.8.0"
           },
           "tdk-implement": {
             "version": "5.1.0"
@@ -90,10 +90,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "2e33cdc14ebf20e5074ae949db076e4e04d51a31ec94d99ef1c3d6278c4c929e",
-        ".claude-plugin/plugin.json": "cdc9d16f37641147a5b2479dc9dcaf602bf729cb3902e73ddac67e0809ce94a2",
-        ".codex-plugin/plugin.json": "cdc9d16f37641147a5b2479dc9dcaf602bf729cb3902e73ddac67e0809ce94a2",
-        ".cursor-plugin/plugin.json": "cdc9d16f37641147a5b2479dc9dcaf602bf729cb3902e73ddac67e0809ce94a2",
-        "CHANGELOG.md": "bbba750556dc5789a0fbeca51df8acfde236ecc15e83fdf1b9fa37a3848453f7",
+        ".claude-plugin/plugin.json": "e8792842f989f050009a6367324fd25a061b8e945da50a3535e69175ccafb587",
+        ".codex-plugin/plugin.json": "e8792842f989f050009a6367324fd25a061b8e945da50a3535e69175ccafb587",
+        ".cursor-plugin/plugin.json": "e8792842f989f050009a6367324fd25a061b8e945da50a3535e69175ccafb587",
+        "CHANGELOG.md": "d9e0ff3c620aada6a7001b37782bd0ed4f6f596211b936e73317c987ed0cb4a0",
         "__tests__/context-builder.test.cjs": "39ea0d403e0154a14cfe8877ef76a6c8fc68ffa046ef2d1f59b152de68440fe2",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
@@ -160,8 +160,10 @@
         "skills/tdk-greenfield-start/references/workflow-quick.md": "d316f12848b5826632d63b79d53eaef1170544e57722ebcac8df52daf8499f5e",
         "skills/tdk-greenfield-start/references/workflow-unknown.md": "09843c29cb8b3f2a8ce7c86d38bbc03f4e45d33329a0ea49fe4668340208f2ff",
         "skills/tdk-greenfield-start/templates/project-inception.md.tpl": "499d59ff03a33d8fe23c7c51243eecf0838b97ed66181a62d35240f7e1c8707e",
-        "skills/tdk-high-level-design/SKILL.md": "0520a7974e6e2e9925586aa6b1872cca98a6588db8d8fa676063916ca6686236",
-        "skills/tdk-high-level-design/references/high-level-design-output-contract.md": "72e700c5b56e2b8a6e53d18cf1d638567504b14bab9ab42342ca38d6ed4a147c",
+        "skills/tdk-high-level-design/SKILL.md": "2c289714d1beef423ded42c7ae09253c06c74d5481e915a58556f9640f5878cd",
+        "skills/tdk-high-level-design/references/high-level-design-lenses.md": "57199babd27fa71933cf204721fbb3cabdcbc991e6b33d50d22b4b8f42bfb052",
+        "skills/tdk-high-level-design/references/high-level-design-output-contract.md": "3d260bc11486bd95777d8ec61dec77716307051e81e88f3dd441aabba7dc658c",
+        "skills/tdk-high-level-design/references/high-level-design-skill-routing.md": "a54e41d2405983ccfa49b3e21e23cd7be4821b87540e279b5c07b600106e8bb1",
         "skills/tdk-implement/SKILL.md": "c4de40f65441e71013f5ff6c1a891f1f65a4c24ba06d46c304035d7ae892014a",
         "skills/tdk-implement/references/phase-execution.md": "13c49525313e4524c355ca3f620f4fd6d5e06a90be63eb9aa5f99ed4240c4a63",
         "skills/tdk-implement/references/project-and-phase-contract.md": "93bafb807ab3a4e4272c9264e5c8da1edc9b42a862f29e9a68d4112bb04abbe2",

@@ -10,6 +10,23 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+
+## [1.84.0] - 2026-06-28
+
+### Added
+- **[tdk-high-level-design]** Add design lenses and optional skill routing:
+  - Add built-in design lenses reference for feature-scoped checks
+  - Add optional project-specific HLD skill routing reference
+- **[Templates]** Add `high-level-design-skill-routing-template.tpl` for project design lens configuration
+- **[Scripts]** Add `tdk-high-level-design-routing-contract.test.ts` to test HLD routing and contract rules
+
+### Changed
+- **[tdk-high-level-design]** Update high-level design skill and contract:
+  - Load and validate built-in lenses and optional skill routing
+  - Fold lens and advisory consumer findings into existing artifacts only
+- **[Docs]** Update command reference, document flow, and full feature scenario with HLD routing info
+- **[General]** Update root `README.md` to reference built-in design lenses and optional HLD routing
+
 ## [1.83.0] - 2026-06-28
 
 ### Added

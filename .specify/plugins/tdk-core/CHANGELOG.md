@@ -4,6 +4,16 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.8.0] - 2026-06-28
+
+### Added
+- Add built-in design lenses reference for feature-scoped checks
+- Add optional project-specific HLD skill routing reference
+
+### Changed
+- Load and validate built-in lenses and optional skill routing
+- Fold lens and advisory consumer findings into existing artifacts only
+
 ## [5.7.2] - 2026-06-28
 
 ### Changed
