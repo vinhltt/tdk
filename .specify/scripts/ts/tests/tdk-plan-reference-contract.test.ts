@@ -9,12 +9,19 @@ const PLAN_SKILL = resolve(
 const REFERENCES_DIR = resolve(dirname(PLAN_SKILL), 'references');
 const MODES_REFERENCE = resolve(REFERENCES_DIR, 'modes.md');
 const RED_TEAM_WORKFLOW = resolve(REFERENCES_DIR, 'red-team-workflow.md');
+const GATES_REFERENCE = resolve(REFERENCES_DIR, 'gates.md');
+const RESEARCH_PHASE_REFERENCE = resolve(REFERENCES_DIR, 'research-phase.md');
 const SKILL_ROUTING_REFERENCE = resolve(REFERENCES_DIR, 'skill-routing.md');
 const VALIDATE_WORKFLOW = resolve(REFERENCES_DIR, 'validate-workflow.md');
 const VALIDATE_QUESTION_FRAMEWORK = resolve(REFERENCES_DIR, 'validate-question-framework.md');
 const PLUGINS_DIR = resolve(import.meta.dir, '../../../plugins');
 const MANIFEST = resolve(PLUGINS_DIR, 'manifest.json');
 const UTILS_PLANNING_SKILL = resolve(PLUGINS_DIR, 'tdk-utils/skills/planning');
+const RETIRED_OBSIDIAN_HELPERS = [
+  'obsidian_simple_search',
+  'obsidian_complex_search',
+  'obsidian_batch_get_file_contents',
+];
 
 function read(path: string): string {
   return readFileSync(path, 'utf-8');
@@ -57,7 +64,7 @@ describe('tdk-plan reference contract', () => {
 
   it('documents timestamped research report output instead of top-level research.md', () => {
     const outputContract = read(resolve(REFERENCES_DIR, 'plan-output-contract.md'));
-    const researchPhase = read(resolve(REFERENCES_DIR, 'research-phase.md'));
+    const researchPhase = read(RESEARCH_PHASE_REFERENCE);
 
     expect(outputContract).toContain('research/');
     expect(outputContract).toContain('yyMMdd-HHmmss-{slug}.md');
@@ -219,5 +226,28 @@ describe('tdk-plan reference contract', () => {
       '(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parse-phases-table.ts <plan-md-path> --json --validate-deps)',
     );
     expect(existingPlanWorkflow).toContain('Do not use `bun -e` / `bun --eval` snippets');
+  });
+
+  it('uses current Obsidian action examples instead of retired project knowledge helpers', () => {
+    const researchPhase = read(RESEARCH_PHASE_REFERENCE);
+
+    for (const helper of RETIRED_OBSIDIAN_HELPERS) {
+      expect(researchPhase).not.toContain(helper);
+    }
+    expect(researchPhase).toContain('vault(action="search"');
+    expect(researchPhase).toContain('vault(action="read"');
+    expect(researchPhase).toContain('verify important claims by read');
+  });
+
+  it('keeps memory guardian fallback semantics without smart-obsidian-specific wording', () => {
+    const gates = read(GATES_REFERENCE);
+
+    expect(gates).not.toContain('mcp__smart-obsidian');
+    expect(gates).not.toContain('smart-obsidian');
+    expect(gates).toContain('STATUS: MCP_UNAVAILABLE');
+    expect(gates).toContain('--no-mcp');
+    expect(gates).toContain('BLOCK_IMPL');
+    expect(gates).toContain('REVIEW');
+    expect(gates).toContain('CLEAR');
   });
 });

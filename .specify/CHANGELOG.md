@@ -10,6 +10,19 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.83.0] - 2026-06-28
+
+### Added
+- **[Memory]** Added `skills/_shared/obsidian-mcp-action-contract.md` defining the new Obsidian MCP action contract.
+
+### Changed
+- **[Embedded Skills]** Updated planning and memory query/update skills to use the new Obsidian MCP action contract:
+  - `tdk-plan`: Update planning references (`gates.md`, `research-phase.md`) to use current Obsidian action examples/contract and remove legacy `smart-obsidian` specific wording.
+  - `tdk-memory-query`: Update SKILL.md and flow reference to use `ToolSearch` to discover Obsidian `vault(action="list")` probe instead of legacy server info tool.
+  - `tdk-memory-update`: Update SKILL.md and flow references to use Obsidian `vault` and `edit` actions with user prompt fallbacks.
+- **[Claude Agent Config]** Align `tdk-memory-agent.md` instructions with the Obsidian action contract (`vault(action="search")`, `vault(action="read")`).
+- **[Scripts]** Update `tdk-memory-agent-contract.test.ts` and `tdk-plan-reference-contract.test.ts` to assert correct Obsidian MCP contract usage and ensure retired smart-obsidian helpers are not used.
+
 ## [1.82.0] - 2026-06-27
 
 ### Added

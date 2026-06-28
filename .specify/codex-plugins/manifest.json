@@ -1,11 +1,11 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-27T13:29:13Z",
+  "generated_at": "2026-06-28T01:27:10Z",
   "plugins": {
     "tdk-core": {
-      "version": "5.7.1",
+      "version": "5.7.2",
       "files": {
-        ".codex-plugin/plugin.json": "bf62d74cf133236304368457b1d855bfced2609047121c54e03ec3c435a9aae5",
+        ".codex-plugin/plugin.json": "93fbfc1c80885ede0e0ee50663a837524702dc280d5f4e5f5f57938ade407e8b",
         "hooks/codex-hooks.json": "218a8071c85c110a249cf591026b9aa857daa7658f1863b69c7506e62a023e62",
         "hooks/dev-context-injector.cjs": "95ec8603b65686b85c2fe02e73addce8c753361ad920dbeec8a35bd8b85e3671",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
@@ -71,15 +71,15 @@
         "skills/tdk-implement/references/phase-execution.md": "13c49525313e4524c355ca3f620f4fd6d5e06a90be63eb9aa5f99ed4240c4a63",
         "skills/tdk-implement/references/project-and-phase-contract.md": "93bafb807ab3a4e4272c9264e5c8da1edc9b42a862f29e9a68d4112bb04abbe2",
         "skills/tdk-implement/references/routing-preflight.md": "794db5940ab7f9f2b928c03dcef6fc8bb8474642ff8244acb544166f727e5de9",
-        "skills/tdk-plan/SKILL.md": "fbde916909ee7f65a1d58a934063da323b88592d78496257118256d11b8041f5",
+        "skills/tdk-plan/SKILL.md": "0c66bf23e2a3d03121cb91cb2629332282ead1d9f85279551a247583f61eb26d",
         "skills/tdk-plan/references/cross-plan-deps.md": "8678be6c9d45e0ac8269a2087fbf40d053ef83ae0cbf95b3e5a2c10f1b512e69",
         "skills/tdk-plan/references/design-phase.md": "c12111ef6064fd868fd50dc8e37fd66706e3873000cbf16ff76e7fb2a375d828",
-        "skills/tdk-plan/references/gates.md": "964fa5dceaaf1ef8165877d17290f7602147e8fbbaaf9fbc92a69bf2b176f221",
+        "skills/tdk-plan/references/gates.md": "e0d22f6966d095c184f9b57acac0e964de19915d3089a3f747a9d341cf1de56d",
         "skills/tdk-plan/references/handle-existing-plan.md": "4fed435cbab240b053c6c5e786f58640e6c339c0c3e210aa7253d5a5b4e3dfab",
         "skills/tdk-plan/references/modes.md": "91e1626f2d74fcb5604da80f4e6be0044f65baa62a421a6cf0c606c901b241e0",
         "skills/tdk-plan/references/plan-output-contract.md": "da6d73cce8aabc6e39f77306d556d65ecef105300c8a3192b1283b49c879b82e",
         "skills/tdk-plan/references/red-team-workflow.md": "368314e8cf60d323bc3849206c87947539e237da605e4794614548abd2e83b3d",
-        "skills/tdk-plan/references/research-phase.md": "8200b467d7040cea4ca72f487ac182a8cfbed5744a3c41f64d898f15c91dbdaa",
+        "skills/tdk-plan/references/research-phase.md": "a6d56b6624877cc680919feff120ea060c4746d38dd42db761a922820a0aa33a",
         "skills/tdk-plan/references/scope-challenge.md": "9f341caed80d5e83989c2e83efc24e8aec7ffcaf84d512919990b0e75dbc1913",
         "skills/tdk-plan/references/skill-routing.md": "97513d6919cfcc219b65dee7cf40310d72e9aeefd478a387a068a298830d6465",
         "skills/tdk-plan/references/validate-question-framework.md": "eb6972acb7a093ff4253a2af0764681e617a62cbf95b5f3e99d987e4934ae6e6",
@@ -101,9 +101,10 @@
       }
     },
     "tdk-memory": {
-      "version": "2.0.0",
+      "version": "2.1.0",
       "files": {
-        ".codex-plugin/plugin.json": "b7ebc0f706a4f71f861026d6b93a76cfeae4db1f1caf0968ab32a008268d0aea",
+        ".codex-plugin/plugin.json": "5570f2a36ec4069cda4f0dce26b4ed08c5a02a9e5089afb5dc555727f671d89f",
+        "skills/_shared/obsidian-mcp-action-contract.md": "6db432b5def981ead6172fbf18da6cc9ec4ae0319594167d366a977d083e02ac",
         "skills/tdk-memory-changelog/SKILL.md": "e7240e6276bcfbdc7b6baafac5004489b97c10af3c98c0c5571a19e11eee9ee6",
         "skills/tdk-memory-changelog/references/changelog-entry-format-and-change-type-taxonomy.md": "7f5bd010fc1dd8ad12f476a5bf1c08d797b24a9e4fb36ac0aa5acb4edc8ef5cb",
         "skills/tdk-memory-checksum/SKILL.md": "4a657174fda6a65fac9d99ca060ba7fe52b94aad537eefb64d1dde0d12f54a80",
@@ -114,14 +115,14 @@
         "skills/tdk-memory-init/references/fresh-init-flow.md": "0355a5b9fdd1d07581905021842a0bdb33359eac13df7233cb8b011a50abb634",
         "skills/tdk-memory-init/references/memory-index-template.md": "f4b981b916432fce0b735261a3b07de854f0ddc29b6ab10133b910e64d3874d6",
         "skills/tdk-memory-init/references/re-run-flow.md": "3063c6333930b63e59436001805182759f8faf6ce439f749bd84566bc0f48937",
-        "skills/tdk-memory-query/SKILL.md": "6e39ff6a76c5c7db3b2d8d5a208e848ae408f9fa1c5bdfdff5eb86b12746e521",
-        "skills/tdk-memory-query/references/flow-available-mcp.md": "7473fa18ff58df8409051b3dadb2be9ae83bfbc8ece61c50d76a806bc4eaeaf4",
+        "skills/tdk-memory-query/SKILL.md": "573dd73df94dfe5f2158195ad297e6241028946ba8493cb7e8778ab874ffad2e",
+        "skills/tdk-memory-query/references/flow-available-mcp.md": "20c0ae3d0c4a5027b8954df464087739b79387d7ead021d97d83ce5f7425a479",
         "skills/tdk-memory-query/references/flow-query-normal.md": "79ce46558b6f748f25c5fd461bce0c8288eeb51cb48de3a7d055c36e31c7cf18",
-        "skills/tdk-memory-update/SKILL.md": "228ae76e0f6fe8928aa87aa45d9939b23f27c51ddbf58a1294cb42c300321df1",
+        "skills/tdk-memory-update/SKILL.md": "c34574f2364c78010f96a3114a21aca72d00d71910484eb667bc7bf8a62ef79e",
         "skills/tdk-memory-update/references/deprecation-flow.md": "ce20abb6226bba198845cae3876a4988d71ed39768ce2173ba356d461c0d44a2",
         "skills/tdk-memory-update/references/domain-source-extraction-flow.md": "f30235919068818a17dcaf57c066c639b32bb5018761035b991c1045418408bc",
-        "skills/tdk-memory-update/references/flow-update-mcp.md": "28cd6fbd051464b1ca980acac97787813efe2afd9363d29560391ba7cee66ad1",
-        "skills/tdk-memory-update/references/flow-update-normal.md": "ec446def200fec6ba34dea920b58593b8d9828e28ae6e998e893722ad9351475",
+        "skills/tdk-memory-update/references/flow-update-mcp.md": "1e1eab4c5bd86255d5d41da8b063a24bb762939000ffe6fc1727ed3e70738215",
+        "skills/tdk-memory-update/references/flow-update-normal.md": "012412bb8993f674919d85db8e9a8fac5dcdc32267d52b78ecf1484e4e871e6a",
         "skills/tdk-memory-update/references/memory-section-anchor-update-strategy-additive-vs-replacement.md": "489d4ed9540772ce1ae87ed6739d7822e70e3a1ed3a3ba1df220c0ebe32406b8",
         "skills/tdk-memory-update/references/regenerate-memory-index-flow.md": "176cade0e7ecb28856793cc0ef20947c757cbb39d04ba4a3c1eda3766a5a7c9a"
       }

@@ -1,24 +1,32 @@
 # Update Flow — MCP Available
 
-> Used when `MCP_AVAILABLE = true`. All paths are **vault-relative** (no `.specify/` prefix).
-> Load any MCP tool schema via `ToolSearch("select:mcp__smart-obsidian__{tool_name}")` before first use.
+> Used when `MCP_AVAILABLE = true`. All paths are vault-relative (no `.specify/`
+> prefix). Follow `../_shared/obsidian-mcp-action-contract.md`.
+
+## Step 0.5: Confirm write action availability
+
+Before changing memory, confirm the active Obsidian MCP exposes writable actions:
+
+- `vault(action="create")` or `vault(action="update")` for whole-file writes.
+- `edit(action="patch")` for targeted heading, block, or frontmatter edits.
+
+If write actions are hidden, unavailable, or read-only, ask the user:
+
+- **Continue with file tools** -> set `MCP_AVAILABLE=false` and follow `references/flow-update-normal.md`.
+- **Fix MCP first** -> STOP without editing `.specify/memory/`.
+
+Do not silently fall back to file edits after an MCP write failure.
 
 ## Step 1: Guard checks + Read memory-index.md
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__list_vault_files")`
-
-1. `mcp__smart-obsidian__list_vault_files("memory")` — verify results contain:
+1. `vault(action="list", directory="memory", pageSize=25)` — verify results contain:
    - `memory/memory-index.md`
    - `memory/memory.yaml`
-   - Either missing → STOP: "Run /tdk-memory-init first."
+   - Either missing -> STOP: "Run /tdk-memory-init first."
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__get_vault_file")`
-
-2. `mcp__smart-obsidian__get_vault_file("memory/memory-index.md", format="json")` — parse:
-   - Extract `## Routing Rules` table: content type → target pattern + template mapping
+2. `vault(action="read", path="memory/memory-index.md", raw=true)` — parse:
+   - Extract `## Routing Rules` table: content type -> target pattern + template mapping
    - Extract `## Domain Map` table: valid domain names + folder paths
-
----
 
 ## Step 2: Natural language routing
 
@@ -38,23 +46,15 @@ Read user request from `$ARGUMENTS`. Match against Routing Rules table:
 
 **Emit routing result:** `RESOLVED_TARGET_PATH = {full determined target path}`
 
----
-
 ## Step 2.5: Domain source extraction (domain-level updates only)
 
 Follow `references/domain-source-extraction-flow.md`.
 
----
-
 ## Step 3: Read template
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__get_vault_file")`
-
-`mcp__smart-obsidian__get_vault_file("templates/memory/{type}-template.md.tpl", format="json")`
+`vault(action="read", path="templates/memory/{type}-template.md.tpl", raw=true)`
 
 If missing: STOP "Template not found. Re-run /tdk-memory-init to restore templates."
-
----
 
 ## Step 4: Domain validation
 
@@ -64,13 +64,12 @@ If missing: STOP "Template not found. Re-run /tdk-memory-init to restore templat
 
 **For domain-agnostic content** (data-model, screen, screen-flow, shared-flow): skip.
 
----
-
 ## Step 4.5: Merge vs Replace (domain-level updates only)
 
 **Applies to:** same criteria as Step 2.5. Skip for other content types.
 
 **Trigger:** `RESOLVED_TARGET_PATH` is domain-level AND target file already exists.
+Check existence with `vault(action="list", directory="{parent-directory}", pageSize=100)`.
 If target does NOT exist: skip (Step 5 creates from template).
 
 1. **AskUserQuestion**:
@@ -83,87 +82,60 @@ If target does NOT exist: skip (Step 5 creates from template).
    - If declined: re-ask merge vs replace.
    - If confirmed: proceed with replacement strategy.
 
----
-
-## Step 5: Apply update via heading-based patch
+## Step 5: Apply update via action contract
 
 **New file:**
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__create_vault_file")`
+`vault(action="create", path="{vault-relative-path}", content="{content}")` — create from template, replace placeholders (`{domain}`, `{Domain}`, `{module}`, `{YYYY-MM-DD}`), fill sections. Then proceed to Step 5.1.
 
-`mcp__smart-obsidian__create_vault_file(filename, content)` — create from template, replace placeholders (`{domain}`, `{Domain}`, `{module}`, `{YYYY-MM-DD}`), fill sections. Then proceed to Step 5.1.
+**Whole-file rewrite when target exists and replacement owns the full file:**
 
-**Existing file** — use MCP patch tools:
+`vault(action="update", path="{vault-relative-path}", content="{content}")`
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__patch_vault_file")`
+**Existing file — use MCP patch actions:**
 
 *Additive — append entry to a section:*
 ```
-mcp__smart-obsidian__patch_vault_file(
-  filename: "{vault-relative-path}",
-  target: "{Section Heading Name}",
-  content: "\n- {new entry content}",
-  operation: "append"
-)
+edit(action="patch", path="{vault-relative-path}", targetType="heading", target="{Section Heading Name}", operation="append", content="\n- {new entry content}")
 ```
 
 *Replacement — replace entire section content:*
 ```
-mcp__smart-obsidian__patch_vault_file(
-  filename: "{vault-relative-path}",
-  target: "{Section Heading Name}",
-  content: "{new section content}",
-  operation: "replace"
-)
+edit(action="patch", path="{vault-relative-path}", targetType="heading", target="{Section Heading Name}", operation="replace", content="{new section content}")
 ```
 
-*Nested heading (use `::` as delimiter):*
+*Nested heading (use `::` as delimiter when supported by schema):*
 ```
-mcp__smart-obsidian__patch_vault_file(
-  filename: "{vault-relative-path}",
-  target: "Parent Heading::Child Heading",
-  targetDelimiter: "::",
-  content: "\n- {new entry}",
-  operation: "append"
-)
+edit(action="patch", path="{vault-relative-path}", targetType="heading", target="Parent Heading::Child Heading", targetDelimiter="::", operation="append", content="\n- {new entry}")
 ```
 
 *Frontmatter field update:*
 ```
-mcp__smart-obsidian__patch_vault_file(
-  filename: "{vault-relative-path}",
-  target: "updated_at",
-  content: "{today ISO date}",
-  targetType: "frontmatter"
-)
+edit(action="patch", path="{vault-relative-path}", targetType="frontmatter", target="updated_at", content="{today ISO date}")
 ```
 
 *When file has Obsidian block IDs (`^block-id`) — prefer block targeting:*
 ```
-mcp__smart-obsidian__patch_vault_file(
-  filename: "{vault-relative-path}",
-  target: "{file-slug}-{section-name}",
-  content: "\n- {new entry}",
-  targetType: "block",
-  operation: "append"
-)
+edit(action="patch", path="{vault-relative-path}", targetType="block", target="{file-slug}-{section-name}", operation="append", content="\n- {new entry}")
 ```
 
 Then proceed to Step 5.2.
 
----
+If any write action fails because the server is read-only or the action is
+missing, STOP and ask before falling back to file tools.
 
 ## Step 5.1 — Enrich newly created file (new file path only)
 
-Activate the `obsidian-brain` skill (Writer Mode) to load Obsidian Flavored Markdown syntax reference before applying enrichment.
+Use the Obsidian syntax rules below directly for enrichment. Do not activate a
+separate Obsidian helper skill from this flow.
 
-**Idempotency guard:** Check line 1 of file for `---`. If frontmatter with `aliases:` already present → SKIP enrichment steps below entirely.
+**Idempotency guard:** Check line 1 of file for `---`. If frontmatter with `aliases:` already present -> SKIP enrichment steps below entirely.
 
 **A. Verify frontmatter** — templates already include Obsidian frontmatter. Ensure these placeholders are resolved:
-- `{YYYY-MM-DD}` → today's date (ISO date)
-- `{table-name}` → snake_case of table name
-- `{domain-slug}` → kebab-case of domain name
-- `updated_by` → `"tdk-memory-update"`
+- `{YYYY-MM-DD}` -> today's date (ISO date)
+- `{table-name}` -> snake_case of table name
+- `{domain-slug}` -> kebab-case of domain name
+- `updated_by` -> `"tdk-memory-update"`
 
 **B. Add wikilinks** based on content type (append to first readable section after frontmatter):
 
@@ -175,7 +147,7 @@ Activate the `obsidian-brain` skill (Writer Mode) to load Obsidian Flavored Mark
 | `screens/{m}/{n}.md` | `[[screen-flows/{n}-flow\|User Flow]]` — only if flow file exists |
 | `*-flow.md` | Links to screens mentioned in flow content — only if screen files exist |
 
-Rule: check file existence via `mcp__smart-obsidian__list_vault_files` before inserting any wikilink. Skip wikilink if target absent.
+Rule: check file existence via `vault(action="list", directory="{parent-directory}", pageSize=100)` before inserting any wikilink. Skip wikilink if target absent.
 
 **C. Add callouts** for specific content types:
 
@@ -205,11 +177,9 @@ Content here. ^{file-slug}-validation-rules
 ```
 
 Block ID naming convention: `^{file-slug}-{section-name-kebab}`
-- Derive `{file-slug}` from file path: `data-model/users.md` → `users`; `domains/auth/services.md` → `auth-services`
-- Rule: only add block ID if section has non-empty content. Empty sections → skip.
+- Derive `{file-slug}` from file path: `data-model/users.md` -> `users`; `domains/auth/services.md` -> `auth-services`
+- Rule: only add block ID if section has non-empty content. Empty sections -> skip.
 - These block IDs enable block-targeted patching in future updates.
-
----
 
 ## Step 5.2 — Preserve wikilinks on existing file update
 
@@ -218,22 +188,13 @@ When applying additive or replacement strategy to existing file:
 - Do NOT remove or overwrite frontmatter block (`---` ... `---` at top of file)
 - If adding content that references a new entity, append wikilink to Related section if present
 
----
-
 ## Step 6: Regenerate memory-index.md
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__list_vault_files")`
-
-1. `mcp__smart-obsidian__list_vault_files("memory/domains")` → get domain folders
-2. For each domain: `mcp__smart-obsidian__list_vault_files("memory/domains/{domain}")` → get files per domain
-3. `mcp__smart-obsidian__list_vault_files("memory/data-model")`, `mcp__smart-obsidian__list_vault_files("memory/screens")` → list other content
-4. Build index content from listing results
-
-Load schema: `ToolSearch("select:mcp__smart-obsidian__create_vault_file")`
-
-5. `mcp__smart-obsidian__create_vault_file("memory/memory-index.md", content)` — atomic overwrite with rebuilt index
-
----
+1. `vault(action="list", directory="memory/domains", pageSize=100)` -> get domain folders.
+2. For each domain: `vault(action="list", directory="memory/domains/{domain}", pageSize=100)` -> get files per domain.
+3. `vault(action="list", directory="memory/data-model", pageSize=100)` and `vault(action="list", directory="memory/screens", pageSize=100)` -> list other content.
+4. Build index content from listing results.
+5. `vault(action="update", path="memory/memory-index.md", content="{rebuilt-index-content}")` — atomic overwrite with rebuilt index.
 
 ## Step 7: Update memory.yaml + report
 
@@ -244,17 +205,17 @@ $VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
 ```
 
 2. Update `memory.yaml`: `sha256`, `updated_at`, `updated_by: "tdk-memory-update"`
-3. Compute SHA256 of regenerated `memory-index.md` → store as `memory_index_sha256`
+3. Compute SHA256 of regenerated `memory-index.md` -> store as `memory_index_sha256`
 
 Report:
 ```
 Updated {target-file}
   Section: {section-name} ({strategy})
-  Obsidian: {frontmatter ✓ | wikilinks added: N | block IDs added: N} (new file) | {wikilinks preserved} (existing file)
+  Obsidian: {frontmatter OK | wikilinks added: N | block IDs added: N} (new file) | {wikilinks preserved} (existing file)
   memory-index.md: regenerated
   memory.yaml: checksums updated
 
 Run /tdk-memory-changelog before committing.
 ```
 
-Uses: Step 5.1 obsidian-brain Writer Mode (new files only).
+Uses: Step 5.1 Obsidian syntax enrichment rules (new files only).

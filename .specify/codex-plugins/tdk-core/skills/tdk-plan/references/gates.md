@@ -47,15 +47,15 @@ Run after `plan.md` is drafted (Step 3 complete) and **only if** `.specify/memor
 1. Spawn `tdk-memory-agent` agent with `--mode validate` and:
    - `plan.md` content
    - the Context Block already loaded in Step 0.memory (pass it directly to avoid double preload)
-   - **TOOL PRIORITY instruction:** `"Use mcp__smart-obsidian__search_vault_smart for vault-wide claim verification; fall back to get_vault_file/Read only for known paths. See agent's Tool Priority section."`
+   - **Obsidian MCP instruction:** `"Use the Obsidian MCP action contract: vault(action=\"search\") for candidate discovery, vault(action=\"read\") for evidence files, and file tools only after fallback is selected. See agent's Obsidian MCP Action Contract section."`
 1.5. **Handle MCP availability:**
     - If agent output contains line `STATUS: MCP_UNAVAILABLE`:
-      - **`--fast` mode:** re-spawn agent with `--no-mcp` flag, log warning: `"MCP smart-obsidian unavailable; using file-based search. Fix MCP for next run."` Skip user prompt.
+      - **`--fast` mode:** re-spawn agent with `--no-mcp` flag, log warning: `"Obsidian MCP unavailable; using file-based search. Fix MCP for next run."` Skip user prompt.
      - **Default mode:** AskUserQuestion with 2 options:
         - **A) Continue with file-based search** → re-spawn agent with `--no-mcp` flag
-       - **B) Fix MCP smart-obsidian first** → STOP. Output:
+       - **B) Fix Obsidian MCP first** → STOP. Output:
          ```
-         MCP smart-obsidian server unavailable. To fix:
+         Obsidian MCP server unavailable. To fix:
          1. Verify MCP config: ~/.claude.json or .mcp.json
          2. Restart Claude Code
          3. Re-run /tdk-plan after fix

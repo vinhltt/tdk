@@ -33,13 +33,16 @@ Wait for all researcher reports before continuing to design. If any researcher r
 
 ## Project Knowledge Sources
 
-**Obsidian MCP** (semantic search across vault):
+**Obsidian MCP** (project knowledge across the vault):
 
 ```
-- obsidian_simple_search("feature-name")           → semantic match
-- obsidian_complex_search                          → JsonLogic queries
-- obsidian_batch_get_file_contents                 → batch read related files
+- vault(action="search", query="feature-name", searchStrategy="auto", ranked=true, includeSnippets=true) -> discover candidate files
+- vault(action="search", query="memory-index", searchStrategy="filename", ranked=true) -> find known memory files
+- vault(action="read", path="memory/memory-index.md", raw=true) -> read evidence files
 ```
+
+Search ranks candidate files only; verify important claims by read before using
+them in research conclusions.
 
 **AI Docs Manager** — `tdk-memory-query` skill OR ask `tdk-memory-agent` agent. Reads `.specify/memory/` based on feature domain.
 

@@ -16,6 +16,31 @@ const TDK_ANALYZE = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-analyze/SKILL.md')
 const TDK_PLAN = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-plan/SKILL.md');
 const TDK_PLAN_GATES = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-plan/references/gates.md');
 const LEGACY_ACTIVE_TERMS = ['memory-guardian', 'tdk-memory-preload'];
+const LEGACY_OBSIDIAN_TERMS = [
+  'mcp__smart-obsidian__',
+  'smart-obsidian',
+  'obsidian_simple_search',
+  'obsidian_complex_search',
+  'obsidian_batch_get_file_contents',
+];
+const MEMORY_SOURCE_DIR = resolve(PLUGINS_DIR, 'tdk-memory');
+const MEMORY_CODEX_DIR = resolve(CODEX_PLUGINS_DIR, 'tdk-memory');
+const PLAN_SOURCE_DIR = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-plan');
+const PLAN_CODEX_DIR = resolve(CODEX_PLUGINS_DIR, 'tdk-core/skills/tdk-plan');
+const OBSIDIAN_CONTRACT = resolve(
+  PLUGINS_DIR,
+  'tdk-memory/skills/_shared/obsidian-mcp-action-contract.md',
+);
+const CODEX_OBSIDIAN_CONTRACT = resolve(
+  CODEX_PLUGINS_DIR,
+  'tdk-memory/skills/_shared/obsidian-mcp-action-contract.md',
+);
+const MEMORY_UPDATE_ENRICHMENT_FLOWS = [
+  resolve(PLUGINS_DIR, 'tdk-memory/skills/tdk-memory-update/references/flow-update-mcp.md'),
+  resolve(PLUGINS_DIR, 'tdk-memory/skills/tdk-memory-update/references/flow-update-normal.md'),
+  resolve(CODEX_PLUGINS_DIR, 'tdk-memory/skills/tdk-memory-update/references/flow-update-mcp.md'),
+  resolve(CODEX_PLUGINS_DIR, 'tdk-memory/skills/tdk-memory-update/references/flow-update-normal.md'),
+];
 const ALLOWED_HISTORICAL_LINES = new Map([
   [
     resolve(PLUGINS_DIR, 'tdk-memory/CHANGELOG.md'),
@@ -74,6 +99,31 @@ function isAllowedHistoricalLine(file: string, line: string): boolean {
   return ALLOWED_HISTORICAL_LINES.get(file)?.includes(line.trim()) ?? false;
 }
 
+function findTermViolations(paths: string[], terms: string[]): string[] {
+  const violations: string[] = [];
+
+  for (const path of paths.flatMap(walkPaths)) {
+    const relativePath = relative(PROJECT_ROOT, path);
+    for (const term of terms) {
+      if (relativePath.includes(term)) {
+        violations.push(`${relativePath}: path contains ${term}`);
+      }
+    }
+
+    if (!statSync(path).isFile()) continue;
+    const content = readFileSync(path, 'utf-8');
+    content.split(/\r?\n/).forEach((line, index) => {
+      for (const term of terms) {
+        if (line.includes(term) && !isAllowedHistoricalLine(path, line)) {
+          violations.push(`${relativePath}:${index + 1}: contains ${term}`);
+        }
+      }
+    });
+  }
+
+  return violations;
+}
+
 describe('tdk-memory-agent contract', () => {
   it('tdk-memory-agent.md exists and old memory-guardian.md is absent', () => {
     expect(existsSync(AGENT)).toBe(true);
@@ -124,28 +174,41 @@ describe('tdk-memory-agent contract', () => {
 
   it('active TDK artifacts do not reference stale memory agent names as current behavior', () => {
     const activeSurfaces = [PLUGINS_DIR, CODEX_PLUGINS_DIR, SPECIFY_DOCS_DIR, README];
-    const violations: string[] = [];
-
-    for (const path of activeSurfaces.flatMap(walkPaths)) {
-      const relativePath = relative(PROJECT_ROOT, path);
-      for (const term of LEGACY_ACTIVE_TERMS) {
-        if (relativePath.includes(term)) {
-          violations.push(`${relativePath}: path contains ${term}`);
-        }
-      }
-
-      if (!statSync(path).isFile()) continue;
-      const content = readFileSync(path, 'utf-8');
-      content.split(/\r?\n/).forEach((line, index) => {
-        for (const term of LEGACY_ACTIVE_TERMS) {
-          if (line.includes(term) && !isAllowedHistoricalLine(path, line)) {
-            violations.push(`${relativePath}:${index + 1}: contains ${term}`);
-          }
-        }
-      });
-    }
+    const violations = findTermViolations(activeSurfaces, LEGACY_ACTIVE_TERMS);
 
     expect(violations).toEqual([]);
+  });
+
+  it('active memory and plan surfaces use the Obsidian action contract, not legacy smart-obsidian tools', () => {
+    const activeSurfaces = [MEMORY_SOURCE_DIR, PLAN_SOURCE_DIR, MEMORY_CODEX_DIR, PLAN_CODEX_DIR];
+    const violations = findTermViolations(activeSurfaces, LEGACY_OBSIDIAN_TERMS);
+
+    expect(violations).toEqual([]);
+  });
+
+  it('defines the shared Obsidian MCP action contract in source and generated Codex mirror', () => {
+    for (const contractPath of [OBSIDIAN_CONTRACT, CODEX_OBSIDIAN_CONTRACT]) {
+      expect(existsSync(contractPath), `${relative(PROJECT_ROOT, contractPath)} should exist`).toBe(true);
+      const content = read(contractPath);
+
+      expect(content).toContain('vault(action="list"');
+      expect(content).toContain('vault(action="read"');
+      expect(content).toContain('vault(action="search"');
+      expect(content).toContain('edit(action="patch"');
+      expect(content).toContain('STATUS: MCP_UNAVAILABLE');
+    }
+  });
+
+  it('keeps memory-update enrichment self-contained instead of loading legacy Obsidian helper skills', () => {
+    for (const flowPath of MEMORY_UPDATE_ENRICHMENT_FLOWS) {
+      const content = read(flowPath);
+
+      expect(content).not.toContain('obsidian-brain');
+      expect(content).toContain('Obsidian syntax enrichment rules');
+      expect(content).toContain('wikilinks');
+      expect(content).toContain('callouts');
+      expect(content).toContain('block ID');
+    }
   });
 
   it('defines Guardian Report taxonomy and action values', () => {

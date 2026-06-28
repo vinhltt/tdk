@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.7.2] - 2026-06-28
+
+### Changed
+- Update planning references (gates.md, research-phase.md) to use current Obsidian action examples/contract and remove legacy smart-obsidian specific wording.
+
 ## [5.7.1] - 2026-06-27
 
 ### Changed

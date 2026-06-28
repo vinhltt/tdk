@@ -1,23 +1,21 @@
 # Query Flow — MCP Available
 
-> Used when `MCP_AVAILABLE = true`. All paths are **vault-relative** (no `.specify/` prefix).
-> Load any MCP tool schema via `ToolSearch("select:mcp__smart-obsidian__{tool_name}")` before first use.
+> Used when `MCP_AVAILABLE = true`. All paths are vault-relative (no `.specify/`
+> prefix). Follow `../_shared/obsidian-mcp-action-contract.md`.
 
 ## Step 1: Guard checks
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__list_vault_files")`
-
-Call `mcp__smart-obsidian__list_vault_files("memory")` and verify results contain:
+Call `vault(action="list", directory="memory", pageSize=25)` and verify results contain:
 - `memory/memory-index.md`
 - `memory/memory.yaml`
 
-Either missing → STOP: "Memory not initialized. Run /tdk-memory-init first."
+Either missing -> STOP: "Memory not initialized. Run /tdk-memory-init first."
 
 ## Step 2: Parse query intent
 
 Read `$ARGUMENTS`. Identify:
 - Target domains (from `--domain` flag or NL extraction)
-- Target content types (from `--type` flag or NL: "business rules" → `business-rules.md`)
+- Target content types (from `--type` flag or NL: "business rules" -> `business-rules.md`)
 - Scope: single file, whole domain, or cross-domain
 - Output mode: is `--for-agent` flag present?
 
@@ -34,38 +32,42 @@ MEMORY_QUERY_RESULT_END
 
 ## Step 3: Resolve CANDIDATE_FILES
 
+**Known file path in query:**
+
+- If the path starts with `memory/`, add it directly to CANDIDATE_FILES.
+- If the path starts with `.specify/memory/`, strip `.specify/` before using MCP.
+
 **With `--domain` flag:**
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__list_vault_files")`
-
-- `mcp__smart-obsidian__list_vault_files("memory/domains/{domain}")` → build CANDIDATE_FILES
-- If query mentions entity/model: also list `memory/domains/{domain}/data-model`
+- `vault(action="list", directory="memory/domains/{domain}", pageSize=50)` -> build CANDIDATE_FILES.
+- If query mentions entity/model: also search or list `memory/data-model`.
 
 **With `--type` flag:**
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__search_vault")`
-
-- `mcp__smart-obsidian__search_vault(query="type: {type}", queryType="dataview")` → build CANDIDATE_FILES from all matching files across domains
+- `vault(action="search", query="{type}", searchStrategy="content", ranked=true, includeSnippets=true)` -> build CANDIDATE_FILES.
+- Post-filter paths to `memory/` and content filenames matching the requested type when possible.
 
 **Natural language (no explicit flags):**
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__search_vault_smart")`
+- `vault(action="search", query="{keywords}", searchStrategy="auto", ranked=true, includeSnippets=true)` -> build CANDIDATE_FILES from top results.
+- If the query looks filename-like, also call `vault(action="search", query="{filename keywords}", searchStrategy="filename", ranked=true, includeSnippets=true)`.
+- Post-filter all candidates to paths under `memory/`.
 
-- `mcp__smart-obsidian__search_vault_smart(query="{keywords}", filter={folders:["memory"]})` → build CANDIDATE_FILES from top results
-
-If a resolved path does not appear in vault: skip with note `{file}: not found`.
+If a resolved path does not appear in vault listings or search results: skip with
+note `{file}: not found`.
 
 ## Step 4: Read and extract
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__get_vault_file")`
-
 For each file in CANDIDATE_FILES:
-- `mcp__smart-obsidian__get_vault_file(filename, format="json")` — filename is vault-relative, e.g. `memory/domains/platform/services.md`
+- `vault(action="read", path="{vault-relative-path}", raw=true)` — example: `memory/domains/platform/services.md`.
 
 Extract per `--format` flag:
 - `--format full`: include entire file content
 - `--format summary` (default): frontmatter title + `updated_at`, H2/H3 headers, first 3-5 lines per section
 - `--format list`: file paths + frontmatter titles only
+
+Search results are candidates only. Do not answer from snippets when a matched
+file can be read.
 
 ## Step 5: Render output
 

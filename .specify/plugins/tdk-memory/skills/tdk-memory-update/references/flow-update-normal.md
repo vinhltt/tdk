@@ -112,7 +112,8 @@ Then proceed to Step 5.2.
 
 ## Step 5.1 — Enrich newly created file (new file path only)
 
-Activate the `obsidian-brain` skill (Writer Mode) to load Obsidian Flavored Markdown syntax reference before applying enrichment.
+Use the Obsidian syntax rules below directly for enrichment. Do not activate a
+separate Obsidian helper skill from this flow.
 
 **Idempotency guard:** Check line 1 of file for `---`. If frontmatter with `aliases:` already present → SKIP enrichment steps below entirely.
 
@@ -205,4 +206,4 @@ Updated {target-file}
 Run /tdk-memory-changelog before committing.
 ```
 
-Uses: Step 5.1 obsidian-brain Writer Mode (new files only).
+Uses: Step 5.1 Obsidian syntax enrichment rules (new files only).

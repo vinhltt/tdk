@@ -6,6 +6,7 @@ description: "Query .specify/memory/ knowledge base by natural language. Returns
   'show data model for Z', or when other skills need memory context before implementing.
   Invocable by user (/tdk-memory-query) and by other skills/agents."
 metadata:
+  version: 2.1.0
   category: "Context & Memory"
   requires:
     - tdk-memory-init
@@ -54,11 +55,12 @@ context. Never modifies files.
 
 > **MUST execute first. Do NOT skip.**
 
-1. Call `ToolSearch("select:mcp__smart-obsidian__get_server_info")` to load MCP tool schema
-2. Call `mcp__smart-obsidian__get_server_info()`
+1. Read `../_shared/obsidian-mcp-action-contract.md`.
+2. Use `ToolSearch` to discover an Obsidian MCP tool exposing `vault(action="list")`.
+3. Call `vault(action="list", directory="memory", pageSize=1)`.
    - **OK** → `MCP_AVAILABLE = true` → read and follow `references/flow-available-mcp.md`
    - **FAIL** → `MCP_AVAILABLE = false` → read and follow `references/flow-query-normal.md`
-3. Log: `"MCP status: {true/false}"`
+4. Log: `"MCP status: {true/false}"`
 
 ## Security
 

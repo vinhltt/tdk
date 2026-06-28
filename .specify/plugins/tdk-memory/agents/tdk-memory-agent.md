@@ -9,7 +9,7 @@ description: "Load relevant memory context (mode load) AND validate spec/plan fo
 color: red
 model: sonnet
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 ## Mode
@@ -22,15 +22,18 @@ Dispatch on `--mode` flag in input prompt:
 
 Detect by grepping input prompt body for the literal strings `--mode load` or `--mode validate` (same idiom as `--no-mcp` detection below).
 
-## Tool Priority
+## Obsidian MCP Action Contract
 
-Khi truy cập `.specify/memory/` (vault root = `.specify/`, paths vault-relative):
-1. `mcp__smart-obsidian__search_vault_smart` — semantic search, vault-wide claim verification
-2. `mcp__smart-obsidian__search_vault` — full-text/regex, exact string match
-3. `mcp__smart-obsidian__get_vault_file` — known path, surgical lookup
-4. `Read` / `Glob` / `Grep` — fallback ONLY khi `MCP_AVAILABLE=false`
+When accessing `.specify/memory/`, use the shared contract in
+`skills/_shared/obsidian-mcp-action-contract.md`.
 
-Load any MCP schema first via `ToolSearch("select:mcp__smart-obsidian__{tool}")`.
+- Vault root is `.specify/`; MCP paths are vault-relative, e.g. `memory/memory-index.md`.
+- Discover Obsidian MCP tools by capability with `ToolSearch`, looking for
+  `vault` list/read/search actions and `edit` patch actions.
+- Use `vault(action="list")` for guards, `vault(action="read")` for known
+  evidence files, and `vault(action="search")` only for candidate discovery.
+- Verify important claims by reading the matched file before reporting them.
+- `Read` / `Glob` / `Grep` are fallback ONLY when `MCP_AVAILABLE=false`.
 
 ## Security
 
@@ -55,8 +58,8 @@ Load any MCP schema first via `ToolSearch("select:mcp__smart-obsidian__{tool}")`
 > **MUST execute first. Do NOT skip unless `--no-mcp` flag set.**
 
 1. **Detect `--no-mcp` flag** — Grep input prompt body for the literal string `--no-mcp`. If found → set `MCP_AVAILABLE=false`, skip to Step 1.
-2. `ToolSearch("select:mcp__smart-obsidian__get_server_info")` → load schema.
-3. Call `mcp__smart-obsidian__get_server_info()`:
+2. `ToolSearch` for an Obsidian MCP tool that exposes `vault(action="list")`.
+3. Call `vault(action="list", directory="memory", pageSize=1)`:
    - **OK** → `MCP_AVAILABLE=true`, proceed.
    - **FAIL** → `MCP_AVAILABLE=false`, proceed (silent file fallback — non-blocking).
 4. Log: `"MCP status: {true/false}"`.
@@ -65,7 +68,7 @@ Load any MCP schema first via `ToolSearch("select:mcp__smart-obsidian__{tool}")`
 
 Check if memory is initialized:
 
-- If `MCP_AVAILABLE=true`: Load schema `ToolSearch("select:mcp__smart-obsidian__list_vault_files")`, call `mcp__smart-obsidian__list_vault_files("memory")` — verify results contain `memory/memory-index.md`.
+- If `MCP_AVAILABLE=true`: call `vault(action="list", directory="memory", pageSize=25)` and verify results contain `memory/memory-index.md`.
 - If `MCP_AVAILABLE=false`: `Glob(".specify/memory/memory-index.md")` → must return a result.
 
 NOT found → return silently (non-blocking; memory not initialized).
@@ -81,7 +84,7 @@ If natural language: extract same from prompt body.
 
 ### Step 3: Domain resolution
 
-- If `MCP_AVAILABLE=true`: Read `memory/memory-index.md` via `mcp__smart-obsidian__get_vault_file`.
+- If `MCP_AVAILABLE=true`: Read `memory/memory-index.md` via `vault(action="read", path="memory/memory-index.md", raw=true)`.
 - If `MCP_AVAILABLE=false`: `Read(".specify/memory/memory-index.md")`.
 
 Match extracted terms against `## Domain Map` table.
@@ -92,14 +95,13 @@ If `--domains` flag provided: use it directly, skip NL matching.
 If zero domains matched: check if data-model or screens sections are relevant.
 If still nothing: output `No relevant memory context found.` and exit gracefully (non-blocking).
 
-### Step 3.5: Cross-domain Semantic Discovery (MCP only)
+### Step 3.5: Cross-domain Discovery (MCP only)
 
 > Skip this step if `MCP_AVAILABLE=false`.
 
-Load schema: `ToolSearch("select:mcp__smart-obsidian__search_vault_smart")`
-
-- `mcp__smart-obsidian__search_vault_smart(query="{feature description keywords}", filter={folders:["memory"]})` → discover cross-domain dependencies automatically
-- Merge top results into RELEVANT_FILES list
+- Use `vault(action="search", query="{feature description keywords}", searchStrategy="auto", ranked=true, includeSnippets=true)` to discover candidate files.
+- Post-filter candidates to paths under `memory/`.
+- Merge top candidate paths into RELEVANT_FILES list.
 
 This supplements (not replaces) domain resolution from Step 3 — captures cross-domain files that keyword matching would miss.
 
@@ -107,12 +109,10 @@ This supplements (not replaces) domain resolution from Step 3 — captures cross
 
 **If `MCP_AVAILABLE=true`:**
 1. Semantic results already collected in Step 3.5 (RELEVANT_FILES)
-2. Load schema: `ToolSearch("select:mcp__smart-obsidian__get_vault_file")`
-3. `mcp__smart-obsidian__get_vault_file(filename)` for each file in RELEVANT_FILES
+2. `vault(action="read", path="{filename}", raw=true)` for each file in RELEVANT_FILES
 4. If RELEVANT_DOMAINS has explicit domains not yet covered by Step 3.5 results:
-   - Load schema: `ToolSearch("select:mcp__smart-obsidian__list_vault_files")`
-   - `mcp__smart-obsidian__list_vault_files("memory/domains/{domain}")` for uncovered domains
-   - `mcp__smart-obsidian__get_vault_file(filename)` for additional files not in semantic results
+   - `vault(action="list", directory="memory/domains/{domain}", pageSize=50)` for uncovered domains
+   - `vault(action="read", path="{filename}", raw=true)` for additional files not in search results
 
 **If `MCP_AVAILABLE=false`:**
 For each resolved domain, invoke `tdk-memory-query` with `--for-agent` and `--format summary`:
@@ -197,8 +197,8 @@ You will receive in your context:
 > **MUST execute first. Do NOT skip unless `--no-mcp` flag set.**
 
 1. **Detect `--no-mcp` flag** — Grep input prompt body for the literal string `--no-mcp` (caller injects as plain text, not a structured field). If found → set `MCP_AVAILABLE=false`, skip to Phase 1.
-2. `ToolSearch("select:mcp__smart-obsidian__get_server_info")` → load schema.
-3. Call `mcp__smart-obsidian__get_server_info()`:
+2. `ToolSearch` for an Obsidian MCP tool that exposes `vault(action="list")`.
+3. Call `vault(action="list", directory="memory", pageSize=1)`:
    - **OK** → `MCP_AVAILABLE=true`, proceed to Phase 1.
    - **FAIL** → emit single line:
      ```
@@ -234,13 +234,13 @@ For each extracted claim, check against loaded memory:
 | User flow | `domains/{domain}/flows/` | Skips required step, wrong order, missing error case |
 | Permission | `domains/{domain}/business-rules.md` | Role not authorized per existing rules |
 
-**Tool selection by claim type** (use path from table above as `get_vault_file` argument when path known):
+**Tool selection by claim type** (use `vault(action="read")` when path is known):
 
 | Claim Type | Preferred Tool | Notes |
 |------------|----------------|-------|
-| Business rule, flow, cross-domain assertion | `search_vault_smart(query=keywords, filter={folders:["memory"]})` | 1 vault-wide call covers all domains |
-| Exact entity → file mapping | `get_vault_file("memory/data-model/{entity}.md")` | Surgical, when path known from table above |
-| Permission, role check | `search_vault(query="role|permission keyword", filter={folders:["memory/domains"]})` | Full-text grep equivalent |
+| Business rule, flow, cross-domain assertion | `vault(action="search", query="{keywords}", searchStrategy="auto", ranked=true, includeSnippets=true)` | Candidate discovery; post-filter to `memory/`, then read evidence |
+| Exact entity → file mapping | `vault(action="read", path="memory/data-model/{entity}.md", raw=true)` | Surgical, when path known from table above |
+| Permission, role check | `vault(action="search", query="{role or permission keyword}", searchStrategy="content", ranked=true, includeSnippets=true)` | Candidate discovery; verify by read |
 | Fallback (`MCP_AVAILABLE=false`) | `Read(.specify/memory/{path})` / `Glob` | Only when caller confirmed file-based mode |
 
 For each extracted claim:

@@ -4,6 +4,16 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.1.0] - 2026-06-28
+
+### Added
+- Added obsidian-mcp-action-contract.md defining the new Obsidian MCP action contract.
+
+### Changed
+- Update tool discovery and availability checks to target the Obsidian vault action contract.
+- Update update and patch flows to use the Obsidian vault/edit contract.
+- Align tdk-memory-agent.md instructions with the Obsidian action contract.
+
 ## [2.0.0] - 2026-06-17
 
 ### Added

@@ -2,7 +2,7 @@
 name: tdk-memory-update
 description: "This skill should be used when the user asks to 'update memory', 'add service to domain', 'update business rules', 'add data model', 'modify domain knowledge', 'deprecate memory file', 'tdk-memory-update', or needs to route natural language updates to .specify/memory/ files. Reads memory-index.md for routing rules, applies section anchor updates (additive or replacement), and regenerates checksums. Only explicit flag: --deprecate [path]."
 metadata:
-  version: 2.0.0
+  version: 2.1.0
   category: "Context & Memory"
   requires:
     - tdk-memory-query
@@ -68,17 +68,21 @@ VENV_PY="$(pwd)/.venv/Scripts/python.exe"
 
 > **MUST execute first. Do NOT skip.**
 
-1. Call `ToolSearch("select:mcp__smart-obsidian__get_server_info")` to load MCP tool schema
-2. Call `mcp__smart-obsidian__get_server_info()`
+1. Read `../_shared/obsidian-mcp-action-contract.md`.
+2. Use `ToolSearch` to discover Obsidian MCP tools exposing `vault(action="list")`, `vault(action="create|update")`, and `edit(action="patch")`.
+3. Call `vault(action="list", directory="memory", pageSize=1)`.
    - **OK** → `MCP_AVAILABLE = true` → read and follow `references/flow-update-mcp.md`
-   - **FAIL** → `MCP_AVAILABLE = false` → read and follow `references/flow-update-normal.md`
-3. Log: `"MCP status: {true/false}"`
+   - **FAIL** → ask user before file-tool fallback:
+     - **Approve file fallback** → `MCP_AVAILABLE = false` → read and follow `references/flow-update-normal.md`
+     - **Fix MCP first** → STOP with MCP setup guidance
+4. If write actions are hidden, unavailable, or read-only after the list probe succeeds, ask the same fallback question before using traditional file editing tools.
+5. Log: `"MCP status: {true/false}"`
 
 ---
 
 ## References
 
-- **`references/flow-update-mcp.md`** — MCP path: Steps 1-7 using Smart Obsidian tools
+- **`references/flow-update-mcp.md`** — MCP path: Steps 1-7 using Obsidian MCP action tools
 - **`references/flow-update-normal.md`** — Normal path: Steps 1-7 using Read/Glob/Edit/Write
 - **`references/domain-source-extraction-flow.md`** — Step 2.5 domain context extraction from source files
 - **`references/regenerate-memory-index-flow.md`** — Step 6 fallback: memory-index.md rebuild from FS state
