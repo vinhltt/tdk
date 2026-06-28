@@ -94,5 +94,5 @@ describe('sync-docs snapshot parity tests', () => {
   // Bug fix: bash never sets $DIRECTION var (line 129 guard never triggers).
   //          TS fixes this via syncOpts.direction tracking. Documented in Phase 5 CHANGELOG.
   // Backup stdout leak: bash emits backup paths to stdout (line 105). TS sends to stderr only.
-  // YAML sub-config: bash uses yq to read .specify.yaml; TS parseConfig uses JSON fallback.
+  // YAML sub-config: legacy bash read .specify.yaml; TS parseConfig uses JSON fallback.
 });

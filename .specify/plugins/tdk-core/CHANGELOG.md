@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.9.1] - 2026-06-28
+
+### Changed
+- tdk-specify: point promote-flow guidance at docs/en/guides/promote-convention.md
+- tdk-task-breakdown: point promote-flow guidance and output contract links at docs/en/guides/promote-convention.md
+- tdk-sub-workspace-init: replace stale jq/yq migration failure wording with manual migration guidance
+
 ## [5.9.0] - 2026-06-28
 
 ### Added

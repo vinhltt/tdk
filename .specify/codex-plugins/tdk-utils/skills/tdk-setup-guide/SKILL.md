@@ -12,7 +12,7 @@ Interactive guide for setting up and verifying the TDK environment.
 ## Critical Constraint
 
 **DO NOT hallucinate or invent information.** All responses MUST be sourced from:
-- Setup docs → `.specify/docs/en/setup/`
+- Setup docs → `.specify/docs/en/guides/setup/`
 - Setup script → `.specify/setup.sh`
 - Config files → `.specify/.specify.json`, `.mcp.json`
 
@@ -41,34 +41,34 @@ Parse `$ARGUMENTS` to determine mode:
 ## Tool Strategy
 
 **CRITICAL — Vault Path Rule:** Smart-obsidian vault root = `.specify/`. All paths passed to MCP tools MUST be relative to vault root — NEVER prefix with `.specify/`.
-- CORRECT: `get_vault_file("docs/en/setup/speckit-setup-guide.md")`
-- WRONG: `get_vault_file(".specify/docs/en/setup/speckit-setup-guide.md")` ← double-prefix, 404
+- CORRECT: `get_vault_file("docs/en/guides/setup/README.md")`
+- WRONG: `get_vault_file(".specify/docs/en/guides/setup/README.md")` ← double-prefix, 404
 - WRONG: `list_vault_files("")` or `list_vault_files("/")` ← empty path, 404
 
 | Task | Tool | Why |
 |------|------|-----|
 | Read setup docs | `get_vault_file(path)` or `Read` | Get full guide content |
-| Find setup topic | `search_vault_smart(query)` | Semantic match across docs/en/setup/ |
+| Find setup topic | `search_vault_smart(query)` | Semantic match across docs/en/guides/setup/ |
 | Verify prerequisites | `Bash` — run check commands | Real system state verification |
 | Check config exists | `Glob` for config files | Fast path validation |
 | Search troubleshooting | `Grep` on setup docs | Line-level match for error messages |
 
 ## Mode: Overview (no args)
 
-1. Read `.specify/docs/en/setup/speckit-setup-guide.md` — display the Quick Setup section
-2. List all available setup topics from `.specify/docs/en/setup/`:
+1. Read `.specify/docs/en/guides/setup/README.md` — display the Quick Setup section
+2. List all available setup topics from `.specify/docs/en/guides/setup/`:
 
 ```markdown
 ## Setup Topics
 
 | Topic | Guide |
 |-------|-------|
-| Full TDK Setup | [speckit-setup-guide.md](en/setup/speckit-setup-guide.md) |
-| Claude Code + Python | [claude-code/README.md](en/setup/claude-code/README.md) |
-| Plugin Marketplace | [plugin-marketplace-setup.md](en/setup/plugin-marketplace-setup.md) |
-| Context7 MCP | [ctx7-mcp-setup.md](en/setup/ctx7-mcp-setup.md) |
-| GitHub MCP | [github-mcp-setup.md](en/setup/github-mcp-setup.md) |
-| Obsidian (Windows) | [setup-obsidian-plugins-windows.md](en/setup/claude-code/setup-obsidian-plugins-windows.md) |
+| Full TDK Setup | [README.md](en/guides/setup/README.md) |
+| Claude Code + Python | [claude-code/README.md](en/guides/setup/claude-code/README.md) |
+| Plugin Marketplace | [plugin-marketplace-setup.md](en/guides/setup/plugin-marketplace-setup.md) |
+| Context7 MCP | [ctx7-mcp-setup.md](en/guides/setup/ctx7-mcp-setup.md) |
+| GitHub MCP | [github-mcp-setup.md](en/guides/setup/github-mcp-setup.md) |
+| Obsidian (Windows) | [setup-obsidian-plugins-windows.md](en/guides/setup/claude-code/setup-obsidian-plugins-windows.md) |
 
 Use `/tdk-setup-guide check` to verify your environment, or `/tdk-setup-guide <topic>` for detailed guide.
 ```
@@ -81,8 +81,6 @@ Run verification commands and report status. Execute these sequentially:
 ```bash
 git --version
 python --version || python3 --version
-jq --version
-yq --version
 bun --version
 ```
 
@@ -131,22 +129,20 @@ test -f .mcp.json && echo ".mcp.json: EXISTS" || echo ".mcp.json: MISSING"
 |-----------|--------|--------|
 | Git | OK | v2.43.0 |
 | Python | OK | 3.11.5 |
-| jq | OK | 1.7.1 |
-| yq | MISSING | Install: `choco install yq` (Win) / `brew install yq` (Mac) |
 | Python venv | OK | .venv/ exists, imports pass |
-| .specify.json | OK | configFound=true, WORKSPACE=commondragon |
+| .specify.json | OK | configFound=true, WORKSPACE=example-workspace |
 | Plugin marketplace | OK | tdk-core, tdk-utils registered |
 | .mcp.json | OK | EXISTS |
 
 ### Actions needed:
-1. Install yq: see [speckit-setup-guide.md Section 1](en/setup/speckit-setup-guide.md#1-system-prerequisites)
+1. Install missing tools: see [README.md Section 1](en/guides/setup/README.md#1-system-prerequisites)
 ```
 
 ## Mode: Topic Detail (`<topic>`)
 
 1. Match `<topic>` against setup doc filenames and content:
-   - Try filename match: `Glob` `.specify/docs/en/setup/*{topic}*`
-   - If no match: `search_vault_smart(topic)` filtered to `docs/en/setup/` path
+   - Try filename match: `Glob` `.specify/docs/en/guides/setup/*{topic}*`
+   - If no match: `search_vault_smart(topic)` filtered to `docs/en/guides/setup/` path
 2. Read matched doc → display relevant sections
 3. If topic is about a specific step in speckit-setup-guide, extract just that section
 
@@ -164,7 +160,7 @@ test -f .mcp.json && echo ".mcp.json: EXISTS" || echo ".mcp.json: MISSING"
 ## Mode: Troubleshoot (`troubleshoot` or `debug`)
 
 1. Run **Check** mode first to identify failing components
-2. For each failure, search `.specify/docs/en/setup/speckit-setup-guide.md` Section 9 (Troubleshooting) for matching solution
+2. For each failure, search `.specify/docs/en/guides/setup/README.md` Section 9 (Troubleshooting) for matching solution
 3. If user describes a specific error:
    - `Grep` the error message across all setup docs
    - `search_vault_smart(error_message)` for semantic match

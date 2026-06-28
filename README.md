@@ -184,8 +184,8 @@ Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup,
 
 ## Documentation
 
-- [Command Reference](.specify/docs/en/command-reference.md) — full CLI documentation
-- [Scenario Guides](.specify/docs/en/scenarios/) — 12 workflow scenarios
-- [Setup Guide](.specify/docs/en/setup/speckit-setup-guide.md) — installation and configuration
-- [UT Backfill Usage](.specify/docs/en/tdk-ut-backfill-skills-usage.md) — unit test workflow
-- [Document Flow](.specify/docs/en/document-flow.md) — spec → plan → task lifecycle
+- [Command Reference](.specify/docs/en/guides/command-reference.md) — full CLI documentation
+- [Scenario Guides](.specify/docs/en/guides/scenarios/) — 11 workflow scenarios
+- [Setup Guide](.specify/docs/en/guides/setup/README.md) — installation and configuration
+- [UT Backfill Usage](.specify/docs/en/guides/tdk-ut-backfill-skills-usage.md) — unit test workflow
+- [Document Flow](.specify/docs/en/guides/document-flow.md) — spec → plan → task lifecycle

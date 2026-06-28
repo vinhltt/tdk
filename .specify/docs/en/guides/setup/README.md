@@ -1,6 +1,6 @@
 # TDK Setup Guide
 
-Complete guide for setting up TDK tooling after cloning the commondragon repository.
+Complete guide for setting up TDK tooling after cloning a consumer repository.
 
 > **Scope:** TDK CLI tools, scripts, and Claude Code skills only. For Docker, backend, or frontend setup, see their respective docs.
 
@@ -9,11 +9,11 @@ Complete guide for setting up TDK tooling after cloning the commondragon reposit
 Run the automated installer from the project root:
 
 ```bash
-# Run from project root (commondragon/), not from inside .specify/
+# Run from the consumer project root, not from inside .specify/
 bash .specify/setup.sh
 ```
 
-The script bootstraps prerequisites (git, jq, yq, bun) in bash, then delegates all remaining setup logic to TypeScript (`setup.ts`). Follow the printed manual steps after it completes.
+The script bootstraps prerequisites (git, bun) in bash, then delegates all remaining setup logic to TypeScript (`setup.ts`). Follow the printed manual steps after it completes.
 
 > If you prefer manual setup or the script fails, follow the sections below.
 
@@ -27,33 +27,25 @@ Install all required tools before proceeding.
 |------|-------------|--------|---------|
 | Git | any | `git --version` | Version control |
 | Python | 3.8+ | `python --version` or `python3 --version` | Scripts, skills, automation |
-| jq | 1.6+ | `jq --version` | JSON processing in bash scripts |
-| yq | 4.0+ (mikefarah) | `yq --version` | YAML config parsing |
 | Bun | 1.3+ | `bun --version` | TypeScript CLI runtime |
-> **Important:** yq must be [mikefarah/yq](https://github.com/mikefarah/yq), not kislyuk/yq (Python). Check with `yq --version` — it should show `mikefarah/yq`.
 
 ### Install Commands
 
 **Windows (Chocolatey — run as Admin):**
 ```powershell
-choco install python jq git -y
-# yq: download from https://github.com/mikefarah/yq/releases
-# Add yq.exe to a directory in your PATH
+choco install python git -y
 # Bun: powershell -c "irm bun.sh/install.ps1 | iex"
 ```
 
 **macOS (Homebrew):**
 ```bash
-brew install python jq yq git
+brew install python git
 curl -fsSL https://bun.sh/install | bash
 ```
 
 **Linux (Debian/Ubuntu):**
 ```bash
-sudo apt-get update && sudo apt-get install -y python3 python3-venv jq git
-# yq: install manually
-sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-sudo chmod +x /usr/local/bin/yq
+sudo apt-get update && sudo apt-get install -y python3 python3-venv git
 # Bun
 curl -fsSL https://bun.sh/install | bash
 ```
@@ -83,15 +75,15 @@ After registering, set up the required MCP integrations:
 - **[Context7 Plugin Setup](ctx7-mcp-setup.md)** *(required — enables docs-seeker)*
 - **[GitHub MCP Setup](github-mcp-setup.md)** *(optional — enables GitHub repo browsing)*
 
-## 5. .specify.yaml (Reference Only)
+## 5. .specify.json (Reference Only)
 
-The workspace config at [`.specify/.specify.yaml`](../../../.specify.yaml) is already committed. No action needed.
+The workspace config at [`.specify/.specify.json`](../../../../.specify.json) is already committed. No action needed.
 
 Simplified view of current config:
 
 ```yaml
 version: "1.0"
-name: "commondragon"
+name: "example-workspace"
 architecture:
   type: "modular-monolith"
 docs:
@@ -141,7 +133,7 @@ Run these checks from the project root to confirm everything works:
 ```bash
 cd .specify/scripts/ts && bun src/commands/detect-config.ts
 ```
-Expected: JSON output with `"configFound": true` and `"workspaceName": "commondragon"`.
+Expected: JSON output with `"configFound": true` and the configured `"workspaceName"`.
 
 ### b) Python Imports
 ```bash
@@ -167,7 +159,7 @@ In Claude Code, the `/tdk-` command prefix should be visible. Key commands:
 ## 8. File Map & Quick Reference
 
 ```
-commondragon/
+consumer-project/
 ├── .specify/
 │   ├── .specify.yaml              # Workspace config
 │   ├── .specify.env.example       # Env template (copy to .specify.env)
@@ -193,13 +185,11 @@ commondragon/
 
 | Problem | Cause | Solution |
 |---------|-------|----------|
-| `yq: command not found` | Not installed or wrong fork | Install [mikefarah/yq](https://github.com/mikefarah/yq/releases). Verify: `yq --version` shows `mikefarah/yq` |
-| `jq: command not found` | Not installed | `choco install jq` (Win) / `brew install jq` (Mac) / `apt install jq` (Linux) |
 | detect-config.ts fails | Missing bun | Install Bun (Section 1) and run `cd .specify/scripts/ts && bun install` |
 | Python `ModuleNotFoundError` | venv not set up | Re-run setup script (Section 2) |
 | CRLF parse errors in bash | Windows line endings | Convert to LF: `dos2unix .specify/.specify.env` or configure `git config core.autocrlf input` |
 | `.specify.env` changes ignored | File not saved as LF | Ensure LF line endings, no trailing whitespace |
-| `/tdk-` commands not visible | Claude Code not in project root | Open Claude Code from the commondragon repo root |
+| `/tdk-` commands not visible | Claude Code not in project root | Open Claude Code from the consumer project root |
 | docs-seeker not working | context7 plugin not enabled | Enable plugin via `.claude/settings.json` → `enabledPlugins` (Section 4) |
 
 ---

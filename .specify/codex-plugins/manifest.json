@@ -1,11 +1,11 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-28T09:25:44Z",
+  "generated_at": "2026-06-28T14:03:46Z",
   "plugins": {
     "tdk-core": {
-      "version": "5.9.0",
+      "version": "5.9.1",
       "files": {
-        ".codex-plugin/plugin.json": "3ae189ada081b8f7b14e6494cd67d586ecbc1b5a8f2920c8d5df98bfca3d141e",
+        ".codex-plugin/plugin.json": "645645f5113e2ff696685f8524f14f113421e2ae5371a3f53c3289f1bc7eb491",
         "hooks/codex-hooks.json": "218a8071c85c110a249cf591026b9aa857daa7658f1863b69c7506e62a023e62",
         "hooks/dev-context-injector.cjs": "95ec8603b65686b85c2fe02e73addce8c753361ad920dbeec8a35bd8b85e3671",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
@@ -87,17 +87,17 @@
         "skills/tdk-plan/references/skill-routing.md": "97513d6919cfcc219b65dee7cf40310d72e9aeefd478a387a068a298830d6465",
         "skills/tdk-plan/references/validate-question-framework.md": "eb6972acb7a093ff4253a2af0764681e617a62cbf95b5f3e99d987e4934ae6e6",
         "skills/tdk-plan/references/validate-workflow.md": "504ffc62d2c156f239d7143eab585490365e1c1d32ae85963df195f00867661b",
-        "skills/tdk-specify/SKILL.md": "7eb0d658b1179ed58550902c7913a81d132a3335288ddcf77bb0d5f71bcb8da2",
+        "skills/tdk-specify/SKILL.md": "2a26cead2049b02b0ccfeeaa746d90b27acd1118136a0ce92a251c822f5051bf",
         "skills/tdk-specify/evals/evals.json": "6c432121010453d7024c9abff36e5c9517010c7e486f59474a4742b642d526bd",
         "skills/tdk-specify/evals/fixtures/multi-sw/.specify.json": "b8b14e53eea16003f8dc13000c6f9b6c8bfe0dd439eac4e86e58ef8b6f6863b8",
         "skills/tdk-specify/references/spec-quality-guidelines.md": "4cab4632e4408fbb12f1e374b0cad4602a45719613c1a7ba4fec083c2d1889d0",
         "skills/tdk-specify/references/spec-writing-principles.md": "6d8b472745116c8bc9a6c09d7f1bd759fa3cac2a2c3e9fbe401da914202a6158",
         "skills/tdk-status/SKILL.md": "2a096496da2b332bf58039789a7425ffbbb7b500717a2e7ac233fdc72242f89e",
         "skills/tdk-sub-workspace-docs/SKILL.md": "9cbac44ba7bf6a8cc3574c3b551b39d7af31380fba2554db73369b54caf3211b",
-        "skills/tdk-sub-workspace-init/SKILL.md": "addc5fa7f6507d78666406f0c0598fc91adcd67600c9aed9c142142b9f99dc42",
+        "skills/tdk-sub-workspace-init/SKILL.md": "27eb96d721b8ec9eecec15e93c647d5297370db5f44253324e8e7171c265837d",
         "skills/tdk-sub-workspace-list/SKILL.md": "048d5207d474ab4e349e4ad9b32d0ed1da3727de44eb49e720e32a8316fbe04e",
-        "skills/tdk-task-breakdown/SKILL.md": "f99817539ce271ee6c689314575133220b30767148872213c237faa07793f1b7",
-        "skills/tdk-task-breakdown/references/task-breakdown-output-contract.md": "8ef15913ffb0f074a63933c8a20e5300ff3156fbea0fddece41d5c21d4c9e0e9",
+        "skills/tdk-task-breakdown/SKILL.md": "ff9c47738e6c9a6db182b6dd9bdba53df20527e0f878c2331b947ff220d77cea",
+        "skills/tdk-task-breakdown/references/task-breakdown-output-contract.md": "e2c06f57d1b9fce8c21e3246107dbafbdc42d091666f2390ce7686091f4a7e72",
         "skills/tdk-ut-backfill-plan/SKILL.md": "d6536ca64010f42789a1c5075ada1be447a82b46f36dfb035e030be0ed595d73",
         "skills/tdk-workspace-topology-apply/SKILL.md": "b481f98d01a512c65da84999da35a2aae868e0613ce7b05443e83473df3efbf4",
         "skills/tdk-workspace-topology-apply/templates/topology-apply-report.md.tpl": "1697848bb41e48a3549dfaa39904d22d8d6632131be9c5ac8071302585f8759b"
@@ -131,10 +131,10 @@
       }
     },
     "tdk-retro": {
-      "version": "1.0.1",
+      "version": "1.0.2",
       "files": {
-        ".codex-plugin/plugin.json": "fd7ccd120536a51cf9726b6602dec8cb1a49e4fef0bae93091288c0ab6efae87",
-        "skills/_shared/consumer-skill-discovery.md": "8fa190d8717ded27081c202bf1e4d77c1281195bb56228fb3fc11ef02b7471e5",
+        ".codex-plugin/plugin.json": "e72f3f7012d846f9b23c2cd7387d281c3eb0852f7888f9dc898de51fb115c879",
+        "skills/_shared/consumer-skill-discovery.md": "db84537340454432fd5a19f4c39f90e7da182d0e9aa958a54dc4404ae41f6e5b",
         "skills/_shared/learning-delta-schema.md": "75ea06307874ce5e92579e0e8de381c94e7b4ab2f6b5fbe61e7b22dda13b20ba",
         "skills/_shared/retro-feedback-schema.md": "2a459f6a69e424075e6d4bb7027507324652ab11aa9277b97933c6ec36a38aa2",
         "skills/_shared/script-command-contract.md": "9bc0cfdc5316b6b19ddd72b6bd3fe267d71d7e6831f35ac15e65533098061116",
@@ -185,9 +185,9 @@
       }
     },
     "tdk-utils": {
-      "version": "2.1.0",
+      "version": "2.1.1",
       "files": {
-        ".codex-plugin/plugin.json": "51d0523c98c993e6cb215552a8fa503abcb276f990eedf3b7f9db64913f812ce",
+        ".codex-plugin/plugin.json": "f11087d0cb2f79eae7c7db35f3c894290d3345d9a8a699224a02959f11f30ccf",
         "skills/brainstorming/SKILL.md": "583b1c8afc286ee95bba050548ce38fcd1f647c3376e8bad8aff1db7234a299b",
         "skills/brainstorming/scripts/README.md": "ee47937b3b2c9ce3e6d358b118c4f7693b3596b4085b93f0376e41b4028898e3",
         "skills/brainstorming/scripts/brainstorm.py": "ae22620928cbd69e03b05e4db707367bfb166b5c87eb70aa22114ddd6fd8461e",
@@ -211,7 +211,7 @@
         "skills/context-engineering/scripts/context_analyzer.py": "25209958471fa2a74ec9d6211f912c32117b6754eb382223e388e7060823b533",
         "skills/context-engineering/scripts/tests/test_edge_cases.py": "06d705178ded2fa7e571e35c7bc875580337dcb15e4b27b1814c644f15115dfe",
         "skills/docs-seeker/SKILL.md": "e1de5ea14889812fdb6ed4ae30e16db6fc2d5de4631ccc5fe3a3318546de027e",
-        "skills/obsidian-brain/SKILL.md": "dfcf3e59e30e98aed7a01647ee50c591c545af5ddedcfbe05c72d3d61482635c",
+        "skills/obsidian-brain/SKILL.md": "97caa3feb257c7c9cfb7dd114e3448a933d1b1f687958e1cff0174642c7e665d",
         "skills/obsidian-brain/references/json-canvas.md": "37b539a44c6173e28e2d0647b46bef1f6a291fa6e5165df6b5447c0d19e83377",
         "skills/obsidian-brain/references/obsidian-base.md": "e17bd8574a09ee278605ea7e55118b36f0bdcf2fe62f452807852a9a28225db8",
         "skills/obsidian-brain/references/obsidian-markdown.md": "676007714e1ff93d4c27e6b27ac4c67c603a5ffb15fcf88458aa9197d1fbc057",
@@ -250,8 +250,8 @@
         "skills/tdk-module-boundary-policy/templates/enforcement-snippets.md.tpl": "6deb87dbadd16fb8f3dd284bdf2722c9660220bcdb7edce88a1de85fbd360d5e",
         "skills/tdk-module-boundary-policy/templates/module-boundary-policy.md.tpl": "235c7e69fc3c588a38ee2b78755f338485ee70bd725b5498c817a166e9e26c45",
         "skills/tdk-scout/SKILL.md": "3ae073d7c22872345c67d1d8bf69c98fd601d99a49b0c8f8efbe86ce0be8fbf3",
-        "skills/tdk-setup-guide/SKILL.md": "9f0077c110dccd67b42d8dd5635d4d5182e272f9781b49b5882da3ec9bf7385a",
-        "skills/tdk-skill-guide/SKILL.md": "b7c4ae40a943e7948bed94b2baa78782b4b6d96f7295a213ae135c47090d611d",
+        "skills/tdk-setup-guide/SKILL.md": "406e62dc8332354d409f1150742449e036e1f88b60a4c3b4285cb1dd20c51db8",
+        "skills/tdk-skill-guide/SKILL.md": "bf49a4c7d80fdebfd9ed2f8bd4a96e1058d0d1371debcaca9d029062b68b3517",
         "skills/tdk-validate-task-id/SKILL.md": "37fd8d518fa3de373b5a93c0384eee5b21fbc45ffe1264b6d490016745275f1b"
       }
     }

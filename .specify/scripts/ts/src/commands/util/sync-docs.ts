@@ -13,7 +13,7 @@
 // 2. Backup stdout leak: bash backup_file() emits the backup path to stdout (line 105)
 //    via bare `echo "$backup"`, polluting JSON output. All diagnostics here go to stderr.
 //
-// 3. YAML sub-workspace config: bash uses `yq` to read sub's .specify.yaml docs.path.
+// 3. YAML sub-workspace config: legacy bash read sub .specify.yaml docs.path.
 //    parseConfig() only supports JSON. Falls back to parent docsPath if yaml-only.
 
 import { Command } from 'commander';

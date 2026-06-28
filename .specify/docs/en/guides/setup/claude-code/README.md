@@ -80,7 +80,7 @@ This virtual environment is shared among:
 erc_spec_kit/
 ├── .venv/                      ← Shared virtual environment
 ├── requirements.txt            ← Project dependencies
-├── .specify/docs/en/setup/claude-code/     ← Setup docs (you are here)
+├── .specify/docs/en/guides/setup/claude-code/     ← Setup docs (you are here)
 │   ├── setup-python-venv.ps1   (Windows script pending)
 │   └── README.md               (this file)
 ├── .specify/scripts/bash/
@@ -147,7 +147,7 @@ After finishing setup:
 
 ## 🔗 Related Documentation
 
-- [TDK Setup Guide](../speckit-setup-guide.md) — Full TDK tooling setup (prerequisites, jq/yq, environment config, skills, verification). Start here if you're new.
+- [TDK Setup Guide](../README.md) — Full TDK tooling setup (prerequisites, environment config, skills, verification). Start here if you're new.
 - **Obsidian MCP Setup:**
   - [Setup Obsidian & Plugins — Windows](./setup-obsidian-plugins-windows.md) — Install Obsidian, Local REST API, MCP Tools and configure `.mcp.json` on Windows.
   - Setup Obsidian & Plugins — macOS *(coming soon)*
@@ -155,7 +155,7 @@ After finishing setup:
 - [TDK Documentation](.specify/memory/)
 - [Project Rules](.claude/rules/)
 
-> **Note:** This document covers Python venv setup only. For the complete TDK tooling setup, see the [TDK Setup Guide](../speckit-setup-guide.md).
+> **Note:** This document covers Python venv setup only. For the complete TDK tooling setup, see the [TDK Setup Guide](../README.md).
 
 ---
 

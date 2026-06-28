@@ -27,9 +27,9 @@ Create a new `.specify.json` configuration file for the current sub-workspace.
 2. If `.specify/.specify.yaml` exists but `.specify.json` does NOT:
    - Auto-migrate: `bash .specify/scripts/bash/migrate-yaml-to-json.sh`
    - If migrate succeeds: proceed with `.specify.json`
-   - If migrate fails (yq/jq missing): notify user to install required tools:
+   - If migrate fails (migration script unavailable): notify user to migrate manually:
      ```
-     Migration failed — required tools (yq, jq) not found.
+     Migration failed — migration script not available or manual migration required.
      Run: bash .specify/scripts/bash/setup.sh
      Then retry: bash .specify/scripts/bash/migrate-yaml-to-json.sh
      ```

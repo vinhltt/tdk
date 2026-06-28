@@ -2,7 +2,7 @@
 name: tdk-skill-guide
 description: "Interactive guide for TDK skills and commands. Shows usage, scenarios, tips, and skill discovery. Use when asking 'how to use /tdk-*', 'what skills are available', 'show scenario', 'find a skill for X', 'tdk guide', 'tdk help'."
 metadata:
-  version: 2.1.0
+  version: 2.1.1
 ---
 
 # TDK Skill Guide
@@ -13,18 +13,18 @@ Interactive guide for discovering and using TDK skills in the marketplace.
 
 **DO NOT hallucinate or invent information.** All responses MUST be sourced from existing files:
 - Skill info → `SKILL.md` files in `.specify/plugins/*/skills/*/`
-- Command details → `.specify/docs/en/command-reference.md`
-- Scenarios → `.specify/docs/en/scenarios/*.md`
-- Setup → `.specify/docs/en/setup/`
+- Command details → `.specify/docs/en/guides/command-reference.md`
+- Scenarios → `.specify/docs/en/guides/scenarios/*.md`
+- Setup → `.specify/docs/en/guides/setup/`
 
 If information is not found in these sources, respond: "No documentation found for this topic." Never fabricate usage examples, parameters, or workflows.
 
 ## Tool Strategy
 
 **CRITICAL — Vault Path Rule:** Smart-obsidian vault root = `.specify/`. All paths passed to MCP tools MUST be relative to vault root — NEVER prefix with `.specify/`.
-- CORRECT: `get_vault_file("docs/en/command-reference.md")`
+- CORRECT: `get_vault_file("docs/en/guides/command-reference.md")`
 - CORRECT: `list_vault_files("plugins")`
-- WRONG: `get_vault_file(".specify/docs/en/command-reference.md")` ← double-prefix, 404
+- WRONG: `get_vault_file(".specify/docs/en/guides/command-reference.md")` ← double-prefix, 404
 - WRONG: `list_vault_files("")` or `list_vault_files("/")` ← empty path, 404
 
 **Always prefer smart-obsidian MCP tools.** Fall back to built-in tools (Glob, Grep, Read) only when MCP is unavailable or returns errors.
@@ -58,7 +58,7 @@ Before first tool call, attempt one smart-obsidian call (e.g., `get_server_info(
 - **Skill Detail**: `search_vault_simple(skill-name)` → `get_vault_file` matched SKILL.md → `search_vault_simple` in command-reference.md
 - **Search**: `search_vault_smart(keyword)` → filter by path → `get_vault_file` top results
 - **Tips**: `search_vault_smart(skill-name + "tips OR gotchas OR best practices")` → `get_vault_file` relevant sections
-- **Scenario**: `list_vault_files("docs/en/scenarios")` → `get_vault_file` matched file
+- **Scenario**: `list_vault_files("docs/en/guides/scenarios")` → `get_vault_file` matched file
 
 ### Preferred flow per mode (fallback)
 
@@ -124,11 +124,11 @@ Parse `$ARGUMENTS` to determine mode:
 2. `get_vault_file(matched-path)` — extract name, description, and full content
    - Fallback: `Read` matched file
 
-3. `search_vault_simple(skill-name)` scoped to `docs/en/command-reference.md` — extract relevant section
-   - Fallback: `Grep` `.specify/docs/en/command-reference.md` for skill name
+3. `search_vault_simple(skill-name)` scoped to `docs/en/guides/command-reference.md` — extract relevant section
+   - Fallback: `Grep` `.specify/docs/en/guides/command-reference.md` for skill name
 
-4. `search_vault_smart(skill-name)` scoped to `docs/en/scenarios/` — list related scenarios
-   - Fallback: `Grep` `.specify/docs/en/scenarios/*.md` for skill name
+4. `search_vault_smart(skill-name)` scoped to `docs/en/guides/scenarios/` — list related scenarios
+   - Fallback: `Grep` `.specify/docs/en/guides/scenarios/*.md` for skill name
 
 5. Present combined output:
    ```markdown
@@ -144,22 +144,22 @@ Parse `$ARGUMENTS` to determine mode:
    [from command-reference.md section]
 
    ### Related Scenarios
-   - [01 - Full Feature Development](scenarios/01-full-feature-development.md)
-   - [02 - Quick Specification](scenarios/02-quick-specification.md)
+   - [01 - Full Feature Development](guides/scenarios/01-full-feature-development.md)
+   - [02 - Quick Specification](guides/scenarios/02-quick-specification.md)
    ```
 
 ## Mode: Scenario (`scenario <N>` or `scenario <keyword>`)
 
-1. `list_vault_files("docs/en/scenarios")` → find matching file
+1. `list_vault_files("docs/en/guides/scenarios")` → find matching file
    - If `<N>` is a number: match `{N}-*.md`
    - If `<keyword>`: `search_vault_smart(keyword)` scoped to scenarios
-   - Fallback: `Glob` `.specify/docs/en/scenarios/*.md` + `Grep` for keyword
+   - Fallback: `Glob` `.specify/docs/en/guides/scenarios/*.md` + `Grep` for keyword
 2. `get_vault_file(matched-path)` — read scenario content
    - Fallback: `Read` matched file
 3. If no match: list all available scenarios
 4. Display the scenario content with a header note:
    ```
-   > Scenario from .specify/docs/en/scenarios/
+   > Scenario from .specify/docs/en/guides/scenarios/
    ```
 
 ## Mode: Search (`search <keyword>`)
@@ -167,13 +167,13 @@ Parse `$ARGUMENTS` to determine mode:
 Search across all sources using `search_vault_smart(keyword)`:
 
 1. **Skill names & descriptions**: results from `plugins/*/skills/*/SKILL.md`
-2. **Command reference**: results from `docs/en/command-reference.md`
-3. **Scenarios**: results from `docs/en/scenarios/*.md`
+2. **Command reference**: results from `docs/en/guides/command-reference.md`
+3. **Scenarios**: results from `docs/en/guides/scenarios/*.md`
 
 Fallback (MCP unavailable):
 1. `Grep` SKILL.md files for keyword
-2. `Grep` `.specify/docs/en/command-reference.md`
-3. `Grep` `.specify/docs/en/scenarios/*.md`
+2. `Grep` `.specify/docs/en/guides/command-reference.md`
+3. `Grep` `.specify/docs/en/guides/scenarios/*.md`
 
 Present results grouped by source:
 
@@ -198,7 +198,7 @@ Extract best practices and gotchas from existing docs only:
 1. Find the skill's `SKILL.md` (same as Skill Detail mode — use `search_vault_simple`)
 2. `search_vault_smart(skill-name + "tips OR best practices OR gotchas")` — extract relevant sections from command-reference.md
    - Fallback: `Grep` `command-reference.md` for skill name
-3. `search_vault_smart(skill-name)` scoped to `docs/en/scenarios/` — extract usage patterns (what comes before/after)
+3. `search_vault_smart(skill-name)` scoped to `docs/en/guides/scenarios/` — extract usage patterns (what comes before/after)
    - Fallback: `Grep` `scenarios/*.md` for skill name
 4. Present:
 
@@ -227,4 +227,4 @@ Extract best practices and gotchas from existing docs only:
 | Skill not found | "Skill '<name>' not found. Did you mean: [list close matches]?" |
 | Scenario number out of range | "Scenarios available: 01-15. Use `/tdk-skill-guide` for full list." |
 | No search results | "No results for '<keyword>'. Try broader terms or `/tdk-skill-guide` for overview." |
-| Guides dir missing | "Guides not found at `.specify/docs/en/`. Run setup first: see `.specify/docs/en/setup/speckit-setup-guide.md`" |
+| Guides dir missing | "Guides not found at `.specify/docs/en/guides/`. Run setup first: see `.specify/docs/en/guides/setup/README.md`" |

@@ -22,6 +22,6 @@ Search from the consumer project root:
 
 ## Notes
 
-- The suffix convention comes from `docs/en/migration-ut-rule-to-skill.md`.
+- The suffix convention comes from `docs/en/guides/migration-ut-rule-to-skill.md`.
 - Do not create consumer skills automatically during retro. Propose T4 only when a target skill is discoverable.
 - If multiple skills match, include all relevant paths in evidence.

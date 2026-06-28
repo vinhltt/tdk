@@ -462,8 +462,8 @@ Lặp child loop cho từng sub-issue. Không plan và implement parent epic nh�
 
 ## Docs Liên Quan
 
-- [Epic Start Guide English](../en/epic-start-guide.md)
-- [Command Reference](../en/command-reference.md)
-- [Document Flow](../en/document-flow.md)
-- [Full Feature Development Scenario](../en/scenarios/01-full-feature-development.md)
+- [Epic Start Guide English](../../en/guides/epic-start-guide.md)
+- [Command Reference](../../en/guides/command-reference.md)
+- [Document Flow](../../en/guides/document-flow.md)
+- [Full Feature Development Scenario](../../en/guides/scenarios/01-full-feature-development.md)
 - [Quy Ước Promote: Work-Item → Child Spec](promote-convention.md)

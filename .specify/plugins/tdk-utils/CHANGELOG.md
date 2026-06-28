@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.1.1] - 2026-06-28
+
+### Changed
+- obsidian-brain: update smart-obsidian examples to docs/en/guides/command-reference.md
+- tdk-setup-guide: update setup doc paths to docs/en/guides/setup and remove jq/yq prerequisite checks from guide output
+- tdk-skill-guide: update command, scenario, and setup discovery paths to docs/en/guides
+
 ## [2.1.0] - 2026-06-27
 
 ### Added

@@ -4,16 +4,8 @@
 
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { execFileSync } from 'node:child_process';
 import { Command } from 'commander';
 import { loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson } from '../../utils/index';
-
-function checkTool(name: string): boolean {
-  try {
-    execFileSync(name, ['--version'], { stdio: 'pipe' });
-    return true;
-  } catch { return false; }
-}
 
 function checkFile(file: string, label: string): void {
   console.log(existsSync(file) ? `  ✓ ${label}` : `  ✗ ${label}`);
@@ -32,23 +24,6 @@ const program = new Command()
   .option('--include-tasks', '[deprecated] Include tasks.md in available docs list', false)
   .option('--paths-only', 'Only output path variables, no validation', false)
   .action((taskId: string, opts: { json: boolean; requireTasks: boolean; includeTasks: boolean; pathsOnly: boolean }) => {
-    // Check required tools
-    const missingTools: string[] = [];
-    if (!checkTool('yq')) missingTools.push('yq');
-    if (!checkTool('jq')) missingTools.push('jq');
-    if (missingTools.length > 0) {
-      process.stderr.write(`ERROR: Missing required tools: ${missingTools.join(', ')}\n\n`);
-      process.stderr.write('Install instructions:\n');
-      for (const tool of missingTools) {
-        if (tool === 'yq') {
-          process.stderr.write('  yq:\n    macOS:   brew install yq\n    Linux:   wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && chmod +x /usr/local/bin/yq\n    Windows: choco install yq\n');
-        } else if (tool === 'jq') {
-          process.stderr.write('  jq:\n    macOS:   brew install jq\n    Linux:   apt-get install jq\n    Windows: choco install jq\n');
-        }
-      }
-      process.exit(1);
-    }
-
     const env = loadFeatureEnv();
     const repoRoot = getRepoRoot();
     const paths = getFeaturePaths(

@@ -41,9 +41,7 @@ describe('setup.sh thin bootstrap validation', () => {
     expect(content).toContain('"$@"');
   });
 
-  it('retains auto-install functions for jq, yq, bun', () => {
-    expect(content).toContain('auto_install_jq');
-    expect(content).toContain('auto_install_yq');
+  it('retains auto-install function for bun', () => {
     expect(content).toContain('auto_install_bun');
   });
 

@@ -465,7 +465,7 @@ Repeat the child loop for each sub-issue. Do not plan and implement the parent e
 
 ## Related Docs
 
-- [Hướng Dẫn Bắt Đầu Epic](../vi/epic-start-guide.md)
+- [Hướng Dẫn Bắt Đầu Epic](../../vi/guides/epic-start-guide.md)
 - [Command Reference](command-reference.md)
 - [Document Flow](document-flow.md)
 - [Full Feature Development Scenario](scenarios/01-full-feature-development.md)

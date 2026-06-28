@@ -59,7 +59,7 @@ Consumer-owned tracker sync must treat `tasks-breakdown/index.md` as the manifes
 ## Promoted Work Items
 
 A work-item large enough to be its own sub-feature may be **promoted** into an
-independent child spec (see `.specify/docs/en/promote-convention.md`). The
+independent child spec (see `.specify/docs/en/guides/promote-convention.md`). The
 `Status` column is how the index records that, so a promoted item is never
 double-tracked as both a work-item here and a child spec.
 
@@ -83,7 +83,7 @@ double-tracked as both a work-item here and a child spec.
   makes this safe. This is the *revert* path of demote; when only the parent is
   gone and the child should survive as an independent root spec, use the *unlink*
   path instead (clear `parent_spec`, keep the child). Both demote paths are defined
-  in `.specify/docs/en/promote-convention.md`.
+  in `.specify/docs/en/guides/promote-convention.md`.
 - **Consumer advisory.** `Status` is appended as the **last** column. Any
   downstream tool that parses `index.md` by column index must read `Status` as the
   trailing column; column-name-based parsing is unaffected.

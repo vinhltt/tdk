@@ -1,6 +1,6 @@
 # Plugin Marketplaces
 
-Local Claude Code plugin marketplace for the CommonDragon project.
+Local Claude Code plugin marketplace for a TDK consumer project.
 
 ## Available Plugins
 

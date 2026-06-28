@@ -46,7 +46,7 @@ async function main() {
   if (argv.includes('--help') || argv.includes('-h')) {
     console.log(`Usage: bun setup.ts [OPTIONS]
 
-Automates TDK setup from .specify/docs/en/setup/speckit-setup-guide.md
+Automates TDK setup from .specify/docs/en/guides/setup/README.md
 Smart re-run: skips already-installed components automatically.
 
 OPTIONS:
