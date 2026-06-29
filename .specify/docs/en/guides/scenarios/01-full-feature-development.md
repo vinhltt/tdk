@@ -6,11 +6,15 @@
 
 ## Command Sequence
 
-```
-optional /tdk-discovery -> /tdk-specify -> /tdk-clarify -> optional /tdk-high-level-design -> optional /tdk-task-breakdown -> /tdk-plan -> /tdk-implement
+```text
+Feature path:
+/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement
+
+Epic path:
+optional /tdk-discovery -> /tdk-specify -> /tdk-clarify -> optional /tdk-high-level-design -> /tdk-task-breakdown -> tracker sync -> child /tdk-specify -> child /tdk-clarify -> child /tdk-plan -> child /tdk-implement
 ```
 
-For feature-sized work, continue from the current spec to `plan` and `implement`. For epic-sized work, use `task-breakdown` as the handoff to tracker sub-issues, then seed each sub-issue into a child spec and run the normal child loop.
+For feature-sized work, skip discovery, HLD, and task breakdown by default. For epic-sized work, use `discovery` when the problem is broad, then use `task-breakdown` as the handoff to tracker sub-issues; each sub-issue gets its own child spec loop.
 
 ## Step-by-Step
 
@@ -25,6 +29,8 @@ Use discovery only when the work is broad enough to need epic-level context befo
 **What happens**: Claude writes context-only discovery artifacts for problem framing, personas, MVP boundary, and an index. It does not create `spec.md`, plans, work items, tracker records, or `UR-*` / `FR-*` / `SC-*` IDs.
 
 **Output**: `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md`
+
+Add `--interview` when the discovery artifacts should be challenged before they influence the spec. Later, `/tdk-discovery feat-001 --interview` rechecks existing discovery artifacts without regenerating them.
 
 ### 1. Create the specification
 
@@ -50,6 +56,8 @@ Type in Claude Code chat:
 
 ### 3. Produce high-level design (optional, greenfield)
 
+Skip this for the minimal feature path. Use it only when stakeholders need approval-level design before planning, or when an epic needs design context before breakdown.
+
 Optional setup for project-specific advisory design skills:
 
 ```
@@ -68,6 +76,8 @@ Skip this setup when built-in HLD lenses are enough. HLD routing is separate fro
 
 ### 4. Generate portable work items (optional)
 
+Skip this for the minimal feature path. Use it when the work is epic-sized and needs tracker sub-issues plus child specs.
+
 ```
 /tdk-task-breakdown feat-001
 ```
@@ -77,6 +87,17 @@ Skip this setup when built-in HLD lenses are enough. HLD routing is separate fro
 **Output**: `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md`
 
 For epic-sized work, sync these task files to tracker sub-issues with consumer-owned tooling, then seed each sub-issue into a child spec that runs its own `specify -> clarify -> plan -> implement` loop. For feature-sized work, you may continue to plan the current spec directly.
+
+Example child loop after tracker sync:
+
+```
+/tdk-specify feat-002 "Seed from task-001-avatar-upload-validation.md"
+/tdk-clarify feat-002
+/tdk-plan feat-002
+/tdk-implement feat-002
+```
+
+Keep the parent spec as decomposition authority. Do not implement the parent epic as one large unit after task breakdown unless you intentionally decide it is small enough.
 
 ### 5. Generate the implementation plan
 
@@ -124,6 +145,7 @@ Run at any point to see a progress bar, completed phases, and recommendations.
 - Use `discovery` only for epic-sized ambiguity before specification. Feature-sized work starts at `specify`.
 - Use `high-level-design` on greenfield features when stakeholders need an approval-level design before breakdown or planning; it is optional and existing flows are unaffected when skipped.
 - Use `task-breakdown` when you need portable issue-sized Markdown files for tracker sync and child specs.
+- Read manifests first: `discovery/index.md`, `high-level-design/index.md`, and `tasks-breakdown/index.md`.
 - Run `analyze` before `implement` to catch inconsistencies early.
 - Use `status` after interruptions to see where you left off.
 - Task IDs must use prefixes from `.specify/.specify.env` (e.g., `feat`, `spec`, `docs`, `bug`).

@@ -10,6 +10,14 @@ const SPECIFY_SKILL_PATH = resolve(
   import.meta.dir,
   '../../../plugins/tdk-core/skills/tdk-specify/SKILL.md',
 );
+const SPECIFY_INPUT_ROUTING_REF_PATH = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-core/skills/tdk-specify/references/input-routing-and-mode-workflow.md',
+);
+const SPECIFY_GENERATION_REF_PATH = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-core/skills/tdk-specify/references/spec-generation-and-validation-workflow.md',
+);
 const DISCOVERY_CONTRACT_PATH = resolve(
   import.meta.dir,
   '../../../plugins/tdk-core/skills/tdk-discovery/references/discovery-output-contract.md',
@@ -26,8 +34,11 @@ function read(path: string): string {
 describe('tdk discovery/specify interview contract', () => {
   const discoverySkill = read(DISCOVERY_SKILL_PATH);
   const specifySkill = read(SPECIFY_SKILL_PATH);
+  const specifyInputRoutingRef = read(SPECIFY_INPUT_ROUTING_REF_PATH);
+  const specifyGenerationRef = read(SPECIFY_GENERATION_REF_PATH);
+  const specifyContract = `${specifySkill}\n${specifyInputRoutingRef}\n${specifyGenerationRef}`;
   const discoveryContract = read(DISCOVERY_CONTRACT_PATH);
-  const combined = `${discoverySkill}\n${specifySkill}\n${discoveryContract}`;
+  const combined = `${discoverySkill}\n${specifyContract}\n${discoveryContract}`;
 
   it('defines one shared artifact-alignment protocol', () => {
     expect(existsSync(SHARED_PROTOCOL_PATH)).toBe(true);
@@ -57,16 +68,45 @@ describe('tdk discovery/specify interview contract', () => {
     expect(discoverySkill).toContain('No `interview.md`');
   });
 
+  it('documents discovery replay interview against existing artifacts', () => {
+    expect(discoverySkill).toContain('/tdk-discovery <epic-id> --interview');
+    expect(discoverySkill).toContain('set `DISCOVERY_REPLAY_INTERVIEW=true`');
+    expect(discoverySkill).toContain('discovery/index.md`, `problem.md`, `personas.md`, and `mvp-scope.md`');
+    expect(discoverySkill).toContain('Discovery replay interview requires existing discovery artifacts');
+    expect(discoverySkill).toContain('If the cleaned brief is exactly `interview`, STOP before creation or replay routing');
+    expect(discoverySkill).toContain('contains exactly the four allowed files and no extras');
+    expect(discoverySkill).toContain('skip Step 3 directory initialization and Step 4 artifact generation');
+    expect(discoverySkill).toContain('`--force --interview` requires a replacement brief or file');
+    expect(discoverySkill).toContain('Did you mean `--interview`?');
+  });
+
   it('documents optional interview mode for specify while allowing fast composition', () => {
     expect(specifySkill).toContain('[--fast] [--interview]');
     expect(specifySkill).toContain('../_shared/interview-alignment-protocol.md');
-    expect(specifySkill).toContain('set `SPEC_INTERVIEW=true`');
-    expect(specifySkill).toContain('Unknown flags STOP');
-    expect(specifySkill).toContain('`--fast --interview` is valid');
-    expect(specifySkill).toContain('does not force full mode');
-    expect(specifySkill).toContain('4-6 artifact-grounded questions');
-    expect(specifySkill).toContain('problem, scope, impact surface, top UR/FR/entity, success criteria, risk, and unresolved questions');
-    expect(specifySkill).toContain('classification: `aligned`, `mismatch`, or `unclear`');
+    expect(specifyContract).toContain('set `SPEC_INTERVIEW=true`');
+    expect(specifyContract).toContain('Unknown flags STOP');
+    expect(specifyContract).toContain('`--fast --interview` is valid');
+    expect(specifyContract).toContain('does not force full mode');
+    expect(specifyContract).toContain('4-6 artifact-grounded questions');
+    expect(specifyContract).toContain('problem, scope, impact surface, top UR/FR/entity, success criteria, risk, and unresolved questions');
+    expect(specifyContract).toContain('classification: `aligned`, `mismatch`, or `unclear`');
+  });
+
+  it('documents specify replay interview against the existing spec', () => {
+    expect(specifySkill).toContain('/tdk-specify <id> --interview');
+    expect(specifyContract).toContain('set `SPEC_REPLAY_INTERVIEW=true`');
+    expect(specifyContract).toContain('Spec replay interview requires existing `spec.md`');
+    expect(specifyContract).toContain('`--fast --interview` requires a feature description');
+    expect(specifyContract).toContain('If cleaned description is exactly `interview`, STOP before creation or replay routing');
+    expect(specifyContract).toContain('skip spec generation');
+    expect(specifyContract).toContain('skip duplicate-spec STOP');
+    expect(specifyContract).toContain('Did you mean `--interview`?');
+  });
+
+  it('does not treat positional interview as a supported mode', () => {
+    expect(combined).toContain('positional `interview`');
+    expect(combined).not.toContain('/tdk-discovery <epic-id> interview');
+    expect(combined).not.toContain('/tdk-specify <id> interview');
   });
 
   it('keeps discovery four-file and tracker-neutral contracts intact', () => {

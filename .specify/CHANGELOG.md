@@ -10,6 +10,26 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 
+## [1.88.0] - 2026-06-29
+
+### Added
+- **[tdk-specify]** Split complex workflow details into external reference files:
+  - `references/input-routing-and-mode-workflow.md` (covers input parsing, mode detection, and memory validation).
+  - `references/spec-generation-and-validation-workflow.md` (covers spec generation, interview gate, and quality checklist).
+
+### Changed
+- **[tdk-discovery]** Added support for `--interview` replay mode:
+  - Support `/tdk-discovery <epic-id> --interview` to run interviews on existing discovery files without a brief.
+  - Skips directory initialization and artifact generation during replay.
+  - Validates presence of only the four required discovery files.
+- **[tdk-specify]** Refactored skill structure and added replay mode:
+  - Restructured `SKILL.md` to reference externalized workflows.
+  - Support `/tdk-specify <id> --interview` to replay interviews on existing specifications.
+- **[Docs]** Updated asset names and documentation references:
+  - Renamed `pav-lifecycle-share-graph.png` to `tdk-lifecycle-share-graph.png`.
+  - Updated English and Vietnamese documentation, READMEs, epic start guides, and command references.
+- **[Scripts]** Updated test suites to cover new specify reference paths and verify line limit constraints.
+
 ## [1.87.0] - 2026-06-29
 
 ### Added

@@ -36,25 +36,48 @@ plan.md is implementation sequence for one spec
 | Situation | Start with | Why |
 |---|---|---|
 | The work is broad, vague, or has many possible MVP cuts | `/tdk-discovery` | You need epic-level problem, persona, and MVP context before a spec |
-| The generated discovery/spec could easily encode the wrong intent | Add `--interview` | The command asks artifact-grounded challenge questions before completion |
+| The generated discovery could easily encode the wrong intent | `/tdk-discovery <epic-id/spec-id> <brief\|file> --interview` | Discovery interview mode asks artifact-grounded challenge questions before completion |
+| Existing discovery or spec artifacts need another intent check | `/tdk-discovery <id> --interview` or `/tdk-specify <id> --interview` | ID-only interview mode rechecks current artifacts without regenerating them |
 | The feature is already clear and small | `/tdk-specify` | Discovery would add ceremony without reducing risk |
 | You are not sure who the users are | `/tdk-discovery` | Persona and jobs-to-be-done context should be captured first |
 | You already know scope, actors, acceptance criteria, and edge cases | `/tdk-specify` | The spec can be written directly |
 
 When in doubt, ask: "Can I write clear user requirements and success criteria now?" If no, run discovery first.
 
+Interview mode quick syntax:
+
+```text
+/tdk-discovery <epic-id/spec-id> <brief|file> --interview
+/tdk-discovery <epic-id/spec-id> --interview
+/tdk-specify <epic-id/spec-id> <description> --interview
+/tdk-specify <epic-id/spec-id> --interview
+```
+
+For creation-time interview, `<brief|file>` and `<description>` are required. For ID-only replay interview, the artifacts must already exist: discovery replay requires the four discovery files, and specify replay requires `spec.md`. Put `--interview` at the end of the command; positional `interview` is not a mode.
+
+For discovery, this looks like:
+
+```text
+/tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and moderation" --interview
+```
+
+Use creation-time interview before `/tdk-specify` when wrong epic context would be expensive. It writes the normal four discovery files first, asks 3-5 questions about concrete claims in those files, then folds accepted corrections or open questions back into the same discovery artifacts. Use ID-only replay later when you want to recheck the current files without regenerating them. It is not a separate command and does not create `discovery/interview.md`.
+
 ## Flow Diagram
 
 ```mermaid
 flowchart TD
-    A[Epic brief] --> B{Broad or unclear?}
+    A[Epic or feature brief] --> B{Broad or unclear?}
     B -->|Yes| C[/tdk-discovery/]
     B -->|No| D[/tdk-specify/]
     C --> D
     D --> E[/tdk-clarify/]
     E --> F{Unresolved Questions = None?}
     F -->|No| E
-    F -->|Yes| G{Need stakeholder design approval?}
+    F -->|Yes| S{Feature-sized?}
+    S -->|Yes| P[/tdk-plan/]
+    P --> Q[/tdk-implement/]
+    S -->|No| G{Need stakeholder design approval?}
     G -->|Yes| H[/tdk-high-level-design/]
     G -->|No| I[/tdk-task-breakdown/]
     H --> I
@@ -64,7 +87,24 @@ flowchart TD
     L --> M[Child: clarify -> plan -> implement]
 ```
 
-Feature-sized work can skip task breakdown and run `/tdk-plan` on the current spec directly. In this epic workflow, task breakdown feeds tracker sub-issues, and each sub-issue gets its own child spec loop.
+Feature-sized work should use the short path: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. In the epic workflow, task breakdown feeds tracker sub-issues, and each sub-issue gets its own child spec loop.
+
+![TDK Epic Start - Discovery to Task Breakdown](../../assets/tdk-epic-discovery-to-task-breakdown.png)
+
+## Canonical Epic Path
+
+Use one parent ID from discovery through task breakdown. Use new child IDs only after tracker sync or promotion.
+
+| Step | Command or action | Gate before next step |
+|---|---|---|
+| 1 | `/tdk-discovery <parent-id> <brief\|file> [--interview]` | `discovery/index.md` says the problem, personas, and MVP cut are ready enough for specify |
+| 2 | `/tdk-specify <parent-id> <description> [--interview]` | `spec.md` exists, `checklists/requirements.md` reviewed, and `UR-*` / `FR-*` / `SC-*` IDs are stable |
+| 3 | `/tdk-clarify <parent-id>` | `## 9. Unresolved Questions` is exactly `None` |
+| 4 | Optional `/tdk-high-level-design <parent-id>` | HLD index exists and any new requirement has gone back into `spec.md` |
+| 5 | `/tdk-task-breakdown <parent-id>` | `tasks-breakdown/index.md` lists every task file and every task cites source requirement IDs |
+| 6 | Consumer-owned tracker sync | Each tracker sub-issue has the task objective, scope, acceptance criteria, and source requirements |
+| 7 | `/tdk-specify <child-id> "<sub-issue or task content>"` | Child spec is scoped to one sub-issue, not the whole parent epic |
+| 8 | Child `/tdk-clarify` -> `/tdk-plan` -> `/tdk-implement` | Child spec is clarified before implementation planning |
 
 ## Output File Contents
 
@@ -147,17 +187,17 @@ The `tasks-breakdown/index.md` task table has:
 | `File` | Link to the task file |
 | `Status` | Empty for active work item, or `promoted -> <child-id>` when the work item became a child spec |
 
-Task breakdown is not an implementation plan. It creates portable work items that the consumer project can sync to GitHub, GitLab, Backlog, Jira, or another tracker.
+Task breakdown is not an implementation plan and does not create child specs by itself. It creates portable work items that the consumer project can sync to GitHub, GitLab, Backlog, Jira, or another tracker. After sync or promotion, update the parent `tasks-breakdown/index.md` row status to show the child relationship when your tracker workflow supports it.
 
 ### Tracker sub-issue and child spec outputs
 
 TDK core does not create external issues. After consumer-owned tracker sync, each external sub-issue should carry the task's objective, source requirements, scope, acceptance criteria, and notes.
 
-Then create a child spec from each sub-issue/task. The child spec output is the same shape as `spec.md`, but scoped to that one sub-issue. Only after the child spec is clarified should it move to `/tdk-plan` and `/tdk-implement`.
+Then create a child spec from each sub-issue/task using a new child ID. The child spec output is the same shape as `spec.md`, but scoped to that one sub-issue. Only after the child spec is clarified should it move to `/tdk-plan` and `/tdk-implement`.
 
 ## Skill Playbook
 
-### 1. `/tdk-discovery <epic-id> <brief|file> [--force] [--interview]`
+### 1. `/tdk-discovery <epic-id/spec-id> [<brief|file>] [--force] [--interview]`
 
 Use this only for epic-sized context before a feature spec.
 
@@ -167,15 +207,23 @@ Example:
 /tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and moderation"
 ```
 
+Interview example:
+
+```text
+/tdk-discovery <epic-id/spec-id> <brief|file> --interview
+/tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and moderation" --interview
+/tdk-discovery feat-001 --interview
+```
+
 | Item | Detail |
 |---|---|
-| Input | Epic ID plus a short brief or a workspace-local Markdown file |
+| Input | Epic ID plus a short brief or a workspace-local Markdown file; ID only when replaying existing discovery with `--interview` |
 | Reads | Project context, constitution, and memory when available |
 | Creates | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md` |
 | Main value | Frames the problem, users, MVP cutline, risks, and open questions |
 | Next command | `/tdk-specify <id> <description>` |
 
-Add `--interview` when the epic is broad, politically sensitive, or likely to hide intent mismatches. It asks targeted questions about the generated discovery artifacts, then folds accepted changes into the same four files. It does not create `discovery/interview.md` or tracker records.
+Add `--interview` with a brief when the epic is broad, politically sensitive, or likely to hide intent mismatches. It asks targeted questions about the generated discovery artifacts, then folds accepted changes into the same four files. Use `/tdk-discovery <id> --interview` only after the four discovery files already exist; replay reads and updates current artifacts without regenerating them. Neither form creates `discovery/interview.md` or tracker records.
 
 What it does not do:
 
@@ -187,9 +235,10 @@ Ready check:
 
 - Open `discovery/index.md`.
 - Check that problem, personas, and MVP scope are understandable.
+- If you used `--interview`, confirm accepted corrections appear in `problem.md`, `personas.md`, `mvp-scope.md`, or `index.md`, and unresolved points are in the relevant `## Open Questions`.
 - If the MVP boundary still feels vague, clarify the brief before moving on.
 
-### 2. `/tdk-specify <id> <desc> [--fast] [--interview]`
+### 2. `/tdk-specify <epic-id/spec-id> [<desc>] [--fast] [--interview]`
 
 Use this to create the feature specification. This is the source of truth for requirements.
 
@@ -199,15 +248,23 @@ Example:
 /tdk-specify feat-001 Add user avatar upload with image cropping and validation
 ```
 
+Interview example:
+
+```text
+/tdk-specify <epic-id/spec-id> <description> --interview
+/tdk-specify feat-001 Add user avatar upload with image cropping and validation --interview
+/tdk-specify feat-001 --interview
+```
+
 | Item | Detail |
 |---|---|
-| Input | Feature ID plus natural-language description |
-| Reads | Optional `discovery/index.md` if discovery exists |
+| Input | Feature ID plus natural-language description; ID only when replaying existing `spec.md` with `--interview` |
+| Reads | Optional `discovery/index.md` if discovery exists; existing `spec.md` for ID-only replay |
 | Creates | `spec.md`, `checklists/requirements.md` |
 | Main value | Defines problem, scope, impact surface, user requirements, functional requirements, success criteria, risks, and unresolved questions |
 | Next command | `/tdk-clarify <id>` |
 
-Add `--interview` when you want to challenge the draft spec against your intent before unresolved-question handling. `--fast --interview` is valid: `--fast` controls draft depth and `--interview` controls the alignment check.
+Add `--interview` with a description when you want to challenge the draft spec against your intent before unresolved-question handling. After `spec.md` exists, use `/tdk-specify <id> --interview` to replay the alignment gate without creating a new spec. `--fast --interview` is valid only with a description: `--fast` controls draft depth and `--interview` controls the alignment check.
 
 Requirement IDs start here:
 
@@ -405,6 +462,12 @@ If the problem and MVP are not fully clear:
 /tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and removal"
 ```
 
+If the generated discovery needs an alignment check before it influences requirements:
+
+```text
+/tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and removal" --interview
+```
+
 Then create the requirement source of truth:
 
 ```text
@@ -445,6 +508,10 @@ Repeat the child loop for each sub-issue. Do not plan and implement the parent e
 | Mistake | Correction |
 |---|---|
 | Running discovery for every small feature | Skip discovery when the feature is already clear |
+| Skipping discovery interview mode for high-risk epic context | Use `/tdk-discovery <epic-id/spec-id> <brief\|file> --interview` before `/tdk-specify` |
+| Regenerating artifacts just to recheck intent | Use `/tdk-discovery <id> --interview` or `/tdk-specify <id> --interview` after the artifacts already exist |
+| Typing positional `interview` as a mode | Use the `--interview` flag |
+| Looking for `discovery/interview.md` after `--interview` | Interview decisions are folded into the four existing discovery files |
 | Treating discovery as requirements | Only `spec.md` owns `UR-*`, `FR-*`, and `SC-*` |
 | Putting implementation details into spec | Keep spec focused on user value, behavior, scope, and success criteria |
 | Running HLD while unresolved questions remain | Run `/tdk-clarify` until unresolved questions are `None` |

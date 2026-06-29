@@ -36,24 +36,40 @@ plan.md là thứ tự triển khai cho một spec
 | Tình huống | Bắt đầu bằng | Lý do |
 |---|---|---|
 | Work còn rộng, mơ hồ, có nhiều cách cắt MVP | `/tdk-discovery` | Cần hiểu problem, persona, MVP trước khi viết spec |
+| Discovery có thể hiểu sai intent | `/tdk-discovery <epic-id/spec-id> <brief\|file> --interview` | Interview mode hỏi câu hỏi bám artifact trước khi hoàn tất discovery |
+| Artifact discovery hoặc spec đã có cần recheck intent | `/tdk-discovery <id> --interview` hoặc `/tdk-specify <id> --interview` | ID-only interview đọc artifact hiện tại, không regenerate |
 | Feature đã nhỏ và rõ | `/tdk-specify` | Discovery sẽ làm workflow nặng hơn mà không giảm risk |
 | Chưa rõ user/persona là ai | `/tdk-discovery` | Cần persona và jobs-to-be-done trước |
 | Đã rõ scope, actor, acceptance criteria, edge cases | `/tdk-specify` | Có thể viết spec trực tiếp |
 
 Câu hỏi nhanh: "Mình đã viết được user requirements và success criteria rõ ràng chưa?" Nếu chưa, chạy discovery trước.
 
+Syntax nhanh cho interview mode:
+
+```text
+/tdk-discovery <epic-id/spec-id> <brief|file> --interview
+/tdk-discovery <epic-id/spec-id> --interview
+/tdk-specify <epic-id/spec-id> <description> --interview
+/tdk-specify <epic-id/spec-id> --interview
+```
+
+Với creation-time interview, bắt buộc có `<brief|file>` hoặc `<description>`. Với ID-only replay interview, artifact phải tồn tại sẵn: discovery replay cần đủ bốn file discovery, specify replay cần `spec.md`. Luôn dùng flag `--interview`; positional `interview` không phải mode.
+
 ## Flow Tổng Quan
 
 ```mermaid
 flowchart TD
-    A[Epic brief] --> B{Rộng hoặc chưa rõ?}
+    A[Epic hoặc feature brief] --> B{Rộng hoặc chưa rõ?}
     B -->|Có| C[/tdk-discovery/]
     B -->|Không| D[/tdk-specify/]
     C --> D
     D --> E[/tdk-clarify/]
     E --> F{Unresolved Questions = None?}
     F -->|Không| E
-    F -->|Có| G{Cần duyệt design cấp cao?}
+    F -->|Có| S{Feature-sized?}
+    S -->|Có| P[/tdk-plan/]
+    P --> Q[/tdk-implement/]
+    S -->|Không| G{Cần duyệt design cấp cao?}
     G -->|Có| H[/tdk-high-level-design/]
     G -->|Không| I[/tdk-task-breakdown/]
     H --> I
@@ -63,9 +79,24 @@ flowchart TD
     L --> M[Child: clarify -> plan -> implement]
 ```
 
-Nếu work nhỏ kiểu feature-sized, có thể bỏ qua `task-breakdown` và chạy `/tdk-plan` trực tiếp trên spec hiện tại. Với epic workflow, `task-breakdown` tạo work items để sync sang tracker sub-issues, sau đó mỗi sub-issue có child spec riêng.
+Nếu work nhỏ kiểu feature-sized, dùng path ngắn: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. Với epic workflow, `task-breakdown` tạo work items để sync sang tracker sub-issues, sau đó mỗi sub-issue có child spec riêng.
 
-![TDK Epic Start - Discovery đến Task Breakdown](../assets/tdk-epic-discovery-to-task-breakdown.png)
+![TDK Epic Start - Discovery đến Task Breakdown](../../assets/tdk-epic-discovery-to-task-breakdown.png)
+
+## Đường Đi Chuẩn Cho Epic
+
+Dùng cùng một parent ID từ discovery đến task breakdown. Chỉ tạo child IDs mới sau tracker sync hoặc promotion.
+
+| Bước | Lệnh hoặc action | Gate trước khi đi tiếp |
+|---|---|---|
+| 1 | `/tdk-discovery <parent-id> <brief\|file> [--interview]` | `discovery/index.md` cho thấy problem, personas, MVP cut đủ rõ để specify |
+| 2 | `/tdk-specify <parent-id> <description> [--interview]` | `spec.md` tồn tại, `checklists/requirements.md` đã review, `UR-*` / `FR-*` / `SC-*` ổn định |
+| 3 | `/tdk-clarify <parent-id>` | `## 9. Unresolved Questions` đúng bằng `None` |
+| 4 | Optional `/tdk-high-level-design <parent-id>` | HLD index tồn tại và requirement mới, nếu có, đã quay lại `spec.md` |
+| 5 | `/tdk-task-breakdown <parent-id>` | `tasks-breakdown/index.md` list mọi task file và task nào cũng cite source requirement IDs |
+| 6 | Consumer-owned tracker sync | Mỗi tracker sub-issue có objective, scope, acceptance criteria, source requirements |
+| 7 | `/tdk-specify <child-id> "<sub-issue hoặc task content>"` | Child spec chỉ scope một sub-issue, không copy toàn bộ parent epic |
+| 8 | Child `/tdk-clarify` -> `/tdk-plan` -> `/tdk-implement` | Child spec đã clarify trước khi implementation planning |
 
 ## Nội Dung Output File
 
@@ -148,17 +179,17 @@ Bảng task trong `tasks-breakdown/index.md` có:
 | `File` | Link đến task file |
 | `Status` | Rỗng nghĩa là work item active, hoặc `promoted -> <child-id>` khi work item đã thành child spec |
 
-Task breakdown không phải implementation plan. Nó tạo portable work items để consumer project sync sang GitHub, GitLab, Backlog, Jira, hoặc tracker khác.
+Task breakdown không phải implementation plan và không tự tạo child specs. Nó tạo portable work items để consumer project sync sang GitHub, GitLab, Backlog, Jira, hoặc tracker khác. Sau sync hoặc promotion, update status row trong parent `tasks-breakdown/index.md` để thể hiện quan hệ child nếu tracker workflow hỗ trợ.
 
 ### Output của Tracker Sub-Issue và Child Spec
 
 TDK core không tạo external issues. Sau bước consumer-owned tracker sync, mỗi sub-issue bên ngoài nên chứa objective, source requirements, scope, acceptance criteria, và notes lấy từ task file.
 
-Sau đó tạo child spec từ từng sub-issue/task. Output của child spec có cùng shape với `spec.md`, nhưng scope chỉ nằm trong sub-issue đó. Chỉ khi child spec đã clarify xong mới đi tiếp sang `/tdk-plan` và `/tdk-implement`.
+Sau đó tạo child spec từ từng sub-issue/task bằng child ID mới. Output của child spec có cùng shape với `spec.md`, nhưng scope chỉ nằm trong sub-issue đó. Chỉ khi child spec đã clarify xong mới đi tiếp sang `/tdk-plan` và `/tdk-implement`.
 
 ## Playbook Từng Skill
 
-### 1. `/tdk-discovery <epic-id> <brief|file> [--force]`
+### 1. `/tdk-discovery <epic-id/spec-id> [<brief|file>] [--force] [--interview]`
 
 Dùng khi work đủ lớn để cần context cấp epic trước khi viết feature spec.
 
@@ -168,13 +199,23 @@ Ví dụ:
 /tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and moderation"
 ```
 
+Ví dụ interview:
+
+```text
+/tdk-discovery <epic-id/spec-id> <brief|file> --interview
+/tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and moderation" --interview
+/tdk-discovery feat-001 --interview
+```
+
 | Item | Chi tiết |
 |---|---|
-| Input | Epic ID + brief ngắn hoặc file Markdown trong workspace |
+| Input | Epic ID + brief ngắn hoặc file Markdown trong workspace; ID-only khi replay discovery đã có bằng `--interview` |
 | Reads | Project context, constitution, memory nếu có |
 | Creates | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md` |
 | Tác dụng | Làm rõ problem, users, MVP cutline, risks, open questions |
 | Lệnh tiếp theo | `/tdk-specify <id> <description>` |
+
+Thêm `--interview` với brief khi epic rộng, nhạy cảm, hoặc dễ ẩn intent mismatch. Nó hỏi câu hỏi bám artifact vừa tạo rồi fold accepted changes vào đúng bốn discovery files. Chỉ dùng `/tdk-discovery <id> --interview` sau khi bốn discovery files đã tồn tại; replay đọc và update artifact hiện tại, không regenerate. Cả hai dạng đều không tạo `discovery/interview.md` hoặc tracker record.
 
 Skill này không làm:
 
@@ -186,9 +227,10 @@ Checklist trước khi đi tiếp:
 
 - Mở `discovery/index.md`.
 - Kiểm tra problem, persona, MVP scope đã dễ hiểu chưa.
+- Nếu dùng `--interview`, kiểm tra accepted corrections đã nằm trong `problem.md`, `personas.md`, `mvp-scope.md`, hoặc `index.md`; unresolved points nằm trong `## Open Questions` phù hợp.
 - Nếu MVP boundary vẫn mơ hồ, làm rõ brief trước khi chạy `specify`.
 
-### 2. `/tdk-specify <id> <desc> [--fast]`
+### 2. `/tdk-specify <epic-id/spec-id> [<desc>] [--fast] [--interview]`
 
 Dùng để tạo feature specification. Đây là nguồn sự thật của requirements.
 
@@ -198,13 +240,23 @@ Ví dụ:
 /tdk-specify feat-001 Add user avatar upload with image cropping and validation
 ```
 
+Ví dụ interview:
+
+```text
+/tdk-specify <epic-id/spec-id> <description> --interview
+/tdk-specify feat-001 Add user avatar upload with image cropping and validation --interview
+/tdk-specify feat-001 --interview
+```
+
 | Item | Chi tiết |
 |---|---|
-| Input | Feature ID + mô tả bằng ngôn ngữ tự nhiên |
-| Reads | Optional `discovery/index.md` nếu đã có discovery |
+| Input | Feature ID + mô tả bằng ngôn ngữ tự nhiên; ID-only khi replay `spec.md` đã có bằng `--interview` |
+| Reads | Optional `discovery/index.md` nếu đã có discovery; existing `spec.md` cho ID-only replay |
 | Creates | `spec.md`, `checklists/requirements.md` |
 | Tác dụng | Định nghĩa problem, scope, impact surface, user requirements, functional requirements, success criteria, risks, unresolved questions |
 | Lệnh tiếp theo | `/tdk-clarify <id>` |
+
+Thêm `--interview` với description khi muốn challenge draft spec với intent của bạn trước unresolved-question handling. Sau khi `spec.md` tồn tại, dùng `/tdk-specify <id> --interview` để replay alignment gate mà không tạo spec mới. `--fast --interview` chỉ hợp lệ khi có description: `--fast` điều khiển độ sâu draft, `--interview` điều khiển alignment check.
 
 Requirement IDs bắt đầu từ đây:
 
@@ -402,6 +454,12 @@ Nếu problem và MVP chưa rõ:
 /tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and removal"
 ```
 
+Nếu discovery cần alignment check trước khi ảnh hưởng tới requirement:
+
+```text
+/tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and removal" --interview
+```
+
 Tạo requirement source of truth:
 
 ```text
@@ -442,6 +500,10 @@ Lặp child loop cho từng sub-issue. Không plan và implement parent epic nh�
 | Lỗi | Cách sửa |
 |---|---|
 | Chạy discovery cho mọi feature nhỏ | Bỏ qua discovery nếu feature đã rõ |
+| Bỏ qua discovery interview mode cho epic context rủi ro cao | Dùng `/tdk-discovery <epic-id/spec-id> <brief\|file> --interview` trước `/tdk-specify` |
+| Regenerate artifact chỉ để recheck intent | Dùng `/tdk-discovery <id> --interview` hoặc `/tdk-specify <id> --interview` sau khi artifact đã tồn tại |
+| Gõ positional `interview` như một mode | Dùng flag `--interview` |
+| Đi tìm `discovery/interview.md` sau `--interview` | Interview decisions được fold vào bốn discovery files hiện có |
 | Xem discovery là requirement | Chỉ `spec.md` sở hữu `UR-*`, `FR-*`, `SC-*` |
 | Nhét implementation detail vào spec | Giữ spec ở user value, behavior, scope, success criteria |
 | Chạy HLD khi unresolved questions vẫn còn | Chạy `/tdk-clarify` đến khi unresolved questions là `None` |

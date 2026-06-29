@@ -5,7 +5,7 @@
 
 ---
 
-![TDK lifecycle workflow](/tdk-docs/assets/diagrams/tdk-lifecycle-share-graph-v4.svg)
+![TDK lifecycle workflow](../../assets/tdk-lifecycle-share-graph.png)
 
 ## Full Workflow Flow
 
@@ -326,12 +326,12 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `.specify/configurations/golden-path/golden-path-scaffold-plan.md` | `/tdk-golden-path-scaffold --dry-run` | approved topology/config evidence, architecture decision/recovery, optional boundary policy | Human review before recipe approval | Optional skeleton plan |
 | `.specify/configurations/golden-path/golden-path-recipe.json` | `/tdk-golden-path-scaffold --dry-run` | scaffold plan and approved topology/config evidence | Set `status: approved` before guarded apply | Optional skeleton recipe |
 | `.specify/configurations/golden-path/generated-files-report.md` | `/tdk-golden-path-scaffold --dry-run` or `--yes` | recipe and safety gates | Review created/skipped/existing/refused paths | Scaffold report |
-| `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution | Optional context for `/tdk-specify` | Optional before specify |
-| `spec.md` | `/tdk-specify` | User description | `/tdk-plan`, all downstream | Feature start |
-| `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-ba-requirement` | After specify |
+| `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution; existing discovery files for ID-only `--interview` | Optional context for `/tdk-specify` | Optional before specify |
+| `spec.md` | `/tdk-specify` | User description, optional `discovery/index.md`; existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature start |
+| `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-high-level-design`, `/tdk-task-breakdown`, `/tdk-plan` | After specify |
 | `{docs.path}/custom-workflow/high-level-design-skill-routing.md` | Human-authored from `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` | Consumer HLD design skills | `/tdk-high-level-design` as advisory read-only routing | Optional project setup |
 | `high-level-design/` | `/tdk-high-level-design` | clarified `spec.md`; built-in lenses; optional HLD routing | `/tdk-task-breakdown` (optional enrichment) | Optional after clarify (greenfield) |
-| `tasks-breakdown/` | `/tdk-task-breakdown` | clarified `spec.md`; optional `high-level-design/` | Consumer-owned tracker sync | Optional after clarify |
+| `tasks-breakdown/` | `/tdk-task-breakdown` | clarified `spec.md`; optional `high-level-design/` | Consumer-owned tracker sync, then child spec seeding | Optional after clarify |
 | `ba-requirement.md` | `/tdk-ba-requirement` | `spec.md` | `/tdk-plan` | For Approval |
 | `plan.md` | `/tdk-plan` | `ba-requirement.md`, `constitution.md` | `plan.md ## Phases`, `/tdk-implement [--phase NN]` | Feature start |
 | `plan.md ## Phases` | `/tdk-plan` | `ba-requirement.md`, design artifacts | `/tdk-implement [--phase NN]` | Feature start |
@@ -398,15 +398,24 @@ flowchart TD
 
     DISCOVERY --> SPECIFY
     SPECIFY --> CLARIFY[tdk-clarify]
-    CLARIFY --> PLAN[tdk-plan]
-    PLAN --> IMPLEMENT[tdk-implement]
+    CLARIFY --> HLD{Need HLD?}
+    HLD -->|Yes| HLD_CMD[tdk-high-level-design]
+    HLD -->|No| EPIC_SIZE{Epic-sized?}
+    HLD_CMD --> EPIC_SIZE
+    EPIC_SIZE -->|Yes| BREAKDOWN[tdk-task-breakdown]
+    BREAKDOWN --> TRACKER[Consumer-owned tracker sync]
+    TRACKER --> CHILD_SPEC[child tdk-specify]
+    CHILD_SPEC --> CHILD_PLAN[child tdk-plan]
+    EPIC_SIZE -->|No| PLAN[tdk-plan]
+    CHILD_PLAN --> IMPLEMENT[tdk-implement]
+    PLAN --> IMPLEMENT
     
     UPDATE_CONTRACT --> PLAN
 
     classDef event fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef command fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
     class START event
-    class DISCOVERY,SPECIFY,CLARIFY,PLAN,IMPLEMENT command
+    class DISCOVERY,SPECIFY,CLARIFY,HLD_CMD,BREAKDOWN,CHILD_SPEC,CHILD_PLAN,PLAN,IMPLEMENT command
 ```
 
 ---
@@ -418,6 +427,7 @@ flowchart TD
 ├── discovery/                          # Optional epic discovery context
 ├── spec.md                             # Phase 0: Feature specification
 ├── high-level-design/                  # Optional approval-level design artifacts
+├── tasks-breakdown/                    # Optional portable work items for tracker sync
 ├── plan.md                             # Phase 1: Implementation plan
 ├── research/                           # Phase 1: Technology research
 ├── data-model.md                       # Phase 1: Entity definitions + enums

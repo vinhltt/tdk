@@ -1,16 +1,21 @@
 ---
 name: tdk-discovery
-description: "EPIC-ONLY v1 discovery entry point that creates context-only problem, persona, MVP, and index artifacts before tdk-specify"
-argument-hint: "<epic-id> <brief|file> [--force] [--interview]"
+description: "EPIC-ONLY v1 discovery entry point that creates context-only problem, persona, MVP, and index artifacts before tdk-specify, or interviews existing discovery artifacts with --interview"
+argument-hint: "<epic-id> [<brief|file>] [--force] [--interview]"
 metadata:
-  version: "5.9.0"
+  version: "5.10.0"
 ---
 
 # tdk-discovery
 
 Create bounded epic discovery context before `/tdk-specify`.
 
-Trigger: `/tdk-discovery <epic-id> <brief|file> [--force] [--interview]`
+Triggers:
+
+```text
+/tdk-discovery <epic-id> <brief|file> [--force] [--interview]
+/tdk-discovery <epic-id> --interview
+```
 
 ## Boundary Declaration
 
@@ -45,6 +50,8 @@ discovery's existing capabilities; recovery adds no new execution branch.
 |---|---|
 | Brief is vague or too thin to discover from | Ask targeted clarifying questions until the brief is clear enough for bounded discovery. If the user cannot clarify, STOP instead of inventing scope. |
 | Brief points to a missing, secret, dotenv, credential, token, or outside-workspace file | STOP and refuse, same as Step 2. |
+| `/tdk-discovery <epic-id> --interview` and all four discovery files exist | Run existing artifact interview replay. Do not regenerate discovery files. |
+| `/tdk-discovery <epic-id> --interview` and any discovery file is missing | STOP, same as Step 2. Tell the user to create discovery with a brief or file first. |
 | `discovery/index.md` already exists, no `--force` | STOP, same as Step 3. The user may move or archive the prior discovery manually, then re-run. |
 | `discovery/index.md` already exists, with `--force` | Reuse the directory and overwrite the four artifacts. |
 
@@ -93,7 +100,7 @@ Parse flags before resolving the brief:
 - If `--force` is present, set `FORCE_DISCOVERY=true`.
 - If `--interview` is present, set `INTERVIEW_DISCOVERY=true`.
 - Unknown flags STOP before any file is read or written. Report:
-  `Unknown flag: <flag>. Usage: /tdk-discovery <epic-id> <brief|file> [--force] [--interview]`.
+  `Unknown flag: <flag>. Usage: /tdk-discovery <epic-id> [<brief|file>] [--force] [--interview]`.
 - Strip `--force` and `--interview` from the second argument onward before
   treating the remaining text as the discovery brief or file path.
 
@@ -101,13 +108,42 @@ Use the cleaned second argument onward as the discovery brief. If it points to
 a workspace-local Markdown file, read that file as input. Refuse secret-like,
 dotenv, key, credential, token, or outside-workspace paths.
 
-If the brief is empty, STOP with:
+If the cleaned brief is exactly `interview`, STOP before creation or replay routing with:
+
+```text
+positional `interview` is not a mode. Did you mean `--interview`?
+```
+
+If the brief is empty and both `--force` and `--interview` are present, STOP with:
+
+```text
+`--force --interview` requires a replacement brief or file. Usage: /tdk-discovery <epic-id> <brief|file> --force --interview
+```
+
+If the brief is empty and `INTERVIEW_DISCOVERY=true`, set `DISCOVERY_REPLAY_INTERVIEW=true` and validate the existing discovery set before continuing:
+
+- Require `discovery/index.md`, `problem.md`, `personas.md`, and `mvp-scope.md`.
+- Before Step 4.5, verify `discovery/` contains exactly the four allowed files and no extras.
+- If any file is missing, STOP with:
+
+```text
+Discovery replay interview requires existing discovery artifacts: `discovery/index.md`, `problem.md`, `personas.md`, and `mvp-scope.md`. Create discovery first with /tdk-discovery <epic-id> <brief|file> --interview.
+```
+- If any extra discovery file exists, STOP before interviewing with:
+
+```text
+Discovery replay interview requires exactly the four discovery artifacts. Remove unexpected discovery files before rerunning --interview.
+```
+
+If the brief is empty and replay is not active, STOP with:
 
 ```text
 Description required. Usage: /tdk-discovery <epic-id> <brief|file> [--force] [--interview]
 ```
 
 ### Step 3 - Initialize Discovery Directory
+
+If `DISCOVERY_REPLAY_INTERVIEW=true`, skip Step 3 directory initialization and Step 4 artifact generation. The replay path must read and update only the existing four discovery artifacts validated in Step 2.
 
 Create the epic feature directory idempotently:
 
@@ -122,6 +158,8 @@ Discovery already exists. Re-run with --force only when you intend to replace di
 ```
 
 ### Step 4 - Write Discovery Artifacts
+
+If `DISCOVERY_REPLAY_INTERVIEW=true`, skip this step.
 
 Write exactly these files from local templates:
 
@@ -150,7 +188,8 @@ are updated only through `tdk-constitution`.
 ### Step 4.5 - Optional Interview Alignment Gate
 
 If `INTERVIEW_DISCOVERY=true`, run the interview after the four draft artifacts
-exist and before validation:
+exist for creation, or after the current artifacts are loaded for
+`DISCOVERY_REPLAY_INTERVIEW=true`, and before validation:
 
 1. Load `../_shared/interview-alignment-protocol.md`.
 2. Read `problem.md`, `personas.md`, `mvp-scope.md`, and `index.md`.
@@ -189,7 +228,7 @@ Report:
 
 - Discovery directory path
 - Files written
-- Whether interview alignment ran
+- Interview alignment: `creation`, `existing artifact`, or `disabled`
 - Whether product-level signal candidates need human review for a future
   `/tdk-constitution --update`
 - Readiness for `/tdk-specify <epic-id> <description>`. The `## Ready For Specify` checklist

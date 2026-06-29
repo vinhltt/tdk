@@ -21,7 +21,7 @@ After setup, use the workflow guides below.
 2. **Need a command?** → [Command Reference](guides/command-reference.md)
 3. **Want a workflow?** → [Scenarios](#scenarios) below
 
-![TDK lifecycle workflow](/tdk-docs/assets/diagrams/tdk-lifecycle-share-graph-v4.svg)
+![TDK lifecycle workflow](../assets/tdk-lifecycle-share-graph.png)
 
 ## Guides
 

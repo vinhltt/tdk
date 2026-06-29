@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.10.0] - 2026-06-29
+
+### Added
+- Split complex workflow details into external reference files: references/input-routing-and-mode-workflow.md, references/spec-generation-and-validation-workflow.md
+
+### Changed
+- [tdk-discovery] Added support for --interview replay mode
+- [tdk-specify] Refactored skill structure and added replay mode
+
 ## [5.9.2] - 2026-06-28
 
 ### Changed

@@ -10,7 +10,10 @@ const SPECIFY_DOCS_DIR = resolve(SPECIFY_DIR, 'docs');
 const README = resolve(PROJECT_ROOT, 'README.md');
 const AGENT = resolve(PLUGINS_DIR, 'tdk-memory/agents/tdk-memory-agent.md');
 const OLD_AGENT = resolve(PLUGINS_DIR, 'tdk-memory/agents/memory-guardian.md');
-const TDK_SPECIFY = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-specify/SKILL.md');
+const TDK_SPECIFY_INPUT_ROUTING = resolve(
+  PLUGINS_DIR,
+  'tdk-core/skills/tdk-specify/references/input-routing-and-mode-workflow.md',
+);
 const TDK_CLARIFY = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-clarify/SKILL.md');
 const TDK_ANALYZE = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-analyze/SKILL.md');
 const TDK_PLAN = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-plan/SKILL.md');
@@ -257,8 +260,8 @@ describe('tdk-memory-agent contract', () => {
   });
 
   it('tdk-specify validates raw requirements and persists accepted resolutions', () => {
-    const content = read(TDK_SPECIFY);
-    const memoryStep = markdownSection(content, '### Step 0.memory');
+    const content = read(TDK_SPECIFY_INPUT_ROUTING);
+    const memoryStep = markdownSection(content, '## Step 0.memory');
     expect(memoryStep).toContain('--mode validate');
     expect(memoryStep).not.toContain('--mode load');
     expect(memoryStep).toContain('Guardian Report');

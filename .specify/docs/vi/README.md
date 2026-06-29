@@ -19,6 +19,8 @@ Sau khi setup xong, quay lại các guide bên dưới để bắt đầu workfl
 | Xem đầy đủ tài liệu tiếng Anh | [English docs](../en/README.md) |
 | Xem command reference | [English command reference](../en/guides/command-reference.md) |
 
+![TDK lifecycle workflow](../assets/tdk-lifecycle-share-graph.png)
+
 ## Quy Ước
 
 - Tài liệu tiếng Việt nằm trong `docs/vi/guides/`.

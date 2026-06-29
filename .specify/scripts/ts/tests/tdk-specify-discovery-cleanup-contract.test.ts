@@ -6,6 +6,14 @@ const SPECIFY_SKILL_PATH = resolve(
   import.meta.dir,
   '../../../plugins/tdk-core/skills/tdk-specify/SKILL.md',
 );
+const SPECIFY_INPUT_ROUTING_REF_PATH = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-core/skills/tdk-specify/references/input-routing-and-mode-workflow.md',
+);
+const SPECIFY_GENERATION_REF_PATH = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-core/skills/tdk-specify/references/spec-generation-and-validation-workflow.md',
+);
 const SPEC_TEMPLATE_PATH = resolve(
   import.meta.dir,
   '../../../templates/spec-template.md.tpl',
@@ -17,14 +25,25 @@ function read(path: string): string {
 
 describe('tdk-specify discovery cleanup contract', () => {
   const skill = read(SPECIFY_SKILL_PATH);
+  const inputRoutingRef = read(SPECIFY_INPUT_ROUTING_REF_PATH);
+  const generationRef = read(SPECIFY_GENERATION_REF_PATH);
   const template = read(SPEC_TEMPLATE_PATH);
-  const combined = `${skill}\n${template}`;
+  const contract = `${skill}\n${inputRoutingRef}\n${generationRef}`;
+  const combined = `${contract}\n${template}`;
+
+  it('keeps specify skill and references within progressive-disclosure limits', () => {
+    expect(skill.split('\n').length).toBeLessThanOrEqual(300);
+    expect(inputRoutingRef.split('\n').length).toBeLessThanOrEqual(300);
+    expect(generationRef.split('\n').length).toBeLessThanOrEqual(300);
+    expect(skill).toContain('references/input-routing-and-mode-workflow.md');
+    expect(skill).toContain('references/spec-generation-and-validation-workflow.md');
+  });
 
   it('preserves optional discovery context from Plan 1', () => {
-    expect(skill).toContain('DISCOVERY_INDEX="$FEATURE_DIR/discovery/index.md"');
-    expect(skill).toContain('test -f "$DISCOVERY_INDEX"');
-    expect(skill).toContain('read it as optional context before spec generation');
-    expect(skill).toContain('Do not require discovery for normal specify flow');
+    expect(contract).toContain('DISCOVERY_INDEX="$FEATURE_DIR/discovery/index.md"');
+    expect(contract).toContain('test -f "$DISCOVERY_INDEX"');
+    expect(contract).toContain('read it as optional context before spec generation');
+    expect(contract).toContain('Do not require discovery for normal specify flow');
   });
 
   it('keeps the nine-section spec schema and current headings', () => {
@@ -46,10 +65,10 @@ describe('tdk-specify discovery cleanup contract', () => {
   });
 
   it('uses discovery as concise reference context for spec sections 1 and 4', () => {
-    expect(skill).toContain(
+    expect(contract).toContain(
       'Use discovery for concise source references in `## 1. Problem Statement` and `## 4. Evaluated Approaches`; do not copy discovery prose wholesale into `spec.md`.',
     );
-    expect(skill).toContain(
+    expect(contract).toContain(
       'Do not copy discovery content into `UR-*`, `FR-*`, or `SC-*`; derive explicit spec requirements from it.',
     );
     expect(template).toContain(

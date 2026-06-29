@@ -10,6 +10,14 @@ const SKILL_PATH = resolve(
   import.meta.dir,
   '../../../plugins/tdk-core/skills/tdk-specify/SKILL.md',
 );
+const INPUT_ROUTING_REF_PATH = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-core/skills/tdk-specify/references/input-routing-and-mode-workflow.md',
+);
+const GENERATION_REF_PATH = resolve(
+  import.meta.dir,
+  '../../../plugins/tdk-core/skills/tdk-specify/references/spec-generation-and-validation-workflow.md',
+);
 
 function read(path: string): string {
   return readFileSync(path, 'utf-8');
@@ -18,6 +26,9 @@ function read(path: string): string {
 describe('spec-template YAML frontmatter migration contract', () => {
   const template = read(TEMPLATE_PATH);
   const skill = read(SKILL_PATH);
+  const inputRoutingRef = read(INPUT_ROUTING_REF_PATH);
+  const generationRef = read(GENERATION_REF_PATH);
+  const contract = `${skill}\n${inputRoutingRef}\n${generationRef}`;
 
   describe('Template structure', () => {
     it('begins with YAML frontmatter block', () => {
@@ -54,27 +65,27 @@ describe('spec-template YAML frontmatter migration contract', () => {
 
   describe('Skill instruction on frontmatter emission', () => {
     it('instructs agent to emit schema_version in frontmatter', () => {
-      expect(skill).toContain('schema_version: 1');
+      expect(contract).toContain('schema_version: 1');
     });
 
     it('instructs agent to set memory_context_loaded based on memory validation', () => {
-      expect(skill).toContain('memory_context_loaded');
-      expect(skill).toContain('Step 0.memory');
-      expect(skill).toContain('true');
-      expect(skill).toContain('false');
+      expect(contract).toContain('memory_context_loaded');
+      expect(contract).toContain('Step 0.memory');
+      expect(contract).toContain('true');
+      expect(contract).toContain('false');
     });
 
     it('removes stale unconditional memory_context_loaded: false bullet', () => {
-      expect(skill).not.toContain(
+      expect(contract).not.toContain(
         'Note in `spec.md` frontmatter: `memory_context_loaded: false`',
       );
     });
 
     it('describes frontmatter emission in Step 2 specification section', () => {
-      expect(skill).toContain(
+      expect(contract).toContain(
         'Emit the YAML frontmatter block at the top with `title`, `status`, `branch`, `created`, `input`, `memory_context_loaded`',
       );
-      expect(skill).toContain('schema_version: 1');
+      expect(contract).toContain('schema_version: 1');
     });
   });
 });
