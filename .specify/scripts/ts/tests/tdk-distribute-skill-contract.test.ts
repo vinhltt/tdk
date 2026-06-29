@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const TDK_ROOT = resolve(import.meta.dir, '../../../..');
+const DISTRIBUTE_SH_PATH = resolve(TDK_ROOT, 'distribute.sh');
 const SKILL_PATHS = [
   resolve(TDK_ROOT, '.claude/skills/tdk-distribute/SKILL.md'),
   resolve(TDK_ROOT, '.agents/skills/tdk-distribute/SKILL.md'),
@@ -28,4 +29,22 @@ describe('tdk-distribute skill contract', () => {
       expect(skillText).not.toContain('path must exist or will be created on sync');
     });
   }
+
+  it('distribute.sh built-in fallback ships the full docs tree', () => {
+    const script = read(DISTRIBUTE_SH_PATH);
+    expect(script).toContain('"docs/"');
+    expect(script).not.toContain('"docs/setup/"');
+    expect(script).toContain('sync-config.yaml not found — using built-in include/exclude rules');
+  });
+
+  it('distribute.sh built-in fallback ships public schemas', () => {
+    const script = read(DISTRIBUTE_SH_PATH);
+    expect(script).toContain('"schemas/"');
+  });
+
+  it('distribute.sh built-in fallback ships the full template tree', () => {
+    const script = read(DISTRIBUTE_SH_PATH);
+    expect(script).toContain('"templates/"');
+    expect(script).not.toContain('"templates" "setup.sh"');
+  });
 });

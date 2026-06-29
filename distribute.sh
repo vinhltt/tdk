@@ -4,7 +4,8 @@
 # One-way sync of .specify/ substrate from TDK source to target project.
 # Legacy .claude/ sync remains available, but explicit harness mutation should use
 # `bun src/index.ts harness install --harness claude` from the consumer .specify/scripts/ts dir.
-# Reads include/exclude rules from sync-config.yaml. Compares files by MD5.
+# Uses built-in include/exclude rules, with optional legacy sync-config.yaml override.
+# Compares files by MD5.
 # Always shows dry-run summary first, then asks for confirmation before writing.
 #
 # Usage:
@@ -206,11 +207,11 @@ if [[ -f "$SYNC_CONFIG" ]] && command -v yq &>/dev/null; then
 elif [[ -f "$SYNC_CONFIG" ]]; then
     log "${YELLOW}Warning: yq not found — using fallback include/exclude rules${NC}"
     log "${YELLOW}Install yq for sync-config.yaml support: https://github.com/mikefarah/yq${NC}"
-    SPECIFY_INCLUDES=("_shared" "plugins/" "scripts" "templates" "setup.sh" "docs/setup/" "CHANGELOG.md" ".specify.yaml.example" ".specify.env.example" ".specify.json.example")
+    SPECIFY_INCLUDES=("_shared" "plugins/" "scripts" "templates/" "setup.sh" "docs/" "schemas/" "CHANGELOG.md" ".specify.yaml.example" ".specify.env.example" ".specify.json.example")
     SPECIFY_EXCLUDES=("configurations/" "memory/" ".specify.yaml" ".specify.env" "scripts/ts/node_modules/" "__pycache__/")
 else
-    log "${YELLOW}Warning: sync-config.yaml not found — using fallback rules${NC}"
-    SPECIFY_INCLUDES=("_shared" "plugins/" "scripts" "templates" "setup.sh" "docs/setup/" "CHANGELOG.md" ".specify.yaml.example" ".specify.env.example" ".specify.json.example")
+    log_dim "sync-config.yaml not found — using built-in include/exclude rules"
+    SPECIFY_INCLUDES=("_shared" "plugins/" "scripts" "templates/" "setup.sh" "docs/" "schemas/" "CHANGELOG.md" ".specify.yaml.example" ".specify.env.example" ".specify.json.example")
     SPECIFY_EXCLUDES=("configurations/" "memory/" ".specify.yaml" ".specify.env" "scripts/ts/node_modules/" "__pycache__/")
 fi
 
@@ -244,8 +245,13 @@ is_excluded() {
     local pattern
     for pattern in "$@"; do
         if [[ "$pattern" == */ ]]; then
-            # Directory match: prefix OR anywhere in path (e.g. __pycache__/)
-            [[ "$rel_path" == "$pattern"* || "$rel_path" == "${pattern%/}" || "$rel_path" == *"/$pattern"* ]] && return 0
+            # Directory excludes are root-anchored; cache dirs remain basename-matched.
+            local dir="${pattern%/}"
+            if [[ "$dir" == _*_cache__ ]]; then
+                [[ "$rel_path" == "$dir" || "$rel_path" == "$dir/"* || "$rel_path" == *"/$dir/"* ]] && return 0
+            else
+                [[ "$rel_path" == "$dir" || "$rel_path" == "$dir/"* ]] && return 0
+            fi
         else
             [[ "$rel_path" == "$pattern" ]] && return 0
         fi

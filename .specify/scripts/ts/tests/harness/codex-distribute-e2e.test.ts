@@ -56,6 +56,22 @@ function buildSyntheticSource(): string {
     'lib/demo.cjs': sha256(lib),
   });
 
+  const docsReadmePath = path.join(consumer.root, '.specify', 'docs', 'en', 'README.md');
+  fs.mkdirSync(path.dirname(docsReadmePath), { recursive: true });
+  fs.writeFileSync(docsReadmePath, '# TDK Guides\n\nDistributed docs fixture.\n', 'utf-8');
+
+  const schemaPath = path.join(consumer.root, '.specify', 'schemas', 'specify.schema.json');
+  fs.mkdirSync(path.dirname(schemaPath), { recursive: true });
+  fs.writeFileSync(schemaPath, '{"$schema":"https://json-schema.org/draft/2020-12/schema"}\n', 'utf-8');
+
+  const memoryTemplatePath = path.join(consumer.root, '.specify', 'templates', 'memory', 'decision-record-template.md.tpl');
+  fs.mkdirSync(path.dirname(memoryTemplatePath), { recursive: true });
+  fs.writeFileSync(memoryTemplatePath, '# Decision Record\n\nDistributed memory template fixture.\n', 'utf-8');
+
+  const memoryStatePath = path.join(consumer.root, '.specify', 'memory', 'constitution.md');
+  fs.mkdirSync(path.dirname(memoryStatePath), { recursive: true });
+  fs.writeFileSync(memoryStatePath, '# Local consumer memory must not distribute.\n', 'utf-8');
+
   // Run harness convert to generate .specify/codex-plugins/tdk-core/
   const convert = Bun.spawnSync({
     cmd: ['bun', cliPath, 'harness', 'convert', '--plugins', 'tdk-core'],
@@ -130,6 +146,22 @@ describe('codex distribute exclusion', () => {
       fs.existsSync(path.join(consumerRoot, '.specify', 'plugins', 'tdk-core')),
       '.specify/plugins/tdk-core/ must be distributed to the consumer',
     ).toBe(true);
+    expect(
+      fs.existsSync(path.join(consumerRoot, '.specify', 'docs', 'en', 'README.md')),
+      '.specify/docs/ must be distributed to the consumer',
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(consumerRoot, '.specify', 'schemas', 'specify.schema.json')),
+      '.specify/schemas/ must be distributed to the consumer',
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(consumerRoot, '.specify', 'templates', 'memory', 'decision-record-template.md.tpl')),
+      '.specify/templates/memory/ must be distributed to the consumer',
+    ).toBe(true);
+    expect(
+      fs.existsSync(path.join(consumerRoot, '.specify', 'memory', 'constitution.md')),
+      '.specify/memory/ state must stay local to the source project',
+    ).toBe(false);
 
     // PRIMARY guard: codex-plugins/ is intentionally NOT shipped to consumers.
     const codexPluginsDir = path.join(consumerRoot, '.specify', 'codex-plugins');
