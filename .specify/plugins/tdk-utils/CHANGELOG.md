@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.1.2] - 2026-06-29
+
+### Changed
+- Updated topic alias reference in setup guide skill
+
 ## [2.1.1] - 2026-06-28
 
 ### Changed

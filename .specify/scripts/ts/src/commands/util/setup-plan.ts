@@ -4,7 +4,7 @@
 import { existsSync, mkdirSync, copyFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson, parseFeatureId } from '../../utils/index';
+import { loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson, parseFeatureId, findConfigFile } from '../../utils/index';
 import { extractFrontmatter } from './parse-plan-frontmatter';
 
 const program = new Command()
@@ -14,8 +14,8 @@ const program = new Command()
   .option('--json', 'Output results in JSON format', false)
   .option('--force', 'Overwrite existing plan.md unconditionally', false)
   .action((taskId: string, opts: { json: boolean; force: boolean }) => {
-    const env = loadFeatureEnv();
     const repoRoot = getRepoRoot();
+    const env = loadFeatureEnv(findConfigFile(repoRoot));
 
     // Build feature dir path respecting folder/ticket split
     const id = taskId.toLowerCase();

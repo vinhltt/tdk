@@ -10,6 +10,22 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 
+## [1.87.0] - 2026-06-29
+
+### Added
+- **[General]** Added JSON schema validation for workspace configurations (`.specify/schemas/specify.schema.json`) and referenced it in config files
+- **[Scripts]** Added JSON Schema generation and directory rules config support
+  - Added JSON Schema generator utility (`config-json-schema.ts`) and test suite
+  - Added support for directory-based rules config (`rules.path` schema) in Zod types
+
+### Changed
+- **[Docs]** Updated installation setup guide README to document JSON format, JSON schema, and directory rules settings
+- **[Skills]** **[tdk-setup-guide]** Updated topic alias reference in setup guide skill
+- **[Scripts]** Refined configuration parsing and fixed test harness
+  - Documented configuration schema fields with Zod `.describe()` annotations
+  - Improved environment configuration loader path handling
+  - Fixed TTY restoration in checkbox selector test harness
+
 ## [1.86.0] - 2026-06-28
 
 ### Added

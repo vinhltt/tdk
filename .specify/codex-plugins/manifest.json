@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-28T14:53:35Z",
+  "generated_at": "2026-06-29T02:22:23Z",
   "plugins": {
     "tdk-core": {
       "version": "5.9.2",
@@ -185,9 +185,9 @@
       }
     },
     "tdk-utils": {
-      "version": "2.1.1",
+      "version": "2.1.2",
       "files": {
-        ".codex-plugin/plugin.json": "f11087d0cb2f79eae7c7db35f3c894290d3345d9a8a699224a02959f11f30ccf",
+        ".codex-plugin/plugin.json": "95d5a46ca26ad86a425042ab844f552b8ee386ebffeb2a9049bbd8d789352de7",
         "skills/brainstorming/SKILL.md": "583b1c8afc286ee95bba050548ce38fcd1f647c3376e8bad8aff1db7234a299b",
         "skills/brainstorming/scripts/README.md": "ee47937b3b2c9ce3e6d358b118c4f7693b3596b4085b93f0376e41b4028898e3",
         "skills/brainstorming/scripts/brainstorm.py": "ae22620928cbd69e03b05e4db707367bfb166b5c87eb70aa22114ddd6fd8461e",
@@ -250,7 +250,7 @@
         "skills/tdk-module-boundary-policy/templates/enforcement-snippets.md.tpl": "6deb87dbadd16fb8f3dd284bdf2722c9660220bcdb7edce88a1de85fbd360d5e",
         "skills/tdk-module-boundary-policy/templates/module-boundary-policy.md.tpl": "235c7e69fc3c588a38ee2b78755f338485ee70bd725b5498c817a166e9e26c45",
         "skills/tdk-scout/SKILL.md": "3ae073d7c22872345c67d1d8bf69c98fd601d99a49b0c8f8efbe86ce0be8fbf3",
-        "skills/tdk-setup-guide/SKILL.md": "b74f016fcc75acc0b7bf1ea8e5d4ea64d0eedd259e1f0c2374cbb5a0662dd007",
+        "skills/tdk-setup-guide/SKILL.md": "58c01c505210ac41cec7311b5d984737ad51bd6f05ca944f09d6f418585cfad9",
         "skills/tdk-skill-guide/SKILL.md": "538b36e23ac70eeac70977163ca21104b5c40c89fd9b60e1900262ad8b758042",
         "skills/tdk-validate-task-id/SKILL.md": "37fd8d518fa3de373b5a93c0384eee5b21fbc45ffe1264b6d490016745275f1b"
       }

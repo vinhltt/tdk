@@ -59,6 +59,18 @@ function suppressOutput() {
   return () => { stderrSpy.mockRestore(); stdoutSpy.mockRestore(); };
 }
 
+function forceStdinTTY(value: boolean): () => void {
+  const previous = Object.getOwnPropertyDescriptor(process.stdin, 'isTTY');
+  Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value });
+  return () => {
+    if (previous) {
+      Object.defineProperty(process.stdin, 'isTTY', previous);
+    } else {
+      delete (process.stdin as NodeJS.ReadStream & { isTTY?: boolean }).isTTY;
+    }
+  };
+}
+
 describe('harness install picker seam (mocked checkbox-capable terminal)', () => {
   test('omitted --harness + capable checkbox → picker IS called; codex proceeds into install pipeline', async () => {
     pickerResult = ['codex'];
@@ -92,17 +104,19 @@ describe('harness install picker seam (mocked checkbox-capable terminal)', () =>
     });
     const stdoutSpy = spyOn(process.stdout, 'write').mockImplementation(() => true);
     const exitSpy = spyOn(process, 'exit').mockImplementation((() => { throw new Error('exit-stub'); }) as never);
+    const restoreStdinTTY = forceStdinTTY(false);
 
     const cmd = createHarnessInstallCommand() as Command;
     try {
       await cmd.parseAsync([], { from: 'user' });
     } catch (_) {
       // Expected: no plugin selector was provided in this seam test.
+    } finally {
+      restoreStdinTTY();
+      stderrSpy.mockRestore();
+      stdoutSpy.mockRestore();
+      exitSpy.mockRestore();
     }
-
-    stderrSpy.mockRestore();
-    stdoutSpy.mockRestore();
-    exitSpy.mockRestore();
 
     expect(stderrChunks.join('')).not.toContain('Codex harness: coming soon');
     expect(stderrChunks.join('')).toContain('No plugin selector provided');

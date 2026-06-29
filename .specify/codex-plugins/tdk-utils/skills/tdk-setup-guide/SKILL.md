@@ -2,7 +2,7 @@
 name: tdk-setup-guide
 description: "Interactive setup guide for TDK environment. Checks prerequisites, verifies config, troubleshoots issues. Use when asking 'how to set up', 'setup help', 'verify setup', 'check prerequisites', 'tdk setup', 'installation guide', 'troubleshoot setup'."
 metadata:
-  version: "2.1.1"
+  version: "2.1.2"
 ---
 
 # TDK Setup Guide
@@ -144,7 +144,7 @@ test -f .mcp.json && echo ".mcp.json: EXISTS" || echo ".mcp.json: MISSING"
    - Try filename match: `Glob` `.specify/docs/en/guides/setup/*{topic}*`
    - If no match: `search_vault_smart(topic)` filtered to `docs/en/guides/setup/` path
 2. Read matched doc → display relevant sections
-3. If topic is about a specific step in speckit-setup-guide, extract just that section
+3. If topic is about a specific step in the setup README, extract just that section
 
 **Topic aliases:**
 

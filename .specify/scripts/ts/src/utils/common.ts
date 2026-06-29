@@ -32,8 +32,8 @@ const FEATURE_ENV_DEFAULTS: FeatureEnv = {
   validationHook: '',
 };
 
-export function loadFeatureEnv(configPath?: string): FeatureEnv {
-  const path = configPath ?? findConfigFile();
+export function loadFeatureEnv(configPath?: string | null): FeatureEnv {
+  const path = configPath === undefined ? findConfigFile() : configPath;
   if (!path) return { ...FEATURE_ENV_DEFAULTS };
   const { config } = parseConfig(path);
   if (!config) return { ...FEATURE_ENV_DEFAULTS };

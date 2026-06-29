@@ -1,0 +1,340 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/vinhltt/tdk/main/.specify/schemas/specify.schema.json",
+  "title": "TDK .specify.json",
+  "description": "Editor-facing JSON Schema for TDK workspace configuration.",
+  "type": "object",
+  "required": [
+    "name"
+  ],
+  "properties": {
+    "architecture": {
+      "description": "Optional architecture metadata.",
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "description": {
+          "description": "Optional human-readable architecture summary.",
+          "type": "string"
+        },
+        "type": {
+          "description": "Workspace architecture pattern.",
+          "type": "string",
+          "enum": [
+            "monolith",
+            "modular-monolith",
+            "microservices",
+            "layered-application"
+          ]
+        },
+        "communication": {
+          "description": "Service communication metadata.",
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "deployment": {
+          "description": "Deployment metadata.",
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "layers": {
+          "description": "Architecture layer metadata.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "stack": {
+          "description": "Technology stack metadata.",
+          "type": "object",
+          "additionalProperties": {}
+        }
+      }
+    },
+    "changelog": {
+      "description": "Changelog settings.",
+      "type": "object",
+      "properties": {
+        "exclude": {
+          "description": "Changelog exclusion globs.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commands": {
+      "description": "Plugin-specific command metadata.",
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "docs": {
+      "description": "Documentation settings.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "Project documentation path relative to the workspace root.",
+          "type": "string",
+          "default": ".specify/configurations"
+        },
+        "rules": {
+          "description": "Documentation rule file references.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sync": {
+          "description": "Documentation sync settings.",
+          "type": "object",
+          "properties": {
+            "backup": {
+              "description": "Create backups before docs sync writes.",
+              "type": "boolean",
+              "default": true
+            },
+            "exclude": {
+              "description": "Docs sync exclusion globs.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "git": {
+      "description": "Git workflow settings.",
+      "type": "object",
+      "properties": {
+        "mainBranch": {
+          "description": "Main branch name used by TDK workflows.",
+          "type": "string",
+          "default": "master"
+        },
+        "prefixList": {
+          "description": "Default ticket or branch prefix list.",
+          "type": "string",
+          "default": "feat"
+        }
+      }
+    },
+    "logLevel": {
+      "description": "TDK logging level.",
+      "type": "string",
+      "enum": [
+        "Trace",
+        "Debug",
+        "Information",
+        "Warning",
+        "Error",
+        "Critical"
+      ],
+      "default": "Information"
+    },
+    "memory": {
+      "description": "TDK memory settings.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "Memory storage path relative to the workspace root.",
+          "type": "string",
+          "default": ".specify/memory"
+        }
+      },
+      "default": {
+        "path": ".specify/memory"
+      }
+    },
+    "metadata": {
+      "description": "Plugin-specific metadata.",
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "name": {
+      "description": "Workspace name shown in config detection output.",
+      "type": "string",
+      "minLength": 1
+    },
+    "rules": {
+      "description": "Workspace rules configuration.",
+      "anyOf": [
+        {
+          "description": "Rules directory configuration.",
+          "type": "object",
+          "properties": {
+            "path": {
+              "description": "Directory containing Markdown rule files, relative to the workspace root.",
+              "type": "string",
+              "default": ".specify/rules"
+            }
+          }
+        },
+        {
+          "description": "Legacy inline rule definitions. Prefer rules.path for file-backed rules.",
+          "type": "array",
+          "items": {}
+        }
+      ]
+    },
+    "specs": {
+      "description": "Specification generation settings.",
+      "type": "object",
+      "properties": {
+        "defaultFolder": {
+          "description": "Default folder for generated feature specs.",
+          "type": "string",
+          "default": "feature"
+        },
+        "root": {
+          "description": "Root folder for generated specs.",
+          "type": "string",
+          "default": ".specify"
+        },
+        "ticketFormat": {
+          "description": "Regular expression used to parse ticket identifiers.",
+          "type": "string",
+          "default": "^([a-zA-Z]+/)?([a-zA-Z]+)-([0-9]+)$"
+        }
+      }
+    },
+    "subWorkspaces": {
+      "description": "Child workspaces managed by this TDK config.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "path"
+        ],
+        "properties": {
+          "docs": {
+            "description": "Sub-workspace documentation settings.",
+            "type": "object",
+            "properties": {
+              "path": {
+                "description": "Documentation path override for this sub-workspace.",
+                "type": "string"
+              }
+            }
+          },
+          "hasModules": {
+            "description": "Whether this sub-workspace should be treated as modular.",
+            "type": "boolean"
+          },
+          "modules": {
+            "description": "Optional modules inside this sub-workspace.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "name",
+                "path"
+              ],
+              "properties": {
+                "name": {
+                  "description": "Module identifier used by TDK commands.",
+                  "type": "string",
+                  "pattern": "^[a-zA-Z0-9._-]+$"
+                },
+                "path": {
+                  "description": "Module path relative to its sub-workspace.",
+                  "type": "string",
+                  "minLength": 1
+                },
+                "testPath": {
+                  "description": "Optional test path for this module.",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "name": {
+            "description": "Sub-workspace identifier.",
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "description": "Sub-workspace path relative to the workspace root.",
+            "type": "string",
+            "minLength": 1
+          },
+          "testMapping": {
+            "description": "Optional test mapping behavior for this sub-workspace.",
+            "type": "object",
+            "properties": {
+              "exclude": {
+                "description": "Source and test globs excluded from test mapping.",
+                "type": "object",
+                "properties": {
+                  "source": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  },
+                  "test": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "default": []
+                  }
+                }
+              },
+              "strategy": {
+                "description": "How tests are mapped for this sub-workspace.",
+                "type": "string",
+                "enum": [
+                  "co-location",
+                  "mirror",
+                  "separate-project"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "test": {
+      "description": "tdk-test-api plugin settings.",
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "validation": {
+      "description": "Validation hook settings.",
+      "type": "object",
+      "properties": {
+        "failBehavior": {
+          "description": "Behavior when validation fails.",
+          "type": "string",
+          "enum": [
+            "exit",
+            "warn"
+          ],
+          "default": "exit"
+        },
+        "hook": {
+          "description": "Optional validation hook command.",
+          "type": "string"
+        },
+        "timeout": {
+          "description": "Validation hook timeout in seconds.",
+          "type": "number",
+          "default": 30
+        }
+      }
+    },
+    "version": {
+      "description": "TDK config schema version.",
+      "type": "string",
+      "default": "1.0"
+    }
+  }
+}

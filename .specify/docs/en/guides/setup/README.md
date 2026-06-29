@@ -75,24 +75,34 @@ After registering, set up the required MCP integrations:
 - **[Context7 Plugin Setup](ctx7-mcp-setup.md)** *(required — enables docs-seeker)*
 - **[GitHub MCP Setup](github-mcp-setup.md)** *(optional — enables GitHub repo browsing)*
 
-## 5. .specify.json (Reference Only)
+## 5. Configuration (Reference Only)
 
 The workspace config at [`.specify/.specify.json`](../../../../.specify.json) is already committed. No action needed.
 
 Simplified view of current config:
 
-```yaml
-version: "1.0"
-name: "example-workspace"
-architecture:
-  type: "modular-monolith"
-docs:
-  path: ".specify/configurations"
-sub-workspaces:
-  - name: "frontend"
-    path: "frontend"
-  - name: "backend"
-    path: "backend"
+```json
+{
+  "$schema": "./schemas/specify.schema.json",
+  "version": "1.0",
+  "name": "example-workspace",
+  "architecture": {
+    "type": "modular-monolith"
+  },
+  "docs": {
+    "path": ".specify/configurations"
+  },
+  "subWorkspaces": [
+    {
+      "name": "frontend",
+      "path": "frontend"
+    },
+    {
+      "name": "backend",
+      "path": "backend"
+    }
+  ]
+}
 ```
 
 ### Field Reference
@@ -100,12 +110,30 @@ sub-workspaces:
 | Field | Required | Purpose |
 |-------|----------|---------|
 | `version` | Yes | Config schema version (currently `1.0`) |
-| `name` | Yes | Workspace identifier — appears as `WORKSPACE_NAME` in `detect-config.ts` output |
+| `name` | Yes | Workspace identifier — appears as `workspaceName` in `detect-config.ts` output |
 | `architecture.type` | Yes | Codebase pattern: `monolith`, `modular-monolith`, `microservices`, or `layered-application`. Used for project-init auto-detection |
-| `docs.path` | Yes | Where TDK stores project documentation, relative to repo root |
-| `sub-workspaces` | No | List of child workspaces (`name` + `path`). `detect-config.ts` auto-detects which sub-workspace you're in based on CWD |
+| `docs.path` | No | Where TDK stores project documentation, relative to repo root. Defaults to `.specify/configurations` when omitted |
+| `subWorkspaces` | No | List of child workspaces (`name` + `path`). `detect-config.ts` auto-detects which sub-workspace you're in based on CWD |
+| `rules.path` | No | Directory for Markdown rule files. Defaults to `.specify/rules` when omitted |
 
-> **Tip:** See `.specify/.specify.yaml.example` for a full template with all optional fields documented.
+> **Tip:** See `.specify/.specify.json.example` for a full template with all optional fields documented.
+
+### JSON Schema
+
+TDK commits a generated JSON Schema at `.specify/schemas/specify.schema.json` for editor autocomplete, validation hints, and field descriptions. Runtime validation still comes from the TypeScript Zod parser used by TDK commands.
+
+To opt in per workspace config:
+
+```json
+{
+  "$schema": "./schemas/specify.schema.json",
+  "name": "example-workspace"
+}
+```
+
+TDK does not automatically add `$schema` to consumer configs. If you do not want to edit `.specify/.specify.json`, configure your editor to associate `.specify/.specify.json` with `.specify/schemas/specify.schema.json`.
+
+Defaults may be applied by the runtime parser without being written back to the file. Unknown top-level keys are tolerated during runtime parse for plugin-owned metadata, but only documented fields are supported as the public config contract.
 
 This file is used by `detect-config.ts` to discover workspace settings. Modify only if workspace structure changes.
 
@@ -161,15 +189,16 @@ In Claude Code, the `/tdk-` command prefix should be visible. Key commands:
 ```
 consumer-project/
 ├── .specify/
-│   ├── .specify.yaml              # Workspace config
+│   ├── .specify.json              # Workspace config
+│   ├── .specify.json.example      # Config template
 │   ├── .specify.env.example       # Env template (copy to .specify.env)
 │   ├── scripts/bash/              # Automation scripts
 │   │   └── ...
+│   ├── schemas/                   # JSON Schema for editor validation
 │   ├── docs/                      # All TDK documentation
 │   │   ├── README.md              # Language index
 │   │   ├── en/                    # English docs
-│   │   │   ├── setup/             # Installation & configuration guides
-│   │   │   └── scenarios/         # Workflow scenarios
+│   │   │   └── guides/            # Guides, setup docs, workflow scenarios
 │   │   └── vi/                    # Vietnamese docs
 │   ├── configurations/            # Project documentation
 │   ├── plugins/       # Bundled Claude Code plugins & skills

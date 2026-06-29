@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-28T14:53:35Z",
+  "generated_at": "2026-06-29T02:22:23Z",
   "plugins": {
     "tdk-core": {
       "version": "5.9.2",
@@ -383,7 +383,7 @@
       }
     },
     "tdk-utils": {
-      "version": "2.1.1",
+      "version": "2.1.2",
       "components": {
         "skills": {
           "brainstorming": {
@@ -423,7 +423,7 @@
             "version": "1.11.4"
           },
           "tdk-setup-guide": {
-            "version": "2.1.1"
+            "version": "2.1.2"
           },
           "tdk-skill-guide": {
             "version": "2.1.1"
@@ -454,10 +454,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e68f07c43a122d63dbd44fafbd978b0adb4f5f18bb95537f80014e859846f8b4",
-        ".claude-plugin/plugin.json": "fa8710c789f5a4e0887c39d2398d8632beb344e9489adb91222d56b3a648ae3b",
-        ".codex-plugin/plugin.json": "fa8710c789f5a4e0887c39d2398d8632beb344e9489adb91222d56b3a648ae3b",
-        ".cursor-plugin/plugin.json": "fa8710c789f5a4e0887c39d2398d8632beb344e9489adb91222d56b3a648ae3b",
-        "CHANGELOG.md": "59fe5644a9892d8be6f6a6e61af94b6778df1bb0ba1f38d5a178b572fe5f49b9",
+        ".claude-plugin/plugin.json": "4edd9f6d573cc4b0375d66525ea6ace5b1962b106a63dea2473063977f7e231d",
+        ".codex-plugin/plugin.json": "4edd9f6d573cc4b0375d66525ea6ace5b1962b106a63dea2473063977f7e231d",
+        ".cursor-plugin/plugin.json": "4edd9f6d573cc4b0375d66525ea6ace5b1962b106a63dea2473063977f7e231d",
+        "CHANGELOG.md": "39ee656437cb78bc015bb491ad71b1eb969b9750898ccdfe9f7cafd8c99c44f1",
         "agents/researcher.md": "239051264f41b129ef5c59adb573b7e762a528bb58d0ff8dd1e32eee243baaaf",
         "agents/tdk-red-team-reliability.md": "8585ee27a9d1f6b79b9988fc6020317baa3be7e37f80be9086708bfc35c74ea8",
         "agents/tdk-red-team-security.md": "8e808e7330b21e83e830f70bf6221150ba0e91d235061ba0c6b2a32060ea7a33",
@@ -525,7 +525,7 @@
         "skills/tdk-module-boundary-policy/templates/enforcement-snippets.md.tpl": "6deb87dbadd16fb8f3dd284bdf2722c9660220bcdb7edce88a1de85fbd360d5e",
         "skills/tdk-module-boundary-policy/templates/module-boundary-policy.md.tpl": "235c7e69fc3c588a38ee2b78755f338485ee70bd725b5498c817a166e9e26c45",
         "skills/tdk-scout/SKILL.md": "3ae073d7c22872345c67d1d8bf69c98fd601d99a49b0c8f8efbe86ce0be8fbf3",
-        "skills/tdk-setup-guide/SKILL.md": "b74f016fcc75acc0b7bf1ea8e5d4ea64d0eedd259e1f0c2374cbb5a0662dd007",
+        "skills/tdk-setup-guide/SKILL.md": "58c01c505210ac41cec7311b5d984737ad51bd6f05ca944f09d6f418585cfad9",
         "skills/tdk-skill-guide/SKILL.md": "538b36e23ac70eeac70977163ca21104b5c40c89fd9b60e1900262ad8b758042",
         "skills/tdk-validate-task-id/SKILL.md": "37fd8d518fa3de373b5a93c0384eee5b21fbc45ffe1264b6d490016745275f1b"
       }

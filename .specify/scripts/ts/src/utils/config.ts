@@ -248,7 +248,7 @@ export function detectConfig(opts: DetectConfigOptions = {}): ConfigResult {
     docsSyncBackup: config.docs?.sync?.backup ?? true,
     docsSyncExclude: config.docs?.sync?.exclude ?? [],
     rulesFiles: config.docs?.rules ?? [],
-    inlineRules: config.rules ?? [],
+    inlineRules: Array.isArray(config.rules) ? config.rules : [],
     metadata: config.metadata ?? {},
     commands: config.commands ?? {},
     specsRoot: config.specs?.root ?? '.specify',

@@ -17,6 +17,8 @@ import {
 } from '../../src/utils/index';
 import { SpecifyConfigSchema, type TestStrategy } from '../../src/utils/types';
 
+const TDK_CONFIG_PATH = resolve(import.meta.dir, '../../../../.specify.json');
+
 describe('config.test.ts', () => {
   let tempDir: string;
 
@@ -104,6 +106,48 @@ describe('config.test.ts', () => {
 
     const defaulted = SpecifyConfigSchema.parse({ name: 'default-memory' });
     expect(defaulted.memory?.path).toBe('.specify/memory');
+  });
+
+  it('C-05c: parseConfig accepts current TDK config with rules.path', () => {
+    const { config: parsed, error } = parseConfig(TDK_CONFIG_PATH);
+    expect(error).toBeNull();
+    expect(parsed?.name).toBe('tdk');
+    expect(parsed?.rules).toEqual({ path: '.specify/rules' });
+    expect('$schema' in (parsed as Record<string, unknown>)).toBe(false);
+  });
+
+  it('C-05d: parseConfig accepts rules.path config', () => {
+    const specDir = join(tempDir, '.specify');
+    mkdirSync(specDir);
+    const configPath = join(specDir, '.specify.json');
+    writeFileSync(configPath, JSON.stringify({
+      name: 'rules-path-workspace',
+      rules: { path: '.specify/rules' },
+    }));
+
+    const { config: parsed, error } = parseConfig(configPath);
+    expect(error).toBeNull();
+    expect(parsed?.rules).toEqual({ path: '.specify/rules' });
+  });
+
+  it('C-05e: detectConfig exposes inlineRules only for legacy rules arrays', () => {
+    const specDir = join(tempDir, '.specify');
+    mkdirSync(specDir);
+    const configPath = join(specDir, '.specify.json');
+    writeFileSync(configPath, JSON.stringify({
+      name: 'rules-path-workspace',
+      rules: { path: '.specify/rules' },
+    }));
+
+    expect(detectConfig({ cwd: tempDir }).inlineRules).toEqual([]);
+
+    const inlineRules = [{ path: 'src/**/*.ts', content: 'Use strict TypeScript.' }];
+    writeFileSync(configPath, JSON.stringify({
+      name: 'inline-rules-workspace',
+      rules: inlineRules,
+    }));
+
+    expect(detectConfig({ cwd: tempDir }).inlineRules).toEqual(inlineRules);
   });
 
   it('C-06: parseConfig invalid JSON → error', () => {
