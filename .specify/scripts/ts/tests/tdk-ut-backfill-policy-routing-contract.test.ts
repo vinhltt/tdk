@@ -22,7 +22,8 @@ describe('TDK UT backfill module policy routing contracts', () => {
 
   it('routes missing module ownership to topology and policy workflow', () => {
     expect(skill).toContain('/tdk-boundary-map');
-    expect(skill).toContain('/tdk-workspace-topology-apply --dry-run');
+    expect(skill).toContain('/tdk-workflow-config-apply');
+    expect(skill).not.toContain('/tdk-workflow-config-apply --dry-run');
     expect(skill).toContain('/tdk-module-boundary-policy');
     expect(skill).toContain('does not edit `.specify/.specify.json`');
     expect(skill).toContain('Proceed at sub-workspace level');
@@ -31,7 +32,8 @@ describe('TDK UT backfill module policy routing contracts', () => {
   it('documents topology as the durable module ownership path', () => {
     expect(usage).toContain('Durable module ownership belongs in topology');
     expect(usage).toContain('/tdk-boundary-map');
-    expect(usage).toContain('/tdk-workspace-topology-apply --dry-run');
+    expect(usage).toContain('/tdk-workflow-config-apply');
+    expect(usage).not.toContain('/tdk-workflow-config-apply --dry-run');
     expect(usage).toContain('/tdk-module-boundary-policy');
   });
 });

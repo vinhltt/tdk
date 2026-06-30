@@ -8,9 +8,9 @@ related-skills:
   - tdk-brownfield-start
   - tdk-scout
   - tdk-boundary-map
-  - tdk-workspace-topology-apply
+  - tdk-workflow-config-apply
 metadata:
-  version: "5.6.0"
+  version: "5.10.1"
   author: "VinhLTT"
   category: architecture-workflow
 ---

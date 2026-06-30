@@ -6,7 +6,7 @@
   "owner": "product-team",
   "contracts": ["workspace-topology-proposal"],
   "routing": {
-    "next": "/tdk-workspace-topology-apply --dry-run"
+    "next": "/tdk-workflow-config-apply"
   },
   "subWorkspaces": [
     {
@@ -17,7 +17,7 @@
       "contracts": ["http-api"],
       "allowedDependencies": ["shared"],
       "routing": {
-        "next": "/tdk-workspace-topology-apply --dry-run"
+        "next": "/tdk-workflow-config-apply"
       },
       "docs": {
         "path": "docs/app"

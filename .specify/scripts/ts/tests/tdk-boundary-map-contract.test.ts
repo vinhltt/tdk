@@ -46,8 +46,8 @@ const REQUIRED_REPORT_ONLY_FIELDS = [
 
 const FORBIDDEN_PROMISES = [
   'supports `--yes`',
-  'run `/tdk-workspace-topology-apply`',
-  'execute `/tdk-workspace-topology-apply`',
+  'run `/tdk-workflow-config-apply`',
+  'execute `/tdk-workflow-config-apply`',
   'apply topology changes',
   'Create the proposal directory if needed',
   'create the proposal directory',
@@ -165,17 +165,18 @@ describe('TDK boundary-map contracts', () => {
     expect(combined).toContain('does not enforce module boundaries');
   });
 
-  it('keeps topology apply dry-run-first while adding boundary-map route docs', () => {
-    const topologyApply = read(join(CORE_SKILLS_DIR, 'tdk-workspace-topology-apply/SKILL.md'));
+  it('keeps workflow config apply interactive while adding boundary-map route docs', () => {
+    const topologyApply = read(join(CORE_SKILLS_DIR, 'tdk-workflow-config-apply/SKILL.md'));
     const commandReference = read(join(DOCS_DIR, 'command-reference.md'));
     const documentFlow = read(join(DOCS_DIR, 'document-flow.md'));
 
-    expect(topologyApply).toContain('dry-run is the default');
-    expect(topologyApply).toContain('guarded two-step');
+    expect(topologyApply).toContain('no flags is the default human mode');
+    expect(topologyApply).toContain('Apply this workflow config patch to `.specify/.specify.json`?');
+    expect(topologyApply).toContain('user copy it manually');
     expect(topologyApply).toContain('`--yes` without `--expect-hash` exits 1');
     expect(topologyApply).toContain('deferred: first-time config creation');
     expect(commandReference).toContain('/tdk-boundary-map [input|file] [--from-existing|--unknown]');
-    expect(commandReference).toContain('guarded config apply');
+    expect(commandReference).toContain('Interactive runtime config review/apply');
     expect(documentFlow).toContain('/tdk-boundary-map');
   });
 

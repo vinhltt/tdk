@@ -145,7 +145,7 @@ bun src/commands/manifest/compute.ts --root ../..
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
-| **tdk-core** | 23 skills + 1 agent | Greenfield/brownfield start, architecture advisor, boundary map, topology apply, constitution, discovery, specify, clarify, HLD, task breakdown, plan, implement, config, sub-workspace, ut-backfill |
+| **tdk-core** | 23 skills + 1 agent | Greenfield/brownfield start, architecture advisor, boundary map, workflow config apply, constitution, discovery, specify, clarify, HLD, task breakdown, plan, implement, config, sub-workspace, ut-backfill |
 | **tdk-utils** | 15 skills + 5 agents | Scout, research, module boundary policy, brainstorming, docs-seeker, context-engineering, problem-solving |
 | **tdk-memory** | 5 skills + 1 agent | Domain memory: init, update, checksum, changelog, query, and tdk-memory-agent |
 | **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |

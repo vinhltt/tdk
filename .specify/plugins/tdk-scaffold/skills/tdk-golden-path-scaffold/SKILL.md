@@ -6,10 +6,10 @@ argument-hint: "[topology|file] [--dry-run|--yes] [--preset <name>]"
 related-skills:
   - tdk-architecture-advisor
   - tdk-boundary-map
-  - tdk-workspace-topology-apply
+  - tdk-workflow-config-apply
   - tdk-module-boundary-policy
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   author: "VinhLTT"
   category: scaffold
 ---

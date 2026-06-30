@@ -92,8 +92,8 @@ const FORBIDDEN_RUNTIME_REFERENCES = [
 
 const FORBIDDEN_ADVISOR_PROMISES = [
   'supports `--yes`',
-  'execute `/tdk-workspace-topology-apply`',
-  'run `/tdk-workspace-topology-apply`',
+  'execute `/tdk-workflow-config-apply`',
+  'run `/tdk-workflow-config-apply`',
   'scaffold source',
   'create GitHub issues',
   'write docs/decisions/',

@@ -10,6 +10,25 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 
+## [1.89.0] - 2026-06-30
+
+### Added
+- **[tdk-workflow-config-apply]** Added new skill to preview or apply workflow configuration patches to `.specify/.specify.json` (renamed from `tdk-workspace-topology-apply` to support a new default interactive review and apply flow).
+- **[Docs]** Added new greenfield walkthrough scenario: `14-greenfield-full-start-architecture-topology.md`.
+
+### Changed
+- **[tdk-core]** Updated related skills and references to use `tdk-workflow-config-apply` instead of `tdk-workspace-topology-apply` (in `tdk-architecture-advisor`, `tdk-boundary-map`, `tdk-brownfield-start`, `tdk-greenfield-start`, and `tdk-ut-backfill-plan`).
+- **[tdk-scaffold]** Updated `tdk-golden-path-scaffold` references to point to `tdk-workflow-config-apply`.
+- **[tdk-utils]** Updated `tdk-module-boundary-policy` references to point to `tdk-workflow-config-apply`.
+- **[Docs]** Updated command reference, document flow, and usage guides to reference the renamed `/tdk-workflow-config-apply` command and its interactive flow.
+- **[Scripts]** Updated test suites and contract tests to use the renamed skill.
+
+### Removed
+- **[tdk-workspace-topology-apply]** Removed skill (renamed to `tdk-workflow-config-apply`).
+
+
+
+
 ## [1.88.0] - 2026-06-29
 
 ### Added

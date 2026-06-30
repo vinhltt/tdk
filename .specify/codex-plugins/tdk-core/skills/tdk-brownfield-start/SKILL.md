@@ -6,10 +6,10 @@ argument-hint: "[repo-root] [--full|--config-only|--unknown]"
 related-skills:
   - tdk-scout
   - tdk-architecture-advisor
-  - tdk-workspace-topology-apply
+  - tdk-workflow-config-apply
   - tdk-sub-workspace-docs
 metadata:
-  version: "5.7.0"
+  version: "5.10.1"
   author: "VinhLTT"
   category: architecture-workflow
 ---
@@ -139,12 +139,12 @@ Required report sections:
      ```bash
      /tdk-scout --scope <repo-root> --task-hint "brownfield onboarding"
      /tdk-architecture-advisor --recover-existing <brownfield-onboarding.md>
-     /tdk-workspace-topology-apply --dry-run --reconcile
+     /tdk-workflow-config-apply --reconcile
      /tdk-sub-workspace-docs --all
      ```
    - Typical `--config-only` recommendation chain:
      ```bash
-     /tdk-workspace-topology-apply --dry-run --reconcile
+     /tdk-workflow-config-apply --reconcile
      ```
    - For `--unknown`, recommend the single next route with the strongest evidence, usually `tdk-scout` for structure or `tdk-discovery` for missing product intent.
 
@@ -153,14 +153,14 @@ Required report sections:
 | Mode | Behavior |
 |---|---|
 | `--full` | Observe repo shape, current config, docs, tests, CI, and package commands. Write the report and recommend scout, topology dry-run, and docs generation when evidence supports them. |
-| `--config-only` | Inspect `.specify` state and topology-readiness. Write the report with config risks and recommend topology dry-run first. |
+| `--config-only` | Inspect `.specify` state and topology-readiness. Write the report with config risks and recommend reconcile preview first. |
 | `--unknown` | Classify repo shape, write the report, and stop with one recommended next route. |
 
 ## Recommendation Rules
 
 - Recommend `tdk-scout` when repo boundaries, framework ownership, or file roles are unclear.
 - Recommend `/tdk-architecture-advisor --recover-existing <brownfield-onboarding.md>` when repo evidence is ready for architecture recovery.
-- Recommend `tdk-workspace-topology-apply --dry-run --reconcile` when observed repo shape differs from `.specify` config, or when `.specify` config is missing expected sub-workspaces/modules. Apply remains a second guarded step with `--yes --expect-hash`.
+- Recommend `tdk-workflow-config-apply --reconcile` when observed repo shape differs from `.specify` config, or when `.specify` config is missing expected sub-workspaces/modules. Normal apply remains `/tdk-workflow-config-apply` after review.
 - Recommend `tdk-sub-workspace-docs --all` only after config evidence is present or after topology dry-run/apply is accepted.
 - Recommend `tdk-discovery` only when product intent is missing and the user wants product-scope questions.
 - Do not present recommendations as completed work, applied configuration, or source-tree changes.
@@ -173,7 +173,7 @@ Required report sections:
 | Secret-like target or evidence cannot be safely redacted | Refuse that source; include the refusal in the report if a report is otherwise safe to write. |
 | `.specify/` is absent | Stop with setup guidance; do not create runtime config. |
 | Multiple modes passed | Ask the user to pick one mode; no report write until resolved. |
-| Existing source layout conflicts with inferred topology | Report as risk/unresolved question; recommend topology dry-run first. |
+| Existing source layout conflicts with inferred topology | Report as risk/unresolved question; recommend reconcile preview first. |
 
 ## Notes
 

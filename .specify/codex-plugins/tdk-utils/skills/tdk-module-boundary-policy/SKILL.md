@@ -5,10 +5,10 @@ user-invocable: true
 argument-hint: "[topology|file] [--audit|--suggest]"
 related-skills:
   - tdk-boundary-map
-  - tdk-workspace-topology-apply
+  - tdk-workflow-config-apply
   - tdk-scout
 metadata:
-  version: "2.1.0"
+  version: "2.1.3"
   author: "VinhLTT"
   category: architecture-workflow
 ---

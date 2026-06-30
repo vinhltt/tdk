@@ -96,7 +96,7 @@ especially in `--from-existing` mode.
 
 ## Recommended Next Route
 
-Recommended: `/tdk-workspace-topology-apply --dry-run`
+Recommended: `/tdk-workflow-config-apply`
 
 Only use the recommendation after unresolved questions are cleared and the JSON
 proposal is reviewed.

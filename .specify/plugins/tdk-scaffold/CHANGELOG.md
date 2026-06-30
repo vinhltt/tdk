@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.2.1] - 2026-06-30
+
+### Changed
+- Updated tdk-golden-path-scaffold references to point to tdk-workflow-config-apply
+
 ## [1.2.0] - 2026-06-27
 
 ### Added

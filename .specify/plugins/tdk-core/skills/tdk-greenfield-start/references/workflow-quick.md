@@ -32,5 +32,5 @@ If the brief already answers a question, record the answer instead of asking aga
 - Prefer `/tdk-constitution --init` for a new project with enough intent but weak product context.
 - Prefer `/tdk-discovery` when product/user/workflow details are clearly incomplete.
 - Recommend `/tdk-architecture-advisor <project-inception.md>` only when architecture assumptions and unresolved gaps are explicit.
-- Recommend topology dry-run first when topology assumptions are explicit; apply requires an existing JSON config and a parsed `planHash`.
+- Recommend `/tdk-workflow-config-apply` when topology assumptions are explicit; the skill previews first and applies only after confirmation.
 - When readiness is `not-ready`, recommend answering unresolved questions or rerunning with `--full`.

@@ -1,21 +1,25 @@
 ---
-name: tdk-workspace-topology-apply
-description: "Preview or apply guarded .specify/.specify.json changes derived from workspace-topology.json."
-argument-hint: "[--dry-run] [--yes --expect-hash <hash>] [--accept-overwrites] [--reconcile] [--topology <path>]"
+name: tdk-workflow-config-apply
+description: "Interactively review and apply guarded .specify/.specify.json changes derived from workspace-topology.json."
+argument-hint: "[(no flags)|--dry-run|--reconcile|--yes --expect-hash <hash>] [--topology <path>]"
 metadata:
-  version: "5.7.0"
+  version: "5.10.1"
 ---
 
-# tdk-workspace-topology-apply
+# tdk-workflow-config-apply
 
-Preview or apply an approved workspace topology proposal to TDK runtime config.
+Review and optionally apply an approved workspace topology proposal to TDK
+runtime config.
 
 ## Contract
 
 - `workspace-topology.json` is the authoring proposal.
 - `.specify/.specify.json` is derived runtime config.
-- dry-run is the default; dry-run writes no files.
-- apply is a guarded two-step: dry-run emits `planHash`, then apply uses `--yes --expect-hash <planHash>`.
+- no flags is the default human mode: dry-run, parse `planHash` internally,
+  show the review summary, ask for confirmation, then apply the exact preview.
+- `--dry-run` is preview-only and writes no files.
+- `--reconcile` is report-only and implies preview; it does not need `--dry-run`.
+- automation apply remains explicit: `--yes --expect-hash <planHash>`.
 - `--yes` without `--expect-hash` exits 1. There is no single-shot apply.
 - `--expect-hash` proves preview/apply consistency, not topology authenticity.
 - apply is eligible only for topology files under `.specify/configurations/workspace-topology/`.
@@ -41,10 +45,11 @@ Supported flags:
 
 | Flag | Behavior |
 |---|---|
-| `--dry-run` | Explicit dry-run mode. This is also the default. |
+| no flags | Recommended human flow: preview, review, confirm, then guarded apply with the parsed `planHash`. |
+| `--dry-run` | Preview only. Writes no files and stops after the summary. |
 | `--topology <path>` | Use a topology proposal path instead of the default. |
-| `--reconcile` | Add brownfield reconciliation notes to the report; never moves or renames folders. |
-| `--yes` | Apply the previously previewed plan. Requires `--expect-hash`. |
+| `--reconcile` | Brownfield reconciliation preview. Writes no config and never moves or renames folders. |
+| `--yes` | Automation apply for a previously previewed plan. Requires `--expect-hash`. |
 | `--expect-hash <hash>` | Hash from a prior dry-run JSON payload. Mandatory with `--yes`. |
 | `--accept-overwrites` | Allow confirmation findings only after explicit user approval. |
 
@@ -58,11 +63,21 @@ Default topology path:
 
 ### Step 0 - Parse Flags
 
+Select mode:
+
+| Input | Mode |
+|---|---|
+| no flags | `interactive` |
+| `--dry-run` without `--yes` | `preview-only` |
+| `--reconcile` without `--yes` | `reconcile-preview` |
+| `--yes --expect-hash <hash>` | `automation-apply` |
+
 Reject directory-creation flags, source-move flags, source-rename flags, `--force`, and routing-update flags. Stop with a scoped-deferred message.
 
 Reject `--reconcile --yes`; reconcile remains report-only.
 
-Reject `--yes` without `--expect-hash`; tell the user to run dry-run first and parse `planHash` from the JSON output.
+Reject `--yes` without `--expect-hash`; tell the user to run either the no-flag
+interactive flow or explicit `--dry-run` first.
 
 Resolve `TOPOLOGY_PATH` from `--topology <path>` or use the default path above.
 
@@ -72,12 +87,13 @@ Use `<agent-resolved-project-root>` from the active coding harness/session.
 
 Ask the user for the project root if it cannot be identified confidently; do not pass the placeholder literally.
 
-### Step 2 - Dry-Run The CLI
+### Step 2 - Preview The CLI
 
 ```bash
 bash -lc '
 PROJECT_DIR="$1"
 TOPOLOGY_PATH="$2"
+RECONCILE_MODE="$3"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
@@ -86,8 +102,12 @@ case "$TOPOLOGY_PATH" in
   /*) TOPOLOGY_ARG="$TOPOLOGY_PATH" ;;
   *) TOPOLOGY_ARG="$PROJECT_DIR/$TOPOLOGY_PATH" ;;
 esac
-(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/index.ts config topology apply --dry-run --topology "$TOPOLOGY_ARG")
-' -- "<agent-resolved-project-root>" "{TOPOLOGY_PATH}"
+EXTRA_ARGS=()
+if [ "$RECONCILE_MODE" = "yes" ]; then
+  EXTRA_ARGS+=(--reconcile)
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/index.ts config topology apply --dry-run --topology "$TOPOLOGY_ARG" "${EXTRA_ARGS[@]}")
+' -- "<agent-resolved-project-root>" "{TOPOLOGY_PATH}" "{yes|no}"
 ```
 
 If the command exits non-zero, stop and report the stderr/stdout summary. Do not retry with writes or hand-edit config.
@@ -103,15 +123,39 @@ Parse the single JSON stdout object. Capture:
 
 Do not transcribe `planHash` by eye; parse it from JSON.
 
-### Step 3 - Confirmation Gate
+Show a concise review summary before any write:
+
+- topology path
+- config path
+- changed sections from `diff`
+- warnings
+- confirmation findings
+- whether apply is eligible
+
+In `preview-only` or `reconcile-preview` mode, stop here. Do not ask for apply
+confirmation.
+
+### Step 3 - Interactive Confirmation Gate
 
 If `applyEligible` is not `true`, do not apply. Explain that only topology files under `.specify/configurations/workspace-topology/` can be applied.
 
 If `requiresConfirmation` is true, show `confirmationFindings` and ask the user for explicit approval before passing `--accept-overwrites`.
 
+In `interactive` mode, ask:
+
+```text
+Apply this workflow config patch to `.specify/.specify.json`?
+```
+
+If the user declines, stop after the preview and write no files.
+
 ### Step 4 - Apply The Preview
 
-Only when the user requested apply and the gates above pass:
+In `interactive` mode, use the parsed `planHash` from Step 2. Do not make the
+user copy it manually.
+
+In `automation-apply` mode, skip Steps 2 and 3 and call the CLI with the
+provided `--expect-hash` value.
 
 ```bash
 bash -lc '
@@ -135,12 +179,13 @@ If the command exits non-zero, report the exit code and stderr summary. Exit 2 m
 
 ### Step 5 - Reconcile Notes
 
-When `--reconcile` is present:
+When `--reconcile` is present, stay in `reconcile-preview` mode:
 
 1. Compare real folders with proposed `subWorkspaces[]` and `modules[]`.
 2. Report add, update, keep, and missing-folder decisions.
 3. Surface same-name overwrite/conflict candidates.
-4. State that apply requires `--expect-hash` and `--accept-overwrites` for conflicts.
+4. State that normal apply should use `/tdk-workflow-config-apply`; automation
+   can still use `--dry-run` followed by `--yes --expect-hash`.
 
 Reconcile is observe/report only. It does not move, rename, create, or delete source folders.
 
@@ -151,15 +196,17 @@ Show:
 - topology path
 - config path
 - dry-run patch summary
-- `planHash` and `applyEligible`
+- `applyEligible`
 - warnings
 - whether confirmation is required
 - apply result, changed files, backup path, report path, and audit status when applied
+- `planHash` only when useful for automation/debug; do not make it the primary
+  user action in default mode
 - unresolved questions, if any
 
 ## Quality Gates
 
-- [ ] Dry-run is the default.
+- [ ] No flags is the default interactive human flow.
 - [ ] The TypeScript CLI is the validation authority.
 - [ ] `--yes` always includes a parsed `--expect-hash`.
 - [ ] `--accept-overwrites` is passed only after explicit user approval.

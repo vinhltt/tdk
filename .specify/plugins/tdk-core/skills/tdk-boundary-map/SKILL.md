@@ -8,9 +8,9 @@ related-skills:
   - tdk-brownfield-start
   - tdk-architecture-advisor
   - tdk-scout
-  - tdk-workspace-topology-apply
+  - tdk-workflow-config-apply
 metadata:
-  version: "5.7.0"
+  version: "5.10.1"
   author: "VinhLTT"
   category: architecture-workflow
 ---
@@ -40,7 +40,7 @@ Boundary summary: does not create directories; does not move or rename source
 folders; does not scaffold source; does not enforce module boundaries.
 
 The JSON artifact is an authoring proposal. Existing topology validation and
-dry-run preview stay owned by `tdk-workspace-topology-apply`.
+dry-run preview stay owned by `tdk-workflow-config-apply`.
 
 ## Args
 

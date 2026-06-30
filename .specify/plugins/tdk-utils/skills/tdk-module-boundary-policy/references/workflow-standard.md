@@ -13,6 +13,6 @@ Use standard mode to write the main policy proposal.
 7. Write `enforcement-snippets.md` only when evidence supports at least one stack
    or the user requested snippet guidance.
 
-Standard mode may recommend `/tdk-workspace-topology-apply --dry-run` when
+Standard mode may recommend `/tdk-workflow-config-apply` when
 topology is not yet applied, or `/tdk-module-boundary-policy --audit` after a
 human applies snippets.

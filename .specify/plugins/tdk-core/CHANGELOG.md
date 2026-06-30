@@ -4,6 +4,17 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.10.1] - 2026-06-30
+
+### Added
+- Added new skill tdk-workflow-config-apply (renamed from tdk-workspace-topology-apply to support interactive review and apply flow)
+
+### Changed
+- Updated related skills and references to use tdk-workflow-config-apply instead of tdk-workspace-topology-apply (in tdk-architecture-advisor, tdk-boundary-map, tdk-brownfield-start, tdk-greenfield-start, and tdk-ut-backfill-plan)
+
+### Removed
+- Removed skill tdk-workspace-topology-apply (renamed to tdk-workflow-config-apply)
+
 ## [5.10.0] - 2026-06-29
 
 ### Added

@@ -31,18 +31,18 @@ proposal text.
 6. Mark `boundaryType`, `owner`, `contracts`, `allowedDependencies`, and
    `routing` as report-only.
 7. Write `workspace-topology.md` and `workspace-topology.json`.
-8. Recommend `/tdk-workspace-topology-apply --dry-run` only when unresolved
-   questions do not block parser-safe review; guarded apply needs an existing
-   JSON config, parsed `planHash`, and explicit approval for overwrite findings.
+8. Recommend `/tdk-workflow-config-apply` only when unresolved questions do not
+   block parser-safe review; the skill previews first, then asks for explicit
+   approval before applying.
 
 ## Route Rules
 
 - Recommend `/tdk-architecture-advisor` when architecture evidence is missing.
 - Recommend `/tdk-boundary-map --unknown` when topology evidence is too weak.
 - Recommend `/tdk-scout` when folder/package evidence is unclear.
-- Recommend `/tdk-workspace-topology-apply --dry-run` only as a later preview
-  route after proposal review. Apply remains a second step with
-  `--yes --expect-hash <planHash>` after approval.
+- Recommend `/tdk-workflow-config-apply` only as a later review/apply route
+  after proposal review. Preview-only automation can still use
+  `/tdk-workflow-config-apply --dry-run`.
 
 ## Stop Conditions
 

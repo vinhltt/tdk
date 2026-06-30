@@ -5,6 +5,7 @@ import { resolve } from 'node:path';
 const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
 const INDEX_PATH = resolve(import.meta.dir, '../src/index.ts');
 const APPLY_PATH = resolve(import.meta.dir, '../src/commands/config/topology/apply.ts');
+const OLD_TOPOLOGY_APPLY_SKILL = ['tdk', 'workspace', 'topology', 'apply'].join('-');
 
 function skillPath(name: string): string {
   return resolve(CORE_SKILLS_DIR, name, 'SKILL.md');
@@ -32,7 +33,7 @@ describe('architecture workflow foundation contracts', () => {
   const greenfieldPath = skillPath('tdk-greenfield-start');
   const brownfieldPath = skillPath('tdk-brownfield-start');
   const boundaryMapPath = skillPath('tdk-boundary-map');
-  const topologyPath = skillPath('tdk-workspace-topology-apply');
+  const topologyPath = skillPath('tdk-workflow-config-apply');
 
   const greenfield = readIfExists(greenfieldPath);
   const brownfield = readIfExists(brownfieldPath);
@@ -84,12 +85,17 @@ describe('architecture workflow foundation contracts', () => {
     expectNoRuntimeConfigMutation(brownfield);
   });
 
-  it('adds topology apply as a dry-run-first wrapper over the TypeScript CLI', () => {
+  it('adds workflow config apply as an interactive wrapper over the TypeScript CLI', () => {
     expect(existsSync(topologyPath)).toBe(true);
-    expect(topology).toContain('name: tdk-workspace-topology-apply');
-    expect(topology).toContain('[--dry-run] [--yes --expect-hash <hash>]');
-    expect(topology).toContain('dry-run is the default');
+    expect(existsSync(skillPath(OLD_TOPOLOGY_APPLY_SKILL))).toBe(false);
+    expect(topology).toContain('name: tdk-workflow-config-apply');
+    expect(topology).toContain('[(no flags)|--dry-run|--reconcile|--yes --expect-hash <hash>]');
+    expect(topology).toContain('no flags is the default human mode');
+    expect(topology).toContain('Do not make the');
+    expect(topology).toContain('user copy it manually');
+    expect(topology).toContain('Apply this workflow config patch to `.specify/.specify.json`?');
     expect(topology).toContain('`--yes` without `--expect-hash` exits 1');
+    expect(topology).toContain('automation apply remains explicit: `--yes --expect-hash <planHash>`');
     expect(topology).toContain('existing JSON `.specify/.specify.json` is required');
     expect(topology).toContain('bun src/index.ts config topology apply');
     expect(topology).toContain('.specify/configurations/workspace-topology/workspace-topology.json');
@@ -99,6 +105,7 @@ describe('architecture workflow foundation contracts', () => {
     expect(topology).toContain('deferred: first-time config creation');
     expect(topology).toContain('`--reconcile` apply');
     expect(topology).toContain('TOPOLOGY_ARG="$PROJECT_DIR/$TOPOLOGY_PATH"');
+    expect(topology).not.toContain('dry-run is the default');
     expect(topology).not.toContain('--create-dirs');
   });
 

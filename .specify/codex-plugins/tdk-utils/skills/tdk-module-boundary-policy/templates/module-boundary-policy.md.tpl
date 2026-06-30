@@ -73,7 +73,7 @@ enforcement active.
 
 ## Recommended Next Route
 
-Recommended: Replace with `/tdk-workspace-topology-apply --dry-run`, human
+Recommended: Replace with `/tdk-workflow-config-apply`, human
 snippet review, `/tdk-module-boundary-policy --audit`, or manual docs only.
 
 ## Unresolved Questions

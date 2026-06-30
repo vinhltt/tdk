@@ -29,7 +29,7 @@ flowchart TD
     GREENFIELD_INCEPTION -.->|/tdk-architecture-advisor<br/>project decision| ARCHITECTURE_REPORTS
     BROWNFIELD_ONBOARDING -.->|/tdk-architecture-advisor --recover-existing<br/>recovery report| ARCHITECTURE_REPORTS
     ARCHITECTURE_REPORTS -.->|/tdk-boundary-map<br/>proposal only| TOPOLOGY
-    TOPOLOGY -.->|/tdk-workspace-topology-apply<br/>dry-run first| CONFIG_PATCH
+    TOPOLOGY -.->|/tdk-workflow-config-apply<br/>review/apply| CONFIG_PATCH
     CONFIG_PATCH -.->|/tdk-module-boundary-policy<br/>policy only| POLICY
     POLICY -.->|/tdk-golden-path-scaffold<br/>dry-run first| GOLDEN_PATH
     REQ -.->|/tdk-discovery<br/>optional, epic| DISCOVERY
@@ -115,7 +115,7 @@ flowchart LR
     GREENFIELD_INCEPTION -.->|"/tdk-architecture-advisor"| ARCHITECTURE_REPORTS
     BROWNFIELD_ONBOARDING -.->|"/tdk-architecture-advisor --recover-existing"| ARCHITECTURE_REPORTS
     ARCHITECTURE_REPORTS -.->|"/tdk-boundary-map"| TOPOLOGY
-    TOPOLOGY -.->|"/tdk-workspace-topology-apply<br/>dry-run first"| CONFIG_PATCH
+    TOPOLOGY -.->|"/tdk-workflow-config-apply<br/>review/apply"| CONFIG_PATCH
     CONFIG_PATCH -.->|"/tdk-module-boundary-policy<br/>policy only"| POLICY
     POLICY -.->|"/tdk-golden-path-scaffold<br/>dry-run first"| GOLDEN_PATH
     REQ -.->|"/tdk-discovery<br/>epic-id brief"| DISCOVERY
@@ -319,8 +319,8 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `.specify/configurations/architecture/architecture-decision.md` | `/tdk-architecture-advisor` | `architecture-options.md` plus accepted assumptions | `/tdk-boundary-map` or future topology work | Project architecture decision |
 | `.specify/configurations/architecture/architecture-recovery.md` | `/tdk-architecture-advisor --recover-existing` | Brownfield onboarding, scout, README, or bounded repo evidence | Brownfield-safe architecture recovery review | Existing-repo recovery |
 | `.specify/configurations/workspace-topology/workspace-topology.md` | `/tdk-boundary-map` or human-authored topology proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | Human review before dry-run preview | Project topology proposal |
-| `.specify/configurations/workspace-topology/workspace-topology.json` | `/tdk-boundary-map` or human-authored topology proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | `/tdk-workspace-topology-apply --dry-run`, then guarded apply with `--expect-hash` when approved | Project topology changes |
-| `config topology dry-run/apply` | `/tdk-workspace-topology-apply` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | Human review; `--yes --expect-hash <planHash>` for guarded write | Runtime config preview or guarded config write |
+| `.specify/configurations/workspace-topology/workspace-topology.json` | `/tdk-boundary-map` or human-authored topology proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | `/tdk-workflow-config-apply` interactive review/apply, or explicit `--dry-run` for automation preview | Project topology changes |
+| `config topology dry-run/apply` | `/tdk-workflow-config-apply` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | Human review; parsed `planHash` passed internally for guarded write | Runtime config preview or guarded config write |
 | `.specify/configurations/module-boundary-policy/module-boundary-policy.md` | `/tdk-module-boundary-policy` | topology artifacts, existing `.specify/.specify.json`, repo stack evidence | Human review of boundary guidance | Optional project boundary policy |
 | `.specify/configurations/module-boundary-policy/enforcement-snippets.md` | `/tdk-module-boundary-policy --suggest` | policy report and detected stack evidence | Human-applied enforcement config candidates | Optional snippet guidance |
 | `.specify/configurations/golden-path/golden-path-scaffold-plan.md` | `/tdk-golden-path-scaffold --dry-run` | approved topology/config evidence, architecture decision/recovery, optional boundary policy | Human review before recipe approval | Optional skeleton plan |

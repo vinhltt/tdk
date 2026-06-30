@@ -27,7 +27,7 @@ verified.
 
 ## Route Rules
 
-- Prefer `/tdk-workspace-topology-apply --dry-run --reconcile` when config drift or missing topology evidence is present. Apply remains a separate guarded step after dry-run review.
+- Prefer `/tdk-workflow-config-apply --reconcile` when config drift or missing topology evidence is present. Apply remains a separate `/tdk-workflow-config-apply` step after review.
 - Mention `/tdk-architecture-advisor --recover-existing` only when the user explicitly asks for architecture recovery beyond config readiness.
 - Do not recommend docs generation unless config evidence is present enough to identify docs targets.
 - Do not ask product questions or source ownership questions unless config evidence directly conflicts.

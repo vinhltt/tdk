@@ -85,15 +85,17 @@ Run `diff → sync → index` to keep docs consistent across workspaces.
 | `/tdk-brownfield-start` | Observe-first repo onboarding that writes evidence/confidence-based `brownfield-onboarding.md` and recommends scout/topology/docs steps |
 | `/tdk-architecture-advisor` | Project-level architecture advisor that writes report-only options, decision, or recovery artifacts |
 | `/tdk-boundary-map` | Topology proposal workflow that writes `workspace-topology.md` and `workspace-topology.json` without runtime config mutation |
-| `/tdk-workspace-topology-apply` | Dry-run preview or guarded two-step apply of `.specify/.specify.json` changes derived from `workspace-topology.json` |
+| `/tdk-workflow-config-apply` | Interactive review/apply of `.specify/.specify.json` changes derived from `workspace-topology.json`; automation can still use explicit dry-run/apply flags |
 | `/tdk-module-boundary-policy` | Optional module boundary policy report and non-applied enforcement snippets from approved topology evidence |
 | `/tdk-golden-path-scaffold` | Dry-run-first scaffold plan and recipe for approved topology skeletons; guarded apply creates only safe empty structure and `.specify` templates |
 
 Architecture advisor is report-only. It does not write runtime config, topology
 files, source code, plans, tasks, tracker issues, or ADR files. Boundary-map is
 proposal-only: it writes topology markdown/JSON and does not change runtime
-config, source directories, or boundary policy. Topology apply is dry-run-first:
-dry-run emits `planHash`; guarded apply requires `--yes --expect-hash <planHash>`.
+config, source directories, or boundary policy. Workflow config apply previews
+first, shows diff/warnings, asks before writing, and passes the parsed
+`planHash` internally. Automation can still run `--dry-run`, then
+`--yes --expect-hash <planHash>`.
 It does not create source directories or apply `--reconcile`. Module boundary
 policy follows topology review/apply and writes advisory Markdown only; it never
 changes source, lint, workspace, package manager, routing, or runtime config.
@@ -198,7 +200,7 @@ Each command reads the output of the previous one. For minimal feature work, the
 | 21 | `/tdk-config-diff` | Compare workspace vs sub-workspace docs |
 | 22 | `/tdk-config-sync` | Sync docs between workspace and sub-workspaces |
 | 23 | `/tdk-config-index` | Generate/update document manager index |
-| 24 | `/tdk-workspace-topology-apply [--dry-run] [--yes --expect-hash <hash>] [--accept-overwrites] [--reconcile] [--topology <path>]` | Preview or guarded-apply runtime config patch from workspace topology |
+| 24 | `/tdk-workflow-config-apply [(no flags)\|--dry-run\|--reconcile\|--yes --expect-hash <hash>] [--topology <path>]` | Interactive runtime config review/apply from workspace topology |
 | 25 | `/tdk-sub-workdspace-init` | Initialize a new sub-workspace |
 | 26 | `/tdk-sub-workdspace-list` | List all configured sub-workspaces |
 | 27 | `/tdk-sub-workdspace-sync` | ~~Deprecated~~ → use `/tdk-config-sync` instead |
@@ -373,7 +375,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | brownfield:start | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | `--full`, `--config-only`, `--unknown` | Existing repo evidence, optional scout output | `.specify/configurations/inception/brownfield-onboarding.md` with observed evidence separated from inferred recommendations | None |
 | architecture:advisor | `/tdk-architecture-advisor [input\|file] [--recover-existing\|--unknown]` | `--recover-existing`, `--unknown` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | `.specify/configurations/architecture/architecture-options.md`, `.specify/configurations/architecture/architecture-decision.md`, or `.specify/configurations/architecture/architecture-recovery.md` | Optional after start/scout/discovery |
 | boundary:map | `/tdk-boundary-map [input\|file] [--from-existing\|--unknown]` | `--from-existing`, `--unknown` | Architecture reports, inception/onboarding evidence, scout, README, or bounded repo evidence | `.specify/configurations/workspace-topology/workspace-topology.md`, `.specify/configurations/workspace-topology/workspace-topology.json` | Optional after advisor/start/scout |
-| workspace-topology:apply | `/tdk-workspace-topology-apply [--dry-run] [--yes --expect-hash <hash>] [--accept-overwrites] [--reconcile] [--topology <path>]` | `--dry-run`, `--yes`, `--expect-hash`, `--accept-overwrites`, `--reconcile`, `--topology` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | Dry-run patch preview or guarded config apply | Optional after boundary-map or human-authored proposal |
+| workflow-config:apply | `/tdk-workflow-config-apply [(no flags)\|--dry-run\|--reconcile\|--yes --expect-hash <hash>] [--topology <path>]` | no flags, `--dry-run`, `--reconcile`, `--yes`, `--expect-hash`, `--accept-overwrites`, `--topology` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | Interactive patch review/apply; explicit preview/apply for automation | Optional after boundary-map or human-authored proposal |
 | module-boundary:policy | `/tdk-module-boundary-policy [topology\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | `workspace-topology.json`, `workspace-topology.md`, `.specify/.specify.json`, repo stack evidence | `module-boundary-policy.md`, optional `enforcement-snippets.md` | Optional after topology review/apply |
 | golden-path:scaffold | `/tdk-golden-path-scaffold [topology\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved topology/config evidence, architecture decision/recovery, optional boundary policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional after topology/policy review |
 
@@ -396,14 +398,30 @@ and avoids overwriting JSON when evidence is insufficient.
 
 Syntax: `/tdk-boundary-map [input|file] [--from-existing|--unknown]`.
 
-`/tdk-workspace-topology-apply` wraps the TypeScript CLI dry-run-first apply flow:
+`/tdk-workflow-config-apply` wraps the TypeScript CLI guarded apply flow.
+For normal human use, run it without flags:
+
+```text
+/tdk-workflow-config-apply
+```
+
+The skill runs dry-run, parses `planHash`, shows diff/warnings/confirmation
+findings, asks whether to apply, then calls the CLI with
+`--yes --expect-hash <planHash>` internally. Use `--reconcile` for brownfield
+config drift review without applying.
+
+Automation can still use the explicit CLI-shaped sequence:
 
 ```bash
 bun src/index.ts config topology apply --dry-run --topology .specify/configurations/workspace-topology/workspace-topology.json
 bun src/index.ts config topology apply --topology .specify/configurations/workspace-topology/workspace-topology.json --yes --expect-hash "$PLAN_HASH"
 ```
 
-Apply requires an existing JSON `.specify/.specify.json`, an apply-eligible topology under `.specify/configurations/workspace-topology/`, and a `planHash` parsed from dry-run JSON. Same-name overwrites, architecture type changes, and normalized path collisions require `--accept-overwrites` after explicit user approval. `--reconcile` remains report-only.
+Apply requires an existing JSON `.specify/.specify.json` and an apply-eligible
+topology under `.specify/configurations/workspace-topology/`. Same-name
+overwrites, architecture type changes, and normalized path collisions require
+explicit approval before `--accept-overwrites` is passed. `--reconcile` remains
+report-only.
 
 `/tdk-module-boundary-policy` is optional policy/report work after topology is
 reviewed. Standard mode writes
@@ -545,6 +563,7 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 | # | Scenario | When to use | Link |
 |---|----------|-------------|------|
 | 13 | Multi-Sub-Workspace Monorepo | Multi-service project setup | [13-multi-sub-workspace-monorepo.md](scenarios/13-multi-sub-workspace-monorepo.md) |
+| 14 | Greenfield Full Start, Architecture, And Topology | New project start through architecture, topology, boundary policy, and sub-workspace docs | [14-greenfield-full-start-architecture-topology.md](scenarios/14-greenfield-full-start-architecture-topology.md) |
 
 ### Day-to-Day
 
@@ -573,7 +592,7 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 |------|---------|---------|
 | `--sub-workspace <name>` | ut:*, config:* | Target a specific sub-workspace (e.g., `frontend`, `backend`) |
 | `--force` | ut:auto, ut:plan, config:sync | Overwrite existing artifacts without confirmation |
-| `--dry-run` | config:sync, workspace-topology:apply | Preview changes without writing files; topology apply emits `planHash` for guarded apply |
+| `--dry-run` | config:sync, workflow-config:apply | Preview changes without writing files; workflow config apply emits `planHash` for automation/debug |
 | `--standalone` | ut:plan | Generate UT plan for existing code without spec |
 | `--review` | ut:plan | Review and update existing UT plan |
 
@@ -620,7 +639,7 @@ architecture-advisor (optional, project-level report-only)
      ↓
 boundary-map (optional, project-level proposal-only)
      ↓
-workspace-topology-apply --dry-run, then --yes --expect-hash when approved (optional, project-level)
+workflow-config-apply, or explicit --dry-run then --yes --expect-hash for automation (optional, project-level)
      ↓
 golden-path-scaffold --dry-run, then --yes when recipe approved (optional, skeleton only)
      ↓

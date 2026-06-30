@@ -2,7 +2,7 @@
 name: tdk-ut-backfill-plan
 description: "Generate unit test plan using templates. Creates `ut/plan.md` + phase files at `ut/phases/{module}.md` and injects the routed consumer test skill from `plan-skill-routing.md`."
 metadata:
-  version: "5.7.1"
+  version: "5.10.1"
 ---
 
 # /tdk-ut-backfill-plan - Create Unit Test Plan
@@ -163,7 +163,7 @@ If error -> STOP and report to user
 - If `hasModules` is falsy (false/absent):
   → Ask user: "Sub-workspace {name} does not have modules configured. Would you like to proceed at sub-workspace level or pause for topology ownership?"
     1. **Proceed at sub-workspace level** — continue without module targeting (L2 path)
-    2. **Pause for topology ownership** — STOP and route durable module ownership through `/tdk-boundary-map`, `/tdk-workspace-topology-apply --dry-run`, and optional `/tdk-module-boundary-policy`
+    2. **Pause for topology ownership** — STOP and route durable module ownership through `/tdk-boundary-map`, `/tdk-workflow-config-apply`, and optional `/tdk-module-boundary-policy`
   → If user picks "Proceed at sub-workspace level" → continue without `--module`
   → If user picks "Pause for topology ownership" → STOP and explain that UT planning does not edit `.specify/.specify.json`, create modules, or create source directories.
 - If `hasModules=true` AND the matched SW's `modules[]` is empty/absent:

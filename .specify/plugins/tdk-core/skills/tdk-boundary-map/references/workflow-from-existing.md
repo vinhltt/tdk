@@ -29,9 +29,9 @@ Do not read secret-like files. Redact sensitive values before proposal text.
 6. Record ownership, dependency direction, and next route as report-only fields.
 7. Write `workspace-topology.md` and `workspace-topology.json` when observed
    evidence is parser-safe.
-8. Recommend `/tdk-workspace-topology-apply --dry-run --reconcile` only after
-   observed JSON and unresolved questions are reviewed. Reconcile is report-only;
-   guarded apply is a separate `--yes --expect-hash <planHash>` step.
+8. Recommend `/tdk-workflow-config-apply --reconcile` only after observed JSON
+   and unresolved questions are reviewed. Reconcile is report-only; normal
+   apply uses `/tdk-workflow-config-apply` after the proposal is accepted.
 
 ## Brownfield Rules
 
