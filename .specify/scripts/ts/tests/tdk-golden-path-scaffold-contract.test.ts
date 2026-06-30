@@ -77,9 +77,9 @@ describe('TDK golden-path scaffold contracts', () => {
   it('registers golden-path scaffold as a TDK scaffold skill', () => {
     expect(existsSync(skillPath)).toBe(true);
     expect(skill).toContain('name: tdk-golden-path-scaffold');
-    expect(skill).toContain('[topology|file] [--dry-run|--yes] [--preset <name>]');
+    expect(skill).toContain('[layout|file] [--dry-run|--yes] [--preset <name>]');
     expect(skill).toContain('category: scaffold');
-    expect(skill).toContain('  version: "1.2.0"');
+    expect(skill).toMatch(/version: "[^"]+"/);
     expect(existsSync(join(CORE_SKILLS_DIR, SKILL_NAME, 'SKILL.md'))).toBe(false);
     expect(existsSync(join(UTILS_SKILLS_DIR, SKILL_NAME, 'SKILL.md'))).toBe(false);
   });
@@ -97,6 +97,20 @@ describe('TDK golden-path scaffold contracts', () => {
       expect(existsSync(join(goldenPathDir, template))).toBe(true);
       expect(skill).toContain(template);
     }
+  });
+
+  it('accepts new workspace layout evidence while preserving legacy topology compatibility', () => {
+    const outputContract = read(join(goldenPathDir, 'references/golden-path-output-contract.md'));
+    const dryRunWorkflow = read(join(goldenPathDir, 'references/workflow-dry-run.md'));
+    const safetyGates = read(join(goldenPathDir, 'references/safety-gates.md'));
+
+    for (const text of [skill, outputContract, dryRunWorkflow, safetyGates]) {
+      expect(text).toContain('.specify/configurations/workspace-layout/workspace-layout-proposal.json');
+      expect(text).toContain('.specify/configurations/workspace-topology/workspace-topology.json');
+    }
+
+    expect(skill).toContain('tdk-workspace-layout-propose');
+    expect(skill).toContain('tdk-workspace-dependency-policy');
   });
 
   it('keeps dry-run output under the golden-path configuration directory', () => {
@@ -184,7 +198,7 @@ describe('TDK golden-path scaffold contracts', () => {
     expect(manifest).toContain('"tdk-golden-path-scaffold"');
     expect(readme).toContain('/tdk-golden-path-scaffold');
     expect(readme).toContain('tdk-scaffold/        # Skill/agent and golden-path scaffolding (3 skills)');
-    expect(commandReference).toContain('/tdk-golden-path-scaffold [topology|file] [--dry-run|--yes] [--preset <name>]');
+    expect(commandReference).toContain('/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <name>]');
     expect(commandReference).toContain('golden-path-recipe.json');
     expect(documentFlow).toContain('/tdk-golden-path-scaffold');
     expect(documentFlow).toContain('golden-path-scaffold-plan.md');

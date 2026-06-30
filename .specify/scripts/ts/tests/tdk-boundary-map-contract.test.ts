@@ -7,19 +7,20 @@ const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skil
 const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en/guides');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
-const BOUNDARY_MAP_NAME = 'tdk-boundary-map';
+const LAYOUT_NAME = 'tdk-workspace-layout-propose';
+const LEGACY_LAYOUT_NAME = 'tdk-boundary-map';
 
 const REQUIRED_REFERENCES = [
-  'references/boundary-map-output-contract.md',
-  'references/boundary-taxonomy-and-runtime-projection.md',
+  'references/workspace-layout-proposal-output-contract.md',
+  'references/workspace-layout-taxonomy-and-runtime-projection.md',
   'references/workflow-standard.md',
   'references/workflow-from-existing.md',
   'references/workflow-unknown.md',
 ];
 
 const REQUIRED_TEMPLATES = [
-  'templates/workspace-topology.md.tpl',
-  'templates/workspace-topology.json.tpl',
+  'templates/workspace-layout-proposal.md.tpl',
+  'templates/workspace-layout-proposal.json.tpl',
 ];
 
 const REQUIRED_MARKDOWN_TEMPLATE_SECTIONS = [
@@ -49,9 +50,6 @@ const FORBIDDEN_PROMISES = [
   'run `/tdk-workflow-config-apply`',
   'execute `/tdk-workflow-config-apply`',
   'apply topology changes',
-  'Create the proposal directory if needed',
-  'create the proposal directory',
-  'mkdir',
   'creates source directories',
   'moves source folders',
   'renames source folders',
@@ -61,8 +59,8 @@ const FORBIDDEN_PROMISES = [
   'writes ADR files',
 ];
 
-function boundaryMapDir(): string {
-  return resolve(CORE_SKILLS_DIR, BOUNDARY_MAP_NAME);
+function skillDir(name: string): string {
+  return resolve(CORE_SKILLS_DIR, name);
 }
 
 function read(path: string): string {
@@ -76,23 +74,36 @@ function walkFiles(dir: string): string[] {
   });
 }
 
-describe('TDK boundary-map contracts', () => {
-  const skillDir = boundaryMapDir();
-  const skillPath = join(skillDir, 'SKILL.md');
+describe('TDK workspace layout proposal contracts', () => {
+  const layoutDir = skillDir(LAYOUT_NAME);
+  const legacyDir = skillDir(LEGACY_LAYOUT_NAME);
+  const skillPath = join(layoutDir, 'SKILL.md');
+  const legacySkillPath = join(legacyDir, 'SKILL.md');
   const skill = existsSync(skillPath) ? read(skillPath) : '';
+  const legacySkill = existsSync(legacySkillPath) ? read(legacySkillPath) : '';
 
-  it('registers boundary-map as a proposal-only TDK core skill', () => {
+  it('registers workspace-layout-propose as the proposal-only TDK core skill', () => {
     expect(existsSync(skillPath)).toBe(true);
-    expect(skill).toContain('name: tdk-boundary-map');
+    expect(skill).toContain('name: tdk-workspace-layout-propose');
     expect(skill).toContain('[input|file] [--from-existing|--unknown]');
-    expect(skill).toContain('  version: "5.7.0"');
-    expect(skill).toContain('.specify/configurations/workspace-topology/workspace-topology.md');
-    expect(skill).toContain('.specify/configurations/workspace-topology/workspace-topology.json');
+    expect(skill).toContain('category: architecture-workflow');
+    expect(skill).toContain('.specify/configurations/workspace-layout/workspace-layout-proposal.md');
+    expect(skill).toContain('.specify/configurations/workspace-layout/workspace-layout-proposal.json');
     expect(skill).toContain('does not create or update `.specify/.specify.json`');
-    expect(skill).toContain('does not create directories');
+    expect(skill).toContain('does not create source directories');
     expect(skill).toContain('does not move or rename source folders');
     expect(skill).toContain('does not scaffold source');
-    expect(skill).toContain('does not enforce module boundaries');
+    expect(skill).toContain('does not enforce dependency policy');
+  });
+
+  it('keeps boundary-map as a deprecated compatibility wrapper', () => {
+    expect(existsSync(legacySkillPath)).toBe(true);
+    expect(legacySkill).toContain('name: tdk-boundary-map');
+    expect(legacySkill).toContain('deprecated compatibility route');
+    expect(legacySkill).toContain('/tdk-workspace-layout-propose');
+    expect(legacySkill).toContain('.specify/configurations/workspace-topology/workspace-topology.md');
+    expect(legacySkill).toContain('.specify/configurations/workspace-topology/workspace-topology.json');
+    expect(legacySkill).toContain('transition window');
   });
 
   it('uses progressive disclosure through required references and templates', () => {
@@ -100,20 +111,24 @@ describe('TDK boundary-map contracts', () => {
     expect(skill).toContain('Load exactly one mode workflow');
 
     for (const reference of REQUIRED_REFERENCES) {
-      expect(existsSync(join(skillDir, reference))).toBe(true);
+      expect(existsSync(join(layoutDir, reference))).toBe(true);
       expect(skill).toContain(reference);
     }
 
     for (const template of REQUIRED_TEMPLATES) {
-      expect(existsSync(join(skillDir, template))).toBe(true);
+      expect(existsSync(join(layoutDir, template))).toBe(true);
       expect(skill).toContain(template);
     }
   });
 
-  it('requires topology proposal sections and report-only field labels', () => {
-    const markdownTemplate = read(join(skillDir, 'templates/workspace-topology.md.tpl'));
-    const runtimeReference = read(join(skillDir, 'references/boundary-taxonomy-and-runtime-projection.md'));
-    const outputContract = read(join(skillDir, 'references/boundary-map-output-contract.md'));
+  it('requires layout proposal sections and report-only field labels', () => {
+    const markdownTemplate = read(join(layoutDir, 'templates/workspace-layout-proposal.md.tpl'));
+    const runtimeReference = read(
+      join(layoutDir, 'references/workspace-layout-taxonomy-and-runtime-projection.md'),
+    );
+    const outputContract = read(
+      join(layoutDir, 'references/workspace-layout-proposal-output-contract.md'),
+    );
 
     for (const section of REQUIRED_MARKDOWN_TEMPLATE_SECTIONS) {
       expect(markdownTemplate).toContain(section);
@@ -127,18 +142,22 @@ describe('TDK boundary-map contracts', () => {
   });
 
   it('keeps mode semantics explicit and observe-first for brownfield repos', () => {
-    const standardWorkflow = read(join(skillDir, 'references/workflow-standard.md'));
-    const fromExistingWorkflow = read(join(skillDir, 'references/workflow-from-existing.md'));
-    const unknownWorkflow = read(join(skillDir, 'references/workflow-unknown.md'));
+    const standardWorkflow = read(join(layoutDir, 'references/workflow-standard.md'));
+    const fromExistingWorkflow = read(join(layoutDir, 'references/workflow-from-existing.md'));
+    const unknownWorkflow = read(join(layoutDir, 'references/workflow-unknown.md'));
 
-    expect(standardWorkflow).toContain('Write `workspace-topology.md` and `workspace-topology.json`');
+    expect(standardWorkflow).toContain(
+      'Write `workspace-layout-proposal.md` and `workspace-layout-proposal.json`',
+    );
     expect(fromExistingWorkflow).toContain('observed real folders or packages only');
-    expect(fromExistingWorkflow).toContain('desired-state deltas stay in `workspace-topology.md`');
-    expect(unknownWorkflow).toContain('Do not overwrite `workspace-topology.json` when evidence is insufficient');
+    expect(fromExistingWorkflow).toContain('desired-state deltas stay in `workspace-layout-proposal.md`');
+    expect(unknownWorkflow).toContain(
+      'Do not overwrite `workspace-layout-proposal.json` when evidence is insufficient',
+    );
   });
 
   it('keeps JSON template parser-compatible and labels report-only fields', () => {
-    const jsonTemplate = read(join(skillDir, 'templates/workspace-topology.json.tpl'));
+    const jsonTemplate = read(join(layoutDir, 'templates/workspace-layout-proposal.json.tpl'));
     const parsedJson = JSON.parse(jsonTemplate);
     const parsedTopology = parseWorkspaceTopology(parsedJson);
 
@@ -149,7 +168,7 @@ describe('TDK boundary-map contracts', () => {
   });
 
   it('keeps proposal text free of apply, scaffold, policy, and tracker promises', () => {
-    const combined = walkFiles(skillDir)
+    const combined = walkFiles(layoutDir)
       .filter((path) => path.endsWith('.md') || path.endsWith('.tpl'))
       .map((path) => read(path))
       .join('\n');
@@ -159,13 +178,13 @@ describe('TDK boundary-map contracts', () => {
     }
 
     expect(combined).toContain('does not create or update `.specify/.specify.json`');
-    expect(combined).toContain('does not create directories');
+    expect(combined).toContain('does not create source directories');
     expect(combined).toContain('does not move or rename source folders');
     expect(combined).toContain('does not scaffold source');
-    expect(combined).toContain('does not enforce module boundaries');
+    expect(combined).toContain('does not enforce dependency policy');
   });
 
-  it('keeps workflow config apply interactive while adding boundary-map route docs', () => {
+  it('keeps workflow config apply interactive while documenting new and legacy layout routes', () => {
     const topologyApply = read(join(CORE_SKILLS_DIR, 'tdk-workflow-config-apply/SKILL.md'));
     const commandReference = read(join(DOCS_DIR, 'command-reference.md'));
     const documentFlow = read(join(DOCS_DIR, 'document-flow.md'));
@@ -175,19 +194,31 @@ describe('TDK boundary-map contracts', () => {
     expect(topologyApply).toContain('user copy it manually');
     expect(topologyApply).toContain('`--yes` without `--expect-hash` exits 1');
     expect(topologyApply).toContain('deferred: first-time config creation');
+    expect(topologyApply).toContain(
+      '.specify/configurations/workspace-layout/workspace-layout-proposal.json',
+    );
+    expect(topologyApply).toContain(
+      '.specify/configurations/workspace-topology/workspace-topology.json',
+    );
+    expect(commandReference).toContain('/tdk-workspace-layout-propose [input|file] [--from-existing|--unknown]');
     expect(commandReference).toContain('/tdk-boundary-map [input|file] [--from-existing|--unknown]');
     expect(commandReference).toContain('Interactive runtime config review/apply');
+    expect(documentFlow).toContain('/tdk-workspace-layout-propose');
     expect(documentFlow).toContain('/tdk-boundary-map');
   });
 
-  it('registers boundary-map docs and manifest entries', () => {
+  it('registers layout proposal docs and manifest entries', () => {
     const manifest = read(MANIFEST_PATH);
     const readme = read(README_PATH);
     const commandReference = read(join(DOCS_DIR, 'command-reference.md'));
 
+    expect(manifest).toContain('"tdk-workspace-layout-propose"');
     expect(manifest).toContain('"tdk-boundary-map"');
+    expect(readme).toContain('/tdk-workspace-layout-propose');
     expect(readme).toContain('/tdk-boundary-map');
-    expect(readme).toContain('23 skills + 1 agent');
+    expect(readme).toContain('24 skills + 1 agent');
+    expect(commandReference).toContain('workspace-layout-proposal.md');
+    expect(commandReference).toContain('workspace-layout-proposal.json');
     expect(commandReference).toContain('workspace-topology.md');
     expect(commandReference).toContain('workspace-topology.json');
   });

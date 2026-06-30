@@ -9,7 +9,7 @@ related-skills:
   - tdk-workflow-config-apply
   - tdk-sub-workspace-docs
 metadata:
-  version: "5.10.1"
+  version: "5.11.0"
   author: "VinhLTT"
   category: architecture-workflow
 ---

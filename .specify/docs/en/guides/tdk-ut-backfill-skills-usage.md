@@ -90,10 +90,10 @@ Relevant fields in `.specify/.specify.json`:
 }
 ```
 
-Durable module ownership belongs in topology, not ad hoc UT planning. When a
-sub-workspace needs module boundaries, use `/tdk-boundary-map`, review
-`workspace-topology.json`, review/apply with `/tdk-workflow-config-apply`,
-and optionally run `/tdk-module-boundary-policy` for dependency guidance before
+Durable module ownership belongs in workspace layout, not ad hoc UT planning. When a
+sub-workspace needs module boundaries, use `/tdk-workspace-layout-propose`, review
+`workspace-layout-proposal.json`, review/apply with `/tdk-workflow-config-apply`,
+and optionally run `/tdk-workspace-dependency-policy` for dependency guidance before
 UT planning targets a specific module.
 
 - `testMapping.strategy` — one of `co-location`, `mirror`, `separate-project`.

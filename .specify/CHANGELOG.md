@@ -9,6 +9,17 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.90.0] - 2026-06-30
+
+### Added
+- **[tdk-workspace-layout-propose]** Added canonical workspace layout proposal skill and kept `/tdk-boundary-map` as a deprecated compatibility route.
+- **[tdk-workspace-dependency-policy]** Added canonical workspace dependency policy skill and kept `/tdk-module-boundary-policy` as a deprecated compatibility route.
+
+### Changed
+- **[tdk-workflow-config-apply]** Prefer `.specify/configurations/workspace-layout/workspace-layout-proposal.json` and fall back to legacy `workspace-topology.json`.
+- **[tdk-scaffold]** Updated golden-path scaffold evidence routing to use workspace layout/dependency policy names.
+- **[Docs]** Updated command reference, document flow, UT usage, README, and scenario 14 for the new workspace layout/dependency policy names.
+
 
 ## [1.89.0] - 2026-06-30
 

@@ -13,9 +13,9 @@ Allowed artifacts:
 - `architecture-recovery.md`
 
 No other writes are allowed. The advisor does not create specs, HLD artifacts,
-plans, tasks, tracker issues, source code, topology files, ADR files, or
+plans, tasks, tracker issues, source code, layout proposal files, ADR files, or
 `.specify/.specify.json`. It does not create or update `.specify/.specify.json`
-and does not write `workspace-topology.json`.
+and does not write `workspace-layout-proposal.json`.
 
 ## Standard Mode Outputs
 

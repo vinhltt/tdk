@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.2.2] - 2026-06-30
+
+### Changed
+- tdk-golden-path-scaffold: accept workspace layout evidence and workspace dependency policy guidance while keeping legacy topology/policy fallback
+
 ## [1.2.1] - 2026-06-30
 
 ### Changed

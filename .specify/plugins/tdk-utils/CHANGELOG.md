@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.2.0] - 2026-06-30
+
+### Added
+- tdk-workspace-dependency-policy: add canonical workspace dependency policy workflow with standard/audit/suggest modes and review-only enforcement snippets
+
+### Changed
+- tdk-module-boundary-policy: convert to a deprecated compatibility route for the new workspace dependency policy skill
+- tdk-workspace-dependency-policy references and templates: prefer workspace layout proposal artifacts while preserving legacy topology inputs
+
 ## [2.1.3] - 2026-06-30
 
 ### Changed

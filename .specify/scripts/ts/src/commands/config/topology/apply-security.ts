@@ -15,6 +15,10 @@ import { CliExitError, type CliExitCode, EXIT_VALIDATION } from '../../../utils/
 import { hashBytes } from './apply-plan';
 
 const MAX_SEARCH_DEPTH = 20;
+const WORKSPACE_LAYOUT_DIR = ['.specify', 'configurations', 'workspace-layout'];
+const WORKSPACE_LAYOUT_FILE = 'workspace-layout-proposal.json';
+const LEGACY_TOPOLOGY_DIR = ['.specify', 'configurations', 'workspace-topology'];
+const LEGACY_TOPOLOGY_FILE = 'workspace-topology.json';
 const SENSITIVE_KEY_PATTERN = /(token|secret|password|credential|auth|private[_-]?key|api[_-]?key|access[_-]?key)/i;
 const SECRET_VALUE_PATTERNS = [
   /\bBearer\s+[A-Za-z0-9._~+/=-]+/i,
@@ -73,6 +77,11 @@ export interface AuditRecord {
   failureGate?: string;
   message?: string;
   host: string;
+}
+
+interface EligibleTopologyDir {
+  dir: string;
+  realPath: string;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -197,19 +206,53 @@ export function validateConfigTargetBeforeRead(target: JsonConfigTarget): SafeCo
   };
 }
 
+function workspaceLayoutDir(target: JsonConfigTarget): string {
+  return join(target.workspaceRoot, ...WORKSPACE_LAYOUT_DIR);
+}
+
+function legacyTopologyDir(target: JsonConfigTarget): string {
+  return join(target.workspaceRoot, ...LEGACY_TOPOLOGY_DIR);
+}
+
+function defaultTopologyPath(target: JsonConfigTarget): string {
+  const layoutPath = join(workspaceLayoutDir(target), WORKSPACE_LAYOUT_FILE);
+  if (existsSync(layoutPath)) {
+    return layoutPath;
+  }
+
+  const legacyPath = join(legacyTopologyDir(target), LEGACY_TOPOLOGY_FILE);
+  if (existsSync(legacyPath)) {
+    return legacyPath;
+  }
+
+  return layoutPath;
+}
+
+function findEligibleTopologyDir(
+  target: JsonConfigTarget,
+  topologyRealPath: string,
+): EligibleTopologyDir | undefined {
+  for (const dir of [workspaceLayoutDir(target), legacyTopologyDir(target)]) {
+    if (!existsSync(dir)) {
+      continue;
+    }
+    const realPath = realpathSync.native(dir);
+    if (isInside(realPath, topologyRealPath)) {
+      return { dir, realPath };
+    }
+  }
+  return undefined;
+}
+
 export function resolveTopologyForApply(target: JsonConfigTarget, topologyPath?: string): SafeTopologyRead {
-  const topologyDir = join(target.workspaceRoot, '.specify', 'configurations', 'workspace-topology');
-  const defaultTopologyPath = join(topologyDir, 'workspace-topology.json');
-  const resolvedTopologyPath = resolve(target.workspaceRoot, topologyPath ?? defaultTopologyPath);
+  const resolvedTopologyPath = resolve(target.workspaceRoot, topologyPath ?? defaultTopologyPath(target));
 
   if (!existsSync(resolvedTopologyPath)) {
-    throw new CliExitError(`Topology file not found: ${resolvedTopologyPath}`, EXIT_VALIDATION, 'topology-read');
+    throw new CliExitError(`Workspace layout/topology file not found: ${resolvedTopologyPath}`, EXIT_VALIDATION, 'topology-read');
   }
 
   const topologyRead = readNoFollow(resolvedTopologyPath, 'topology file');
-  const applyEligible = existsSync(topologyDir)
-    ? isInside(realpathSync.native(topologyDir), topologyRead.realPath)
-    : false;
+  const applyEligible = findEligibleTopologyDir(target, topologyRead.realPath) !== undefined;
 
   return {
     topologyPath: resolvedTopologyPath,
@@ -221,9 +264,22 @@ export function resolveTopologyForApply(target: JsonConfigTarget, topologyPath?:
   };
 }
 
-export function buildSafeTopologyApplyPaths(target: JsonConfigTarget, runId: string): SafeWriterPaths {
-  const topologyDir = join(target.workspaceRoot, '.specify', 'configurations', 'workspace-topology');
-  const topologyDirRealPath = realpathSync.native(topologyDir);
+export function buildSafeTopologyApplyPaths(
+  target: JsonConfigTarget,
+  runId: string,
+  topologyRealPath: string,
+): SafeWriterPaths {
+  const eligibleDir = findEligibleTopologyDir(target, topologyRealPath);
+  if (eligibleDir === undefined) {
+    throw new CliExitError(
+      'Selected layout/topology file is not under an apply-eligible configuration directory.',
+      EXIT_VALIDATION,
+      'topology-eligibility',
+    );
+  }
+
+  const topologyDir = eligibleDir.dir;
+  const topologyDirRealPath = eligibleDir.realPath;
   assertInside(target.workspaceRootRealPath, topologyDirRealPath, 'topology apply directory');
   assertExistingParentsNoSymlink(target.workspaceRoot, topologyDir, 'topology apply directory');
   assertNoSymlink(topologyDir, 'topology apply directory');

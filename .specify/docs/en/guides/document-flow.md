@@ -17,9 +17,9 @@ flowchart TD
     GREENFIELD_INCEPTION[project-inception.md<br/>Greenfield Intake]
     BROWNFIELD_ONBOARDING[brownfield-onboarding.md<br/>Brownfield Onboarding]
     ARCHITECTURE_REPORTS[architecture-options.md<br/>architecture-decision.md<br/>architecture-recovery.md]
-    TOPOLOGY[workspace-topology.md/json<br/>Topology Proposal]
+    TOPOLOGY[workspace-layout-proposal.md/json<br/>Layout Proposal]
     CONFIG_PATCH[config topology apply<br/>Dry-run / Guarded Apply]
-    POLICY[module-boundary-policy.md<br/>enforcement-snippets.md]
+    POLICY[workspace-dependency-policy.md<br/>enforcement-snippets.md]
     GOLDEN_PATH[golden-path-scaffold-plan.md<br/>golden-path-recipe.json]
     DISCOVERY[discovery/<br/>Epic Context]
 
@@ -28,9 +28,9 @@ flowchart TD
     REQ -.->|/tdk-brownfield-start<br/>repo onboarding| BROWNFIELD_ONBOARDING
     GREENFIELD_INCEPTION -.->|/tdk-architecture-advisor<br/>project decision| ARCHITECTURE_REPORTS
     BROWNFIELD_ONBOARDING -.->|/tdk-architecture-advisor --recover-existing<br/>recovery report| ARCHITECTURE_REPORTS
-    ARCHITECTURE_REPORTS -.->|/tdk-boundary-map<br/>proposal only| TOPOLOGY
+    ARCHITECTURE_REPORTS -.->|/tdk-workspace-layout-propose<br/>proposal only| TOPOLOGY
     TOPOLOGY -.->|/tdk-workflow-config-apply<br/>review/apply| CONFIG_PATCH
-    CONFIG_PATCH -.->|/tdk-module-boundary-policy<br/>policy only| POLICY
+    CONFIG_PATCH -.->|/tdk-workspace-dependency-policy<br/>policy only| POLICY
     POLICY -.->|/tdk-golden-path-scaffold<br/>dry-run first| GOLDEN_PATH
     REQ -.->|/tdk-discovery<br/>optional, epic| DISCOVERY
     REQ -->|/tdk-specify| SPEC[spec.md<br/>Feature Specification]
@@ -99,9 +99,9 @@ flowchart LR
     GREENFIELD_INCEPTION[project-inception.md]
     BROWNFIELD_ONBOARDING[brownfield-onboarding.md]
     ARCHITECTURE_REPORTS[architecture reports]
-    TOPOLOGY[workspace-topology.md/json]
+    TOPOLOGY[workspace-layout-proposal.md/json]
     CONFIG_PATCH[config dry-run/apply]
-    POLICY[module-boundary-policy.md<br/>enforcement-snippets.md]
+    POLICY[workspace-dependency-policy.md<br/>enforcement-snippets.md]
     GOLDEN_PATH[golden-path scaffold<br/>recipe/report]
     DISCOVERY[discovery/<br/>Epic Context]
     SPEC[spec.md]
@@ -114,9 +114,9 @@ flowchart LR
     REQ -.->|"/tdk-brownfield-start"| BROWNFIELD_ONBOARDING
     GREENFIELD_INCEPTION -.->|"/tdk-architecture-advisor"| ARCHITECTURE_REPORTS
     BROWNFIELD_ONBOARDING -.->|"/tdk-architecture-advisor --recover-existing"| ARCHITECTURE_REPORTS
-    ARCHITECTURE_REPORTS -.->|"/tdk-boundary-map"| TOPOLOGY
+    ARCHITECTURE_REPORTS -.->|"/tdk-workspace-layout-propose"| TOPOLOGY
     TOPOLOGY -.->|"/tdk-workflow-config-apply<br/>review/apply"| CONFIG_PATCH
-    CONFIG_PATCH -.->|"/tdk-module-boundary-policy<br/>policy only"| POLICY
+    CONFIG_PATCH -.->|"/tdk-workspace-dependency-policy<br/>policy only"| POLICY
     POLICY -.->|"/tdk-golden-path-scaffold<br/>dry-run first"| GOLDEN_PATH
     REQ -.->|"/tdk-discovery<br/>epic-id brief"| DISCOVERY
     REQ -->|"/tdk-specify<br/>feature-id desc"| SPEC
@@ -316,15 +316,18 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `.specify/configurations/inception/project-inception.md` | `/tdk-greenfield-start` | Project brief or workspace-local file plus project-inception questions | Readiness-aware recommended greenfield route | New-project intake |
 | `.specify/configurations/inception/brownfield-onboarding.md` | `/tdk-brownfield-start` | Existing repo evidence, optional scout output | Evidence/confidence-based brownfield onboarding route | Existing-repo intake |
 | `.specify/configurations/architecture/architecture-options.md` | `/tdk-architecture-advisor` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | Architecture decision review | Project architecture options |
-| `.specify/configurations/architecture/architecture-decision.md` | `/tdk-architecture-advisor` | `architecture-options.md` plus accepted assumptions | `/tdk-boundary-map` or future topology work | Project architecture decision |
+| `.specify/configurations/architecture/architecture-decision.md` | `/tdk-architecture-advisor` | `architecture-options.md` plus accepted assumptions | `/tdk-workspace-layout-propose` or future layout work | Project architecture decision |
 | `.specify/configurations/architecture/architecture-recovery.md` | `/tdk-architecture-advisor --recover-existing` | Brownfield onboarding, scout, README, or bounded repo evidence | Brownfield-safe architecture recovery review | Existing-repo recovery |
-| `.specify/configurations/workspace-topology/workspace-topology.md` | `/tdk-boundary-map` or human-authored topology proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | Human review before dry-run preview | Project topology proposal |
-| `.specify/configurations/workspace-topology/workspace-topology.json` | `/tdk-boundary-map` or human-authored topology proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | `/tdk-workflow-config-apply` interactive review/apply, or explicit `--dry-run` for automation preview | Project topology changes |
-| `config topology dry-run/apply` | `/tdk-workflow-config-apply` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | Human review; parsed `planHash` passed internally for guarded write | Runtime config preview or guarded config write |
-| `.specify/configurations/module-boundary-policy/module-boundary-policy.md` | `/tdk-module-boundary-policy` | topology artifacts, existing `.specify/.specify.json`, repo stack evidence | Human review of boundary guidance | Optional project boundary policy |
-| `.specify/configurations/module-boundary-policy/enforcement-snippets.md` | `/tdk-module-boundary-policy --suggest` | policy report and detected stack evidence | Human-applied enforcement config candidates | Optional snippet guidance |
-| `.specify/configurations/golden-path/golden-path-scaffold-plan.md` | `/tdk-golden-path-scaffold --dry-run` | approved topology/config evidence, architecture decision/recovery, optional boundary policy | Human review before recipe approval | Optional skeleton plan |
-| `.specify/configurations/golden-path/golden-path-recipe.json` | `/tdk-golden-path-scaffold --dry-run` | scaffold plan and approved topology/config evidence | Set `status: approved` before guarded apply | Optional skeleton recipe |
+| `.specify/configurations/workspace-layout/workspace-layout-proposal.md` | `/tdk-workspace-layout-propose` or human-authored layout proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | Human review before dry-run preview | Project layout proposal |
+| `.specify/configurations/workspace-layout/workspace-layout-proposal.json` | `/tdk-workspace-layout-propose` or human-authored layout proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | `/tdk-workflow-config-apply` interactive review/apply, or explicit `--dry-run` for automation preview | Project layout changes |
+| `.specify/configurations/workspace-topology/workspace-topology.md` | `/tdk-boundary-map` compatibility or human-authored legacy topology proposal | Legacy topology evidence | Human review before dry-run preview | Legacy project topology proposal |
+| `.specify/configurations/workspace-topology/workspace-topology.json` | `/tdk-boundary-map` compatibility or human-authored legacy topology proposal | Legacy topology evidence | `/tdk-workflow-config-apply` legacy fallback | Legacy project topology changes |
+| `config topology dry-run/apply` | `/tdk-workflow-config-apply` | `workspace-layout-proposal.json`, legacy `workspace-topology.json`, existing JSON `.specify/.specify.json` | Human review; parsed `planHash` passed internally for guarded write | Runtime config preview or guarded config write |
+| `.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md` | `/tdk-workspace-dependency-policy` | layout artifacts, existing `.specify/.specify.json`, repo stack evidence | Human review of dependency guidance | Optional project dependency policy |
+| `.specify/configurations/workspace-dependency-policy/enforcement-snippets.md` | `/tdk-workspace-dependency-policy --suggest` | policy report and detected stack evidence | Human-applied enforcement config candidates | Optional snippet guidance |
+| `.specify/configurations/module-boundary-policy/module-boundary-policy.md` | `/tdk-module-boundary-policy` compatibility | legacy topology artifacts, existing `.specify/.specify.json`, repo stack evidence | Human review of legacy boundary guidance | Legacy optional project boundary policy |
+| `.specify/configurations/golden-path/golden-path-scaffold-plan.md` | `/tdk-golden-path-scaffold --dry-run` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | Human review before recipe approval | Optional skeleton plan |
+| `.specify/configurations/golden-path/golden-path-recipe.json` | `/tdk-golden-path-scaffold --dry-run` | scaffold plan and approved layout/config evidence | Set `status: approved` before guarded apply | Optional skeleton recipe |
 | `.specify/configurations/golden-path/generated-files-report.md` | `/tdk-golden-path-scaffold --dry-run` or `--yes` | recipe and safety gates | Review created/skipped/existing/refused paths | Scaffold report |
 | `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution; existing discovery files for ID-only `--interview` | Optional context for `/tdk-specify` | Optional before specify |
 | `spec.md` | `/tdk-specify` | User description, optional `discovery/index.md`; existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature start |

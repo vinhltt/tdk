@@ -7,10 +7,11 @@ const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skil
 const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en/guides');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
-const POLICY_NAME = 'tdk-module-boundary-policy';
+const POLICY_NAME = 'tdk-workspace-dependency-policy';
+const LEGACY_POLICY_NAME = 'tdk-module-boundary-policy';
 
 const REQUIRED_REFERENCES = [
-  'references/module-boundary-policy-output-contract.md',
+  'references/workspace-dependency-policy-output-contract.md',
   'references/enforcement-snippet-catalog.md',
   'references/ecosystem-boundary-candidates.md',
   'references/workflow-standard.md',
@@ -19,7 +20,7 @@ const REQUIRED_REFERENCES = [
 ];
 
 const REQUIRED_TEMPLATES = [
-  'templates/module-boundary-policy.md.tpl',
+  'templates/workspace-dependency-policy.md.tpl',
   'templates/enforcement-snippets.md.tpl',
 ];
 
@@ -53,8 +54,8 @@ const FORBIDDEN_POLICY_PROMISES = [
   'enforcement is active',
 ];
 
-function policyDir(): string {
-  return resolve(UTILS_SKILLS_DIR, POLICY_NAME);
+function skillDir(name: string): string {
+  return resolve(UTILS_SKILLS_DIR, name);
 }
 
 function read(path: string): string {
@@ -68,21 +69,39 @@ function walkFiles(dir: string): string[] {
   });
 }
 
-describe('TDK module-boundary-policy contracts', () => {
-  const skillDir = policyDir();
-  const skillPath = join(skillDir, 'SKILL.md');
+describe('TDK workspace dependency policy contracts', () => {
+  const policyDir = skillDir(POLICY_NAME);
+  const legacyPolicyDir = skillDir(LEGACY_POLICY_NAME);
+  const skillPath = join(policyDir, 'SKILL.md');
+  const legacySkillPath = join(legacyPolicyDir, 'SKILL.md');
   const skill = existsSync(skillPath) ? read(skillPath) : '';
+  const legacySkill = existsSync(legacySkillPath) ? read(legacySkillPath) : '';
 
-  it('registers module-boundary-policy as a TDK utils report skill', () => {
+  it('registers workspace-dependency-policy as a TDK utils report skill', () => {
     expect(existsSync(skillPath)).toBe(true);
-    expect(skill).toContain('name: tdk-module-boundary-policy');
-    expect(skill).toContain('[topology|file] [--audit|--suggest]');
+    expect(skill).toContain('name: tdk-workspace-dependency-policy');
+    expect(skill).toContain('[layout|file] [--audit|--suggest]');
     expect(skill).toContain('category: architecture-workflow');
-    expect(skill).toContain('.specify/configurations/module-boundary-policy/module-boundary-policy.md');
-    expect(skill).toContain('.specify/configurations/module-boundary-policy/enforcement-snippets.md');
+    expect(skill).toContain(
+      '.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md',
+    );
+    expect(skill).toContain(
+      '.specify/configurations/workspace-dependency-policy/enforcement-snippets.md',
+    );
     expect(skill).toContain('does not create or update `.specify/.specify.json`');
     expect(skill).toContain('does not enforce imports directly');
     expect(existsSync(join(CORE_SKILLS_DIR, POLICY_NAME, 'SKILL.md'))).toBe(false);
+  });
+
+  it('keeps module-boundary-policy as a deprecated compatibility wrapper', () => {
+    expect(existsSync(legacySkillPath)).toBe(true);
+    expect(legacySkill).toContain('name: tdk-module-boundary-policy');
+    expect(legacySkill).toContain('deprecated compatibility route');
+    expect(legacySkill).toContain('/tdk-workspace-dependency-policy');
+    expect(legacySkill).toContain(
+      '.specify/configurations/module-boundary-policy/module-boundary-policy.md',
+    );
+    expect(legacySkill).toContain('transition window');
   });
 
   it('uses progressive disclosure through required references and templates', () => {
@@ -90,19 +109,21 @@ describe('TDK module-boundary-policy contracts', () => {
     expect(skill).toContain('Load exactly one mode workflow');
 
     for (const reference of REQUIRED_REFERENCES) {
-      expect(existsSync(join(skillDir, reference))).toBe(true);
+      expect(existsSync(join(policyDir, reference))).toBe(true);
       expect(skill).toContain(reference);
     }
 
     for (const template of REQUIRED_TEMPLATES) {
-      expect(existsSync(join(skillDir, template))).toBe(true);
+      expect(existsSync(join(policyDir, template))).toBe(true);
       expect(skill).toContain(template);
     }
   });
 
-  it('requires policy report sections and report-only topology guidance', () => {
-    const policyTemplate = read(join(skillDir, 'templates/module-boundary-policy.md.tpl'));
-    const outputContract = read(join(skillDir, 'references/module-boundary-policy-output-contract.md'));
+  it('requires policy report sections and report-only layout guidance', () => {
+    const policyTemplate = read(join(policyDir, 'templates/workspace-dependency-policy.md.tpl'));
+    const outputContract = read(
+      join(policyDir, 'references/workspace-dependency-policy-output-contract.md'),
+    );
 
     for (const section of REQUIRED_POLICY_SECTIONS) {
       expect(policyTemplate).toContain(section);
@@ -112,16 +133,16 @@ describe('TDK module-boundary-policy contracts', () => {
       expect(outputContract).toContain(field);
     }
 
-    expect(outputContract).toContain('Report-only topology fields stay advisory');
+    expect(outputContract).toContain('Report-only layout fields stay advisory');
   });
 
   it('keeps workflows observe-only and snippet-only', () => {
-    const standard = read(join(skillDir, 'references/workflow-standard.md'));
-    const audit = read(join(skillDir, 'references/workflow-audit.md'));
-    const suggest = read(join(skillDir, 'references/workflow-suggest.md'));
-    const snippets = read(join(skillDir, 'templates/enforcement-snippets.md.tpl'));
+    const standard = read(join(policyDir, 'references/workflow-standard.md'));
+    const audit = read(join(policyDir, 'references/workflow-audit.md'));
+    const suggest = read(join(policyDir, 'references/workflow-suggest.md'));
+    const snippets = read(join(policyDir, 'templates/enforcement-snippets.md.tpl'));
 
-    expect(standard).toContain('Write `module-boundary-policy.md`');
+    expect(standard).toContain('Write `workspace-dependency-policy.md`');
     expect(audit).toContain('It is observe-only');
     expect(suggest).toContain('Write or update `enforcement-snippets.md`');
     expect(snippets).toContain('Copy after human review only');
@@ -129,7 +150,7 @@ describe('TDK module-boundary-policy contracts', () => {
   });
 
   it('keeps non-JS ecosystems manual or deferred without matching evidence', () => {
-    const candidates = read(join(skillDir, 'references/ecosystem-boundary-candidates.md'));
+    const candidates = read(join(policyDir, 'references/ecosystem-boundary-candidates.md'));
 
     for (const ecosystem of ['CODEOWNERS', 'ArchUnit', 'Import Linter', 'Packwerk', 'Bazel']) {
       expect(candidates).toContain(ecosystem);
@@ -141,7 +162,7 @@ describe('TDK module-boundary-policy contracts', () => {
   });
 
   it('keeps policy text free of config-write, source-move, and active-enforcement promises', () => {
-    const combined = walkFiles(skillDir)
+    const combined = walkFiles(policyDir)
       .filter((path) => path.endsWith('.md') || path.endsWith('.tpl'))
       .map((path) => read(path).toLowerCase())
       .join('\n');
@@ -161,12 +182,18 @@ describe('TDK module-boundary-policy contracts', () => {
     const commandReference = read(join(DOCS_DIR, 'command-reference.md'));
     const documentFlow = read(join(DOCS_DIR, 'document-flow.md'));
 
+    expect(manifest).toContain('"tdk-workspace-dependency-policy"');
     expect(manifest).toContain('"tdk-module-boundary-policy"');
+    expect(readme).toContain('/tdk-workspace-dependency-policy');
     expect(readme).toContain('/tdk-module-boundary-policy');
-    expect(readme).toContain('15 skills + 5 agents');
+    expect(readme).toContain('16 skills + 5 agents');
+    expect(commandReference).toContain('/tdk-workspace-dependency-policy [layout|file] [--audit|--suggest]');
     expect(commandReference).toContain('/tdk-module-boundary-policy [topology|file] [--audit|--suggest]');
+    expect(commandReference).toContain('workspace-dependency-policy.md');
     expect(commandReference).toContain('module-boundary-policy.md');
+    expect(documentFlow).toContain('/tdk-workspace-dependency-policy');
     expect(documentFlow).toContain('/tdk-module-boundary-policy');
+    expect(documentFlow).toContain('workspace-dependency-policy.md');
     expect(documentFlow).toContain('module-boundary-policy.md');
   });
 });

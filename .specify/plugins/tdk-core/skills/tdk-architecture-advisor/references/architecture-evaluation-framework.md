@@ -76,4 +76,4 @@ Every recommendation must cover:
 The advisor may discuss a broad architecture taxonomy. That taxonomy is not
 automatically valid `.specify/.specify.json` runtime config. Record config
 mapping only as a note or follow-up. The advisor does not create or update
-`.specify/.specify.json` and does not write `workspace-topology.json`.
+`.specify/.specify.json` and does not write `workspace-layout-proposal.json`.

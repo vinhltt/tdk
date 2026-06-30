@@ -36,7 +36,17 @@ lint config, Nx config, Turborepo config, or dependency-cruiser config.
 
 ## Evidence Gates
 
-Dry-run requires topology or runtime config evidence. Apply requires an approved
-recipe and no unresolved ownership questions. Missing module-boundary policy is
+Dry-run requires layout or runtime config evidence. Apply requires an approved
+recipe and no unresolved ownership questions. Missing workspace dependency policy is
 a warning for dry-run, not an apply blocker unless the recipe depends on policy
 claims.
+
+Canonical layout evidence:
+
+- `.specify/configurations/workspace-layout/workspace-layout-proposal.json`
+- `.specify/configurations/workspace-layout/workspace-layout-proposal.md`
+
+Legacy topology evidence:
+
+- `.specify/configurations/workspace-topology/workspace-topology.json`
+- `.specify/configurations/workspace-topology/workspace-topology.md`

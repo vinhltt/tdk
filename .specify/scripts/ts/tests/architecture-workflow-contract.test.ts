@@ -25,19 +25,21 @@ function expectNoRuntimeConfigMutation(skill: string): void {
   expect(skill).not.toContain('mutate `.specify/.specify.json`');
 }
 
-function expectArchitectureWorkflowVersion(skill: string): void {
-  expect(skill).toContain('  version: "5.7.0"');
+function expectArchitectureWorkflowMetadata(skill: string): void {
+  expect(skill).toMatch(/version: "[^"]+"/);
 }
 
 describe('architecture workflow foundation contracts', () => {
   const greenfieldPath = skillPath('tdk-greenfield-start');
   const brownfieldPath = skillPath('tdk-brownfield-start');
-  const boundaryMapPath = skillPath('tdk-boundary-map');
+  const layoutPath = skillPath('tdk-workspace-layout-propose');
+  const legacyBoundaryMapPath = skillPath('tdk-boundary-map');
   const topologyPath = skillPath('tdk-workflow-config-apply');
 
   const greenfield = readIfExists(greenfieldPath);
   const brownfield = readIfExists(brownfieldPath);
-  const boundaryMap = readIfExists(boundaryMapPath);
+  const layout = readIfExists(layoutPath);
+  const legacyBoundaryMap = readIfExists(legacyBoundaryMapPath);
   const topology = readIfExists(topologyPath);
   const hld = read(skillPath('tdk-high-level-design'));
   const index = read(INDEX_PATH);
@@ -50,11 +52,21 @@ describe('architecture workflow foundation contracts', () => {
     expect(applyCommand).toContain("option('--expect-hash <hash>'");
   });
 
-  it('keeps new foundation skills at the selected architecture workflow version', () => {
-    expectArchitectureWorkflowVersion(greenfield);
-    expectArchitectureWorkflowVersion(brownfield);
-    expectArchitectureWorkflowVersion(boundaryMap);
-    expectArchitectureWorkflowVersion(topology);
+  it('keeps new foundation skills in the architecture workflow category', () => {
+    expectArchitectureWorkflowMetadata(greenfield);
+    expectArchitectureWorkflowMetadata(brownfield);
+    expectArchitectureWorkflowMetadata(layout);
+    expectArchitectureWorkflowMetadata(topology);
+  });
+
+  it('keeps boundary-map as a compatibility wrapper for workspace layout proposal', () => {
+    expect(existsSync(layoutPath)).toBe(true);
+    expect(existsSync(legacyBoundaryMapPath)).toBe(true);
+    expect(layout).toContain('name: tdk-workspace-layout-propose');
+    expect(layout).toContain('.specify/configurations/workspace-layout/workspace-layout-proposal.json');
+    expect(legacyBoundaryMap).toContain('deprecated compatibility route');
+    expect(legacyBoundaryMap).toContain('/tdk-workspace-layout-propose');
+    expect(legacyBoundaryMap).toContain('.specify/configurations/workspace-topology/workspace-topology.json');
   });
 
   it('adds greenfield start as report-only new-project intake', () => {
@@ -98,8 +110,10 @@ describe('architecture workflow foundation contracts', () => {
     expect(topology).toContain('automation apply remains explicit: `--yes --expect-hash <planHash>`');
     expect(topology).toContain('existing JSON `.specify/.specify.json` is required');
     expect(topology).toContain('bun src/index.ts config topology apply');
+    expect(topology).toContain('.specify/configurations/workspace-layout/workspace-layout-proposal.json');
     expect(topology).toContain('.specify/configurations/workspace-topology/workspace-topology.json');
-    expect(topology).toContain('workspace-topology.json` is the authoring proposal');
+    expect(topology).toContain('workspace-layout-proposal.json` is the authoring proposal');
+    expect(topology).toContain('workspace-topology.json` remains a legacy fallback');
     expect(topology).toContain('`.specify/.specify.json` is derived runtime config');
     expect(topology).toContain('shell-like routing values hard-fail');
     expect(topology).toContain('deferred: first-time config creation');

@@ -82,24 +82,26 @@ Run `diff → sync → index` to keep docs consistent across workspaces.
 | Command | Purpose |
 |---------|---------|
 | `/tdk-greenfield-start` | New-project intake that writes readiness-aware `project-inception.md` and recommends the next command chain without mutating runtime config |
-| `/tdk-brownfield-start` | Observe-first repo onboarding that writes evidence/confidence-based `brownfield-onboarding.md` and recommends scout/topology/docs steps |
+| `/tdk-brownfield-start` | Observe-first repo onboarding that writes evidence/confidence-based `brownfield-onboarding.md` and recommends scout/layout/docs steps |
 | `/tdk-architecture-advisor` | Project-level architecture advisor that writes report-only options, decision, or recovery artifacts |
-| `/tdk-boundary-map` | Topology proposal workflow that writes `workspace-topology.md` and `workspace-topology.json` without runtime config mutation |
-| `/tdk-workflow-config-apply` | Interactive review/apply of `.specify/.specify.json` changes derived from `workspace-topology.json`; automation can still use explicit dry-run/apply flags |
-| `/tdk-module-boundary-policy` | Optional module boundary policy report and non-applied enforcement snippets from approved topology evidence |
-| `/tdk-golden-path-scaffold` | Dry-run-first scaffold plan and recipe for approved topology skeletons; guarded apply creates only safe empty structure and `.specify` templates |
+| `/tdk-workspace-layout-propose` | Workspace layout proposal workflow that writes `workspace-layout-proposal.md` and `workspace-layout-proposal.json` without runtime config mutation |
+| `/tdk-boundary-map` | Deprecated compatibility route for `/tdk-workspace-layout-propose`; legacy `workspace-topology.md/json` artifacts remain readable |
+| `/tdk-workflow-config-apply` | Interactive review/apply of `.specify/.specify.json` changes derived from `workspace-layout-proposal.json` or legacy `workspace-topology.json`; automation can still use explicit dry-run/apply flags |
+| `/tdk-workspace-dependency-policy` | Optional workspace dependency policy report and non-applied enforcement snippets from approved layout evidence |
+| `/tdk-module-boundary-policy` | Deprecated compatibility route for `/tdk-workspace-dependency-policy`; legacy policy artifacts remain readable |
+| `/tdk-golden-path-scaffold` | Dry-run-first scaffold plan and recipe for approved layout skeletons; guarded apply creates only safe empty structure and `.specify` templates |
 
-Architecture advisor is report-only. It does not write runtime config, topology
-files, source code, plans, tasks, tracker issues, or ADR files. Boundary-map is
-proposal-only: it writes topology markdown/JSON and does not change runtime
-config, source directories, or boundary policy. Workflow config apply previews
+Architecture advisor is report-only. It does not write runtime config, layout
+files, source code, plans, tasks, tracker issues, or ADR files. Workspace layout
+proposal is proposal-only: it writes layout markdown/JSON and does not change runtime
+config, source directories, or dependency policy. Workflow config apply previews
 first, shows diff/warnings, asks before writing, and passes the parsed
 `planHash` internally. Automation can still run `--dry-run`, then
 `--yes --expect-hash <planHash>`.
-It does not create source directories or apply `--reconcile`. Module boundary
-policy follows topology review/apply and writes advisory Markdown only; it never
+It does not create source directories or apply `--reconcile`. Workspace dependency
+policy follows layout review/apply and writes advisory Markdown only; it never
 changes source, lint, workspace, package manager, routing, or runtime config.
-Golden-path scaffold follows approved topology/policy review and defaults to a
+Golden-path scaffold follows approved layout/policy review and defaults to a
 reviewable dry-run recipe under `.specify/configurations/golden-path/`; `--yes`
 requires `golden-path-recipe.json` to be approved and never creates business
 code.
@@ -191,16 +193,18 @@ Each command reads the output of the previous one. For minimal feature work, the
 | 14 | `/tdk-greenfield-start [brief|file] [--full|--quick|--unknown]` | New-project intake and routing report |
 | 15 | `/tdk-brownfield-start [repo-root] [--full|--config-only|--unknown]` | Existing-repo onboarding and safe setup recommendations |
 | 16 | `/tdk-architecture-advisor [input|file] [--recover-existing|--unknown]` | Project architecture options, decision, or recovery reports |
-| 17 | `/tdk-boundary-map [input|file] [--from-existing|--unknown]` | Workspace topology proposal markdown and JSON |
-| 18 | `/tdk-module-boundary-policy [topology|file] [--audit|--suggest]` | Optional module boundary policy report and non-applied enforcement snippets |
-| 19 | `/tdk-golden-path-scaffold [topology|file] [--dry-run|--yes] [--preset <name>]` | Guarded golden-path scaffold plan and recipe |
+| 17 | `/tdk-workspace-layout-propose [input|file] [--from-existing|--unknown]` | Workspace layout proposal markdown and JSON |
+| 17c | `/tdk-boundary-map [input|file] [--from-existing|--unknown]` | Deprecated compatibility route for workspace layout proposal |
+| 18 | `/tdk-workspace-dependency-policy [layout|file] [--audit|--suggest]` | Optional workspace dependency policy report and non-applied enforcement snippets |
+| 18c | `/tdk-module-boundary-policy [topology|file] [--audit|--suggest]` | Deprecated compatibility route for workspace dependency policy |
+| 19 | `/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <name>]` | Guarded golden-path scaffold plan and recipe |
 | — | **Unit Testing** | |
 | 20 | `/tdk-ut-backfill-plan <id>` | Generate unit test plan and phase files |
 | — | **Config & Workspace** | |
 | 21 | `/tdk-config-diff` | Compare workspace vs sub-workspace docs |
 | 22 | `/tdk-config-sync` | Sync docs between workspace and sub-workspaces |
 | 23 | `/tdk-config-index` | Generate/update document manager index |
-| 24 | `/tdk-workflow-config-apply [(no flags)\|--dry-run\|--reconcile\|--yes --expect-hash <hash>] [--topology <path>]` | Interactive runtime config review/apply from workspace topology |
+| 24 | `/tdk-workflow-config-apply [(no flags)\|--dry-run\|--reconcile\|--yes --expect-hash <hash>] [--topology <path>]` | Interactive runtime config review/apply from workspace layout proposal |
 | 25 | `/tdk-sub-workdspace-init` | Initialize a new sub-workspace |
 | 26 | `/tdk-sub-workdspace-list` | List all configured sub-workspaces |
 | 27 | `/tdk-sub-workdspace-sync` | ~~Deprecated~~ → use `/tdk-config-sync` instead |
@@ -374,10 +378,12 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | greenfield:start | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | `--full`, `--quick`, `--unknown` | Project brief, optional README/docs | `.specify/configurations/inception/project-inception.md` with readiness, assumptions, unresolved questions, and recommendation confidence | None |
 | brownfield:start | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | `--full`, `--config-only`, `--unknown` | Existing repo evidence, optional scout output | `.specify/configurations/inception/brownfield-onboarding.md` with observed evidence separated from inferred recommendations | None |
 | architecture:advisor | `/tdk-architecture-advisor [input\|file] [--recover-existing\|--unknown]` | `--recover-existing`, `--unknown` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | `.specify/configurations/architecture/architecture-options.md`, `.specify/configurations/architecture/architecture-decision.md`, or `.specify/configurations/architecture/architecture-recovery.md` | Optional after start/scout/discovery |
-| boundary:map | `/tdk-boundary-map [input\|file] [--from-existing\|--unknown]` | `--from-existing`, `--unknown` | Architecture reports, inception/onboarding evidence, scout, README, or bounded repo evidence | `.specify/configurations/workspace-topology/workspace-topology.md`, `.specify/configurations/workspace-topology/workspace-topology.json` | Optional after advisor/start/scout |
-| workflow-config:apply | `/tdk-workflow-config-apply [(no flags)\|--dry-run\|--reconcile\|--yes --expect-hash <hash>] [--topology <path>]` | no flags, `--dry-run`, `--reconcile`, `--yes`, `--expect-hash`, `--accept-overwrites`, `--topology` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | Interactive patch review/apply; explicit preview/apply for automation | Optional after boundary-map or human-authored proposal |
-| module-boundary:policy | `/tdk-module-boundary-policy [topology\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | `workspace-topology.json`, `workspace-topology.md`, `.specify/.specify.json`, repo stack evidence | `module-boundary-policy.md`, optional `enforcement-snippets.md` | Optional after topology review/apply |
-| golden-path:scaffold | `/tdk-golden-path-scaffold [topology\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved topology/config evidence, architecture decision/recovery, optional boundary policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional after topology/policy review |
+| workspace-layout:propose | `/tdk-workspace-layout-propose [input\|file] [--from-existing\|--unknown]` | `--from-existing`, `--unknown` | Architecture reports, inception/onboarding evidence, scout, README, or bounded repo evidence | `.specify/configurations/workspace-layout/workspace-layout-proposal.md`, `.specify/configurations/workspace-layout/workspace-layout-proposal.json` | Optional after advisor/start/scout |
+| boundary:map | `/tdk-boundary-map [input\|file] [--from-existing\|--unknown]` | `--from-existing`, `--unknown` | Compatibility route for layout proposal | legacy `.specify/configurations/workspace-topology/workspace-topology.md`, legacy `.specify/configurations/workspace-topology/workspace-topology.json` | Compatibility only |
+| workflow-config:apply | `/tdk-workflow-config-apply [(no flags)\|--dry-run\|--reconcile\|--yes --expect-hash <hash>] [--topology <path>]` | no flags, `--dry-run`, `--reconcile`, `--yes`, `--expect-hash`, `--accept-overwrites`, `--topology` | `workspace-layout-proposal.json`, legacy `workspace-topology.json`, existing JSON `.specify/.specify.json` | Interactive patch review/apply; explicit preview/apply for automation | Optional after layout proposal or human-authored proposal |
+| workspace-dependency:policy | `/tdk-workspace-dependency-policy [layout\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | `workspace-layout-proposal.json`, `workspace-layout-proposal.md`, legacy topology artifacts, `.specify/.specify.json`, repo stack evidence | `workspace-dependency-policy.md`, optional `enforcement-snippets.md` | Optional after layout review/apply |
+| module-boundary:policy | `/tdk-module-boundary-policy [topology\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | Compatibility route for dependency policy | legacy `module-boundary-policy.md`, optional `enforcement-snippets.md` | Compatibility only |
+| golden-path:scaffold | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional after layout/policy review |
 
 Greenfield and brownfield start commands are report/routing entrypoints. They do not create specs, plans, tracker issues, source code, or `.specify/.specify.json`. Greenfield full mode runs a project-inception interview before strong routing. Quick mode records unanswered critical gaps. Unknown mode classifies only unless minimum facts are present. Brownfield full mode uses bounded repo evidence, config-only mode focuses on `.specify` state, and unknown mode recommends one evidence-backed next route.
 
@@ -390,13 +396,15 @@ updates `architecture-decision.md` only after explicit user confirmation.
 
 Syntax: `/tdk-architecture-advisor [input|file] [--recover-existing|--unknown]`.
 
-`/tdk-boundary-map` is project-level and proposal-only. Standard mode writes
-`workspace-topology.md` and `workspace-topology.json` from architecture evidence.
+`/tdk-workspace-layout-propose` is project-level and proposal-only. Standard mode writes
+`workspace-layout-proposal.md` and `workspace-layout-proposal.json` from architecture evidence.
 `--from-existing` keeps JSON limited to observed folders/packages by default and
 records desired-state deltas in markdown. `--unknown` writes readiness guidance
 and avoids overwriting JSON when evidence is insufficient.
 
-Syntax: `/tdk-boundary-map [input|file] [--from-existing|--unknown]`.
+Syntax: `/tdk-workspace-layout-propose [input|file] [--from-existing|--unknown]`.
+
+Compatibility syntax: `/tdk-boundary-map [input|file] [--from-existing|--unknown]`.
 
 `/tdk-workflow-config-apply` wraps the TypeScript CLI guarded apply flow.
 For normal human use, run it without flags:
@@ -413,29 +421,32 @@ config drift review without applying.
 Automation can still use the explicit CLI-shaped sequence:
 
 ```bash
-bun src/index.ts config topology apply --dry-run --topology .specify/configurations/workspace-topology/workspace-topology.json
-bun src/index.ts config topology apply --topology .specify/configurations/workspace-topology/workspace-topology.json --yes --expect-hash "$PLAN_HASH"
+bun src/index.ts config topology apply --dry-run --topology .specify/configurations/workspace-layout/workspace-layout-proposal.json
+bun src/index.ts config topology apply --topology .specify/configurations/workspace-layout/workspace-layout-proposal.json --yes --expect-hash "$PLAN_HASH"
 ```
 
 Apply requires an existing JSON `.specify/.specify.json` and an apply-eligible
-topology under `.specify/configurations/workspace-topology/`. Same-name
+proposal under `.specify/configurations/workspace-layout/` or legacy topology
+under `.specify/configurations/workspace-topology/`. Same-name
 overwrites, architecture type changes, and normalized path collisions require
 explicit approval before `--accept-overwrites` is passed. `--reconcile` remains
 report-only.
 
-`/tdk-module-boundary-policy` is optional policy/report work after topology is
+`/tdk-workspace-dependency-policy` is optional policy/report work after layout is
 reviewed. Standard mode writes
-`.specify/configurations/module-boundary-policy/module-boundary-policy.md`.
-`--audit` compares existing repo evidence against topology intent and writes
+`.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md`.
+`--audit` compares existing repo evidence against layout intent and writes
 findings only. `--suggest` writes
-`.specify/configurations/module-boundary-policy/enforcement-snippets.md` with
+`.specify/configurations/workspace-dependency-policy/enforcement-snippets.md` with
 copy-after-review snippets for detected stacks such as Nx, Turborepo, ESLint,
 TypeScript ESLint, or dependency-cruiser. Non-JS tools stay manual/deferred
 unless matching repo evidence exists.
 
-Syntax: `/tdk-module-boundary-policy [topology|file] [--audit|--suggest]`.
+Syntax: `/tdk-workspace-dependency-policy [layout|file] [--audit|--suggest]`.
 
-`/tdk-golden-path-scaffold` is a guarded scaffold workflow after topology review.
+Compatibility syntax: `/tdk-module-boundary-policy [topology|file] [--audit|--suggest]`.
+
+`/tdk-golden-path-scaffold` is a guarded scaffold workflow after layout review.
 Dry-run writes `.specify/configurations/golden-path/golden-path-scaffold-plan.md`,
 `.specify/configurations/golden-path/golden-path-recipe.json`, and
 `.specify/configurations/golden-path/generated-files-report.md`. Apply mode
@@ -443,7 +454,7 @@ requires `--yes` and `golden-path-recipe.json` with `status: approved`, then
 creates only allowlisted skeleton artifacts such as empty directories,
 `.gitkeep`, `.specify` guidance docs, and explicitly templated config files.
 
-Syntax: `/tdk-golden-path-scaffold [topology|file] [--dry-run|--yes] [--preset <name>]`.
+Syntax: `/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <name>]`.
 
 ### UT Commands
 
@@ -458,7 +469,7 @@ Syntax: `/tdk-golden-path-scaffold [topology|file] [--dry-run|--yes] [--preset <
 | config:diff | `/tdk-config-diff` | `--sub-workspace` (required), `--detailed` | Workspace + sub-workspace docs | Diff table (no file) | sub-workspace:init |
 | config:sync | `/tdk-config-sync` | `--from-sub-workspace`, `--to-sub-workspace`, `--all`, `--force`, `--dry-run` | Docs paths | Synced files | sub-workspace:init |
 | config:index | `/tdk-config-index` | `--sub-workspace`, `--full` | All docs files | `document-manager.md` | None |
-| config topology apply | `bun src/index.ts config topology apply [--dry-run] [--reconcile] [--topology <path>] [--yes --expect-hash <hash>] [--accept-overwrites]` | `--dry-run`, `--reconcile`, `--topology`, `--yes`, `--expect-hash`, `--accept-overwrites` | `workspace-topology.json`, existing JSON `.specify/.specify.json` | JSON dry-run patch preview or guarded config write | None |
+| config topology apply | `bun src/index.ts config topology apply [--dry-run] [--reconcile] [--topology <path>] [--yes --expect-hash <hash>] [--accept-overwrites]` | `--dry-run`, `--reconcile`, `--topology`, `--yes`, `--expect-hash`, `--accept-overwrites` | `workspace-layout-proposal.json`, legacy `workspace-topology.json`, existing JSON `.specify/.specify.json` | JSON dry-run patch preview or guarded config write | None |
 
 ### Harness CLI Commands
 

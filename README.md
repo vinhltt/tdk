@@ -19,10 +19,10 @@ TDK works as a closed development loop:
 TDK structures the full development loop:
 
 1. **Start** — classify greenfield or brownfield repo shape and recommend the safe workflow path (`/tdk-greenfield-start`, `/tdk-brownfield-start`)
-2. **Advise** — optionally produce project-level architecture options, decisions, or recovery reports without topology/config writes (`/tdk-architecture-advisor`)
-3. **Map** — optionally produce workspace topology proposal markdown and JSON without runtime config writes (`/tdk-boundary-map`)
-4. **Guide boundaries** — optionally turn approved topology into module boundary policy and non-applied snippets (`/tdk-module-boundary-policy`)
-5. **Scaffold safely** — optionally turn approved topology into a dry-run golden-path skeleton recipe (`/tdk-golden-path-scaffold`)
+2. **Advise** — optionally produce project-level architecture options, decisions, or recovery reports without layout/config writes (`/tdk-architecture-advisor`)
+3. **Propose layout** — optionally produce workspace layout proposal markdown and JSON without runtime config writes (`/tdk-workspace-layout-propose`; `/tdk-boundary-map` is a compatibility route)
+4. **Guide dependencies** — optionally turn approved layout into workspace dependency policy and non-applied snippets (`/tdk-workspace-dependency-policy`; `/tdk-module-boundary-policy` is a compatibility route)
+5. **Scaffold safely** — optionally turn approved layout into a dry-run golden-path skeleton recipe (`/tdk-golden-path-scaffold`)
 6. **Discover** — optionally create epic-only context before spec (`/tdk-discovery`)
 7. **Specify** — generate feature specs from natural language and optional discovery refs (`/tdk:specify`)
 8. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
@@ -33,7 +33,7 @@ TDK structures the full development loop:
 13. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
 14. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
 
-Additional workflows: constitution-owned `product-context.md`, topology proposal and dry-run workspace config previews, config management, sub-workspace docs generation, scout (codebase analysis), memory management, API test generation.
+Additional workflows: constitution-owned `product-context.md`, workspace layout proposal and dry-run workspace config previews, config management, sub-workspace docs generation, scout (codebase analysis), memory management, API test generation.
 
 Authority boundaries: discovery is context-only and does not mint requirement IDs; `spec.md` owns `UR-*`/`FR-*`/`SC-*`; HLD enriches existing IDs and is not a second requirement source.
 
@@ -120,8 +120,8 @@ bun src/commands/manifest/compute.ts --root ../..
 ```
 .specify/
 ├── plugins/              # Marketplace plugins (installed by setup.sh)
-│   ├── tdk-core/            # Core workflow (23 skills + 1 agent)
-│   ├── tdk-utils/           # Utilities: scout, research, boundary policy, problem solving (15 skills + 5 agents)
+│   ├── tdk-core/            # Core workflow (24 skills + 1 agent)
+│   ├── tdk-utils/           # Utilities: scout, research, dependency policy, problem solving (16 skills + 5 agents)
 │   ├── tdk-memory/          # Domain memory management (5 skills + 1 agent)
 │   ├── tdk-test-api/        # API test generation (3 skills)
 │   ├── tdk-retro/           # Retrospective learning loop (4 skills)
@@ -145,8 +145,8 @@ bun src/commands/manifest/compute.ts --root ../..
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
-| **tdk-core** | 23 skills + 1 agent | Greenfield/brownfield start, architecture advisor, boundary map, workflow config apply, constitution, discovery, specify, clarify, HLD, task breakdown, plan, implement, config, sub-workspace, ut-backfill |
-| **tdk-utils** | 15 skills + 5 agents | Scout, research, module boundary policy, brainstorming, docs-seeker, context-engineering, problem-solving |
+| **tdk-core** | 24 skills + 1 agent | Greenfield/brownfield start, architecture advisor, workspace layout proposal, boundary-map compatibility, workflow config apply, constitution, discovery, specify, clarify, HLD, task breakdown, plan, implement, config, sub-workspace, ut-backfill |
+| **tdk-utils** | 16 skills + 5 agents | Scout, research, workspace dependency policy, module-boundary compatibility, brainstorming, docs-seeker, context-engineering, problem-solving |
 | **tdk-memory** | 5 skills + 1 agent | Domain memory: init, update, checksum, changelog, query, and tdk-memory-agent |
 | **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |
 | **tdk-retro** | 4 | Retrospective feedback collection, learning proposal, and approved-delta application |

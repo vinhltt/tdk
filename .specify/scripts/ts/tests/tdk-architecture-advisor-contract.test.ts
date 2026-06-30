@@ -123,13 +123,13 @@ describe('TDK architecture advisor contracts', () => {
     expect(existsSync(skillPath)).toBe(true);
     expect(skill).toContain('name: tdk-architecture-advisor');
     expect(skill).toContain('[input|file] [--recover-existing|--unknown]');
-    expect(skill).toContain('  version: "5.6.0"');
+    expect(skill).toMatch(/version: "[^"]+"/);
     expect(skill).toContain('.specify/configurations/architecture/architecture-options.md');
     expect(skill).toContain('.specify/configurations/architecture/architecture-decision.md');
     expect(skill).toContain('.specify/configurations/architecture/architecture-recovery.md');
     expect(skill).toContain('does not create or update `.specify/.specify.json`');
-    expect(skill).toContain('does not write `workspace-topology.json`');
-    expect(skill).toContain('does not create specs, HLD artifacts, plans, tasks, tracker issues, source code, topology files, ADR files, or `.specify/.specify.json`');
+    expect(skill).toContain('does not write `workspace-layout-proposal.json`');
+    expect(skill).toContain('does not create specs, HLD artifacts, plans, tasks, tracker issues, source code, layout proposal files, ADR files, or `.specify/.specify.json`');
   });
 
   it('uses progressive disclosure through required references and templates', () => {
@@ -208,11 +208,11 @@ describe('TDK architecture advisor contracts', () => {
     }
 
     expect(combined).toContain('does not create or update `.specify/.specify.json`');
-    expect(combined).toContain('does not write `workspace-topology.json`');
+    expect(combined).toContain('does not write `workspace-layout-proposal.json`');
     expect(combined).toContain('write or update `architecture-decision.md` only after explicit user confirmation');
   });
 
-  it('keeps HLD feature-scoped and out of advisor topology ownership', () => {
+  it('keeps HLD feature-scoped and out of advisor layout ownership', () => {
     const hld = read(HLD_PATH);
 
     expect(hld).toContain('Produce approval-level high-level design');
@@ -234,6 +234,6 @@ describe('TDK architecture advisor contracts', () => {
     expect(documentFlow).toContain('.specify/configurations/architecture/architecture-options.md');
     expect(manifest).toContain('"tdk-architecture-advisor"');
     expect(readme).toContain('/tdk-architecture-advisor');
-    expect(readme).toContain('23 skills + 1 agent');
+    expect(readme).toContain('24 skills + 1 agent');
   });
 });

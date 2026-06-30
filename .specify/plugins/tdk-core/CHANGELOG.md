@@ -4,6 +4,16 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.11.0] - 2026-06-30
+
+### Added
+- tdk-workspace-layout-propose: add canonical workspace layout proposal workflow with markdown/JSON proposal outputs and standard/from-existing/unknown modes
+
+### Changed
+- tdk-boundary-map: convert to a deprecated compatibility route for the new workspace layout proposal skill
+- tdk-workflow-config-apply: prefer workspace layout proposal JSON while preserving legacy workspace-topology fallback and apply eligibility checks
+- tdk-architecture-advisor, greenfield/brownfield start, and UT backfill: route architecture evidence and ownership guidance through workspace layout terminology
+
 ## [5.10.1] - 2026-06-30
 
 ### Added

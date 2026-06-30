@@ -31,11 +31,11 @@ Do not read secret-like files. Redact sensitive values before report text.
 8. Write or update `architecture-decision.md` only after explicit user
    confirmation.
 9. Recommend brownfield-safe deltas and next routes without changing source,
-   topology, or runtime config.
+   layout, or runtime config.
 
 ## Recovery Rules
 
-- Never present a refactor, source move, config change, or topology change as
+- Never present a refactor, source move, config change, or layout change as
   completed work.
 - Keep current state and desired state in separate sections.
 - Prefer incremental deltas over large rewrites.
@@ -46,10 +46,10 @@ Do not read secret-like files. Redact sensitive values before report text.
 ## Route Rules
 
 - Recommend `/tdk-scout --scope <repo-root> --task-hint "brownfield architecture recovery"` when repo boundaries are unclear.
-- Recommend `/tdk-boundary-map --from-existing <architecture-recovery.md>` when
-  recovery findings are ready for topology proposal.
+- Recommend `/tdk-workspace-layout-propose --from-existing <architecture-recovery.md>` when
+  recovery findings are ready for layout proposal.
 - Recommend `/tdk-workflow-config-apply --reconcile` only as a later
-  preview route after boundary-map proposal artifacts are reviewed.
+  preview route after layout proposal artifacts are reviewed.
 - Recommend `/tdk-sub-workspace-docs --all` only when config evidence is enough
   to identify docs targets.
 

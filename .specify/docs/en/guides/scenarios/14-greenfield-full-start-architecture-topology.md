@@ -1,8 +1,8 @@
-# Scenario: Greenfield Full Start, Architecture, And Topology
+# Scenario: Greenfield Full Start, Architecture, And Workspace Layout
 
 > **When to use**: Starting a new project and you need project inception,
-> constitution, epic/spec context, architecture reports, topology proposal,
-> boundary policy guidance, and sub-workspace docs before implementation.
+> constitution, epic/spec context, architecture reports, workspace layout
+> proposal, dependency policy guidance, and sub-workspace docs before implementation.
 
 This scenario covers the full project-start chain:
 
@@ -13,16 +13,17 @@ This scenario covers the full project-start chain:
 -> /tdk-specify
 -> /tdk-clarify
 -> /tdk-architecture-advisor
--> /tdk-boundary-map
+-> /tdk-workspace-layout-propose
 -> /tdk-workflow-config-apply
--> /tdk-module-boundary-policy
+-> /tdk-workspace-dependency-policy
 -> /tdk-sub-workspace-docs --all
+-> /tdk-recommend-automations
 ```
 
 The chain has two different artifact classes:
 
 - **Project-level artifacts**: inception, constitution/memory, architecture,
-  topology, module boundary policy, and sub-workspace docs.
+  workspace layout, dependency policy, sub-workspace docs, and automation recommendations.
 - **Feature/epic artifacts**: discovery, `spec.md`, requirements checklist, and
   clarifications.
 
@@ -34,14 +35,11 @@ writes config. On a fresh project, approve the guarded apply before
 ## Prerequisites
 
 - TDK is installed in the consumer project under `.specify/`.
-- The project has a JSON `.specify/.specify.json`; topology apply does not create
+- The project has a JSON `.specify/.specify.json`; workflow config apply does not create
   first-time config from scratch.
 - `bun` is available.
 - `repomix` is installed before `/tdk-sub-workspace-docs --all`:
   `npm install -g repomix`.
-- `.specify/configurations/workspace-topology/` exists before
-  `/tdk-boundary-map`; the current boundary-map skill stops if this directory is
-  missing.
 
 ## Recommended Command Sequence
 
@@ -54,7 +52,7 @@ Use explicit arguments; the short chain above is only the shape.
 /tdk-specify feat-001 "Feature or epic requirement description"
 /tdk-clarify feat-001
 /tdk-architecture-advisor .specify/configurations/inception/project-inception.md
-/tdk-boundary-map .specify/configurations/architecture/architecture-decision.md
+/tdk-workspace-layout-propose .specify/configurations/architecture/architecture-decision.md
 /tdk-workflow-config-apply
 ```
 
@@ -62,14 +60,15 @@ Review the diff/warnings shown by the skill. If the patch is approved, the skill
 applies the parsed `planHash` internally. Then continue:
 
 ```text
-/tdk-module-boundary-policy .specify/configurations/workspace-topology/workspace-topology.json
+/tdk-workspace-dependency-policy .specify/configurations/workspace-layout/workspace-layout-proposal.json
 /tdk-sub-workspace-docs --all
+/tdk-recommend-automations
 ```
 
 If you intentionally want policy guidance before runtime config apply, run
 `/tdk-workflow-config-apply --dry-run` first, then
-`/tdk-module-boundary-policy`, but treat the result as advisory against a
-proposed topology.
+`/tdk-workspace-dependency-policy`, but treat the result as advisory against a
+proposed layout.
 
 ## Output Map
 
@@ -81,10 +80,11 @@ proposed topology.
 | 4 | `/tdk-specify <id> <description>` | `<feature-dir>/spec.md`, `<feature-dir>/checklists/requirements.md` | No |
 | 5 | `/tdk-clarify <id>` | Updates `<feature-dir>/spec.md` and `## Clarifications` | No |
 | 6 | `/tdk-architecture-advisor` | `.specify/configurations/architecture/architecture-options.md`, `architecture-decision.md` | No |
-| 7 | `/tdk-boundary-map` | `.specify/configurations/workspace-topology/workspace-topology.md`, `workspace-topology.json` | No |
-| 8 | `/tdk-workflow-config-apply` | Diff/warnings review, then updated `.specify/.specify.json`, topology apply report, backup when approved | Yes, after confirmation |
-| 9 | `/tdk-module-boundary-policy` | `.specify/configurations/module-boundary-policy/module-boundary-policy.md`, optional `enforcement-snippets.md` | No |
+| 7 | `/tdk-workspace-layout-propose` | `.specify/configurations/workspace-layout/workspace-layout-proposal.md`, `workspace-layout-proposal.json` | No |
+| 8 | `/tdk-workflow-config-apply` | Diff/warnings review, then updated `.specify/.specify.json`, apply report, backup when approved | Yes, after confirmation |
+| 9 | `/tdk-workspace-dependency-policy` | `.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md`, optional `enforcement-snippets.md` | No |
 | 10 | `/tdk-sub-workspace-docs --all` | Four docs per configured sub-workspace under `<docsPath>/sub-workspaces/<name>/` | No runtime config mutation |
+| 11 | `/tdk-recommend-automations` | `.specify/configurations/automation-recommendations/recommendation-<project>.md` | No |
 
 `<feature-dir>` is resolved from project config and task ID. In a default setup,
 it is usually under `.specify/specs/<id>/`.
@@ -106,7 +106,7 @@ Check:
   work;
 - recommended next route matches the project goal.
 
-This command is intake/routing only. It does not create specs, topology files,
+This command is intake/routing only. It does not create specs, layout files,
 plans, source code, tracker issues, or `.specify/.specify.json`.
 
 ### 2. Constitution and memory authority
@@ -201,16 +201,16 @@ Review:
 - trust boundaries and data classification;
 - kill criteria and unresolved questions.
 
-### 7. Boundary map
+### 7. Workspace layout proposal
 
 ```text
-/tdk-boundary-map .specify/configurations/architecture/architecture-decision.md
+/tdk-workspace-layout-propose .specify/configurations/architecture/architecture-decision.md
 ```
 
 Output:
 
-- `.specify/configurations/workspace-topology/workspace-topology.md`
-- `.specify/configurations/workspace-topology/workspace-topology.json`
+- `.specify/configurations/workspace-layout/workspace-layout-proposal.md`
+- `.specify/configurations/workspace-layout/workspace-layout-proposal.json`
 
 The JSON is an authoring proposal, not runtime config. Runtime-backed fields are
 limited to `architecture.type`, `subWorkspaces[]`, docs/test mapping, and
@@ -249,20 +249,20 @@ Use `--accept-overwrites` only after explicitly approving same-name overwrites,
 architecture type changes, or normalized path collisions. `--reconcile` is
 report-only and cannot be combined with `--yes`.
 
-### 9. Module boundary policy
+### 9. Workspace dependency policy
 
 ```text
-/tdk-module-boundary-policy .specify/configurations/workspace-topology/workspace-topology.json
+/tdk-workspace-dependency-policy .specify/configurations/workspace-layout/workspace-layout-proposal.json
 ```
 
 Output:
 
-- `.specify/configurations/module-boundary-policy/module-boundary-policy.md`
-- `.specify/configurations/module-boundary-policy/enforcement-snippets.md`
+- `.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md`
+- `.specify/configurations/workspace-dependency-policy/enforcement-snippets.md`
   when snippets are requested or evidence supports them
 
 This is policy/report only. It does not edit ESLint, Nx, Turborepo,
-dependency-cruiser, package manager files, source folders, topology files, ADRs,
+dependency-cruiser, package manager files, source folders, layout files, ADRs,
 routing files, or `.specify/.specify.json`.
 
 ### 10. Sub-workspace docs
@@ -292,19 +292,18 @@ it does not create PRDs, roadmap docs, or runtime config.
 - No HLD artifacts
 - No ADR files by default
 - No active dependency enforcement config
-- No runtime config mutation until guarded topology apply uses
+- No runtime config mutation until guarded layout apply uses
   `/tdk-workflow-config-apply`
 
 ## Common Failure Modes
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Boundary map stops before writing | `.specify/configurations/workspace-topology/` is missing | Create the configurations directory as project setup, then rerun |
 | Topology apply says missing JSON config | `.specify/.specify.json` does not exist or only YAML config exists | Create/migrate JSON config first; first-time creation is deferred |
 | `--yes` is rejected | Missing `--expect-hash` in automation mode | Use no-flag interactive mode, or rerun dry-run and pass the parsed `planHash` |
 | Sub-workspace docs says no sub-workspaces | Dry-run was reviewed but not applied | Run guarded workflow config apply, then rerun docs |
-| Sub-workspace docs says missing path | Config points to a folder that does not exist | Create the intended folder or fix topology/config before docs |
-| Boundary policy creates no snippets | No supported stack evidence or snippets not requested | Use `--suggest` after topology evidence is strong |
+| Sub-workspace docs says missing path | Config points to a folder that does not exist | Create the intended folder or fix layout/config before docs |
+| Dependency policy creates no snippets | No supported stack evidence or snippets not requested | Use `--suggest` after layout evidence is strong |
 
 ## Next Commands
 

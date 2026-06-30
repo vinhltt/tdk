@@ -4,10 +4,12 @@ Dry-run is the default mode for `/tdk-golden-path-scaffold`.
 
 ## Evidence Check
 
-Require at least one topology or runtime config source:
+Require at least one layout or runtime config source:
 
-- `.specify/configurations/workspace-topology/workspace-topology.json`
-- `.specify/configurations/workspace-topology/workspace-topology.md`
+- `.specify/configurations/workspace-layout/workspace-layout-proposal.json`
+- `.specify/configurations/workspace-layout/workspace-layout-proposal.md`
+- legacy `.specify/configurations/workspace-topology/workspace-topology.json`
+- legacy `.specify/configurations/workspace-topology/workspace-topology.md`
 - `.specify/.specify.json`
 
 Prefer architecture context when present:
@@ -15,9 +17,10 @@ Prefer architecture context when present:
 - `.specify/configurations/architecture/architecture-decision.md`
 - `.specify/configurations/architecture/architecture-recovery.md`
 
-Use module-boundary policy as optional guidance only:
+Use workspace dependency policy as optional guidance only:
 
-- `.specify/configurations/module-boundary-policy/module-boundary-policy.md`
+- `.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md`
+- legacy `.specify/configurations/module-boundary-policy/module-boundary-policy.md`
 
 If evidence is insufficient to name safe repo-relative skeleton paths, write a
 readiness-oriented scaffold plan and leave the recipe empty with `status:
@@ -39,7 +42,7 @@ Use:
 
 ## Recipe Derivation
 
-Derive actions from named topology/config boundaries only. Do not invent
+Derive actions from named layout/config boundaries only. Do not invent
 modules, owners, dependencies, or implementation files.
 
 Recommended derivation:

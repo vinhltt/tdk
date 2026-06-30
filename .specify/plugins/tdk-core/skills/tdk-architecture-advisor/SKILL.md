@@ -1,16 +1,16 @@
 ---
 name: tdk-architecture-advisor
-description: "Project-level architecture recommendation and brownfield recovery advisor. Writes architecture reports only; does not mutate topology or config."
+description: "Project-level architecture recommendation and brownfield recovery advisor. Writes architecture reports only; does not mutate layout or config."
 user-invocable: true
 argument-hint: "[input|file] [--recover-existing|--unknown]"
 related-skills:
   - tdk-greenfield-start
   - tdk-brownfield-start
   - tdk-scout
-  - tdk-boundary-map
+  - tdk-workspace-layout-propose
   - tdk-workflow-config-apply
 metadata:
-  version: "5.10.1"
+  version: "5.11.0"
   author: "VinhLTT"
   category: architecture-workflow
 ---
@@ -33,12 +33,12 @@ This command is **architecture reporting only**.
 - `.specify/configurations/architecture/architecture-recovery.md`
 
 **This command does not create specs, HLD artifacts, plans, tasks, tracker issues,
-source code, topology files, ADR files, or `.specify/.specify.json`. This command
-does not create or update `.specify/.specify.json` and does not write `workspace-topology.json`.**
+source code, layout proposal files, ADR files, or `.specify/.specify.json`. This command
+does not create or update `.specify/.specify.json` and does not write `workspace-layout-proposal.json`.**
 
-Boundary summary: does not create specs, HLD artifacts, plans, tasks, tracker issues, source code, topology files, ADR files, or `.specify/.specify.json`.
+Boundary summary: does not create specs, HLD artifacts, plans, tasks, tracker issues, source code, layout proposal files, ADR files, or `.specify/.specify.json`.
 
-Advisor output is evidence for `/tdk-boundary-map`, topology preview, scaffold,
+Advisor output is evidence for `/tdk-workspace-layout-propose`, workflow config preview, scaffold,
 or implementation work. Those later steps require separate commands and review.
 
 ## Args

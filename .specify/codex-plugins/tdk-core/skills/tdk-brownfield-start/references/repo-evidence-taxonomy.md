@@ -13,8 +13,8 @@ Use this taxonomy to collect bounded evidence before writing
 | Docs/tests/CI | README, docs folders, test folders, test configs, CI workflow files, coverage hints. |
 | Deployment/runtime hints | Dockerfiles, compose files, Procfile, platform configs, infra folders, env example keys. |
 | Data/API boundaries | API route markers, schema/migration folders, ORM configs, OpenAPI/GraphQL files, service clients. |
-| Current `.specify` state | Existing config, templates, feature folders, generated docs, topology proposals, install state. |
-| Topology candidates | Candidate sub-workspaces/modules with evidence and confidence. |
+| Current `.specify` state | Existing config, templates, feature folders, generated docs, layout proposals, install state. |
+| Layout candidates | Candidate sub-workspaces/modules with evidence and confidence. |
 | Confidence/conflicts | Evidence strength, contradictions, stale files, unresolved repo questions. |
 
 ## Confidence Labels
@@ -25,7 +25,7 @@ Use this taxonomy to collect bounded evidence before writing
 
 ## Clarification Rules
 
-- Ask only for repo-onboarding decisions, evidence conflicts, missing safe context, or confirmation of low-confidence topology candidates.
+- Ask only for repo-onboarding decisions, evidence conflicts, missing safe context, or confirmation of low-confidence layout candidates.
 - Do not ask product-scope discovery questions by default.
 - Recommend product discovery later only when product intent is missing and the user wants that route.
 - Redact secret values before using evidence in notes or reports.

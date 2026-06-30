@@ -6,6 +6,16 @@ The golden-path scaffold writes reviewable artifacts under:
 .specify/configurations/golden-path/
 ```
 
+Evidence may come from the canonical workspace layout proposal:
+
+- `.specify/configurations/workspace-layout/workspace-layout-proposal.json`
+- `.specify/configurations/workspace-layout/workspace-layout-proposal.md`
+
+Legacy topology evidence remains readable for compatibility:
+
+- `.specify/configurations/workspace-topology/workspace-topology.json`
+- `.specify/configurations/workspace-topology/workspace-topology.md`
+
 Dry-run writes review artifacts only. It does not create skeleton folders outside
 the golden-path configuration directory.
 
@@ -25,7 +35,7 @@ This workflow does not generate fake business code, does not mutate
 `.specify/.specify.json`, does not run shell commands, and does not install
 package dependencies.
 
-It also does not change topology, boundary policy, package manager, lint,
+It also does not change layout, dependency policy, package manager, lint,
 runtime routing, migration, environment, CI secret, or tracker issue files.
 
 ## Required Report Content

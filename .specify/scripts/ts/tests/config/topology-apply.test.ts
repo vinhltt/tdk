@@ -40,6 +40,16 @@ describe('config topology apply dry-run', () => {
     return join(tempDir, '.specify', 'configurations', 'workspace-topology', 'workspace-topology.json');
   }
 
+  function layoutPath(): string {
+    return join(
+      tempDir,
+      '.specify',
+      'configurations',
+      'workspace-layout',
+      'workspace-layout-proposal.json',
+    );
+  }
+
   async function runCli(args: string[]): Promise<{ stdout: string; stderr: string; exitCode: number }> {
     const indexPath = resolve(import.meta.dir, '../../src/index.ts');
     const proc = Bun.spawn(['bun', 'run', indexPath, 'config', 'topology', 'apply', ...args], {
@@ -211,16 +221,40 @@ describe('config topology apply dry-run', () => {
     expect(JSON.stringify(result.confirmationFindings)).toContain('pathCollision');
   });
 
-  it('runs the CLI dry-run without writing .specify/.specify.json', async () => {
+  it('prefers the default workspace layout proposal and falls back to legacy topology', async () => {
+    writeJson(configPath(), { name: 'demo' });
+    writeJson(topologyPath(), {
+      subWorkspaces: [{ name: 'legacy', path: 'legacy' }],
+    });
+    writeJson(layoutPath(), {
+      subWorkspaces: [{ name: 'app', path: 'apps/app' }],
+    });
+
+    const preferred = JSON.parse((await runCli([])).stdout);
+    expect(preferred.topologyPath).toBe(layoutPath());
+    expect(preferred.changes.after.subWorkspaces.map((entry: { name: string }) => entry.name)).toEqual([
+      'app',
+    ]);
+
+    rmSync(layoutPath(), { force: true });
+
+    const fallback = JSON.parse((await runCli([])).stdout);
+    expect(fallback.topologyPath).toBe(topologyPath());
+    expect(fallback.changes.after.subWorkspaces.map((entry: { name: string }) => entry.name)).toEqual([
+      'legacy',
+    ]);
+  });
+
+  it('runs the CLI dry-run from a workspace layout proposal without writing .specify/.specify.json', async () => {
     writeJson(configPath(), {
       name: 'demo',
       subWorkspaces: [{ name: 'legacy', path: 'legacy' }],
     });
-    writeJson(topologyPath(), {
+    writeJson(layoutPath(), {
       subWorkspaces: [{ name: 'app', path: 'apps/app' }],
     });
     const before = readFileSync(configPath(), 'utf-8');
-    const { stdout, stderr, exitCode } = await runCli(['--topology', topologyPath()]);
+    const { stdout, stderr, exitCode } = await runCli(['--topology', layoutPath()]);
 
     expect(exitCode).toBe(0);
     expect(stderr).toBe('');
@@ -229,7 +263,7 @@ describe('config topology apply dry-run', () => {
     const output = JSON.parse(stdout);
     expect(output.mode).toBe('dry-run');
     expect(output.configPath).toBe(configPath());
-    expect(output.topologyPath).toBe(topologyPath());
+    expect(output.topologyPath).toBe(layoutPath());
     expect(typeof output.runId).toBe('string');
     expect(output.rawBeforeHash).toMatch(/^[a-f0-9]{64}$/);
     expect(output.planHash).toMatch(/^[a-f0-9]{64}$/);
@@ -244,10 +278,10 @@ describe('config topology apply dry-run', () => {
 
   it('keeps planHash stable while changing runId per dry-run', async () => {
     writeJson(configPath(), { name: 'demo' });
-    writeJson(topologyPath(), { subWorkspaces: [{ name: 'app', path: 'apps/app' }] });
+    writeJson(layoutPath(), { subWorkspaces: [{ name: 'app', path: 'apps/app' }] });
 
-    const first = JSON.parse((await runCli(['--topology', topologyPath()])).stdout);
-    const second = JSON.parse((await runCli(['--topology', topologyPath()])).stdout);
+    const first = JSON.parse((await runCli(['--topology', layoutPath()])).stdout);
+    const second = JSON.parse((await runCli(['--topology', layoutPath()])).stdout);
 
     expect(first.planHash).toBe(second.planHash);
     expect(first.runId).not.toBe(second.runId);
@@ -255,10 +289,10 @@ describe('config topology apply dry-run', () => {
 
   it('rejects --yes without --expect-hash and leaves config unchanged', async () => {
     writeJson(configPath(), { name: 'demo' });
-    writeJson(topologyPath(), { subWorkspaces: [{ name: 'app', path: 'apps/app' }] });
+    writeJson(layoutPath(), { subWorkspaces: [{ name: 'app', path: 'apps/app' }] });
     const before = readFileSync(configPath(), 'utf-8');
 
-    const { stderr, exitCode } = await runCli(['--topology', topologyPath(), '--yes']);
+    const { stderr, exitCode } = await runCli(['--topology', layoutPath(), '--yes']);
 
     expect(exitCode).toBe(1);
     expect(stderr).toContain('--yes requires --expect-hash');
@@ -281,15 +315,15 @@ describe('config topology apply dry-run', () => {
       subWorkspaces: [{ name: 'legacy', path: 'legacy', pluginField: 'keep-subfield' }],
     });
     chmodSync(configPath(), 0o600);
-    writeJson(topologyPath(), {
+    writeJson(layoutPath(), {
       architecture: { type: 'modular-monolith' },
       subWorkspaces: [{ name: 'app', path: 'apps/app' }],
     });
-    const dryRun = JSON.parse((await runCli(['--topology', topologyPath()])).stdout);
+    const dryRun = JSON.parse((await runCli(['--topology', layoutPath()])).stdout);
 
     const { stdout, stderr, exitCode } = await runCli([
       '--topology',
-      topologyPath(),
+      layoutPath(),
       '--yes',
       '--expect-hash',
       dryRun.planHash,
@@ -302,8 +336,9 @@ describe('config topology apply dry-run', () => {
     expect(result.audit.status).toBe('success');
     expect(result.backupPath).toContain('backups');
     expect(existsSync(result.backupPath)).toBe(true);
-    expect(readFileSync(join(tempDir, '.specify', 'configurations', 'workspace-topology', 'backups', '.gitignore'), 'utf-8')).toBe('*\n');
+    expect(readFileSync(join(tempDir, '.specify', 'configurations', 'workspace-layout', 'backups', '.gitignore'), 'utf-8')).toBe('*\n');
     expect(existsSync(result.reportPath)).toBe(true);
+    expect(result.reportPath).toContain('workspace-layout');
 
     const written = JSON.parse(readFileSync(configPath(), 'utf-8'));
     expect(written.pluginOwned).toEqual({ untouched: true });
@@ -316,14 +351,14 @@ describe('config topology apply dry-run', () => {
 
   it('rejects stale --expect-hash after raw config changes', async () => {
     writeJson(configPath(), { name: 'demo', metadata: { note: 'previewed' } });
-    writeJson(topologyPath(), { subWorkspaces: [{ name: 'app', path: 'apps/app' }] });
-    const dryRun = JSON.parse((await runCli(['--topology', topologyPath()])).stdout);
+    writeJson(layoutPath(), { subWorkspaces: [{ name: 'app', path: 'apps/app' }] });
+    const dryRun = JSON.parse((await runCli(['--topology', layoutPath()])).stdout);
     writeJson(configPath(), { name: 'demo', metadata: { note: 'changed' } });
     const beforeApply = readFileSync(configPath(), 'utf-8');
 
     const { stderr, exitCode } = await runCli([
       '--topology',
-      topologyPath(),
+      layoutPath(),
       '--yes',
       '--expect-hash',
       dryRun.planHash,
@@ -351,10 +386,10 @@ describe('config topology apply dry-run', () => {
     ]);
 
     expect(exitCode).toBe(1);
-    expect(stderr).toContain('External topology dry-runs are not apply-eligible');
+    expect(stderr).toContain('External layout/topology dry-runs are not apply-eligible');
   });
 
-  it('allows external topology dry-run when the default topology directory is missing', async () => {
+  it('allows external topology dry-run when default layout and topology directories are missing', async () => {
     rmSync(join(tempDir, '.specify', 'configurations'), { recursive: true, force: true });
     writeJson(configPath(), { name: 'demo' });
     const externalTopology = join(tempDir, 'external-topology.json');

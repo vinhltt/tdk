@@ -1,19 +1,20 @@
 ---
 name: tdk-workflow-config-apply
-description: "Interactively review and apply guarded .specify/.specify.json changes derived from workspace-topology.json."
+description: "Interactively review and apply guarded .specify/.specify.json changes derived from workspace layout proposal JSON."
 argument-hint: "[(no flags)|--dry-run|--reconcile|--yes --expect-hash <hash>] [--topology <path>]"
 metadata:
-  version: "5.10.1"
+  version: "5.11.0"
 ---
 
 # tdk-workflow-config-apply
 
-Review and optionally apply an approved workspace topology proposal to TDK
+Review and optionally apply an approved workspace layout proposal to TDK
 runtime config.
 
 ## Contract
 
-- `workspace-topology.json` is the authoring proposal.
+- `workspace-layout-proposal.json` is the authoring proposal.
+- `workspace-topology.json` remains a legacy fallback.
 - `.specify/.specify.json` is derived runtime config.
 - no flags is the default human mode: dry-run, parse `planHash` internally,
   show the review summary, ask for confirmation, then apply the exact preview.
@@ -21,15 +22,15 @@ runtime config.
 - `--reconcile` is report-only and implies preview; it does not need `--dry-run`.
 - automation apply remains explicit: `--yes --expect-hash <planHash>`.
 - `--yes` without `--expect-hash` exits 1. There is no single-shot apply.
-- `--expect-hash` proves preview/apply consistency, not topology authenticity.
-- apply is eligible only for topology files under `.specify/configurations/workspace-topology/`.
+- `--expect-hash` proves preview/apply consistency, not proposal authenticity.
+- apply is eligible only for proposal files under `.specify/configurations/workspace-layout/` or legacy topology files under `.specify/configurations/workspace-topology/`.
 - an existing JSON `.specify/.specify.json` is required. Missing JSON and YAML-only config exit 1 with guidance; first-time creation is deferred.
 - same-name overwrites, architecture type changes, and normalized path collisions require `--accept-overwrites` after explicit user approval.
 - Safe report-only fields are warned and ignored for runtime config.
 - shell-like routing values hard-fail.
 - live writes preserve unknown top-level/plugin-owned config fields instead of writing a schema-stripped config.
 - apply uses a lock, stale-hash rejection, git-first recoverability, raw pre-write backups when needed, atomic write, and parent-dir fsync.
-- backups live under `.specify/configurations/workspace-topology/backups/`, are `0600`, self-ignored by a writer-created `.gitignore` containing `*`, and retention-bounded.
+- backups live under the selected proposal directory's `backups/`, are `0600`, self-ignored by a writer-created `.gitignore` containing `*`, and retention-bounded.
 - `topology-apply-report.md` contains redacted diagnostics plus a manual revert command.
 - stdout/stderr/report redact sensitive arbitrary keys and secret-looking values. Raw local backups preserve original bytes for rollback; do not store secrets in `.specify/.specify.json`.
 - exit codes: 0 success, 1 validation/IO/confirmation, 2 stale preview, 3 fail-closed/no rollback path.
@@ -47,13 +48,19 @@ Supported flags:
 |---|---|
 | no flags | Recommended human flow: preview, review, confirm, then guarded apply with the parsed `planHash`. |
 | `--dry-run` | Preview only. Writes no files and stops after the summary. |
-| `--topology <path>` | Use a topology proposal path instead of the default. |
+| `--topology <path>` | Use a workspace layout proposal path or legacy topology path instead of auto-detecting. |
 | `--reconcile` | Brownfield reconciliation preview. Writes no config and never moves or renames folders. |
 | `--yes` | Automation apply for a previously previewed plan. Requires `--expect-hash`. |
 | `--expect-hash <hash>` | Hash from a prior dry-run JSON payload. Mandatory with `--yes`. |
 | `--accept-overwrites` | Allow confirmation findings only after explicit user approval. |
 
-Default topology path:
+Default proposal path:
+
+```text
+.specify/configurations/workspace-layout/workspace-layout-proposal.json
+```
+
+Legacy fallback when the new proposal file is missing:
 
 ```text
 .specify/configurations/workspace-topology/workspace-topology.json
@@ -79,7 +86,8 @@ Reject `--reconcile --yes`; reconcile remains report-only.
 Reject `--yes` without `--expect-hash`; tell the user to run either the no-flag
 interactive flow or explicit `--dry-run` first.
 
-Resolve `TOPOLOGY_PATH` from `--topology <path>` or use the default path above.
+Resolve `TOPOLOGY_PATH` from `--topology <path>` or use the default path above,
+falling back to legacy topology when the new proposal file is absent.
 
 ### Step 1 - Resolve Project Root
 
@@ -125,7 +133,7 @@ Do not transcribe `planHash` by eye; parse it from JSON.
 
 Show a concise review summary before any write:
 
-- topology path
+- proposal path
 - config path
 - changed sections from `diff`
 - warnings
@@ -137,7 +145,9 @@ confirmation.
 
 ### Step 3 - Interactive Confirmation Gate
 
-If `applyEligible` is not `true`, do not apply. Explain that only topology files under `.specify/configurations/workspace-topology/` can be applied.
+If `applyEligible` is not `true`, do not apply. Explain that only layout proposal
+files under `.specify/configurations/workspace-layout/` or legacy topology files
+under `.specify/configurations/workspace-topology/` can be applied.
 
 If `requiresConfirmation` is true, show `confirmationFindings` and ask the user for explicit approval before passing `--accept-overwrites`.
 
@@ -193,7 +203,7 @@ Reconcile is observe/report only. It does not move, rename, create, or delete so
 
 Show:
 
-- topology path
+- proposal path
 - config path
 - dry-run patch summary
 - `applyEligible`
@@ -211,7 +221,7 @@ Show:
 - [ ] `--yes` always includes a parsed `--expect-hash`.
 - [ ] `--accept-overwrites` is passed only after explicit user approval.
 - [ ] Existing JSON config requirement is respected; YAML-only and missing JSON are not auto-created.
-- [ ] External topology paths are dry-run-only.
+- [ ] External layout/topology paths are dry-run-only.
 - [ ] Raw-preserving write, raw backup, lock, stale check, atomic write, and idempotency are enforced by the CLI.
 - [ ] Output has one JSON object on stdout; failure audit goes to stderr.
 - [ ] Shell-like routing values hard-fail.

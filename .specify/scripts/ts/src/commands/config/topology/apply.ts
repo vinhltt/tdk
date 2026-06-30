@@ -107,11 +107,11 @@ function runApply(opts: TopologyApplyOptions): void {
   const runId = randomUUID();
   const preLockPlan = buildPlanFromCurrentInputs({ topology: opts.topology, runId });
   if (!preLockPlan.applyEligible) {
-    throw new CliExitError('--yes requires topology under .specify/configurations/workspace-topology/. External topology dry-runs are not apply-eligible.', EXIT_VALIDATION, 'topology-eligibility');
+    throw new CliExitError('--yes requires layout/topology under .specify/configurations/workspace-layout/ or .specify/configurations/workspace-topology/. External layout/topology dry-runs are not apply-eligible.', EXIT_VALIDATION, 'topology-eligibility');
   }
 
   const target = resolveJsonConfigTarget(process.cwd());
-  const paths = buildSafeTopologyApplyPaths(target, runId);
+  const paths = buildSafeTopologyApplyPaths(target, runId, preLockPlan.topologyRealPath);
   const lock = acquireApplyLock(paths, {
     runId,
     target: target.configPath,
@@ -122,7 +122,7 @@ function runApply(opts: TopologyApplyOptions): void {
   try {
     const plan = buildPlanFromCurrentInputs({ topology: opts.topology, runId });
     if (!plan.applyEligible) {
-      throw new CliExitError('--yes requires topology under .specify/configurations/workspace-topology/. External topology dry-runs are not apply-eligible.', EXIT_VALIDATION, 'topology-eligibility');
+      throw new CliExitError('--yes requires layout/topology under .specify/configurations/workspace-layout/ or .specify/configurations/workspace-topology/. External layout/topology dry-runs are not apply-eligible.', EXIT_VALIDATION, 'topology-eligibility');
     }
     if (plan.planHash !== opts.expectHash) {
       throw new CliExitError('Stale topology apply preview. Rerun dry-run and apply with the new planHash.', EXIT_STALE_PLAN, 'stale-plan');
@@ -147,8 +147,8 @@ function runApply(opts: TopologyApplyOptions): void {
 
 export function createConfigTopologyApplyCommand(): Command {
   return new Command('apply')
-    .description('Preview or apply .specify/.specify.json changes from workspace-topology.json')
-    .option('--topology <path>', 'Path to workspace-topology.json')
+    .description('Preview or apply .specify/.specify.json changes from workspace layout proposal JSON')
+    .option('--topology <path>', 'Path to workspace-layout-proposal.json or legacy workspace-topology.json')
     .option('--dry-run', 'Preview changes without writing files')
     .option('--yes', 'Apply the previously previewed topology patch')
     .option('--expect-hash <hash>', 'Plan hash emitted by a prior dry-run')
