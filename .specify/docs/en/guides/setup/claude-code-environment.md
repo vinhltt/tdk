@@ -80,9 +80,9 @@ This virtual environment is shared among:
 erc_spec_kit/
 ├── .venv/                      ← Shared virtual environment
 ├── requirements.txt            ← Project dependencies
-├── .specify/docs/en/guides/setup/claude-code/     ← Setup docs (you are here)
-│   ├── setup-python-venv.ps1   (Windows script pending)
-│   └── README.md               (this file)
+├── .specify/docs/en/guides/setup/
+│   ├── claude-code-environment.md               ← This file
+│   └── obsidian-plugins-windows.md
 ├── .specify/scripts/bash/
 │   └── setup-python-venv.sh    (Linux/Mac runtime script)
 ├── .claude/skills/             ← Claude Code skills
@@ -147,15 +147,15 @@ After finishing setup:
 
 ## 🔗 Related Documentation
 
-- [TDK Setup Guide](../README.md) — Full TDK tooling setup (prerequisites, environment config, skills, verification). Start here if you're new.
+- [TDK Setup Guide](installation.md) — Full TDK tooling setup (prerequisites, environment config, skills, verification). Start here if you're new.
 - **Obsidian MCP Setup:**
-  - [Setup Obsidian & Plugins — Windows](./setup-obsidian-plugins-windows.md) — Install Obsidian, Local REST API, MCP Tools and configure `.mcp.json` on Windows.
+  - [Setup Obsidian & Plugins — Windows](./obsidian-plugins-windows.md) — Install Obsidian, Local REST API, MCP Tools and configure `.mcp.json` on Windows.
   - Setup Obsidian & Plugins — macOS *(coming soon)*
 - [Claude Code Documentation](https://github.com/anthropics/claude-code)
 - [TDK Documentation](.specify/memory/)
 - [Project Rules](.claude/rules/)
 
-> **Note:** This document covers Python venv setup only. For the complete TDK tooling setup, see the [TDK Setup Guide](../README.md).
+> **Note:** This document covers Python venv setup only. For the complete TDK tooling setup, see the [TDK Setup Guide](installation.md).
 
 ---
 

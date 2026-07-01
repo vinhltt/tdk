@@ -137,7 +137,7 @@ If you accidentally committed the old key:
 
 ## Related
 
-- [Setup Claude Code README](./README.md)
-- [TDK Setup Guide](../README.md)
+- [Setup Claude Code Environment](./claude-code-environment.md)
+- [TDK Setup Guide](./installation.md)
 - [Local REST API Plugin](https://github.com/coddingtonbear/obsidian-local-rest-api)
 - [MCP Tools Plugin](https://github.com/jacksteamdev/obsidian-mcp-tools)

@@ -54,7 +54,7 @@ curl -fsSL https://bun.sh/install | bash
 
 A shared `.venv/` at the project root is used by Claude skills, `.specify/` scripts, and project development.
 
-See full setup instructions: [**Setup Claude Code Environment**](claude-code/README.md)
+See full setup instructions: [**Setup Claude Code Environment**](claude-code-environment.md)
 
 ## 3. Claude Code Installation
 
@@ -227,5 +227,5 @@ consumer-project/
 
 - [Context7 Plugin Setup](ctx7-mcp-setup.md) — docs-seeker MCP integration
 - [GitHub MCP Setup](github-mcp-setup.md) — optional GitHub repo browsing
-- [Setup Claude Code Environment](claude-code/README.md)
-- [Setup Obsidian Plugins — Windows](claude-code/setup-obsidian-plugins-windows.md)
+- [Setup Claude Code Environment](claude-code-environment.md)
+- [Setup Obsidian Plugins — Windows](obsidian-plugins-windows.md)

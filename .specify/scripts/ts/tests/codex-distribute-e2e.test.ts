@@ -103,9 +103,9 @@ function buildSyntheticSource(): string {
     'lib/demo.cjs': sha256(lib),
   });
 
-  const docsReadmePath = path.join(consumer.root, '.specify', 'docs', 'en', 'README.md');
-  fs.mkdirSync(path.dirname(docsReadmePath), { recursive: true });
-  fs.writeFileSync(docsReadmePath, '# TDK Guides\n\nDistributed docs fixture.\n', 'utf-8');
+  const docsIndexPath = path.join(consumer.root, '.specify', 'docs', 'en', 'index.md');
+  fs.mkdirSync(path.dirname(docsIndexPath), { recursive: true });
+  fs.writeFileSync(docsIndexPath, '# TDK Guides\n\nDistributed docs fixture.\n', 'utf-8');
 
   const schemaPath = path.join(consumer.root, '.specify', 'schemas', 'specify.schema.json');
   fs.mkdirSync(path.dirname(schemaPath), { recursive: true });
@@ -194,7 +194,7 @@ describe('codex distribute payload', () => {
       '.specify/plugins/tdk-core/ must be distributed to the consumer',
     ).toBe(true);
     expect(
-      fs.existsSync(path.join(consumerRoot, '.specify', 'docs', 'en', 'README.md')),
+      fs.existsSync(path.join(consumerRoot, '.specify', 'docs', 'en', 'index.md')),
       '.specify/docs/ must be distributed to the consumer',
     ).toBe(true);
     expect(

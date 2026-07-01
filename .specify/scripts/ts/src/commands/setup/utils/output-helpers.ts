@@ -89,7 +89,7 @@ export function manualSteps(claudeFound: boolean): string {
   lines.push('   Guide: .specify/docs/en/guides/setup/github-mcp-setup.md');
   lines.push('');
   lines.push(`${BOLD}Obsidian Plugin Setup (optional)${NC}`);
-  lines.push('   Guide: .specify/docs/en/guides/setup/claude-code/setup-obsidian-plugins-windows.md');
+  lines.push('   Guide: .specify/docs/en/guides/setup/obsidian-plugins-windows.md');
   lines.push('');
 
   return lines.join('\n');

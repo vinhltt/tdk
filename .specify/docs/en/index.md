@@ -7,8 +7,8 @@
 
 If you are new to TDK or just cloned a consumer repository, start here:
 
-- [TDK Setup](guides/setup/README.md) — prerequisites, installation, and verification
-- [Claude Code Setup](guides/setup/claude-code/README.md) — Claude Code extension and Python environment
+- [TDK Setup](guides/setup/installation.md) — prerequisites, installation, and verification
+- [Claude Code Setup](guides/setup/claude-code-environment.md) — Claude Code extension and Python environment
 - [Context7 MCP Setup](guides/setup/ctx7-mcp-setup.md) — required for docs-seeker
 - [GitHub MCP Setup](guides/setup/github-mcp-setup.md) — optional GitHub repo browsing
 - [Plugin Marketplace](guides/setup/plugin-marketplace-setup.md) — plugin marketplace activation

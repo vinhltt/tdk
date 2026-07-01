@@ -6,8 +6,8 @@
 
 | Language | Start here |
 |----------|------------|
-| English | [en/README.md](en/README.md) |
-| Tiếng Việt | [vi/README.md](vi/README.md) |
+| English | [en/index.md](en/index.md) |
+| Tiếng Việt | [vi/index.md](vi/index.md) |
 
 ## Conventions
 

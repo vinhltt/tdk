@@ -9,6 +9,20 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.94.1] - 2026-07-01
+
+### Changed
+- **[Docs]** Reorganized and renamed setup documentation files
+  - Renamed English and Vietnamese `README.md` to `index.md`
+  - Renamed setup guides (`README.md` to `installation.md`) and flattened paths for Claude Code environment and Obsidian plugins
+- **[General]** Updated Setup Guide link in root README.md
+- **[Scripts]** Updated setup command and distribution test references
+  - Updated `setup.ts` CLI help and `output-helpers.ts` manual guide links to point to new installation guides
+  - Updated `codex-distribute-e2e.test.ts` to expect `index.md` instead of `README.md`
+- **[Embedded Skills]** Updated setup and skill guide reference paths
+  - Updated `tdk-setup-guide` skill references to point to `installation.md` and flattened paths
+  - Updated `tdk-skill-guide` fallback path to point to `index.md`
+
 ## [1.94.0] - 2026-07-01
 
 ### Changed

@@ -2,7 +2,7 @@
 name: tdk-skill-guide
 description: "Interactive guide for TDK skills and commands. Shows usage, scenarios, tips, and skill discovery. Use when asking 'how to use /tdk-*', 'what skills are available', 'show scenario', 'find a skill for X', 'tdk guide', 'tdk help'."
 metadata:
-  version: 2.1.1
+  version: 2.2.1
 ---
 
 # TDK Skill Guide
@@ -92,8 +92,8 @@ Parse `$ARGUMENTS` to determine mode:
 
 ## Mode: Overview (no args)
 
-1. `get_vault_file("docs/en/README.md")` — display the quick start + guide index
-   - Fallback: `Read` `.specify/docs/en/README.md`
+1. `get_vault_file("docs/en/index.md")` — display the quick start + guide index
+   - Fallback: `Read` `.specify/docs/en/index.md`
 2. `list_vault_files("plugins")` → filter for `SKILL.md` files → `get_vault_file` each for name+description
    - Fallback: `Glob` `.specify/plugins/*/skills/*/SKILL.md` → `Read` each
 3. Group skills by plugin and display as categorized table:
@@ -227,4 +227,4 @@ Extract best practices and gotchas from existing docs only:
 | Skill not found | "Skill '<name>' not found. Did you mean: [list close matches]?" |
 | Scenario number out of range | "Scenarios available: 01-15. Use `/tdk-skill-guide` for full list." |
 | No search results | "No results for '<keyword>'. Try broader terms or `/tdk-skill-guide` for overview." |
-| Guides dir missing | "Guides not found at `.specify/docs/en/guides/`. Run setup first: see `.specify/docs/en/guides/setup/README.md`" |
+| Guides dir missing | "Guides not found at `.specify/docs/en/guides/`. Run setup first: see `.specify/docs/en/guides/setup/installation.md`" |

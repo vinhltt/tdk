@@ -204,6 +204,6 @@ Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup,
 - [Command Reference](.specify/docs/en/guides/command-reference.md) — full CLI documentation
 - [tdk-setup README](packages/tdk-setup/README.md) — harness setup CLI reference
 - [Scenario Guides](.specify/docs/en/guides/scenarios/) — 11 workflow scenarios
-- [Setup Guide](.specify/docs/en/guides/setup/README.md) — installation and configuration
+- [Setup Guide](.specify/docs/en/guides/setup/installation.md) — installation and configuration
 - [UT Backfill Usage](.specify/docs/en/guides/tdk-ut-backfill-skills-usage.md) — unit test workflow
 - [Document Flow](.specify/docs/en/guides/document-flow.md) — spec → plan → task lifecycle

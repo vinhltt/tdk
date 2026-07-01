@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.2.1] - 2026-07-01
+
+### Changed
+- Updated tdk-setup-guide skill references to point to installation.md and flattened paths
+- Updated tdk-skill-guide fallback path to point to index.md
+
 ## [2.2.0] - 2026-06-30
 
 ### Added

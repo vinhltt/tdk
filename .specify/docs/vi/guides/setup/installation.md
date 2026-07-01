@@ -54,7 +54,7 @@ curl -fsSL https://bun.sh/install | bash
 
 Một `.venv/` dùng chung ở project root được sử dụng bởi Claude skills, scripts trong `.specify/`, và quá trình phát triển project.
 
-Xem hướng dẫn đầy đủ: [**Setup Claude Code Environment**](../../../en/guides/setup/claude-code/README.md)
+Xem hướng dẫn đầy đủ: [**Setup Claude Code Environment**](../../../en/guides/setup/claude-code-environment.md)
 
 ## 3. Cài Đặt Claude Code
 
@@ -201,5 +201,5 @@ consumer-project/
 
 - [Context7 Plugin Setup](../../../en/guides/setup/ctx7-mcp-setup.md) — docs-seeker MCP integration
 - [GitHub MCP Setup](../../../en/guides/setup/github-mcp-setup.md) — tùy chọn để đọc GitHub repo
-- [Setup Claude Code Environment](../../../en/guides/setup/claude-code/README.md)
-- [Setup Obsidian Plugins — Windows](../../../en/guides/setup/claude-code/setup-obsidian-plugins-windows.md)
+- [Setup Claude Code Environment](../../../en/guides/setup/claude-code-environment.md)
+- [Setup Obsidian Plugins — Windows](../../../en/guides/setup/obsidian-plugins-windows.md)
