@@ -1,40 +1,37 @@
 # Decisions & Risks: {FEATURE_NAME}
 
 <!--
-  Design decisions, rejected alternatives, risks, assumptions to validate, and
-  any new-requirement candidates. New requirements are NON-BLOCKING follow-ups:
-  record them here and route the user back to /tdk-specify + /tdk-clarify; do not
-  mint requirement IDs in the HLD.
+  Parent epic slice decisions, rejected decomposition shapes, risks,
+  assumptions to validate, and child-spec follow-ups. New formal requirements
+  belong in child specs; do not mint requirement IDs in HLD.
 -->
 
-## Decisions
+## Slice Boundary Decisions
 
-<!-- From spec §4 Evaluated Approaches + design choices made during HLD. -->
+<!-- What was split/merged and why. -->
 
 - {Decision}: {what was chosen and why}
 
 ## Alternatives Rejected
 
-<!-- From spec §4. -->
+<!-- Rejected split/merge shapes. -->
 
 - {Alternative}: {why rejected}
 
 ## Risks & Mitigations
 
-<!-- From spec §8 Risks & Mitigations. -->
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| {risk} | {High/Medium/Low} | {mitigation} |
+| Risk | Impact | Mitigation | Affected slice key(s) |
+|------|--------|------------|-----------------------|
+| {risk} | {High/Medium/Low} | {mitigation} | {slice-key} |
 
 ## Assumptions to Validate
 
-<!-- Originated `assumed` items from project-and-technical-overview.md that need confirmation. -->
+<!-- Originated `assumed` items that child specs or epic PRD interview should validate. -->
 
 - {Assumption} `assumed` — {how/when to validate}
 
 ## Non-Blocking Follow-Ups
 
-<!-- New-requirement candidates surfaced during HLD. Route to /tdk-specify + /tdk-clarify. -->
+<!-- Route slice-map/product changes back to /tdk-epic-prd --interview or child clarify. -->
 
-- {Candidate requirement} — re-run `/tdk-specify {TASK_ID}` then `/tdk-clarify {TASK_ID}`
+- {Follow-up} — validate before or during child `/tdk-clarify`

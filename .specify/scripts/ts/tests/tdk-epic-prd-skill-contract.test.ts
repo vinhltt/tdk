@@ -103,7 +103,7 @@ describe('tdk-epic-prd skill contract', () => {
     expect(skill).toContain('update only the four epic PRD files');
   });
 
-  it('documents the current epic flow without advertising future commands', () => {
+  it('documents the current epic flow through parent HLD without advertising future commands', () => {
     const commandReference = readIfExists(COMMAND_REFERENCE_PATH);
     const documentFlow = readIfExists(DOCUMENT_FLOW_PATH);
     const epicGuide = readIfExists(EPIC_GUIDE_PATH);
@@ -113,8 +113,10 @@ describe('tdk-epic-prd skill contract', () => {
     expect(commandReference).toContain('/tdk-epic-prd <epic-id> [--force] [--interview]');
     expect(docsCombined).toContain('epic-prd/');
     expect(docsCombined).toContain('discovery');
+    expect(docsCombined).toContain('/tdk-epic-hld');
+    expect(docsCombined).toContain('/tdk-task-breakdown');
     expect(docsCombined).toContain('child /tdk-specify');
-    expect(docsCombined).not.toContain('/tdk-epic-hld');
+    expect(docsCombined).not.toContain('/tdk-high-level-design');
     expect(docsCombined).not.toContain('/tdk-epic-slice-breakdown');
   });
 });

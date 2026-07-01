@@ -4,11 +4,11 @@ import { resolve } from 'node:path';
 
 const HLD_SKILL_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-high-level-design/SKILL.md',
+  '../../../plugins/tdk-core/skills/tdk-epic-hld/SKILL.md',
 );
 const HLD_CONTRACT_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-high-level-design/references/high-level-design-output-contract.md',
+  '../../../plugins/tdk-core/skills/tdk-epic-hld/references/high-level-design-output-contract.md',
 );
 const REQUIREMENT_OVERVIEW_TEMPLATE_PATH = resolve(
   import.meta.dir,
@@ -27,25 +27,26 @@ function read(path: string): string {
   return readFileSync(path, 'utf-8');
 }
 
-describe('tdk-high-level-design requirement overview reference contract', () => {
+describe('tdk-epic-hld parent epic reference contract', () => {
   const skill = read(HLD_SKILL_PATH);
   const contract = read(HLD_CONTRACT_PATH);
   const requirementOverview = read(REQUIREMENT_OVERVIEW_TEMPLATE_PATH);
   const indexTemplate = read(HLD_INDEX_TEMPLATE_PATH);
   const taskBreakdownContract = read(TASK_BREAKDOWN_CONTRACT_PATH);
 
-  it('makes requirement-overview.md reference-first instead of PRD restatement', () => {
-    expect(requirementOverview).toContain('reference-first design context');
+  it('makes requirement-overview.md epic-source-first instead of PRD restatement', () => {
+    expect(requirementOverview).toContain('source-first parent epic design context');
     expect(requirementOverview).toContain('Do NOT restate PRD prose.');
     expect(requirementOverview).toContain(
-      'Each note must point back to a spec section or an existing UR-*/FR-*/SC-* ID.',
+      'Each note must point back to an epic PRD section, artifact path, or slice key.',
     );
+    expect(requirementOverview).toContain('Slice Source Map');
     expect(requirementOverview).not.toContain(
       '{Concise restatement of the problem and the target outcome}',
     );
 
     expect(contract).toContain(
-      'reference-first design context, not a PRD restatement',
+      'Epic HLD is the parent design stage between `/tdk-epic-prd` and',
     );
   });
 
@@ -64,32 +65,32 @@ describe('tdk-high-level-design requirement overview reference contract', () => 
     }
 
     expect(contract).toContain('Allowed files (exactly these six, no others)');
-    expect(contract).toContain('Do not create `tasks.md`');
+    expect(contract).toContain('`tasks.md`, `tasks-breakdown/`');
   });
 
-  it('keeps requirement-derived statements tied to existing spec IDs only', () => {
-    expect(contract).toContain('Valid citations are spec requirement identifiers only');
-    expect(contract).toContain('UR-*');
-    expect(contract).toContain('FR-*');
-    expect(contract).toContain('SC-*');
-    expect(skill).toContain(
-      'HLD enriches existing spec requirements; it does not become a second PRD or requirement source.',
+  it('keeps parent HLD tied to epic PRD sources and out of child requirement authority', () => {
+    expect(contract).toContain('Valid traceability sources are');
+    expect(contract).toContain('slice keys from `epic-prd/slice-map.md`');
+    expect(contract).toContain('Do not cite or mint `UR-*`, `FR-*`, `SC-*`, or `FS-*`.');
+    expect(skill).toMatch(
+      /Child specs are the\s+requirement authority and do not run HLD by default\./,
     );
     expect(skill).toContain(
-      'If HLD surfaces a genuinely new requirement, record it only as a non-blocking follow-up in `decisions-and-risks.md`.',
+      'Use epic PRD slice keys and source artifact references for traceability.',
     );
   });
 
   it('clarifies source-reference mapping in HLD index and contract', () => {
-    expect(indexTemplate).toContain('Source references, covered IDs, design implications');
+    expect(indexTemplate).toContain('Breakdown Readiness Map');
     expect(contract).toContain(
-      'Mapping means source reference and design implication, not copied PRD prose.',
+      'Mapping means source reference and decomposition implication, not copied PRD',
     );
   });
 
-  it('preserves downstream task-breakdown citation authority', () => {
+  it('preserves downstream task-breakdown child spec seed authority', () => {
     expect(taskBreakdownContract).toContain(
-      'HLD never becomes a citation source: citations remain `UR-*/FR-*/SC-*` from `spec.md`.',
+      'Only child',
     );
+    expect(taskBreakdownContract).toContain('`spec.md` artifacts mint formal requirement IDs');
   });
 });

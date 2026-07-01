@@ -4,6 +4,18 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [6.0.0] - 2026-07-01
+
+### Added
+- Add new epic HLD skill to turn epic PRD artifacts into high-level design context
+
+### Changed
+- Update greenfield-start skill and full workflow reference
+- Update task breakdown output contract and skill details to align with the new epic HLD workflow
+
+### Removed
+- Remove deprecated high-level-design skill in favor of tdk-epic-hld
+
 ## [5.13.0] - 2026-07-01
 
 ### Added

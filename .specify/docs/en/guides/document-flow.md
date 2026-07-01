@@ -25,6 +25,8 @@ flowchart TD
     AUTOMATION_RECOMMEND[automation-recommendation.md]
     DISCOVERY[discovery/<br/>Epic Context]
     EPIC_PRD[epic-prd/<br/>PRD + Slice Map]
+    HLD[high-level-design/<br/>Parent HLD]
+    TASK_BREAKDOWN[tasks-breakdown/<br/>Child Spec Seeds]
 
     %% Phase 0: Feature Specification
     REQ -.->|/tdk-greenfield-start<br/>project intake| GREENFIELD_INCEPTION
@@ -39,17 +41,16 @@ flowchart TD
     SUB_WORKSPACE_DOCS -.->|/tdk-sub-workspace-automation-recommend<br/>one workspace| AUTOMATION_RECOMMEND
     REQ -.->|/tdk-discovery<br/>optional, epic| DISCOVERY
     DISCOVERY -.->|/tdk-epic-prd<br/>product alignment| EPIC_PRD
+    EPIC_PRD -.->|/tdk-epic-hld<br/>parent design| HLD
+    HLD -.->|/tdk-task-breakdown<br/>child spec seeds| TASK_BREAKDOWN
+    TASK_BREAKDOWN -.->|child /tdk-specify<br/>seed| SPEC
     REQ -->|/tdk-specify| SPEC[spec.md<br/>Feature Specification]
     DISCOVERY -.->|context only| SPEC
-    EPIC_PRD -.->|child /tdk-specify<br/>slice seed| SPEC
     PRODUCT_CONTEXT -.->|project authority| GREENFIELD_INCEPTION
     PRODUCT_CONTEXT -.->|project authority| BROWNFIELD_ONBOARDING
     PRODUCT_CONTEXT -.->|project authority| DISCOVERY
     PRODUCT_CONTEXT -.->|project authority| SPEC
     SPEC -->|/tdk-clarify| SPEC_CLARIFIED[spec.md<br/>+ Clarifications]
-    SPEC_CLARIFIED -.->|/tdk-high-level-design<br/>optional, greenfield| HLD[high-level-design/<br/>Design Artifacts]
-    SPEC_CLARIFIED -.->|/tdk-task-breakdown<br/>optional| TASK_BREAKDOWN[tasks-breakdown/<br/>Portable Work Items]
-    HLD -.->|enriches, optional| TASK_BREAKDOWN
     SPEC_CLARIFIED -->|/tdk-ba-requirement| BA_REQ[ba-requirement.md<br/>BA Requirements]
     BA_REQ -.->|Approval| BA_REQ
     BA_REQ -->|/tdk-test-viewpoint| TEST_VP[test-viewpoint.csv<br/>Test Viewpoints]
@@ -87,7 +88,7 @@ flowchart TD
     classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
     classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px
 
-    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,SPEC,SPEC_CLARIFIED,TASK_BREAKDOWN phase0
+    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,HLD,TASK_BREAKDOWN,SPEC,SPEC_CLARIFIED phase0
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES,PAGEDESIGNS,BATCH_DESIGN phase1
     class TEST_VP phase0
     class PRODUCT_CONTEXT,CONSTITUTION,UIUX,REF_DATAMODEL,REF_STATE reference
@@ -114,10 +115,10 @@ flowchart LR
     AUTOMATION_RECOMMEND[automation recommendation<br/>one workspace]
     DISCOVERY[discovery/<br/>Epic Context]
     EPIC_PRD[epic-prd/<br/>PRD + Slice Map]
+    HLD[high-level-design/<br/>Parent HLD]
+    TASKS[tasks-breakdown/<br/>Child Spec Seeds]
     SPEC[spec.md]
     SPEC_CLAR[spec.md<br/>+ Clarifications]
-    HLD[high-level-design/<br/>Design Artifacts]
-    TASKS[tasks-breakdown/<br/>Portable Work Items]
     BA_REQ[ba-requirement.md]
 
     REQ -.->|"/tdk-greenfield-start"| GREENFIELD_INCEPTION
@@ -132,13 +133,12 @@ flowchart LR
     SUB_WORKSPACE_DOCS -.->|"/tdk-sub-workspace-automation-recommend"| AUTOMATION_RECOMMEND
     REQ -.->|"/tdk-discovery<br/>epic-id brief"| DISCOVERY
     DISCOVERY -.->|"/tdk-epic-prd<br/>epic-id"| EPIC_PRD
+    EPIC_PRD -.->|"/tdk-epic-hld<br/>epic-id"| HLD
+    HLD -.->|"/tdk-task-breakdown<br/>epic-id"| TASKS
+    TASKS -.->|"child /tdk-specify<br/>seed"| SPEC
     REQ -->|"/tdk-specify<br/>feature-id desc"| SPEC
     DISCOVERY -.->|"context only"| SPEC
-    EPIC_PRD -.->|"child /tdk-specify<br/>slice seed"| SPEC
     SPEC -->|"/tdk-clarify<br/>feature-id"| SPEC_CLAR
-    SPEC_CLAR -.->|"/tdk-high-level-design<br/>feature-id"| HLD
-    SPEC_CLAR -.->|"/tdk-task-breakdown<br/>feature-id"| TASKS
-    HLD -.->|"enriches, optional"| TASKS
     SPEC_CLAR -->|"/tdk-ba-requirement"| BA_REQ
 
     BA_REQ -.->|contains| CONTENT["- Functional requirements<br/>- User stories<br/>- Acceptance criteria<br/>- Approval section"]
@@ -152,12 +152,12 @@ flowchart LR
     class CONTENT note
 ```
 
-**Promote a large work-item → child spec.** A work-item big enough to be its own
-sub-feature can be promoted into an independent child spec at `specs/<child-id>/`, linked
-to its parent by a single `parent_spec` frontmatter field (no path nesting). The child
-re-runs this same Phase 0 pipeline. See
-[Promote Convention](./promote-convention.md) for the manual seed flow, the
-`[folder/]ticket` `parent_spec` format rule, and the sizing rule.
+**Create a child spec from a seed.** A `tasks-breakdown/task-NNN-{slice}.md`
+seed that is independently specifiable can become a child spec at
+`specs/<child-id>/`. Parent epic traceability stays in the seed refs; `parent_spec`
+is only for explicit links to an existing parent `spec.md`. See
+[Promote Convention](./promote-convention.md) for the manual seed flow,
+optional `parent_spec` rule, and sizing rule.
 
 ### Phase 1: Design & Architecture
 
@@ -346,12 +346,12 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `<docsPath>/sub-workspaces/<name>/{README,architecture,interfaces,engineering}.md` | `/tdk-sub-workspace-docs` | configured sub-workspace path, repomix pack, scout output, optional dependency policy | `/tdk-sub-workspace-automation-recommend` | Per sub-workspace docs refresh |
 | `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | `/tdk-sub-workspace-automation-recommend` | selected sub-workspace docs, dependency policy, official docs, local skill catalog, optional direct skill search | `/tdk-scaffold-from-recommendation` after approval | Per sub-workspace automation review |
 | `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution; existing discovery files for ID-only `--interview` | Optional context for `/tdk-epic-prd` or `/tdk-specify` | Optional before epic PRD or specify |
-| `epic-prd/` | `/tdk-epic-prd` | Existing `discovery/index.md`, `problem.md`, `personas.md`, and `mvp-scope.md`; existing PRD files for ID-only `--interview` | `slice-map.md` seeds child /tdk-specify commands | Optional after discovery |
+| `epic-prd/` | `/tdk-epic-prd` | Existing `discovery/index.md`, `problem.md`, `personas.md`, and `mvp-scope.md`; existing PRD files for ID-only `--interview` | Feeds `/tdk-epic-hld`, then `/tdk-task-breakdown` child spec seeds | Optional after discovery |
 | `spec.md` | `/tdk-specify` | User description, optional `discovery/index.md` or epic PRD slice seed; existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature start |
-| `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-high-level-design`, `/tdk-task-breakdown`, `/tdk-plan` | After specify |
-| `{docs.path}/custom-workflow/high-level-design-skill-routing.md` | Human-authored from `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` | Consumer HLD design skills | `/tdk-high-level-design` as advisory read-only routing | Optional project setup |
-| `high-level-design/` | `/tdk-high-level-design` | clarified `spec.md`; built-in lenses; optional HLD routing | `/tdk-task-breakdown` (optional enrichment) | Optional after clarify (greenfield) |
-| `tasks-breakdown/` | `/tdk-task-breakdown` | clarified `spec.md`; optional `high-level-design/` | Consumer-owned tracker sync, then child spec seeding | Optional after clarify |
+| `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-plan` | After specify |
+| `{docs.path}/custom-workflow/high-level-design-skill-routing.md` | Human-authored from `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` | Consumer HLD design skills | `/tdk-epic-hld` as advisory read-only routing | Optional project setup |
+| `high-level-design/` | `/tdk-epic-hld` | `epic-prd/`; built-in lenses; optional HLD routing | `/tdk-task-breakdown` | Parent epic after PRD |
+| `tasks-breakdown/` | `/tdk-task-breakdown` | `epic-prd/`; `high-level-design/` | Child `/tdk-specify` seeds | Parent epic after HLD |
 | `ba-requirement.md` | `/tdk-ba-requirement` | `spec.md` | `/tdk-plan` | For Approval |
 | `plan.md` | `/tdk-plan` | `ba-requirement.md`, `constitution.md` | `plan.md ## Phases`, `/tdk-implement [--phase NN]` | Feature start |
 | `plan.md ## Phases` | `/tdk-plan` | `ba-requirement.md`, design artifacts | `/tdk-implement [--phase NN]` | Feature start |
@@ -417,17 +417,14 @@ flowchart TD
     START -->|API change| UPDATE_CONTRACT[contracts/ manual edit]
 
     DISCOVERY --> EPIC_PRD[tdk-epic-prd]
-    EPIC_PRD --> SPECIFY
-    SPECIFY --> CLARIFY[tdk-clarify]
-    CLARIFY --> HLD{Need HLD?}
-    HLD -->|Yes| HLD_CMD[tdk-high-level-design]
-    HLD -->|No| EPIC_SIZE{Epic-sized?}
-    HLD_CMD --> EPIC_SIZE
-    EPIC_SIZE -->|Yes| BREAKDOWN[tdk-task-breakdown]
+    EPIC_PRD --> HLD_CMD[tdk-epic-hld]
+    HLD_CMD --> BREAKDOWN[tdk-task-breakdown]
     BREAKDOWN --> TRACKER[Consumer-owned tracker sync]
     TRACKER --> CHILD_SPEC[child tdk-specify]
-    CHILD_SPEC --> CHILD_PLAN[child tdk-plan]
-    EPIC_SIZE -->|No| PLAN[tdk-plan]
+    SPECIFY --> CLARIFY[tdk-clarify]
+    CHILD_SPEC --> CHILD_CLARIFY[child tdk-clarify]
+    CHILD_CLARIFY --> CHILD_PLAN[child tdk-plan]
+    CLARIFY --> PLAN[tdk-plan]
     CHILD_PLAN --> IMPLEMENT[tdk-implement]
     PLAN --> IMPLEMENT
     
@@ -448,8 +445,8 @@ flowchart TD
 ├── discovery/                          # Optional epic discovery context
 ├── epic-prd/                           # Optional epic PRD, slice map, and open questions
 ├── spec.md                             # Phase 0: Feature specification
-├── high-level-design/                  # Optional approval-level design artifacts
-├── tasks-breakdown/                    # Optional portable work items for tracker sync
+├── high-level-design/                  # Optional parent epic HLD after epic PRD
+├── tasks-breakdown/                    # Optional child spec seed files after HLD
 ├── plan.md                             # Phase 1: Implementation plan
 ├── research/                           # Phase 1: Technology research
 ├── data-model.md                       # Phase 1: Entity definitions + enums

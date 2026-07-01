@@ -1,8 +1,8 @@
 # TDK - TiHon Development Kit
 
-**TDK (TiHon Development Kit)** is a specification-driven coding workflow toolkit for Claude Code with generated Codex harness support. It generates specs, portable task breakdowns, plans, and code from natural language — shipped as a set of marketplace plugins + a TypeScript CLI.
+**TDK (TiHon Development Kit)** is a specification-driven coding workflow toolkit for Claude Code with generated Codex harness support. It generates specs, child spec seed breakdowns, plans, and code from natural language — shipped as a set of marketplace plugins + a TypeScript CLI.
 
-Core philosophy: **SDD (Specification-Driven Development)** — every feature starts from a formal spec, can produce portable work items, flows through structured plans, and is verified against the spec before shipping.
+Core philosophy: **SDD (Specification-Driven Development)** — every feature starts from a formal spec, broad epics can produce child spec seeds, each child flows through structured plans, and implementation is verified against the spec before shipping.
 
 ## Workflow Overview
 
@@ -25,10 +25,10 @@ TDK structures the full development loop:
 5. **Scaffold safely** — optionally turn approved layout into a dry-run golden-path skeleton recipe (`/tdk-golden-path-scaffold`)
 6. **Discover** — optionally create epic-only context before spec (`/tdk-discovery`)
 7. **Align epic PRD** — optionally turn discovery into product alignment, blocking questions, and child spec slice seeds (`/tdk-epic-prd`)
-8. **Specify** — generate child or feature specs from natural language and optional discovery/epic PRD refs (`/tdk:specify`)
-9. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
-10. **Design** — optionally produce approval-level HLD artifacts after clarify for greenfield work, using built-in design lenses and optional HLD-specific advisory routing (`/tdk-high-level-design`)
-11. **Break down** — optionally turn clarified spec/HLD context into portable Markdown work items (`/tdk-task-breakdown`)
+8. **Design epic** — optionally turn epic PRD into parent HLD context before child seed breakdown (`/tdk-epic-hld`)
+9. **Break down epic** — optionally turn epic PRD + HLD into child spec seed Markdown (`/tdk-task-breakdown`)
+10. **Specify** — generate child or feature specs from natural language and optional discovery/epic PRD refs (`/tdk:specify`)
+11. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
 12. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
 13. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
 14. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
@@ -36,7 +36,7 @@ TDK structures the full development loop:
 
 Additional workflows: constitution-owned `product-context.md`, workspace layout proposal and dry-run workspace config previews, config management, sub-workspace docs generation, scout (codebase analysis), memory management, API test generation.
 
-Authority boundaries: discovery is context-only and does not mint requirement IDs; epic PRD is product alignment and slice-map context only; `spec.md` owns `UR-*`/`FR-*`/`SC-*`; HLD enriches existing IDs and is not a second requirement source.
+Authority boundaries: discovery is context-only and does not mint requirement IDs; epic PRD is product alignment and slice-map context only; epic HLD guides parent decomposition and does not mint requirement IDs; task breakdown creates child spec seeds; child `spec.md` owns `UR-*`/`FR-*`/`SC-*`.
 
 ## Quick Start
 

@@ -23,11 +23,12 @@ Use this workflow for default mode and `--full`.
 
 - Recommend `/tdk-constitution --init` when project principles or product context do not exist.
 - Recommend `/tdk-discovery` when the work is epic/product-sized and product context needs depth.
+- Recommend `/tdk-epic-prd` when epic/product-sized work has enough context for parent slice mapping.
 - Recommend `/tdk-architecture-advisor <project-inception.md>` when inception evidence is ready for a project-level architecture decision.
 - Recommend `/tdk-workspace-layout-propose <architecture-decision.md>` after architecture advisor evidence is reviewed.
-- Recommend `/tdk-specify` only when the user has a concrete feature-sized objective.
+- Recommend `/tdk-specify` only when the user has a concrete feature-sized objective or selected child spec seed.
 - Recommend `/tdk-workflow-config-apply` only after layout proposal artifacts are reviewed. The skill previews first and asks before applying; greenfield no-config creation stays a separate seed/migration step.
-- Do not route directly to high-level design before specification and clarification.
+- Do not route directly to `/tdk-epic-hld` before `/tdk-epic-prd`.
 
 ## Stop Conditions
 

@@ -1,8 +1,9 @@
 # High-Level Design Skill Routing
 
-This reference defines optional consumer skill routing for `/tdk-high-level-design`.
+This reference defines optional consumer skill routing for `/tdk-epic-hld`.
 
-HLD routing is design-stage enrichment only. `/tdk-high-level-design` remains the sole writer of the six HLD artifacts.
+HLD routing is parent epic design-stage enrichment only. `/tdk-epic-hld`
+remains the sole writer of the six HLD artifacts.
 
 ## Routing File
 
@@ -14,11 +15,13 @@ Resolve this optional file from project context:
 
 Missing file behavior: continue with built-in lenses.
 
-If the file exists, read it before artifact generation and treat matching consumer skills as advisory design lenses.
+If the file exists, read it before artifact generation and treat matching
+consumer skills as advisory design lenses.
 
 ## Format
 
-Sections match sub-workspace names from project context. `## global` is the fallback for monoliths and unmatched sub-workspaces.
+Sections match sub-workspace names from project context. `## global` is the
+fallback for monoliths and unmatched sub-workspaces.
 
 Line format:
 
@@ -38,7 +41,8 @@ Known lens vocabulary:
 - `domain`
 - `compliance`
 
-Unknown lenses are allowed but should be treated as advisory labels, not execution domains.
+Unknown lenses are allowed but should be treated as advisory labels, not
+execution domains.
 
 ## Example
 
@@ -57,7 +61,8 @@ Unknown lenses are allowed but should be treated as advisory labels, not executi
 
 ## Missing Skill Behavior
 
-When a routed skill is unavailable or cannot be read, warn in the final report and continue with built-in lenses.
+When a routed skill is unavailable or cannot be read, warn in the final report
+and continue with built-in lenses.
 
 Do not block HLD generation solely because a routed consumer skill is missing.
 
@@ -67,14 +72,15 @@ Consumer HLD skills provide advisory output only.
 
 They must:
 
-- read existing project/spec/HLD context only;
+- read existing project, epic PRD, and HLD context only;
 - return design notes, risks, assumptions, or questions;
 - include lens name, intended HLD artifact target, confidence, and treatment;
-- cite existing `UR-*`, `FR-*`, or `SC-*` identifiers when requirement-derived.
+- cite epic PRD artifact paths, epic PRD sections, or slice keys when source-derived.
 
 They must not write files.
 They must not create new requirement IDs.
-They must not create tasks, plans, tracker issues, source code, runtime config, or status changes.
+They must not create tasks, child specs, plans, tracker issues, source code,
+runtime config, or status changes.
 
 Recommended note shape:
 
@@ -83,7 +89,7 @@ Recommended note shape:
   Artifact: project-and-technical-overview.md
   Confidence: medium
   Treatment: assumption
-  Note: `assumed` session boundaries need confirmation for FR-3.
+  Note: `assumed` session boundary must be clarified for slice `avatar-upload-validation`.
 ```
 
 ## Artifact Integration
@@ -93,6 +99,6 @@ Fold advisory findings into the existing six artifacts only:
 - assumptions and technical context -> `project-and-technical-overview.md`
 - flow implications -> `data-flow.md` or `screen-flow.md`
 - decisions, risks, rejected options, and follow-ups -> `decisions-and-risks.md`
-- source reference coverage -> `requirement-overview.md`
+- source coverage -> `requirement-overview.md`
 
 Do not add a delegate-skills section to any HLD artifact.

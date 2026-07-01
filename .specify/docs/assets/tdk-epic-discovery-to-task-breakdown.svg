@@ -6,7 +6,7 @@
 <tspan x="70" dy="0">TDK Epic Start — Discovery → Task Breakdown</tspan>
 </text>
 <text x="72" y="108" font-family="Noto Sans Mono" font-size="16" fill="#475569" text-anchor="start">
-<tspan x="72" dy="0">Biến epic mơ hồ thành parent spec + portable work items trước khi sync sub-issues</tspan>
+<tspan x="72" dy="0">Biến epic mơ hồ thành epic PRD + parent HLD + child spec seeds</tspan>
 </text>
 <text x="1230" y="68" font-family="Noto Sans Mono" font-size="13" fill="#64748b" text-anchor="start">
 <tspan x="1230" dy="0">Source: .specify/docs/vi/guides/epic-start-guide.md</tspan>
@@ -17,7 +17,7 @@
 <tspan x="82" dy="0">PARENT EPIC — trước implementation</tspan>
 </text>
 <text x="82" y="193" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
-<tspan x="82" dy="0">Mục tiêu: làm rõ context, requirements, design, rồi chia thành work items</tspan>
+<tspan x="82" dy="0">Mục tiêu: làm rõ context, epic PRD, parent design, rồi seed child specs</tspan>
 </text>
 <ellipse cx="190.0" cy="345.0" rx="95.0" ry="41.0" stroke="#2563eb" fill="#e7f5ff" stroke-width="2"/>
 <text x="190.0" y="341.0" font-family="Noto Sans Mono" font-size="16" fill="#1e40af" text-anchor="middle">
@@ -52,26 +52,27 @@
 <tspan x="516" dy="15.0">index.md = manifest + ready gate</tspan>
 </text>
 <text x="500" y="639" font-family="Noto Sans Mono" font-size="12" fill="#d97706" text-anchor="start">
-<tspan x="500" dy="0">Luật: discovery là context, không phải requirement authority.</tspan>
+<tspan x="500" dy="0">Luật: discovery là context, không mint requirement IDs.</tspan>
 </text>
-<rect x="850" y="215" width="450" height="438" rx="12" ry="12" stroke="#16a34a" fill="#f0fdf4" stroke-width="2"/>
-<text x="876" y="248" font-family="Noto Sans Mono" font-size="16" fill="#16a34a" text-anchor="start">
-<tspan x="876" dy="0">REQUIREMENT AUTHORITY</tspan>
+<rect x="850" y="215" width="450" height="438" rx="12" ry="12" stroke="#d97706" fill="#fff7ed" stroke-width="2"/>
+<text x="876" y="248" font-family="Noto Sans Mono" font-size="16" fill="#d97706" text-anchor="start">
+<tspan x="876" dy="0">PARENT EPIC PRD</tspan>
 </text>
 <text x="876" y="269" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
-<tspan x="876" dy="0">Chỉ spec.md sở hữu UR-* / FR-* / SC-*</tspan>
+<tspan x="876" dy="0">epic-prd owns slice map; child specs mint UR/FR/SC</tspan>
 </text>
 <rect x="875" y="304" width="190" height="104" rx="12" ry="12" stroke="#2563eb" fill="#dbeafe" stroke-width="2"/>
 <text x="970.0" y="343.75" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="middle">
-<tspan x="970.0" dy="0">/tdk-specify</tspan>
-<tspan x="970.0" dy="17.5">spec.md</tspan>
-<tspan x="970.0" dy="17.5">+ requirements checklist</tspan>
+<tspan x="970.0" dy="0">/tdk-epic-prd</tspan>
+<tspan x="970.0" dy="17.5">prd.md</tspan>
+<tspan x="970.0" dy="17.5">+ slice-map.md</tspan>
 </text>
 <rect x="1092" y="304" width="178" height="104" rx="12" ry="12" stroke="#2563eb" fill="#dbeafe" stroke-width="2"/>
 <text x="1181.0" y="343.75" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="middle">
-<tspan x="1181.0" dy="0">/tdk-clarify</tspan>
-<tspan x="1181.0" dy="17.5">answers ghi ngược</tspan>
-<tspan x="1181.0" dy="17.5">vào spec.md</tspan>
+<tspan x="1181.0" dy="0">optional</tspan>
+<tspan x="1181.0" dy="17.5">/tdk-epic-prd</tspan>
+<tspan x="1181.0" dy="17.5">--interview</tspan>
+<tspan x="1181.0" dy="17.5">resolve Q</tspan>
 </text>
 <polygon points="1125.0,478 1210,537.0 1125.0,596 1040,537.0" stroke="#dc2626" fill="#fee2e2" stroke-width="2"/>
 <text x="1125.0" y="524.75" font-family="Noto Sans Mono" font-size="14" fill="#991b1b" text-anchor="middle">
@@ -79,23 +80,24 @@
 <tspan x="1125.0" dy="17.5">Questions</tspan>
 <tspan x="1125.0" dy="17.5">= None?</tspan>
 </text>
-<text x="938" y="587" font-family="Noto Sans Mono" font-size="12" fill="#dc2626" text-anchor="start">
-<tspan x="938" dy="0">Không: quay lại clarify</tspan>
+<text x="928" y="623" font-family="Noto Sans Mono" font-size="12" fill="#dc2626" text-anchor="start">
+<tspan x="928" dy="0">Không: rerun epic-prd interview</tspan>
 </text>
 <text x="1238.0" y="525" font-family="Noto Sans Mono" font-size="12" fill="#16a34a" text-anchor="middle">
 <tspan x="1238.0" dy="0">Có</tspan>
 </text>
-<rect x="880" y="462" width="145" height="95" rx="12" ry="12" stroke="#16a34a" fill="#dcfce7" stroke-width="2"/>
+<rect x="880" y="462" width="145" height="95" rx="12" ry="12" stroke="#d97706" fill="#fff7ed" stroke-width="2"/>
 <text x="952.5" y="499.0" font-family="Noto Sans Mono" font-size="12" fill="#374151" text-anchor="middle">
-<tspan x="952.5" dy="0">spec.md</tspan>
-<tspan x="952.5" dy="15.0">UR/FR/SC</tspan>
-<tspan x="952.5" dy="15.0">source of truth</tspan>
+<tspan x="952.5" dy="0">epic-prd/</tspan>
+<tspan x="952.5" dy="15.0">prd.md</tspan>
+<tspan x="952.5" dy="15.0">slice-map.md</tspan>
+<tspan x="952.5" dy="15.0">open-questions.md</tspan>
 </text>
 <rect x="1332" y="285" width="220" height="120" rx="12" ry="12" stroke="#d97706" fill="#fef3c7" stroke-width="2"/>
 <text x="1442.0" y="332.75" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="middle">
-<tspan x="1442.0" dy="0">optional</tspan>
-<tspan x="1442.0" dy="17.5">/tdk-high-level-design</tspan>
-<tspan x="1442.0" dy="17.5">enrich-only HLD</tspan>
+<tspan x="1442.0" dy="0">parent</tspan>
+<tspan x="1442.0" dy="17.5">/tdk-epic-hld</tspan>
+<tspan x="1442.0" dy="17.5">design context</tspan>
 </text>
 <rect x="1285" y="462" width="314" height="148" rx="12" ry="12" stroke="#d97706" fill="#fff7ed" stroke-width="2"/>
 <text x="1305" y="493" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="start">
@@ -114,7 +116,7 @@
 <rect x="1660" y="285" width="220" height="120" rx="12" ry="12" stroke="#d97706" fill="#fef3c7" stroke-width="2"/>
 <text x="1770.0" y="332.75" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="middle">
 <tspan x="1770.0" dy="0">/tdk-task-breakdown</tspan>
-<tspan x="1770.0" dy="17.5">portable work items</tspan>
+<tspan x="1770.0" dy="17.5">child spec seeds</tspan>
 <tspan x="1770.0" dy="17.5">không phải plan.md</tspan>
 </text>
 <rect x="1628" y="462" width="270" height="148" rx="12" ry="12" stroke="#d97706" fill="#fff7ed" stroke-width="2"/>
@@ -123,13 +125,13 @@
 </text>
 <text x="1648" y="516" font-family="Noto Sans Mono" font-size="11" fill="#374151" text-anchor="start">
 <tspan x="1648" dy="0">tasks-breakdown/index.md</tspan>
-<tspan x="1648" dy="13.75">= manifest authoritative</tspan>
+<tspan x="1648" dy="13.75">= seed manifest</tspan>
 <tspan x="1648" dy="13.75"></tspan>
-<tspan x="1648" dy="13.75">task-NNN-{slug}.md</tspan>
-<tspan x="1648" dy="13.75">= objective + scope + AC</tspan>
+<tspan x="1648" dy="13.75">task-NNN-{slice}.md</tspan>
+<tspan x="1648" dy="13.75">= child spec seed</tspan>
 </text>
 <text x="1638" y="640" font-family="Noto Sans Mono" font-size="12" fill="#d97706" text-anchor="start">
-<tspan x="1638" dy="0">Mỗi task có thể sync thành 1 sub-issue.</tspan>
+<tspan x="1638" dy="0">Mỗi seed feed child spec/sub-issue.</tspan>
 </text>
 <path d="M 286 345 L 337 345" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_dc366fd1)"/>
 <path d="M 470 342 L 532 342" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow_87d2b039)"/>
@@ -143,7 +145,7 @@
 <path d="M 655 393 L 565 462" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
 <path d="M 655 393 L 660 462" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
 <path d="M 655 393 L 760 462" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
-<path d="M 970 408 L 952 462" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_76b51680)"/>
+<path d="M 970 408 L 952 462" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
 <path d="M 1442 405 L 1442 462" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
 <path d="M 1770 405 L 1770 462" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow_87d2b039)"/>
 <rect x="55" y="785" width="1865" height="275" rx="12" ry="12" stroke="#94a3b8" fill="#ffffff" stroke-width="2"/>
@@ -151,11 +153,11 @@
 <tspan x="82" dy="0">HANDOFF SAU TASK BREAKDOWN — ngoài phạm vi TDK core</tspan>
 </text>
 <text x="82" y="843" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
-<tspan x="82" dy="0">Task files là input cho tracker sync của consumer project; parent epic không đi thẳng tới implement như một khối lớn.</tspan>
+<tspan x="82" dy="0">Seed files là input cho tracker sync của consumer project; parent epic không đi thẳng tới implement như một khối lớn.</tspan>
 </text>
 <rect x="115" y="890" width="255" height="92" rx="12" ry="12" stroke="#d97706" fill="#fef3c7" stroke-width="2"/>
 <text x="242.5" y="932.5" font-family="Noto Sans Mono" font-size="14" fill="#1e40af" text-anchor="middle">
-<tspan x="242.5" dy="0">portable task files</tspan>
+<tspan x="242.5" dy="0">child spec seed files</tspan>
 <tspan x="242.5" dy="17.5">index.md + task-NNN.md</tspan>
 </text>
 <rect x="485" y="890" width="260" height="92" rx="12" ry="12" stroke="#64748b" fill="#e9ecef" stroke-width="2"/>
@@ -202,14 +204,14 @@
 </text>
 <rect x="520" y="1125" width="24" height="18" rx="12" ry="12" stroke="#16a34a" fill="#dcfce7" stroke-width="2"/>
 <text x="555" y="1135" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
-<tspan x="555" dy="0">requirement authority</tspan>
+<tspan x="555" dy="0">child spec authority</tspan>
 </text>
 <rect x="790" y="1125" width="24" height="18" rx="12" ry="12" stroke="#e03131" fill="#ffc9c9" stroke-width="2"/>
 <text x="825" y="1135" font-family="Noto Sans Mono" font-size="12" fill="#64748b" text-anchor="start">
 <tspan x="825" dy="0">external tracker</tspan>
 </text>
 <text x="70" y="1173" font-family="Noto Sans Mono" font-size="13" fill="#64748b" text-anchor="start">
-<tspan x="70" dy="0">Boundary: discovery = context-only; spec.md = requirement authority; HLD = enrich-only; task breakdown = portable work items for sub-issues.</tspan>
+<tspan x="70" dy="0">Boundary: discovery = context-only; epic PRD = slice map; HLD = parent design context; task breakdown = child spec seeds; child spec.md = requirement authority.</tspan>
 </text>
 <ellipse cx="190.0" cy="712.0" rx="7.0" ry="7.0" stroke="#2563eb" fill="#2563eb" stroke-width="1"/>
 <ellipse cx="405.0" cy="712.0" rx="7.0" ry="7.0" stroke="#d97706" fill="#d97706" stroke-width="1"/>

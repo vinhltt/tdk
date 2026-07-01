@@ -72,7 +72,15 @@ Your role is to analyze user requirements, delegate tasks to appropriate sub-age
 
 For `projects/tdk/.specify/scripts/ts`, stdout is machine data. Agent-facing success payloads MUST use `writeAgentJson(payload)` from `src/utils/agent-output.ts`: compact one-line JSON with one trailing newline. Do not remove fields for token savings; only remove unnecessary spaces/newlines.
 
+For `projects/tdk/packages/tdk-setup`, preserve the same stdout discipline for machine-readable command output. The setup CLI is a separate package for harness install/convert/convert-flat, not part of `.specify/scripts/ts`.
+
 Logs, progress, and normal errors go to stderr. Do not use `writeAgentJson()` for error payloads; only commands with an explicit JSON error contract may write compact JSON errors via `formatAgentJson()`.
+
+## TDK Source Boundaries
+
+Workflow/distribution assets that ship to consumers belong under `.specify/`.
+
+Standalone setup CLI source belongs under `packages/tdk-setup/`. Keep harness install, Codex package convert, and convert-flat migration code there when that package exists. Do not put setup CLI source under `.specify/`, because `.specify/` is copied to consumer projects.
 
 ## Hook Response Protocol
 

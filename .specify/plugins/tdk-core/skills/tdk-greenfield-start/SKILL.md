@@ -3,7 +3,7 @@ name: tdk-greenfield-start
 description: "New-project intake and routing entry point that asks project-inception questions, writes project-inception.md, and recommends safe next TDK routes"
 argument-hint: "[brief|file] [--full|--quick|--unknown]"
 metadata:
-  version: "5.11.0"
+  version: "6.0.0"
 ---
 
 # tdk-greenfield-start
@@ -136,7 +136,10 @@ Common route examples:
 /tdk-workflow-config-apply
 ```
 
-Do not route directly to high-level design before `/tdk-specify` and `/tdk-clarify`.
+Do not route directly to `/tdk-epic-hld` without `/tdk-epic-prd` artifacts.
+For broad epics, route through discovery/epic PRD before parent HLD and task
+breakdown; child `/tdk-specify` starts only from a selected seed or scoped
+feature brief.
 
 ### Step 8 - Report Completion
 

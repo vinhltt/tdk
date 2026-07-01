@@ -41,7 +41,7 @@ describe('architecture workflow foundation contracts', () => {
   const layout = readIfExists(layoutPath);
   const legacyBoundaryMap = readIfExists(legacyBoundaryMapPath);
   const topology = readIfExists(topologyPath);
-  const hld = read(skillPath('tdk-high-level-design'));
+  const hld = read(skillPath('tdk-epic-hld'));
   const index = read(INDEX_PATH);
   const applyCommand = read(APPLY_PATH);
 
@@ -123,8 +123,8 @@ describe('architecture workflow foundation contracts', () => {
     expect(topology).not.toContain('--create-dirs');
   });
 
-  it('keeps HLD feature-scoped and out of project topology ownership', () => {
-    expect(hld).toContain('Produce approval-level high-level design');
+  it('keeps HLD epic-scoped and out of project topology ownership', () => {
+    expect(hld).toContain('Produce parent epic high-level design');
     expect(hld).toContain('This command does NOT:');
     expect(hld).toContain('Create implementation plans');
     expect(hld).toContain('Implement code');

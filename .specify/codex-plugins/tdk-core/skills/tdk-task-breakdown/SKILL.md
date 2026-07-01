@@ -1,13 +1,13 @@
 ---
 name: tdk-task-breakdown
-description: "Generate portable Markdown work-item artifacts from a clarified spec. Use after /tdk-clarify and before tracker-specific issue sync owned by the consumer project."
+description: "Generate parent epic child-spec-seed breakdown artifacts from epic PRD plus /tdk-epic-hld context. Use before child /tdk-specify loops."
 metadata:
-  version: "5.9.1"
+  version: "6.0.0"
 ---
 
 # tdk-task-breakdown
 
-Create portable work-item Markdown from a clarified `spec.md`.
+Create parent epic child-spec-seed Markdown from epic PRD and epic HLD context.
 
 ## User Input
 
@@ -15,29 +15,35 @@ Create portable work-item Markdown from a clarified `spec.md`.
 $ARGUMENTS
 ```
 
+Trigger: `/tdk-task-breakdown <epic-id> [--force]`
+
 ## Boundary Declaration
 
 **This command produces:**
-- Markdown work-item artifacts under `{FEATURE_DIR}/tasks-breakdown/`
+- Markdown child spec seed artifacts under `{FEATURE_DIR}/tasks-breakdown/`
 - `tasks-breakdown/index.md`
-- `tasks-breakdown/task-NNN-{slug}.md` files
+- `tasks-breakdown/task-NNN-{slice}.md` files
 
 **This command does NOT:**
-- Create implementation plans (use `/tdk-plan`)
-- Implement code (use `/tdk-implement`)
-- This command does NOT create GitHub, GitLab, Backlog, or other tracker issues
+- Create child `spec.md` files (use `/tdk-specify <child-id> "<seed>"`)
+- Clarify child specs (use child `/tdk-clarify`)
+- Create implementation plans (use child `/tdk-plan`)
+- Implement code (use child `/tdk-implement`)
+- Create GitHub, GitLab, Backlog, or other tracker issues
 - Call external tracker APIs or CLIs
+- Mint `UR-*`, `FR-*`, `SC-*`, or `FS-*` identifiers
 
-Core output is tracker-neutral Markdown. Consumer projects own any later issue creation or sync workflow.
+Core output is tracker-neutral child spec seed Markdown. Child specs are the
+implementation units after this stage.
 
 ## Skill References
 
-Load before deriving any task content:
+Load before deriving any breakdown content:
 - `references/task-breakdown-output-contract.md`
 
 ## Execution Steps
 
-### Step 0 - Validate Task ID
+### Step 0 - Validate Epic ID
 
 Invoke `tdk-validate-task-id` with `$ARGUMENTS` and host skill name `/tdk-task-breakdown`.
 If STOP, halt execution.
@@ -50,25 +56,38 @@ Invoke `tdk-load-project-context` with validated `TASK_ID`.
 
 Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
-### Step 1 - Read Spec
+### Step 1 - Read Epic PRD
 
-Read `{FEATURE_DIR}/spec.md`.
+Require and read:
 
-If the file is missing, STOP and tell the user to run `/tdk-specify {TASK_ID}` and `/tdk-clarify {TASK_ID}` first.
+```text
+{FEATURE_DIR}/epic-prd/index.md
+{FEATURE_DIR}/epic-prd/prd.md
+{FEATURE_DIR}/epic-prd/slice-map.md
+{FEATURE_DIR}/epic-prd/open-questions.md
+```
 
-### Step 1.5 - Optional HLD Context
+If any file is missing, STOP before writing and tell the user to run
+`/tdk-epic-prd {TASK_ID}` first.
 
-If `{FEATURE_DIR}/high-level-design/index.md` exists, read the artifacts it lists as enrichment context. If it is absent, silently continue with no change in behavior.
+### Step 1.5 - Require Epic HLD Context
 
-HLD is enrichment only: it may sharpen task objective, scope, and dependency wording. It is never a citation source and never relaxes the citation rules. Citations remain `UR-*/FR-*/SC-*` from `spec.md`.
+Require `{FEATURE_DIR}/high-level-design/index.md` and read the artifacts it
+lists. If it is missing, STOP and tell the user to run `/tdk-epic-hld {TASK_ID}`
+first.
 
-### Step 2 - Unresolved Questions Gate
+HLD is parent design context only: it sharpens boundaries, dependencies,
+assumptions, risks, and child spec seed wording. It is not requirement authority.
 
-Find `## 9. Unresolved Questions` in `spec.md`.
+### Step 2 - Parent Readiness Gates
 
-STOP before writing any file unless the section content is exactly `None` after trimming whitespace.
+STOP before writing any file when:
 
-If the section is missing, contains bullets, contains placeholders, or contains anything other than `None`, STOP and report that `/tdk-clarify {TASK_ID}` must resolve the questions first.
+- `epic-prd/open-questions.md` has any item under `## Blocking Questions`.
+- `epic-prd/slice-map.md` has no independently specifiable slice.
+- `epic-prd/slice-map.md` contains catch-all slices such as "all features",
+  "entire MVP", or "whole epic".
+- `high-level-design/index.md` does not mark the HLD set ready for task breakdown.
 
 ### Step 3 - Load Output Contract
 
@@ -78,52 +97,65 @@ Use that reference as the single source of truth for:
 - Output filenames
 - Frontmatter schema
 - Required sections
-- Task granularity rules
-- Source requirement citation rules
+- Slice granularity rules
+- Child spec seed rules
+- Requirement-authority boundaries
 
-### Step 4 - Extract Source Requirements
+### Step 4 - Extract Source Slices
 
-From `spec.md`, extract only durable requirement and acceptance identifiers:
-- `UR-*` user requirements
-- `FR-*` functional requirements
-- `SC-*` success criteria
+From `epic-prd/slice-map.md`, extract slice keys, capability, actor, outcome,
+dependencies, suggested child spec title, priority, and seed text.
 
-Ignore implementation guesses. Do not invent file paths, APIs, database tables, owners, estimates, or tracker labels unless they already appear in the spec.
+From HLD artifacts, extract only boundary, dependency, data/user flow,
+interface, assumption, risk, and follow-up context that affects child spec seed
+quality.
 
-### Step 5 - Derive Work Items
+Do not invent file paths, APIs, database tables, owners, estimates, tracker
+labels, or formal requirement IDs unless the epic PRD or HLD explicitly states
+them as assumptions to validate.
 
-Create issue-sized tasks from the extracted requirements:
-- Each task must cite at least one source requirement ID.
-- Each task should be independently understandable outside TDK.
-- Keep plan-phase sequencing out of scope unless the spec already states an ordering constraint.
-- Prefer fewer coherent tasks over fragmented one-line tasks.
-- When HLD context is present (Step 1.5), it may enrich objective, scope, and dependency wording only; citations stay `UR-*/FR-*/SC-*` from the spec.
+### Step 5 - Derive Child Spec Seeds
 
-If a work-item is large enough to be its own sub-feature (its own requirements, clarify, and plan), it can be **promoted** into an independent child spec instead of being tracked as a task here. See `.specify/docs/en/guides/promote-convention.md` for the manual promote flow and the work-item-vs-child-spec sizing rule.
+Create one breakdown file for each independently specifiable slice:
+
+- Each item must cite a source slice key.
+- Each item must include source PRD/HLD references.
+- Each item must include suggested `/tdk-specify <child-id> "<seed>"` text.
+- Each item must define boundary, dependencies, assumptions/risks, and what to
+  clarify in the child spec.
+- Prefer fewer coherent child specs over fragmented one-line seeds.
+
+If a slice is too broad to become a child spec, STOP and tell the user to refine
+the epic PRD slice map before writing output.
 
 ### Step 6 - Write Markdown Artifacts
 
 Create or update only:
 - `{FEATURE_DIR}/tasks-breakdown/index.md`
-- `{FEATURE_DIR}/tasks-breakdown/task-NNN-{slug}.md`
+- `{FEATURE_DIR}/tasks-breakdown/task-NNN-{slice}.md`
 
-Do not write `tasks.md`, plan files, tracker config, or implementation files.
+Do not write `tasks.md`, child `spec.md`, plan files, tracker config, or
+implementation files.
 
-`index.md` is the authoritative manifest for the current generated set. Consumer tracker sync must read the task files listed in `index.md`, not glob every file in `tasks-breakdown/`.
-
-When regenerating an existing breakdown, read the current `index.md` first. Preserve any row whose `Status` is `promoted → <child-id>`: keep the row and its marker, and do NOT re-emit that item as a normal task or overwrite its task file. A promoted work-item now lives as an independent child spec, so re-emitting it would double-track it (see `references/task-breakdown-output-contract.md` and `.specify/docs/en/guides/promote-convention.md`).
+`index.md` is the authoritative manifest for the current generated set.
+Consumers and agents must read the child spec seed files listed in `index.md`,
+not glob every file in `tasks-breakdown/`.
 
 ### Step 7 - Report Results
 
 Report:
-- Number of task files written
-- Relative paths for `tasks-breakdown/index.md` and each task file
+- Number of child spec seed files written
+- Relative paths for `tasks-breakdown/index.md` and each seed file
+- Reminder: child specs start with `/tdk-specify <child-id> "<seed>"`
 - Reminder: tracker issue creation is consumer-owned and out of TDK core scope
 
 ## Quality Gates
 
-- [ ] `## 9. Unresolved Questions` is `None` before any write
+- [ ] Epic PRD artifacts exist before any write
+- [ ] Epic HLD artifacts exist before any write
+- [ ] `epic-prd/open-questions.md` has no blocking questions
 - [ ] `references/task-breakdown-output-contract.md` was loaded
-- [ ] Only `tasks-breakdown/index.md` and `tasks-breakdown/task-NNN-{slug}.md` were written
-- [ ] Every task cites at least one `UR-*`, `FR-*`, or `SC-*`
-- [ ] No tracker API or CLI call was made
+- [ ] Only `tasks-breakdown/index.md` and `tasks-breakdown/task-NNN-{slice}.md` were written
+- [ ] Every seed cites a source slice key and PRD/HLD refs
+- [ ] No `UR-*`, `FR-*`, `SC-*`, or `FS-*` identifiers were minted
+- [ ] No child spec, plan, code, tracker API, or tracker CLI call was made

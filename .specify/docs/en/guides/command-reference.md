@@ -165,13 +165,13 @@ The TDK command suite provides a **specification-driven development** workflow. 
 
 **Minimal feature flow**: `specify` -> `clarify` -> `plan` -> `implement`
 
-**Epic flow**: `constitution` (project-level) -> optional `discovery` -> optional `epic-prd` -> child `specify` -> child `clarify` -> optional `high-level-design` -> `task-breakdown` -> tracker sync or promotion -> child `plan` -> child `implement`
+**Epic flow**: `constitution` (project-level) -> optional `discovery` -> `epic-prd` -> `epic-hld` -> `task-breakdown` -> child `specify` -> child `clarify` -> child `plan` -> child `implement`
 
-For feature-sized work, skip discovery, epic PRD, HLD, and task breakdown by default. If the feature is small and clear, the current spec continues directly to `plan` and `implement`. For broad epics, `epic-prd/` turns discovery into product alignment, blocking questions, and child spec seeds; each selected slice then starts a child `/tdk-specify` loop.
+For feature-sized work, skip discovery, epic PRD, HLD, and task breakdown by default. If the feature is small and clear, the current spec continues directly to `plan` and `implement`. For broad epics, `epic-prd/` turns discovery into product alignment and slice map, `/tdk-epic-hld` adds parent design context, and `/tdk-task-breakdown` creates child spec seeds. Each seed then starts a child `/tdk-specify` loop.
 
-Each command reads the output of the previous one. For minimal feature work, the chain is `spec.md` -> `plan.md` (with `## Phases`) -> source code. For epic-sized work, optional `discovery/` feeds `epic-prd/`; `epic-prd/slice-map.md` seeds child specs. HLD and task breakdown remain tied to clarified `spec.md`, not to epic PRD directly.
+Each command reads the output of the previous one. For minimal feature work, the chain is `spec.md` -> `plan.md` (with `## Phases`) -> source code. For epic-sized work, optional `discovery/` feeds `epic-prd/`; `epic-prd/` feeds parent HLD; parent HLD feeds task breakdown; task breakdown seeds child specs. Child specs do not run HLD by default.
 
-`/tdk-high-level-design` always uses built-in design lenses and may optionally read `{docs.path}/custom-workflow/high-level-design-skill-routing.md` for advisory consumer design skills. This HLD routing file is separate from `plan-skill-routing.md`, which remains implementation/test routing for planning and UT workflows.
+`/tdk-epic-hld` always uses built-in design lenses and may optionally read `{docs.path}/custom-workflow/high-level-design-skill-routing.md` for advisory consumer design skills. This HLD routing file is separate from `plan-skill-routing.md`, which remains implementation/test routing for planning and UT workflows.
 
 ---
 
@@ -184,8 +184,8 @@ Each command reads the output of the previous one. For minimal feature work, the
 | 1 | `/tdk-specify <id> [<desc>] [--interview]` | Create a child or feature spec, or run ID-only `--interview` against existing `spec.md` |
 | 2 | `/tdk-specify <id> <desc> --fast [--interview]` | Quick specification (skips brainstorm, fewer tokens); `--fast --interview` is valid |
 | 3 | `/tdk-clarify <id>` | Ask up to 5 targeted questions to fill spec gaps |
-| 4 | `/tdk-high-level-design <id> [--greenfield] [--force]` | Generate approval-level high-level design artifacts from a clarified spec (greenfield, optional) |
-| 5 | `/tdk-task-breakdown <id>` | Generate portable Markdown work-item files from a clarified spec |
+| 4 | `/tdk-epic-hld <epic-id> [--force]` | Generate parent epic high-level design artifacts from epic PRD |
+| 5 | `/tdk-task-breakdown <epic-id> [--force]` | Generate child spec seed Markdown from epic PRD + HLD |
 | 6 | `/tdk-ba-requirement <id>` | Generate BA requirement document for stakeholder approval |
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
 | 8 | `/tdk-api-design <id>` | Generate detailed API design (Scenario A/B) with DB schema for approval |
@@ -255,7 +255,16 @@ Before writing child specs for a broad epic, create the epic PRD:
 /tdk-epic-prd feat-001 --interview
 ```
 
-This creates `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, and `epic-prd/open-questions.md`. Epic PRD is not `spec.md`; it does not mint requirement IDs or create tracker issues. Use `slice-map.md` to choose one child /tdk-specify seed.
+This creates `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, and `epic-prd/open-questions.md`. Epic PRD is not `spec.md`; it does not mint requirement IDs or create tracker issues.
+
+Before writing child specs for a broad epic, create parent HLD and task breakdown:
+
+```
+/tdk-epic-hld feat-001
+/tdk-task-breakdown feat-001
+```
+
+HLD reads epic PRD artifacts and produces `high-level-design/index.md` plus five design artifacts. Task breakdown reads epic PRD + HLD and creates `tasks-breakdown/index.md` plus child spec seed files. These stages do not mint `UR-*`, `FR-*`, or `SC-*`.
 
 ```
 /tdk-specify feat-002 "Avatar upload image cropping slice"
@@ -277,23 +286,23 @@ Claude identifies underspecified areas and asks up to 5 targeted questions. Answ
 
 For HLD, task breakdown, or child planning, `## 9. Unresolved Questions` must be exactly `None`.
 
-### Step 3 — Produce high-level design (optional)
+### Step 3 — Produce parent high-level design
 
 ```
-/tdk-high-level-design feat-001
+/tdk-epic-hld feat-001
 ```
 
-Creates `high-level-design/index.md` and five design artifacts from a clarified spec. Use this when stakeholders need approval-level design before task breakdown or planning. HLD enriches existing `UR-*`, `FR-*`, and `SC-*`; it does not create new requirement IDs.
+Creates `high-level-design/index.md` and five design artifacts from epic PRD. Use this when stakeholders need parent design context before child spec seed breakdown. HLD does not create requirement IDs.
 
-### Step 4 — Generate portable work items (optional)
+### Step 4 — Generate child spec seeds
 
 ```
 /tdk-task-breakdown feat-001
 ```
 
-Creates `tasks-breakdown/index.md` and `tasks-breakdown/task-NNN-*.md` files from a clarified spec. This is tracker-neutral Markdown only; GitHub, GitLab, Backlog, Jira, or other issue sync stays consumer-owned.
+Creates `tasks-breakdown/index.md` and `tasks-breakdown/task-NNN-*.md` child spec seed files from epic PRD + HLD. This is tracker-neutral Markdown only; GitHub, GitLab, Backlog, Jira, or other issue sync stays consumer-owned.
 
-For epic-sized work, the task files are usually synced into tracker sub-issues by consumer-owned tooling. Each sub-issue is then seeded into a child spec and runs its own `specify -> clarify -> plan -> implement` loop. For small feature-sized work, you can skip this child-spec loop and plan the current spec directly.
+For epic-sized work, each seed starts a child spec and runs its own `specify -> clarify -> plan -> implement` loop. Child specs do not run HLD by default. For small feature-sized work, skip parent epic HLD and task breakdown and plan the current spec directly.
 
 ### Step 5 — Plan the implementation
 
@@ -335,7 +344,7 @@ Map the `test` domain in `{docs.path}/custom-workflow/plan-skill-routing.md`, th
 
 To add project-specific advisory design skills, copy `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` to `{docs.path}/custom-workflow/high-level-design-skill-routing.md` and map lenses such as `architecture`, `security`, `data`, `api`, `ux`, or `operability`.
 
-Missing HLD routing is non-blocking; `/tdk-high-level-design` continues with built-in lenses. Consumer HLD skills are read-only/advisory and do not write artifacts.
+Missing HLD routing is non-blocking; `/tdk-epic-hld` continues with built-in lenses. Consumer HLD skills are read-only/advisory and do not write artifacts.
 
 ### Check progress any time
 
@@ -352,8 +361,8 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 ├── discovery/           ← Optional epic context before Step 1
 ├── epic-prd/            ← Optional epic PRD, slice map, and open questions
 ├── spec.md              ← Step 1
-├── high-level-design/   ← Optional design after clarification
-├── tasks-breakdown/     ← Step 3 optional portable work items
+├── high-level-design/   ← Parent epic HLD after epic PRD
+├── tasks-breakdown/     ← Parent child spec seeds after HLD
 ├── plan.md              ← Step 4 (includes ## Phases table)
 ├── research/            ← Step 4 (if needed)
 ├── data-model.md        ← Step 4 (if needed)
@@ -374,8 +383,8 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | specify | `/tdk-specify <id> [<desc>] [--interview]` | `--interview` | `.specify.env`; optional `discovery/index.md` or `epic-prd/slice-map.md` seed; existing `spec.md` for ID-only `--interview` | `spec.md`, `checklists/requirements.md` | None, discovery context, or epic PRD slice seed |
 | specify (fast) | `/tdk-specify <id> <desc> --fast [--interview]` | `--fast`, `--interview` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
-| high-level-design | `/tdk-high-level-design <id>` | `--greenfield`, `--force` | `spec.md` with unresolved questions set to `None`; optional HLD routing | `high-level-design/index.md` + 5 design artifacts | clarify |
-| task-breakdown | `/tdk-task-breakdown <id>` | — | `spec.md` with unresolved questions set to `None`; optional `high-level-design/` | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md` | clarify |
+| high-level-design | `/tdk-epic-hld <epic-id>` | `--force` | `epic-prd/index.md`, `prd.md`, `slice-map.md`, `open-questions.md`; optional HLD routing | `high-level-design/index.md` + 5 design artifacts | epic-prd |
+| task-breakdown | `/tdk-task-breakdown <epic-id>` | `--force` | `epic-prd/`; `high-level-design/` | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md` child spec seed files | high-level-design |
 | ba-requirement | `/tdk-ba-requirement <id>` | `--figma-pc`, `--figma-sp`, `--output` | `spec.md` | `ba-requirement.md` | clarify |
 | plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--red-team`, `--validate` | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | ba-requirement |
 | api-design | `/tdk-api-design <id>` | `--scenario A|B` | `spec.md`, `research/` | `api_design.md` (incl. DB schema) | plan |

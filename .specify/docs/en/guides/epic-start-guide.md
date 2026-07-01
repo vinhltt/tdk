@@ -11,11 +11,12 @@ TDK turns vague work into implementation-ready evidence:
 ```text
 Epic brief
   -> optional /tdk-discovery
-  -> optional /tdk-epic-prd
-  -> choose one slice from epic-prd/slice-map.md
+  -> /tdk-epic-prd
+  -> /tdk-epic-hld
+  -> /tdk-task-breakdown
+  -> choose one seed from tasks-breakdown/index.md
   -> child /tdk-specify
   -> child /tdk-clarify
-  -> optional child /tdk-high-level-design or /tdk-task-breakdown
   -> child /tdk-plan
   -> child /tdk-implement
 ```
@@ -25,9 +26,9 @@ The most important rule:
 ```text
 discovery is context
 epic PRD is product alignment and slice map
+epic HLD is parent design context for safe decomposition
+task breakdown is child spec seeds from PRD + HLD
 child spec.md is requirement authority
-HLD is design enrichment for a clarified spec
-task breakdown is portable work items for a clarified spec
 child specs are the implementation units
 plan.md is implementation sequence for one spec
 ```
@@ -74,25 +75,18 @@ flowchart TD
     B -->|Yes| C[/tdk-discovery/]
     B -->|No| D[/tdk-specify/]
     C --> R[/tdk-epic-prd/]
-    R --> X[Choose slice seed]
+    R --> H[/tdk-epic-hld/]
+    H --> I[/tdk-task-breakdown/]
+    I --> X[Choose child spec seed]
     X --> D
     D --> E[/tdk-clarify/]
     E --> F{Unresolved Questions = None?}
     F -->|No| E
-    F -->|Yes| S{Feature-sized?}
-    S -->|Yes| P[/tdk-plan/]
+    F -->|Yes| P[/tdk-plan/]
     P --> Q[/tdk-implement/]
-    S -->|No| G{Need stakeholder design approval?}
-    G -->|Yes| H[/tdk-high-level-design/]
-    G -->|No| I[/tdk-task-breakdown/]
-    H --> I
-    I --> J[Consumer-owned tracker sync]
-    J --> K[GitHub/GitLab/Backlog sub-issues]
-    K --> L[Seed each sub-issue into a child spec]
-    L --> M[Child: clarify -> plan -> implement]
 ```
 
-Feature-sized work should use the short path: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. In the epic workflow, `epic-prd/slice-map.md` feeds child /tdk-specify commands. Task breakdown remains available after a child spec is clarified when you need portable work items.
+Feature-sized work should use the short path: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. In the epic workflow, `epic-prd/` feeds parent HLD, HLD feeds task breakdown, and `tasks-breakdown/` feeds child /tdk-specify commands. Child specs do not run HLD by default.
 
 ![TDK Epic Start - Discovery to Task Breakdown](../../assets/tdk-epic-discovery-to-task-breakdown.png)
 
@@ -104,11 +98,11 @@ Use one parent ID for discovery and epic PRD. Use new child IDs for implementati
 |---|---|---|
 | 1 | `/tdk-discovery <parent-id> <brief\|file> [--interview]` | `discovery/index.md` says the problem, personas, and MVP cut are ready enough for specify |
 | 2 | `/tdk-epic-prd <parent-id> [--interview]` | `epic-prd/index.md` says Blocking Questions are empty, and `slice-map.md` has no catch-all slice |
-| 3 | Choose one slice seed | The seed describes one independently specifiable child, not the whole parent epic |
-| 4 | `/tdk-specify <child-id> "<slice seed>"` | Child spec is scoped to one PRD slice, and `UR-*` / `FR-*` / `SC-*` IDs start here |
-| 5 | Child `/tdk-clarify` | `## 9. Unresolved Questions` is exactly `None` |
-| 6 | Optional child `/tdk-high-level-design` or `/tdk-task-breakdown` | HLD/task files cite the child spec requirements |
-| 7 | Child `/tdk-plan` -> `/tdk-implement` | Child spec is clarified before implementation planning |
+| 3 | `/tdk-epic-hld <parent-id>` | Parent HLD captures slice boundaries, dependencies, risks, and design assumptions without minting requirement IDs |
+| 4 | `/tdk-task-breakdown <parent-id>` | Seed files map PRD slices + HLD context into independently specifiable child specs |
+| 5 | Choose one child spec seed | The seed describes one independently specifiable child, not the whole parent epic |
+| 6 | `/tdk-specify <child-id> "<seed>"` | Child spec is scoped to one seed, and `UR-*` / `FR-*` / `SC-*` IDs start here |
+| 7 | Child `/tdk-clarify` -> `/tdk-plan` -> `/tdk-implement` | Child spec is clarified before implementation planning |
 
 ## Output File Contents
 
@@ -131,7 +125,7 @@ Discovery output is not requirement authority. Treat it as context for writing t
 |---|---|---|
 | `epic-prd/index.md` | Source discovery links, artifact map, readiness gate, next commands | Start here; if Blocking Questions exist, do not treat the epic as ready for downstream design or breakdown |
 | `epic-prd/prd.md` | Product intent, problem/current state, personas, objectives, scope, MVP appetite, assumptions, risks, no-gos, source trace | Align on product direction without treating it as a requirement spec |
-| `epic-prd/slice-map.md` | Slug slice keys, capabilities, actors, outcomes, dependencies, suggested child spec titles, priority | Pick one row and turn it into a child /tdk-specify seed |
+| `epic-prd/slice-map.md` | Slug slice keys, capabilities, actors, outcomes, dependencies, suggested child spec titles, priority | Source for HLD/task-breakdown; child `/tdk-specify` starts from the seed file |
 | `epic-prd/open-questions.md` | Blocking Questions, Non-Blocking Questions, assumptions needing evidence, source trace | Resolve blockers before downstream epic design, breakdown, or child specs |
 
 Epic PRD output is not `spec.md`, does not create tracker issues, and does not mint `UR-*`, `FR-*`, `SC-*`, or `FS-*`.
@@ -168,7 +162,7 @@ If the spec is created from a promoted task or sub-issue, its frontmatter may al
 |---|---|---|
 | `## Clarifications` | Adds a dated session with one `Q -> A` bullet per accepted answer and rationale | Read this to understand why a decision was made |
 | Existing requirement sections | Updates scope, user requirements, functional requirements, key entities, success criteria, edge cases, risks, or terminology | Read the updated section as the current truth; do not rely only on the Q/A log |
-| `## 9. Unresolved Questions` | Should become exactly `None` before HLD, task breakdown, or child planning | Use this as the gate before moving forward |
+| `## 9. Unresolved Questions` | Should become exactly `None` before child planning | Use this as the child-spec gate before moving forward |
 
 Clarify is useful because it keeps decisions inside the spec instead of leaving them only in chat history.
 
@@ -176,37 +170,38 @@ Clarify is useful because it keeps decisions inside the spec instead of leaving 
 
 | File | What it contains | How a junior should use it |
 |---|---|---|
-| `high-level-design/index.md` | Frontmatter, `## Source`, `## Artifact Map`, `## Readiness Gate` | Start here; it lists the HLD files that are current and validates the spec gate |
-| `high-level-design/requirement-overview.md` | Problem and outcome, scope, actors, requirement map, non-functional goals | See how `UR-*`, `FR-*`, and `SC-*` translate into design implications |
-| `high-level-design/project-and-technical-overview.md` | System context, module impact, technical assumptions, integration map, security posture, operability | Understand system-level impact; treat originated details marked `assumed` as assumptions to validate |
-| `high-level-design/data-flow.md` | Key entities, read/write flows, external dependencies, state lifecycle, optional diagram | Understand data movement and state behavior before splitting work |
-| `high-level-design/screen-flow.md` | Primary journeys, screen list, steps, branch conditions, related APIs, optional diagram | Understand user journeys and UI/API touchpoints |
-| `high-level-design/decisions-and-risks.md` | Decisions, rejected alternatives, risks, assumptions to validate, non-blocking follow-ups | See what was chosen, what was rejected, and what may need to go back to spec |
+| `high-level-design/index.md` | Frontmatter, `## Source`, `## Artifact Map`, `## Breakdown Readiness Map`, `## Readiness Gate` | Start here; it lists the HLD files that are current and validates the parent epic gate |
+| `high-level-design/requirement-overview.md` | Product objective, scope, personas/jobs, slice source map, breakdown readiness | See how epic PRD slices translate into child spec seed implications |
+| `high-level-design/project-and-technical-overview.md` | System context, slice boundary map, dependency map, interface assumptions, security posture, operability | Understand system-level decomposition impact; treat originated details marked `assumed` as assumptions to validate |
+| `high-level-design/data-flow.md` | Key entities, cross-slice flows, external dependencies, state lifecycle, optional diagram | Understand data movement and state behavior before creating child spec seeds |
+| `high-level-design/screen-flow.md` | Epic journeys, slice touchpoints, steps, branch conditions, related interfaces, optional diagram | Understand user journeys and UI/API touchpoints across slices |
+| `high-level-design/decisions-and-risks.md` | Slice boundary decisions, rejected alternatives, risks, assumptions to validate, non-blocking follow-ups | See what was split/merged, what was rejected, and what may need child clarification |
 
-HLD enriches existing requirements. It does not create `UR-*`, `FR-*`, `SC-*`, tasks, plans, tracker issues, or code.
+HLD guides parent decomposition. It does not create `UR-*`, `FR-*`, `SC-*`, child specs, tasks, plans, tracker issues, or code.
 
 ### Task breakdown outputs
 
 | File | What it contains | How a junior should use it |
 |---|---|---|
-| `tasks-breakdown/index.md` | Frontmatter, source spec link, `## Tasks` table, tracker boundary, sync boundary | Treat as the authoritative manifest for task files to sync |
-| `tasks-breakdown/task-NNN-{slug}.md` | Frontmatter, title, `## Objective`, `## Source Requirements`, `## Scope` with In/Out, `## Acceptance Criteria`, `## Notes` | Use one task file as the body/source for one tracker sub-issue |
+| `tasks-breakdown/index.md` | Frontmatter, epic PRD/HLD links, `## Child Spec Seeds` table, tracker boundary, sync boundary | Treat as the authoritative manifest for child spec seed files |
+| `tasks-breakdown/task-NNN-{slice}.md` | Frontmatter, source slice, suggested child `/tdk-specify` command, boundary, dependencies, assumptions/risks, child clarify questions | Use one seed file to start one child spec |
 
 The `tasks-breakdown/index.md` task table has:
 
 | Column | Meaning |
 |---|---|
-| `#` | Stable work-item number such as `001` |
-| `Task` | Short issue-sized title |
-| `Source Requirements` | `UR-*`, `FR-*`, and `SC-*` references from `spec.md` |
-| `File` | Link to the task file |
-| `Status` | Empty for active work item, or `promoted -> <child-id>` when the work item became a child spec |
+| `#` | Stable seed number such as `001` |
+| `Slice key` | Source slice from `epic-prd/slice-map.md` |
+| `Child spec title` | Suggested child spec name |
+| `Depends on` | Slice keys or external dependencies |
+| `Seed file` | Link to the child spec seed file |
+| `Status` | Empty until a child spec/tracker workflow records progress |
 
-Task breakdown is not an implementation plan and does not create child specs by itself. It creates portable work items that the consumer project can sync to GitHub, GitLab, Backlog, Jira, or another tracker. After sync or promotion, update the parent `tasks-breakdown/index.md` row status to show the child relationship when your tracker workflow supports it.
+Task breakdown is not an implementation plan and does not create child specs by itself. It creates portable child spec seeds that can be copied into `/tdk-specify <child-id> "<seed>"` or synced to a tracker by consumer-owned tooling.
 
 ### Tracker sub-issue and child spec outputs
 
-TDK core does not create external issues. After consumer-owned tracker sync, each external sub-issue should carry the task's objective, source requirements, scope, acceptance criteria, and notes.
+TDK core does not create external issues. After consumer-owned tracker sync, each external sub-issue should carry the seed's source slice, boundary, dependencies, assumptions/risks, and clarify questions.
 
 Then create a child spec from each sub-issue/task using a new child ID. The child spec output is the same shape as `spec.md`, but scoped to that one sub-issue. Only after the child spec is clarified should it move to `/tdk-plan` and `/tdk-implement`.
 
@@ -324,7 +319,7 @@ What it does not do:
 
 - Does not write code.
 - Does not create implementation plans.
-- Does not create portable task files.
+- Does not create child spec seed files.
 - Should not describe implementation details like file paths, APIs, frameworks, or database tables unless they are part of the accepted requirement context.
 
 Ready check:
@@ -338,7 +333,7 @@ Ready check:
 
 ### 3. `/tdk-clarify <id>`
 
-Use this to remove ambiguity before design, task breakdown, or planning.
+Use this to remove ambiguity before child planning.
 
 Example:
 
@@ -351,7 +346,7 @@ Example:
 | Input | Existing `spec.md` |
 | Updates | `spec.md` |
 | Main value | Asks targeted questions and writes answers back into the spec |
-| Next command | `/tdk-high-level-design`, `/tdk-task-breakdown`, or `/tdk-plan` for feature-sized work |
+| Next command | `/tdk-plan <child-id>` |
 
 Clarify usually targets:
 
@@ -372,24 +367,24 @@ Ready check:
 
 - Confirm answers appear under `## Clarifications`.
 - Confirm affected requirement sections were updated, not only appended.
-- Confirm `## 9. Unresolved Questions` is exactly `None` before running HLD or task breakdown.
+- Confirm `## 9. Unresolved Questions` is exactly `None` before child planning.
 
-### 4. `/tdk-high-level-design <id> [--greenfield] [--force]`
+### 4. `/tdk-epic-hld <epic-id> [--force]`
 
-Use this when stakeholders need approval-level design before breakdown or planning.
+Use this on the parent epic after `/tdk-epic-prd` and before `/tdk-task-breakdown`.
 
 Example:
 
 ```text
-/tdk-high-level-design feat-001
+/tdk-epic-hld feat-001
 ```
 
 | Item | Detail |
 |---|---|
-| Input | Clarified `spec.md` with unresolved questions set to `None` |
+| Input | `epic-prd/index.md`, `prd.md`, `slice-map.md`, `open-questions.md` |
 | Creates | `high-level-design/index.md` plus 5 design artifacts |
-| Main value | Turns stable requirements into product/system design context |
-| Next command | `/tdk-task-breakdown <id>` for epic work, or `/tdk-plan <id>` for feature-sized work |
+| Main value | Turns epic PRD slices into parent product/system design context for safe breakdown |
+| Next command | `/tdk-task-breakdown <epic-id>` |
 
 Created files:
 
@@ -405,7 +400,7 @@ high-level-design/decisions-and-risks.md
 What it does not do:
 
 - Does not create implementation plans.
-- Does not create tasks.
+- Does not create child spec seeds.
 - Does not create code.
 - Does not create tracker issues.
 - Does not create new requirement IDs.
@@ -414,12 +409,12 @@ Ready check:
 
 - Start with `high-level-design/index.md`.
 - Read only artifacts listed in the index.
-- Check that requirement-derived design statements cite `UR-*`, `FR-*`, or `SC-*`.
-- If HLD exposes a new requirement, return to `specify` or `clarify` instead of forcing it into design.
+- Check that design statements trace to epic PRD sections or slice keys.
+- If HLD exposes a new slice or product decision, return to `/tdk-epic-prd --interview` or update the epic PRD instead of hiding it in design.
 
-### 5. `/tdk-task-breakdown <id>`
+### 5. `/tdk-task-breakdown <epic-id>`
 
-Use this when you need portable, issue-sized Markdown work items.
+Use this when you need child spec seed Markdown from the parent epic.
 
 Example:
 
@@ -429,49 +424,53 @@ Example:
 
 | Item | Detail |
 |---|---|
-| Input | Clarified `spec.md`; optional HLD context |
-| Creates | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-{slug}.md` |
-| Main value | Converts parent requirements into portable work items for consumer-owned tracker sub-issues |
-| Next command | Consumer-owned tracker sync, then child spec creation per sub-issue |
+| Input | `epic-prd/`; `high-level-design/` |
+| Creates | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-{slice}.md` |
+| Main value | Converts parent PRD slices and HLD context into child spec seeds |
+| Next command | Child `/tdk-specify <child-id> "<seed>"` |
 
 What it does not do:
 
 - Does not create GitHub, GitLab, Backlog, Jira, or other tracker issues.
+- Does not create child specs.
 - Does not create an implementation plan.
 - Does not write code.
-- Does not use HLD as a citation source.
+- Does not mint `UR-*`, `FR-*`, `SC-*`, or `FS-*`.
 
 Ready check:
 
 - Open `tasks-breakdown/index.md`.
 - Treat it as the authoritative manifest.
-- Open each listed task file.
-- Confirm each task cites at least one `UR-*`, `FR-*`, or `SC-*`.
-- Sync each listed task to a tracker sub-issue using consumer-owned tooling.
-- Seed each synced sub-issue into a child spec so it can run its own clarify, plan, and implement loop.
+- Open each listed seed file.
+- Confirm each seed cites a source slice key and PRD/HLD refs.
+- Start one child spec from each selected seed.
+- Run child clarify, plan, and implement. Do not run HLD in the child flow by default.
 
 ## Parent Epic vs Child Spec
 
-For an epic, the parent spec is the decomposition authority. It usually should not be planned and implemented as one large unit after task breakdown.
+For an epic, the parent discovery/PRD/HLD/task-breakdown artifacts are decomposition context. Child specs are the implementation authority. Do not plan and implement the parent epic as one large unit after task breakdown.
 
 Instead:
 
 ```text
-parent spec
+parent epic artifacts
+  -> /tdk-epic-prd
+  -> /tdk-epic-hld
   -> /tdk-task-breakdown
   -> tasks-breakdown/index.md
+  -> child spec seed files
   -> consumer-owned tracker sync
   -> GitHub/GitLab/Backlog sub-issues
   -> child spec per synced sub-issue
   -> child clarify -> child plan -> child implement
 ```
 
-Keep the parent spec for:
+Use the parent epic artifacts for:
 
-- problem and scope authority
-- requirement traceability
-- breakdown manifest
-- parent-child relationship tracking
+- product intent and MVP boundary
+- slice map and source traceability
+- parent design context
+- child spec seed manifest
 
 Use each child spec for:
 
@@ -480,19 +479,20 @@ Use each child spec for:
 - implementation planning
 - implementation and verification
 
-TDK core creates portable Markdown task files. The consumer project owns the tracker sync that turns those task files into GitHub, GitLab, Backlog, Jira, or other tracker sub-issues. After sync, this epic workflow treats each sub-issue as a child spec seed.
+TDK core creates portable Markdown child spec seed files. The consumer project
+owns tracker sync that turns those seeds into GitHub, GitLab, Backlog, Jira, or
+other tracker sub-issues. After sync, this epic workflow treats each sub-issue as
+a child spec seed.
 
 ## Readiness Gates
 
 | Move | Gate |
 |---|---|
-| Discovery -> Specify | Problem, persona, and MVP context are clear enough to write a feature spec |
-| Specify -> Clarify | `spec.md` exists and the requirements checklist was reviewed |
-| Clarify -> HLD | `## 9. Unresolved Questions` is exactly `None` |
-| Clarify -> Task Breakdown | `## 9. Unresolved Questions` is exactly `None` |
-| HLD -> Task Breakdown | HLD index exists and no new requirement needs a spec update |
-| Task Breakdown -> Tracker Sync | `tasks-breakdown/index.md` lists task files; every task cites `UR-*`, `FR-*`, or `SC-*` |
-| Tracker Sync -> Child Spec | Each external sub-issue has enough task content to seed a child spec |
+| Discovery -> Epic PRD | Problem, persona, and MVP context are clear enough for product alignment |
+| Epic PRD -> HLD | `epic-prd/open-questions.md` has no blocking questions and `slice-map.md` has no catch-all slice |
+| HLD -> Task Breakdown | HLD index exists and marks the parent design ready for breakdown |
+| Task Breakdown -> Child Spec | `tasks-breakdown/index.md` lists seed files; every seed cites a source slice key and PRD/HLD refs |
+| Child Specify -> Child Clarify | Child `spec.md` exists and the requirements checklist was reviewed |
 | Child Spec -> Child Plan | Child `spec.md` is clarified and unresolved questions are `None` |
 | Child Plan -> Child Implement | Child `plan.md` has a usable `## Phases` table |
 
@@ -516,40 +516,39 @@ If the generated discovery needs an alignment check before it influences require
 /tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and removal" --interview
 ```
 
-Then create the requirement source of truth:
+Then create the epic PRD:
 
 ```text
-/tdk-specify feat-001 Add user avatar upload with cropping, validation, storage, and removal
+/tdk-epic-prd feat-001 --interview
 ```
 
-Resolve gaps:
+Create parent design context:
 
 ```text
-/tdk-clarify feat-001
+/tdk-epic-hld feat-001
 ```
 
-If `spec.md` still has unresolved questions, answer them before moving on. If stakeholders need a design review:
-
-```text
-/tdk-high-level-design feat-001
-```
-
-Break the parent epic into issue-sized work items:
+Break the parent epic into child spec seeds:
 
 ```text
 /tdk-task-breakdown feat-001
 ```
 
-Sync the listed task files to your tracker as sub-issues using consumer-owned tooling. Then seed each sub-issue into a child spec. Example:
+Create and clarify one child spec from a seed:
 
 ```text
-/tdk-specify feat-002 "Seed from task-001-avatar-upload-validation.md"
+/tdk-specify feat-002 "Seed from tasks-breakdown/task-001-avatar-upload-validation.md"
 /tdk-clarify feat-002
+```
+
+Then plan and implement the child:
+
+```text
 /tdk-plan feat-002
 /tdk-implement feat-002
 ```
 
-Repeat the child loop for each sub-issue. Do not plan and implement the parent epic as one large unit unless you intentionally decide the current spec is small enough to implement directly.
+Repeat the child loop for each selected seed. Do not plan and implement the parent epic as one large unit.
 
 ## Common Mistakes
 
@@ -562,9 +561,9 @@ Repeat the child loop for each sub-issue. Do not plan and implement the parent e
 | Looking for `discovery/interview.md` after `--interview` | Interview decisions are folded into the four existing discovery files |
 | Treating discovery as requirements | Only `spec.md` owns `UR-*`, `FR-*`, and `SC-*` |
 | Putting implementation details into spec | Keep spec focused on user value, behavior, scope, and success criteria |
-| Running HLD while unresolved questions remain | Run `/tdk-clarify` until unresolved questions are `None` |
-| Treating HLD as a second PRD | HLD enriches existing spec requirements; it does not mint new requirements |
-| Planning the parent epic immediately after task breakdown | Sync tasks to sub-issues, then create child specs for implementation |
+| Running HLD before epic PRD is ready | Resolve PRD blocking questions and catch-all slices first |
+| Treating HLD as a second PRD | HLD guides decomposition; update epic PRD when product direction changes |
+| Planning the parent epic immediately after task breakdown | Create child specs from seeds, then plan each child |
 | Treating task breakdown as implementation plan | Child `/tdk-plan` owns implementation phases for each child spec |
 | Expecting TDK core to create tracker issues | Task breakdown is tracker-neutral; tracker sync is consumer-owned |
 
@@ -572,11 +571,11 @@ Repeat the child loop for each sub-issue. Do not plan and implement the parent e
 
 | Symptom | Likely Cause | Fix |
 |---|---|---|
-| HLD stops before writing files | `## 9. Unresolved Questions` is not exactly `None` | Run `/tdk-clarify <id>` |
-| Task breakdown stops before writing files | Spec still has unresolved questions or missing stable IDs | Resolve questions and ensure `UR-*`, `FR-*`, `SC-*` exist |
-| Sub-issue has no implementation path | It was synced from task breakdown but not seeded into a child spec | Create a child spec from the sub-issue/task content |
+| HLD stops before writing files | Epic PRD has blocking questions or catch-all slices | Update or interview the epic PRD |
+| Task breakdown stops before writing files | Epic HLD is missing or parent readiness gates fail | Run `/tdk-epic-hld <id>` and resolve parent readiness issues |
+| Sub-issue has no implementation path | It was synced from task breakdown but not seeded into a child spec | Create a child spec from the seed content |
 | User cannot tell what to inspect next | They are reading by globbing directories | Start from `discovery/index.md`, `high-level-design/index.md`, or `tasks-breakdown/index.md` |
-| Requirements conflict with HLD | New requirement discovered too late | Update `spec.md` through `specify` or `clarify`, then regenerate downstream artifacts |
+| Requirements conflict with HLD | Product/slice decision discovered too late | Update epic PRD or child spec in the owning lane, then regenerate downstream artifacts |
 
 ## Related Docs
 

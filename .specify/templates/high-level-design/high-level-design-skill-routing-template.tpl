@@ -6,7 +6,7 @@ Copy this file to:
 {docs.path}/custom-workflow/high-level-design-skill-routing.md
 ```
 
-This file is optional and HLD-only. `/tdk-high-level-design` reads it as advisory design routing before writing the six HLD artifacts. `/tdk-plan` does not consume this file.
+This file is optional and HLD-only. `/tdk-epic-hld` reads it as advisory parent epic design routing before writing the six HLD artifacts. `/tdk-plan` does not consume this file.
 
 Known lenses: `architecture`, `quality`, `security`, `data`, `api`, `ux`, `operability`, `domain`, `compliance`.
 
@@ -38,4 +38,4 @@ Line format:
 
 <!-- Add more sections matching sub-workspaces in project context. -->
 
-Consumer HLD skills are advisory only. They may return design notes, risks, assumptions, or questions, but must not write files, create requirement IDs, create tasks/plans, or change tracker/config/status state.
+Consumer HLD skills are advisory only. They may return design notes, risks, assumptions, or questions, but must not write files, create requirement IDs, create child specs, create tasks/plans, or change tracker/config/status state.

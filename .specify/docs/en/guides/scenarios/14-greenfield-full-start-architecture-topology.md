@@ -323,7 +323,7 @@ After this scenario, choose the next path:
 
 | Goal | Next command |
 |---|---|
-| Produce stakeholder design docs for the clarified feature | `/tdk-high-level-design feat-001` |
-| Turn clarified feature into portable work items | `/tdk-task-breakdown feat-001` |
+| Produce parent epic design docs from epic PRD | `/tdk-epic-hld feat-001` |
+| Turn epic PRD + HLD into child spec seeds | `/tdk-task-breakdown feat-001` |
 | Build implementation plan directly | `/tdk-plan feat-001` |
 | Start implementing after a plan exists | `/tdk-implement feat-001` |

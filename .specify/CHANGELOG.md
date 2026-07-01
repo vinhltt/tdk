@@ -9,7 +9,31 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.93.0] - 2026-07-01
+
+### Added
+- **[tdk-epic-hld]** Add new epic HLD skill to turn epic PRD artifacts into high-level design context
+
+### Changed
+- **[tdk-greenfield-start]** Update skill and full workflow reference
+- **[tdk-task-breakdown]** Update task breakdown output contract and skill details to align with the new epic HLD workflow
+- **[Guides]** Update Epic onboarding guides and documentation
+  - Update epic-start-guide (en/vi) and document flow for epic HLD routing
+  - Update excalidraw diagram and command-reference definitions
+  - Update development scenarios to reflect tdk-epic-hld workflow
+- **[Templates]** Update high-level design templates
+  - Align data-flow, screen-flow, and requirement-overview templates with epic HLD schema
+  - Update decisions-and-risks and project-and-technical-overview templates
+- **[Scripts]** Update tests to align with tdk-epic-hld changes
+  - Rename routing-contract test to tdk-epic-hld-routing-contract.test.ts
+  - Update architecture-workflow, architecture-advisor, epic-prd, hld-requirement, and task-breakdown contract tests
+- **[General]** Update primary workflow rules for epic PRD/HLD sequencing
+
+### Removed
+- **[tdk-high-level-design]** Remove deprecated high-level-design skill (was 5.8.0) in favor of tdk-epic-hld
+
 ## [1.92.0] - 2026-07-01
+
 
 ### Added
 - **[Embedded Skills]** Added new `tdk-epic-prd` skill for epic product alignment, mapping, and child specification slice seeds.

@@ -1,6 +1,12 @@
 # Task Breakdown Output Contract
 
-This reference is the single source of truth for `/tdk-task-breakdown` Markdown artifacts.
+This reference is the single source of truth for `/tdk-task-breakdown` Markdown
+artifacts.
+
+Task breakdown is the parent epic decomposition step after `/tdk-epic-hld`. It
+turns epic PRD slices plus HLD design context into child spec seeds. It does not
+create child specs, implementation plans, code, formal requirement IDs, or
+tracker issues.
 
 ## Output Directory
 
@@ -14,12 +20,14 @@ Allowed files:
 
 ```text
 tasks-breakdown/index.md
-tasks-breakdown/task-NNN-{slug}.md
+tasks-breakdown/task-NNN-{slice}.md
 ```
 
-Do not create `tasks.md`, tracker config, implementation plans, or source code.
+Do not create `tasks.md`, `spec.md`, tracker config, implementation plans, or
+source code.
 
-`tasks-breakdown/index.md` is authoritative. Consumer tracker sync must read task files listed in `index.md`, not discover tasks by globbing the directory.
+`tasks-breakdown/index.md` is authoritative. Consumers and agents must read seed
+files listed in `index.md`, not discover files by globbing the directory.
 
 ## Index Schema
 
@@ -28,8 +36,9 @@ Do not create `tasks.md`, tracker config, implementation plans, or source code.
 ```markdown
 ---
 task_id: "{TASK_ID}"
-source_spec: "../spec.md"
-artifact_type: "portable-task-breakdown"
+source_epic_prd: "../epic-prd/index.md"
+source_hld: "../high-level-design/index.md"
+artifact_type: "child-spec-seed-breakdown"
 tracker_sync: "consumer-owned"
 ---
 
@@ -37,135 +46,111 @@ tracker_sync: "consumer-owned"
 
 ## Source
 
-- Spec: `../spec.md`
-- Unresolved Questions: `None`
+- Epic PRD: `../epic-prd/index.md`
+- Slice Map: `../epic-prd/slice-map.md`
+- Epic HLD: `../high-level-design/index.md`
+- Blocking Questions: `None`
 
-## Tasks
+## Child Spec Seeds
 
-| # | Task | Source Requirements | File | Status |
-|---|------|---------------------|------|--------|
-| 001 | Example task title | UR-001, FR-001, SC-001 | [task-001-example-task-title.md](./task-001-example-task-title.md) | |
-| 012 | Build importer sub-feature | UR-003, FR-007 | [task-012-build-importer-sub-feature.md](./task-012-build-importer-sub-feature.md) | promoted → feat-123 |
+| # | Slice key | Child spec title | Depends on | Seed file | Status |
+|---|-----------|------------------|------------|-----------|--------|
+| 001 | avatar-upload-validation | Avatar upload validation | none | [task-001-avatar-upload-validation.md](./task-001-avatar-upload-validation.md) | |
 
 ## Tracker Boundary
 
-These files are portable Markdown work items. TDK core does not create external tracker issues.
+These files are portable Markdown child spec seeds. TDK core does not create external tracker issues.
 
 ## Sync Boundary
 
 Consumer-owned tracker sync must treat `tasks-breakdown/index.md` as the manifest. Files not listed in the current index are non-authoritative and must not be synced just because they exist in the directory.
 ```
 
-## Promoted Work Items
+## Seed File Schema
 
-A work-item large enough to be its own sub-feature may be **promoted** into an
-independent child spec (see `.specify/docs/en/guides/promote-convention.md`). The
-`Status` column is how the index records that, so a promoted item is never
-double-tracked as both a work-item here and a child spec.
-
-- **Status column.** Trailing column on the `## Tasks` table. Empty means active
-  (the normal case). A promoted row reads `promoted → <child-id>` where
-  `<child-id>` is the child spec's id (e.g. `feat-123`, or `test/aa-100` when the
-  child is in a non-default category).
-- **Back-link.** The child spec carries `promoted_from: "NNN"` in its frontmatter.
-  This is a **best-effort human annotation only, not a machine-resolvable
-  back-link** — regeneration may renumber tasks when the task meaning changes, so
-  `promoted_from` can dangle. The authoritative trace is `parent_spec` (child →
-  parent) plus the `promoted → <child-id>` index marker (parent → child). Do not
-  build tooling that resolves `promoted_from` programmatically.
-- **Regeneration rule.** On regenerate, read the existing `index.md` first. For any
-  row whose `Status` is `promoted → ...`, preserve that row and its marker and do
-  NOT re-emit the item as a normal task or overwrite its task file.
-- **Demote — revert promotion (manual, no command).** To turn a child spec back
-  into a normal work-item: delete or archive `specs/<child-id>/`, close its tracker
-  issue (when consumer tracker-sync exists), and clear the `promoted → <child-id>`
-  marker in the parent index row. Loose coupling (link in frontmatter, not path)
-  makes this safe. This is the *revert* path of demote; when only the parent is
-  gone and the child should survive as an independent root spec, use the *unlink*
-  path instead (clear `parent_spec`, keep the child). Both demote paths are defined
-  in `.specify/docs/en/guides/promote-convention.md`.
-- **Consumer advisory.** `Status` is appended as the **last** column. Any
-  downstream tool that parses `index.md` by column index must read `Status` as the
-  trailing column; column-name-based parsing is unaffected.
-
-## Task File Schema
-
-Each `task-NNN-{slug}.md` must use this structure:
+Each `task-NNN-{slice}.md` must use this structure:
 
 ```markdown
 ---
 task_id: "{TASK_ID}"
 work_item: "NNN"
-title: "Short imperative task title"
-source_spec: "../spec.md"
-source_requirements: ["UR-001", "FR-001", "SC-001"]
+slice_key: "avatar-upload-validation"
+child_spec_title: "Avatar upload validation"
+source_epic_prd: "../epic-prd/index.md"
+source_hld: "../high-level-design/index.md"
 tracker_sync: "consumer-owned"
 ---
 
-# NNN. Short imperative task title
+# NNN. Avatar upload validation
 
-## Objective
+## Source Slice
 
-One concise paragraph describing the user-visible or workflow outcome.
+- Slice key: `avatar-upload-validation`
+- Source PRD refs: `epic-prd/slice-map.md`, `epic-prd/prd.md`
+- Source HLD refs: `high-level-design/index.md`, relevant listed artifact(s)
 
-## Source Requirements
+## Suggested Child Spec Command
 
-- UR-001: Brief copied or paraphrased requirement text
-- FR-001: Brief copied or paraphrased requirement text
-- SC-001: Brief copied or paraphrased success criterion
+```text
+/tdk-specify <child-id> "Seed text derived from this slice, boundary, dependencies, assumptions, and risks."
+```
 
-## Scope
+## Boundary
 
 ### In
 
-- Concrete work included in this external issue-sized task.
+- Capability and outcome included in this child spec seed.
 
 ### Out
 
-- Work explicitly excluded or deferred.
+- Related parent epic scope explicitly excluded from this child spec seed.
 
-## Acceptance Criteria
+## Dependencies
 
-- [ ] Observable result tied to the cited source requirements.
-- [ ] Error or edge behavior when relevant.
+- Upstream/downstream slice keys or external dependencies.
 
-## Notes
+## Assumptions And Risks
 
-- Optional implementation constraints already present in the spec.
+- Assumptions or risks that the child spec should clarify.
+
+## Clarify In Child Spec
+
+- Questions the child `/tdk-clarify` should resolve before planning.
 ```
 
 ## Filename Rules
 
-- Number tasks from `001`.
-- Use `task-NNN-{slug}.md`.
-- Use lowercase kebab-case for `{slug}`.
-- Slug derives from the task title.
-- Keep filenames stable if regenerating unless the task meaning changes.
+- Number items from `001`.
+- Use `task-NNN-{slice}.md`.
+- Use lowercase kebab-case for `{slice}`.
+- `{slice}` derives from the source slice key.
+- Keep filenames stable if regenerating unless the slice meaning changes.
 
-## Task Granularity Rules
+## Slice Granularity Rules
 
-- One task should map to one external issue-sized unit of work.
-- Each task must cite at least one `UR-*`, `FR-*`, or `SC-*`.
-- Group tightly related requirements when they form one coherent user outcome.
-- Split tasks when acceptance criteria require different actors, workflows, or validation surfaces.
-- Do not include implementation file paths unless `spec.md` already states them.
-- Do not add owners, estimates, priorities, labels, milestones, or tracker IDs unless `spec.md` already states them.
+- One seed should map to one independently specifiable child spec.
+- Each seed must cite one source slice key.
+- Group tightly related slice-map rows only when they cannot be specified independently.
+- Split seeds when actors, outcomes, dependencies, or clarification questions differ materially.
+- Do not include implementation file paths unless the epic PRD or HLD already states them.
+- Do not add owners, estimates, priorities, labels, milestones, or tracker IDs unless the epic PRD already states them.
 
-## Source Requirement Rules
+## Source Authority Rules
 
-Valid citations:
-- `UR-*`
-- `FR-*`
-- `SC-*`
+Valid parent traceability sources:
 
-Every task file must include a `## Source Requirements` section with at least one citation. Prefer exact identifiers from the spec. If the spec uses prose without stable IDs, STOP and tell the user to update the spec before generating portable tasks.
+- `epic-prd/index.md`
+- `epic-prd/prd.md`
+- `epic-prd/slice-map.md`
+- `epic-prd/open-questions.md`
+- `high-level-design/index.md` and listed HLD artifacts
+- slice keys from `epic-prd/slice-map.md`
 
-## Optional HLD Enrichment
-
-When `{FEATURE_DIR}/high-level-design/index.md` exists, `/tdk-task-breakdown` may read the listed HLD artifacts as enrichment context for task objective, scope, and dependency wording. This is optional and changes nothing when HLD is absent.
-
-HLD never becomes a citation source: citations remain `UR-*/FR-*/SC-*` from `spec.md`. HLD never relaxes the stable-ID STOP rule above. If the spec lacks stable identifiers, STOP regardless of whether HLD exists.
+Task breakdown must not mint `UR-*`, `FR-*`, `SC-*`, or `FS-*`. Only child
+`spec.md` artifacts mint formal requirement IDs after `/tdk-specify`.
 
 ## Tracker Boundary
 
-Generated task files are tracker-neutral. Downstream GitHub, GitLab, Backlog, Jira, or other issue creation is owned by the consumer project and must not be performed by TDK core.
+Generated seed files are tracker-neutral. Downstream GitHub, GitLab, Backlog,
+Jira, or other issue creation is owned by the consumer project and must not be
+performed by TDK core.

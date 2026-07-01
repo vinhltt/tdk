@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 const HLD_SKILL_DIR = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-high-level-design',
+  '../../../plugins/tdk-core/skills/tdk-epic-hld',
 );
 const HLD_SKILL_PATH = resolve(HLD_SKILL_DIR, 'SKILL.md');
 const HLD_CONTRACT_PATH = resolve(
@@ -32,7 +32,7 @@ function read(path: string): string {
   return readFileSync(path, 'utf-8');
 }
 
-describe('tdk-high-level-design routing contract', () => {
+describe('tdk-epic-hld routing contract', () => {
   const skill = read(HLD_SKILL_PATH);
   const contract = read(HLD_CONTRACT_PATH);
   const planRoutingTemplate = read(PLAN_ROUTING_TEMPLATE_PATH);

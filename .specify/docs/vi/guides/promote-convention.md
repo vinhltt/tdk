@@ -1,53 +1,69 @@
-# Quy Ước Promote: Work-Item → Child Spec
+# Quy Ước Promote: Child Spec Seed → Child Spec
 
-> Cách promote một work-item lớn thành **child spec** độc lập, chạy lại pipeline TDK bình thường và liên kết với parent bằng một field frontmatter duy nhất.
+> Cách biến seed do `/tdk-task-breakdown` tạo thành **child spec** độc lập,
+> chạy child implementation pipeline bình thường.
 
-Child spec **không** phải recursion engine mới. Nó là một spec độc lập bình thường tại `specs/<child-id>/`, liên kết với parent qua một field `parent_spec` trong YAML frontmatter. Decomposition vẫn size-adaptive: mặc định một spec được chia thành các work-item; work-item đủ lớn để trở thành sub-feature riêng thì được **promote** thành child spec.
-
----
-
-## Sizing Rule: Work-Item vs Child Spec
-
-Decompose trước bằng `/tdk-task-breakdown`. Với từng item sinh ra, quyết định:
-
-| Giữ làm **work-item** | Promote thành **child spec** |
-|-----------------------|------------------------------|
-| Một đơn vị work *bên trong* feature hiện tại | Một sub-feature có requirement, scope, acceptance criteria **riêng** |
-| Implement trực tiếp từ parent plan | Cần vòng spec -> clarify -> plan -> implement riêng |
-| Một task file trong `tasks-breakdown/` | Thư mục `specs/<child-id>/` độc lập |
-
-Mặc định giữ item là work-item (YAGNI). Chỉ promote khi item thật sự là feature riêng: nếu không promote thì nó sẽ phải mang scope boundary lồng nhau, user requirements riêng, và risk surface riêng.
-
----
-
-## Manual Promote Flow (MVP)
-
-Promote là quy ước **manual content-seed**. Không có auto-promote engine và không có marker heuristic.
+Child spec **không** phải recursion engine mới. Trong epic flow, parent lane là:
 
 ```text
-parent spec -> /tdk-task-breakdown -> work-items
-   └─ promote một work-item lớn:
-        seed nội dung vào /tdk-specify <child-id> "<content>"
-        -> child spec tại specs/<child-id>/ (normal id độc lập, giữ category)
-           với parent_spec: <parent-id> và promoted_from: <work-item-id>
-        -> full spec -> clarify -> optional HLD -> plan -> implement
+/tdk-epic-prd -> /tdk-epic-hld -> /tdk-task-breakdown
+```
+
+Chỉ sau khi `tasks-breakdown/` tồn tại, seed được chọn mới trở thành child
+`spec.md` qua `/tdk-specify`. Traceability về parent epic nằm trong seed file:
+`slice_key`, PRD refs, HLD refs. `parent_spec` là optional và chỉ dùng khi child
+được link tới một parent `spec.md` thật sự.
+
+---
+
+## Sizing Rule: Seed vs Child Spec
+
+Decompose trước bằng `/tdk-task-breakdown`. Với từng seed, quyết định:
+
+| Giữ làm **seed/tracker item** | Tạo **child spec** |
+|-----------------------|------------------------------|
+| Chưa chọn để implement | Cần requirement, scope, acceptance criteria riêng |
+| Vẫn chỉ là parent decomposition context | Cần vòng specify -> clarify -> plan -> implement riêng |
+| Một seed file trong `tasks-breakdown/` | Thư mục `specs/<child-id>/` độc lập |
+
+Chỉ tạo child spec khi seed có thể specify độc lập. Không plan/implement parent
+epic như một khối lớn sau task breakdown.
+
+---
+
+## Manual Seed Flow (MVP)
+
+Seed-to-child-spec là quy ước **manual content-seed**. Không có auto-promote
+engine và không có marker heuristic.
+
+```text
+parent epic -> /tdk-epic-prd -> /tdk-epic-hld -> /tdk-task-breakdown
+   -> tasks-breakdown/task-NNN-{slice}.md
+      -> /tdk-specify <child-id> "<seed content>"
+      -> child spec tại specs/<child-id>/
+      -> child clarify -> child plan -> child implement
 ```
 
 Các bước:
 
-1. Chọn work-item cần promote từ `tasks-breakdown/` của parent.
+1. Chọn seed từ `tasks-breakdown/index.md`.
 2. Chọn `<child-id>`: một task id bình thường, ví dụ `feat-123`, được validate bằng task-id grammar hiện có. **Không có path nesting kiểu `{epic}/{child}`**; link chỉ nằm trong frontmatter, không nằm trong directory path.
-3. Chạy `/tdk-specify <child-id> "<seed content from the work-item>"`.
-4. Trong frontmatter của child `spec.md`, set:
-   - `parent_spec: <parent-id>`: canonical link tới parent, xem format rule bên dưới.
-   - `promoted_from: "<work-item-id>"`: id work-item ở parent, chỉ là annotation best-effort cho người đọc, không phải back-link máy móc có thể resolve.
-5. Xác nhận thư mục parent spec tồn tại trước khi ghi child. Đây là advisory cho agent; enforcement cứng xảy ra sau ở plan-time.
+3. Chạy `/tdk-specify <child-id> "<seed content from the seed file>"`.
+4. Mang traceability của seed vào nội dung child spec: source slice key, PRD refs,
+   HLD refs, assumptions/risks, clarify questions.
+5. Chạy child `/tdk-clarify`, child `/tdk-plan`, child `/tdk-implement`.
+   Child specs không chạy HLD mặc định.
 
 ---
 
-## `parent_spec` Format Rule (required)
+## Optional `parent_spec` Format Rule
 
-`parent_spec` MUST dùng cùng form `[folder/]ticket` như khi address spec. **Luôn include category folder khi parent không nằm trong default folder.**
+Chỉ dùng `parent_spec` khi child được link tới một parent `spec.md` thật sự.
+Không dùng `parent_spec` để trỏ tới `epic-prd/index.md`, HLD artifacts, hoặc
+seed files trong `tasks-breakdown/`.
+
+Khi dùng, `parent_spec` MUST dùng cùng form `[folder/]ticket` như khi address spec.
+**Luôn include category folder khi parent không nằm trong default folder.**
 
 | Parent location | `parent_spec` đúng |
 |-----------------|--------------------|
@@ -57,25 +73,34 @@ Các bước:
 
 Một giá trị trần `feat-100` sẽ resolve qua default folder. Nếu parent thuộc non-default category mà lưu **không có** folder, nó sẽ resolve sai directory và tạo false STOP "parent not found" ở plan-time.
 
-`parent_spec` là single source of truth cho link. Không lưu `child_specs[]`; children được suy ra bằng cách query `parent_spec`.
+`parent_spec` là single source of truth cho spec-to-spec link. Không lưu
+`child_specs[]`; children được suy ra bằng cách query `parent_spec`.
 
 ---
 
 ## Link Integrity (fail-loud ở plan-time)
 
-Khi một spec khai báo `parent_spec`, `/tdk-plan` validate link trước khi generate plan. Nếu parent `spec.md` không tồn tại, planning **STOP** với non-zero exit và stderr error.
+Khi một child spec khai báo `parent_spec`, `/tdk-plan` validate link trước khi
+generate plan. Nếu parent `spec.md` không tồn tại, planning **STOP** với non-zero
+exit và stderr error.
 
 Đây là **hard STOP kể cả khi parent thật sự đã được archive hoặc delete hợp lệ**. Parent bị thiếu buộc bạn phải demote child trước, tức clear `parent_spec`, thay vì âm thầm generate plan với broken link. Resolution có path-traversal guard: `parent_spec` crafted không thể escape khỏi specs root.
 
 ---
 
-## Demote
+## Demote / Unlink
 
-Có hai operation khác nhau cùng dùng chữ "demote"; chọn theo intent. Loose coupling, tức link nằm trong frontmatter chứ không nằm trong path, giúp cả hai operation an toàn.
+Có hai operation khác nhau cùng dùng chữ "demote"; chọn theo intent. Loose
+coupling, tức seed content và optional frontmatter link không nằm trong path
+nesting, giúp cả hai operation an toàn.
 
 **Unlink (parent đã mất).** Khi `/tdk-plan` STOP vì `parent_spec` trỏ tới parent đã archive hoặc delete, clear field `parent_spec`. Child tiếp tục sống như một root spec độc lập bình thường và planning chạy tiếp. Không có gì khác đổi; child giữ nguyên spec, tasks, và history của nó.
 
-**Revert promotion (quay lại work-item).** Khi sub-feature không nên là spec riêng nữa, chạy đầy đủ revert checklist trong task-breakdown output contract: delete hoặc archive `specs/<child-id>/`, đóng tracker issue của nó nếu consumer tracker-sync tồn tại, và clear marker `promoted → <child-id>` trong row tương ứng của parent `tasks-breakdown/index.md` để nó quay lại thành work-item bình thường. Xem `.specify/plugins/tdk-core/skills/tdk-task-breakdown/references/task-breakdown-output-contract.md`.
+**Revert child spec (quay lại seed/tracker item).** Khi sub-feature không nên là
+spec riêng nữa, chạy đầy đủ revert checklist trong task-breakdown output contract:
+delete hoặc archive `specs/<child-id>/`, đóng tracker issue nếu consumer
+tracker-sync tồn tại, và update `tasks-breakdown/index.md` nếu consumer workflow
+đã ghi status child spec ở đó. Xem `.specify/plugins/tdk-core/skills/tdk-task-breakdown/references/task-breakdown-output-contract.md`.
 
 ---
 
@@ -84,4 +109,5 @@ Có hai operation khác nhau cùng dùng chữ "demote"; chọn theo intent. Loo
 - Không có automatic promote heuristic hoặc marker engine; chỉ có manual content-seed.
 - Không có path nesting kiểu `{epic}/{child}` và không có project-level epic root.
 - Không có status-rollup dashboard.
-- Epic chỉ là một parent spec lớn bình thường; per-feature HLD áp dụng cho nó như mọi spec khác.
+- Epic PRD/HLD artifacts là parent decomposition context, không phải parent `spec.md`.
+- Child specs không chạy HLD mặc định; child flow là specify -> clarify -> plan -> implement.

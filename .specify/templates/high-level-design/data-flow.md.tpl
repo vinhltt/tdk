@@ -1,38 +1,37 @@
 # Data Flow: {FEATURE_NAME}
 
 <!--
-  Feature-level read/write flows. Table shapes reuse the memory flow template
-  (Steps, External Dependencies) scoped to this feature. Cite FR-* for flows.
-  Text-first; the Mermaid block is OPTIONAL.
+  Parent epic data/entity lifecycle assumptions across slices.
+  Use slice keys and epic PRD/HLD source pointers. Text-first; Mermaid OPTIONAL.
 -->
 
 ## Key Entities
 
-<!-- From spec §6 Key Entities. What each represents; no storage/implementation detail. -->
+<!-- From epic-prd/prd.md and epic-prd/slice-map.md wording. No storage detail unless source states it. -->
 
-- **{Entity}**: {what it represents, key attributes}
+- **{Entity}**: {what it represents, source pointer}
 
-## Read / Write Flows
+## Cross-Slice Flows
 
-<!-- One row per step. Cite the FR-* the step satisfies. -->
+<!-- One row per cross-slice flow. -->
 
-| Step | Action | Component | Source (FR-*) | Notes |
-|------|--------|-----------|---------------|-------|
-| 1 | {action} | {service/module} | FR-001 | {notes} |
+| Step | Slice key | Action | Producer / Consumer | Notes |
+|------|-----------|--------|---------------------|-------|
+| 1 | {slice-key} | {action} | {producer -> consumer} | {notes} |
 
 ## External Dependencies
 
-| Dependency | Purpose | Notes |
-|------------|---------|-------|
-| {service/API} | {purpose} | {notes} |
+| Dependency | Purpose | Source / Assumption |
+|------------|---------|---------------------|
+| {service/API} | {purpose} | {source or `assumed`} |
 
 ## State & Lifecycle
 
-<!-- Entity state transitions relevant to the flows above. -->
+<!-- Entity state transitions relevant to epic decomposition. -->
 
-| Entity | From | Event | To |
-|--------|------|-------|----|
-| {entity} | {state} | {event} | {state} |
+| Entity | From | Event | To | Slice key |
+|--------|------|-------|----|-----------|
+| {entity} | {state} | {event} | {state} | {slice-key} |
 
 ## Diagram (optional)
 
@@ -40,5 +39,5 @@
 
 ```mermaid
 flowchart LR
-  A[{actor}] -->|{action}| B[{component}]
+  A[{slice}] -->|{handoff}| B[{slice}]
 ```

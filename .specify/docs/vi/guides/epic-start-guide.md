@@ -11,11 +11,12 @@ TDK biến một epic mơ hồ thành các bằng chứng có thể triển khai
 ```text
 Epic brief
   -> optional /tdk-discovery
-  -> optional /tdk-epic-prd
-  -> chọn một slice trong epic-prd/slice-map.md
+  -> /tdk-epic-prd
+  -> /tdk-epic-hld
+  -> /tdk-task-breakdown
+  -> chọn một seed trong tasks-breakdown/index.md
   -> child /tdk-specify
   -> child /tdk-clarify
-  -> optional child /tdk-high-level-design hoặc /tdk-task-breakdown
   -> child /tdk-plan
   -> child /tdk-implement
 ```
@@ -25,9 +26,9 @@ Luật quan trọng nhất:
 ```text
 discovery là context
 epic PRD là product alignment và slice map
+epic HLD là parent design context để chia việc an toàn
+task breakdown là child spec seeds từ PRD + HLD
 child spec.md là nguồn sự thật của requirement
-HLD là design enrichment cho spec đã clarify
-task breakdown là work items cho spec đã clarify
 child specs là đơn vị triển khai
 plan.md là thứ tự triển khai cho một spec
 ```
@@ -66,25 +67,18 @@ flowchart TD
     B -->|Có| C[/tdk-discovery/]
     B -->|Không| D[/tdk-specify/]
     C --> R[/tdk-epic-prd/]
-    R --> X[Chọn slice seed]
+    R --> H[/tdk-epic-hld/]
+    H --> I[/tdk-task-breakdown/]
+    I --> X[Chọn child spec seed]
     X --> D
     D --> E[/tdk-clarify/]
     E --> F{Unresolved Questions = None?}
     F -->|Không| E
-    F -->|Có| S{Feature-sized?}
-    S -->|Có| P[/tdk-plan/]
+    F -->|Có| P[/tdk-plan/]
     P --> Q[/tdk-implement/]
-    S -->|Không| G{Cần duyệt design cấp cao?}
-    G -->|Có| H[/tdk-high-level-design/]
-    G -->|Không| I[/tdk-task-breakdown/]
-    H --> I
-    I --> J[Consumer-owned tracker sync]
-    J --> K[GitHub/GitLab/Backlog sub-issues]
-    K --> L[Seed mỗi sub-issue thành child spec]
-    L --> M[Child: clarify -> plan -> implement]
 ```
 
-Nếu work nhỏ kiểu feature-sized, dùng path ngắn: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. Với epic workflow, `epic-prd/slice-map.md` tạo seed cho child /tdk-specify. Task breakdown vẫn dùng sau khi child spec đã clarify nếu cần work items.
+Nếu work nhỏ kiểu feature-sized, dùng path ngắn: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. Với epic workflow, `epic-prd/` feed parent HLD, HLD feed task breakdown, và `tasks-breakdown/` feed child /tdk-specify. Child specs không chạy HLD mặc định.
 
 ![TDK Epic Start - Discovery đến Task Breakdown](../../assets/tdk-epic-discovery-to-task-breakdown.png)
 
@@ -96,11 +90,11 @@ Dùng cùng một parent ID cho discovery và epic PRD. Tạo child IDs mới ch
 |---|---|---|
 | 1 | `/tdk-discovery <parent-id> <brief\|file> [--interview]` | `discovery/index.md` cho thấy problem, personas, MVP cut đủ rõ để specify |
 | 2 | `/tdk-epic-prd <parent-id> [--interview]` | `epic-prd/index.md` không còn Blocking Questions và `slice-map.md` không có catch-all slice |
-| 3 | Chọn một slice seed | Seed chỉ mô tả một child có thể specify riêng, không copy toàn bộ parent epic |
-| 4 | `/tdk-specify <child-id> "<slice seed>"` | Child spec chỉ scope một PRD slice, và `UR-*` / `FR-*` / `SC-*` bắt đầu từ đây |
-| 5 | Child `/tdk-clarify` | `## 9. Unresolved Questions` đúng bằng `None` |
-| 6 | Optional child `/tdk-high-level-design` hoặc `/tdk-task-breakdown` | HLD/task files cite requirement từ child spec |
-| 7 | Child `/tdk-plan` -> `/tdk-implement` | Child spec đã clarify trước khi implementation planning |
+| 3 | `/tdk-epic-hld <parent-id>` | Parent HLD nắm slice boundaries, dependencies, risks, design assumptions mà không tạo requirement IDs |
+| 4 | `/tdk-task-breakdown <parent-id>` | Seed files map PRD slices + HLD context thành child specs có thể specify riêng |
+| 5 | Chọn một child spec seed | Seed chỉ mô tả một child có thể specify riêng, không copy toàn bộ parent epic |
+| 6 | `/tdk-specify <child-id> "<seed>"` | Child spec scope một seed, và `UR-*` / `FR-*` / `SC-*` bắt đầu từ đây |
+| 7 | Child `/tdk-clarify` -> `/tdk-plan` -> `/tdk-implement` | Child spec đã clarify trước khi implementation planning |
 
 ## Nội Dung Output File
 
@@ -123,7 +117,7 @@ Discovery không phải requirement authority. Nó chỉ là context để viế
 |---|---|---|
 | `epic-prd/index.md` | Link về discovery source, artifact map, readiness gate, next commands | Bắt đầu từ đây; nếu còn Blocking Questions thì chưa sẵn sàng cho downstream design hoặc breakdown |
 | `epic-prd/prd.md` | Product intent, problem/current state, personas, objectives, scope, MVP appetite, assumptions, risks, no-gos, source trace | Align hướng product, nhưng không xem là requirement spec |
-| `epic-prd/slice-map.md` | Slug slice keys, capabilities, actors, outcomes, dependencies, child spec titles, priority | Chọn một row để tạo child /tdk-specify seed |
+| `epic-prd/slice-map.md` | Slug slice keys, capabilities, actors, outcomes, dependencies, child spec titles, priority | Source cho HLD/task-breakdown; child `/tdk-specify` bắt đầu từ seed file |
 | `epic-prd/open-questions.md` | Blocking Questions, Non-Blocking Questions, assumptions cần evidence, source trace | Resolve blockers trước downstream epic design, breakdown, hoặc child specs |
 
 Epic PRD không phải `spec.md`, không tạo tracker issues, và không tạo `UR-*`, `FR-*`, `SC-*`, hoặc `FS-*`.
@@ -160,7 +154,7 @@ Nếu spec được tạo từ một task đã promote hoặc từ sub-issue, fr
 |---|---|---|
 | `## Clarifications` | Thêm session theo ngày, mỗi accepted answer là một dòng `Q -> A` kèm rationale | Đọc để hiểu vì sao một quyết định được chọn |
 | Các section requirement hiện có | Update scope, user requirements, functional requirements, key entities, success criteria, edge cases, risks, hoặc terminology | Đọc section đã update như current truth; không chỉ đọc Q/A log |
-| `## 9. Unresolved Questions` | Nên trở thành đúng bằng `None` trước khi chạy HLD, task breakdown, hoặc child planning | Dùng section này làm gate trước khi đi tiếp |
+| `## 9. Unresolved Questions` | Nên trở thành đúng bằng `None` trước child planning | Dùng section này làm gate của child spec trước khi đi tiếp |
 
 Clarify có giá trị vì decision được lưu trong spec, không bị thất lạc trong chat history.
 
@@ -168,39 +162,40 @@ Clarify có giá trị vì decision được lưu trong spec, không bị thất
 
 | File | Bên trong có gì | Junior nên dùng thế nào |
 |---|---|---|
-| `high-level-design/index.md` | Frontmatter, `## Source`, `## Artifact Map`, `## Readiness Gate` | Bắt đầu đọc từ đây; nó list các HLD files đang có hiệu lực và validate gate từ spec |
-| `high-level-design/requirement-overview.md` | Problem/outcome, scope, actors, requirement map, non-functional goals | Xem `UR-*`, `FR-*`, `SC-*` được chuyển thành design implication như thế nào |
-| `high-level-design/project-and-technical-overview.md` | System context, module impact, technical assumptions, integration map, security posture, operability | Hiểu impact cấp hệ thống; detail nào được đánh dấu `assumed` thì cần validate |
-| `high-level-design/data-flow.md` | Key entities, read/write flows, external dependencies, state lifecycle, optional diagram | Hiểu data di chuyển và state thay đổi thế nào trước khi chia task |
-| `high-level-design/screen-flow.md` | Primary journeys, screen list, steps, branch conditions, related APIs, optional diagram | Hiểu user journey và các touchpoint UI/API |
-| `high-level-design/decisions-and-risks.md` | Decisions, rejected alternatives, risks, assumptions to validate, non-blocking follow-ups | Biết cái gì đã chọn, cái gì bị reject, cái gì có thể cần quay lại spec |
+| `high-level-design/index.md` | Frontmatter, `## Source`, `## Artifact Map`, `## Breakdown Readiness Map`, `## Readiness Gate` | Bắt đầu từ đây; nó list HLD files và validate parent epic gate |
+| `high-level-design/requirement-overview.md` | Product objective, scope, personas/jobs, slice source map, breakdown readiness | Xem epic PRD slices chuyển thành child spec seed implication thế nào |
+| `high-level-design/project-and-technical-overview.md` | System context, slice boundary map, dependency map, interface assumptions, security posture, operability | Hiểu decomposition impact cấp hệ thống; detail `assumed` cần validate |
+| `high-level-design/data-flow.md` | Key entities, cross-slice flows, external dependencies, state lifecycle, optional diagram | Hiểu data/state trước khi tạo child spec seeds |
+| `high-level-design/screen-flow.md` | Epic journeys, slice touchpoints, steps, branch conditions, related interfaces, optional diagram | Hiểu user journey và touchpoint UI/API giữa các slice |
+| `high-level-design/decisions-and-risks.md` | Slice boundary decisions, rejected alternatives, risks, assumptions, follow-ups | Biết split/merge nào đã chọn, cái gì reject, cái gì cần child clarify |
 
-HLD chỉ enrich requirement đã có. Nó không tạo `UR-*`, `FR-*`, `SC-*`, task, plan, tracker issue, hoặc code.
+HLD guide parent decomposition. Nó không tạo `UR-*`, `FR-*`, `SC-*`, child specs, task, plan, tracker issue, hoặc code.
 
 ### Output của Task Breakdown
 
 | File | Bên trong có gì | Junior nên dùng thế nào |
 |---|---|---|
-| `tasks-breakdown/index.md` | Frontmatter, link về source spec, bảng `## Tasks`, tracker boundary, sync boundary | Xem đây là manifest chính thức để biết task file nào cần sync |
-| `tasks-breakdown/task-NNN-{slug}.md` | Frontmatter, title, `## Objective`, `## Source Requirements`, `## Scope` có In/Out, `## Acceptance Criteria`, `## Notes` | Dùng một task file làm body/source cho một tracker sub-issue |
+| `tasks-breakdown/index.md` | Frontmatter, epic PRD/HLD links, `## Child Spec Seeds`, tracker boundary, sync boundary | Xem đây là manifest chính thức để biết child spec seed nào cần dùng |
+| `tasks-breakdown/task-NNN-{slice}.md` | Frontmatter, source slice, suggested child `/tdk-specify` command, boundary, dependencies, assumptions/risks, child clarify questions | Dùng một seed file để bắt đầu một child spec |
 
 Bảng task trong `tasks-breakdown/index.md` có:
 
 | Column | Ý nghĩa |
 |---|---|
-| `#` | Số work-item ổn định, ví dụ `001` |
-| `Task` | Title ngắn, đủ nhỏ để thành issue |
-| `Source Requirements` | Các reference `UR-*`, `FR-*`, `SC-*` từ `spec.md` |
-| `File` | Link đến task file |
-| `Status` | Rỗng nghĩa là work item active, hoặc `promoted -> <child-id>` khi work item đã thành child spec |
+| `#` | Số seed ổn định, ví dụ `001` |
+| `Slice key` | Source slice từ `epic-prd/slice-map.md` |
+| `Child spec title` | Tên child spec được đề xuất |
+| `Depends on` | Slice keys hoặc external dependencies |
+| `Seed file` | Link đến child spec seed file |
+| `Status` | Rỗng cho đến khi child spec/tracker workflow ghi progress |
 
-Task breakdown không phải implementation plan và không tự tạo child specs. Nó tạo portable work items để consumer project sync sang GitHub, GitLab, Backlog, Jira, hoặc tracker khác. Sau sync hoặc promotion, update status row trong parent `tasks-breakdown/index.md` để thể hiện quan hệ child nếu tracker workflow hỗ trợ.
+Task breakdown không phải implementation plan và không tự tạo child specs. Nó tạo portable child spec seeds để dùng với `/tdk-specify <child-id> "<seed>"` hoặc sync sang tracker bằng tooling của consumer.
 
 ### Output của Tracker Sub-Issue và Child Spec
 
-TDK core không tạo external issues. Sau bước consumer-owned tracker sync, mỗi sub-issue bên ngoài nên chứa objective, source requirements, scope, acceptance criteria, và notes lấy từ task file.
+TDK core không tạo external issues. Sau bước consumer-owned tracker sync, mỗi sub-issue bên ngoài nên chứa source slice, boundary, dependencies, assumptions/risks, và clarify questions lấy từ seed file.
 
-Sau đó tạo child spec từ từng sub-issue/task bằng child ID mới. Output của child spec có cùng shape với `spec.md`, nhưng scope chỉ nằm trong sub-issue đó. Chỉ khi child spec đã clarify xong mới đi tiếp sang `/tdk-plan` và `/tdk-implement`.
+Sau đó tạo child spec từ từng seed/sub-issue bằng child ID mới. Output của child spec có cùng shape với `spec.md`, nhưng scope chỉ nằm trong seed đó. Chỉ khi child spec đã clarify xong mới đi tiếp sang `/tdk-plan` và `/tdk-implement`.
 
 ## Playbook Từng Skill
 
@@ -316,7 +311,7 @@ Skill này không làm:
 
 - Không viết code.
 - Không tạo implementation plan.
-- Không tạo portable task files.
+- Không tạo child spec seed files.
 - Không nên nhét implementation detail như file path, API, framework, database table, trừ khi đó là requirement context đã được chấp nhận.
 
 Checklist trước khi đi tiếp:
@@ -330,7 +325,7 @@ Checklist trước khi đi tiếp:
 
 ### 3. `/tdk-clarify <id>`
 
-Dùng để loại bỏ ambiguity trước khi design, task breakdown, hoặc planning.
+Dùng để loại bỏ ambiguity trước child planning.
 
 Ví dụ:
 
@@ -343,7 +338,7 @@ Ví dụ:
 | Input | `spec.md` đã tồn tại |
 | Updates | Chính file `spec.md` |
 | Tác dụng | Hỏi các câu hỏi có impact cao và ghi câu trả lời ngược vào spec |
-| Lệnh tiếp theo | `/tdk-high-level-design`, `/tdk-task-breakdown`, hoặc `/tdk-plan` nếu work nhỏ |
+| Lệnh tiếp theo | `/tdk-plan <child-id>` |
 
 Clarify thường hỏi về:
 
@@ -364,24 +359,24 @@ Checklist trước khi đi tiếp:
 
 - Kiểm tra câu trả lời đã nằm trong `## Clarifications`.
 - Kiểm tra section requirement liên quan đã được update, không chỉ append Q/A ở cuối.
-- Kiểm tra `## 9. Unresolved Questions` đúng bằng `None` trước khi chạy HLD hoặc task breakdown.
+- Kiểm tra `## 9. Unresolved Questions` đúng bằng `None` trước child planning.
 
-### 4. `/tdk-high-level-design <id> [--greenfield] [--force]`
+### 4. `/tdk-epic-hld <epic-id> [--force]`
 
-Dùng khi stakeholder cần design cấp cao để review trước breakdown/planning.
+Dùng trên parent epic sau `/tdk-epic-prd` và trước `/tdk-task-breakdown`.
 
 Ví dụ:
 
 ```text
-/tdk-high-level-design feat-001
+/tdk-epic-hld feat-001
 ```
 
 | Item | Chi tiết |
 |---|---|
-| Input | `spec.md` đã clarify, `Unresolved Questions` là `None` |
+| Input | `epic-prd/index.md`, `prd.md`, `slice-map.md`, `open-questions.md` |
 | Creates | `high-level-design/index.md` + 5 design artifacts |
-| Tác dụng | Biến stable requirements thành product/system design context |
-| Lệnh tiếp theo | `/tdk-task-breakdown <id>` cho epic, hoặc `/tdk-plan <id>` cho feature nhỏ |
+| Tác dụng | Biến epic PRD slices thành parent product/system design context để breakdown an toàn |
+| Lệnh tiếp theo | `/tdk-task-breakdown <epic-id>` |
 
 Files được tạo:
 
@@ -397,7 +392,7 @@ high-level-design/decisions-and-risks.md
 Skill này không làm:
 
 - Không tạo implementation plan.
-- Không tạo tasks.
+- Không tạo child spec seeds.
 - Không viết code.
 - Không tạo tracker issues.
 - Không tạo requirement IDs mới.
@@ -406,12 +401,12 @@ Checklist trước khi đi tiếp:
 
 - Bắt đầu từ `high-level-design/index.md`.
 - Chỉ đọc artifacts được list trong index.
-- Kiểm tra các design statement có cite `UR-*`, `FR-*`, hoặc `SC-*`.
-- Nếu HLD phát hiện requirement mới, quay lại `specify` hoặc `clarify`, không nhét ép vào design.
+- Kiểm tra design statements trace về epic PRD sections hoặc slice keys.
+- Nếu HLD phát hiện slice hoặc product decision mới, quay lại `/tdk-epic-prd --interview` hoặc update epic PRD.
 
-### 5. `/tdk-task-breakdown <id>`
+### 5. `/tdk-task-breakdown <epic-id>`
 
-Dùng khi cần issue-sized Markdown work items để sync sang tracker sub-issues.
+Dùng khi cần child spec seed Markdown từ parent epic.
 
 Ví dụ:
 
@@ -421,49 +416,53 @@ Ví dụ:
 
 | Item | Chi tiết |
 |---|---|
-| Input | `spec.md` đã clarify; optional HLD context |
-| Creates | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-{slug}.md` |
-| Tác dụng | Chuyển parent requirements thành portable work items cho tracker sub-issues |
-| Lệnh tiếp theo | Consumer-owned tracker sync, rồi tạo child spec cho từng sub-issue |
+| Input | `epic-prd/`; `high-level-design/` |
+| Creates | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-{slice}.md` |
+| Tác dụng | Chuyển parent PRD slices và HLD context thành child spec seeds |
+| Lệnh tiếp theo | Child `/tdk-specify <child-id> "<seed>"` |
 
 Skill này không làm:
 
 - Không tạo GitHub, GitLab, Backlog, Jira, hoặc tracker issues khác.
+- Không tạo child specs.
 - Không tạo implementation plan.
 - Không viết code.
-- Không dùng HLD làm citation source.
+- Không tạo `UR-*`, `FR-*`, `SC-*`, hoặc `FS-*`.
 
 Checklist trước khi đi tiếp:
 
 - Mở `tasks-breakdown/index.md`.
 - Xem nó là manifest chính thức.
-- Mở từng task file được list.
-- Kiểm tra mỗi task cite ít nhất một `UR-*`, `FR-*`, hoặc `SC-*`.
-- Sync từng task sang tracker sub-issue bằng tooling của consumer project.
-- Seed từng synced sub-issue thành child spec để chạy vòng clarify, plan, implement riêng.
+- Mở từng seed file được list.
+- Kiểm tra mỗi seed cite source slice key và PRD/HLD refs.
+- Start một child spec từ mỗi seed được chọn.
+- Chạy child clarify, plan, implement. Không chạy HLD trong child flow mặc định.
 
 ## Parent Epic vs Child Spec
 
-Với epic, parent spec là nơi giữ quyền decomposition. Thường không nên plan và implement parent epic như một khối lớn sau khi đã task breakdown.
+Với epic, parent discovery/PRD/HLD/task-breakdown artifacts là decomposition context. Child specs là implementation authority. Không nên plan và implement parent epic như một khối lớn sau task breakdown.
 
 Flow đúng:
 
 ```text
-parent spec
+parent epic artifacts
+  -> /tdk-epic-prd
+  -> /tdk-epic-hld
   -> /tdk-task-breakdown
   -> tasks-breakdown/index.md
+  -> child spec seed files
   -> consumer-owned tracker sync
   -> GitHub/GitLab/Backlog sub-issues
   -> child spec cho từng synced sub-issue
   -> child clarify -> child plan -> child implement
 ```
 
-Parent spec dùng để giữ:
+Parent epic artifacts dùng để giữ:
 
-- problem và scope authority
-- requirement traceability
-- breakdown manifest
-- quan hệ parent-child
+- product intent và MVP boundary
+- slice map và source traceability
+- parent design context
+- child spec seed manifest
 
 Mỗi child spec dùng để giữ:
 
@@ -472,19 +471,20 @@ Mỗi child spec dùng để giữ:
 - implementation planning
 - implementation và verification
 
-TDK core chỉ tạo portable Markdown task files. Consumer project chịu trách nhiệm sync các task files đó thành GitHub, GitLab, Backlog, Jira, hoặc tracker sub-issues khác. Sau sync, epic workflow xem mỗi sub-issue như seed cho một child spec.
+TDK core chỉ tạo portable Markdown child spec seed files. Consumer project chịu
+trách nhiệm sync các seed đó thành GitHub, GitLab, Backlog, Jira, hoặc tracker
+sub-issues khác. Sau sync, epic workflow xem mỗi sub-issue như seed cho một
+child spec.
 
 ## Readiness Gates
 
 | Move | Gate |
 |---|---|
-| Discovery -> Specify | Problem, persona, MVP context đủ rõ để viết feature spec |
-| Specify -> Clarify | `spec.md` tồn tại và requirements checklist đã được review |
-| Clarify -> HLD | `## 9. Unresolved Questions` đúng bằng `None` |
-| Clarify -> Task Breakdown | `## 9. Unresolved Questions` đúng bằng `None` |
-| HLD -> Task Breakdown | HLD index tồn tại và không có requirement mới cần update spec |
-| Task Breakdown -> Tracker Sync | `tasks-breakdown/index.md` list task files; mọi task cite `UR-*`, `FR-*`, hoặc `SC-*` |
-| Tracker Sync -> Child Spec | Mỗi external sub-issue có đủ task content để seed child spec |
+| Discovery -> Epic PRD | Problem, persona, MVP context đủ rõ để product alignment |
+| Epic PRD -> HLD | `epic-prd/open-questions.md` không có blocking questions và `slice-map.md` không có catch-all slice |
+| HLD -> Task Breakdown | HLD index tồn tại và đánh dấu parent design sẵn sàng breakdown |
+| Task Breakdown -> Child Spec | `tasks-breakdown/index.md` list seed files; mỗi seed cite source slice key và PRD/HLD refs |
+| Child Specify -> Child Clarify | Child `spec.md` tồn tại và requirements checklist đã được review |
 | Child Spec -> Child Plan | Child `spec.md` đã clarify và unresolved questions là `None` |
 | Child Plan -> Child Implement | Child `plan.md` có `## Phases` table usable |
 
@@ -508,40 +508,39 @@ Nếu discovery cần alignment check trước khi ảnh hưởng tới requirem
 /tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and removal" --interview
 ```
 
-Tạo requirement source of truth:
+Tạo epic PRD:
 
 ```text
-/tdk-specify feat-001 Add user avatar upload with cropping, validation, storage, and removal
+/tdk-epic-prd feat-001 --interview
 ```
 
-Làm rõ các gap:
+Tạo parent design context:
 
 ```text
-/tdk-clarify feat-001
+/tdk-epic-hld feat-001
 ```
 
-Nếu `spec.md` vẫn còn unresolved questions, trả lời tiếp trước khi đi qua bước sau. Nếu cần stakeholder review design:
-
-```text
-/tdk-high-level-design feat-001
-```
-
-Break parent epic thành issue-sized work items:
+Break parent epic thành child spec seeds:
 
 ```text
 /tdk-task-breakdown feat-001
 ```
 
-Sync các task files được list sang tracker sub-issues bằng consumer-owned tooling. Sau đó seed mỗi sub-issue thành child spec. Ví dụ:
+Tạo và clarify một child spec từ seed:
 
 ```text
-/tdk-specify feat-002 "Seed from task-001-avatar-upload-validation.md"
+/tdk-specify feat-002 "Seed from tasks-breakdown/task-001-avatar-upload-validation.md"
 /tdk-clarify feat-002
+```
+
+Sau đó plan và implement child:
+
+```text
 /tdk-plan feat-002
 /tdk-implement feat-002
 ```
 
-Lặp child loop cho từng sub-issue. Không plan và implement parent epic như một khối lớn, trừ khi bạn cố ý quyết định current spec đủ nhỏ để triển khai trực tiếp.
+Lặp child loop cho từng seed được chọn. Không plan và implement parent epic như một khối lớn.
 
 ## Lỗi Thường Gặp
 
@@ -554,9 +553,9 @@ Lặp child loop cho từng sub-issue. Không plan và implement parent epic nh�
 | Đi tìm `discovery/interview.md` sau `--interview` | Interview decisions được fold vào bốn discovery files hiện có |
 | Xem discovery là requirement | Chỉ `spec.md` sở hữu `UR-*`, `FR-*`, `SC-*` |
 | Nhét implementation detail vào spec | Giữ spec ở user value, behavior, scope, success criteria |
-| Chạy HLD khi unresolved questions vẫn còn | Chạy `/tdk-clarify` đến khi unresolved questions là `None` |
-| Xem HLD là PRD thứ hai | HLD enrich requirement đã có, không tạo requirement mới |
-| Plan parent epic ngay sau task breakdown | Sync tasks thành sub-issues, rồi tạo child specs để implement |
+| Chạy HLD khi epic PRD chưa sẵn sàng | Resolve PRD blocking questions và catch-all slices trước |
+| Xem HLD là PRD thứ hai | HLD guide decomposition; update epic PRD khi product direction đổi |
+| Plan parent epic ngay sau task breakdown | Tạo child specs từ seeds, rồi plan từng child |
 | Xem task breakdown là implementation plan | Child `/tdk-plan` mới sở hữu implementation phases |
 | Kỳ vọng TDK core tạo tracker issues | Task breakdown tracker-neutral; tracker sync là consumer-owned |
 
@@ -564,11 +563,11 @@ Lặp child loop cho từng sub-issue. Không plan và implement parent epic nh�
 
 | Triệu chứng | Nguyên nhân thường gặp | Cách sửa |
 |---|---|---|
-| HLD dừng trước khi ghi file | `## 9. Unresolved Questions` không đúng bằng `None` | Chạy `/tdk-clarify <id>` |
-| Task breakdown dừng trước khi ghi file | Spec còn unresolved questions hoặc thiếu stable IDs | Resolve questions và đảm bảo có `UR-*`, `FR-*`, `SC-*` |
-| Sub-issue không có đường triển khai | Task đã sync từ breakdown nhưng chưa seed thành child spec | Tạo child spec từ sub-issue/task content |
+| HLD dừng trước khi ghi file | Epic PRD còn blocking questions hoặc catch-all slices | Update hoặc interview epic PRD |
+| Task breakdown dừng trước khi ghi file | Epic HLD thiếu hoặc parent readiness gates fail | Chạy `/tdk-epic-hld <id>` và resolve parent readiness issues |
+| Sub-issue không có đường triển khai | Task đã sync từ breakdown nhưng chưa seed thành child spec | Tạo child spec từ seed content |
 | Không biết nên đọc file nào tiếp | Đang glob thư mục thay vì đọc manifest | Bắt đầu từ `discovery/index.md`, `high-level-design/index.md`, hoặc `tasks-breakdown/index.md` |
-| Requirement conflict với HLD | Requirement mới bị phát hiện quá muộn | Update `spec.md` qua `specify` hoặc `clarify`, rồi regenerate artifact downstream |
+| Requirement conflict với HLD | Product/slice decision phát hiện quá muộn | Update epic PRD hoặc child spec ở đúng lane, rồi regenerate downstream artifacts |
 
 ## Docs Liên Quan
 
@@ -576,4 +575,4 @@ Lặp child loop cho từng sub-issue. Không plan và implement parent epic nh�
 - [Command Reference](../../en/guides/command-reference.md)
 - [Document Flow](../../en/guides/document-flow.md)
 - [Full Feature Development Scenario](../../en/guides/scenarios/01-full-feature-development.md)
-- [Quy Ước Promote: Work-Item → Child Spec](promote-convention.md)
+- [Quy Ước Promote: Child Spec Seed → Child Spec](promote-convention.md)

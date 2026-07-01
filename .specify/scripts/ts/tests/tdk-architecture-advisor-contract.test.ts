@@ -6,7 +6,7 @@ const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skil
 const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en/guides');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
-const HLD_PATH = resolve(CORE_SKILLS_DIR, 'tdk-high-level-design/SKILL.md');
+const HLD_PATH = resolve(CORE_SKILLS_DIR, 'tdk-epic-hld/SKILL.md');
 
 const ADVISOR_NAME = 'tdk-architecture-advisor';
 
@@ -212,10 +212,10 @@ describe('TDK architecture advisor contracts', () => {
     expect(combined).toContain('write or update `architecture-decision.md` only after explicit user confirmation');
   });
 
-  it('keeps HLD feature-scoped and out of advisor layout ownership', () => {
+  it('keeps HLD epic-scoped and out of advisor layout ownership', () => {
     const hld = read(HLD_PATH);
 
-    expect(hld).toContain('Produce approval-level high-level design');
+    expect(hld).toContain('Produce parent epic high-level design');
     expect(hld).toContain('Create implementation plans');
     expect(hld).not.toContain('workspace-topology.json');
     expect(hld).not.toContain('/tdk-architecture-advisor');

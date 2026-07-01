@@ -1,39 +1,40 @@
 # Screen Flow: {FEATURE_NAME}
 
 <!--
-  Multi-screen user journeys. Table shapes reuse the memory screen-flow template
-  (Steps, Branch Conditions, Related API Calls) scoped to this feature.
-  Derive journeys from spec §5 acceptance scenarios. Text-first; Mermaid OPTIONAL.
-  Omit this artifact's content if the feature has no UI surface.
+  Parent epic user journeys and slice touchpoints.
+  Derive journeys from epic PRD personas, jobs, outcomes, and slice map.
+  Text-first; Mermaid OPTIONAL. Omit this artifact's content if there is no UI surface.
 -->
 
-## Primary Journeys
+## Epic Journeys
 
-<!-- From spec §5 acceptance scenarios. -->
+<!-- From epic-prd/prd.md personas/jobs/outcomes. -->
 
 - {Journey name}: {actor} {goal}
 
-## Screen List
+## Slice Touchpoints
 
-- {screen}: {role in the journey}
+| Slice key | Actor | Touchpoint | Purpose |
+|-----------|-------|------------|---------|
+| {slice-key} | {actor} | {screen/API/system} | {purpose} |
 
 ## Steps
 
-| Step | Screen | Action | Response | Next |
-|------|--------|--------|----------|------|
-| 1 | {screen} | {action} | {system response} | Step 2 |
+| Step | Journey | Action | Response | Next |
+|------|---------|--------|----------|------|
+| 1 | {journey} | {action} | {system response} | Step 2 |
 
 ## Branch Conditions
 
 | Condition | Branch To |
 |-----------|-----------|
-| {condition} | {screen} |
+| {condition} | {journey or slice key} |
 
-## Related APIs
+## Related Interfaces
 
-| Screen | API | Purpose |
-|--------|-----|---------|
-| {screen} | `{METHOD} /api/{path}` | {purpose} |
+| Interface | Slice key | Purpose |
+|-----------|-----------|---------|
+| {UI/API/system boundary} | {slice-key} | {purpose} |
 
 ## Diagram (optional)
 
@@ -41,5 +42,5 @@
 
 ```mermaid
 flowchart TD
-  S1[{screen}] -->|{action}| S2[{screen}]
+  S1[{slice}] -->|{handoff}| S2[{slice}]
 ```

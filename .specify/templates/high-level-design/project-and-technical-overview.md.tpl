@@ -1,39 +1,38 @@
 # Project & Technical Overview: {FEATURE_NAME}
 
 <!--
-  System and technical design. Sections below marked (assumed) have no spec home
-  by design: originate them as design detail, but tag every originated entry
-  `assumed`. Originated detail is NOT a requirement and must not be cited as
-  UR-*/FR-*/SC-*.
+  Parent epic system and technical design. Sections below marked (assumed)
+  originate design detail; tag every originated entry `assumed`. Originated
+  detail is NOT a requirement and must not mint UR-*/FR-*/SC-*/FS-* IDs.
 -->
 
 ## System Context
 
-<!-- From spec §3 Impact Surface. Where this feature sits in the system. -->
+<!-- From epic PRD context. Where this parent epic sits in the system. -->
 
-{How the feature fits the existing system; upstream/downstream touchpoints}
+{How the epic fits the existing system; upstream/downstream touchpoints}
 
-## Module Impact
+## Slice Boundary Map
 
-<!-- From spec §3 Impact Surface table. -->
+<!-- From epic-prd/slice-map.md plus HLD lens findings. -->
 
-| Subworkspace | Module | Impact Type | Description |
-|--------------|--------|-------------|-------------|
-| {subworkspace} | {module} | {create/modify/extend} | {brief} |
+| Slice key | Boundary | Depends on | Shared concern |
+|-----------|----------|------------|----------------|
+| {slice-key} | {boundary} | {dependencies} | {concern} |
 
-## Technical Assumptions (assumed)
+## Dependency Map
+
+<!-- Cross-slice and external dependency assumptions. -->
+
+| Dependency | Direction | Affected slice key(s) | Notes |
+|------------|-----------|-----------------------|-------|
+| {dependency} | {in/out} | {slice-key} | {source or `assumed`} |
+
+## Interface Assumptions (assumed)
 
 <!-- Originated design detail. Tag each `assumed`. -->
 
-- {Technical assumption} `assumed`
-
-## Integration Map (assumed)
-
-<!-- Originated. External systems, contracts, protocols this feature relies on. -->
-
-| Integration | Direction | Purpose | Notes |
-|-------------|-----------|---------|-------|
-| {system} | {in/out} | {purpose} | `assumed` |
+- {Interface assumption} `assumed`
 
 ## Security Posture (assumed)
 
