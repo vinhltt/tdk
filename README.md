@@ -24,18 +24,19 @@ TDK structures the full development loop:
 4. **Guide dependencies** — optionally turn approved layout into workspace dependency policy and non-applied snippets (`/tdk-workspace-dependency-policy`; `/tdk-module-boundary-policy` is a compatibility route)
 5. **Scaffold safely** — optionally turn approved layout into a dry-run golden-path skeleton recipe (`/tdk-golden-path-scaffold`)
 6. **Discover** — optionally create epic-only context before spec (`/tdk-discovery`)
-7. **Specify** — generate feature specs from natural language and optional discovery refs (`/tdk:specify`)
-8. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
-9. **Design** — optionally produce approval-level HLD artifacts after clarify for greenfield work, using built-in design lenses and optional HLD-specific advisory routing (`/tdk-high-level-design`)
-10. **Break down** — optionally turn clarified spec/HLD context into portable Markdown work items (`/tdk-task-breakdown`)
-11. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
-12. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
-13. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
-14. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
+7. **Align epic PRD** — optionally turn discovery into product alignment, blocking questions, and child spec slice seeds (`/tdk-epic-prd`)
+8. **Specify** — generate child or feature specs from natural language and optional discovery/epic PRD refs (`/tdk:specify`)
+9. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
+10. **Design** — optionally produce approval-level HLD artifacts after clarify for greenfield work, using built-in design lenses and optional HLD-specific advisory routing (`/tdk-high-level-design`)
+11. **Break down** — optionally turn clarified spec/HLD context into portable Markdown work items (`/tdk-task-breakdown`)
+12. **Plan** — break specs into phased implementation plans (`/tdk:plan`)
+13. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
+14. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
+15. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
 
 Additional workflows: constitution-owned `product-context.md`, workspace layout proposal and dry-run workspace config previews, config management, sub-workspace docs generation, scout (codebase analysis), memory management, API test generation.
 
-Authority boundaries: discovery is context-only and does not mint requirement IDs; `spec.md` owns `UR-*`/`FR-*`/`SC-*`; HLD enriches existing IDs and is not a second requirement source.
+Authority boundaries: discovery is context-only and does not mint requirement IDs; epic PRD is product alignment and slice-map context only; `spec.md` owns `UR-*`/`FR-*`/`SC-*`; HLD enriches existing IDs and is not a second requirement source.
 
 ## Quick Start
 
@@ -120,14 +121,14 @@ bun src/commands/manifest/compute.ts --root ../..
 ```
 .specify/
 ├── plugins/              # Marketplace plugins (installed by setup.sh)
-│   ├── tdk-core/            # Core workflow (24 skills + 1 agent)
+│   ├── tdk-core/            # Core workflow (25 skills + 1 agent)
 │   ├── tdk-utils/           # Utilities: scout, research, dependency policy, problem solving (16 skills + 5 agents)
 │   ├── tdk-memory/          # Domain memory management (5 skills + 1 agent)
 │   ├── tdk-test-api/        # API test generation (3 skills)
 │   ├── tdk-retro/           # Retrospective learning loop (4 skills)
 │   └── tdk-scaffold/        # Skill/agent and golden-path scaffolding (3 skills)
 ├── codex-plugins/        # Generated Codex packages (6 packages; skills/hooks/lib at package root)
-├── templates/            # 41 templates (spec, plan, task, discovery, HLD, test, memory, output, design, docs)
+├── templates/            # 60 templates (spec, plan, task, discovery, epic PRD, HLD, test, memory, output, design, docs)
 ├── docs/                 # 26 user guides (scenario guides + setup guides + reference)
 ├── configurations/       # Hook configs, sub-workspace configs
 └── scripts/
@@ -137,7 +138,7 @@ bun src/commands/manifest/compute.ts --root ../..
     │   │   ├── commands/        # Integrated command groups + standalone scripts
     │   │   ├── lib/             # Library modules (parsers, generators)
     │   │   └── utils/           # Zod schemas, shared utilities
-    │   └── tests/               # Bun test suite (97 .test.ts files)
+    │   └── tests/               # Bun test suite (114 .test.ts files)
     └── bash/             # Legacy shell scripts (maintenance-only)
 ```
 
@@ -145,7 +146,7 @@ bun src/commands/manifest/compute.ts --root ../..
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
-| **tdk-core** | 24 skills + 1 agent | Greenfield/brownfield start, architecture advisor, workspace layout proposal, boundary-map compatibility, workflow config apply, constitution, discovery, specify, clarify, HLD, task breakdown, plan, implement, config, `/tdk-sub-workspace-docs`, ut-backfill |
+| **tdk-core** | 25 skills + 1 agent | Greenfield/brownfield start, architecture advisor, workspace layout proposal, boundary-map compatibility, workflow config apply, constitution, discovery, epic PRD, specify, clarify, HLD, task breakdown, plan, implement, config, `/tdk-sub-workspace-docs`, ut-backfill |
 | **tdk-utils** | 16 skills + 5 agents | Scout, research, workspace dependency policy, module-boundary compatibility, brainstorming, docs-seeker, context-engineering, problem-solving |
 | **tdk-memory** | 5 skills + 1 agent | Domain memory: init, update, checksum, changelog, query, and tdk-memory-agent |
 | **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |

@@ -11,10 +11,10 @@ Feature path:
 /tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement
 
 Epic path:
-optional /tdk-discovery -> /tdk-specify -> /tdk-clarify -> optional /tdk-high-level-design -> /tdk-task-breakdown -> tracker sync -> child /tdk-specify -> child /tdk-clarify -> child /tdk-plan -> child /tdk-implement
+optional /tdk-discovery -> optional /tdk-epic-prd -> child /tdk-specify -> child /tdk-clarify -> optional child /tdk-high-level-design or /tdk-task-breakdown -> child /tdk-plan -> child /tdk-implement
 ```
 
-For feature-sized work, skip discovery, HLD, and task breakdown by default. For epic-sized work, use `discovery` when the problem is broad, then use `task-breakdown` as the handoff to tracker sub-issues; each sub-issue gets its own child spec loop.
+For feature-sized work, skip discovery, epic PRD, HLD, and task breakdown by default. For epic-sized work, use `discovery` when the problem is broad, then use `epic-prd/slice-map.md` as the handoff to child specs. Task breakdown still applies after a child spec is clarified when you need portable issue-sized Markdown files.
 
 ## Step-by-Step
 
@@ -32,15 +32,29 @@ Use discovery only when the work is broad enough to need epic-level context befo
 
 Add `--interview` when the discovery artifacts should be challenged before they influence the spec. Later, `/tdk-discovery feat-001 --interview` rechecks existing discovery artifacts without regenerating them.
 
+### 0.5. Align the epic PRD and slice map (optional)
+
+Use epic PRD when discovery is still too broad to become one feature spec.
+
+```
+/tdk-epic-prd feat-001 --interview
+```
+
+**What happens**: Claude reads the four discovery artifacts and writes exactly four epic PRD artifacts: an index, product alignment PRD, slice map, and open questions. It does not create `spec.md`, requirement IDs, tracker issues, HLD, task files, plans, or code.
+
+**Output**: `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md`
+
+Pick one row from `epic-prd/slice-map.md` and seed a child /tdk-specify command from it.
+
 ### 1. Create the specification
 
 Type in Claude Code chat:
 
 ```
-/tdk-specify feat-001 Add user avatar upload with image cropping and validation
+/tdk-specify feat-002 "Avatar upload image cropping and validation slice"
 ```
 
-**What happens**: Claude analyzes your description, optionally reads existing `discovery/index.md` as context, explores scope boundaries via embedded brainstorming, and generates `spec.md` with user stories, requirements, acceptance criteria, and edge cases. You'll answer up to 3 inline clarifying questions.
+**What happens**: Claude analyzes your description, optionally reads existing discovery or epic PRD context, explores scope boundaries via embedded brainstorming, and generates `spec.md` with user stories, requirements, acceptance criteria, and edge cases. You'll answer up to 3 inline clarifying questions.
 
 **Output**: `.specify/specs/feat-001/spec.md`, `checklists/requirements.md`
 
@@ -86,7 +100,7 @@ Skip this for the minimal feature path. Use it when the work is epic-sized and n
 
 **Output**: `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md`
 
-For epic-sized work, sync these task files to tracker sub-issues with consumer-owned tooling, then seed each sub-issue into a child spec that runs its own `specify -> clarify -> plan -> implement` loop. For feature-sized work, you may continue to plan the current spec directly.
+For epic-sized child specs, sync these task files to tracker sub-issues with consumer-owned tooling only when the child spec still needs task decomposition. For feature-sized work, you may continue to plan the current spec directly.
 
 Example child loop after tracker sync:
 
@@ -142,7 +156,7 @@ Run at any point to see a progress bar, completed phases, and recommendations.
 ## Tips
 
 - If your feature is small and well-understood, skip `clarify` and go straight to `plan`.
-- Use `discovery` only for epic-sized ambiguity before specification. Feature-sized work starts at `specify`.
+- Use `discovery` and `epic-prd` only for epic-sized ambiguity before child specification. Feature-sized work starts at `specify`.
 - Use `high-level-design` on greenfield features when stakeholders need an approval-level design before breakdown or planning; it is optional and existing flows are unaffected when skipped.
 - Use `task-breakdown` when you need portable issue-sized Markdown files for tracker sync and child specs.
 - Read manifests first: `discovery/index.md`, `high-level-design/index.md`, and `tasks-breakdown/index.md`.

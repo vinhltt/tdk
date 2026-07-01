@@ -120,7 +120,7 @@ Runs in the Claude Code CLI and VSCode extension. No GitHub Copilot subscription
 
 ## Overview
 
-The TDK command suite provides a **specification-driven development** workflow. You describe a feature in natural language, optionally capture epic discovery context first, and the commands guide you through specification, optional design and task breakdown, planning, and implementation.
+The TDK command suite provides a **specification-driven development** workflow. You describe a feature in natural language, optionally capture epic discovery and PRD context first, and the commands guide you through specification, optional design and task breakdown, planning, and implementation.
 
 ### Workflow Pipeline
 
@@ -165,11 +165,11 @@ The TDK command suite provides a **specification-driven development** workflow. 
 
 **Minimal feature flow**: `specify` -> `clarify` -> `plan` -> `implement`
 
-**Epic flow**: `constitution` (project-level) -> optional `discovery` -> `specify` -> `clarify` -> optional `high-level-design` -> `task-breakdown` -> tracker sync -> child `specify` -> child `clarify` -> child `plan` -> child `implement`
+**Epic flow**: `constitution` (project-level) -> optional `discovery` -> optional `epic-prd` -> child `specify` -> child `clarify` -> optional `high-level-design` -> `task-breakdown` -> tracker sync or promotion -> child `plan` -> child `implement`
 
-For feature-sized work, skip discovery, HLD, and task breakdown by default. If the feature is small and clear, the current spec continues directly to `plan` and `implement`. For epic-sized work, `task-breakdown` usually becomes the handoff to consumer-owned tracker sub-issues; each sub-issue is then seeded into a child spec that runs its own `specify -> clarify -> plan -> implement` loop.
+For feature-sized work, skip discovery, epic PRD, HLD, and task breakdown by default. If the feature is small and clear, the current spec continues directly to `plan` and `implement`. For broad epics, `epic-prd/` turns discovery into product alignment, blocking questions, and child spec seeds; each selected slice then starts a child `/tdk-specify` loop.
 
-Each command reads the output of the previous one. For minimal feature work, the chain is `spec.md` -> `plan.md` (with `## Phases`) -> source code. For epic-sized work, optional `discovery/` and optional `high-level-design/` enrich the parent spec before `tasks-breakdown/`; then task files are synced to tracker sub-issues and seeded into child specs.
+Each command reads the output of the previous one. For minimal feature work, the chain is `spec.md` -> `plan.md` (with `## Phases`) -> source code. For epic-sized work, optional `discovery/` feeds `epic-prd/`; `epic-prd/slice-map.md` seeds child specs. HLD and task breakdown remain tied to clarified `spec.md`, not to epic PRD directly.
 
 `/tdk-high-level-design` always uses built-in design lenses and may optionally read `{docs.path}/custom-workflow/high-level-design-skill-routing.md` for advisory consumer design skills. This HLD routing file is separate from `plan-skill-routing.md`, which remains implementation/test routing for planning and UT workflows.
 
@@ -180,7 +180,8 @@ Each command reads the output of the previous one. For minimal feature work, the
 | # | Command | Description |
 |---|---------|-------------|
 | 0 | `/tdk-discovery <epic-id> [<brief\|file>] [--force] [--interview]` | Optional epic discovery context before `tdk-specify`; ID-only `--interview` rechecks existing discovery artifacts |
-| 1 | `/tdk-specify <id> [<desc>] [--interview]` | Create a feature spec, or run ID-only `--interview` against existing `spec.md` |
+| 0a | `/tdk-epic-prd <epic-id> [--force] [--interview]` | Optional epic product alignment, slice map, and blocking-question gate after discovery; ID-only `--interview` rechecks existing PRD artifacts |
+| 1 | `/tdk-specify <id> [<desc>] [--interview]` | Create a child or feature spec, or run ID-only `--interview` against existing `spec.md` |
 | 2 | `/tdk-specify <id> <desc> --fast [--interview]` | Quick specification (skips brainstorm, fewer tokens); `--fast --interview` is valid |
 | 3 | `/tdk-clarify <id>` | Ask up to 5 targeted questions to fill spec gaps |
 | 4 | `/tdk-high-level-design <id> [--greenfield] [--force]` | Generate approval-level high-level design artifacts from a clarified spec (greenfield, optional) |
@@ -236,7 +237,7 @@ If you are starting from a broad or vague epic, read the [Epic Start Guide](epic
 
 ### Step 1 — Discover or specify
 
-For a broad epic, optionally capture context before the spec:
+For a broad epic, optionally capture discovery context before product alignment:
 
 ```
 /tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and moderation"
@@ -248,10 +249,16 @@ Add `--interview` when the epic is broad or risky enough that you want to challe
 
 After discovery exists, use `/tdk-discovery <id> --interview` to rerun the alignment interview against the current four discovery files. This replay path does not regenerate discovery. Do not use positional `interview`; use `--interview`.
 
-Before specifying a broad epic, open `discovery/index.md` and confirm problem, personas, and MVP scope are clear enough to become requirements.
+Before writing child specs for a broad epic, create the epic PRD:
 
 ```
-/tdk-specify feat-001 Add user avatar upload with image cropping
+/tdk-epic-prd feat-001 --interview
+```
+
+This creates `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, and `epic-prd/open-questions.md`. Epic PRD is not `spec.md`; it does not mint requirement IDs or create tracker issues. Use `slice-map.md` to choose one child /tdk-specify seed.
+
+```
+/tdk-specify feat-002 "Avatar upload image cropping slice"
 ```
 
 This creates `.specify/specs/feat-001/spec.md` with user stories, requirements, and acceptance criteria. Answer any clarifying questions Claude asks (up to 3).
@@ -343,6 +350,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 ```
 .specify/specs/feat-001/
 ├── discovery/           ← Optional epic context before Step 1
+├── epic-prd/            ← Optional epic PRD, slice map, and open questions
 ├── spec.md              ← Step 1
 ├── high-level-design/   ← Optional design after clarification
 ├── tasks-breakdown/     ← Step 3 optional portable work items
@@ -361,8 +369,9 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| discovery | `/tdk-discovery <epic-id> [<brief\|file>] [--force] [--interview]` | `--force`, `--interview` | Project context, constitution/memory, brief or file; existing discovery files for ID-only `--interview` | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md` | Optional after constitution, before specify |
-| specify | `/tdk-specify <id> [<desc>] [--interview]` | `--interview` | `.specify.env`; optional `discovery/index.md`; existing `spec.md` for ID-only `--interview` | `spec.md`, `checklists/requirements.md` | None, or discovery context |
+| discovery | `/tdk-discovery <epic-id> [<brief\|file>] [--force] [--interview]` | `--force`, `--interview` | Project context, constitution/memory, brief or file; existing discovery files for ID-only `--interview` | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md` | Optional after constitution, before epic-prd or specify |
+| epic-prd | `/tdk-epic-prd <epic-id> [--force] [--interview]` | `--force`, `--interview` | Existing `discovery/index.md`, `problem.md`, `personas.md`, `mvp-scope.md`; existing PRD files for ID-only `--interview` | `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` | discovery |
+| specify | `/tdk-specify <id> [<desc>] [--interview]` | `--interview` | `.specify.env`; optional `discovery/index.md` or `epic-prd/slice-map.md` seed; existing `spec.md` for ID-only `--interview` | `spec.md`, `checklists/requirements.md` | None, discovery context, or epic PRD slice seed |
 | specify (fast) | `/tdk-specify <id> <desc> --fast [--interview]` | `--fast`, `--interview` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
 | high-level-design | `/tdk-high-level-design <id>` | `--greenfield`, `--force` | `spec.md` with unresolved questions set to `None`; optional HLD routing | `high-level-design/index.md` + 5 design artifacts | clarify |
@@ -623,7 +632,7 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 
 - **Use `/tdk-specify --fast`** for small, well-understood features. Default mode includes brainstorm exploration for unclear scope. Auto-detect picks mode based on description complexity.
 - **Add `--interview`** when hidden assumptions would be costly. It asks artifact-grounded alignment questions and records only accepted artifact changes or unresolved questions.
-- **Use ID-only `--interview`** only for existing artifacts: `/tdk-discovery <id> --interview` requires the four discovery files, and `/tdk-specify <id> --interview` requires `spec.md`.
+- **Use ID-only `--interview`** only for existing artifacts: `/tdk-discovery <id> --interview` requires the four discovery files, `/tdk-epic-prd <id> --interview` requires the four epic PRD files, and `/tdk-specify <id> --interview` requires `spec.md`.
 - **Always run `clarify`** before `plan` — it catches ambiguities early, saving rework during implementation.
 - **Run `analyze` before `implement`** — it catches spec-plan-tasks inconsistencies that would cause bugs.
 - **Use `status` liberally** — it's read-only and shows what's done vs. remaining.
@@ -643,6 +652,7 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 | Command | Skip when... |
 |---------|-------------|
 | `discovery` | Work is already feature-sized or the problem/personas/MVP boundary is clear |
+| `epic-prd` | Work is feature-sized, or discovery does not need product alignment and child spec slicing |
 | `clarify` | Spec is already detailed and unambiguous |
 | `checklist` | Feature has no complex quality dimensions (UX, security, API) |
 | `analyze` | Small feature with simple spec/plan/tasks chain |
@@ -660,6 +670,8 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 | "Task ID already exists" | `spec.md` or an existing guarded artifact already exists | Work on existing feature or use a different ID. A directory containing only `discovery/` can continue to `/tdk-specify` |
 | "Discovery already exists" | `discovery/index.md` already exists | Re-run `/tdk-discovery ... --force` only when replacing discovery context intentionally |
 | "Discovery replay interview requires existing discovery artifacts" | Running `/tdk-discovery <id> --interview` before all four discovery files exist | Create discovery first with `/tdk-discovery <id> <brief\|file> --interview` |
+| "Epic PRD requires existing discovery artifacts" | Running `/tdk-epic-prd <id>` before the four discovery files exist | Create discovery first with `/tdk-discovery <id> <brief\|file>` |
+| "Epic PRD already exists" | `epic-prd/index.md` already exists | Re-run `/tdk-epic-prd ... --force` only when replacing PRD artifacts, or use `--interview` to replay alignment |
 | "Spec replay interview requires existing `spec.md`" | Running `/tdk-specify <id> --interview` before spec creation | Create the spec first with `/tdk-specify <id> <description> --interview` |
 | "Did you mean `--interview`?" | Using positional `interview` as a mode | Replace `interview` with the `--interview` flag |
 | "No UT skill found" | Running UT commands without a consumer UT skill | Create one in `.claude/skills/{name}/SKILL.md` with UT conventions |
@@ -686,6 +698,8 @@ workflow-config-apply, or explicit --dry-run then --yes --expect-hash for automa
 golden-path-scaffold --dry-run, then --yes when recipe approved (optional, skeleton only)
      ↓
 discovery (optional, epic-level context)
+     ↓
+epic-prd (optional, epic-level product alignment and child spec seeds)
      ↓
 specify [--fast]  →  clarify (optional)  →  checklist (optional)
      ↓

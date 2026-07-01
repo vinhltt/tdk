@@ -11,22 +11,23 @@ TDK biến một epic mơ hồ thành các bằng chứng có thể triển khai
 ```text
 Epic brief
   -> optional /tdk-discovery
-  -> /tdk-specify
-  -> /tdk-clarify
-  -> optional /tdk-high-level-design
-  -> /tdk-task-breakdown
-  -> consumer-owned tracker sync tạo sub-issues
-  -> mỗi sub-issue trở thành một child spec
-  -> child spec chạy clarify -> plan -> implement
+  -> optional /tdk-epic-prd
+  -> chọn một slice trong epic-prd/slice-map.md
+  -> child /tdk-specify
+  -> child /tdk-clarify
+  -> optional child /tdk-high-level-design hoặc /tdk-task-breakdown
+  -> child /tdk-plan
+  -> child /tdk-implement
 ```
 
 Luật quan trọng nhất:
 
 ```text
 discovery là context
-spec.md là nguồn sự thật của requirement
-HLD là design enrichment
-task breakdown là work items cho sub-issues
+epic PRD là product alignment và slice map
+child spec.md là nguồn sự thật của requirement
+HLD là design enrichment cho spec đã clarify
+task breakdown là work items cho spec đã clarify
 child specs là đơn vị triển khai
 plan.md là thứ tự triển khai cho một spec
 ```
@@ -38,6 +39,7 @@ plan.md là thứ tự triển khai cho một spec
 | Work còn rộng, mơ hồ, có nhiều cách cắt MVP | `/tdk-discovery` | Cần hiểu problem, persona, MVP trước khi viết spec |
 | Discovery có thể hiểu sai intent | `/tdk-discovery <epic-id/spec-id> <brief\|file> --interview` | Interview mode hỏi câu hỏi bám artifact trước khi hoàn tất discovery |
 | Artifact discovery hoặc spec đã có cần recheck intent | `/tdk-discovery <id> --interview` hoặc `/tdk-specify <id> --interview` | ID-only interview đọc artifact hiện tại, không regenerate |
+| Discovery vẫn quá rộng để thành một spec | `/tdk-epic-prd` | Epic PRD tạo product alignment, blocking questions, và seed cho child specs mà không tạo requirement IDs |
 | Feature đã nhỏ và rõ | `/tdk-specify` | Discovery sẽ làm workflow nặng hơn mà không giảm risk |
 | Chưa rõ user/persona là ai | `/tdk-discovery` | Cần persona và jobs-to-be-done trước |
 | Đã rõ scope, actor, acceptance criteria, edge cases | `/tdk-specify` | Có thể viết spec trực tiếp |
@@ -49,6 +51,7 @@ Syntax nhanh cho interview mode:
 ```text
 /tdk-discovery <epic-id/spec-id> <brief|file> --interview
 /tdk-discovery <epic-id/spec-id> --interview
+/tdk-epic-prd <epic-id> [--force] [--interview]
 /tdk-specify <epic-id/spec-id> <description> --interview
 /tdk-specify <epic-id/spec-id> --interview
 ```
@@ -62,7 +65,9 @@ flowchart TD
     A[Epic hoặc feature brief] --> B{Rộng hoặc chưa rõ?}
     B -->|Có| C[/tdk-discovery/]
     B -->|Không| D[/tdk-specify/]
-    C --> D
+    C --> R[/tdk-epic-prd/]
+    R --> X[Chọn slice seed]
+    X --> D
     D --> E[/tdk-clarify/]
     E --> F{Unresolved Questions = None?}
     F -->|Không| E
@@ -79,24 +84,23 @@ flowchart TD
     L --> M[Child: clarify -> plan -> implement]
 ```
 
-Nếu work nhỏ kiểu feature-sized, dùng path ngắn: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. Với epic workflow, `task-breakdown` tạo work items để sync sang tracker sub-issues, sau đó mỗi sub-issue có child spec riêng.
+Nếu work nhỏ kiểu feature-sized, dùng path ngắn: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. Với epic workflow, `epic-prd/slice-map.md` tạo seed cho child /tdk-specify. Task breakdown vẫn dùng sau khi child spec đã clarify nếu cần work items.
 
 ![TDK Epic Start - Discovery đến Task Breakdown](../../assets/tdk-epic-discovery-to-task-breakdown.png)
 
 ## Đường Đi Chuẩn Cho Epic
 
-Dùng cùng một parent ID từ discovery đến task breakdown. Chỉ tạo child IDs mới sau tracker sync hoặc promotion.
+Dùng cùng một parent ID cho discovery và epic PRD. Tạo child IDs mới cho từng implementation slice trong `epic-prd/slice-map.md`.
 
 | Bước | Lệnh hoặc action | Gate trước khi đi tiếp |
 |---|---|---|
 | 1 | `/tdk-discovery <parent-id> <brief\|file> [--interview]` | `discovery/index.md` cho thấy problem, personas, MVP cut đủ rõ để specify |
-| 2 | `/tdk-specify <parent-id> <description> [--interview]` | `spec.md` tồn tại, `checklists/requirements.md` đã review, `UR-*` / `FR-*` / `SC-*` ổn định |
-| 3 | `/tdk-clarify <parent-id>` | `## 9. Unresolved Questions` đúng bằng `None` |
-| 4 | Optional `/tdk-high-level-design <parent-id>` | HLD index tồn tại và requirement mới, nếu có, đã quay lại `spec.md` |
-| 5 | `/tdk-task-breakdown <parent-id>` | `tasks-breakdown/index.md` list mọi task file và task nào cũng cite source requirement IDs |
-| 6 | Consumer-owned tracker sync | Mỗi tracker sub-issue có objective, scope, acceptance criteria, source requirements |
-| 7 | `/tdk-specify <child-id> "<sub-issue hoặc task content>"` | Child spec chỉ scope một sub-issue, không copy toàn bộ parent epic |
-| 8 | Child `/tdk-clarify` -> `/tdk-plan` -> `/tdk-implement` | Child spec đã clarify trước khi implementation planning |
+| 2 | `/tdk-epic-prd <parent-id> [--interview]` | `epic-prd/index.md` không còn Blocking Questions và `slice-map.md` không có catch-all slice |
+| 3 | Chọn một slice seed | Seed chỉ mô tả một child có thể specify riêng, không copy toàn bộ parent epic |
+| 4 | `/tdk-specify <child-id> "<slice seed>"` | Child spec chỉ scope một PRD slice, và `UR-*` / `FR-*` / `SC-*` bắt đầu từ đây |
+| 5 | Child `/tdk-clarify` | `## 9. Unresolved Questions` đúng bằng `None` |
+| 6 | Optional child `/tdk-high-level-design` hoặc `/tdk-task-breakdown` | HLD/task files cite requirement từ child spec |
+| 7 | Child `/tdk-plan` -> `/tdk-implement` | Child spec đã clarify trước khi implementation planning |
 
 ## Nội Dung Output File
 
@@ -112,6 +116,17 @@ Khi đọc output, luôn bắt đầu từ file manifest: `discovery/index.md`, 
 | `discovery/index.md` | `## Artifact Manifest`, `## Summary`, `## Product-level signals`, `## Ready For Specify` | Bắt đầu đọc từ đây; file này cho biết bộ discovery gồm file nào và đã sẵn sàng chạy `/tdk-specify` chưa |
 
 Discovery không phải requirement authority. Nó chỉ là context để viết `spec.md` đầu tiên.
+
+### Output của Epic PRD
+
+| File | Bên trong có gì | Junior nên dùng thế nào |
+|---|---|---|
+| `epic-prd/index.md` | Link về discovery source, artifact map, readiness gate, next commands | Bắt đầu từ đây; nếu còn Blocking Questions thì chưa sẵn sàng cho downstream design hoặc breakdown |
+| `epic-prd/prd.md` | Product intent, problem/current state, personas, objectives, scope, MVP appetite, assumptions, risks, no-gos, source trace | Align hướng product, nhưng không xem là requirement spec |
+| `epic-prd/slice-map.md` | Slug slice keys, capabilities, actors, outcomes, dependencies, child spec titles, priority | Chọn một row để tạo child /tdk-specify seed |
+| `epic-prd/open-questions.md` | Blocking Questions, Non-Blocking Questions, assumptions cần evidence, source trace | Resolve blockers trước downstream epic design, breakdown, hoặc child specs |
+
+Epic PRD không phải `spec.md`, không tạo tracker issues, và không tạo `UR-*`, `FR-*`, `SC-*`, hoặc `FS-*`.
 
 ### Output của Specify
 
@@ -213,7 +228,7 @@ Ví dụ interview:
 | Reads | Project context, constitution, memory nếu có |
 | Creates | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md` |
 | Tác dụng | Làm rõ problem, users, MVP cutline, risks, open questions |
-| Lệnh tiếp theo | `/tdk-specify <id> <description>` |
+| Lệnh tiếp theo | `/tdk-epic-prd <id>` cho epic rộng, hoặc `/tdk-specify <id> <description>` cho feature nhỏ |
 
 Thêm `--interview` với brief khi epic rộng, nhạy cảm, hoặc dễ ẩn intent mismatch. Nó hỏi câu hỏi bám artifact vừa tạo rồi fold accepted changes vào đúng bốn discovery files. Chỉ dùng `/tdk-discovery <id> --interview` sau khi bốn discovery files đã tồn tại; replay đọc và update artifact hiện tại, không regenerate. Cả hai dạng đều không tạo `discovery/interview.md` hoặc tracker record.
 
@@ -230,7 +245,40 @@ Checklist trước khi đi tiếp:
 - Nếu dùng `--interview`, kiểm tra accepted corrections đã nằm trong `problem.md`, `personas.md`, `mvp-scope.md`, hoặc `index.md`; unresolved points nằm trong `## Open Questions` phù hợp.
 - Nếu MVP boundary vẫn mơ hồ, làm rõ brief trước khi chạy `specify`.
 
-### 2. `/tdk-specify <epic-id/spec-id> [<desc>] [--fast] [--interview]`
+### 2. `/tdk-epic-prd <epic-id> [--force] [--interview]`
+
+Dùng sau discovery khi epic quá rộng để thành một spec duy nhất.
+
+Ví dụ:
+
+```text
+/tdk-epic-prd feat-001 --interview
+```
+
+| Item | Chi tiết |
+|---|---|
+| Input | Epic ID đã có discovery artifacts |
+| Reads | `discovery/index.md`, `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md` |
+| Creates | `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` |
+| Tác dụng | Align product intent, chặn catch-all slice, tạo seed cho child specs |
+| Lệnh tiếp theo | child `/tdk-specify <child-id> "<slice seed>"` |
+
+Thêm `--interview` khi cần challenge product direction hoặc slice boundary trước khi tạo child specs. Dùng `/tdk-epic-prd <id> --interview` sau khi bốn PRD files đã tồn tại để replay alignment mà không regenerate.
+
+Skill này không làm:
+
+- Không tạo `spec.md`.
+- Không tạo `UR-*`, `FR-*`, `SC-*`, hoặc `FS-*` IDs.
+- Không tạo HLD, task breakdown, plan, code, tracker issue, hoặc product-memory update.
+
+Checklist trước khi đi tiếp:
+
+- Mở `epic-prd/index.md`.
+- Confirm Blocking Questions đã rỗng.
+- Confirm `slice-map.md` không có catch-all "all features" hoặc "entire MVP".
+- Chọn đúng một slice seed trước khi chạy child `/tdk-specify`.
+
+### 3. `/tdk-specify <epic-id/spec-id> [<desc>] [--fast] [--interview]`
 
 Dùng để tạo feature specification. Đây là nguồn sự thật của requirements.
 

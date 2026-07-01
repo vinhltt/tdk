@@ -234,6 +234,6 @@ describe('TDK architecture advisor contracts', () => {
     expect(documentFlow).toContain('.specify/configurations/architecture/architecture-options.md');
     expect(manifest).toContain('"tdk-architecture-advisor"');
     expect(readme).toContain('/tdk-architecture-advisor');
-    expect(readme).toContain('24 skills + 1 agent');
+    expect(readme).toContain('25 skills + 1 agent');
   });
 });

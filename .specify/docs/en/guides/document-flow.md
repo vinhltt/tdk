@@ -24,6 +24,7 @@ flowchart TD
     SUB_WORKSPACE_DOCS[sub-workspaces/name/<br/>README architecture interfaces engineering]
     AUTOMATION_RECOMMEND[automation-recommendation.md]
     DISCOVERY[discovery/<br/>Epic Context]
+    EPIC_PRD[epic-prd/<br/>PRD + Slice Map]
 
     %% Phase 0: Feature Specification
     REQ -.->|/tdk-greenfield-start<br/>project intake| GREENFIELD_INCEPTION
@@ -37,8 +38,10 @@ flowchart TD
     POLICY -.->|/tdk-sub-workspace-docs<br/>arc42-lite docs| SUB_WORKSPACE_DOCS
     SUB_WORKSPACE_DOCS -.->|/tdk-sub-workspace-automation-recommend<br/>one workspace| AUTOMATION_RECOMMEND
     REQ -.->|/tdk-discovery<br/>optional, epic| DISCOVERY
+    DISCOVERY -.->|/tdk-epic-prd<br/>product alignment| EPIC_PRD
     REQ -->|/tdk-specify| SPEC[spec.md<br/>Feature Specification]
     DISCOVERY -.->|context only| SPEC
+    EPIC_PRD -.->|child /tdk-specify<br/>slice seed| SPEC
     PRODUCT_CONTEXT -.->|project authority| GREENFIELD_INCEPTION
     PRODUCT_CONTEXT -.->|project authority| BROWNFIELD_ONBOARDING
     PRODUCT_CONTEXT -.->|project authority| DISCOVERY
@@ -84,7 +87,7 @@ flowchart TD
     classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
     classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px
 
-    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,SPEC,SPEC_CLARIFIED,TASK_BREAKDOWN phase0
+    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,SPEC,SPEC_CLARIFIED,TASK_BREAKDOWN phase0
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES,PAGEDESIGNS,BATCH_DESIGN phase1
     class TEST_VP phase0
     class PRODUCT_CONTEXT,CONSTITUTION,UIUX,REF_DATAMODEL,REF_STATE reference
@@ -110,6 +113,7 @@ flowchart LR
     SUB_WORKSPACE_DOCS[sub-workspace docs<br/>arc42-lite]
     AUTOMATION_RECOMMEND[automation recommendation<br/>one workspace]
     DISCOVERY[discovery/<br/>Epic Context]
+    EPIC_PRD[epic-prd/<br/>PRD + Slice Map]
     SPEC[spec.md]
     SPEC_CLAR[spec.md<br/>+ Clarifications]
     HLD[high-level-design/<br/>Design Artifacts]
@@ -127,8 +131,10 @@ flowchart LR
     POLICY -.->|"/tdk-sub-workspace-docs"| SUB_WORKSPACE_DOCS
     SUB_WORKSPACE_DOCS -.->|"/tdk-sub-workspace-automation-recommend"| AUTOMATION_RECOMMEND
     REQ -.->|"/tdk-discovery<br/>epic-id brief"| DISCOVERY
+    DISCOVERY -.->|"/tdk-epic-prd<br/>epic-id"| EPIC_PRD
     REQ -->|"/tdk-specify<br/>feature-id desc"| SPEC
     DISCOVERY -.->|"context only"| SPEC
+    EPIC_PRD -.->|"child /tdk-specify<br/>slice seed"| SPEC
     SPEC -->|"/tdk-clarify<br/>feature-id"| SPEC_CLAR
     SPEC_CLAR -.->|"/tdk-high-level-design<br/>feature-id"| HLD
     SPEC_CLAR -.->|"/tdk-task-breakdown<br/>feature-id"| TASKS
@@ -142,7 +148,7 @@ flowchart LR
     classDef note fill:#f5f5f5,stroke:#616161,stroke-width:1px
 
     class REQ input
-    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,SPEC,SPEC_CLAR,HLD,TASKS,BA_REQ output
+    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,SPEC,SPEC_CLAR,HLD,TASKS,BA_REQ output
     class CONTENT note
 ```
 
@@ -339,8 +345,9 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `.specify/configurations/golden-path/generated-files-report.md` | `/tdk-golden-path-scaffold --dry-run` or `--yes` | recipe and safety gates | Review created/skipped/existing/refused paths | Scaffold report |
 | `<docsPath>/sub-workspaces/<name>/{README,architecture,interfaces,engineering}.md` | `/tdk-sub-workspace-docs` | configured sub-workspace path, repomix pack, scout output, optional dependency policy | `/tdk-sub-workspace-automation-recommend` | Per sub-workspace docs refresh |
 | `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | `/tdk-sub-workspace-automation-recommend` | selected sub-workspace docs, dependency policy, official docs, local skill catalog, optional direct skill search | `/tdk-scaffold-from-recommendation` after approval | Per sub-workspace automation review |
-| `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution; existing discovery files for ID-only `--interview` | Optional context for `/tdk-specify` | Optional before specify |
-| `spec.md` | `/tdk-specify` | User description, optional `discovery/index.md`; existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature start |
+| `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution; existing discovery files for ID-only `--interview` | Optional context for `/tdk-epic-prd` or `/tdk-specify` | Optional before epic PRD or specify |
+| `epic-prd/` | `/tdk-epic-prd` | Existing `discovery/index.md`, `problem.md`, `personas.md`, and `mvp-scope.md`; existing PRD files for ID-only `--interview` | `slice-map.md` seeds child /tdk-specify commands | Optional after discovery |
+| `spec.md` | `/tdk-specify` | User description, optional `discovery/index.md` or epic PRD slice seed; existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature start |
 | `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-high-level-design`, `/tdk-task-breakdown`, `/tdk-plan` | After specify |
 | `{docs.path}/custom-workflow/high-level-design-skill-routing.md` | Human-authored from `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` | Consumer HLD design skills | `/tdk-high-level-design` as advisory read-only routing | Optional project setup |
 | `high-level-design/` | `/tdk-high-level-design` | clarified `spec.md`; built-in lenses; optional HLD routing | `/tdk-task-breakdown` (optional enrichment) | Optional after clarify (greenfield) |
@@ -409,7 +416,8 @@ flowchart TD
     START -->|New feature| SPECIFY[tdk-specify]
     START -->|API change| UPDATE_CONTRACT[contracts/ manual edit]
 
-    DISCOVERY --> SPECIFY
+    DISCOVERY --> EPIC_PRD[tdk-epic-prd]
+    EPIC_PRD --> SPECIFY
     SPECIFY --> CLARIFY[tdk-clarify]
     CLARIFY --> HLD{Need HLD?}
     HLD -->|Yes| HLD_CMD[tdk-high-level-design]
@@ -428,7 +436,7 @@ flowchart TD
     classDef event fill:#fff3e0,stroke:#e65100,stroke-width:2px
     classDef command fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
     class START event
-    class DISCOVERY,SPECIFY,CLARIFY,HLD_CMD,BREAKDOWN,CHILD_SPEC,CHILD_PLAN,PLAN,IMPLEMENT command
+    class DISCOVERY,EPIC_PRD,SPECIFY,CLARIFY,HLD_CMD,BREAKDOWN,CHILD_SPEC,CHILD_PLAN,PLAN,IMPLEMENT command
 ```
 
 ---
@@ -438,6 +446,7 @@ flowchart TD
 ```
 .specify/specs/{task-id}/
 ├── discovery/                          # Optional epic discovery context
+├── epic-prd/                           # Optional epic PRD, slice map, and open questions
 ├── spec.md                             # Phase 0: Feature specification
 ├── high-level-design/                  # Optional approval-level design artifacts
 ├── tasks-breakdown/                    # Optional portable work items for tracker sync

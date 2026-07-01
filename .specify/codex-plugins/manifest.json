@@ -1,11 +1,11 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-01T03:32:01Z",
+  "generated_at": "2026-07-01T08:39:20Z",
   "plugins": {
     "tdk-core": {
-      "version": "5.11.1",
+      "version": "5.13.0",
       "files": {
-        ".codex-plugin/plugin.json": "021604239720bbab757a8ffd728cc10dceaf81664e338a8ac44114430d57845d",
+        ".codex-plugin/plugin.json": "0f99748efe3b12e36dce91c17975551af72f16299525aa652b6058bcda975ed5",
         "hooks/codex-hooks.json": "218a8071c85c110a249cf591026b9aa857daa7658f1863b69c7506e62a023e62",
         "hooks/dev-context-injector.cjs": "95ec8603b65686b85c2fe02e73addce8c753361ad920dbeec8a35bd8b85e3671",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
@@ -52,6 +52,9 @@
         "skills/tdk-discovery/templates/mvp-scope.md.tpl": "ad1ff61616b2de12c20e4304a1aecd7c3e1497599e50dcca52c9c35c17ab2df6",
         "skills/tdk-discovery/templates/personas.md.tpl": "16376c73ece9680b650eaf59110b265433f76963d5d607dbfbd02d3e37966380",
         "skills/tdk-discovery/templates/problem.md.tpl": "1773337ceb0c33bdafa178b792a062aa46721fa5e729359ada4fcd354a6f08e8",
+        "skills/tdk-epic-prd/SKILL.md": "609982a593519cdc3f80d4be9f0fe658ec087b533b25bc8fb6c7dd388cb844f0",
+        "skills/tdk-epic-prd/references/epic-prd-output-contract.md": "7c93f781ef2271da89026f84987365401e36e0427ebac90f024af5b77d08ff1c",
+        "skills/tdk-epic-prd/references/epic-prd-quality-guidelines.md": "d41772ea57ee960948fc01b74e3883c17d7efbc68284e4c7140da3d626ccc40f",
         "skills/tdk-greenfield-start/SKILL.md": "fed53f065a70c0dc9d78e5d118009b7dc4bfc758665fd93b3cf6c627f22fba16",
         "skills/tdk-greenfield-start/references/inception-question-taxonomy.md": "65c6120f17cc073fd293c265a4cd8bc94a06895bca327ed72fe392bbee5f439e",
         "skills/tdk-greenfield-start/references/project-inception-output-contract.md": "f71ee01afa425e24ed07e183aedf5a301ea591834be0284eca578e05f46eace6",

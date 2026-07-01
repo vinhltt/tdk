@@ -9,6 +9,17 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.92.0] - 2026-07-01
+
+### Added
+- **[Embedded Skills]** Added new `tdk-epic-prd` skill for epic product alignment, mapping, and child specification slice seeds.
+- **[Templates]** Added epic PRD templates (`prd.md.tpl`, `open-questions.md.tpl`, `slice-map.md.tpl`, `index.md.tpl`).
+- **[Scripts]** Added contract test suite for `tdk-epic-prd` (`tdk-epic-prd-skill-contract.test.ts`).
+
+### Changed
+- **[Docs]** Updated guides (document flow, command reference, English & Vietnamese epic start guides, full feature development scenario guide) to integrate the epic PRD step.
+- **[Scripts]** Updated expected skill counts to 25 in contract tests for architecture advisor and boundary map.
+
 ## [1.91.0] - 2026-07-01
 
 ### Added

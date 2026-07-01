@@ -4,6 +4,19 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.13.0] - 2026-07-01
+
+### Added
+- Added new `tdk-epic-prd` skill for epic product alignment, mapping, and child specification slice seeds.
+
+### Changed
+- TODO: describe
+
+## [5.12.0] - 2026-07-01
+
+### Added
+- Add /tdk-epic-prd for tracker-neutral epic PRD artifacts after discovery, including product alignment, slice map, blocking questions, templates, docs, and contract coverage.
+
 ## [5.11.1] - 2026-07-01
 
 ### Changed

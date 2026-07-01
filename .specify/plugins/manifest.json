@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-01T03:32:01Z",
+  "generated_at": "2026-07-01T08:39:20Z",
   "plugins": {
     "tdk-core": {
-      "version": "5.11.1",
+      "version": "5.13.0",
       "components": {
         "skills": {
           "_shared": {
@@ -41,6 +41,9 @@
           },
           "tdk-discovery": {
             "version": "5.10.0"
+          },
+          "tdk-epic-prd": {
+            "version": "5.13.0"
           },
           "tdk-greenfield-start": {
             "version": "5.11.0"
@@ -96,10 +99,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "2e33cdc14ebf20e5074ae949db076e4e04d51a31ec94d99ef1c3d6278c4c929e",
-        ".claude-plugin/plugin.json": "25177ce5ba49e1c99f76b57de0711087044bd64658fc0e8a9acf2ae9158d7b28",
-        ".codex-plugin/plugin.json": "25177ce5ba49e1c99f76b57de0711087044bd64658fc0e8a9acf2ae9158d7b28",
-        ".cursor-plugin/plugin.json": "25177ce5ba49e1c99f76b57de0711087044bd64658fc0e8a9acf2ae9158d7b28",
-        "CHANGELOG.md": "8a8a026787668b7deda2aa01766cb6ea6a5d554c6d1707016179db8087a703b2",
+        ".claude-plugin/plugin.json": "4af69a0167103583f9e7104e72b8c250fb11b89cd5ab1bd34ff1d95658e90a38",
+        ".codex-plugin/plugin.json": "4af69a0167103583f9e7104e72b8c250fb11b89cd5ab1bd34ff1d95658e90a38",
+        ".cursor-plugin/plugin.json": "4af69a0167103583f9e7104e72b8c250fb11b89cd5ab1bd34ff1d95658e90a38",
+        "CHANGELOG.md": "e4b128340ae81a7e4ee65e41f31f1f28b8b3074bd91d81a237c686ce7e3be868",
         "__tests__/context-builder.test.cjs": "39ea0d403e0154a14cfe8877ef76a6c8fc68ffa046ef2d1f59b152de68440fe2",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
@@ -153,6 +156,9 @@
         "skills/tdk-discovery/templates/mvp-scope.md.tpl": "ad1ff61616b2de12c20e4304a1aecd7c3e1497599e50dcca52c9c35c17ab2df6",
         "skills/tdk-discovery/templates/personas.md.tpl": "16376c73ece9680b650eaf59110b265433f76963d5d607dbfbd02d3e37966380",
         "skills/tdk-discovery/templates/problem.md.tpl": "1773337ceb0c33bdafa178b792a062aa46721fa5e729359ada4fcd354a6f08e8",
+        "skills/tdk-epic-prd/SKILL.md": "609982a593519cdc3f80d4be9f0fe658ec087b533b25bc8fb6c7dd388cb844f0",
+        "skills/tdk-epic-prd/references/epic-prd-output-contract.md": "7c93f781ef2271da89026f84987365401e36e0427ebac90f024af5b77d08ff1c",
+        "skills/tdk-epic-prd/references/epic-prd-quality-guidelines.md": "d41772ea57ee960948fc01b74e3883c17d7efbc68284e4c7140da3d626ccc40f",
         "skills/tdk-greenfield-start/SKILL.md": "fed53f065a70c0dc9d78e5d118009b7dc4bfc758665fd93b3cf6c627f22fba16",
         "skills/tdk-greenfield-start/references/inception-question-taxonomy.md": "65c6120f17cc073fd293c265a4cd8bc94a06895bca327ed72fe392bbee5f439e",
         "skills/tdk-greenfield-start/references/project-inception-output-contract.md": "f71ee01afa425e24ed07e183aedf5a301ea591834be0284eca578e05f46eace6",

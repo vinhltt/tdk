@@ -11,22 +11,23 @@ TDK turns vague work into implementation-ready evidence:
 ```text
 Epic brief
   -> optional /tdk-discovery
-  -> /tdk-specify
-  -> /tdk-clarify
-  -> optional /tdk-high-level-design
-  -> /tdk-task-breakdown
-  -> consumer-owned tracker sync creates sub-issues
-  -> each sub-issue becomes a child spec
-  -> child spec runs clarify -> plan -> implement
+  -> optional /tdk-epic-prd
+  -> choose one slice from epic-prd/slice-map.md
+  -> child /tdk-specify
+  -> child /tdk-clarify
+  -> optional child /tdk-high-level-design or /tdk-task-breakdown
+  -> child /tdk-plan
+  -> child /tdk-implement
 ```
 
 The most important rule:
 
 ```text
 discovery is context
-spec.md is requirement authority
-HLD is design enrichment
-task breakdown is portable work items for sub-issues
+epic PRD is product alignment and slice map
+child spec.md is requirement authority
+HLD is design enrichment for a clarified spec
+task breakdown is portable work items for a clarified spec
 child specs are the implementation units
 plan.md is implementation sequence for one spec
 ```
@@ -38,6 +39,7 @@ plan.md is implementation sequence for one spec
 | The work is broad, vague, or has many possible MVP cuts | `/tdk-discovery` | You need epic-level problem, persona, and MVP context before a spec |
 | The generated discovery could easily encode the wrong intent | `/tdk-discovery <epic-id/spec-id> <brief\|file> --interview` | Discovery interview mode asks artifact-grounded challenge questions before completion |
 | Existing discovery or spec artifacts need another intent check | `/tdk-discovery <id> --interview` or `/tdk-specify <id> --interview` | ID-only interview mode rechecks current artifacts without regenerating them |
+| Discovery is broad enough to become one bundled spec | `/tdk-epic-prd` | Epic PRD creates product alignment, blocking questions, and child spec seeds without minting requirements |
 | The feature is already clear and small | `/tdk-specify` | Discovery would add ceremony without reducing risk |
 | You are not sure who the users are | `/tdk-discovery` | Persona and jobs-to-be-done context should be captured first |
 | You already know scope, actors, acceptance criteria, and edge cases | `/tdk-specify` | The spec can be written directly |
@@ -49,6 +51,7 @@ Interview mode quick syntax:
 ```text
 /tdk-discovery <epic-id/spec-id> <brief|file> --interview
 /tdk-discovery <epic-id/spec-id> --interview
+/tdk-epic-prd <epic-id> [--force] [--interview]
 /tdk-specify <epic-id/spec-id> <description> --interview
 /tdk-specify <epic-id/spec-id> --interview
 ```
@@ -70,7 +73,9 @@ flowchart TD
     A[Epic or feature brief] --> B{Broad or unclear?}
     B -->|Yes| C[/tdk-discovery/]
     B -->|No| D[/tdk-specify/]
-    C --> D
+    C --> R[/tdk-epic-prd/]
+    R --> X[Choose slice seed]
+    X --> D
     D --> E[/tdk-clarify/]
     E --> F{Unresolved Questions = None?}
     F -->|No| E
@@ -87,24 +92,23 @@ flowchart TD
     L --> M[Child: clarify -> plan -> implement]
 ```
 
-Feature-sized work should use the short path: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. In the epic workflow, task breakdown feeds tracker sub-issues, and each sub-issue gets its own child spec loop.
+Feature-sized work should use the short path: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. In the epic workflow, `epic-prd/slice-map.md` feeds child /tdk-specify commands. Task breakdown remains available after a child spec is clarified when you need portable work items.
 
 ![TDK Epic Start - Discovery to Task Breakdown](../../assets/tdk-epic-discovery-to-task-breakdown.png)
 
 ## Canonical Epic Path
 
-Use one parent ID from discovery through task breakdown. Use new child IDs only after tracker sync or promotion.
+Use one parent ID for discovery and epic PRD. Use new child IDs for implementation slices from `epic-prd/slice-map.md`.
 
 | Step | Command or action | Gate before next step |
 |---|---|---|
 | 1 | `/tdk-discovery <parent-id> <brief\|file> [--interview]` | `discovery/index.md` says the problem, personas, and MVP cut are ready enough for specify |
-| 2 | `/tdk-specify <parent-id> <description> [--interview]` | `spec.md` exists, `checklists/requirements.md` reviewed, and `UR-*` / `FR-*` / `SC-*` IDs are stable |
-| 3 | `/tdk-clarify <parent-id>` | `## 9. Unresolved Questions` is exactly `None` |
-| 4 | Optional `/tdk-high-level-design <parent-id>` | HLD index exists and any new requirement has gone back into `spec.md` |
-| 5 | `/tdk-task-breakdown <parent-id>` | `tasks-breakdown/index.md` lists every task file and every task cites source requirement IDs |
-| 6 | Consumer-owned tracker sync | Each tracker sub-issue has the task objective, scope, acceptance criteria, and source requirements |
-| 7 | `/tdk-specify <child-id> "<sub-issue or task content>"` | Child spec is scoped to one sub-issue, not the whole parent epic |
-| 8 | Child `/tdk-clarify` -> `/tdk-plan` -> `/tdk-implement` | Child spec is clarified before implementation planning |
+| 2 | `/tdk-epic-prd <parent-id> [--interview]` | `epic-prd/index.md` says Blocking Questions are empty, and `slice-map.md` has no catch-all slice |
+| 3 | Choose one slice seed | The seed describes one independently specifiable child, not the whole parent epic |
+| 4 | `/tdk-specify <child-id> "<slice seed>"` | Child spec is scoped to one PRD slice, and `UR-*` / `FR-*` / `SC-*` IDs start here |
+| 5 | Child `/tdk-clarify` | `## 9. Unresolved Questions` is exactly `None` |
+| 6 | Optional child `/tdk-high-level-design` or `/tdk-task-breakdown` | HLD/task files cite the child spec requirements |
+| 7 | Child `/tdk-plan` -> `/tdk-implement` | Child spec is clarified before implementation planning |
 
 ## Output File Contents
 
@@ -120,6 +124,17 @@ Read generated files through the manifest first: `discovery/index.md`, `high-lev
 | `discovery/index.md` | `## Artifact Manifest`, `## Summary`, `## Product-level signals`, `## Ready For Specify` | Start here; it tells you which discovery files matter and whether the epic is ready for `/tdk-specify` |
 
 Discovery output is not requirement authority. Treat it as context for writing the first `spec.md`.
+
+### Epic PRD outputs
+
+| File | What it contains | How a junior should use it |
+|---|---|---|
+| `epic-prd/index.md` | Source discovery links, artifact map, readiness gate, next commands | Start here; if Blocking Questions exist, do not treat the epic as ready for downstream design or breakdown |
+| `epic-prd/prd.md` | Product intent, problem/current state, personas, objectives, scope, MVP appetite, assumptions, risks, no-gos, source trace | Align on product direction without treating it as a requirement spec |
+| `epic-prd/slice-map.md` | Slug slice keys, capabilities, actors, outcomes, dependencies, suggested child spec titles, priority | Pick one row and turn it into a child /tdk-specify seed |
+| `epic-prd/open-questions.md` | Blocking Questions, Non-Blocking Questions, assumptions needing evidence, source trace | Resolve blockers before downstream epic design, breakdown, or child specs |
+
+Epic PRD output is not `spec.md`, does not create tracker issues, and does not mint `UR-*`, `FR-*`, `SC-*`, or `FS-*`.
 
 ### Specify outputs
 
@@ -238,7 +253,40 @@ Ready check:
 - If you used `--interview`, confirm accepted corrections appear in `problem.md`, `personas.md`, `mvp-scope.md`, or `index.md`, and unresolved points are in the relevant `## Open Questions`.
 - If the MVP boundary still feels vague, clarify the brief before moving on.
 
-### 2. `/tdk-specify <epic-id/spec-id> [<desc>] [--fast] [--interview]`
+### 2. `/tdk-epic-prd <epic-id> [--force] [--interview]`
+
+Use this after discovery when the epic is too broad to become one bundled spec.
+
+Example:
+
+```text
+/tdk-epic-prd feat-001 --interview
+```
+
+| Item | Detail |
+|---|---|
+| Input | Epic ID with existing discovery artifacts |
+| Reads | `discovery/index.md`, `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md` |
+| Creates | `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` |
+| Main value | Aligns product intent, rejects catch-all slices, and produces child spec seeds |
+| Next command | child `/tdk-specify <child-id> "<slice seed>"` |
+
+Add `--interview` when product direction or slice boundaries should be challenged before child specs are created. Use `/tdk-epic-prd <id> --interview` after the four PRD files exist to replay alignment without regenerating them.
+
+What it does not do:
+
+- Does not create `spec.md`.
+- Does not create `UR-*`, `FR-*`, `SC-*`, or `FS-*` IDs.
+- Does not create HLD, task breakdown, plans, code, tracker issues, or product-memory updates.
+
+Ready check:
+
+- Open `epic-prd/index.md`.
+- Confirm Blocking Questions are empty.
+- Confirm `slice-map.md` has no catch-all "all features" or "entire MVP" row.
+- Pick exactly one slice seed before running child `/tdk-specify`.
+
+### 3. `/tdk-specify <epic-id/spec-id> [<desc>] [--fast] [--interview]`
 
 Use this to create the feature specification. This is the source of truth for requirements.
 
