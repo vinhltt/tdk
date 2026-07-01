@@ -51,13 +51,13 @@ describe('validateDocsArgs', () => {
 describe('computeMode', () => {
   it('returns force when force flag is true', () => {
     expect(computeMode([], true)).toBe('force');
-    expect(computeMode(['codebase-summary.md'], true)).toBe('force');
+    expect(computeMode(['architecture.md'], true)).toBe('force');
   });
   it('returns init when no existing files', () => {
     expect(computeMode([], false)).toBe('init');
   });
   it('returns update when at least one expected file exists', () => {
-    expect(computeMode(['codebase-summary.md'], false)).toBe('update');
+    expect(computeMode(['architecture.md'], false)).toBe('update');
   });
 });
 
@@ -91,11 +91,11 @@ describe('scanExistingDocs', () => {
   });
 
   it('returns only expected files, ignores others', () => {
-    writeFileSync(join(tmp, 'codebase-summary.md'), '');
+    writeFileSync(join(tmp, 'architecture.md'), '');
     writeFileSync(join(tmp, 'README.md'), '');
     writeFileSync(join(tmp, 'random.md'), '');
     const found = scanExistingDocs(tmp);
-    expect(found.sort()).toEqual(['README.md', 'codebase-summary.md'].sort());
+    expect(found.sort()).toEqual(['README.md', 'architecture.md'].sort());
   });
 
   it('preserves canonical ordering of expected files', () => {
@@ -193,7 +193,7 @@ describe('runDocs (integration)', () => {
     setupConfig([{ name: 'frontend', path: 'apps/frontend' }]);
     const docDir = join(tmp, 'docs/sub-workspaces/frontend');
     mkdirSync(docDir, { recursive: true });
-    writeFileSync(join(docDir, 'codebase-summary.md'), '# old');
+    writeFileSync(join(docDir, 'architecture.md'), '# old');
     const env = runDocs(
       { subWorkspace: 'frontend' },
       { ensureBin: () => {}, pack: ({ outputPath }) => ({ packedFile: outputPath, tokenCount: 5 }) },
@@ -202,7 +202,7 @@ describe('runDocs (integration)', () => {
     expect(env.ok).toBe(true);
     if (env.ok) {
       expect(env.targets[0]!.mode).toBe('update');
-      expect(env.targets[0]!.existingFiles).toContain('codebase-summary.md');
+      expect(env.targets[0]!.existingFiles).toContain('architecture.md');
     }
   });
 

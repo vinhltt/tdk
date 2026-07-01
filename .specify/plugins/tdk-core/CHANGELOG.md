@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.11.1] - 2026-07-01
+
+### Changed
+- Streamlined tdk-sub-workspace-docs skill implementation to support --sub-workspace <NAME> and --all CLI flags.
+- Streamlined tdk-docs-writer rules, checklist, and per-mode instructions.
+
 ## [5.11.0] - 2026-06-30
 
 ### Added

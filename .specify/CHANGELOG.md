@@ -9,6 +9,29 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.91.0] - 2026-07-01
+
+### Added
+- **[Embedded Skills]** Added `tdk-sub-workspace-automation-recommend` skill to recommend skills and agents for a selected sub-workspace.
+- **[Templates]** Added `architecture.md.tpl`, `interfaces.md.tpl`, and `engineering.md.tpl` templates.
+- **[Scripts]** Added contract tests for sub-workspace docs, automation recommendations, and scaffolding.
+
+### Changed
+- **[Embedded Skills]** Streamlined sub-workspace-related skills:
+  - Updated `tdk-sub-workspace-docs` to support `--sub-workspace <NAME>` and `--all` CLI flags.
+  - Updated `tdk-scaffold-from-recommendation` to target sub-workspace directories.
+- **[Claude Agent Config]** Streamlined `tdk-docs-writer` rules, checklist, and per-mode instructions.
+- **[Scripts]** Updated expected sub-workspace documentation filenames in types.ts and updated roundtrip/docs tests.
+- **[Guides]** Updated `command-reference.md`, `document-flow.md`, and greenfield scenario docs to reference the new sub-workspace automation recommendation workflow.
+
+### Removed
+- **[Embedded Skills]** Removed `tdk-recommend-automations` skill (replaced by `tdk-sub-workspace-automation-recommend`).
+- **[Templates]** Removed obsolete sub-workspace templates:
+  - `code-standards.md.tpl`
+  - `codebase-summary.md.tpl`
+  - `system-architecture.md.tpl`
+
+
 ## [1.90.0] - 2026-06-30
 
 ### Added

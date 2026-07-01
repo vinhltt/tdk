@@ -1,6 +1,6 @@
 # TDK Command Suite Guide
 
-> **Last updated**: 2026-06-24
+> **Last updated**: 2026-07-01
 >
 > **Terminology**: In this guide, `/tdk-*` items are called "commands." Internally they are Claude Code plugin skills. Both terms refer to the same thing.
 >
@@ -90,6 +90,8 @@ Run `diff → sync → index` to keep docs consistent across workspaces.
 | `/tdk-workspace-dependency-policy` | Optional workspace dependency policy report and non-applied enforcement snippets from approved layout evidence |
 | `/tdk-module-boundary-policy` | Deprecated compatibility route for `/tdk-workspace-dependency-policy`; legacy policy artifacts remain readable |
 | `/tdk-golden-path-scaffold` | Dry-run-first scaffold plan and recipe for approved layout skeletons; guarded apply creates only safe empty structure and `.specify` templates |
+| `/tdk-sub-workspace-docs` | Arc42-lite docs for one or all configured sub-workspaces |
+| `/tdk-sub-workspace-automation-recommend` | One-sub-workspace skill/agent recommendation from docs, dependency policy, official docs, local skills, and optional direct community lookup |
 
 Architecture advisor is report-only. It does not write runtime config, layout
 files, source code, plans, tasks, tracker issues, or ADR files. Workspace layout
@@ -207,13 +209,16 @@ Each command reads the output of the previous one. For minimal feature work, the
 | 24 | `/tdk-workflow-config-apply [(no flags)\|--dry-run\|--reconcile\|--yes --expect-hash <hash>] [--topology <path>]` | Interactive runtime config review/apply from workspace layout proposal |
 | 25 | `/tdk-sub-workdspace-init` | Initialize a new sub-workspace |
 | 26 | `/tdk-sub-workdspace-list` | List all configured sub-workspaces |
-| 27 | `/tdk-sub-workdspace-sync` | ~~Deprecated~~ → use `/tdk-config-sync` instead |
+| 27 | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | Generate arc42-lite docs under `<docsPath>/sub-workspaces/<name>/` |
+| 28 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | Recommend skills/agents for one selected sub-workspace |
+| 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | Scaffold reviewed skills/agents from an approved recommendation |
+| 30 | `/tdk-sub-workdspace-sync` | ~~Deprecated~~ → use `/tdk-config-sync` instead |
 | — | **Design Documents** | |
-| 28 | `/tdk-batch-design <id>` | Generate batch processing design document for approval |
+| 31 | `/tdk-batch-design <id>` | Generate batch processing design document for approval |
 | — | **Test Viewpoints** | |
-| 29 | `/tdk-test-viewpoint <id>` | Generate high-level test viewpoints (観点) from spec |
+| 32 | `/tdk-test-viewpoint <id>` | Generate high-level test viewpoints (観点) from spec |
 | — | **Primary Implementation** | |
-| 30 | `/tdk-implement <id> [--phase NN]` | Execute implementation directly from plan.md ## Phases (recommended) |
+| 33 | `/tdk-implement <id> [--phase NN]` | Execute implementation directly from plan.md ## Phases (recommended) |
 
 ---
 
@@ -384,6 +389,9 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | workspace-dependency:policy | `/tdk-workspace-dependency-policy [layout\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | `workspace-layout-proposal.json`, `workspace-layout-proposal.md`, legacy topology artifacts, `.specify/.specify.json`, repo stack evidence | `workspace-dependency-policy.md`, optional `enforcement-snippets.md` | Optional after layout review/apply |
 | module-boundary:policy | `/tdk-module-boundary-policy [topology\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | Compatibility route for dependency policy | legacy `module-boundary-policy.md`, optional `enforcement-snippets.md` | Compatibility only |
 | golden-path:scaffold | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional after layout/policy review |
+| sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `engineering.md` per sub-workspace | After config apply |
+| sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | `--sub-workspace`, `--no-community-search` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` or skills.sh lookup | `automation-recommendation.md` | After sub-workspace docs |
+| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | `--dry-run`, `--skills-only`, `--agents-only` | approved `automation-recommendation.md` or legacy recommendation file | Scaffolded skill/agent starter files | After recommendation approval |
 
 Greenfield and brownfield start commands are report/routing entrypoints. They do not create specs, plans, tracker issues, source code, or `.specify/.specify.json`. Greenfield full mode runs a project-inception interview before strong routing. Quick mode records unanswered critical gaps. Unknown mode classifies only unless minimum facts are present. Brownfield full mode uses bounded repo evidence, config-only mode focuses on `.specify` state, and unknown mode recommends one evidence-backed next route.
 
@@ -455,6 +463,29 @@ creates only allowlisted skeleton artifacts such as empty directories,
 `.gitkeep`, `.specify` guidance docs, and explicitly templated config files.
 
 Syntax: `/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <name>]`.
+
+`/tdk-sub-workspace-docs` generates an arc42-lite four-file docs set
+for one configured sub-workspace or all configured sub-workspaces:
+`README.md`, `architecture.md`, `interfaces.md`, and `engineering.md` under
+`<docsPath>/sub-workspaces/<name>/`. It updates managed AUTO-GEN sections and
+does not delete old generated docs.
+
+Syntax: `/tdk-sub-workspace-docs [--sub-workspace NAME|--all] [--force]`.
+
+`/tdk-sub-workspace-automation-recommend` recommends skills and agents for one
+selected sub-workspace. It reads the selected sub-workspace docs, workspace
+dependency policy, official docs or primary sources, local installed skill
+catalog, and optional direct community lookup through `npx skills find` or
+skills.sh. It does not support `--all` and does not use `ck:find-skills`.
+
+Syntax: `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]`.
+
+`/tdk-scaffold-from-recommendation` reads an approved recommendation and creates
+starter skill/agent files. It prefers
+`.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md`
+and keeps legacy recommendation file fallbacks.
+
+Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]`.
 
 ### UT Commands
 

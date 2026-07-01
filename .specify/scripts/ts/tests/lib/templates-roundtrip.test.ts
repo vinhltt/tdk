@@ -15,9 +15,9 @@ const TEMPLATE_SUITES = [
     dir: resolve(__dirname, '../../../../templates/sub-workspace-docs'),
     files: [
       'README.md.tpl',
-      'code-standards.md.tpl',
-      'codebase-summary.md.tpl',
-      'system-architecture.md.tpl',
+      'architecture.md.tpl',
+      'engineering.md.tpl',
+      'interfaces.md.tpl',
     ],
   },
   {

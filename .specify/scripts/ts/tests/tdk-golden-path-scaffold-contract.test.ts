@@ -180,7 +180,8 @@ describe('TDK golden-path scaffold contracts', () => {
   it('preserves existing recommendation scaffold scope', () => {
     const recommendationSkill = read(join(SCAFFOLD_SKILLS_DIR, 'tdk-scaffold-from-recommendation/SKILL.md'));
 
-    expect(recommendationSkill).toContain('recommendation-<project>.md');
+    expect(recommendationSkill).toContain('automation-recommendation.md');
+    expect(recommendationSkill).toContain('.specify/reports/recommendation-*.md');
     expect(recommendationSkill).toContain('Scaffold skills');
     expect(recommendationSkill).toContain('Scaffold agents');
     expect(recommendationSkill).not.toContain('golden-path-recipe.json');

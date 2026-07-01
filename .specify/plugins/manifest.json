@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-06-30T15:29:14Z",
+  "generated_at": "2026-07-01T03:32:01Z",
   "plugins": {
     "tdk-core": {
-      "version": "5.11.0",
+      "version": "5.11.1",
       "components": {
         "skills": {
           "_shared": {
@@ -61,7 +61,7 @@
             "version": "3.4.11"
           },
           "tdk-sub-workspace-docs": {
-            "version": "4.0.1"
+            "version": "5.11.1"
           },
           "tdk-sub-workspace-init": {
             "version": "5.9.1"
@@ -84,7 +84,7 @@
         },
         "agents": {
           "tdk-docs-writer": {
-            "version": "1.0.0"
+            "version": "5.11.1"
           }
         },
         "hooks": {
@@ -96,10 +96,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "2e33cdc14ebf20e5074ae949db076e4e04d51a31ec94d99ef1c3d6278c4c929e",
-        ".claude-plugin/plugin.json": "92fd356eecd3782e3892897371b8339ea6abb5a406cba09608d54c83b39f8164",
-        ".codex-plugin/plugin.json": "92fd356eecd3782e3892897371b8339ea6abb5a406cba09608d54c83b39f8164",
-        ".cursor-plugin/plugin.json": "92fd356eecd3782e3892897371b8339ea6abb5a406cba09608d54c83b39f8164",
-        "CHANGELOG.md": "b4df8e46834513f86bd9920fd40fa84a7d5d8f397476d2fff9f3e3866774dc50",
+        ".claude-plugin/plugin.json": "25177ce5ba49e1c99f76b57de0711087044bd64658fc0e8a9acf2ae9158d7b28",
+        ".codex-plugin/plugin.json": "25177ce5ba49e1c99f76b57de0711087044bd64658fc0e8a9acf2ae9158d7b28",
+        ".cursor-plugin/plugin.json": "25177ce5ba49e1c99f76b57de0711087044bd64658fc0e8a9acf2ae9158d7b28",
+        "CHANGELOG.md": "8a8a026787668b7deda2aa01766cb6ea6a5d554c6d1707016179db8087a703b2",
         "__tests__/context-builder.test.cjs": "39ea0d403e0154a14cfe8877ef76a6c8fc68ffa046ef2d1f59b152de68440fe2",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
@@ -108,7 +108,7 @@
         "__tests__/rule-matcher.test.cjs": "99bb7c60b0cbc4894733ea99a26723a44c7a37f389003c6df818bfc5b6cbb281",
         "__tests__/session-tracker.test.cjs": "0e47cc6a28f9c47c1b4d445855a171953206c5fb029f59881a14a82f30298ea7",
         "__tests__/speckit-config-reader.test.cjs": "506ae509e55dec1a6ecc9f2c215e758a14027de402aee4e67522777ca776c129",
-        "agents/tdk-docs-writer.md": "52dd9f4eb033792eb124678424d846fa98a2e4f036614f596245beb5958fc95a",
+        "agents/tdk-docs-writer.md": "512d9f0b24bb4463c002e8a9effbab2dbd723a6da24d3d60293d7d331fbf2e3e",
         "hooks/dev-context-injector.cjs": "95ec8603b65686b85c2fe02e73addce8c753361ad920dbeec8a35bd8b85e3671",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
         "hooks/hooks.json": "d1b3892b48746e6d61eb6544b00cbf0c8f4a91ac1be558b2c3a1cad404401e1d",
@@ -189,7 +189,7 @@
         "skills/tdk-specify/references/spec-quality-guidelines.md": "4cab4632e4408fbb12f1e374b0cad4602a45719613c1a7ba4fec083c2d1889d0",
         "skills/tdk-specify/references/spec-writing-principles.md": "6d8b472745116c8bc9a6c09d7f1bd759fa3cac2a2c3e9fbe401da914202a6158",
         "skills/tdk-status/SKILL.md": "2a096496da2b332bf58039789a7425ffbbb7b500717a2e7ac233fdc72242f89e",
-        "skills/tdk-sub-workspace-docs/SKILL.md": "9cbac44ba7bf6a8cc3574c3b551b39d7af31380fba2554db73369b54caf3211b",
+        "skills/tdk-sub-workspace-docs/SKILL.md": "ed76c52a20c694efc129ec836a7fbda658fdbce35b1afbae664cd87038d898a2",
         "skills/tdk-sub-workspace-init/SKILL.md": "342d01940acb183a64f52f1e69c3b7322b0e894a40565f5078e0b2aa576748da",
         "skills/tdk-sub-workspace-list/SKILL.md": "048d5207d474ab4e349e4ad9b32d0ed1da3727de44eb49e720e32a8316fbe04e",
         "skills/tdk-task-breakdown/SKILL.md": "82764000e9682d03577040ccc3e44f0bb3b91a4013466506dd879e4ac76fd669",
@@ -314,17 +314,17 @@
       }
     },
     "tdk-scaffold": {
-      "version": "1.2.2",
+      "version": "2.0.0",
       "components": {
         "skills": {
           "tdk-golden-path-scaffold": {
             "version": "1.2.2"
           },
-          "tdk-recommend-automations": {
-            "version": "0.1.0"
-          },
           "tdk-scaffold-from-recommendation": {
-            "version": "0.3.1"
+            "version": "2.0.0"
+          },
+          "tdk-sub-workspace-automation-recommend": {
+            "version": "2.0.0"
           }
         },
         "agents": {},
@@ -333,10 +333,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "68760c7a49cdbe25dff7017c9f3832ac3c3f83758acc1be97d61c6bc2c19967e",
-        ".claude-plugin/plugin.json": "30f4bd1e8c805f3a0a6d3bb2f0880b7f3d5768812d869f1a76240bba1cf96eea",
-        ".codex-plugin/plugin.json": "30f4bd1e8c805f3a0a6d3bb2f0880b7f3d5768812d869f1a76240bba1cf96eea",
-        ".cursor-plugin/plugin.json": "30f4bd1e8c805f3a0a6d3bb2f0880b7f3d5768812d869f1a76240bba1cf96eea",
-        "CHANGELOG.md": "89cf270df2fcc43d00255302a946d0416ce2f65cd5ba3631e7c20899f7146e3d",
+        ".claude-plugin/plugin.json": "d5fa06aa4d0ff0ab6539aa736ac08cb4aa3a35a19e0d81da41f7ddebe70b03b0",
+        ".codex-plugin/plugin.json": "d5fa06aa4d0ff0ab6539aa736ac08cb4aa3a35a19e0d81da41f7ddebe70b03b0",
+        ".cursor-plugin/plugin.json": "d5fa06aa4d0ff0ab6539aa736ac08cb4aa3a35a19e0d81da41f7ddebe70b03b0",
+        "CHANGELOG.md": "289f53cd516819629bf9aab4dd08ae13706c6a40e7b6e02bdbc7a0fbc17671ac",
         "skills/tdk-golden-path-scaffold/SKILL.md": "cc1099c927acec094e0443d7db6f4990fa90f8f7377e17be559fe8e73729b390",
         "skills/tdk-golden-path-scaffold/references/golden-path-output-contract.md": "ef32bb4f620983e461f0bef02fcfda57da4703dc21bbad767f58c4ba116b4e7c",
         "skills/tdk-golden-path-scaffold/references/golden-path-recipe-schema.md": "10638a7933d1658ac8cc96288a49716ad2c97b7dc8c4ce8ac5cfbc995aa97a68",
@@ -348,11 +348,10 @@
         "skills/tdk-golden-path-scaffold/templates/golden-path-recipe.json.tpl": "ea9bb006bb56b228b9885c4f446bf221e15a8434a07239c85f8e8fc25724dec4",
         "skills/tdk-golden-path-scaffold/templates/golden-path-scaffold-plan.md.tpl": "c8e4714cbad9bd83c78b40526915fb8cbc2952a72275a347d3ac70eb060d90fa",
         "skills/tdk-golden-path-scaffold/templates/project-structure.md.tpl": "df95624033993e0ff899eb06a60cdfa55105481da98e4d5253b268d23094f1c3",
-        "skills/tdk-recommend-automations/SKILL.md": "fc98581f70636cc75cde8fdcd0d8430f319fb3208eec124adfa2ec000528a244",
-        "skills/tdk-recommend-automations/references/architecture-presets.md": "ce006dcc1d6d91141362d306bb0103359b60f8877f033c9e195bf1b78f1cbe2f",
-        "skills/tdk-scaffold-from-recommendation/SKILL.md": "2d2daa34dbe197757bf8c9a922662e9985a1936e7a84d20338604b193d4e6d79",
+        "skills/tdk-scaffold-from-recommendation/SKILL.md": "4de9ba27ebf6333783072c104b696ba365c4c8167739a727be6aa64abebc974e",
         "skills/tdk-scaffold-from-recommendation/references/agent-output-pattern.md": "6627c4769e50c541405e0c3d8db00653e0df4cd023030bf3116b746e5cf7677d",
-        "skills/tdk-scaffold-from-recommendation/references/skill-output-pattern.md": "d373008520c731f6ea261a009d1a169da65a73c5441f7ddedfd04f5acf781b16"
+        "skills/tdk-scaffold-from-recommendation/references/skill-output-pattern.md": "d373008520c731f6ea261a009d1a169da65a73c5441f7ddedfd04f5acf781b16",
+        "skills/tdk-sub-workspace-automation-recommend/SKILL.md": "f2ddf52874e881d97fc2c2fe46bd17c345b1844b1a6dc8f0af3b1ca165cadce9"
       }
     },
     "tdk-test-api": {

@@ -145,12 +145,12 @@ bun src/commands/manifest/compute.ts --root ../..
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
-| **tdk-core** | 24 skills + 1 agent | Greenfield/brownfield start, architecture advisor, workspace layout proposal, boundary-map compatibility, workflow config apply, constitution, discovery, specify, clarify, HLD, task breakdown, plan, implement, config, sub-workspace, ut-backfill |
+| **tdk-core** | 24 skills + 1 agent | Greenfield/brownfield start, architecture advisor, workspace layout proposal, boundary-map compatibility, workflow config apply, constitution, discovery, specify, clarify, HLD, task breakdown, plan, implement, config, `/tdk-sub-workspace-docs`, ut-backfill |
 | **tdk-utils** | 16 skills + 5 agents | Scout, research, workspace dependency policy, module-boundary compatibility, brainstorming, docs-seeker, context-engineering, problem-solving |
 | **tdk-memory** | 5 skills + 1 agent | Domain memory: init, update, checksum, changelog, query, and tdk-memory-agent |
 | **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |
 | **tdk-retro** | 4 | Retrospective feedback collection, learning proposal, and approved-delta application |
-| **tdk-scaffold** | 3 | Skill/agent scaffolding from approved automation recommendations plus guarded golden-path skeleton recipes |
+| **tdk-scaffold** | 3 | `/tdk-sub-workspace-automation-recommend`, skill/agent scaffolding from approved automation recommendations, and guarded golden-path skeleton recipes |
 
 ## CLI Commands
 
@@ -169,7 +169,7 @@ Integrated commands (via `bun src/index.ts`; no installed `tdk` binary yet):
 | `bun src/index.ts harness install` | Install selected TDK plugin artifacts into `.claude/` or preconverted `.codex/` + `.agents/skills/` targets with dry-run, saved install settings, prefix rewrite, ownership, collision, and drift safety |
 | `bun src/index.ts harness convert` | Maintainer-only command that emits generated Codex packages under `.specify/codex-plugins/<plugin>/` and checks converter freshness |
 | `bun src/index.ts harness convert-flat` | Convert an existing flat `.claude/` tree into additive `.codex/` and `.agents/skills/` artifacts with dry-run, conflict reporting, and `.specify/state/harness-install/codex.json` ownership manifest |
-| `bun src/index.ts sub-workspace docs` | Generate sub-workspace documentation |
+| `bun src/index.ts sub-workspace docs` | Generate arc42-lite sub-workspace documentation for `/tdk-sub-workspace-docs` |
 
 Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup, changelog, util, test-api.
 

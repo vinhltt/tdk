@@ -36,10 +36,10 @@ export type DocsEnvelope =
     };
 
 export const EXPECTED_DOC_FILES = [
-  'codebase-summary.md',
-  'code-standards.md',
-  'system-architecture.md',
   'README.md',
+  'architecture.md',
+  'interfaces.md',
+  'engineering.md',
 ] as const;
 
 export class DocsError extends Error {

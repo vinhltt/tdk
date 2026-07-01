@@ -17,7 +17,7 @@ This scenario covers the full project-start chain:
 -> /tdk-workflow-config-apply
 -> /tdk-workspace-dependency-policy
 -> /tdk-sub-workspace-docs --all
--> /tdk-recommend-automations
+-> /tdk-sub-workspace-automation-recommend --sub-workspace <name>
 ```
 
 The chain has two different artifact classes:
@@ -62,7 +62,7 @@ applies the parsed `planHash` internally. Then continue:
 ```text
 /tdk-workspace-dependency-policy .specify/configurations/workspace-layout/workspace-layout-proposal.json
 /tdk-sub-workspace-docs --all
-/tdk-recommend-automations
+/tdk-sub-workspace-automation-recommend --sub-workspace <name>
 ```
 
 If you intentionally want policy guidance before runtime config apply, run
@@ -83,8 +83,8 @@ proposed layout.
 | 7 | `/tdk-workspace-layout-propose` | `.specify/configurations/workspace-layout/workspace-layout-proposal.md`, `workspace-layout-proposal.json` | No |
 | 8 | `/tdk-workflow-config-apply` | Diff/warnings review, then updated `.specify/.specify.json`, apply report, backup when approved | Yes, after confirmation |
 | 9 | `/tdk-workspace-dependency-policy` | `.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md`, optional `enforcement-snippets.md` | No |
-| 10 | `/tdk-sub-workspace-docs --all` | Four docs per configured sub-workspace under `<docsPath>/sub-workspaces/<name>/` | No runtime config mutation |
-| 11 | `/tdk-recommend-automations` | `.specify/configurations/automation-recommendations/recommendation-<project>.md` | No |
+| 10 | `/tdk-sub-workspace-docs --all` | Arc42-lite docs per configured sub-workspace under `<docsPath>/sub-workspaces/<name>/` | No runtime config mutation |
+| 11 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name>` | `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | No |
 
 `<feature-dir>` is resolved from project config and task ID. In a default setup,
 it is usually under `.specify/specs/<id>/`.
@@ -274,14 +274,26 @@ routing files, or `.specify/.specify.json`.
 This requires configured `subWorkspaces[]` in `.specify/.specify.json` and real
 paths on disk. For each target, it writes or refreshes:
 
-- `<docsPath>/sub-workspaces/<name>/codebase-summary.md`
-- `<docsPath>/sub-workspaces/<name>/code-standards.md`
-- `<docsPath>/sub-workspaces/<name>/system-architecture.md`
 - `<docsPath>/sub-workspaces/<name>/README.md`
+- `<docsPath>/sub-workspaces/<name>/architecture.md`
+- `<docsPath>/sub-workspaces/<name>/interfaces.md`
+- `<docsPath>/sub-workspaces/<name>/engineering.md`
 
 The skill runs the resolver, packs code with repomix, runs scout, then delegates
-writing to the `tdk-docs-writer` agent. It generates codebase-derived docs only;
+writing to the `tdk-docs-writer` agent. It generates arc42-lite docs only;
 it does not create PRDs, roadmap docs, or runtime config.
+
+### 11. Sub-workspace automation recommendation
+
+```text
+/tdk-sub-workspace-automation-recommend --sub-workspace <name>
+```
+
+Run this per sub-workspace after docs exist. The recommendation reads the
+selected sub-workspace docs, workspace dependency policy, official docs, primary
+sources, local installed skills, and optional direct community lookup through
+`npx skills find` or skills.sh. It does not use `ck:find-skills` and does not
+support `--all`.
 
 ## What This Chain Does Not Produce
 

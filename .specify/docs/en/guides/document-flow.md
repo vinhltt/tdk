@@ -21,6 +21,8 @@ flowchart TD
     CONFIG_PATCH[config topology apply<br/>Dry-run / Guarded Apply]
     POLICY[workspace-dependency-policy.md<br/>enforcement-snippets.md]
     GOLDEN_PATH[golden-path-scaffold-plan.md<br/>golden-path-recipe.json]
+    SUB_WORKSPACE_DOCS[sub-workspaces/name/<br/>README architecture interfaces engineering]
+    AUTOMATION_RECOMMEND[automation-recommendation.md]
     DISCOVERY[discovery/<br/>Epic Context]
 
     %% Phase 0: Feature Specification
@@ -32,6 +34,8 @@ flowchart TD
     TOPOLOGY -.->|/tdk-workflow-config-apply<br/>review/apply| CONFIG_PATCH
     CONFIG_PATCH -.->|/tdk-workspace-dependency-policy<br/>policy only| POLICY
     POLICY -.->|/tdk-golden-path-scaffold<br/>dry-run first| GOLDEN_PATH
+    POLICY -.->|/tdk-sub-workspace-docs<br/>arc42-lite docs| SUB_WORKSPACE_DOCS
+    SUB_WORKSPACE_DOCS -.->|/tdk-sub-workspace-automation-recommend<br/>one workspace| AUTOMATION_RECOMMEND
     REQ -.->|/tdk-discovery<br/>optional, epic| DISCOVERY
     REQ -->|/tdk-specify| SPEC[spec.md<br/>Feature Specification]
     DISCOVERY -.->|context only| SPEC
@@ -80,7 +84,7 @@ flowchart TD
     classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
     classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px
 
-    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,DISCOVERY,SPEC,SPEC_CLARIFIED,TASK_BREAKDOWN phase0
+    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,SPEC,SPEC_CLARIFIED,TASK_BREAKDOWN phase0
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES,PAGEDESIGNS,BATCH_DESIGN phase1
     class TEST_VP phase0
     class PRODUCT_CONTEXT,CONSTITUTION,UIUX,REF_DATAMODEL,REF_STATE reference
@@ -103,6 +107,8 @@ flowchart LR
     CONFIG_PATCH[config dry-run/apply]
     POLICY[workspace-dependency-policy.md<br/>enforcement-snippets.md]
     GOLDEN_PATH[golden-path scaffold<br/>recipe/report]
+    SUB_WORKSPACE_DOCS[sub-workspace docs<br/>arc42-lite]
+    AUTOMATION_RECOMMEND[automation recommendation<br/>one workspace]
     DISCOVERY[discovery/<br/>Epic Context]
     SPEC[spec.md]
     SPEC_CLAR[spec.md<br/>+ Clarifications]
@@ -118,6 +124,8 @@ flowchart LR
     TOPOLOGY -.->|"/tdk-workflow-config-apply<br/>review/apply"| CONFIG_PATCH
     CONFIG_PATCH -.->|"/tdk-workspace-dependency-policy<br/>policy only"| POLICY
     POLICY -.->|"/tdk-golden-path-scaffold<br/>dry-run first"| GOLDEN_PATH
+    POLICY -.->|"/tdk-sub-workspace-docs"| SUB_WORKSPACE_DOCS
+    SUB_WORKSPACE_DOCS -.->|"/tdk-sub-workspace-automation-recommend"| AUTOMATION_RECOMMEND
     REQ -.->|"/tdk-discovery<br/>epic-id brief"| DISCOVERY
     REQ -->|"/tdk-specify<br/>feature-id desc"| SPEC
     DISCOVERY -.->|"context only"| SPEC
@@ -134,7 +142,7 @@ flowchart LR
     classDef note fill:#f5f5f5,stroke:#616161,stroke-width:1px
 
     class REQ input
-    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,DISCOVERY,SPEC,SPEC_CLAR,HLD,TASKS,BA_REQ output
+    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,SPEC,SPEC_CLAR,HLD,TASKS,BA_REQ output
     class CONTENT note
 ```
 
@@ -329,6 +337,8 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `.specify/configurations/golden-path/golden-path-scaffold-plan.md` | `/tdk-golden-path-scaffold --dry-run` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | Human review before recipe approval | Optional skeleton plan |
 | `.specify/configurations/golden-path/golden-path-recipe.json` | `/tdk-golden-path-scaffold --dry-run` | scaffold plan and approved layout/config evidence | Set `status: approved` before guarded apply | Optional skeleton recipe |
 | `.specify/configurations/golden-path/generated-files-report.md` | `/tdk-golden-path-scaffold --dry-run` or `--yes` | recipe and safety gates | Review created/skipped/existing/refused paths | Scaffold report |
+| `<docsPath>/sub-workspaces/<name>/{README,architecture,interfaces,engineering}.md` | `/tdk-sub-workspace-docs` | configured sub-workspace path, repomix pack, scout output, optional dependency policy | `/tdk-sub-workspace-automation-recommend` | Per sub-workspace docs refresh |
+| `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | `/tdk-sub-workspace-automation-recommend` | selected sub-workspace docs, dependency policy, official docs, local skill catalog, optional direct skill search | `/tdk-scaffold-from-recommendation` after approval | Per sub-workspace automation review |
 | `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution; existing discovery files for ID-only `--interview` | Optional context for `/tdk-specify` | Optional before specify |
 | `spec.md` | `/tdk-specify` | User description, optional `discovery/index.md`; existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature start |
 | `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-high-level-design`, `/tdk-task-breakdown`, `/tdk-plan` | After specify |

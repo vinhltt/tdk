@@ -1,165 +1,156 @@
 ---
 name: tdk-scaffold-from-recommendation
-description: "Read approved recommendation.md → scaffold SKILL.md + references/ stubs for skills and agent.md for agents, following existing TDK conventions."
+description: "Read approved automation recommendation markdown and scaffold SKILL.md plus references stubs for skills and agent.md files for agents."
 user-invocable: true
-argument-hint: "[<path-to-recommendation.md>] [--dry-run] [--skills-only] [--agents-only]"
+argument-hint: "[<path-to-automation-recommendation.md>] [--dry-run] [--skills-only] [--agents-only]"
 metadata:
-  version: "0.3.1"
+  version: "2.0.0"
   author: "VinhLTT"
   category: scaffold
   requires:
-    - tdk-recommend-automations (for prerequisite recommendation.md)
+    - tdk-sub-workspace-automation-recommend
   input_format: "[path] [flags]"
   output_format: "Scaffolded SKILL.md, references/ stubs, agent.md files"
 ---
 
 # tdk-scaffold-from-recommendation
 
-Read an approved `recommendation-<project>.md` file and scaffold SKILL.md + references/ stubs (skills) and agent.md (agents) following existing TDK plugin conventions.
+Read approved recommendations and scaffold skill/agent starting points following existing TDK plugin conventions.
 
-## When to use
+## When To Use
 
-- After `tdk-recommend-automations` generates a recommendation file
-- User has reviewed recommendations and set `status: approved` in frontmatter
-- Before manually creating skill/agent boilerplate — get a structured starting point
+- After `/tdk-sub-workspace-automation-recommend --sub-workspace <name>` writes a recommendation.
+- The user has reviewed recommendations and set `status: approved` in frontmatter.
+- The user wants initial files for recommended skills or agents.
 
 ## Prerequisites
 
-- A `recommendation-<project>.md` file exists in `.specify/reports/`
-- File has `status: approved` in YAML frontmatter
-- The scaffold plugin is installed
+- A recommendation file exists in one of the supported paths.
+- The file has `status: approved`, or the user explicitly approves proceeding anyway.
+- The recommendation contains reviewed recommendations under `## Recommended Skills` or `## Recommended Agents`.
 
 ## Args
 
 | Flag | Notes |
-|------|-------|
-| `<path>` | Path to recommendation.md. Default: latest `recommendation-*.md` in `.specify/reports/` |
-| `--dry-run` | Show planned output without writing files |
-| `--skills-only` | Scaffold only skill recommendations, skip agents |
-| `--agents-only` | Scaffold only agent recommendations, skip skills |
+|---|---|
+| `<path>` | Optional explicit recommendation markdown path. |
+| `--dry-run` | Show planned output without writing files. |
+| `--skills-only` | Scaffold skills only. |
+| `--agents-only` | Scaffold agents only. |
 
-## Steps
+## Resolve Input File
 
-### 1. Resolve input file
+Prefer the new per-sub-workspace output path:
 
-- If `<path>` argument provided → use it directly
-- Else → find latest: `ls -t .specify/reports/recommendation-*.md | head -1`
-- If no file found → error: "No recommendation file found. Run tdk-recommend-automations first."
+```text
+.specify/configurations/automation-recommendations/sub-workspaces/*/automation-recommendation.md
+```
 
-### 2. Parse and validate
+Keep old fallback paths:
 
-- Read the file content
-- Parse YAML frontmatter: extract `status`, `architecture`, `project`, `source_docs_path`
-- If `status` is not `approved`:
-  - Use `AskUserQuestion` with header "Status Check":
-    - "Proceed anyway (status is '{status}')" / "Abort — set status to approved first"
-  - If abort → stop
-- Extract `## Project Context` section content for use in generation
+```text
+.specify/reports/recommendation-*.md
+.specify/configurations/automation-recommendations/recommendation-*.md
+```
 
-### 3. Extract recommendations
+If no file is found, error: `No recommendation file found. Run /tdk-sub-workspace-automation-recommend --sub-workspace <name> first.`
 
-- Parse `## Recommended Skills` section:
-  - Each `### N. <name> [<priority>]` block → extract: name, priority, purpose, why, input signals, trigger, inspired-by
-- Parse `## Recommended Agents` section:
-  - Each `### N. <name> [<priority>]` block → extract: name, priority, purpose, why, model, tools
-- If both sections empty → error: "No recommendations found in file."
-- If `--skills-only` → discard agent recommendations
-- If `--agents-only` → discard skill recommendations
+## Parse And Validate
 
-### 4. Read structural exemplars
+Parse YAML frontmatter. Known fields include:
 
-Read these files for structural patterns (first 50 lines each — content comes from recommendation, not exemplars):
+- `status`
+- `architecture`
+- `project`
+- `source_docs_path`
+- `sub_workspace`
+- `sub_workspace_path`
+- `dependency_policy`
+- `official_docs_read`
+- `skill_search_queries`
 
-- Skill pattern: find any SKILL.md in the same plugin or `tdk-core/skills/` → note frontmatter fields and section ordering
-- Agent pattern: find any agent .md in `tdk-utils/agents/` → note frontmatter fields and section ordering
+If `status` is not `approved`, ask:
 
-Load: `references/skill-output-pattern.md` for skill generation rules
-Load: `references/agent-output-pattern.md` for agent generation rules
+- `Proceed anyway`
+- `Abort - set status: approved first`
 
-### 5. Scaffold skills
+Default to abort. Scaffolding writes should happen only after reviewed recommendations.
 
-Skip if `--agents-only`.
+## Extract Recommendations
+
+- Parse `## Recommended Skills`.
+- Parse `## Recommended Agents`.
+- Stop if both are empty.
+- Respect `--skills-only` and `--agents-only`.
+
+## Read Structural Exemplars
+
+Read nearby existing files for style only:
+
+- Skill pattern: an existing `SKILL.md` in `.specify/plugins/tdk-scaffold/skills/` or `.specify/plugins/tdk-core/skills/`.
+- Agent pattern: an existing agent file in `.specify/plugins/**/agents/`.
+- `references/skill-output-pattern.md`
+- `references/agent-output-pattern.md`
+
+Do not copy recommendation content from exemplars. Use the approved recommendation as the content source.
+
+## Scaffold skills
+
+Skip when `--agents-only` is set.
 
 For each skill recommendation:
 
-1. Target dir: `.specify/plugins/tdk-scaffold/skills/<name>/`
-2. If dir already exists → `AskUserQuestion`: "Overwrite existing `<name>`?" / "Skip"
-3. If `--dry-run` → print planned path and skip write
+1. Target: `.specify/plugins/tdk-scaffold/skills/<name>/SKILL.md`.
+2. If target exists, ask whether to overwrite or skip.
+3. If `--dry-run`, print planned paths and do not write.
+4. Generate frontmatter with `name`, `description`, `user-invocable`, `argument-hint`, and `metadata`.
+5. Generate sections:
+   - When To Use
+   - Prerequisites
+   - Steps
+   - Error UX
+   - Notes
+6. Create a `references/` directory only when the recommendation needs supporting references.
 
-4. Generate `SKILL.md`:
-   ```yaml
-   ---
-   name: <name>
-   description: "<purpose from recommendation>"
-   user-invocable: true
-   argument-hint: ""
-   metadata:
-     version: "0.1.0"
-     author: "VinhLTT"
-     category: "<architecture type from recommendation>"
-   ---
-   ```
+## Scaffold agents
 
-   Sections to generate:
-   - **When to use**: Derived from recommendation's "Why" field
-   - **Prerequisites**: Derived from "Input signals" (what must exist for this skill to run)
-   - **Steps**: 3-5 placeholder steps derived from purpose + trigger condition
-   - **Error UX**: Table with 2-3 common error patterns
-   - **Notes**: Architecture context, limitations
-
-5. Create `references/` directory
-6. If recommendation has "Input signals" describing specific data patterns → generate a stub reference file: `references/<topic-from-input-signals>.md` with section headers only
-
-### 6. Scaffold agents
-
-Skip if `--skills-only`.
+Skip when `--skills-only` is set.
 
 For each agent recommendation:
 
-1. Target: `.specify/plugins/tdk-scaffold/agents/<name>.md`
-2. If file exists → `AskUserQuestion`: "Overwrite existing `<name>`?" / "Skip"
-3. If `--dry-run` → print planned path and skip write
+1. Target: `.specify/plugins/tdk-scaffold/agents/<name>.md`.
+2. If target exists, ask whether to overwrite or skip.
+3. If `--dry-run`, print planned paths and do not write.
+4. Generate frontmatter with `name`, `tools`, `description`, `model`, and `metadata`.
+5. Generate sections:
+   - Role
+   - Behavioral Checklist
+   - Input Contract
+   - Output Contract
 
-4. Generate `agents/<name>.md`:
-   ```yaml
-   ---
-   name: <name>
-   tools: Read, Grep, Glob
-   description: "<purpose from recommendation>"
-   model: <model from recommendation, default: sonnet>
-   metadata:
-     version: "0.1.0"
-   ---
-   ```
-
-   Sections to generate:
-   - **Role description**: From "Purpose" + "Why" fields
-   - **Behavioral checklist**: 3-5 items derived from purpose
-   - **Input/Output contract**: What caller provides, what agent returns
-
-### 7. Summary
+## Summary
 
 Print:
-- Architecture type from recommendation
-- Files created: list each path
-- Count: N skills + M agents scaffolded
-- Suggest: "Review generated files, then run `tdk-bump` to update plugin version and manifest"
 
-If `--dry-run` was used → print "Dry run complete. No files written."
+- Source recommendation path.
+- `sub_workspace` when present.
+- Files created.
+- Count of scaffolded skills and agents.
+
+If `--dry-run` was used, print: `Dry run complete. No files written.`
 
 ## Error UX
 
 | Condition | Message |
-|-----------|---------|
-| No recommendation file found | "No recommendation file found. Run tdk-recommend-automations first." |
-| status != approved | AskUserQuestion: proceed or abort |
-| Skill/agent dir already exists | AskUserQuestion: overwrite or skip |
-| Empty recommendations | "No recommendations found in file." |
-| Exemplar file missing | Warn "Exemplar not found, using default patterns." Continue. |
+|---|---|
+| No recommendation file | `No recommendation file found. Run /tdk-sub-workspace-automation-recommend --sub-workspace <name> first.` |
+| Status not approved | Ask whether to proceed or abort. |
+| Empty recommendations | `No recommendations found in file.` |
+| Target exists | Ask overwrite or skip. |
+| Exemplar missing | Warn and continue with default pattern. |
 
 ## Notes
 
-- Output is a starting point — generated SKILL.md files need manual refinement
-- Skill generates into the same plugin (`tdk-scaffold`) by default; move to target plugin manually if needed
-- No template engine — LLM generates content using reference patterns + recommendation context
-- Project-level only; sub-workspace iteration is out of scope
+- Output is a starting point and still requires human review.
+- Scaffold skills and Scaffold agents are separate phases in the summary so users can review them independently.
+- Do not mark generated files complete just because the recommendation exists; scaffolding is only as good as the approved evidence.

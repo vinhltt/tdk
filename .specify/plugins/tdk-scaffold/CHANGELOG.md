@@ -4,6 +4,17 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.0.0] - 2026-07-01
+
+### Added
+- Added tdk-sub-workspace-automation-recommend skill to recommend skills and agents for a selected sub-workspace.
+
+### Changed
+- Streamlined tdk-scaffold-from-recommendation skill implementation to target sub-workspace directories.
+
+### Removed
+- Removed tdk-recommend-automations skill (replaced by tdk-sub-workspace-automation-recommend).
+
 ## [1.2.2] - 2026-06-30
 
 ### Changed
