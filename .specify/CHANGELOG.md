@@ -9,6 +9,19 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.94.0] - 2026-07-01
+
+### Changed
+- **[Docs]** Remove deprecated harness install, convert, and convert-flat CLI command documentation, pointing to `packages/tdk-setup/README.md` instead.
+- **[Scripts]** Clean up harness command registration and relocate distribute tests
+  - Remove `harness` command registration from the main CLI entrypoint
+  - Relocate codex distribute end-to-end tests from `tests/harness/` to `tests/` and update to reflect standalone setup layout
+
+### Removed
+- **[Scripts]** Delete harness command implementations and transform tests
+  - Delete `harness` command group implementation
+  - Delete obsolete harness transform tests (agent-to-codex-toml, codex-capabilities, codex-hook-wrapper, output-writer-primitives, and purity-invariant)
+
 ## [1.93.0] - 2026-07-01
 
 ### Added

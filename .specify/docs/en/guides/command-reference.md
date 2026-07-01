@@ -520,21 +520,7 @@ Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [-
 | config:index | `/tdk-config-index` | `--sub-workspace`, `--full` | All docs files | `document-manager.md` | None |
 | config topology apply | `bun src/index.ts config topology apply [--dry-run] [--reconcile] [--topology <path>] [--yes --expect-hash <hash>] [--accept-overwrites]` | `--dry-run`, `--reconcile`, `--topology`, `--yes`, `--expect-hash`, `--accept-overwrites` | `workspace-layout-proposal.json`, legacy `workspace-topology.json`, existing JSON `.specify/.specify.json` | JSON dry-run patch preview or guarded config write | None |
 
-### Harness CLI Commands
-
-| Command | Syntax | Key Flags | Input | Output | Depends On |
-|---------|--------|-----------|-------|--------|------------|
-| harness install | `tdk harness install --harness claude` or `--harness codex` | `--plugins`, `--all-plugins`, `--prefix`, `--dry-run`, `--yes` | TDK plugin source under `.specify/plugins/`; Codex uses generated packages under `.specify/codex-plugins/` | Managed `.claude/` artifacts or `.agents/skills/` + `.codex/` artifacts + ownership manifest | setup |
-| harness convert | `tdk harness convert` | `--plugins`, `--all-plugins`, `--dry-run`, `--check` | Maintainer source tree `.specify/plugins/tdk-*` | Generated per-plugin packages under `.specify/codex-plugins/<plugin>/` (official OpenAI layout); `--check` fails on drift | source tree |
-| harness convert-flat | `tdk harness convert-flat [root]` | `--dry-run`, `--force`, `--yes` | Existing flat `.claude/` tree | Additive `.codex/` + `.agents/skills/` artifacts + `.specify/state/harness-install/codex.json` ownership manifest | setup |
-
-`harness convert` is source-tree/maintainer-only. Consumer payloads install the generated `.specify/codex-plugins/<plugin>/` packages with `harness install --harness codex`; install never re-transforms source.
-
-`harness install --harness codex` verifies generated-package checksums from `.specify/codex-plugins/manifest.json`, writes skills to `.agents/skills/` and hooks/lib under `.codex/`, generates `.codex/agents/*.toml` and `.codex/config.toml` at install time from plugin source agents, and rejects combined `--harness claude,codex` in v1.
-
-Underscore-prefixed shared skill directories such as `_shared` are copied as reference assets, but their `SKILL.md` entrypoint is not installed as a loadable Codex skill.
-
-`harness convert-flat` never deletes or modifies the source `.claude/` tree. Unknown flat `.claude/` entries are reported and skipped; originals remain in place. Existing unowned `.codex/` targets are conflicts by default and are skipped unless `--force` is passed.
+> Harness install, convert, and convert-flat are managed by the standalone `packages/tdk-setup/` tool in the TDK source checkout. They are not part of the consumer-facing workflow CLI documented here. See `packages/tdk-setup/README.md` for setup CLI usage.
 
 ### Sub-workspace Commands
 

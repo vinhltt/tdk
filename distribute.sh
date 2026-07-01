@@ -3,7 +3,7 @@
 #
 # One-way sync of .specify/ substrate from TDK source to target project.
 # Legacy .claude/ sync remains available, but explicit harness mutation should use
-# `bun src/index.ts harness install --harness claude` from the consumer .specify/scripts/ts dir.
+# `bun src/index.ts install <target> --harness claude` from the tdk-setup package (packages/tdk-setup).
 # Uses built-in include/exclude rules, with optional legacy sync-config.yaml override.
 # Compares files by MD5.
 # Always shows dry-run summary first, then asks for confirmation before writing.
@@ -16,7 +16,7 @@
 # OPTIONS:
 #   --dry-run         Show diff only, skip confirmation and writing
 #   --yes             Skip confirmation prompt (auto-approve)
-#   --with-claude     Legacy: also sync .claude/ files (prefer `tdk harness install`)
+#   --with-claude     Legacy: also sync .claude/ files (prefer tdk-setup `install`)
 #   --force           Overwrite all files (skip MD5 comparison)
 #   --no-delete       Skip orphan removal (don't delete files missing from source)
 #   --yes-delete      Auto-approve file deletions (skip 'type delete' prompt)
@@ -177,10 +177,10 @@ echo -e "  ${WHITE}Source:${NC}  $SOURCE_ROOT"
 echo -e "  ${WHITE}Target:${NC}  $TARGET_ROOT"
 if $WITH_CLAUDE; then
     echo -e "  ${WHITE}Scope:${NC}   .specify/ + legacy .claude/"
-    echo -e "  ${YELLOW}Note:${NC}    Prefer 'tdk harness install --harness claude' for explicit harness mutation"
+    echo -e "  ${YELLOW}Note:${NC}    Prefer 'tdk-setup install <target> --harness claude' for explicit harness mutation"
 else
     echo -e "  ${WHITE}Scope:${NC}   .specify/ only"
-    echo -e "  ${WHITE}Next:${NC}    cd .specify/scripts/ts && bun src/index.ts harness install --harness claude --plugins tdk-core --dry-run"
+    echo -e "  ${WHITE}Next:${NC}    cd \"$SOURCE_ROOT/packages/tdk-setup\" && bun src/index.ts install \"$TARGET_ROOT\" --harness claude --plugins tdk-core --dry-run"
 fi
 $FORCE && echo -e "  ${YELLOW}Mode:    --force (skip MD5 comparison)${NC}"
 $NO_DELETE && echo -e "  ${YELLOW}Mode:    --no-delete (skip orphan removal)${NC}"
@@ -207,11 +207,11 @@ if [[ -f "$SYNC_CONFIG" ]] && command -v yq &>/dev/null; then
 elif [[ -f "$SYNC_CONFIG" ]]; then
     log "${YELLOW}Warning: yq not found — using fallback include/exclude rules${NC}"
     log "${YELLOW}Install yq for sync-config.yaml support: https://github.com/mikefarah/yq${NC}"
-    SPECIFY_INCLUDES=("_shared" "plugins/" "scripts" "templates/" "setup.sh" "docs/" "schemas/" "CHANGELOG.md" ".specify.yaml.example" ".specify.env.example" ".specify.json.example")
+    SPECIFY_INCLUDES=("_shared" "plugins/" "codex-plugins/" "scripts" "templates/" "setup.sh" "docs/" "schemas/" "CHANGELOG.md" ".specify.yaml.example" ".specify.env.example" ".specify.json.example")
     SPECIFY_EXCLUDES=("configurations/" "memory/" ".specify.yaml" ".specify.env" "scripts/ts/node_modules/" "__pycache__/")
 else
     log_dim "sync-config.yaml not found — using built-in include/exclude rules"
-    SPECIFY_INCLUDES=("_shared" "plugins/" "scripts" "templates/" "setup.sh" "docs/" "schemas/" "CHANGELOG.md" ".specify.yaml.example" ".specify.env.example" ".specify.json.example")
+    SPECIFY_INCLUDES=("_shared" "plugins/" "codex-plugins/" "scripts" "templates/" "setup.sh" "docs/" "schemas/" "CHANGELOG.md" ".specify.yaml.example" ".specify.env.example" ".specify.json.example")
     SPECIFY_EXCLUDES=("configurations/" "memory/" ".specify.yaml" ".specify.env" "scripts/ts/node_modules/" "__pycache__/")
 fi
 
