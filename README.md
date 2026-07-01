@@ -54,42 +54,49 @@ bash .specify/setup.sh
 
 This bootstraps prerequisites, installs TypeScript dependencies, runs setup checks, and registers TDK plugin metadata from the consumer project's `.specify/` directory.
 
-Install harness artifacts explicitly after the substrate sync from the consumer project root:
+### Setup CLI — Harness Installation
+
+The setup CLI is a standalone package for managing harness install, convert, and convert-flat commands. From a TDK source checkout, run it from `packages/tdk-setup/` and pass the consumer project root explicitly:
 
 ```bash
+cd packages/tdk-setup
+CONSUMER_ROOT=/path/to/consumer-project
+
 # Install one plugin
-bun .specify/scripts/ts/src/index.ts harness install --harness claude --plugins tdk-core --dry-run
-bun .specify/scripts/ts/src/index.ts harness install --harness claude --plugins tdk-core --yes
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --yes
 
 # Install multiple plugins
-bun .specify/scripts/ts/src/index.ts harness install --harness claude --plugins tdk-core,tdk-memory --dry-run
-bun .specify/scripts/ts/src/index.ts harness install --harness claude --plugins tdk-core,tdk-memory --yes
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core,tdk-memory --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core,tdk-memory --yes
 
 # Install every plugin listed in .specify/plugins/manifest.json
-bun .specify/scripts/ts/src/index.ts harness install --harness claude --all-plugins --dry-run
-bun .specify/scripts/ts/src/index.ts harness install --harness claude --all-plugins --yes
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --yes
 
 # Install preconverted Codex artifacts
-bun .specify/scripts/ts/src/index.ts harness install --harness codex --plugins tdk-core --dry-run
-bun .specify/scripts/ts/src/index.ts harness install --harness codex --plugins tdk-core --yes
-bun .specify/scripts/ts/src/index.ts harness install --harness codex --all-plugins --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --yes
+bun src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --dry-run
 
 # Select plugins interactively
-bun .specify/scripts/ts/src/index.ts harness install --harness claude
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude
 
 # Maintainers: regenerate generated Codex packages under .specify/codex-plugins/
-bun .specify/scripts/ts/src/index.ts harness convert --dry-run
-bun .specify/scripts/ts/src/index.ts harness convert
-bun .specify/scripts/ts/src/index.ts harness convert --check
+bun src/index.ts convert --dry-run
+bun src/index.ts convert
+bun src/index.ts convert --check
 
 # Migrate an existing flat .claude/ tree to Codex artifacts
-bun .specify/scripts/ts/src/index.ts harness convert-flat --dry-run
-bun .specify/scripts/ts/src/index.ts harness convert-flat --yes
+bun src/index.ts convert-flat "$CONSUMER_ROOT" --dry-run
+bun src/index.ts convert-flat "$CONSUMER_ROOT" --yes
 ```
 
-`harness convert` is source-tree/maintainer-only. It emits generated Codex packages to `.specify/codex-plugins/<plugin>/` following the official OpenAI layout (only `.codex-plugin/plugin.json` inside `.codex-plugin/`; `skills/`, `hooks/`, `lib/` at the package root) from plugin source trees; `--check` re-emits in memory and fails if the committed packages drift from source.
+The `packages/tdk-setup/` package is a separate dev tool (not shipped to consumers). The workflow scripts (config, scout, ut, sub-workspace) and generated Codex packages under `.specify/codex-plugins/` are shipped to consumer projects.
 
-`harness install --harness codex` reads the generated packages from `.specify/codex-plugins/` and verifies them against `.specify/codex-plugins/manifest.json`, writes skills to `.agents/skills/` and hooks/lib to `.codex/`, generates `.codex/agents/*.toml` and `.codex/config.toml` at install time from plugin source agents, merges `.codex/hooks.json`, and writes Codex ownership state to `.specify/state/harness-install/codex.json`.
+`convert` is source-tree/maintainer-only. It emits generated Codex packages to `.specify/codex-plugins/<plugin>/` following the official OpenAI layout (only `.codex-plugin/plugin.json` inside `.codex-plugin/`; `skills/`, `hooks/`, `lib/` at the package root) from plugin source trees; `--check` re-emits in memory and fails if the committed packages drift from source.
+
+`install --harness codex` reads the generated packages from `.specify/codex-plugins/` and verifies them against `.specify/codex-plugins/manifest.json`, writes skills to `.agents/skills/` and hooks/lib to `.codex/`, generates `.codex/agents/*.toml` and `.codex/config.toml` at install time from plugin source agents, merges `.codex/hooks.json`, and writes Codex ownership state to `.specify/state/harness-install/codex.json`.
 
 Underscore-prefixed shared skill directories such as `_shared` are copied as reference assets, but their `SKILL.md` entrypoint is not installed as a loadable Codex skill.
 
@@ -102,6 +109,8 @@ Existing unmanaged `.claude/` files require explicit interactive overwrite appro
 Claude hook runtime entries are merged into `.claude/settings.json`. Hook scripts are installed under plugin-scoped paths like `.claude/hooks/tdk-core/`; plugin `hooks/hooks.json` files stay source declarations and are not installed as `.claude/hooks/hooks.json`.
 
 Claude and Codex harness installs are separate runs. A combined Claude+Codex install is unsupported.
+
+See [tdk-setup README](packages/tdk-setup/README.md) for the full setup CLI reference.
 
 ### CLI Usage (Development)
 
@@ -157,6 +166,8 @@ bun src/commands/manifest/compute.ts --root ../..
 
 Integrated commands (via `bun src/index.ts`; no installed `tdk` binary yet):
 
+**Workflow commands** (run from `.specify/scripts/ts/`):
+
 | Command | Description |
 |---------|-------------|
 | `bun src/index.ts config detect` | Detect `.specify.json` configuration |
@@ -167,10 +178,15 @@ Integrated commands (via `bun src/index.ts`; no installed `tdk` binary yet):
 | `bun src/index.ts ut backfill plan` | Plan unit test coverage |
 | `bun src/index.ts ut backfill impl` | Implement unit tests from plan |
 | `bun src/index.ts scout` | Codebase analysis (repomix + tier-1 extraction) |
-| `bun src/index.ts harness install` | Install selected TDK plugin artifacts into `.claude/` or preconverted `.codex/` + `.agents/skills/` targets with dry-run, saved install settings, prefix rewrite, ownership, collision, and drift safety |
-| `bun src/index.ts harness convert` | Maintainer-only command that emits generated Codex packages under `.specify/codex-plugins/<plugin>/` and checks converter freshness |
-| `bun src/index.ts harness convert-flat` | Convert an existing flat `.claude/` tree into additive `.codex/` and `.agents/skills/` artifacts with dry-run, conflict reporting, and `.specify/state/harness-install/codex.json` ownership manifest |
 | `bun src/index.ts sub-workspace docs` | Generate arc42-lite sub-workspace documentation for `/tdk-sub-workspace-docs` |
+
+**Setup CLI commands** (run from `packages/tdk-setup/`):
+
+| Command | Description |
+|---------|-------------|
+| `bun src/index.ts install <consumer-root>` | Install selected TDK plugin artifacts into `.claude/` or preconverted `.codex/` + `.agents/skills/` targets with dry-run, saved install settings, prefix rewrite, ownership, collision, and drift safety |
+| `bun src/index.ts convert` | Maintainer-only command that emits generated Codex packages under `.specify/codex-plugins/<plugin>/` and checks converter freshness |
+| `bun src/index.ts convert-flat` | Convert an existing flat `.claude/` tree into additive `.codex/` and `.agents/skills/` artifacts with dry-run, conflict reporting, and `.specify/state/harness-install/codex.json` ownership manifest |
 
 Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup, changelog, util, test-api.
 
@@ -186,6 +202,7 @@ Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup,
 ## Documentation
 
 - [Command Reference](.specify/docs/en/guides/command-reference.md) — full CLI documentation
+- [tdk-setup README](packages/tdk-setup/README.md) — harness setup CLI reference
 - [Scenario Guides](.specify/docs/en/guides/scenarios/) — 11 workflow scenarios
 - [Setup Guide](.specify/docs/en/guides/setup/README.md) — installation and configuration
 - [UT Backfill Usage](.specify/docs/en/guides/tdk-ut-backfill-skills-usage.md) — unit test workflow
