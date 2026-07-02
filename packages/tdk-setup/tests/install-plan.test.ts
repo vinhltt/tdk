@@ -39,6 +39,33 @@ describe('buildClaudeInstallPlan', () => {
     expect(plan.writes.some((write) => write.targetRelativePath === '.claude/hooks/tdk-core/hook-gateway.cjs')).toBe(true);
   });
 
+  test('installs claude rule files into .claude/rules with prefix rewrite', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    const rule = '# TDK primary workflow\nRun `tdk-specify` before `tdk-plan`.\n';
+    const rulesDir = path.join(consumer.root, '.specify', 'claude-rules');
+    fs.mkdirSync(rulesDir, { recursive: true });
+    fs.writeFileSync(path.join(rulesDir, 'primary-workflow-routing.md'), rule, 'utf-8');
+    const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      plugins: inventory.plugins,
+      previousManifest: emptyHarnessManifest(),
+      settings: {},
+      sourcePrefix: 'tdk-',
+      targetPrefix: 'pav-',
+    });
+
+    const write = plan.writes.find((item) => item.targetRelativePath === '.claude/rules/primary-workflow-routing.md');
+    expect(write).toBeDefined();
+    expect(write!.plugin).toBe('claude-rules');
+    expect(write!.sourceRelativePath).toBe('.specify/claude-rules/primary-workflow-routing.md');
+    expect(write!.content.toString('utf-8')).toBe('# PAV primary workflow\nRun `pav-specify` before `pav-plan`.\n');
+    expect(plan.nextManifest.managedFiles.some((file) => file.targetRelativePath === '.claude/rules/primary-workflow-routing.md')).toBe(true);
+  });
+
   test('namespaces same hook filenames from multiple plugins', () => {
     const consumer = makeConsumer();
     writeHookOnlyPlugin(consumer, 'tdk-core', 'hook-gateway.cjs');

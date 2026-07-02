@@ -63,7 +63,7 @@ If `.specify/` was distributed with `bash distribute.sh <consumer-root> --prefix
 
 Codex install writes skills to `.agents/skills/`, hooks and lib files to `.codex/`, generates `.codex/agents/*.toml` and `.codex/config.toml` at install time from plugin source agents, merges `.codex/hooks.json`, and writes ownership state to `.specify/state/harness-install/codex.json`.
 
-Claude install writes managed artifacts to `.claude/`, merges hook runtime entries into `.claude/settings.json`, and writes ownership state to `.specify/state/harness-install/claude.json`.
+Claude install writes managed artifacts to `.claude/`, copies `.specify/claude-rules/*.md` to `.claude/rules/` with the same prefix transform, merges hook runtime entries into `.claude/settings.json`, and writes ownership state to `.specify/state/harness-install/claude.json`.
 
 Existing unmanaged `.claude/` files require explicit interactive overwrite approval. `--yes` only approves clean writes, clean updates, and clean removals.
 

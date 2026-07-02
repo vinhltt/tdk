@@ -9,6 +9,17 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.96.0] - 2026-07-02
+
+### Added
+- **[General]** Add primary workflow routing rule
+
+### Changed
+- **[Scripts]** Add test verifying distribute.sh built-in fallback ships claude rule payloads
+
+### Removed
+- **[General]** Remove obsolete tdk-primary-workflow.md routing rules
+
 ## [1.95.0] - 2026-07-02
 
 ### Added
@@ -25,6 +36,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 - **[Templates]** Update `epic-prd` and specify template files to support root stage manifests.
 - **[Docs]** Update README.md and guide documentation to reference the new stage manifest layout.
 - **[General]** Update manifests to reflect the restructuring of component files.
+- **[General]** Rename Claude workflow rule payload to `primary-workflow-routing.md`.
+- **[Scripts]** Copy `.specify/claude-rules/*.md` into `.claude/rules/` during Claude harness install, with prefix rewrite support.
+- **[Scripts]** Include `.specify/claude-rules/` in `distribute.sh` built-in fallback sync rules.
 
 ### Removed
 - **[Templates]** Remove legacy `index.md.tpl` template from the `high-level-design` template directory.

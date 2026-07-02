@@ -42,6 +42,11 @@ describe('tdk-distribute skill contract', () => {
     expect(script).toContain('"schemas/"');
   });
 
+  it('distribute.sh built-in fallback ships claude rule payloads', () => {
+    const script = read(DISTRIBUTE_SH_PATH);
+    expect(script).toContain('"claude-rules/"');
+  });
+
   it('distribute.sh built-in fallback ships the full template tree', () => {
     const script = read(DISTRIBUTE_SH_PATH);
     expect(script).toContain('"templates/"');

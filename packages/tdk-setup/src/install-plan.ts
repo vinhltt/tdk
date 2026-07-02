@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { sha256Buffer, sha256File } from './checksum';
+import { discoverClaudeRuleFiles } from './claude-rule-files';
 import { classifyFile } from './file-write-plan';
 import { buildHookMerge } from './hook-merge';
 import { settingsPathFor } from './install-settings';
@@ -104,7 +105,7 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
     ),
   })));
   const runtimeAssetMap = buildRuntimeAssetMap(verifiedFiles);
-  const selectedFiles: TransformedPluginFile[] = verifiedFiles.map((file) => {
+  const selectedPluginFiles: TransformedPluginFile[] = verifiedFiles.map((file) => {
     const runtimeContent = transformRuntimeAssetContent(file, file.sourceContent, runtimeAssetMap);
     const content = transformFileContent(
       file.sourcePath,
@@ -120,6 +121,10 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
       content,
     };
   });
+  const selectedFiles = [
+    ...selectedPluginFiles,
+    ...discoverClaudeRuleFiles(input, transformSettings, rewrite.textFiles),
+  ];
 
   const seenTargets = new Map<string, TransformedPluginFile>();
   for (const file of selectedFiles) {
