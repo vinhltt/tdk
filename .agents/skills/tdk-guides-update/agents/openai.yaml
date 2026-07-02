@@ -1,0 +1,4 @@
+interface:
+  display_name: "TDK Guides Update"
+  short_description: "Review and update TDK guide docs"
+  default_prompt: "Use $tdk-guides-update to review TDK guide docs in check-only mode."

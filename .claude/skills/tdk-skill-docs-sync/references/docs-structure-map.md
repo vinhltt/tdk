@@ -110,4 +110,4 @@ Smart-obsidian vault root = `.specify/`
 All paths passed to MCP tools are **relative to vault root**:
 - `docs/en/guides/tdk-skills-guide.md` (not `.specify/docs/en/guides/tdk-skills-guide.md`)
 - `plugins/tdk-core/.claude-plugin/plugin.json`
-- `docs/en/guides/scenarios/01-full-feature-development.md`
+- `docs/en/guides/scenarios/01-child-feature-implementation.md`
