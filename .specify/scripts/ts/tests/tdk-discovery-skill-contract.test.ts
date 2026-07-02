@@ -60,6 +60,8 @@ describe('tdk-discovery skill contract', () => {
 
     expect(reference).toContain('Forbidden outputs');
     expect(reference).toContain('Product-level signals');
+    expect(reference).toContain('## Ready For Epic PRD');
+    expect(reference).not.toContain('## Ready For Specify');
     expect(reference).not.toContain('competitor.md as an output');
     expect(reference).not.toContain('market.md');
     expect(reference).not.toContain('business-model.md');
@@ -75,6 +77,14 @@ describe('tdk-discovery skill contract', () => {
     expect(combined).toContain('discovery/index.md');
     expect(combined).toContain('--force');
     expect(combined).toContain('do not auto-migrate');
+  });
+
+  it('offers recommended next-step handoff after completion', () => {
+    expect(skill).toContain('### Step 7 - Recommend Next Step');
+    expect(skill).toContain('Use `AskUserQuestion` with header "Next Step"');
+    expect(skill).toContain('/tdk-epic-prd {TASK_ID}` (Recommended for broad epics)');
+    expect(skill).toContain('/tdk-discovery {TASK_ID} --interview');
+    expect(skill).toContain('Feature-sized work should skip discovery and start at `/tdk-specify` instead');
   });
 
   it('keeps discovery context-only and tracker-neutral', () => {

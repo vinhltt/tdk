@@ -32,10 +32,10 @@ Candidate checklist only. Humans decide whether any item belongs in
 - [ ] Durable competitive context candidate:
 - [ ] Durable product constraint candidate:
 
-## Ready For Specify
+## Ready For Epic PRD
 
-Advisory only. This checklist is a human readiness read; it never gates `/tdk-specify`,
-which runs regardless of how many items are checked.
+Advisory only. This checklist is a human readiness read; it never gates
+`/tdk-epic-prd`, which runs regardless of how many items are checked.
 
 - [ ] Problem context reviewed (problem, affected users, constraints clear)
 - [ ] Persona context reviewed (primary personas + jobs-to-be-done captured)

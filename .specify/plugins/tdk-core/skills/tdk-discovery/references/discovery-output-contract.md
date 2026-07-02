@@ -4,8 +4,8 @@ This reference is the single source of truth for `/tdk-discovery` Markdown
 artifacts.
 
 Discovery is epic-level context only. It prepares problem, persona, and MVP
-context before `/tdk-specify`; it does not produce requirements, specifications,
-plans, tasks, code, or tracker issues.
+context before `/tdk-epic-prd`; it does not produce requirements,
+specifications, plans, tasks, code, or tracker issues.
 
 ## Allowed Output Shape
 
@@ -96,7 +96,7 @@ Required sections:
 - `## Artifact Manifest`
 - `## Summary`
 - `## Product-level signals`
-- `## Ready For Specify`
+- `## Ready For Epic PRD`
 
 `Product-level signals` is a candidate checklist. It may capture durable signal
 candidates for human review, but it is not authority. Product-level facts live
@@ -110,7 +110,7 @@ outputs:
 - MoSCoW tags (`Must` / `Should` / `Could` / `Won't`) inside `## MVP Cutline`.
 - Skip-justification notes inside `## Open Questions` recording why something was
   deliberately omitted.
-- An advisory, non-blocking readiness checklist inside `## Ready For Specify`.
+- An advisory, non-blocking readiness checklist inside `## Ready For Epic PRD`.
 - Interview alignment notes from optional `--interview`, folded into the relevant
   existing problem, persona, MVP-scope, readiness, or open-question section.
 

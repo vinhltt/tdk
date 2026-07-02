@@ -1,9 +1,9 @@
 ---
 name: tdk-specify
-description: "Create spec.md from a feature description, or replay --interview against existing spec.md. Supports --fast, discovery, memory, checklist."
+description: "Create spec.md from a feature or child-slice description, or replay --interview against existing spec.md. Supports --fast, memory, checklist."
 argument-hint: "<id> [<desc>] [--fast] [--interview]"
 metadata: 
-  version: "6.0.1"
+  version: "6.0.2"
 ---
 
 # tdk-specify
@@ -96,17 +96,20 @@ Must preserve these routing invariants:
 - `--fast --interview` requires a feature description.
 - ID-only `--interview` requires existing `spec.md`, then sets `SPEC_INTERVIEW=true` and `SPEC_REPLAY_INTERVIEW=true`.
 - Duplicate `spec.md` STOP applies only when `SPEC_REPLAY_INTERVIEW` is not true.
-- A directory containing only `discovery/` is allowed for discovery-first specify.
+- A directory containing `discovery.md` but no `spec.md` is a parent epic
+  discovery directory. STOP and route to `/tdk-epic-prd <id>` instead of
+  creating a spec from discovery.
 
 Store: `FEATURE_DIR`, `SPEC_FILE`, `EXPECTED_BRANCH`, `CURRENT_BRANCH`.
 
-### Step 0.2a - Optional Discovery Context
+### Step 0.2a - Reject Direct Discovery-To-Specify Routing
 
 Follow `references/input-routing-and-mode-workflow.md` Step 0.2a.
 
-Replay skips discovery context loading. Normal specify may read
-`DISCOVERY_MANIFEST="$FEATURE_DIR/discovery.md"` as optional context only.
-Discovery is not required and never mints `UR-*`, `FR-*`, or `SC-*`.
+Replay skips this check because it reads an existing `spec.md`. Normal specify
+must not read `discovery.md` as direct context. Discovery is parent epic context
+for `/tdk-epic-prd`; child specs start from explicit descriptions or
+`tasks-breakdown` seed text.
 
 ### Step 0.3 — Mode Detection
 

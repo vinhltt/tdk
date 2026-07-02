@@ -15,7 +15,7 @@ function read(path: string): string {
   return readFileSync(path, 'utf-8');
 }
 
-describe('tdk-specify discovery-first contract', () => {
+describe('tdk-specify discovery boundary contract', () => {
   const skill = read(SPECIFY_SKILL_PATH);
   const inputRoutingRef = read(SPECIFY_INPUT_ROUTING_REF_PATH);
   const contract = `${skill}\n${inputRoutingRef}`;
@@ -27,11 +27,13 @@ describe('tdk-specify discovery-first contract', () => {
     expect(contract).not.toContain('ls "$FEATURE_DIR" 2>/dev/null && echo "ERROR: Ticket already exists"');
   });
 
-  it('allows discovery-first feature directories as optional context', () => {
+  it('rejects direct discovery-to-specify routing', () => {
     expect(contract).toContain('DISCOVERY_MANIFEST="$FEATURE_DIR/discovery.md"');
-    expect(contract).toContain('test -f "$DISCOVERY_MANIFEST"');
-    expect(contract).toContain('read it as optional context before spec generation');
-    expect(contract).toContain('Do not require discovery for normal specify flow');
+    expect(contract).toContain('PARENT_DISCOVERY_CONTEXT=$DISCOVERY_MANIFEST');
+    expect(contract).toContain('Discovery is parent epic context, not a direct predecessor for /tdk-specify');
+    expect(contract).toContain('Continue with /tdk-epic-prd <id>');
+    expect(contract).toContain('Child epic work starts from a');
+    expect(contract).not.toContain('read it as optional context before spec generation');
   });
 
   it('keeps requirement identifiers owned by specify', () => {

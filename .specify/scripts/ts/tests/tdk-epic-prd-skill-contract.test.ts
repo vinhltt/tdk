@@ -116,6 +116,14 @@ describe('tdk-epic-prd skill contract', () => {
     expect(combined).toContain('do not auto-migrate');
   });
 
+  it('offers readiness-aware next-step handoff after completion', () => {
+    expect(skill).toContain('### Step 8 - Recommend Next Step');
+    expect(skill).toContain('Use `AskUserQuestion` with header "Next Step"');
+    expect(skill).toContain('/tdk-epic-hld {TASK_ID}` (Recommended when blocking question count is 0)');
+    expect(skill).toContain('/tdk-epic-prd {TASK_ID} --interview');
+    expect(skill).toContain('mark `/tdk-epic-prd {TASK_ID} --interview` as the recommended option');
+  });
+
   it('documents the current epic flow through parent HLD without advertising future commands', () => {
     const skillsGuide = readIfExists(SKILLS_GUIDE_PATH);
     const documentFlow = readIfExists(DOCUMENT_FLOW_PATH);

@@ -50,9 +50,14 @@ test -f "$SPEC_FILE" && echo "ERROR: Ticket spec already exists" || echo "OK"
 ```
 
 If `spec.md` exists and `SPEC_REPLAY_INTERVIEW` is not true -> ERROR, STOP.
-A feature directory containing only `discovery/` is allowed so discovery-first
-flow can continue to specify. The replay path is the only case that may skip
-duplicate-spec STOP.
+If `spec.md` is missing but `$FEATURE_DIR/discovery.md` exists, STOP before
+writing:
+
+```text
+Discovery is parent epic context, not a direct predecessor for /tdk-specify. Continue with /tdk-epic-prd <id>, then /tdk-epic-hld, /tdk-task-breakdown, and a child /tdk-specify <child-id> "<seed>".
+```
+
+The replay path is the only case that may skip duplicate-spec STOP.
 
 Check duplicate git branches as non-blocking warning:
 
@@ -78,23 +83,26 @@ If `CURRENT_BRANCH != EXPECTED_BRANCH`, print warning only.
 
 Store: `FEATURE_DIR`, `SPEC_FILE`, `EXPECTED_BRANCH`, `CURRENT_BRANCH`.
 
-## Step 0.2a: Optional Discovery Context
+## Step 0.2a: Reject Direct Discovery-To-Specify Routing
 
 If `SPEC_REPLAY_INTERVIEW=true`, skip this step. Replay interviews the existing
 `spec.md` only.
 
-After `FEATURE_DIR` is resolved, check for discovery context:
+After `FEATURE_DIR` is resolved, check for parent discovery context:
 
 ```bash
 DISCOVERY_MANIFEST="$FEATURE_DIR/discovery.md"
-test -f "$DISCOVERY_MANIFEST" && echo "DISCOVERY_CONTEXT=$DISCOVERY_MANIFEST" || echo "NO_DISCOVERY_CONTEXT"
+test -f "$DISCOVERY_MANIFEST" && echo "PARENT_DISCOVERY_CONTEXT=$DISCOVERY_MANIFEST" || echo "NO_PARENT_DISCOVERY_CONTEXT"
 ```
 
-If `discovery.md` exists, read it as optional context before spec generation.
-Do not require discovery for normal specify flow.
-Discovery is context only. Only `tdk-specify` mints `UR-*`, `FR-*`, and `SC-*`.
-Use discovery for concise source references in `## 1. Problem Statement` and `## 4. Evaluated Approaches`; do not copy discovery prose wholesale into `spec.md`.
-Do not copy discovery content into `UR-*`, `FR-*`, or `SC-*`; derive explicit spec requirements from it.
+If `discovery.md` exists and `SPEC_REPLAY_INTERVIEW` is not true, STOP with the
+same parent-epic routing message from Step 0.2. Do not read discovery as
+optional spec context. Normal feature-sized work skips discovery and starts with
+an explicit feature description. Child epic work starts from a
+`tasks-breakdown` seed and a new child ID.
+
+Only `tdk-specify` mints `UR-*`, `FR-*`, and `SC-*`, but it must mint them from
+the feature description or child seed, not directly from parent discovery.
 
 ## Step 0.3: Mode Detection
 

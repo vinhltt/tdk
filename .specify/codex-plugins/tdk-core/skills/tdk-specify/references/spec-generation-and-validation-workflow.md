@@ -23,8 +23,8 @@ Generate all 9 sections in order:
 
 1. `## 1. Problem Statement`
    - Extract concrete problem, affected users, and why now.
-   - If discovery context exists, write concise PRD problem summary and reference `discovery/problem.md` or `discovery.md`.
-   - Do not copy discovery prose wholesale. Reject vague statements such as "improve UX".
+   - If the description comes from a `tasks-breakdown` seed, summarize that child seed's problem context.
+   - Do not read parent discovery as direct spec context. Reject vague statements such as "improve UX".
 2. `## 2. Scope Boundary`
    - Include >=1 in-scope and >=1 out-of-scope item with rationale.
    - Full mode: brainstorm each scope decision.
@@ -33,8 +33,7 @@ Generate all 9 sections in order:
    - Insert `IMPACT_SURFACE` table from Step 1.5.
    - If monolith: "N/A — monolith project".
 4. `## 4. Evaluated Approaches`
-   - If discovery exists, summarize selected MVP boundary and reference `discovery/mvp-scope.md` or `discovery.md`.
-   - Otherwise use current full/fast behavior.
+   - Use current full/fast behavior from the explicit description or child seed.
    - Full mode: 2-3 scope-level options. No tech/framework/library mentions.
    - Fast mode: single recommended scope. No tech/framework/library mentions.
 5. `## 5. User Requirements & Testing`

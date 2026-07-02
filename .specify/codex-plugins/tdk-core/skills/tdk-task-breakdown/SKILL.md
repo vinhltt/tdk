@@ -2,7 +2,7 @@
 name: tdk-task-breakdown
 description: "Generate parent epic child-spec-seed breakdown artifacts from epic PRD plus /tdk-epic-hld context. Use before child /tdk-specify loops."
 metadata:
-  version: "6.0.1"
+  version: "6.0.2"
 ---
 
 # tdk-task-breakdown
@@ -164,6 +164,16 @@ Report:
 - Relative paths for `{FEATURE_DIR}/index.md`, `tasks-breakdown.md`, and each seed file
 - Reminder: child specs start with `/tdk-specify <child-id> "<seed>"`
 - Reminder: tracker issue creation is consumer-owned and out of TDK core scope
+
+### Step 8 - Recommend Next Step
+
+Use `AskUserQuestion` with header "Next Step" after reporting results:
+
+| Option | Action |
+|--------|--------|
+| Start first child `/tdk-specify` (Recommended) | Read the first seed listed in `tasks-breakdown.md`, then invoke its suggested `/tdk-specify <child-id> "<seed>"` command exactly |
+| Choose a different child seed | Stop and tell the user to choose one seed file from `tasks-breakdown.md`; do not infer a different child order |
+| End session | Stop |
 
 ## Quality Gates
 

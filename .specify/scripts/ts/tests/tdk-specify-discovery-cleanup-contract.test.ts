@@ -39,11 +39,12 @@ describe('tdk-specify discovery cleanup contract', () => {
     expect(skill).toContain('references/spec-generation-and-validation-workflow.md');
   });
 
-  it('preserves optional discovery context from Plan 1', () => {
+  it('rejects direct parent discovery context for new specs', () => {
     expect(contract).toContain('DISCOVERY_MANIFEST="$FEATURE_DIR/discovery.md"');
-    expect(contract).toContain('test -f "$DISCOVERY_MANIFEST"');
-    expect(contract).toContain('read it as optional context before spec generation');
-    expect(contract).toContain('Do not require discovery for normal specify flow');
+    expect(contract).toContain('PARENT_DISCOVERY_CONTEXT=$DISCOVERY_MANIFEST');
+    expect(contract).toContain('Discovery is parent epic context, not a direct predecessor for /tdk-specify');
+    expect(contract).toContain('feature description or child seed');
+    expect(contract).not.toContain('read it as optional context before spec generation');
   });
 
   it('keeps the nine-section spec schema and current headings', () => {
@@ -64,18 +65,18 @@ describe('tdk-specify discovery cleanup contract', () => {
     }
   });
 
-  it('uses discovery as concise reference context for spec sections 1 and 4', () => {
+  it('uses explicit descriptions or child seeds for spec sections 1 and 4', () => {
     expect(contract).toContain(
-      'Use discovery for concise source references in `## 1. Problem Statement` and `## 4. Evaluated Approaches`; do not copy discovery prose wholesale into `spec.md`.',
+      'If the description comes from a `tasks-breakdown` seed, summarize that child seed',
     );
     expect(contract).toContain(
-      'Do not copy discovery content into `UR-*`, `FR-*`, or `SC-*`; derive explicit spec requirements from it.',
+      'Do not read parent discovery as direct spec context',
     );
     expect(template).toContain(
-      'When discovery exists, summarize the problem and point to `discovery/problem.md` or `discovery.md`.',
+      "If this is a child spec, summarize the selected `tasks-breakdown` seed's problem context.",
     );
     expect(template).toContain(
-      'When discovery exists, summarize the selected MVP boundary and point to `discovery/mvp-scope.md` or `discovery.md`.',
+      'If this is a child spec, evaluate the MVP boundary from the selected `tasks-breakdown` seed.',
     );
   });
 
@@ -86,7 +87,7 @@ describe('tdk-specify discovery cleanup contract', () => {
     expect(template).toContain(
       'Use arc42 summaries only as read-model context; binding facts live in typed memory.',
     );
-    expect(template).toContain('Discovery is epic context.');
+    expect(template).toContain('Parent discovery is epic context for epic PRD, not direct spec input.');
     expect(template).toContain(
       'Spec is the PRD and requirement-ID source of truth.',
     );

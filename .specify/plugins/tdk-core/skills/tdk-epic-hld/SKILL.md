@@ -2,7 +2,7 @@
 name: tdk-epic-hld
 description: "Turn epic PRD artifacts into parent high-level design context before /tdk-task-breakdown. Use after /tdk-epic-prd; child specs do not run HLD by default."
 metadata:
-  version: "6.0.1"
+  version: "6.0.2"
 ---
 
 # tdk-epic-hld
@@ -186,6 +186,16 @@ Report:
 - Relative paths for `{FEATURE_DIR}/index.md`, `high-level-design.md`, and each detail artifact written
 - Whether update or overwrite was taken (when the directory pre-existed)
 - Readiness for `/tdk-task-breakdown {TASK_ID}`
+
+### Step 8 - Recommend Next Step
+
+Use `AskUserQuestion` with header "Next Step" after reporting results:
+
+| Option | Action |
+|--------|--------|
+| `/tdk-task-breakdown {TASK_ID}` (Recommended) | Invoke `/tdk-task-breakdown {TASK_ID}` |
+| `/tdk-epic-hld {TASK_ID} --force` | Invoke `/tdk-epic-hld {TASK_ID} --force` only when the user wants to regenerate the HLD artifacts |
+| End session | Stop |
 
 ## Quality Gates
 

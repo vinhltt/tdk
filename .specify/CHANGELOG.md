@@ -9,6 +9,17 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.96.1] - 2026-07-02
+
+### Changed
+- **[tdk-discovery]** Updated discovery to precede epic PRD instead of specify, renamed readiness checklist, and added interactive next-step recommendation
+- **[tdk-epic-prd]** Added interactive next-step recommendation (e.g. to epic HLD or replay interview)
+- **[tdk-epic-hld]** Added interactive next-step recommendation (e.g. to task breakdown or force rebuild)
+- **[tdk-task-breakdown]** Added interactive next-step recommendation to start specify on the first child seed
+- **[tdk-specify]** Reject direct routing from epic discovery, and update problem context/MVP scope to read from task-breakdown child seeds
+- **[Templates]** Update spec template instructions to reference task-breakdown seeds instead of direct discovery context
+- **[Scripts]** Add claude-rules pattern to distribute.sh list of payload rewrite candidates
+
 ## [1.96.0] - 2026-07-02
 
 ### Added

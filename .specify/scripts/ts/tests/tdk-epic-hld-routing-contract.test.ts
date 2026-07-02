@@ -82,4 +82,11 @@ describe('tdk-epic-hld routing contract', () => {
     expect(skill).toContain('Consumer HLD skills are advisory only');
     expect(skill).toContain('Do not create `## Delegate Skills`');
   });
+
+  it('offers task-breakdown handoff after HLD completion', () => {
+    expect(skill).toContain('### Step 8 - Recommend Next Step');
+    expect(skill).toContain('Use `AskUserQuestion` with header "Next Step"');
+    expect(skill).toContain('/tdk-task-breakdown {TASK_ID}` (Recommended)');
+    expect(skill).toContain('/tdk-epic-hld {TASK_ID} --force');
+  });
 });

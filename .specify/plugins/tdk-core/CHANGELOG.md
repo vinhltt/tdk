@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [6.0.2] - 2026-07-02
+
+### Changed
+- **[tdk-discovery]** Updated discovery to precede epic PRD instead of specify, renamed readiness checklist, and added interactive next-step recommendation
+- **[tdk-epic-prd]** Added interactive next-step recommendation (e.g. to epic HLD or replay interview)
+- **[tdk-epic-hld]** Added interactive next-step recommendation (e.g. to task breakdown or force rebuild)
+- **[tdk-task-breakdown]** Added interactive next-step recommendation to start specify on the first child seed
+- **[tdk-specify]** Reject direct routing from epic discovery, and update problem context/MVP scope to read from task-breakdown child seeds
+
 ## [6.0.1] - 2026-07-02
 
 ### Changed

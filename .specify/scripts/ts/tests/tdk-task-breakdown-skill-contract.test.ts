@@ -66,6 +66,14 @@ describe('tdk-task-breakdown skill contract', () => {
     expect(reference).toContain('must not mint `UR-*`, `FR-*`, `SC-*`, or `FS-*`');
   });
 
+  it('offers child-specify handoff after breakdown completion', () => {
+    expect(skill).toContain('### Step 8 - Recommend Next Step');
+    expect(skill).toContain('Use `AskUserQuestion` with header "Next Step"');
+    expect(skill).toContain('Start first child `/tdk-specify` (Recommended)');
+    expect(skill).toContain('Read the first seed listed in `tasks-breakdown.md`');
+    expect(skill).toContain('Choose a different child seed');
+  });
+
   it('keeps child implementation lane out of HLD by default', () => {
     expect(skill).toMatch(/Child specs are the\s+implementation units after this stage/);
     expect(skill).toContain('/tdk-specify <child-id> "<seed>"');

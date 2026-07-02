@@ -314,7 +314,7 @@ is_payload_rewrite_candidate() {
         scripts/ts/src/commands/setup/setup.ts|scripts/ts/src/commands/setup/utils/output-helpers.ts) return 0 ;;
         plugins/*|codex-plugins/*|scripts/*|schemas/*) return 1 ;;
         docs/assets/*) has_payload_text_extension "$rel_path"; return ;;
-        docs/*|templates/*) has_payload_text_extension "$rel_path"; return ;;
+        docs/*|templates/*|claude-rules/*) has_payload_text_extension "$rel_path"; return ;;
         *) return 1 ;;
     esac
 }

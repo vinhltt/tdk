@@ -3,7 +3,7 @@ name: tdk-epic-prd
 description: "EPIC-ONLY product alignment and slice-map step after tdk-discovery; writes tracker-neutral epic PRD artifacts without minting requirements"
 argument-hint: "<epic-id> [--force] [--interview]"
 metadata:
-  version: "6.0.1"
+  version: "6.0.2"
 ---
 
 # tdk-epic-prd
@@ -244,3 +244,15 @@ Report:
 - Interview alignment: `creation`, `existing artifact`, or `disabled`
 - Blocking question count
 - Readiness for `/tdk-epic-hld <epic-id>` when blocking questions are empty, and for child `/tdk-specify <child-id> "<slice seed>"` only after downstream breakdown creates seeds
+
+### Step 8 - Recommend Next Step
+
+Use `AskUserQuestion` with header "Next Step" after reporting completion:
+
+| Option | Action |
+|--------|--------|
+| `/tdk-epic-hld {TASK_ID}` (Recommended when blocking question count is 0) | Invoke `/tdk-epic-hld {TASK_ID}` |
+| `/tdk-epic-prd {TASK_ID} --interview` | Invoke `/tdk-epic-prd {TASK_ID} --interview` to resolve or confirm PRD alignment before HLD |
+| End session | Stop |
+
+If blocking question count is greater than 0, mark `/tdk-epic-prd {TASK_ID} --interview` as the recommended option and do not invoke HLD unless the user explicitly selects it after acknowledging the readiness gate.

@@ -16,7 +16,7 @@ schema_version: 1
 <!--
   Product-wide durable facts belong in constitution and memory v3 typed routes.
   Use arc42 summaries only as read-model context; binding facts live in typed memory.
-  Discovery is epic context.
+  Parent discovery is epic context for epic PRD, not direct spec input.
   Spec is the PRD and requirement-ID source of truth.
 -->
 
@@ -27,7 +27,7 @@ schema_version: 1
   - Who is affected? (specific actors/roles)
   - What is the current pain point?
   - Why does this feature need to exist now?
-  When discovery exists, summarize the problem and point to `discovery/problem.md` or `discovery.md`.
+  If this is a child spec, summarize the selected `tasks-breakdown` seed's problem context.
   Avoid vague statements like "improve UX" or "make it better."
 -->
 
@@ -65,7 +65,7 @@ schema_version: 1
 <!--
   Scope-level options ONLY. No implementation details, no tech/framework/library mentions.
   Evaluate MVP boundary: what to include vs exclude.
-  When discovery exists, summarize the selected MVP boundary and point to `discovery/mvp-scope.md` or `discovery.md`.
+  If this is a child spec, evaluate the MVP boundary from the selected `tasks-breakdown` seed.
 -->
 
 ### Option A: [Approach Name]

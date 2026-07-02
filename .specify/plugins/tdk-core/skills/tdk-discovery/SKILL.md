@@ -1,14 +1,14 @@
 ---
 name: tdk-discovery
-description: "EPIC-ONLY v1 discovery entry point that creates context-only problem, persona, MVP, and discovery manifest artifacts before tdk-specify, or interviews existing discovery artifacts with --interview"
+description: "EPIC-ONLY v1 discovery entry point that creates context-only problem, persona, MVP, and discovery manifest artifacts before tdk-epic-prd, or interviews existing discovery artifacts with --interview"
 argument-hint: "<epic-id> [<brief|file>] [--force] [--interview]"
 metadata:
-  version: "6.0.1"
+  version: "6.0.2"
 ---
 
 # tdk-discovery
 
-Create bounded epic discovery context before `/tdk-specify`.
+Create bounded epic discovery context before `/tdk-epic-prd`.
 
 Triggers:
 
@@ -248,6 +248,20 @@ Report:
 - Interview alignment: `creation`, `existing artifact`, or `disabled`
 - Whether product-level signal candidates need human review for a future
   `/tdk-constitution --update`
-- Readiness for `/tdk-epic-prd <epic-id>` for broad epics or `/tdk-specify <epic-id> <description>` for feature-sized work. The `## Ready For Specify` checklist
-  in `discovery.md` is advisory only: discovery completion and `/tdk-specify` do not depend on
-  it, and no checklist item gates the handoff.
+- Readiness for `/tdk-epic-prd <epic-id>`. The `## Ready For Epic PRD`
+  checklist in `discovery.md` is advisory only: discovery completion and
+  `/tdk-epic-prd` do not depend on it, and no checklist item gates the handoff.
+  Feature-sized work should skip discovery and start at `/tdk-specify` instead
+  of using discovery as a direct predecessor.
+
+### Step 7 - Recommend Next Step
+
+Use `AskUserQuestion` with header "Next Step" after reporting completion:
+
+| Option | Action |
+|--------|--------|
+| `/tdk-epic-prd {TASK_ID}` (Recommended for broad epics) | Invoke `/tdk-epic-prd {TASK_ID}` |
+| `/tdk-discovery {TASK_ID} --interview` | Invoke `/tdk-discovery {TASK_ID} --interview` to recheck existing discovery artifacts |
+| End session | Stop |
+
+If discovery ran only as replay interview, still offer the same next-step choices after reporting the updated artifacts.
