@@ -13,7 +13,6 @@
 ## Table of Contents
 
 - [Why TDK?](#why-tdk)
-- [TDK Native Features](#tdk-native-features)
 - [Overview](#overview)
 - [Skill Directory](#skill-directory)
 - [Cheat Sheet](#cheat-sheet)
@@ -31,89 +30,6 @@
 TDK is a specification-driven development framework that generates specs, optional portable task breakdowns, plans, and code from natural language. You describe a feature; TDK guides you through the full artifact chain — from requirements to production-ready implementation.
 
 TDK is the Claude Code native generation of this framework.
-
-### Evolution
-
-| Dimension | speckit-original | speckit-tdk-jp | TDK |
-|-----------|-----------------|----------------|--------------|
-| Commands | 9 | 18 | **current TDK workflow skills** |
-| Platform | Agent templates | GitHub Copilot | **Claude Code CLI** |
-| UT Framework | -- | -- | **3 commands** |
-| Sub-workspace | -- | -- | **Isolation support** |
-| Config mgmt | -- | -- | **diff/sync/index** |
-| Skills system | -- | -- | **documented skills guide** |
-| Language | English | Japanese | **English** |
-
-## TDK Native Features
-
-These capabilities are not present in the original frameworks.
-
-### Unit Testing Framework
-
-Unit-test planning is handled by TDK. Test implementation is routed to consumer-owned skills through `plan-skill-routing.md`.
-
-| Command | Role |
-|---------|------|
-| `/tdk-ut-backfill-plan` | Generates test plan + phase files from spec or existing code |
-| `/tdk-implement` | Executes all runnable phases, or one selected phase with `--phase NN`; runs `## Delegate Skills` before generic implementation |
-| consumer test skill | Generates/runs tests according to project conventions |
-
-### Sub-Workspace Isolation
-
-Commands: `/tdk-sub-workspace-init`, `/tdk-sub-workspace-list`
-
-Use `--sub-workspace <name>` on all UT and config commands to target a specific workspace (e.g., `frontend`, `backend`). Essential for monorepo and multi-service projects where each service has its own framework, conventions, and documentation.
-
-### Config Management Trilogy
-
-| Command | Purpose |
-|---------|---------|
-| `/tdk-config-diff` | Compare workspace docs vs. sub-workspace docs |
-| `/tdk-config-sync` | Bidirectional sync with `--dry-run`, `--all`, `--force` |
-| `/tdk-config-index` | Auto-generate `document-manager.md` for LLM discoverability |
-
-Run `diff → sync → index` to keep docs consistent across workspaces.
-
-### Architecture Workflow Inception
-
-| Command | Purpose |
-|---------|---------|
-| `/tdk-greenfield-start` | New-project intake that writes readiness-aware `project-inception.md` and recommends the next command chain without mutating runtime config |
-| `/tdk-brownfield-start` | Observe-first repo onboarding that writes evidence/confidence-based `brownfield-onboarding.md` and recommends scout/layout/docs steps |
-| `/tdk-architecture-advisor` | Project-level architecture advisor that writes report-only options, decision, or recovery artifacts |
-| `/tdk-workspace-layout-propose` | Workspace layout proposal workflow that writes `workspace-layout-proposal.md` and `workspace-layout-proposal.json` without runtime config mutation |
-| `/tdk-boundary-map` | Deprecated compatibility route for `/tdk-workspace-layout-propose`; legacy `workspace-topology.md/json` artifacts remain readable |
-| `/tdk-workflow-config-apply` | Interactive review/apply of `.specify/.specify.json` changes derived from `workspace-layout-proposal.json` or legacy `workspace-topology.json`; automation can still use explicit dry-run/apply flags |
-| `/tdk-workspace-dependency-policy` | Optional workspace dependency policy report and non-applied enforcement snippets from approved layout evidence |
-| `/tdk-module-boundary-policy` | Deprecated compatibility route for `/tdk-workspace-dependency-policy`; legacy policy artifacts remain readable |
-| `/tdk-golden-path-scaffold` | Dry-run-first scaffold plan and recipe for approved layout skeletons; guarded apply creates only safe empty structure and `.specify` templates |
-| `/tdk-sub-workspace-docs` | Arc42-lite docs for one or all configured sub-workspaces |
-| `/tdk-sub-workspace-automation-recommend` | One-sub-workspace skill/agent recommendation from docs, dependency policy, official docs, local skills, and optional direct community lookup |
-
-Architecture advisor is report-only. It does not write runtime config, layout
-files, source code, plans, tasks, tracker issues, or ADR files. Workspace layout
-proposal is proposal-only: it writes layout markdown/JSON and does not change runtime
-config, source directories, or dependency policy. Workflow config apply previews
-first, shows diff/warnings, asks before writing, and passes the parsed
-`planHash` internally. Automation can still run `--dry-run`, then
-`--yes --expect-hash <planHash>`.
-It does not create source directories or apply `--reconcile`. Workspace dependency
-policy follows layout review/apply and writes advisory Markdown only; it never
-changes source, lint, workspace, package manager, routing, or runtime config.
-Golden-path scaffold follows approved layout/policy review and defaults to a
-reviewable dry-run recipe under `.specify/configurations/golden-path/`; `--yes`
-requires `golden-path-recipe.json` to be approved and never creates business
-code.
-
-### Skills Ecosystem
-
-TDK ships a documented skills guide covering workflow, architecture, workspace, testing, memory, retro, and guide utilities. See [Skill Directory](#skill-directory) for summaries, modes, options, and use cases.
-
-### Claude Code Native
-
-Runs in the Claude Code CLI and VSCode extension. No GitHub Copilot subscription needed. Leverages full Claude reasoning — not just prompt triggering.
-
----
 
 ## Overview
 
@@ -462,7 +378,7 @@ Map the `test` domain in `{docs.path}/custom-workflow/plan-skill-routing.md`, th
 /tdk-implement feat-001
 ```
 
-`/tdk-plan` triggers `/tdk-ut-backfill-plan` when UT planning is needed. The generated `ut/phases/*.md` files delegate implementation to the routed consumer test skill. See [04-unit-testing-full-pipeline.md](scenarios/04-unit-testing-full-pipeline.md) for a detailed walkthrough.
+`/tdk-plan` triggers `/tdk-ut-backfill-plan` when UT planning is needed. The generated `ut/phases/*.md` files delegate implementation to the routed consumer test skill.
 
 ### Optional HLD design routing
 
@@ -694,9 +610,6 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 | 1 | Full Feature Development | New feature from scratch | [01-full-feature-development.md](scenarios/01-full-feature-development.md) |
 | 2 | Quick Specification | Small feature, skip brainstorm | [02-quick-specification.md](scenarios/02-quick-specification.md) |
 | 3 | Quality Review & Analysis | Before PR, validate consistency | [03-quality-review-analysis.md](scenarios/03-quality-review-analysis.md) |
-| 4 | Unit Testing — Full Pipeline | Set up rules + plan + generate tests | [04-unit-testing-full-pipeline.md](scenarios/04-unit-testing-full-pipeline.md) |
-| 5 | Unit Testing — Automated | One-command UT workflow | [05-unit-testing-automated.md](scenarios/05-unit-testing-automated.md) |
-| 6 | Unit Testing — Standalone | Write tests for existing code (no spec) | [06-unit-testing-standalone.md](scenarios/06-unit-testing-standalone.md) |
 
 ### Setup & Management
 

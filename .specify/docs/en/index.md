@@ -8,10 +8,6 @@
 If you are new to TDK or just cloned a consumer repository, start here:
 
 - [TDK Setup](guides/setup/installation.md) — prerequisites, installation, and verification
-- [Claude Code Setup](guides/setup/claude-code-environment.md) — Claude Code extension and Python environment
-- [Context7 MCP Setup](guides/setup/ctx7-mcp-setup.md) — required for docs-seeker
-- [GitHub MCP Setup](guides/setup/github-mcp-setup.md) — optional GitHub repo browsing
-- [Plugin Marketplace](guides/setup/plugin-marketplace-setup.md) — plugin marketplace activation
 
 After setup, use the workflow guides below.
 
@@ -43,17 +39,6 @@ Real-world workflows showing TDK commands in action:
 | 1 | Full Feature Development | [01](guides/scenarios/01-full-feature-development.md) |
 | 2 | Quick Specification | [02](guides/scenarios/02-quick-specification.md) |
 | 3 | Quality Review & Analysis | [03](guides/scenarios/03-quality-review-analysis.md) |
-
-</details>
-
-<details>
-<summary><strong>Unit Testing</strong> (3 scenarios)</summary>
-
-| # | Scenario | File |
-|---|----------|------|
-| 4 | UT — Full Pipeline | [04](guides/scenarios/04-unit-testing-full-pipeline.md) |
-| 5 | UT — Automated | [05](guides/scenarios/05-unit-testing-automated.md) |
-| 6 | UT — Standalone | [06](guides/scenarios/06-unit-testing-standalone.md) |
 
 </details>
 

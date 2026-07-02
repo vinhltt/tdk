@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-02T01:19:43Z",
+  "generated_at": "2026-07-02T01:46:05Z",
   "plugins": {
     "tdk-core": {
       "version": "6.0.0",
@@ -276,11 +276,11 @@
       }
     },
     "tdk-retro": {
-      "version": "1.0.2",
+      "version": "1.0.3",
       "components": {
         "skills": {
           "_shared": {
-            "version": "1.0.2"
+            "version": "1.0.3"
           },
           "tdk-retro-apply": {
             "version": "0.1.1"
@@ -298,13 +298,13 @@
       },
       "files": {
         ".claude-plugin/interface.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
-        ".claude-plugin/plugin.json": "f5a0a23456e16603c2a194d37f3c17cf1d3f9abfebc9f5c21885c2c8782b144e",
-        ".codex-plugin/plugin.json": "f5a0a23456e16603c2a194d37f3c17cf1d3f9abfebc9f5c21885c2c8782b144e",
-        ".cursor-plugin/plugin.json": "f5a0a23456e16603c2a194d37f3c17cf1d3f9abfebc9f5c21885c2c8782b144e",
-        "CHANGELOG.md": "c6a415537a3659ee5fcebd7494fdaa8539adddf47c1d2d8bc58b9af34a918e5f",
+        ".claude-plugin/plugin.json": "9df684dc47e9dcf765491000842db9b0fc42b43534d3d4e2a9c7a23e0ec5860c",
+        ".codex-plugin/plugin.json": "9df684dc47e9dcf765491000842db9b0fc42b43534d3d4e2a9c7a23e0ec5860c",
+        ".cursor-plugin/plugin.json": "9df684dc47e9dcf765491000842db9b0fc42b43534d3d4e2a9c7a23e0ec5860c",
+        "CHANGELOG.md": "913c838ae1ac7b844ae9f3d0a795d11f416ed3ded8366e987e3ce8d2b80ca78d",
         "README.md": "c74e7f4263e8aec94548695e08de4d7faf0c899429f5520e1cf57134c2cb0657",
-        "skills/_shared/SKILL.md": "e3558de07b6390a8db378e7a2a08615e8797ce89fba1d0cd4de1e6b97acec3f5",
-        "skills/_shared/consumer-skill-discovery.md": "db84537340454432fd5a19f4c39f90e7da182d0e9aa958a54dc4404ae41f6e5b",
+        "skills/_shared/SKILL.md": "5367eaf03f98e427e981c166cff507aa3ad38de5ccaab36a663d63fe2d2d990f",
+        "skills/_shared/consumer-skill-discovery.md": "452a972210fbd4889544f917d2f61a03ebbb23271f53d9611d23e7134b146958",
         "skills/_shared/learning-delta-schema.md": "75ea06307874ce5e92579e0e8de381c94e7b4ab2f6b5fbe61e7b22dda13b20ba",
         "skills/_shared/retro-feedback-schema.md": "2a459f6a69e424075e6d4bb7027507324652ab11aa9277b97933c6ec36a38aa2",
         "skills/_shared/script-command-contract.md": "9bc0cfdc5316b6b19ddd72b6bd3fe267d71d7e6831f35ac15e65533098061116",

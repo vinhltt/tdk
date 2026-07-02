@@ -20,8 +20,14 @@ Search from the consumer project root:
    - `Consumer test skills: none found`
    - Do not propose T4 entries unless a concrete skill exists.
 
+## Consumer Skill Name Convention
+
+Consumer test skills are discovered by suffix:
+
+- `*-ut`
+- `*-test`
+
 ## Notes
 
-- The suffix convention comes from `docs/en/guides/migration-ut-rule-to-skill.md`.
 - Do not create consumer skills automatically during retro. Propose T4 only when a target skill is discoverable.
 - If multiple skills match, include all relevant paths in evidence.

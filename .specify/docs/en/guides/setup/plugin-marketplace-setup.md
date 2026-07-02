@@ -1,5 +1,9 @@
 # Plugin Marketplaces
 
+> **Status: Outdated**
+>
+> This guide is temporarily removed from the main docs index. Revalidate the current Claude/Codex plugin marketplace setup flow, update this page, then restore release-facing links before the next release.
+
 Local Claude Code plugin marketplace for a TDK consumer project.
 
 ## Available Plugins

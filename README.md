@@ -138,7 +138,7 @@ bun src/commands/manifest/compute.ts --root ../..
 │   └── tdk-scaffold/        # Skill/agent and golden-path scaffolding (3 skills)
 ├── codex-plugins/        # Generated Codex packages (6 packages; skills/hooks/lib at package root)
 ├── templates/            # 60 templates (spec, plan, task, discovery, epic PRD, HLD, test, memory, output, design, docs)
-├── docs/                 # 26 user guides (scenario guides + setup guides + reference)
+├── docs/                 # 21 user guides (scenario guides + setup guides + reference)
 ├── configurations/       # Hook configs, sub-workspace configs
 └── scripts/
     ├── ts/               # TypeScript CLI (@tdk/tdk) — primary
@@ -203,7 +203,6 @@ Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup,
 
 - [TDK Skills Guide](.specify/docs/en/guides/tdk-skills-guide.md) — skill directory, cheat sheet, and usage reference
 - [tdk-setup README](packages/tdk-setup/README.md) — harness setup CLI reference
-- [Scenario Guides](.specify/docs/en/guides/scenarios/) — 11 workflow scenarios
+- [Scenario Guides](.specify/docs/en/guides/scenarios/) — 10 workflow scenarios
 - [Setup Guide](.specify/docs/en/guides/setup/installation.md) — installation and configuration
-- [UT Backfill Usage](.specify/docs/en/guides/tdk-ut-backfill-skills-usage.md) — unit test workflow
 - [Document Flow](.specify/docs/en/guides/document-flow.md) — spec → plan → task lifecycle

@@ -105,7 +105,7 @@ export function findSkillPlugin(root: string, skill: string): string | null {
   const { readdirSync, statSync } = require('node:fs') as typeof import('node:fs');
   for (const entry of readdirSync(base)) {
     const skillDir = join(base, entry, 'skills', skill);
-    if (existsSync(skillDir) && statSync(skillDir).isDirectory()) return entry;
+    if (existsSync(skillDir) && statSync(skillDir).isDirectory() && existsSync(join(skillDir, 'SKILL.md'))) return entry;
   }
   return null;
 }

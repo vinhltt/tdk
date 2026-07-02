@@ -9,6 +9,21 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.94.3] - 2026-07-02
+
+### Changed
+- **[Skills]** Update consumer-skill-discovery.md in tdk-retro to document consumer skill suffix conventions (`*-ut`, `*-test`) and clean up stale guide references
+- **[Docs]** Update documentation index and setup guides
+  - Remove unit testing scenario links and obsolete setup guides from index.md
+  - Remove unit testing framework details and command listings in tdk-skills-guide.md
+  - Mark plugin-marketplace-setup.md as outdated and remove from docs index
+
+### Removed
+- **[Docs]** Remove obsolete unit testing documentation and scenarios
+  - Delete `migration-ut-rule-to-skill.md` guide
+  - Delete unit testing scenarios (`04-unit-testing-full-pipeline.md`, `05-unit-testing-automated.md`, `06-unit-testing-standalone.md`)
+  - Delete `tdk-ut-backfill-skills-usage.md` guide
+
 ## [1.94.2] - 2026-07-02
 
 ### Changed

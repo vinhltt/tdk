@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.0.3] - 2026-07-02
+
+### Changed
+- Update consumer-skill-discovery.md to document consumer skill suffix conventions (*-ut, *-test) and clean up stale guide references
+
 ## [1.0.2] - 2026-06-28
 
 ### Changed
