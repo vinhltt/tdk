@@ -9,6 +9,22 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.94.2] - 2026-07-02
+
+### Changed
+- **[tdk-skill-docs-sync]** Refactored check tools to support the new docs structure
+  - Updated `scan-skill-docs-gaps.py` script to use `tdk-skills-guide.md` and `docs/en/index.md` instead of `command-reference.md` and `README.md`.
+  - Added support for ignoring internal/non-user-invocable skills and checking catalog coverage in `tdk-skills-guide.md`.
+- **[tdk-utils]** Updated skill files to point to the renamed skills guide
+  - Updated `obsidian-brain`, `tdk-setup-guide`, and `tdk-skill-guide`'s `SKILL.md` files to refer to `tdk-skills-guide.md` instead of `command-reference.md`.
+- **[Docs]** Refactored documentation structure and renamed command reference
+  - Renamed `command-reference.md` to `tdk-skills-guide.md` and updated CLI documentation sections.
+  - Updated references across guides, index pages, scenarios, setup instructions, and the main `README.md` to align with the renamed skills guide.
+  - Removed outdated references to retired `ba-requirement.md` and updated configuration file extensions and commands.
+
+### Removed
+- **[Docs]** Removed obsolete `evolution-comparison.md` guide.
+
 ## [1.94.1] - 2026-07-01
 
 ### Changed

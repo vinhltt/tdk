@@ -18,7 +18,7 @@ After setup, use the workflow guides below.
 ## Quick Start After Setup
 
 1. **Starting a broad epic?** → [Epic Start Guide](guides/epic-start-guide.md)
-2. **Need a command?** → [Command Reference](guides/command-reference.md)
+2. **Need a skill or command?** → [TDK Skills Guide](guides/tdk-skills-guide.md)
 3. **Want a workflow?** → [Scenarios](#scenarios) below
 
 ![TDK lifecycle workflow](../assets/tdk-lifecycle-share-graph.png)
@@ -28,9 +28,8 @@ After setup, use the workflow guides below.
 | Guide | Description |
 |-------|-------------|
 | [Epic Start Guide](guides/epic-start-guide.md) | Beginner-friendly path from epic brief to spec, clarify, HLD, task breakdown, tracker sub-issues, and child specs |
-| [Command Reference](guides/command-reference.md) | Full cheat sheet + command details for all `/tdk-*` skills |
+| [TDK Skills Guide](guides/tdk-skills-guide.md) | Contact-card summaries, modes, options, cheat sheet, and usage details for user-facing TDK skills |
 | [Document Flow](guides/document-flow.md) | Artifact lifecycle — what each command produces and consumes |
-| [Evolution Comparison](guides/evolution-comparison.md) | TDK vs speckit-original vs speckit-tdk-jp |
 
 ## Scenarios
 

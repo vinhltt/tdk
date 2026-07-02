@@ -105,7 +105,7 @@ sub-workspaces:
 | `docs.path` | Có | Nơi TDK lưu project documentation, tính từ repo root |
 | `sub-workspaces` | Không | Danh sách child workspaces (`name` + `path`). `detect-config.ts` tự nhận diện bạn đang ở sub-workspace nào dựa trên CWD |
 
-> **Mẹo:** Xem `.specify/.specify.yaml.example` để có template đầy đủ gồm các field tùy chọn.
+> **Mẹo:** Xem `.specify/.specify.json.example` để có template đầy đủ gồm các field tùy chọn.
 
 File này được `detect-config.ts` dùng để đọc workspace settings. Chỉ sửa khi cấu trúc workspace thay đổi.
 
@@ -164,7 +164,7 @@ Trong Claude Code, prefix command `/tdk-` nên hiện ra. Các lệnh quan trọ
 ```text
 consumer-project/
 ├── .specify/
-│   ├── .specify.yaml              # Workspace config
+│   ├── .specify.json              # Workspace config
 │   ├── .specify.env.example       # Env template (copy thành .specify.env)
 │   ├── scripts/bash/              # Automation scripts
 │   │   └── ...

@@ -42,13 +42,7 @@ Once the marketplace is registered in Step 1, the plugins activate automatically
 
 Type `/tdk-` in Claude Code — the `/tdk-*` commands should appear.
 
-**VSCode Extension:**
-
-![Skills loaded in extension](./plugin-marketplace-assets/skill-load-success-in-extension.png)
-
-**Terminal (CLI):**
-
-![Skills loaded in terminal](./plugin-marketplace-assets/skill-load-success-in-terminal.png)
+Expected result: the Claude Code extension and terminal autocomplete show the installed `/tdk-*` commands.
 
 ---
 

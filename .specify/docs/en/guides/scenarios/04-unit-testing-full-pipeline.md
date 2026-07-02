@@ -38,6 +38,6 @@ To review/update an existing plan:
 
 ## Tips
 
-- Use `--standalone` flag with `ut:plan` to generate tests for existing code without a spec.
+- Use `--standalone` with `/tdk-ut-backfill-plan` to generate tests for existing code without a spec.
 - Use `--force` to overwrite existing UT plan/artifacts.
 - The full pipeline gives you review points between UT planning and routed implementation.

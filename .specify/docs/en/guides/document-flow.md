@@ -51,27 +51,15 @@ flowchart TD
     PRODUCT_CONTEXT -.->|project authority| DISCOVERY
     PRODUCT_CONTEXT -.->|project authority| SPEC
     SPEC -->|/tdk-clarify| SPEC_CLARIFIED[spec.md<br/>+ Clarifications]
-    SPEC_CLARIFIED -->|/tdk-ba-requirement| BA_REQ[ba-requirement.md<br/>BA Requirements]
-    BA_REQ -.->|Approval| BA_REQ
-    BA_REQ -->|/tdk-test-viewpoint| TEST_VP[test-viewpoint.csv<br/>Test Viewpoints]
 
     %% Phase 1: Architecture & Design
-    BA_REQ -->|/tdk-plan| PLAN[plan.md<br/>Implementation Plan]
-    BA_REQ -->|/tdk-plan| RESEARCH[research/<br/>Technology Research]
-    BA_REQ -->|/tdk-plan| DATAMODEL[data-model.md<br/>+ Enum Definitions]
-    BA_REQ -->|/tdk-plan| STATETRANS[state-transitions.md<br/>State Transitions]
-    BA_REQ -->|/tdk-plan| CONTRACTS[contracts/<br/>API Specs YAML/MD]
-    BA_REQ -->|/tdk-plan| QUICKSTART[quickstart.md<br/>Setup Guide]
-    BA_REQ -->|/tdk-plan| WIREFRAMES[design/wireframes/<br/>wf-*.html]
-
-    %% Phase 1: Detailed Design & Approval
-    PLAN -->|/tdk-api-design| API_DESIGN[api_design.md<br/>API + DB Design]
-    PLAN -->|/tdk-batch-design| BATCH_DESIGN[batch-design.md<br/>Batch Processing Design]
-    PAGEDESIGNS[page-designs/<br/>category/screen.md]
-    UI_DESIGN[ui-design-*.md<br/>Screen Definition]
-    API_DESIGN -.->|Approval| API_DESIGN
-    UI_DESIGN -.->|Approval| UI_DESIGN
-    PAGEDESIGNS -.->|Approval| PAGEDESIGNS
+    SPEC_CLARIFIED -->|/tdk-plan| PLAN[plan.md<br/>Implementation Plan]
+    SPEC_CLARIFIED -->|/tdk-plan| RESEARCH[research/<br/>Technology Research]
+    SPEC_CLARIFIED -->|/tdk-plan| DATAMODEL[data-model.md<br/>+ Enum Definitions]
+    SPEC_CLARIFIED -->|/tdk-plan| STATETRANS[state-transitions.md<br/>State Transitions]
+    SPEC_CLARIFIED -->|/tdk-plan| CONTRACTS[contracts/<br/>API Specs YAML/MD]
+    SPEC_CLARIFIED -->|/tdk-plan| QUICKSTART[quickstart.md<br/>Setup Guide]
+    SPEC_CLARIFIED -->|/tdk-plan| WIREFRAMES[design/wireframes/<br/>wf-*.html]
 
     %% Phase 2: Implementation (Solo Path - Primary)
     PLAN -->|/tdk-implement<br/>or --phase NN| CODE_BE[backend/src/<br/>Backend Code]
@@ -89,8 +77,7 @@ flowchart TD
     classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px
 
     class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,HLD,TASK_BREAKDOWN,SPEC,SPEC_CLARIFIED phase0
-    class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES,PAGEDESIGNS,BATCH_DESIGN phase1
-    class TEST_VP phase0
+    class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES phase1
     class PRODUCT_CONTEXT,CONSTITUTION,UIUX,REF_DATAMODEL,REF_STATE reference
     class CODE_BE,CODE_FE,TESTS code
 ```
@@ -119,7 +106,6 @@ flowchart LR
     TASKS[tasks-breakdown/<br/>Child Spec Seeds]
     SPEC[spec.md]
     SPEC_CLAR[spec.md<br/>+ Clarifications]
-    BA_REQ[ba-requirement.md]
 
     REQ -.->|"/tdk-greenfield-start"| GREENFIELD_INCEPTION
     REQ -.->|"/tdk-brownfield-start"| BROWNFIELD_ONBOARDING
@@ -139,16 +125,15 @@ flowchart LR
     REQ -->|"/tdk-specify<br/>feature-id desc"| SPEC
     DISCOVERY -.->|"context only"| SPEC
     SPEC -->|"/tdk-clarify<br/>feature-id"| SPEC_CLAR
-    SPEC_CLAR -->|"/tdk-ba-requirement"| BA_REQ
 
-    BA_REQ -.->|contains| CONTENT["- Functional requirements<br/>- User stories<br/>- Acceptance criteria<br/>- Approval section"]
+    SPEC_CLAR -.->|contains| CONTENT["- Functional requirements<br/>- User stories<br/>- Acceptance criteria<br/>- Clarifications"]
 
     classDef input fill:#e1f5ff,stroke:#01579b,stroke-width:2px
     classDef output fill:#b3e5fc,stroke:#01579b,stroke-width:2px
     classDef note fill:#f5f5f5,stroke:#616161,stroke-width:1px
 
     class REQ input
-    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,SPEC,SPEC_CLAR,HLD,TASKS,BA_REQ output
+    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,SPEC,SPEC_CLAR,HLD,TASKS output
     class CONTENT note
 ```
 
@@ -163,7 +148,7 @@ optional `parent_spec` rule, and sizing rule.
 
 ```mermaid
 flowchart TD
-    BA_REQ[ba-requirement.md]
+    SPEC_CLAR[spec.md<br/>+ Clarifications]
 
     subgraph REFERENCES[Reference Files]
         CONST[constitution.md]
@@ -179,26 +164,17 @@ flowchart TD
         CONTRACTS[contracts/]
     end
 
-    subgraph DETAILED_DESIGN["Detailed Design (for Approval)"]
-        API_DESIGN[api_design.md]
-        PAGEDESIGNS[page-designs/]
-        UI_DESIGN[ui-design-*.md]
-    end
-
-    BA_REQ -->|/tdk-plan| PLAN_OUTPUT
-    PLAN -->|/tdk-api-design| API_DESIGN
+    SPEC_CLAR -->|/tdk-plan| PLAN_OUTPUT
 
     CONST -.->|ref| RESEARCH
-    UIUX -.->|ref| PAGEDESIGNS
     REF_DM -.->|ref| DATAMODEL
 
     classDef input fill:#e1f5ff,stroke:#01579b,stroke-width:2px
     classDef output fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
     classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5
 
-    class BA_REQ input
+    class SPEC_CLAR input
     class PLAN,RESEARCH,DATAMODEL,STATE,CONTRACTS output
-    class API_DESIGN,UI_DESIGN,PAGEDESIGNS output
     class CONST,UIUX,REF_DM reference
 ```
 
@@ -254,8 +230,6 @@ flowchart TD
     UT_PHASES -->|## Delegate Skills| UT_GEN
     UT_SKILL -.->|conventions| UT_GEN
     UT_GEN --> TEST_FILES
-    UT_AUTO -.->|"automates"| UT_PLAN_CMD
-    UT_AUTO -.->|"automates"| UT_GEN
     SPEC_UT -.->|optional input| UT_PLAN_CMD
 
     classDef planning fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
@@ -265,19 +239,18 @@ flowchart TD
 
     class UT_PLAN_CMD,UT_PLAN,UT_PHASES planning
     class UT_GEN,TEST_FILES generation
-    class UT_AUTO orchestrator
     class SPEC_UT,UT_SKILL reference
 ```
 
-`ut:auto` runs the full pipeline in one command; use individual commands for manual control. `--sub-workspace` targets a specific workspace (e.g., `backend`, `frontend`). `--standalone` on `ut:plan` skips spec dependency for existing code.
+Use `/tdk-ut-backfill-plan` to create the unit-test plan and phase files, then `/tdk-implement` runs phase delegates through the consumer test skill listed in `## Delegate Skills`. `--sub-workspace` targets a specific workspace (e.g., `backend`, `frontend`). `--standalone` on `/tdk-ut-backfill-plan` skips spec dependency for existing code.
 
 ### Config & Workspace Management
 
 ```mermaid
 flowchart TD
     subgraph WS_INIT["Workspace Setup"]
-        SUB_INIT["/tdk-sub-workdspace-init<br/>frontend / backend"]
-        YAML[".specify.yaml<br/>Sub-workspace Config"]
+        SUB_INIT["/tdk-sub-workspace-init<br/>frontend / backend"]
+        JSON[".specify/.specify.json<br/>Sub-workspace Config"]
     end
 
     subgraph DOC_COMPARE["Doc Comparison"]
@@ -297,14 +270,14 @@ flowchart TD
         DOC_MGR["document-manager.md<br/>Auto-generated Index"]
     end
 
-    SUB_INIT --> YAML
-    YAML -->|enables| DIFF
+    SUB_INIT --> JSON
+    JSON -->|enables| DIFF
     DIFF --> DIFF_REPORT
     DIFF_REPORT -->|informs| SYNC_CMD
     SYNC_CMD --> TO_SUB
     SYNC_CMD --> FROM_SUB
     SYNC_CMD --> ALL_WS
-    YAML -->|enables| INDEX_CMD
+    JSON -->|enables| INDEX_CMD
     INDEX_CMD --> DOC_MGR
 
     classDef init fill:#e1f5ff,stroke:#01579b,stroke-width:2px
@@ -312,7 +285,7 @@ flowchart TD
     classDef sync fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
     classDef index fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
 
-    class SUB_INIT,YAML init
+    class SUB_INIT,JSON init
     class DIFF,DIFF_REPORT compare
     class SYNC_CMD,TO_SUB,FROM_SUB,ALL_WS sync
     class INDEX_CMD,DOC_MGR index
@@ -352,20 +325,16 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `{docs.path}/custom-workflow/high-level-design-skill-routing.md` | Human-authored from `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` | Consumer HLD design skills | `/tdk-epic-hld` as advisory read-only routing | Optional project setup |
 | `high-level-design/` | `/tdk-epic-hld` | `epic-prd/`; built-in lenses; optional HLD routing | `/tdk-task-breakdown` | Parent epic after PRD |
 | `tasks-breakdown/` | `/tdk-task-breakdown` | `epic-prd/`; `high-level-design/` | Child `/tdk-specify` seeds | Parent epic after HLD |
-| `ba-requirement.md` | `/tdk-ba-requirement` | `spec.md` | `/tdk-plan` | For Approval |
-| `plan.md` | `/tdk-plan` | `ba-requirement.md`, `constitution.md` | `plan.md ## Phases`, `/tdk-implement [--phase NN]` | Feature start |
-| `plan.md ## Phases` | `/tdk-plan` | `ba-requirement.md`, design artifacts | `/tdk-implement [--phase NN]` | Feature start |
-| `research/` | `/tdk-plan` | `ba-requirement.md` | Reference | Feature start |
-| `data-model.md` | `/tdk-plan` | `ba-requirement.md` | Reference | Feature start |
-| `api_design.md` | `/tdk-api-design` | `plan.md` | Reference | For Approval |
-| `batch-design.md` | `/tdk-batch-design` | `spec.md`, `research/`, `data-model.md` | Reference | For Approval |
-| `test-viewpoint.csv` | `/tdk-test-viewpoint` | `spec.md`, `ba-requirement.md` | Manual reference | After ba-requirement |
+| `plan.md` | `/tdk-plan` | `spec.md`, `constitution.md`, optional context | `plan.md ## Phases`, `/tdk-implement [--phase NN]` | Feature start |
+| `plan.md ## Phases` | `/tdk-plan` | `spec.md`, design artifacts | `/tdk-implement [--phase NN]` | Feature start |
+| `research/` | `/tdk-plan` | `spec.md` | Reference | Feature start |
+| `data-model.md` | `/tdk-plan` | `spec.md` | Reference | Feature start |
 | `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
 | `ut/plan.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), consumer test skill routing | `/tdk-implement` | Feature UT |
 | `ut/phases/{module}.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), `plan-skill-routing.md` | consumer test skill via `## Delegate Skills` | Feature UT |
 | `*.test.ts` / `test_*.py` etc. | consumer test skill | `ut/phases/{module}.md` | Test runner | Feature UT |
-| `.specify.yaml` | `/tdk-sub-workdspace-init` | Project config | `config:*`, `ut:*` | Project setup |
+| `.specify/.specify.json` | `/tdk-sub-workspace-init` | Project config | `config:*`, unit-test routing, sub-workspace docs | Project setup |
 | `document-manager.md` | `/tdk-config-index` | All docs files | Manual reference, LLM tools | On demand |
 
 ---

@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-constitution --init <brief|file> -> /tdk-sub-workdspace-init
+/tdk-constitution --init <brief|file> -> /tdk-sub-workspace-init
 ```
 
 ## Step-by-Step
@@ -39,18 +39,18 @@ The constitution uses semantic versioning (MAJOR.MINOR.PATCH). Project knowledge
 ### 2. Initialize sub-workspaces
 
 ```
-/tdk-sub-workdspace-init backend
-/tdk-sub-workdspace-init frontend
+/tdk-sub-workspace-init backend
+/tdk-sub-workspace-init frontend
 ```
 
 **What happens**: Creates sub-workspace configuration with docs path, rules directory, and framework detection. Each sub-workspace can have its own coding standards and test rules.
 
-**Output**: Updated `.specify/.specify.yaml`, `{docs-path}/rules.md`
+**Output**: Updated `.specify/.specify.json`, `{docs-path}/rules.md`
 
 ### 3. Verify sub-workspaces
 
 ```
-/tdk-sub-workdspace-list
+/tdk-sub-workspace-list
 ```
 
 Shows a table of all configured sub-workspaces with their paths, docs locations, and status.

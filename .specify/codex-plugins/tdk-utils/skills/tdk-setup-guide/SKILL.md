@@ -2,7 +2,7 @@
 name: tdk-setup-guide
 description: "Interactive setup guide for TDK environment. Checks prerequisites, verifies config, troubleshoots issues. Use when asking 'how to set up', 'setup help', 'verify setup', 'check prerequisites', 'tdk setup', 'installation guide', 'troubleshoot setup'."
 metadata:
-  version: "2.2.1"
+  version: "2.2.2"
 ---
 
 # TDK Setup Guide
@@ -154,7 +154,7 @@ test -f .mcp.json && echo ".mcp.json: EXISTS" || echo ".mcp.json: MISSING"
 | `plugin`, `marketplace` | plugin-marketplace-setup.md |
 | `ctx7`, `context7` | ctx7-mcp-setup.md |
 | `github`, `gh` | github-mcp-setup.md |
-| `obsidian` | setup-obsidian-plugins-windows.md |
+| `obsidian` | obsidian-plugins-windows.md |
 | `mcp` | All MCP-related setup docs |
 
 ## Mode: Troubleshoot (`troubleshoot` or `debug`)

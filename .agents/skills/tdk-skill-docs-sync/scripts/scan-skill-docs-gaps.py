@@ -7,7 +7,7 @@ Usage:
 Output: JSON gap report to stdout.
 
 Arguments:
-    <skill-name>    Name of skill to check (e.g., tdk-ut-auto)
+    <skill-name>    Name of skill to check (e.g., tdk-ut-backfill-plan)
     --plugin <name> Limit search to specific plugin
     --all           Scan ALL skills across all marketplace plugins
 """
@@ -24,10 +24,16 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SPECIFY_ROOT = SCRIPT_DIR.parents[3] / ".specify"
 PLUGINS_DIR = SPECIFY_ROOT / "plugins"
 MANIFEST_PATH = PLUGINS_DIR / "manifest.json"
-GUIDES_DIR = SPECIFY_ROOT / "docs" / "guides"
-CMD_REF_PATH = GUIDES_DIR / "command-reference.md"
-README_PATH = GUIDES_DIR / "README.md"
+DOCS_EN_DIR = SPECIFY_ROOT / "docs" / "en"
+GUIDES_DIR = DOCS_EN_DIR / "guides"
+SKILLS_GUIDE_PATH = GUIDES_DIR / "tdk-skills-guide.md"
+INDEX_PATH = DOCS_EN_DIR / "index.md"
 SCENARIOS_DIR = GUIDES_DIR / "scenarios"
+USAGE_REFERENCE_PLUGINS = {"tdk-core", "tdk-scaffold"}
+USAGE_REFERENCE_UTIL_SKILLS = {
+    "tdk-module-boundary-policy",
+    "tdk-workspace-dependency-policy",
+}
 
 
 def find_skill(skill_name: str, plugin_filter: str | None = None) -> dict | None:
@@ -50,6 +56,7 @@ def find_skill(skill_name: str, plugin_filter: str | None = None) -> dict | None
                 "plugin": plugin_dir.name,
                 "name": name or skill_name,
                 "description": desc or "",
+                "user_invocable": is_user_invocable(text),
                 "skill_dir": str(
                     (plugin_dir / "skills" / skill_name).relative_to(SPECIFY_ROOT)
                 ),
@@ -73,8 +80,23 @@ def parse_frontmatter(text: str) -> tuple[str, str]:
     return (name, desc)
 
 
+def is_user_invocable(text: str) -> bool:
+    """Return false only when frontmatter explicitly marks the skill internal."""
+    return "user-invocable: false" not in text
+
+
+def is_usage_reference_skill(skill: dict) -> bool:
+    """Only workflow/reference skills need cheat-sheet and usage-reference coverage."""
+    if not skill.get("user_invocable", True):
+        return False
+
+    name = skill["name"]
+    plugin = skill["plugin"]
+    return plugin in USAGE_REFERENCE_PLUGINS or name in USAGE_REFERENCE_UTIL_SKILLS
+
+
 def parse_cheat_sheet(text: str) -> list[dict]:
-    """Parse cheat sheet table rows from command-reference.md."""
+    """Parse cheat sheet table rows from tdk-skills-guide.md."""
     entries = []
     in_table = False
     for line in text.splitlines():
@@ -97,12 +119,19 @@ def parse_cheat_sheet(text: str) -> list[dict]:
     return entries
 
 
-def check_cheat_sheet(skill_name: str) -> dict:
+def check_cheat_sheet(skill: dict) -> dict:
     """Check if skill exists in cheat sheet table."""
-    if not CMD_REF_PATH.exists():
-        return {"status": "ERROR", "detail": "command-reference.md not found"}
+    skill_name = skill["name"]
+    if not is_usage_reference_skill(skill):
+        return {
+            "status": "INFO",
+            "detail": "Cheat-sheet entry not required for support-only skill",
+        }
 
-    text = CMD_REF_PATH.read_text(encoding="utf-8")
+    if not SKILLS_GUIDE_PATH.exists():
+        return {"status": "ERROR", "detail": "tdk-skills-guide.md not found"}
+
+    text = SKILLS_GUIDE_PATH.read_text(encoding="utf-8")
     entries = parse_cheat_sheet(text)
 
     # Count actual numbered entries (exclude category separator rows)
@@ -128,12 +157,19 @@ def check_cheat_sheet(skill_name: str) -> dict:
     }
 
 
-def check_detailed_section(skill_name: str) -> dict:
-    """Check if skill has a detailed section in command-reference.md."""
-    if not CMD_REF_PATH.exists():
-        return {"status": "ERROR", "detail": "command-reference.md not found"}
+def check_detailed_section(skill: dict) -> dict:
+    """Check if skill has a detailed section in tdk-skills-guide.md."""
+    skill_name = skill["name"]
+    if not is_usage_reference_skill(skill):
+        return {
+            "status": "INFO",
+            "detail": "Detailed usage-reference section not required for support-only skill",
+        }
 
-    text = CMD_REF_PATH.read_text(encoding="utf-8")
+    if not SKILLS_GUIDE_PATH.exists():
+        return {"status": "ERROR", "detail": "tdk-skills-guide.md not found"}
+
+    text = SKILLS_GUIDE_PATH.read_text(encoding="utf-8")
     skill_cmd = f"/{skill_name}"
 
     # Look for heading containing skill name
@@ -163,12 +199,12 @@ def check_detailed_section(skill_name: str) -> dict:
     return {"status": "GAP", "detail": "No detailed section found"}
 
 
-def check_readme(skill_name: str) -> dict:
-    """Check README.md for stale skill counts or missing references."""
-    if not README_PATH.exists():
-        return {"status": "ERROR", "detail": "README.md not found"}
+def check_index(skill_name: str) -> dict:
+    """Check docs/en/index.md for stale skill counts or missing references."""
+    if not INDEX_PATH.exists():
+        return {"status": "ERROR", "detail": "docs/en/index.md not found"}
 
-    text = README_PATH.read_text(encoding="utf-8")
+    text = INDEX_PATH.read_text(encoding="utf-8")
 
     # Check for explicit skill count mentions
     count_matches = re.findall(r"(\d+)\s*(?:skills|commands)", text, re.IGNORECASE)
@@ -185,6 +221,26 @@ def check_readme(skill_name: str) -> dict:
         result["mentioned"] = False
 
     return result
+
+
+def check_skill_catalog(skill_name: str, skill: dict) -> dict:
+    """Check if a user-facing TDK skill appears in the skill directory."""
+    if not SKILLS_GUIDE_PATH.exists():
+        return {"status": "ERROR", "detail": "tdk-skills-guide.md not found"}
+
+    text = SKILLS_GUIDE_PATH.read_text(encoding="utf-8")
+    skill_cmd = f"/{skill_name}"
+
+    if skill_name in text or skill_cmd in text:
+        return {"status": "OK", "detail": "Skill directory entry found"}
+
+    if skill_name.startswith("tdk-") and skill.get("user_invocable", True):
+        return {"status": "GAP", "detail": "Missing from tdk-skills-guide.md"}
+
+    return {
+        "status": "INFO",
+        "detail": "Catalog entry optional for non-public or non-tdk skill",
+    }
 
 
 def check_scenarios(skill_name: str) -> dict:
@@ -241,14 +297,17 @@ def list_all_skills() -> list[dict]:
         for skill_dir in sorted(skills_dir.iterdir()):
             skill_md = skill_dir / "SKILL.md"
             if skill_md.exists():
-                name, desc = parse_frontmatter(
-                    skill_md.read_text(encoding="utf-8")
-                )
+                text = skill_md.read_text(encoding="utf-8")
+                name, desc = parse_frontmatter(text)
+                user_invocable = is_user_invocable(text)
+                if skill_dir.name == "_shared" or not user_invocable:
+                    continue
                 skills.append(
                     {
                         "name": name or skill_dir.name,
                         "plugin": plugin_dir.name,
                         "description": desc or "",
+                        "user_invocable": user_invocable,
                     }
                 )
     return skills
@@ -267,9 +326,10 @@ def scan_skill(skill_name: str, plugin_filter: str | None = None) -> dict:
     report = {
         "skill": skill,
         "checks": {
-            "cheat_sheet": check_cheat_sheet(skill_name),
-            "detailed_section": check_detailed_section(skill_name),
-            "readme": check_readme(skill_name),
+            "cheat_sheet": check_cheat_sheet(skill),
+            "detailed_section": check_detailed_section(skill),
+            "index": check_index(skill_name),
+            "skill_catalog": check_skill_catalog(skill_name, skill),
             "scenarios": check_scenarios(skill_name),
             "plugin_json": check_plugin_json(skill_name, skill["plugin"]),
         },

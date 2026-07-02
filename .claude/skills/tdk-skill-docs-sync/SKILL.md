@@ -1,6 +1,6 @@
 ---
 name: tdk-skill-docs-sync
-description: "This skill should be used when the user asks to 'sync skill docs', 'update docs for new skill', 'check skill documentation', 'verify skill docs are up to date', 'tdk-skill-docs-sync', 'docs sync after skill creation', or needs to scan and update guide documentation (command-reference, README, scenarios) after creating or modifying a skill in the tdk-speckit marketplace."
+description: "This skill should be used when the user asks to 'sync skill docs', 'update docs for new skill', 'check skill documentation', 'verify skill docs are up to date', 'tdk-skill-docs-sync', 'docs sync after skill creation', or needs to scan and update guide documentation (tdk-skills-guide, index, scenarios, document-flow) after creating or modifying a skill in the tdk-speckit marketplace."
 ---
 
 # tdk-skill-docs-sync
@@ -8,9 +8,9 @@ description: "This skill should be used when the user asks to 'sync skill docs',
 Scan tdk-speckit marketplace skills against `.specify/docs/` documentation and update missing/outdated entries. All read/write operations go through smart-obsidian MCP tools.
 
 **CRITICAL — Vault Path Rule:** Smart-obsidian vault root = `.specify/`. All paths passed to MCP tools MUST be relative to vault root — NEVER prefix with `.specify/`.
-- CORRECT: `get_vault_file("docs/guides/command-reference.md")`
+- CORRECT: `get_vault_file("docs/en/guides/tdk-skills-guide.md")`
 - CORRECT: `list_vault_files("plugins")`
-- WRONG: `get_vault_file(".specify/docs/guides/command-reference.md")` ← double-prefix, 404
+- WRONG: `get_vault_file(".specify/docs/en/guides/tdk-skills-guide.md")` ← double-prefix, 404
 - WRONG: `list_vault_files("")` or `list_vault_files("/")` ← empty path, 404
 
 ## Usage
@@ -19,7 +19,7 @@ Scan tdk-speckit marketplace skills against `.specify/docs/` documentation and u
 /tdk-skill-docs-sync <skill-name> [--plugin <plugin-name>] [--dry-run]
 ```
 
-- **`<skill-name>`**: Name of the skill to sync docs for (e.g., `tdk-ut-auto`)
+- **`<skill-name>`**: Name of the skill to sync docs for (e.g., `tdk-ut-backfill-plan`)
 - **`--plugin <name>`**: Target plugin (default: auto-detect from skill name)
 - **`--dry-run`**: Report gaps only, do not modify any files
 
@@ -56,61 +56,61 @@ All plugins under `.specify/plugins/`. Auto-detect plugin from skill path.
 
 **Fallback** (script unavailable): Run these checks manually via smart-obsidian. Track results as a gap report.
 
-#### Check 1: Command Reference Cheat Sheet
+#### Check 1: TDK Skills Guide Cheat Sheet
 
-Target: `docs/guides/command-reference.md`
+Target: `docs/en/guides/tdk-skills-guide.md`
 
-1. `get_vault_file("docs/guides/command-reference.md")`
+1. `get_vault_file("docs/en/guides/tdk-skills-guide.md")`
 2. Search the **Cheat Sheet** table for `/<skill-name>`
 3. If missing → **GAP**: "Cheat sheet entry missing"
 4. If present but description differs from SKILL.md → **GAP**: "Cheat sheet description outdated"
 
-#### Check 2: Command Reference Detailed Section
+#### Check 2: TDK Skills Guide Usage Reference
 
 Same file, search below the cheat sheet for a dedicated section or mention of the skill.
 
 1. Search for heading or paragraph containing `/<skill-name>` or the skill name
-2. If the skill is a `/tdk-*` command and has no detailed section → **GAP**: "Detailed command reference section missing"
+2. If the skill is a `/tdk-*` command and has no detailed section → **GAP**: "Detailed usage reference section missing"
 3. Non-tdk skills (utility skills) may not need a detailed section — flag as **INFO** only
 
-#### Check 3: Guides README
+#### Check 3: Guides Index
 
-Target: `docs/guides/README.md`
+Target: `docs/en/index.md`
 
-1. `get_vault_file("docs/guides/README.md")`
+1. `get_vault_file("docs/en/index.md")`
 2. Check if skill counts or skill lists reference this skill
-3. If the README has a skill count that's now stale → **GAP**: "README skill count outdated"
+3. If the index has a skill count that's now stale → **GAP**: "Index skill count outdated"
 
-#### Check 4: Scenarios
+#### Check 4: Skill Directory
 
-Target: `docs/guides/scenarios/`
+Target: `docs/en/guides/tdk-skills-guide.md`
 
-1. `list_vault_files("docs/guides/scenarios")`
+1. `get_vault_file("docs/en/guides/tdk-skills-guide.md")`
+2. Check whether a user-facing `/tdk-*` skill has a contact-card row
+3. If missing and `user-invocable` is not `false` → **GAP**: "Skill directory entry missing"
+4. Non-tdk and internal helper skills are informational only
+
+#### Check 5: Scenarios
+
+Target: `docs/en/guides/scenarios/`
+
+1. `list_vault_files("docs/en/guides/scenarios")`
 2. `search_vault_simple(<skill-name>)` — filter results to paths containing `scenarios/`
 3. If skill appears in no scenario → **INFO**: "No scenario references this skill"
 4. This is informational only — scenarios are not auto-generated
 
-#### Check 5: Evolution Comparison
-
-Target: `docs/guides/evolution-comparison.md`
-
-1. `get_vault_file("docs/guides/evolution-comparison.md")`
-2. Find all command count numbers (e.g., `**31**`, `| 31 |`) referencing CommonDragon
-3. Count actual `/tdk-*` commands from cheat sheet (exclude deprecated)
-4. If any count is stale → **GAP**: "Evolution comparison command count outdated (says N, actual M)"
-
 #### Check 6: Document Flow Diagram
 
-Target: `docs/guides/document-flow.md`
+Target: `docs/en/guides/document-flow.md`
 
-1. `get_vault_file("docs/guides/document-flow.md")`
+1. `get_vault_file("docs/en/guides/document-flow.md")`
 2. Search the Mermaid diagram for `/tdk-<skill-name>`
 3. If the skill is a `/tdk-*` command that produces or consumes artifacts and is missing from diagram → **GAP**: "Document flow diagram missing"
 4. Non-tdk skills or utility skills that don't produce artifacts → **INFO** only
 
 #### Check 7: Command Order Quick Reference
 
-Target: `docs/guides/command-reference.md` (section "Command Order Quick Reference")
+Target: `docs/en/guides/tdk-skills-guide.md` (section "Command Order Quick Reference")
 
 1. Search for the ASCII dependency chain under "Command Order Quick Reference"
 2. If the skill is a `/tdk-*` command and missing from the chain → **GAP**: "Command order chain missing"
@@ -140,10 +140,10 @@ Format the report and present to user:
 | # | Doc | Status | Detail |
 |---|-----|--------|--------|
 | 1 | Cheat Sheet | GAP | Entry missing |
-| 2 | Command Reference Detail | OK | Section exists |
-| 3 | README | GAP | Skill count says 32, actual 33 |
-| 4 | Scenarios | INFO | No scenario references |
-| 5 | Evolution Comparison | GAP | Command count says 31, actual 33 |
+| 2 | Usage Reference Detail | OK | Section exists |
+| 3 | Index | GAP | Skill count says 32, actual 33 |
+| 4 | Skill Directory | GAP | Contact-card entry missing |
+| 5 | Scenarios | INFO | No scenario references |
 | 6 | Document Flow | GAP | Missing from Mermaid diagram |
 | 7 | Command Order | GAP | Missing from dependency chain |
 | 8 | plugin.json | WARNING | Not registered |
@@ -151,7 +151,8 @@ Format the report and present to user:
 ### Proposed Changes
 
 1. Add row to cheat sheet table: `| 36 | /tdk-new-skill | Description here |`
-2. Update README skill count: 32 → 33
+2. Add or update skill directory row in `docs/en/guides/tdk-skills-guide.md`
+3. Update index skill count: 32 → 33
 ```
 
 ### Step 4: Confirm with User
@@ -176,7 +177,7 @@ For each approved change, use the appropriate smart-obsidian tool:
 
 ```
 patch_vault_file(
-  filename: "docs/guides/command-reference.md",
+  filename: "docs/en/guides/tdk-skills-guide.md",
   target: "Cheat Sheet",
   targetType: "heading",
   operation: "append",
@@ -185,11 +186,11 @@ patch_vault_file(
 )
 ```
 
-#### Updating README counts
+#### Updating index counts
 
 ```
 patch_vault_file(
-  filename: "docs/guides/README.md",
+  filename: "docs/en/index.md",
   target: <heading containing count>,
   targetType: "heading",
   operation: "replace",
@@ -198,12 +199,25 @@ patch_vault_file(
 )
 ```
 
-#### Adding command reference section
+#### Updating skill directory
 
 ```
 patch_vault_file(
-  filename: "docs/guides/command-reference.md",
-  target: "Command Reference",
+  filename: "docs/en/guides/tdk-skills-guide.md",
+  target: <category heading>,
+  targetType: "heading",
+  operation: "replace",
+  content: <updated category table with skill contact card>,
+  contentType: "text/markdown"
+)
+```
+
+#### Adding usage reference section
+
+```
+patch_vault_file(
+  filename: "docs/en/guides/tdk-skills-guide.md",
+  target: "Usage Reference",
   targetType: "heading",
   operation: "append",
   content: <new section from SKILL.md>,
@@ -211,26 +225,11 @@ patch_vault_file(
 )
 ```
 
-#### Updating evolution comparison counts
-
-```
-patch_vault_file(
-  filename: "docs/guides/evolution-comparison.md",
-  target: "Quick Comparison",
-  targetType: "heading",
-  operation: "replace",
-  content: <updated table with correct command count>,
-  contentType: "text/markdown"
-)
-```
-
-Also update all other occurrences of the old count in the same file (intro paragraph, detailed breakdown table).
-
 #### Adding to document flow diagram
 
 ```
 patch_vault_file(
-  filename: "docs/guides/document-flow.md",
+  filename: "docs/en/guides/document-flow.md",
   target: "Full Workflow Flow",
   targetType: "heading",
   operation: "replace",
@@ -239,13 +238,13 @@ patch_vault_file(
 )
 ```
 
-Place new nodes near related commands (e.g., `batch-design` near `api-design`, `test-viewpoint` after `ba-requirement`).
+Place new nodes near related workflow commands. Keep legacy command names out of current diagrams unless the skill still exists as a verified compatibility route.
 
 #### Updating command order chain
 
 ```
 patch_vault_file(
-  filename: "docs/guides/command-reference.md",
+  filename: "docs/en/guides/tdk-skills-guide.md",
   target: "Command Order Quick Reference",
   targetType: "heading",
   operation: "replace",
@@ -262,11 +261,11 @@ After all changes applied, output summary:
 ## Changes Applied
 
 - [ ] Cheat sheet entry added
-- [ ] Command reference detail section added
-- [ ] Evolution comparison count updated
+- [ ] Usage reference detail section added
+- [ ] Skill directory entry added or refreshed
 - [ ] Document flow Mermaid diagram updated
 - [ ] Command order dependency chain updated
-- [ ] README skill count updated (if applicable)
+- [ ] Index skill count updated (if applicable)
 - [ ] plugin.json — not modified (use separate workflow)
 - [ ] Scenarios — no action needed
 
@@ -279,7 +278,7 @@ Run `/tdk-skill-guide <skill-name>` to verify the skill is now discoverable.
 |------|--------|
 | Skill not found | "Skill '<name>' not found in marketplace. Check spelling or provide --plugin." |
 | MCP unavailable | Fall back to Glob/Grep/Read for scanning, Edit for writing. Report MCP status. |
-| command-reference.md missing | "Guide docs not found. Run setup first." |
+| tdk-skills-guide.md missing | "Guide docs not found. Run setup first." |
 | Dry run mode | Report all gaps, skip Steps 4-5 |
 | User cancels | Exit gracefully, no changes |
 

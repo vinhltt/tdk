@@ -69,4 +69,4 @@ For a full regeneration:
 - Always run `diff` before `sync` to understand what will change.
 - Use `--dry-run` with `sync` for safe previews.
 - `config:index` helps LLM tools discover documentation efficiently.
-- The deprecated `/tdk-sub-workdspace-sync` command redirects to `/tdk-config-sync`.
+- The deprecated `/tdk-sub-workspace-sync` command redirects to `/tdk-config-sync`.

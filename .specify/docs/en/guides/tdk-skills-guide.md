@@ -1,6 +1,8 @@
-# TDK Command Suite Guide
+# TDK Skills Guide
 
-> **Last updated**: 2026-07-01
+> **Last updated**: 2026-07-02
+>
+> **Source baseline**: TDK `547655e v1.94.1`
 >
 > **Terminology**: In this guide, `/tdk-*` items are called "commands." Internally they are Claude Code plugin skills. Both terms refer to the same thing.
 >
@@ -13,9 +15,10 @@
 - [Why TDK?](#why-tdk)
 - [TDK Native Features](#tdk-native-features)
 - [Overview](#overview)
+- [Skill Directory](#skill-directory)
 - [Cheat Sheet](#cheat-sheet)
 - [Quick Start](#quick-start)
-- [Command Reference](#command-reference)
+- [Usage Reference](#usage-reference)
 - [Use Case Scenarios](#use-case-scenarios)
 - [Tips & Best Practices](#tips--best-practices)
 - [Document Flow](#document-flow)
@@ -33,17 +36,13 @@ TDK is the Claude Code native generation of this framework.
 
 | Dimension | speckit-original | speckit-tdk-jp | TDK |
 |-----------|-----------------|----------------|--------------|
-| Commands | 9 | 18 | **13** (11 TS + 2 bash fallback) |
+| Commands | 9 | 18 | **current TDK workflow skills** |
 | Platform | Agent templates | GitHub Copilot | **Claude Code CLI** |
 | UT Framework | -- | -- | **3 commands** |
 | Sub-workspace | -- | -- | **Isolation support** |
 | Config mgmt | -- | -- | **diff/sync/index** |
-| Skills system | -- | -- | **10+ skills** |
+| Skills system | -- | -- | **documented skills guide** |
 | Language | English | Japanese | **English** |
-
-> **Full breakdown**: [tdk-vs-predecessors.md](evolution-comparison.md) — per-dimension table, per-command upgrades, design decisions.
-
----
 
 ## TDK Native Features
 
@@ -61,11 +60,9 @@ Unit-test planning is handled by TDK. Test implementation is routed to consumer-
 
 ### Sub-Workspace Isolation
 
-Commands: `/tdk-sub-workdspace-init`, `/tdk-sub-workdspace-list`
+Commands: `/tdk-sub-workspace-init`, `/tdk-sub-workspace-list`
 
 Use `--sub-workspace <name>` on all UT and config commands to target a specific workspace (e.g., `frontend`, `backend`). Essential for monorepo and multi-service projects where each service has its own framework, conventions, and documentation.
-
-> **Note**: The `sub-workdspace` spelling in command names is intentional — it matches the internal implementation.
 
 ### Config Management Trilogy
 
@@ -110,7 +107,7 @@ code.
 
 ### Skills Ecosystem
 
-TDK ships with 10+ skills that extend the Claude Code environment: context engineering, DOCX/PDF/PPTX processing, MCP builder, brainstorming, docs-seeker (Context7 integration), and more. Skills are loaded on demand and can be extended without modifying core commands.
+TDK ships a documented skills guide covering workflow, architecture, workspace, testing, memory, retro, and guide utilities. See [Skill Directory](#skill-directory) for summaries, modes, options, and use cases.
 
 ### Claude Code Native
 
@@ -131,30 +128,24 @@ The TDK command suite provides a **specification-driven development** workflow. 
                     │                   SPECIFICATION-DRIVEN WORKFLOW                     │
                     └─────────────────────────────────────────────────────────────────────┘
 
-  Phase 0                Phase 1              Optional              Phase 2                Phase 3
-  ┌──────────────┐    ┌──────────┐    ┌────────────────┐    ┌────────────────┐    ┌───────────────────┐
-  │   specify    │───>│ clarify  │───>│task-breakdown  │───>│      plan      │───>│implement│
-  │  (--fast)    │    │ (should) │    │                │    │                   │
-  └──────────────┘    └──────────┘    └────────────────┘    └────────────────┘    └───────────────────┘
-         │                  │                │                       │                       |
-         v                  v                v                       v                       |
-    ┌──────────┐     ┌──────────────┐  ┌─────────────┐        ┌──────────────┐
-    │checklist │     │ba-requirement│  │api-design   │        │routed test   │
-    │(optional)│     │  (Approval)  │  │db-design    │        │skill         │
-    └──────────┘     └──────────────┘  │ (Approval)  │        └──────────────┘
-                                       └─────────────┘
-
-  Design Documents
-  ┌──────────────────┐
-  │ batch-design     │
-  │ test-viewpoint   │
-  └──────────────────┘
-
-  Primary Implementation
-  ┌───────────────────────┐
-  │implement    │
-  │(plan.md ## Phases)    │
-  └───────────────────────┘
+  EPIC SETUP (optional, parent-level)
+  ┌──────────────┐    ┌───────────┐    ┌────────────┐    ┌──────────┐    ┌────────────────┐
+  │ constitution │    │ discovery │───>│ epic-prd   │───>│ epic-hld │───>│ task-breakdown │
+  │ project ctx  │    │ context   │    │ slice map  │    │ design   │    │ child seeds    │
+  └──────────────┘    └───────────┘    └────────────┘    └──────────┘    └───────┬────────┘
+                                                                                  │
+                                                                                  v
+  FEATURE / CHILD SPEC LOOP
+  ┌──────────────┐    ┌──────────┐    ┌──────────┐    ┌────────────────┐    ┌───────────────────┐
+  │ feature brief│───>│ specify  │───>│ clarify  │───>│      plan      │───>│ implement         │
+  │ or child seed│    │ (--fast) │    │ (should) │    │ plan.md phases │    │ phase execution   │
+  └──────────────┘    └────┬─────┘    └────┬─────┘    └───────┬────────┘    └─────────┬─────────┘
+                           │               │                  │                       │
+                           v               v                  v                       v
+                      ┌──────────┐   ┌──────────────┐   ┌──────────────┐       ┌──────────────┐
+                      │checklist │   │spec.md gaps  │   │routed test   │       │status/analyze│
+                      │optional  │   │resolved      │   │skill         │       │any time      │
+                      └──────────┘   └──────────────┘   └──────────────┘       └──────────────┘
 
   PROJECT-LEVEL (no task ID needed):
   ┌──────────────┐    ┌─────────────────────┐    ┌──────────────────────────┐
@@ -175,6 +166,146 @@ Each command reads the output of the previous one. For minimal feature work, the
 
 ---
 
+## Skill Directory
+
+This section is the contact-card directory for user-facing TDK skills. Use it when you need a quick summary of what a skill does, which modes/options it has, and when to use it. Use [Cheat Sheet](#cheat-sheet) for compact command syntax and [Usage Reference](#usage-reference) for workflow inputs, outputs, and dependencies.
+
+### Visibility Rules
+
+Included:
+
+- `tdk-*` skills unless the skill frontmatter says `user-invocable: false`
+- verified compatibility routes that still have a current `SKILL.md`
+- support guides that users call directly, such as `tdk-skill-guide` and `tdk-setup-guide`
+
+Excluded:
+
+- `_shared` folders
+- `user-invocable: false` helper skills
+- generic helper skills that are internal implementation details
+
+### Core Workflow
+
+| Skill | Summary | Main modes/options | Use when |
+|-------|---------|--------------------|----------|
+| `/tdk-discovery` | Create optional epic context before product alignment or child specs. | `<epic-id> [brief|file]`, `--force`, `--interview` | The work is broad enough that problem, persona, and MVP context should exist before requirements. |
+| `/tdk-epic-prd` | Turn discovery into epic PRD, slice map, and blocking questions. | `<epic-id>`, `--force`, `--interview` | Discovery exists and you need product alignment before decomposition. |
+| `/tdk-specify` | Create or interview a feature/child `spec.md`. | `<id> [desc]`, `--fast`, `--interview` | You are ready to write the requirement authority for one feature or child slice. |
+| `/tdk-clarify` | Ask targeted questions and write answers back into `spec.md`. | `<id>` | `spec.md` has gaps that should be resolved before planning. |
+| `/tdk-epic-hld` | Create parent epic high-level design context. | `<epic-id>`, `--force` | Epic PRD exists and needs design lenses before child breakdown. |
+| `/tdk-task-breakdown` | Generate child spec seed Markdown from epic PRD plus HLD. | `<epic-id>`, `--force` | An epic needs independently specifiable child slices. |
+| `/tdk-plan` | Generate implementation plan and design artifacts. | `<id> [content]`, `--fast`, `--hard`, `--red-team`, `--validate` | `spec.md` is ready to become implementation phases. |
+| `/tdk-implement` | Execute runnable rows from `plan.md ## Phases`. | `<id>`, `--phase NN` | A plan exists and one or more implementation phases are ready. |
+| `/tdk-analyze` | Cross-artifact consistency and quality analysis. | `<id>` | You need read-only verification across spec, plan, and phases. |
+| `/tdk-checklist` | Generate a focused quality checklist. | `<id> [focus]` | Requirements need a gate before downstream implementation. |
+| `/tdk-status` | Show workflow progress. | `<id>` | You need a read-only status snapshot. |
+
+### Project And Architecture
+
+| Skill | Summary | Main modes/options | Use when |
+|-------|---------|--------------------|----------|
+| `/tdk-constitution` | Create or update constitution-owned project context. | `[--init brief|file]` | Project principles or durable product context need initialization/update. |
+| `/tdk-greenfield-start` | New-project intake and safe route recommendation. | `[brief|file]`, `--full`, `--quick`, `--unknown` | Starting a new project and not sure which TDK path to run first. |
+| `/tdk-brownfield-start` | Observe-first onboarding for an existing repository. | `[repo-root]`, `--full`, `--config-only`, `--unknown` | Onboarding an existing repo without mutating layout/config too early. |
+| `/tdk-architecture-advisor` | Write project-level architecture options, decision, or recovery report. | `[input|file]`, `--recover-existing`, `--unknown` | You need architecture guidance without changing runtime config or source code. |
+| `/tdk-workspace-layout-propose` | Propose workspace layout markdown and JSON. | `[input|file]`, `--from-existing`, `--unknown` | Architecture evidence should become a reviewable layout proposal. |
+| `/tdk-boundary-map` | Compatibility route for workspace layout proposal. | `[input|file]`, `--from-existing`, `--unknown` | Legacy users call the old boundary-map route. Prefer `/tdk-workspace-layout-propose`. |
+| `/tdk-workflow-config-apply` | Review/apply `.specify/.specify.json` changes from layout evidence. | no flags, `--dry-run`, `--reconcile`, `--yes --expect-hash <hash>`, `--topology <path>` | A layout proposal is ready for guarded runtime config review/apply. |
+| `/tdk-workspace-dependency-policy` | Write dependency policy report and optional enforcement snippets. | `[layout|file]`, `--audit`, `--suggest` | Approved layout evidence should become reviewable dependency guidance. |
+| `/tdk-module-boundary-policy` | Compatibility route for dependency policy. | `[topology|file]`, `--audit`, `--suggest` | Legacy users call the old module-boundary route. Prefer `/tdk-workspace-dependency-policy`. |
+| `/tdk-golden-path-scaffold` | Create or apply a guarded golden-path scaffold recipe. | `[layout|file]`, `--dry-run`, `--yes`, `--preset <name>` | Approved layout/policy evidence should become safe empty structure/templates. |
+
+### Workspace And Config
+
+| Skill | Summary | Main modes/options | Use when |
+|-------|---------|--------------------|----------|
+| `/tdk-config-diff` | Compare workspace and sub-workspace docs. | `--sub-workspace`, `--detailed` | Before syncing docs between workspace layers. |
+| `/tdk-config-sync` | Synchronize docs between workspace and sub-workspaces. | `--from-sub-workspace`, `--to-sub-workspace`, `--all`, `--force`, `--dry-run` | After diff shows docs should be copied. |
+| `/tdk-config-index` | Generate/update document manager index. | `--sub-workspace`, `--full` | Docs should be easier for LLM tools to discover. |
+| `/tdk-sub-workspace-init` | Initialize a sub-workspace config entry. | `[name]` | A monorepo/service boundary needs its own docs/rules context. |
+| `/tdk-sub-workspace-list` | List configured sub-workspaces. | no flags | You need inventory of sub-workspace config. |
+| `/tdk-sub-workspace-docs` | Generate arc42-lite docs for one or all sub-workspaces. | `--sub-workspace NAME`, `--all`, `--force` | Sub-workspace docs need README, architecture, interfaces, and engineering pages. |
+| `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents for one sub-workspace. | `--sub-workspace <name>`, `--no-community-search` | Existing sub-workspace docs should drive automation recommendations. |
+| `/tdk-scaffold-from-recommendation` | Scaffold approved skill/agent recommendation stubs. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only` | A reviewed automation recommendation is approved for scaffolding. |
+
+### Testing And API
+
+| Skill | Summary | Main modes/options | Use when |
+|-------|---------|--------------------|----------|
+| `/tdk-ut-backfill-plan` | Generate unit-test plan and phase files. | `<id>`, `--sub-workspace`, `--review`, `--force`, `--standalone` | Existing feature/code needs a routed unit-test plan. |
+| `/tdk-test-api-plan` | Generate API test plan from endpoints. | OpenAPI, scout, or manual endpoint input | API coverage needs a structured plan before testcase generation. |
+| `/tdk-test-api-generate-testcase` | Generate per-endpoint API testcase files and execution manifest. | reads API test plan | Test plan is ready to become concrete testcase files. |
+| `/tdk-test-api-gen-code-playwright-ts` | Generate Playwright TypeScript API test code. | reads testcase files and execution manifest | Testcase files should become executable Playwright API tests. |
+
+### Memory And Retro
+
+| Skill | Summary | Main modes/options | Use when |
+|-------|---------|--------------------|----------|
+| `/tdk-memory-init` | Initialize domain memory structure. | project/domain setup inputs | A project needs `.specify/memory/` scaffolding. |
+| `/tdk-memory-update` | Add or modify domain knowledge. | natural-language memory updates | Business rules, services, data models, flows, or decisions changed. |
+| `/tdk-memory-query` | Query project memory by natural language. | query text | Planning/implementation needs memory context. |
+| `/tdk-memory-changelog` | Record staged memory changes in `CHANGELOG.md`. | staged `.specify/memory/` diff | Memory edits are ready to document before commit. |
+| `/tdk-retro-collect` | Collect retrospective feedback after a TDK spec/session. | reviews, drift, UT results, traces, user feedback | A completed workflow should feed the learning loop. |
+| `/tdk-retro-propose` | Propose technical or memory learning deltas from feedback. | `retro-feedback.md` | Feedback needs reviewable learning changes. |
+| `/tdk-retro-apply` | Apply approved learning deltas. | approved `learning-delta.md` entries | Accepted retro learnings should update skills/docs/memory. |
+
+### Guide And Research Utilities
+
+| Skill | Summary | Main modes/options | Use when |
+|-------|---------|--------------------|----------|
+| `/tdk-skill-guide` | Interactive guide for skills, commands, scenarios, search, and tips. | no args, `<skill-name>`, `scenario <N>`, `search <keyword>`, `tips <skill-name>` | You need help using a TDK skill from installed docs/source. |
+| `/tdk-setup-guide` | Interactive setup guide and verifier. | no args, `check`, `verify`, `troubleshoot`, `<topic>` | Environment setup, prerequisite checks, or troubleshooting is needed. |
+| `/tdk-scout` | Codebase navigation and two-tier source analysis. | task-specific scout input | Planning needs repo structure, relevant files, and code context. |
+| `docs-seeker` | Route documentation queries to Context7, GitHub, or web fallbacks. | docs query text | You need current library/API docs while working inside TDK. |
+
+### Detailed Mode Notes
+
+#### `/tdk-plan`
+
+| Mode | Effect |
+|------|--------|
+| default | Normal planning workflow from `spec.md`, with research/design artifacts when needed. |
+| `--fast` | Minimal planning path for small clear work; skips heavier research/review steps. |
+| `--hard` | More rigorous planning with expanded research and review. |
+| `--red-team` | Review an existing plan with adversarial focus. Freeform content becomes review focus. |
+| `--validate` | Interview/validate an existing plan. Freeform content becomes validation focus. |
+
+Outputs: `plan.md`, phase details, optional `research/`, `data-model.md`, and `contracts/`.
+
+#### `/tdk-specify`
+
+| Mode | Effect |
+|------|--------|
+| default | Create or update `spec.md` from feature description and available context. |
+| `--fast` | Token-efficient specification for clear work. |
+| `--interview` | Recheck existing or newly generated spec through targeted questions. |
+
+Outputs: `spec.md` and `checklists/requirements.md`.
+
+#### Architecture Inception
+
+Use `greenfield-start` or `brownfield-start` first when project shape is uncertain. Use `architecture-advisor` for report-only options/decision/recovery. Use `workspace-layout-propose` for proposal-only layout artifacts. Use `workflow-config-apply` only after layout evidence is ready for guarded config review/apply.
+
+#### Memory And Retro
+
+Memory skills maintain durable domain knowledge. Retro skills collect what happened, propose changes, and apply only approved deltas. Keep these separate: retrospectives propose; memory updates store accepted domain knowledge.
+
+#### API Test Generation
+
+API test work is a three-step chain:
+
+```text
+/tdk-test-api-plan -> /tdk-test-api-generate-testcase -> /tdk-test-api-gen-code-playwright-ts
+```
+
+Use unit-test backfill separately when the goal is project/module unit testing instead of API testcase/code generation.
+
+### Internal Helpers Not Listed As User Commands
+
+These exist in source but are not cataloged as direct user commands: `_shared`, `tdk-memory-checksum`, `tdk-load-project-context`, `tdk-validate-task-id`, `brainstorming`, `common`, `context-engineering`, `obsidian-brain`, `problem-solving`, `repomix`, `research`, and other `user-invocable: false` helpers.
+
+---
+
 ## Cheat Sheet
 
 | # | Command | Description |
@@ -186,21 +317,19 @@ Each command reads the output of the previous one. For minimal feature work, the
 | 3 | `/tdk-clarify <id>` | Ask up to 5 targeted questions to fill spec gaps |
 | 4 | `/tdk-epic-hld <epic-id> [--force]` | Generate parent epic high-level design artifacts from epic PRD |
 | 5 | `/tdk-task-breakdown <epic-id> [--force]` | Generate child spec seed Markdown from epic PRD + HLD |
-| 6 | `/tdk-ba-requirement <id>` | Generate BA requirement document for stakeholder approval |
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
-| 8 | `/tdk-api-design <id>` | Generate detailed API design (Scenario A/B) with DB schema for approval |
 | 10 | `/tdk-analyze <id>` | Cross-artifact consistency and quality analysis |
 | 11 | `/tdk-status <id>` | Show workflow progress (read-only, any time) |
 | 12 | `/tdk-checklist <id> [focus]` | Generate quality checklist for requirements |
-| 13 | `/tdk-constitution [--init <brief|file>]` | Create/update project architecture principles and initialize project memory artifacts |
-| 14 | `/tdk-greenfield-start [brief|file] [--full|--quick|--unknown]` | New-project intake and routing report |
-| 15 | `/tdk-brownfield-start [repo-root] [--full|--config-only|--unknown]` | Existing-repo onboarding and safe setup recommendations |
-| 16 | `/tdk-architecture-advisor [input|file] [--recover-existing|--unknown]` | Project architecture options, decision, or recovery reports |
-| 17 | `/tdk-workspace-layout-propose [input|file] [--from-existing|--unknown]` | Workspace layout proposal markdown and JSON |
-| 17c | `/tdk-boundary-map [input|file] [--from-existing|--unknown]` | Deprecated compatibility route for workspace layout proposal |
-| 18 | `/tdk-workspace-dependency-policy [layout|file] [--audit|--suggest]` | Optional workspace dependency policy report and non-applied enforcement snippets |
-| 18c | `/tdk-module-boundary-policy [topology|file] [--audit|--suggest]` | Deprecated compatibility route for workspace dependency policy |
-| 19 | `/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <name>]` | Guarded golden-path scaffold plan and recipe |
+| 13 | `/tdk-constitution [--init <brief\|file>]` | Create/update project architecture principles and initialize project memory artifacts |
+| 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake and routing report |
+| 15 | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | Existing-repo onboarding and safe setup recommendations |
+| 16 | `/tdk-architecture-advisor [input\|file] [--recover-existing\|--unknown]` | Project architecture options, decision, or recovery reports |
+| 17 | `/tdk-workspace-layout-propose [input\|file] [--from-existing\|--unknown]` | Workspace layout proposal markdown and JSON |
+| 17c | `/tdk-boundary-map [input\|file] [--from-existing\|--unknown]` | Deprecated compatibility route for workspace layout proposal |
+| 18 | `/tdk-workspace-dependency-policy [layout\|file] [--audit\|--suggest]` | Optional workspace dependency policy report and non-applied enforcement snippets |
+| 18c | `/tdk-module-boundary-policy [topology\|file] [--audit\|--suggest]` | Deprecated compatibility route for workspace dependency policy |
+| 19 | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | Guarded golden-path scaffold plan and recipe |
 | — | **Unit Testing** | |
 | 20 | `/tdk-ut-backfill-plan <id>` | Generate unit test plan and phase files |
 | — | **Config & Workspace** | |
@@ -208,16 +337,11 @@ Each command reads the output of the previous one. For minimal feature work, the
 | 22 | `/tdk-config-sync` | Sync docs between workspace and sub-workspaces |
 | 23 | `/tdk-config-index` | Generate/update document manager index |
 | 24 | `/tdk-workflow-config-apply [(no flags)\|--dry-run\|--reconcile\|--yes --expect-hash <hash>] [--topology <path>]` | Interactive runtime config review/apply from workspace layout proposal |
-| 25 | `/tdk-sub-workdspace-init` | Initialize a new sub-workspace |
-| 26 | `/tdk-sub-workdspace-list` | List all configured sub-workspaces |
+| 25 | `/tdk-sub-workspace-init` | Initialize a new sub-workspace |
+| 26 | `/tdk-sub-workspace-list` | List all configured sub-workspaces |
 | 27 | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | Generate arc42-lite docs under `<docsPath>/sub-workspaces/<name>/` |
 | 28 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | Recommend skills/agents for one selected sub-workspace |
 | 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | Scaffold reviewed skills/agents from an approved recommendation |
-| 30 | `/tdk-sub-workdspace-sync` | ~~Deprecated~~ → use `/tdk-config-sync` instead |
-| — | **Design Documents** | |
-| 31 | `/tdk-batch-design <id>` | Generate batch processing design document for approval |
-| — | **Test Viewpoints** | |
-| 32 | `/tdk-test-viewpoint <id>` | Generate high-level test viewpoints (観点) from spec |
 | — | **Primary Implementation** | |
 | 33 | `/tdk-implement <id> [--phase NN]` | Execute implementation directly from plan.md ## Phases (recommended) |
 
@@ -372,7 +496,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 ---
 
-## Command Reference
+## Usage Reference
 
 ### Core Commands
 
@@ -385,9 +509,7 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
 | high-level-design | `/tdk-epic-hld <epic-id>` | `--force` | `epic-prd/index.md`, `prd.md`, `slice-map.md`, `open-questions.md`; optional HLD routing | `high-level-design/index.md` + 5 design artifacts | epic-prd |
 | task-breakdown | `/tdk-task-breakdown <epic-id>` | `--force` | `epic-prd/`; `high-level-design/` | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md` child spec seed files | high-level-design |
-| ba-requirement | `/tdk-ba-requirement <id>` | `--figma-pc`, `--figma-sp`, `--output` | `spec.md` | `ba-requirement.md` | clarify |
-| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--red-team`, `--validate` | `spec.md`, `ba-requirement.md` | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | ba-requirement |
-| api-design | `/tdk-api-design <id>` | `--scenario A|B` | `spec.md`, `research/` | `api_design.md` (incl. DB schema) | plan |
+| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--red-team`, `--validate` | `spec.md` plus clarified requirements and optional context | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | clarify |
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
 | analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report (no file created) | specify |
@@ -509,7 +631,7 @@ Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [-
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| ut:plan | `/tdk-ut-backfill-plan <id>` | `--sub-workspace`, `--review`, `--force`, `--standalone` | `spec.md` (opt), consumer test skill routing | `ut/plan.md`, `ut/phases/*.md` | plan or direct invocation |
+| unit-test backfill plan | `/tdk-ut-backfill-plan <id>` | `--sub-workspace`, `--review`, `--force`, `--standalone` | `spec.md` (opt), consumer test skill routing | `ut/plan.md`, `ut/phases/*.md` | plan or direct invocation |
 
 ### Config Commands
 
@@ -526,9 +648,8 @@ Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [-
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| sub-workdspace:init | `/tdk-sub-workdspace-init [name]` | — | Project config | `.specify.yaml`, `rules.md` | None |
-| sub-workdspace:list | `/tdk-sub-workdspace-list` | — | `.specify.yaml` | Table display (no file) | sub-workspace:init |
-| sub-workdspace:sync | `/tdk-sub-workdspace-sync` | — | — | — | **Deprecated** → `/tdk-config-sync` |
+| sub-workspace:init | `/tdk-sub-workspace-init [name]` | — | Project config | `.specify/.specify.json`, rules/docs path config | None |
+| sub-workspace:list | `/tdk-sub-workspace-list` | — | `.specify/.specify.json` | Table display (no file) | sub-workspace:init |
 
 ### Other Commands
 
@@ -536,22 +657,6 @@ Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [-
 |---------|--------|-----------|-------|--------|------------|
 | constitution | `/tdk-constitution [principles]` | `--init <brief\|file>` | `constitution.md`, templates | `constitution.md`, `product-context.md`, project docs | None (project-level) |
 | checklist | `/tdk-checklist <id> [focus]` | — | `spec.md`, `plan.md` (opt) | `checklists/{domain}.md` | specify |
-
-### Design Document Commands
-
-| Command | Syntax | Key Flags | Input | Output | Depends On |
-|---------|--------|-----------|-------|--------|------------|
-| batch-design | `/tdk-batch-design <id>` | `--scenario A\|B` | `spec.md`, `research/`, `data-model.md` | `batch-design.md` | plan |
-| test-viewpoint | `/tdk-test-viewpoint <id>` | — | `spec.md`, `ba-requirement.md` | `test-viewpoint.csv` | ba-requirement |
-
-**`/tdk-batch-design` scenarios:**
-
-| Scenario | Trigger | Data Sources |
-|----------|---------|--------------|
-| **A: New Batch** | No existing endpoint impact | spec.md, research/ |
-| **B: With Impact** | Modifies/extends existing batch or tables | spec.md, data-model.md, research/ |
-
-Detection: `--scenario A|B` flag explicit, else `research/` has reports → B, otherwise → A.
 
 ### Primary Implementation Path
 
@@ -572,11 +677,7 @@ See [tdk-document-flow.md](document-flow.md) for full Mermaid flow diagrams show
 **Summary flow (Primary Path):**
 ```
 req → /specify → spec.md → /clarify → spec.md (clarified)
-  → /ba-requirement → ba-requirement.md (Approval)
   → /plan → plan.md (with ## Phases table), research/, data-model.md, contracts/, wireframes/
-  → /api-design → api_design.md (Approval)
-  → /batch-design → batch-design.md (Approval)
-  → /db-design → db_design.md (Approval)
   → /implement → source code
 ```
 
@@ -636,11 +737,11 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 
 | Flag | Used by | Purpose |
 |------|---------|---------|
-| `--sub-workspace <name>` | ut:*, config:* | Target a specific sub-workspace (e.g., `frontend`, `backend`) |
-| `--force` | ut:auto, ut:plan, config:sync | Overwrite existing artifacts without confirmation |
+| `--sub-workspace <name>` | `/tdk-ut-backfill-plan`, config commands | Target a specific sub-workspace (e.g., `frontend`, `backend`) |
+| `--force` | `/tdk-ut-backfill-plan`, `/tdk-config-sync` | Overwrite existing artifacts without confirmation |
 | `--dry-run` | config:sync, workflow-config:apply | Preview changes without writing files; workflow config apply emits `planHash` for automation/debug |
-| `--standalone` | ut:plan | Generate UT plan for existing code without spec |
-| `--review` | ut:plan | Review and update existing UT plan |
+| `--standalone` | `/tdk-ut-backfill-plan` | Generate UT plan for existing code without spec |
+| `--review` | `/tdk-ut-backfill-plan` | Review and update existing UT plan |
 
 ### When to Skip Optional Commands
 
@@ -698,9 +799,7 @@ epic-prd (optional, epic-level product alignment and child spec seeds)
      ↓
 specify [--fast]  →  clarify (optional)  →  checklist (optional)
      ↓
-ba-requirement (for Approval)  →  test-viewpoint (optional)
-     ↓
-   plan (generates ## Phases table)  →  api-design  →  batch-design  →  db-design (as needed)
+plan (generates ## Phases table, research/, data-model.md, contracts/ as needed)
      ↓
  implement  →  status (any time)
 ```

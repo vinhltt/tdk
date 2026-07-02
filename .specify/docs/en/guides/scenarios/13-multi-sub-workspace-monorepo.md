@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-sub-workdspace-init (×2) → /tdk-config-diff → /tdk-config-sync
+/tdk-sub-workspace-init (×2) → /tdk-config-diff → /tdk-config-sync
 ```
 
 ## Step-by-Step
@@ -13,17 +13,17 @@
 ### 1. Initialize sub-workspaces
 
 ```
-/tdk-sub-workdspace-init frontend
-/tdk-sub-workdspace-init backend
+/tdk-sub-workspace-init frontend
+/tdk-sub-workspace-init backend
 ```
 
-**What happens**: Each command creates a sub-workspace configuration with its own `.specify.yaml` and `rules.md`. Documentation paths are isolated per workspace.
-**Output**: `.specify.yaml` updated, workspace-specific rules created
+**What happens**: Each command creates a sub-workspace configuration with its own `.specify/.specify.json` and `rules.md`. Documentation paths are isolated per workspace.
+**Output**: `.specify/.specify.json` updated, workspace-specific rules created
 
 ### 2. Verify sub-workspaces
 
 ```
-/tdk-sub-workdspace-list
+/tdk-sub-workspace-list
 ```
 
 **What happens**: Displays a table of all configured sub-workspaces with their paths and status.

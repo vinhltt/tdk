@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-01T14:57:05Z",
+  "generated_at": "2026-07-02T01:19:43Z",
   "plugins": {
     "tdk-core": {
       "version": "6.0.0",
@@ -190,9 +190,9 @@
       }
     },
     "tdk-utils": {
-      "version": "2.2.1",
+      "version": "2.2.2",
       "files": {
-        ".codex-plugin/plugin.json": "21644758404d6cd8c26ebd9b77df126df9ac497d0c474cb6fdfe8064ffaaec6e",
+        ".codex-plugin/plugin.json": "adc73faf75b297bb0d42d9f759898e554a67ace07f002ce916d3cc537fc550dc",
         "skills/brainstorming/SKILL.md": "583b1c8afc286ee95bba050548ce38fcd1f647c3376e8bad8aff1db7234a299b",
         "skills/brainstorming/scripts/README.md": "ee47937b3b2c9ce3e6d358b118c4f7693b3596b4085b93f0376e41b4028898e3",
         "skills/brainstorming/scripts/brainstorm.py": "ae22620928cbd69e03b05e4db707367bfb166b5c87eb70aa22114ddd6fd8461e",
@@ -216,7 +216,7 @@
         "skills/context-engineering/scripts/context_analyzer.py": "25209958471fa2a74ec9d6211f912c32117b6754eb382223e388e7060823b533",
         "skills/context-engineering/scripts/tests/test_edge_cases.py": "06d705178ded2fa7e571e35c7bc875580337dcb15e4b27b1814c644f15115dfe",
         "skills/docs-seeker/SKILL.md": "e1de5ea14889812fdb6ed4ae30e16db6fc2d5de4631ccc5fe3a3318546de027e",
-        "skills/obsidian-brain/SKILL.md": "db15a6733698b3fa19a56d3a36077f9be9c65b3b1b3b544c581b9512ba627922",
+        "skills/obsidian-brain/SKILL.md": "f76223dd77180ba81e49e2725dc5b554e589b1604bad2e00cb6e0d8135511afb",
         "skills/obsidian-brain/references/json-canvas.md": "37b539a44c6173e28e2d0647b46bef1f6a291fa6e5165df6b5447c0d19e83377",
         "skills/obsidian-brain/references/obsidian-base.md": "e17bd8574a09ee278605ea7e55118b36f0bdcf2fe62f452807852a9a28225db8",
         "skills/obsidian-brain/references/obsidian-markdown.md": "676007714e1ff93d4c27e6b27ac4c67c603a5ffb15fcf88458aa9197d1fbc057",
@@ -247,8 +247,8 @@
         "skills/tdk-load-project-context/SKILL.md": "e035f5425f4f13f2f1fb9f5f8f3db1c05a03f6f1954f536f06ae74b5cd91d501",
         "skills/tdk-module-boundary-policy/SKILL.md": "797c06870b1c33f9aa5d10bf2d4ce8a034c9109af97107c0df6fc24127b8acac",
         "skills/tdk-scout/SKILL.md": "3ae073d7c22872345c67d1d8bf69c98fd601d99a49b0c8f8efbe86ce0be8fbf3",
-        "skills/tdk-setup-guide/SKILL.md": "995fa140c95ae121cc44316219bd0675bd570172d41a4096edcd1eb25bd0451d",
-        "skills/tdk-skill-guide/SKILL.md": "21c6aa8898eebd416c2072c4867433cb6471305751309d818aadc39da171f627",
+        "skills/tdk-setup-guide/SKILL.md": "44b55f4810ddc4e2b30d0e407a4d2387ea88f85cd2071e7f74c487391962ecb8",
+        "skills/tdk-skill-guide/SKILL.md": "39fb4e3ac40f8bd611bdba9d5d47171c3232ade680a6aaf9df5fbf74f5b7b55d",
         "skills/tdk-validate-task-id/SKILL.md": "37fd8d518fa3de373b5a93c0384eee5b21fbc45ffe1264b6d490016745275f1b",
         "skills/tdk-workspace-dependency-policy/SKILL.md": "1e439c81c185169891c1c6261e08aaa82b0ca7b3f9823e0bc40226d46f2ff089",
         "skills/tdk-workspace-dependency-policy/references/ecosystem-boundary-candidates.md": "b81363436b53619ab8d9c97f9ea76705d93be866e106d0d5eb8f307ee9a986a7",

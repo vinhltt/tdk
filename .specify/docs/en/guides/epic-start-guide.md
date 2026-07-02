@@ -580,7 +580,7 @@ Repeat the child loop for each selected seed. Do not plan and implement the pare
 ## Related Docs
 
 - [Hướng Dẫn Bắt Đầu Epic](../../vi/guides/epic-start-guide.md)
-- [Command Reference](command-reference.md)
+- [TDK Skills Guide](tdk-skills-guide.md)
 - [Document Flow](document-flow.md)
 - [Full Feature Development Scenario](scenarios/01-full-feature-development.md)
 - [Promote Convention](promote-convention.md)

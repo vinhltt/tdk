@@ -4,21 +4,21 @@ Maps which documentation files track skill information and where new entries bel
 
 ## Primary Docs (Check Always)
 
-### 1. Command Reference — Cheat Sheet Table
+### 1. TDK Skills Guide — Cheat Sheet Table
 
-- **Path**: `docs/guides/command-reference.md`
+- **Path**: `docs/en/guides/tdk-skills-guide.md`
 - **Section**: `## Cheat Sheet`
 - **Format**: `| # | Command | Description |`
 - **Applies to**: All `/tdk-*` skills that are user-invocable
 - **Action**: Add numbered row with `/skill-name` and description from SKILL.md frontmatter
 - **Numbering**: Continue from last number in table. Group by category (see category markers `| — |`)
 
-### 2. Command Reference — Detailed Section
+### 2. TDK Skills Guide — Usage Reference Detail
 
-- **Path**: `docs/guides/command-reference.md`
-- **Section**: `## Command Reference` (below cheat sheet)
+- **Path**: `docs/en/guides/tdk-skills-guide.md`
+- **Section**: `## Usage Reference` (below quick start)
 - **Format**: `### /skill-name` subsection with usage, args, output, tips
-- **Applies to**: `/tdk-*` commands only (not utility skills)
+- **Applies to**: Core workflow `/tdk-*` commands that need artifact/ordering detail
 - **Action**: Add subsection derived from SKILL.md usage + description
 - **Template**:
   ```markdown
@@ -39,23 +39,31 @@ Maps which documentation files track skill information and where new entries bel
   **Tips**: <key gotchas or best practices>
   ```
 
-### 3. Guides README
+### 3. TDK Skills Guide — Skill Directory Contact Cards
 
-- **Path**: `docs/guides/README.md`
+- **Path**: `docs/en/guides/tdk-skills-guide.md`
+- **Section**: Relevant category table
+- **Format**: `| Skill | Summary | Main modes/options | Use when |`
+- **Applies to**: User-facing `/tdk-*` skills unless `user-invocable: false`; direct support guides such as `tdk-skill-guide` and `tdk-setup-guide`
+- **Action**: Add or update one concise contact-card row from SKILL.md frontmatter, usage, and verified mode flags.
+
+### 4. Guides Index
+
+- **Path**: `docs/en/index.md`
 - **What to check**: Skill counts, skill lists, category breakdowns
-- **Action**: Update counts if stale. Do NOT add individual skill entries unless README has a skill list.
+- **Action**: Update counts if stale. Link new catalog pages from the guides table when needed. Do NOT add individual skill entries unless the index has a skill list.
 
 ## Secondary Docs (Check if Relevant)
 
-### 4. Scenarios
+### 5. Scenarios
 
-- **Path**: `docs/guides/scenarios/*.md`
+- **Path**: `docs/en/guides/scenarios/*.md`
 - **What to check**: Whether any scenario mentions the skill
 - **Action**: Informational only — report presence/absence. Do not auto-create scenarios.
 
-### 5. Workflow Pipeline Diagram
+### 6. Workflow Pipeline Diagram
 
-- **Path**: `docs/guides/command-reference.md`
+- **Path**: `docs/en/guides/tdk-skills-guide.md`
 - **Section**: `### Workflow Pipeline` (ASCII diagram)
 - **Applies to**: Skills that fit into the core workflow pipeline (specify → clarify → plan → tasks → implement)
 - **Action**: If skill is part of core flow, suggest updating diagram. Do NOT auto-modify ASCII art.
@@ -74,15 +82,15 @@ Skills in the cheat sheet are grouped by category markers:
 
 | Category Marker | Skills |
 |----------------|--------|
-| (top, no marker) | Core workflow: specify, clarify, plan, tasks, implement, analyze, status, checklist, constitution |
-| `Page Design & Quality` | specify-pages, update-page-design, review-code |
-| `Change & Progress` | change-requirement, show-progress |
-| `Unit Testing` | ut-auto, ut-plan, ut-generate, ut-create-rules, ut-check-rules |
-| `Config & Workspace` | config-diff, config-sync, config-index, sub-workspace-init, sub-workspace-list |
+| (top, no marker) | Core workflow: discovery, epic-prd, specify, clarify, epic-hld, task-breakdown, plan, analyze, status, checklist, constitution |
+| `Unit Testing` | ut-backfill-plan and consumer test-skill routing |
+| `Config & Workspace` | config-diff, config-sync, config-index, workflow-config-apply, sub-workspace-init/list/docs/automation-recommend, scaffold-from-recommendation |
+| `Project Inception` | greenfield-start, brownfield-start, architecture-advisor, workspace-layout-propose, dependency-policy, golden-path-scaffold |
+| `Primary Implementation` | implement |
 
 New skills should be placed under the appropriate category. If no category fits, suggest a new one.
 
-> **Note**: This category table is a snapshot. Always verify against the actual `command-reference.md` cheat sheet before placing entries.
+> **Note**: This category table is a snapshot. Always verify against the actual `tdk-skills-guide.md` cheat sheet before placing entries.
 
 ## Smart-Obsidian Tool Reference
 
@@ -100,6 +108,6 @@ New skills should be placed under the appropriate category. If no category fits,
 Smart-obsidian vault root = `.specify/`
 
 All paths passed to MCP tools are **relative to vault root**:
-- `docs/guides/command-reference.md` (not `.specify/docs/guides/command-reference.md`)
+- `docs/en/guides/tdk-skills-guide.md` (not `.specify/docs/en/guides/tdk-skills-guide.md`)
 - `plugins/tdk-core/.claude-plugin/plugin.json`
-- `docs/guides/scenarios/01-full-feature-development.md`
+- `docs/en/guides/scenarios/01-full-feature-development.md`

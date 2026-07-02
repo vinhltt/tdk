@@ -201,7 +201,7 @@ Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup,
 
 ## Documentation
 
-- [Command Reference](.specify/docs/en/guides/command-reference.md) — full CLI documentation
+- [TDK Skills Guide](.specify/docs/en/guides/tdk-skills-guide.md) — skill directory, cheat sheet, and usage reference
 - [tdk-setup README](packages/tdk-setup/README.md) — harness setup CLI reference
 - [Scenario Guides](.specify/docs/en/guides/scenarios/) — 11 workflow scenarios
 - [Setup Guide](.specify/docs/en/guides/setup/installation.md) — installation and configuration
