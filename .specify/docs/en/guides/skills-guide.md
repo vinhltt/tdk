@@ -18,9 +18,9 @@
 - [Cheat Sheet](#cheat-sheet)
 - [Quick Start](#quick-start)
 - [Usage Reference](#usage-reference)
+- [Workflow Map](#workflow-map)
 - [Use Case Scenarios](#use-case-scenarios)
 - [Tips & Best Practices](#tips--best-practices)
-- [Document Flow](#document-flow)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -104,7 +104,7 @@ Excluded:
 
 | Skill | Summary | Main modes/options | Use when |
 |-------|---------|--------------------|----------|
-| `/tdk-discovery` | Create optional epic context before product alignment or child specs. | `<epic-id> [brief|file]`, `--force`, `--interview` | The work is broad enough that problem, persona, and MVP context should exist before requirements. |
+| `/tdk-discovery` | Create optional epic context before product alignment. | `<epic-id> [brief|file]`, `--force`, `--interview` | The work is broad enough that problem, persona, and MVP context should exist before epic PRD. |
 | `/tdk-epic-prd` | Turn discovery into epic PRD, slice map, and blocking questions. | `<epic-id>`, `--force`, `--interview` | Discovery exists and you need product alignment before decomposition. |
 | `/tdk-specify` | Create or interview a feature/child `spec.md`. | `<id> [desc]`, `--fast`, `--interview` | You are ready to write the requirement authority for one feature or child slice. |
 | `/tdk-clarify` | Ask targeted questions and write answers back into `spec.md`. | `<id>` | `spec.md` has gaps that should be resolved before planning. |
@@ -226,7 +226,7 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 
 | # | Command | Description |
 |---|---------|-------------|
-| 0 | `/tdk-discovery <epic-id> [<brief\|file>] [--force] [--interview]` | Optional epic discovery context before `tdk-specify`; ID-only `--interview` rechecks existing discovery artifacts |
+| 0 | `/tdk-discovery <epic-id> [<brief\|file>] [--force] [--interview]` | Optional epic discovery context before `tdk-epic-prd`; ID-only `--interview` rechecks existing discovery artifacts |
 | 0a | `/tdk-epic-prd <epic-id> [--force] [--interview]` | Optional epic product alignment, slice map, and blocking-question gate after discovery; ID-only `--interview` rechecks existing PRD artifacts |
 | 1 | `/tdk-specify <id> [<desc>] [--interview]` | Create a child or feature spec, or run ID-only `--interview` against existing `spec.md` |
 | 2 | `/tdk-specify <id> <desc> --fast [--interview]` | Quick specification (skips brainstorm, fewer tokens); `--fast --interview` is valid |
@@ -265,155 +265,18 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 
 ## Quick Start
 
-Follow this walkthrough to develop your first feature end-to-end.
+Use this file for command lookup. For runnable step-by-step workflows, start with the scenario that matches your situation:
 
-If you are starting from a broad or vague epic, read the [Epic Start Guide](epic-start-guide.md) first. It explains when to use discovery, what each artifact means, and which readiness gates must pass before moving on.
+| Situation | Start with |
+|---|---|
+| Setup or command installation is not complete | [Setup Guide](setup/setup-guide.md) |
+| Broad epic, vague idea, or work that needs child spec seeds | [Epic Start Guide](scenarios/00-epic-start-guide.md) |
+| One clear child seed or one small feature to implement | [Child Feature Implementation](scenarios/01-child-feature-implementation.md) |
+| Small well-understood feature where brainstorm can be skipped | [Quick Specification](scenarios/02-quick-specification.md) |
+| You need a status snapshot or progress check | [Progress Tracking](scenarios/04-progress-tracking.md) |
+| New project needs architecture and layout guidance | [Greenfield Full Start, Architecture, Topology](scenarios/10-greenfield-full-start-architecture-topology.md) |
 
-### Prerequisites
-
-- **Claude Code** installed ([installation guide](https://docs.anthropic.com/en/docs/claude-code))
-- **Git Bash** on Windows (included with Git for Windows)
-- Project initialized with `.specify/.specify.env` configuration file
-
-### Step 1 — Discover or specify
-
-For a broad epic, optionally capture discovery context before product alignment:
-
-```
-/tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and moderation"
-```
-
-This creates `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, and `discovery.md`. Discovery is context-only: it does not create `spec.md`, plans, work items, tracker records, or `UR-*` / `FR-*` / `SC-*` IDs. Skip it for small feature-sized work.
-
-Add `--interview` when the epic is broad or risky enough that you want to challenge the generated discovery text before completion. It folds accepted changes into the same four discovery files and creates no separate interview artifact or tracker record.
-
-After discovery exists, use `/tdk-discovery <id> --interview` to rerun the alignment interview against the current four discovery files. This replay path does not regenerate discovery. Do not use positional `interview`; use `--interview`.
-
-Before writing child specs for a broad epic, create the epic PRD:
-
-```
-/tdk-epic-prd feat-001 --interview
-```
-
-This creates `epic-prd.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, and `epic-prd/open-questions.md`. Epic PRD is not `spec.md`; it does not mint requirement IDs or create tracker issues.
-
-Before writing child specs for a broad epic, create parent HLD and task breakdown:
-
-```
-/tdk-epic-hld feat-001
-/tdk-task-breakdown feat-001
-```
-
-HLD reads epic PRD artifacts and produces `high-level-design.md` plus five design artifacts. Task breakdown reads epic PRD + HLD and creates `tasks-breakdown.md` plus child spec seed files. These stages do not mint `UR-*`, `FR-*`, or `SC-*`.
-
-```
-/tdk-specify feat-002 "Avatar upload image cropping slice"
-```
-
-This creates `.specify/specs/feat-001/spec.md` with user stories, requirements, and acceptance criteria. Answer any clarifying questions Claude asks (up to 3).
-
-Use `/tdk-specify <id> <desc> --interview` to review the draft spec against your intent before unresolved-question handling. `--fast --interview` is valid: `--fast` controls draft depth, while `--interview` controls the alignment gate.
-
-After `spec.md` exists, use `/tdk-specify <id> --interview` to rerun the alignment interview against the current spec without creating a new spec. `--fast --interview` still requires a description.
-
-### Step 2 — Clarify gaps (optional but recommended)
-
-```
-/tdk-clarify feat-001
-```
-
-Claude identifies underspecified areas and asks up to 5 targeted questions. Answers are encoded back into `spec.md`.
-
-For HLD, task breakdown, or child planning, `## 9. Unresolved Questions` must be exactly `None`.
-
-### Step 3 — Produce parent high-level design
-
-```
-/tdk-epic-hld feat-001
-```
-
-Creates `high-level-design.md` and five design artifacts from epic PRD. Use this when stakeholders need parent design context before child spec seed breakdown. HLD does not create requirement IDs.
-
-### Step 4 — Generate child spec seeds
-
-```
-/tdk-task-breakdown feat-001
-```
-
-Creates `tasks-breakdown.md` and `tasks-breakdown/task-NNN-*.md` child spec seed files from epic PRD + HLD. This is tracker-neutral Markdown only; GitHub, GitLab, Backlog, Jira, or other issue sync stays consumer-owned.
-
-For epic-sized work, each seed starts a child spec and runs its own `specify -> clarify -> plan -> implement` loop. Child specs do not run HLD by default. For small feature-sized work, skip parent epic HLD and task breakdown and plan the current spec directly.
-
-### Step 5 — Plan the implementation
-
-```
-/tdk-plan feat-001
-```
-
-Generates `plan.md` with architecture decisions, file structure, tech stack, and design artifacts (`data-model.md`, `contracts/`, `research/`). The plan includes a `## Phases` table for implementation.
-
-For direct feature-sized work, plan the current spec ID. For epic-sized work after task breakdown, plan each child spec ID created from a tracker sub-issue; do not plan the parent epic as one large implementation unit unless you intentionally decide it is small enough.
-
-### Step 6 — Implement (Recommended Path)
-
-```
-/tdk-implement feat-001
-```
-
-Executes implementation directly from `plan.md ## Phases` table. Lightweight approach for small to medium features. Marks completion in the `plan.md` phases table. UT phase files delegate to the consumer test skill listed in `## Delegate Skills`.
-
-To execute one phase only:
-
-```
-/tdk-implement feat-001 --phase 03
-```
-
-Selected mode still honors dependencies and stale `in_progress` recovery.
-
-### Step 6 — Run unit tests (optional)
-
-Map the `test` domain in `{docs.path}/custom-workflow/plan-skill-routing.md`, then run:
-
-```
-/tdk-implement feat-001
-```
-
-`/tdk-plan` triggers `/tdk-ut-backfill-plan` when UT planning is needed. The generated `ut/phases/*.md` files delegate implementation to the routed consumer test skill.
-
-### Optional HLD design routing
-
-To add project-specific advisory design skills, copy `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` to `{docs.path}/custom-workflow/high-level-design-skill-routing.md` and map lenses such as `architecture`, `security`, `data`, `api`, `ux`, or `operability`.
-
-Missing HLD routing is non-blocking; `/tdk-epic-hld` continues with built-in lenses. Consumer HLD skills are read-only/advisory and do not write artifacts.
-
-### Check progress any time
-
-```
-/tdk-status feat-001
-```
-
-Shows a progress bar, completed/remaining phases, and recommendations.
-
-### Artifacts produced (Primary Path)
-
-```
-.specify/specs/feat-001/
-├── index.md             ← Epic dashboard and next-command summary
-├── discovery.md         ← Optional discovery stage manifest
-├── discovery/           ← Optional discovery detail files
-├── epic-prd.md          ← Optional epic PRD stage manifest
-├── epic-prd/            ← Optional epic PRD details, slice map, and open questions
-├── spec.md              ← Step 1
-├── high-level-design.md ← Parent epic HLD stage manifest
-├── high-level-design/   ← Parent epic HLD detail files
-├── tasks-breakdown.md   ← Parent child spec seed manifest
-├── tasks-breakdown/     ← Parent child spec seed files
-├── plan.md              ← Step 4 (includes ## Phases table)
-├── research/            ← Step 4 (if needed)
-├── data-model.md        ← Step 4 (if needed)
-├── contracts/           ← Step 4 (if needed)
-└── checklists/          ← /tdk-checklist (optional)
-```
+For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalog.md). For file input/output relationships, use the [Workflow Map](workflow-map.md). Keep this guide open when you need command syntax, flags, modes, inputs, and outputs.
 
 ---
 
@@ -423,9 +286,9 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| discovery | `/tdk-discovery <epic-id> [<brief\|file>] [--force] [--interview]` | `--force`, `--interview` | Project context, constitution/memory, brief or file; existing discovery files for ID-only `--interview` | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery.md` | Optional after constitution, before epic-prd or specify |
+| discovery | `/tdk-discovery <epic-id> [<brief\|file>] [--force] [--interview]` | `--force`, `--interview` | Project context, constitution/memory, brief or file; existing discovery files for ID-only `--interview` | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery.md` | Optional after constitution, before epic-prd |
 | epic-prd | `/tdk-epic-prd <epic-id> [--force] [--interview]` | `--force`, `--interview` | Existing `discovery.md`, `problem.md`, `personas.md`, `mvp-scope.md`; existing PRD files for ID-only `--interview` | `epic-prd.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` | discovery |
-| specify | `/tdk-specify <id> [<desc>] [--interview]` | `--interview` | `.specify.env`; optional `discovery.md` or `epic-prd/slice-map.md` seed; existing `spec.md` for ID-only `--interview` | `spec.md`, `checklists/requirements.md` | None, discovery context, or epic PRD slice seed |
+| specify | `/tdk-specify <id> [<desc>] [--interview]` | `--interview` | `.specify.env`; explicit feature description or `tasks-breakdown` seed; existing `spec.md` for ID-only `--interview` | `spec.md`, `checklists/requirements.md` | None, or child seed from task breakdown |
 | specify (fast) | `/tdk-specify <id> <desc> --fast [--interview]` | `--fast`, `--interview` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
 | high-level-design | `/tdk-epic-hld <epic-id>` | `--force` | `epic-prd.md`, `prd.md`, `slice-map.md`, `open-questions.md`; optional HLD routing | `high-level-design.md` + 5 design artifacts | epic-prd |
@@ -591,9 +454,9 @@ Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [-
 - **(a) Update phases only** — When feature scope expands or phases change: re-run `/tdk-plan <id>` (overwrites plan.md; you lose current Status-column progress)
 - **(b) Append new phases** — When adding follow-up work: manually add rows to the existing `## Phases` table in plan.md, then resume with `/tdk-implement <id> [--phase NN]`
 
-## Document Flow
+## Workflow Map
 
-See [tdk-document-flow.md](document-flow.md) for full Mermaid flow diagrams showing input/output relationships between all commands and artifacts.
+See [workflow-map.md](workflow-map.md) for full Mermaid flow diagrams showing input/output relationships between commands and files.
 
 **Summary flow (Primary Path):**
 ```
@@ -606,37 +469,7 @@ req → /specify → spec.md → /clarify → spec.md (clarified)
 
 ## Use Case Scenarios
 
-Detailed walkthroughs for common development situations. Each scenario includes problem context, exact command sequence, and step-by-step instructions.
-
-### Core Workflows
-
-| # | Scenario | When to use | Link |
-|---|----------|-------------|------|
-| 1 | Full Feature Development | New feature from scratch | [01-full-feature-development.md](scenarios/01-full-feature-development.md) |
-| 2 | Quick Specification | Small feature, skip brainstorm | [02-quick-specification.md](scenarios/02-quick-specification.md) |
-| 3 | Quality Review & Analysis | Before PR, validate consistency | [03-quality-review-analysis.md](scenarios/03-quality-review-analysis.md) |
-
-### Setup & Management
-
-| # | Scenario | When to use | Link |
-|---|----------|-------------|------|
-| 7 | Project Setup & Constitution | New project or team onboarding | [07-project-setup-constitution.md](scenarios/07-project-setup-constitution.md) |
-| 8 | Workspace Docs Management | Sync and organize docs | [08-workspace-docs-management.md](scenarios/08-workspace-docs-management.md) |
-
-### Advanced Workflows
-
-| # | Scenario | When to use | Link |
-|---|----------|-------------|------|
-| 13 | Multi-Sub-Workspace Monorepo | Multi-service project setup | [13-multi-sub-workspace-monorepo.md](scenarios/13-multi-sub-workspace-monorepo.md) |
-| 14 | Greenfield Full Start, Architecture, And Topology | New project start through architecture, topology, boundary policy, and sub-workspace docs | [14-greenfield-full-start-architecture-topology.md](scenarios/14-greenfield-full-start-architecture-topology.md) |
-
-### Day-to-Day
-
-| # | Scenario | When to use | Link |
-|---|----------|-------------|------|
-| 9 | Progress Tracking | Check where you left off | [09-progress-tracking.md](scenarios/09-progress-tracking.md) |
-| 10 | Mid-Development Changes | Requirements changed mid-feature | [10-mid-development-changes.md](scenarios/10-mid-development-changes.md) |
-| 11 | Resume Existing Feature | Continue work after a break | [11-resume-existing-feature.md](scenarios/11-resume-existing-feature.md) |
+Detailed walkthroughs live in [Scenario Catalog](scenarios/scenario-catalog.md). This file intentionally keeps only command reference material so scenario pages remain the source of truth for step-by-step workflows.
 
 ---
 
@@ -681,7 +514,7 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 | "spec.md not found" | Running `plan` or implementation before `specify` | Run `/tdk-specify <id> <description>` first |
 | "plan.md not found" | Running implementation before `plan` | Run `/tdk-plan <id>` first |
 | "Invalid prefix" | Task ID prefix not in allowed list | Check `ERCSPEC_PREFIX_LIST` in `.specify/.specify.env` |
-| "Task ID already exists" | `spec.md` or an existing guarded artifact already exists | Work on existing feature or use a different ID. A directory containing only `discovery/` can continue to `/tdk-specify` |
+| "Task ID already exists" | `spec.md` or an existing guarded artifact already exists | Work on existing feature or use a different ID. A directory containing `discovery.md` but no `spec.md` is a parent epic directory; continue with `/tdk-epic-prd <id>` |
 | "Discovery already exists" | `discovery.md` already exists | Re-run `/tdk-discovery ... --force` only when replacing discovery context intentionally |
 | "Discovery replay interview requires existing discovery artifacts" | Running `/tdk-discovery <id> --interview` before all four discovery files exist | Create discovery first with `/tdk-discovery <id> <brief\|file> --interview` |
 | "Epic PRD requires existing discovery artifacts" | Running `/tdk-epic-prd <id>` before the four discovery files exist | Create discovery first with `/tdk-discovery <id> <brief\|file>` |
@@ -695,34 +528,13 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 
 ### Command Order Quick Reference
 
-If you get a "not found" error, follow this dependency chain:
+If a command reports a missing prerequisite, use [Workflow Map](workflow-map.md) to inspect file inputs/outputs and use [Scenario Catalog](scenarios/scenario-catalog.md) to choose the matching runnable workflow. The short path for feature-sized work is:
 
-**Primary (Recommended) Path:**
-```
-constitution (optional, project-level)
-     ↓
-greenfield-start or brownfield-start (optional, project-level)
-     ↓
-architecture-advisor (optional, project-level report-only)
-     ↓
-boundary-map (optional, project-level proposal-only)
-     ↓
-workflow-config-apply, or explicit --dry-run then --yes --expect-hash for automation (optional, project-level)
-     ↓
-golden-path-scaffold --dry-run, then --yes when recipe approved (optional, skeleton only)
-     ↓
-discovery (optional, epic-level context)
-     ↓
-epic-prd (optional, epic-level product alignment and child spec seeds)
-     ↓
-specify [--fast]  →  clarify (optional)  →  checklist (optional)
-     ↓
-plan (generates ## Phases table, research/, data-model.md, contracts/ as needed)
-     ↓
- implement  →  status (any time)
+```text
+specify [--fast] -> clarify -> plan -> implement -> status
 ```
 
-Each command requires the output of commands above it in the chain.
+For broad epics, start with [Epic Start Guide](scenarios/00-epic-start-guide.md) instead of planning the parent epic directly.
 
 ---
 

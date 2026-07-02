@@ -1,4 +1,4 @@
-# Promote Convention: Child Spec Seed → Child Spec
+# Concept: Promote Convention: Child Spec Seed -> Child Spec
 
 > How to turn a `/tdk-task-breakdown` seed into an independent **child spec**
 > that runs the normal child implementation pipeline.

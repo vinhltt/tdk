@@ -1,13 +1,13 @@
-# TDK Document Flow
+# TDK Workflow Map
 
-> Visual representation of all artifact inputs/outputs across the TDK command workflow.
-> Migrated from speckit-tdk-jp DOCUMENT-FLOW.md and updated for Claude Code slash commands.
+> Bản đồ input/output file cho TDK command workflow.
+> Dùng file này để xem mỗi command `/tdk-*` đọc file nào, ghi file nào, và truyền gì cho bước sau.
 
 ---
 
 ![TDK lifecycle workflow](../../assets/lifecycle-share-graph.png)
 
-## Full Workflow Flow
+## Full Workflow Map
 
 ```mermaid
 flowchart TD
@@ -61,20 +61,19 @@ flowchart TD
     SPEC_CLARIFIED -->|/tdk-plan| QUICKSTART[quickstart.md<br/>Setup Guide]
     SPEC_CLARIFIED -->|/tdk-plan| WIREFRAMES[design/wireframes/<br/>wf-*.html]
 
-    %% Phase 2: Implementation (Solo Path - Primary)
+    %% Phase 2: Implementation
     PLAN -->|/tdk-implement<br/>or --phase NN| CODE_BE[backend/src/<br/>Backend Code]
     PLAN -->|/tdk-implement<br/>or --phase NN| CODE_FE[frontend/pages/<br/>Frontend Code]
 
-    %% Styling
-    classDef phase0 fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-    classDef phase1 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef phase2 fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef phase3 fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
-    classDef phase4 fill:#fff9c4,stroke:#f57f17,stroke-width:2px
-    classDef phase5 fill:#ffebee,stroke:#b71c1c,stroke-width:2px
-    classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5
-    classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
-    classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px
+    classDef phase0 fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#0f172a
+    classDef phase1 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#0f172a
+    classDef phase2 fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#0f172a
+    classDef phase3 fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#0f172a
+    classDef phase4 fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#0f172a
+    classDef phase5 fill:#ffebee,stroke:#b71c1c,stroke-width:2px,color:#0f172a
+    classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5,color:#0f172a
+    classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px,color:#0f172a
+    classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px,color:#0f172a
 
     class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,HLD,TASK_BREAKDOWN,SPEC,SPEC_CLARIFIED phase0
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES phase1
@@ -84,7 +83,7 @@ flowchart TD
 
 ---
 
-## Phase-by-Phase Details
+## Chi Tiết Theo Phase
 
 ### Phase 0: Specification
 
@@ -128,21 +127,21 @@ flowchart LR
 
     SPEC_CLAR -.->|contains| CONTENT["- Functional requirements<br/>- User stories<br/>- Acceptance criteria<br/>- Clarifications"]
 
-    classDef input fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-    classDef output fill:#b3e5fc,stroke:#01579b,stroke-width:2px
-    classDef note fill:#f5f5f5,stroke:#616161,stroke-width:1px
+    classDef input fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#0f172a
+    classDef output fill:#b3e5fc,stroke:#01579b,stroke-width:2px,color:#0f172a
+    classDef note fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#0f172a
 
     class REQ input
     class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,SPEC,SPEC_CLAR,HLD,TASKS output
     class CONTENT note
 ```
 
-**Create a child spec from a seed.** A `tasks-breakdown/task-NNN-{slice}.md`
-seed that is independently specifiable can become a child spec at
-`specs/<child-id>/`. Parent epic traceability stays in the seed refs; `parent_spec`
-is only for explicit links to an existing parent `spec.md`. See
-[Promote Convention](./promote-convention.md) for the manual seed flow,
-optional `parent_spec` rule, and sizing rule.
+**Tạo child spec từ seed.** Một seed `tasks-breakdown/task-NNN-{slice}.md`
+có thể spec độc lập có thể trở thành child spec tại `specs/<child-id>/`.
+Traceability của parent epic nằm trong seed refs; `parent_spec` chỉ dành cho
+link rõ ràng tới một parent `spec.md` đã tồn tại. Xem
+[Promote Convention](concepts/promote-convention.md) để biết manual seed flow,
+optional `parent_spec` rule, và sizing rule.
 
 ### Phase 1: Design & Architecture
 
@@ -169,9 +168,9 @@ flowchart TD
     CONST -.->|ref| RESEARCH
     REF_DM -.->|ref| DATAMODEL
 
-    classDef input fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-    classDef output fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5
+    classDef input fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#0f172a
+    classDef output fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#0f172a
+    classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5,color:#0f172a
 
     class SPEC_CLAR input
     class PLAN,RESEARCH,DATAMODEL,STATE,CONTRACTS output
@@ -181,6 +180,7 @@ flowchart TD
 ### Phase 2: Implementation Paths
 
 #### Solo Path (Primary)
+
 ```mermaid
 flowchart TD
     PLAN[plan.md<br/>## Phases table]
@@ -193,15 +193,15 @@ flowchart TD
 
     PLAN -->|"/tdk-implement<br/>[--phase NN]"| IMPL_OUTPUT
 
-    classDef input fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
+    classDef input fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#0f172a
+    classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px,color:#0f172a
 
     class PLAN input
     class CODE_BE,CODE_FE,TESTS code
 ```
 
-`/tdk-implement <id>` runs all runnable rows from `plan.md ## Phases`.
-`/tdk-implement <id> --phase NN` runs one selected phase while still honoring dependencies and global stale `in_progress` recovery.
+`/tdk-implement <id>` chạy toàn bộ runnable rows từ `plan.md ## Phases`.
+`/tdk-implement <id> --phase NN` chạy một selected phase, đồng thời vẫn tôn trọng dependencies và global stale `in_progress` recovery.
 
 ### Unit Testing Pipeline
 
@@ -232,17 +232,17 @@ flowchart TD
     UT_GEN --> TEST_FILES
     SPEC_UT -.->|optional input| UT_PLAN_CMD
 
-    classDef planning fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef generation fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef orchestrator fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-    classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5
+    classDef planning fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#0f172a
+    classDef generation fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#0f172a
+    classDef orchestrator fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#0f172a
+    classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5,color:#0f172a
 
     class UT_PLAN_CMD,UT_PLAN,UT_PHASES planning
     class UT_GEN,TEST_FILES generation
     class SPEC_UT,UT_SKILL reference
 ```
 
-Use `/tdk-ut-backfill-plan` to create the unit-test plan and phase files, then `/tdk-implement` runs phase delegates through the consumer test skill listed in `## Delegate Skills`. `--sub-workspace` targets a specific workspace (e.g., `backend`, `frontend`). `--standalone` on `/tdk-ut-backfill-plan` skips spec dependency for existing code.
+Dùng `/tdk-ut-backfill-plan` để tạo unit-test plan và phase files, sau đó `/tdk-implement` chạy phase delegates qua consumer test skill được liệt kê trong `## Delegate Skills`. `--sub-workspace` target workspace cụ thể, ví dụ `backend`, `frontend`. `--standalone` trên `/tdk-ut-backfill-plan` bỏ qua spec dependency cho existing code.
 
 ### Config & Workspace Management
 
@@ -280,10 +280,10 @@ flowchart TD
     JSON -->|enables| INDEX_CMD
     INDEX_CMD --> DOC_MGR
 
-    classDef init fill:#e1f5ff,stroke:#01579b,stroke-width:2px
-    classDef compare fill:#fff9c4,stroke:#f57f17,stroke-width:2px
-    classDef sync fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px
-    classDef index fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef init fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#0f172a
+    classDef compare fill:#fff9c4,stroke:#f57f17,stroke-width:2px,color:#0f172a
+    classDef sync fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px,color:#0f172a
+    classDef index fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#0f172a
 
     class SUB_INIT,JSON init
     class DIFF,DIFF_REPORT compare
@@ -291,57 +291,57 @@ flowchart TD
     class INDEX_CMD,DOC_MGR index
 ```
 
-Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run` with sync for safe previews. `config:index` generates `document-manager.md` for LLM discoverability.
+Luôn chạy `config:diff` trước `config:sync` để preview changes. Dùng `--dry-run` với sync để preview an toàn. `config:index` generate `document-manager.md` để LLM dễ discover.
 
 ---
 
-## Artifact Matrix
+## Workflow File Matrix
 
-| Artifact | Created By | Input From | Used By | Update Frequency |
+| File | Created By | Input From | Used By | Update Frequency |
 |----------|-----------|------------|---------|-----------------|
-| `product-context.md` | `/tdk-constitution --init/update` | constitution, memory, accepted project brief/update feedback | `/tdk-discovery`, `/tdk-specify`, `/tdk-plan` context | Project authority changes |
-| `.specify/configurations/inception/project-inception.md` | `/tdk-greenfield-start` | Project brief or workspace-local file plus project-inception questions | Readiness-aware recommended greenfield route | New-project intake |
+| `product-context.md` | `/tdk-constitution --init/update` | constitution, memory, accepted project brief/update feedback | `/tdk-discovery`, `/tdk-specify`, `/tdk-plan` context | Khi project authority đổi |
+| `.specify/configurations/inception/project-inception.md` | `/tdk-greenfield-start` | Project brief hoặc workspace-local file cộng với project-inception questions | Readiness-aware recommended greenfield route | New-project intake |
 | `.specify/configurations/inception/brownfield-onboarding.md` | `/tdk-brownfield-start` | Existing repo evidence, optional scout output | Evidence/confidence-based brownfield onboarding route | Existing-repo intake |
-| `.specify/configurations/architecture/architecture-options.md` | `/tdk-architecture-advisor` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | Architecture decision review | Project architecture options |
-| `.specify/configurations/architecture/architecture-decision.md` | `/tdk-architecture-advisor` | `architecture-options.md` plus accepted assumptions | `/tdk-workspace-layout-propose` or future layout work | Project architecture decision |
-| `.specify/configurations/architecture/architecture-recovery.md` | `/tdk-architecture-advisor --recover-existing` | Brownfield onboarding, scout, README, or bounded repo evidence | Brownfield-safe architecture recovery review | Existing-repo recovery |
-| `.specify/configurations/workspace-layout/workspace-layout-proposal.md` | `/tdk-workspace-layout-propose` or human-authored layout proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | Human review before dry-run preview | Project layout proposal |
-| `.specify/configurations/workspace-layout/workspace-layout-proposal.json` | `/tdk-workspace-layout-propose` or human-authored layout proposal | Architecture decision/recovery plus inception/onboarding/scout evidence | `/tdk-workflow-config-apply` interactive review/apply, or explicit `--dry-run` for automation preview | Project layout changes |
-| `.specify/configurations/workspace-topology/workspace-topology.md` | `/tdk-boundary-map` compatibility or human-authored legacy topology proposal | Legacy topology evidence | Human review before dry-run preview | Legacy project topology proposal |
-| `.specify/configurations/workspace-topology/workspace-topology.json` | `/tdk-boundary-map` compatibility or human-authored legacy topology proposal | Legacy topology evidence | `/tdk-workflow-config-apply` legacy fallback | Legacy project topology changes |
-| `config topology dry-run/apply` | `/tdk-workflow-config-apply` | `workspace-layout-proposal.json`, legacy `workspace-topology.json`, existing JSON `.specify/.specify.json` | Human review; parsed `planHash` passed internally for guarded write | Runtime config preview or guarded config write |
-| `.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md` | `/tdk-workspace-dependency-policy` | layout artifacts, existing `.specify/.specify.json`, repo stack evidence | Human review of dependency guidance | Optional project dependency policy |
-| `.specify/configurations/workspace-dependency-policy/enforcement-snippets.md` | `/tdk-workspace-dependency-policy --suggest` | policy report and detected stack evidence | Human-applied enforcement config candidates | Optional snippet guidance |
-| `.specify/configurations/module-boundary-policy/module-boundary-policy.md` | `/tdk-module-boundary-policy` compatibility | legacy topology artifacts, existing `.specify/.specify.json`, repo stack evidence | Human review of legacy boundary guidance | Legacy optional project boundary policy |
-| `.specify/configurations/golden-path/golden-path-scaffold-plan.md` | `/tdk-golden-path-scaffold --dry-run` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | Human review before recipe approval | Optional skeleton plan |
-| `.specify/configurations/golden-path/golden-path-recipe.json` | `/tdk-golden-path-scaffold --dry-run` | scaffold plan and approved layout/config evidence | Set `status: approved` before guarded apply | Optional skeleton recipe |
-| `.specify/configurations/golden-path/generated-files-report.md` | `/tdk-golden-path-scaffold --dry-run` or `--yes` | recipe and safety gates | Review created/skipped/existing/refused paths | Scaffold report |
-| `<docsPath>/sub-workspaces/<name>/{README,architecture,interfaces,engineering}.md` | `/tdk-sub-workspace-docs` | configured sub-workspace path, repomix pack, scout output, optional dependency policy | `/tdk-sub-workspace-automation-recommend` | Per sub-workspace docs refresh |
-| `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | `/tdk-sub-workspace-automation-recommend` | selected sub-workspace docs, dependency policy, official docs, local skill catalog, optional direct skill search | `/tdk-scaffold-from-recommendation` after approval | Per sub-workspace automation review |
-| `discovery.md` + `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution; existing discovery files for ID-only `--interview` | Optional context for `/tdk-epic-prd` or `/tdk-specify` | Optional before epic PRD or specify |
-| `epic-prd.md` + `epic-prd/` | `/tdk-epic-prd` | Existing `discovery.md`, `problem.md`, `personas.md`, and `mvp-scope.md`; existing PRD files for ID-only `--interview` | Feeds `/tdk-epic-hld`, then `/tdk-task-breakdown` child spec seeds | Optional after discovery |
-| `spec.md` | `/tdk-specify` | User description, optional `discovery.md` or epic PRD slice seed; existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature start |
-| `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-plan` | After specify |
-| `{docs.path}/custom-workflow/high-level-design-skill-routing.md` | Human-authored from `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` | Consumer HLD design skills | `/tdk-epic-hld` as advisory read-only routing | Optional project setup |
-| `high-level-design.md` + `high-level-design/` | `/tdk-epic-hld` | `epic-prd.md` + `epic-prd/`; built-in lenses; optional HLD routing | `/tdk-task-breakdown` | Parent epic after PRD |
-| `tasks-breakdown.md` + `tasks-breakdown/` | `/tdk-task-breakdown` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | Child `/tdk-specify` seeds | Parent epic after HLD |
+| `.specify/configurations/architecture/architecture-options.md` | `/tdk-architecture-advisor` | Inception, onboarding, discovery, spec, scout, README, hoặc bounded repo evidence | Architecture decision review | Project architecture options |
+| `.specify/configurations/architecture/architecture-decision.md` | `/tdk-architecture-advisor` | `architecture-options.md` cộng với accepted assumptions | `/tdk-workspace-layout-propose` hoặc future layout work | Project architecture decision |
+| `.specify/configurations/architecture/architecture-recovery.md` | `/tdk-architecture-advisor --recover-existing` | Brownfield onboarding, scout, README, hoặc bounded repo evidence | Brownfield-safe architecture recovery review | Existing-repo recovery |
+| `.specify/configurations/workspace-layout/workspace-layout-proposal.md` | `/tdk-workspace-layout-propose` hoặc human-authored layout proposal | Architecture decision/recovery cộng với inception/onboarding/scout evidence | Human review trước dry-run preview | Project layout proposal |
+| `.specify/configurations/workspace-layout/workspace-layout-proposal.json` | `/tdk-workspace-layout-propose` hoặc human-authored layout proposal | Architecture decision/recovery cộng với inception/onboarding/scout evidence | `/tdk-workflow-config-apply` interactive review/apply, hoặc explicit `--dry-run` cho automation preview | Project layout changes |
+| `.specify/configurations/workspace-topology/workspace-topology.md` | `/tdk-boundary-map` compatibility hoặc human-authored legacy topology proposal | Legacy topology evidence | Human review trước dry-run preview | Legacy project topology proposal |
+| `.specify/configurations/workspace-topology/workspace-topology.json` | `/tdk-boundary-map` compatibility hoặc human-authored legacy topology proposal | Legacy topology evidence | `/tdk-workflow-config-apply` legacy fallback | Legacy project topology changes |
+| `config topology dry-run/apply` | `/tdk-workflow-config-apply` | `workspace-layout-proposal.json`, legacy `workspace-topology.json`, existing JSON `.specify/.specify.json` | Human review; parsed `planHash` được truyền internally cho guarded write | Runtime config preview hoặc guarded config write |
+| `.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md` | `/tdk-workspace-dependency-policy` | layout files, existing `.specify/.specify.json`, repo stack evidence | Human review dependency guidance | Optional project dependency policy |
+| `.specify/configurations/workspace-dependency-policy/enforcement-snippets.md` | `/tdk-workspace-dependency-policy --suggest` | policy report và detected stack evidence | Human-applied enforcement config candidates | Optional snippet guidance |
+| `.specify/configurations/module-boundary-policy/module-boundary-policy.md` | `/tdk-module-boundary-policy` compatibility | legacy topology files, existing `.specify/.specify.json`, repo stack evidence | Human review legacy boundary guidance | Legacy optional project boundary policy |
+| `.specify/configurations/golden-path/golden-path-scaffold-plan.md` | `/tdk-golden-path-scaffold --dry-run` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | Human review trước recipe approval | Optional skeleton plan |
+| `.specify/configurations/golden-path/golden-path-recipe.json` | `/tdk-golden-path-scaffold --dry-run` | scaffold plan và approved layout/config evidence | Set `status: approved` trước guarded apply | Optional skeleton recipe |
+| `.specify/configurations/golden-path/generated-files-report.md` | `/tdk-golden-path-scaffold --dry-run` hoặc `--yes` | recipe và safety gates | Review created/skipped/existing/refused paths | Scaffold report |
+| `<docsPath>/sub-workspaces/<name>/{README,architecture,interfaces,engineering}.md` | `/tdk-sub-workspace-docs` | configured sub-workspace path, repomix pack, scout output, optional dependency policy | `/tdk-sub-workspace-automation-recommend` | Refresh docs theo sub-workspace |
+| `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | `/tdk-sub-workspace-automation-recommend` | selected sub-workspace docs, dependency policy, official docs, local skill catalog, optional direct skill search | `/tdk-scaffold-from-recommendation` sau approval | Automation review theo sub-workspace |
+| `discovery.md` + `discovery/` | `/tdk-discovery` | Epic brief hoặc file, project context, memory, constitution; existing discovery files cho ID-only `--interview` | Optional context cho `/tdk-epic-prd` | Optional trước epic PRD |
+| `epic-prd.md` + `epic-prd/` | `/tdk-epic-prd` | Existing `discovery.md`, `problem.md`, `personas.md`, và `mvp-scope.md`; existing PRD files cho ID-only `--interview` | Feed `/tdk-epic-hld`, rồi `/tdk-task-breakdown` child spec seeds | Optional sau discovery |
+| `spec.md` | `/tdk-specify` | User description, child seed từ `tasks-breakdown/`, hoặc existing `spec.md` cho ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, toàn bộ downstream | Feature hoặc child-slice start |
+| `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-plan` | Sau specify |
+| `{docs.path}/custom-workflow/high-level-design-skill-routing.md` | Human-authored từ `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` | Consumer HLD design skills | `/tdk-epic-hld` như advisory read-only routing | Optional project setup |
+| `high-level-design.md` + `high-level-design/` | `/tdk-epic-hld` | `epic-prd.md` + `epic-prd/`; built-in lenses; optional HLD routing | `/tdk-task-breakdown` | Parent epic sau PRD |
+| `tasks-breakdown.md` + `tasks-breakdown/` | `/tdk-task-breakdown` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | Child `/tdk-specify` seeds | Parent epic sau HLD |
 | `plan.md` | `/tdk-plan` | `spec.md`, `constitution.md`, optional context | `plan.md ## Phases`, `/tdk-implement [--phase NN]` | Feature start |
-| `plan.md ## Phases` | `/tdk-plan` | `spec.md`, design artifacts | `/tdk-implement [--phase NN]` | Feature start |
+| `plan.md ## Phases` | `/tdk-plan` | `spec.md`, design files | `/tdk-implement [--phase NN]` | Feature start |
 | `research/` | `/tdk-plan` | `spec.md` | Reference | Feature start |
 | `data-model.md` | `/tdk-plan` | `spec.md` | Reference | Feature start |
 | `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
 | `ut/plan.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), consumer test skill routing | `/tdk-implement` | Feature UT |
-| `ut/phases/{module}.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), `plan-skill-routing.md` | consumer test skill via `## Delegate Skills` | Feature UT |
+| `ut/phases/{module}.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), `plan-skill-routing.md` | consumer test skill qua `## Delegate Skills` | Feature UT |
 | `*.test.ts` / `test_*.py` etc. | consumer test skill | `ut/phases/{module}.md` | Test runner | Feature UT |
 | `.specify/.specify.json` | `/tdk-sub-workspace-init` | Project config | `config:*`, unit-test routing, sub-workspace docs | Project setup |
-| `document-manager.md` | `/tdk-config-index` | All docs files | Manual reference, LLM tools | On demand |
+| `document-manager.md` | `/tdk-config-index` | Tất cả docs files | Manual reference, LLM tools | Khi cần |
 
 ---
 
 ## Reference Files (Templates)
 
-These files are **read-only references** used by multiple commands but never modified:
+Các file này là **read-only references** được nhiều command dùng nhưng không bao giờ modify:
 
 ```mermaid
 flowchart LR
@@ -366,8 +366,8 @@ flowchart LR
     REF_DM -.->|enum format| PLAN
     REF_ST -.->|state format| PLAN
 
-    classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:2px,stroke-dasharray: 5 5
-    classDef command fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
+    classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:2px,stroke-dasharray: 5 5,color:#0f172a
+    classDef command fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px,color:#0f172a
 
     class CONST,PRODUCT,UIUX,REF_DM,REF_ST reference
     class DISCOVERY_CMD,SPECIFY_CMD,PLAN command
@@ -399,28 +399,28 @@ flowchart TD
     
     UPDATE_CONTRACT --> PLAN
 
-    classDef event fill:#fff3e0,stroke:#e65100,stroke-width:2px
-    classDef command fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px
+    classDef event fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#0f172a
+    classDef command fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px,color:#0f172a
     class START event
     class DISCOVERY,EPIC_PRD,SPECIFY,CLARIFY,HLD_CMD,BREAKDOWN,CHILD_SPEC,CHILD_PLAN,PLAN,IMPLEMENT command
 ```
 
 ---
 
-## Artifact Directory Structure
+## Workflow File Directory Structure
 
-```
+```text
 .specify/specs/{task-id}/
-├── index.md                            # Epic dashboard and next-command summary
+├── index.md                            # Epic dashboard và next-command summary
 ├── discovery.md                        # Optional discovery stage manifest
 ├── discovery/                          # Optional discovery detail files
 ├── epic-prd.md                         # Optional epic PRD stage manifest
-├── epic-prd/                           # Optional epic PRD details, slice map, and open questions
+├── epic-prd/                           # Optional epic PRD details, slice map, và open questions
 ├── spec.md                             # Phase 0: Feature specification
 ├── high-level-design.md                # Optional parent epic HLD stage manifest
 ├── high-level-design/                  # Optional parent epic HLD detail files
 ├── tasks-breakdown.md                  # Optional child spec seed manifest
-├── tasks-breakdown/                    # Optional child spec seed files after HLD
+├── tasks-breakdown/                    # Optional child spec seed files sau HLD
 ├── plan.md                             # Phase 1: Implementation plan
 ├── research/                           # Phase 1: Technology research
 ├── data-model.md                       # Phase 1: Entity definitions + enums

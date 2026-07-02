@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-02T09:54:43Z",
+  "generated_at": "2026-07-02T15:26:50Z",
   "plugins": {
     "tdk-core": {
       "version": "6.0.2",
@@ -190,9 +190,9 @@
       }
     },
     "tdk-utils": {
-      "version": "2.2.4",
+      "version": "2.2.5",
       "files": {
-        ".codex-plugin/plugin.json": "ff308c9dec008e9b1557ddcca2fb48f7383aa62a28108afb4db2a6f2684b37cd",
+        ".codex-plugin/plugin.json": "63beb3a546cb3d029b27057b8a188e492db25010b7259f67090de2cbd4f36bfa",
         "skills/brainstorming/SKILL.md": "51bc4fd4199fa7636350071c41e9adcab5f0c2c2bf036cb4bd86a8e162dbcdab",
         "skills/brainstorming/scripts/README.md": "2cf2a585153087eb14e49daeef8de22c1904d6799058d3666c1710a95f36e566",
         "skills/brainstorming/scripts/brainstorm.py": "ae22620928cbd69e03b05e4db707367bfb166b5c87eb70aa22114ddd6fd8461e",
@@ -247,8 +247,8 @@
         "skills/tdk-load-project-context/SKILL.md": "e035f5425f4f13f2f1fb9f5f8f3db1c05a03f6f1954f536f06ae74b5cd91d501",
         "skills/tdk-module-boundary-policy/SKILL.md": "797c06870b1c33f9aa5d10bf2d4ce8a034c9109af97107c0df6fc24127b8acac",
         "skills/tdk-scout/SKILL.md": "3ae073d7c22872345c67d1d8bf69c98fd601d99a49b0c8f8efbe86ce0be8fbf3",
-        "skills/tdk-setup-guide/SKILL.md": "44b55f4810ddc4e2b30d0e407a4d2387ea88f85cd2071e7f74c487391962ecb8",
-        "skills/tdk-skill-guide/SKILL.md": "7f3783cbf74687f4941ab4d3d3bd383df25613f2337e6ae6fc970a73c4fbab99",
+        "skills/tdk-setup-guide/SKILL.md": "8868ddeb774198744003634b7b65dd16824548c88f54f0a73db6f813d245f6f5",
+        "skills/tdk-skill-guide/SKILL.md": "03359d620a7ade8fc36c7487fa17a6bfd6b4b4a3741b4574fc8478659a70ec1c",
         "skills/tdk-validate-task-id/SKILL.md": "37fd8d518fa3de373b5a93c0384eee5b21fbc45ffe1264b6d490016745275f1b",
         "skills/tdk-workspace-dependency-policy/SKILL.md": "1e439c81c185169891c1c6261e08aaa82b0ca7b3f9823e0bc40226d46f2ff089",
         "skills/tdk-workspace-dependency-policy/references/ecosystem-boundary-candidates.md": "b81363436b53619ab8d9c97f9ea76705d93be866e106d0d5eb8f307ee9a986a7",

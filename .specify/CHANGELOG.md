@@ -9,6 +9,30 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.96.3] - 2026-07-02
+
+### Added
+- **[Guides]** Streamlined documentation structure and added new guides:
+  - Added unified `setup-guide.md` (in English and Vietnamese) replacing multiple separate setup guides.
+  - Added concept glossary guide `concepts/glossary.md` (in English and Vietnamese).
+  - Added scenarios `00-epic-start-guide.md` and `01-child-feature-implementation.md` (in English and Vietnamese) along with a `scenario-catalog.md`.
+  - Added localized Vietnamese documentation files to match the new English layout.
+
+### Changed
+- **[tdk-setup-guide]** Refactored skill to use the new unified `setup-guide.md`:
+  - Updated tool strategy and vault path rules to point to `setup-guide.md` instead of `installation.md`.
+  - Refactored `check` and troubleshooting modes to reference `setup-guide.md` for error remediation.
+- **[tdk-skill-guide]** Updated fallback guide directory check error to reference unified `setup-guide.md`.
+- **[Setup Script]** Updated CLI setup script commands and manual step outputs to reference `setup-guide.md` instead of separate guides.
+- **[Guides]** Restructured scenario documentation layouts:
+  - Renamed scenario files to a streamlined numbering (e.g., `04-progress-tracking.md`, `10-greenfield-full-start-architecture-topology.md`, and `workflow-map.md`).
+  - Updated root `README.md` and `skills-guide.md` to reference the new paths.
+
+### Removed
+- **[Guides]** Cleaned up obsolete guides:
+  - Removed split setup documentation files (`installation.md`, `claude-code-environment.md`, `plugin-marketplace-setup.md`, etc.).
+  - Removed outdated scenario guides (`03-quality-review-analysis.md`, `07-project-setup-constitution.md`, `08-workspace-docs-management.md`, etc.).
+
 ## [1.96.2] - 2026-07-02
 
 ### Changed

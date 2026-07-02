@@ -2,7 +2,7 @@
 name: tdk-skill-guide
 description: "Interactive guide for TDK skills and commands. Shows usage, scenarios, tips, and skill discovery. Use when asking 'how to use /tdk-*', 'what skills are available', 'show scenario', 'find a skill for X', 'tdk guide', 'tdk help'."
 metadata:
-  version: 2.2.3
+  version: 2.2.5
 ---
 
 # TDK Skill Guide
@@ -232,4 +232,4 @@ Extract best practices and gotchas from existing docs only:
 | Skill not found | "Skill '<name>' not found. Did you mean: [list close matches]?" |
 | Scenario number out of range | "Scenarios available: 01-15. Use `/tdk-skill-guide` for full list." |
 | No search results | "No results for '<keyword>'. Try broader terms or `/tdk-skill-guide` for overview." |
-| Guides dir missing | "Guides not found at `.specify/docs/en/guides/`. Run setup first: see `.specify/docs/en/guides/setup/installation.md`" |
+| Guides dir missing | "Guides not found at `.specify/docs/en/guides/`. Run setup first: see `.specify/docs/en/guides/setup/setup-guide.md`" |

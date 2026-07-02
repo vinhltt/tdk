@@ -27,7 +27,7 @@ TDK structures the full development loop:
 7. **Align epic PRD** — optionally turn discovery into product alignment, blocking questions, and child spec slice seeds (`/tdk-epic-prd`)
 8. **Design epic** — optionally turn epic PRD into parent HLD context before child seed breakdown (`/tdk-epic-hld`)
 9. **Break down epic** — optionally turn epic PRD + HLD into child spec seed Markdown (`/tdk-task-breakdown`)
-10. **Specify** — generate child or feature specs from natural language and optional discovery/epic PRD refs (`/tdk-specify`)
+10. **Specify** — generate child or feature specs from natural language or task-breakdown seed text (`/tdk-specify`)
 11. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
 12. **Plan** — break specs into phased implementation plans (`/tdk-plan`)
 13. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
@@ -157,7 +157,7 @@ bun src/commands/manifest/compute.ts --root ../..
 │   └── tdk-scaffold/        # Skill/agent and golden-path scaffolding (3 skills)
 ├── codex-plugins/        # Generated Codex packages (6 packages; skills/hooks/lib at package root)
 ├── templates/            # 60 templates (spec, plan, task, discovery, epic PRD, HLD, test, memory, output, design, docs)
-├── docs/                 # 21 user guides (scenario guides + setup guides + reference)
+├── docs/                 # User guides (scenarios, setup, concepts, command guide)
 ├── configurations/       # Hook configs, sub-workspace configs
 └── scripts/
     ├── ts/               # TypeScript CLI (@tdk/tdk) — primary
@@ -220,6 +220,9 @@ Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup,
 
 ## Documentation
 
+- [TDK Guides](.specify/docs/en/index.md) — start here for setup, epic flow, child feature implementation, scenarios, concepts, and command lookup
+- [Epic Start Guide](.specify/docs/en/guides/epic-start-guide.md) — start project/epic work, break it into child specs, then implement child features
+- [Child Feature Implementation](.specify/docs/en/guides/scenarios/00-child-feature-implementation.md) — use after task breakdown or for a small already-clear feature
 - [TDK Skills Guide](.specify/docs/en/guides/skills-guide.md) — skill directory, cheat sheet, and usage reference
 - [tdk-setup README](packages/tdk-setup/README.md) — harness setup CLI reference
 - [Scenario Guides](.specify/docs/en/guides/scenarios/) — 10 workflow scenarios

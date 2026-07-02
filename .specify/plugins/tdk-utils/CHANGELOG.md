@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.2.5] - 2026-07-02
+
+### Changed
+- **[tdk-setup-guide]** Refactored skill to use the new unified setup-guide.md
+- **[tdk-skill-guide]** Updated fallback guide directory check error to reference unified setup-guide.md
+
 ## [2.2.4] - 2026-07-02
 
 ### Changed

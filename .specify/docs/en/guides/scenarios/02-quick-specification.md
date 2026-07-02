@@ -5,7 +5,7 @@
 ## Command Sequence
 
 ```
-/tdk-specify --fast → /tdk-plan → /tdk-implement
+/tdk-specify --fast -> /tdk-plan -> /tdk-implement
 ```
 
 ## When to Choose `--fast` vs Default

@@ -2,7 +2,7 @@
 name: tdk-setup-guide
 description: "Interactive setup guide for TDK environment. Checks prerequisites, verifies config, troubleshoots issues. Use when asking 'how to set up', 'setup help', 'verify setup', 'check prerequisites', 'tdk setup', 'installation guide', 'troubleshoot setup'."
 metadata:
-  version: "2.2.2"
+  version: "2.2.5"
 ---
 
 # TDK Setup Guide
@@ -41,8 +41,8 @@ Parse `$ARGUMENTS` to determine mode:
 ## Tool Strategy
 
 **CRITICAL — Vault Path Rule:** Smart-obsidian vault root = `.specify/`. All paths passed to MCP tools MUST be relative to vault root — NEVER prefix with `.specify/`.
-- CORRECT: `get_vault_file("docs/en/guides/setup/installation.md")`
-- WRONG: `get_vault_file(".specify/docs/en/guides/setup/installation.md")` ← double-prefix, 404
+- CORRECT: `get_vault_file("docs/en/guides/setup/setup-guide.md")`
+- WRONG: `get_vault_file(".specify/docs/en/guides/setup/setup-guide.md")` ← double-prefix, 404
 - WRONG: `list_vault_files("")` or `list_vault_files("/")` ← empty path, 404
 
 | Task | Tool | Why |
@@ -55,22 +55,17 @@ Parse `$ARGUMENTS` to determine mode:
 
 ## Mode: Overview (no args)
 
-1. Read `.specify/docs/en/guides/setup/installation.md` — display the Quick Setup section
-2. List all available setup topics from `.specify/docs/en/guides/setup/`:
+1. Read `.specify/docs/en/guides/setup/setup-guide.md` — display the Fast Path and troubleshooting sections
+2. List the streamlined setup guide:
 
 ```markdown
 ## Setup Topics
 
 | Topic | Guide |
 |-------|-------|
-| Full Setup | [installation.md](en/guides/setup/installation.md) |
-| Claude Code + Python | [claude-code-environment.md](en/guides/setup/claude-code-environment.md) |
-| Plugin Marketplace | [plugin-marketplace-setup.md](en/guides/setup/plugin-marketplace-setup.md) |
-| Context7 MCP | [ctx7-mcp-setup.md](en/guides/setup/ctx7-mcp-setup.md) |
-| GitHub MCP | [github-mcp-setup.md](en/guides/setup/github-mcp-setup.md) |
-| Obsidian (Windows) | [obsidian-plugins-windows.md](en/guides/setup/obsidian-plugins-windows.md) |
+| Full Setup | [setup-guide.md](en/guides/setup/setup-guide.md) |
 
-Use `/tdk-setup-guide check` to verify your environment, or `/tdk-setup-guide <topic>` for detailed guide.
+Use `/tdk-setup-guide check` to verify your environment, or `/tdk-setup-guide <topic>` to jump to the setup guide.
 ```
 
 ## Mode: Check (`check` or `verify`)
@@ -135,7 +130,7 @@ test -f .mcp.json && echo ".mcp.json: EXISTS" || echo ".mcp.json: MISSING"
 | .mcp.json | OK | EXISTS |
 
 ### Actions needed:
-1. Install missing tools: see [installation.md Section 1](en/guides/setup/installation.md#1-system-prerequisites)
+1. Install missing tools or re-run setup: see [setup-guide.md](en/guides/setup/setup-guide.md)
 ```
 
 ## Mode: Topic Detail (`<topic>`)
@@ -150,17 +145,17 @@ test -f .mcp.json && echo ".mcp.json: EXISTS" || echo ".mcp.json: MISSING"
 
 | Input | Matches |
 |-------|---------|
-| `python`, `venv` | claude-code-environment.md |
-| `plugin`, `marketplace` | plugin-marketplace-setup.md |
-| `ctx7`, `context7` | ctx7-mcp-setup.md |
-| `github`, `gh` | github-mcp-setup.md |
-| `obsidian` | obsidian-plugins-windows.md |
-| `mcp` | All MCP-related setup docs |
+| `python`, `venv` | setup-guide.md |
+| `plugin`, `marketplace` | setup-guide.md |
+| `ctx7`, `context7` | setup-guide.md |
+| `github`, `gh` | setup-guide.md |
+| `obsidian` | setup-guide.md |
+| `mcp` | setup-guide.md |
 
 ## Mode: Troubleshoot (`troubleshoot` or `debug`)
 
 1. Run **Check** mode first to identify failing components
-2. For each failure, search `.specify/docs/en/guides/setup/installation.md` Section 9 (Troubleshooting) for matching solution
+2. For each failure, search `.specify/docs/en/guides/setup/setup-guide.md` Troubleshooting for matching solution
 3. If user describes a specific error:
    - `Grep` the error message across all setup docs
    - `search_vault_smart(error_message)` for semantic match
