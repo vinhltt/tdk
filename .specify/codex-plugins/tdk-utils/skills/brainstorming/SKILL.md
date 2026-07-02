@@ -4,7 +4,7 @@ description: Brainstorm solutions with trade-off analysis and brutal honesty. Us
 license: MIT
 user-invocable: false
 metadata:
-  version: "1.11.3"
+  version: "2.2.4"
 ---
 
 # Brainstorming Skill

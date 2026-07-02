@@ -9,6 +9,13 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.96.2] - 2026-07-02
+
+### Changed
+- **[brainstorming]** Bump metadata version and update documentation
+  - Bump metadata version to 2.2.4
+  - Update feature directory paths in scripts README to reference specs/ instead of feature/
+
 ## [1.96.1] - 2026-07-02
 
 ### Changed

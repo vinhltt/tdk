@@ -72,7 +72,7 @@ Script auto-scans `.specify/*/` to find the task directory:
 Script auto-creates the directory structure if it does not yet exist:
 ```
 .specify/
-├── feature/
+├── specs/
 │   └── feat-1814/
 │       └── brainstorm/          ← Auto-created
 │           └── 260204-1530-task-analysis.md

@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.2.4] - 2026-07-02
+
+### Changed
+- Bump metadata version to 2.2.4
+- Update feature directory paths in scripts README to reference specs/ instead of feature/
+
 ## [2.2.3] - 2026-07-02
 
 ### Changed

@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-02T09:41:07Z",
+  "generated_at": "2026-07-02T09:54:43Z",
   "plugins": {
     "tdk-core": {
       "version": "6.0.2",
@@ -394,11 +394,11 @@
       }
     },
     "tdk-utils": {
-      "version": "2.2.3",
+      "version": "2.2.4",
       "components": {
         "skills": {
           "brainstorming": {
-            "version": "1.11.3"
+            "version": "2.2.4"
           },
           "common": {
             "version": "0.1.0"
@@ -468,17 +468,17 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e68f07c43a122d63dbd44fafbd978b0adb4f5f18bb95537f80014e859846f8b4",
-        ".claude-plugin/plugin.json": "3f1ed2afcb641ea045477e1d503c5c2f25096d425d42ae546641ec525862b253",
-        ".codex-plugin/plugin.json": "3f1ed2afcb641ea045477e1d503c5c2f25096d425d42ae546641ec525862b253",
-        ".cursor-plugin/plugin.json": "3f1ed2afcb641ea045477e1d503c5c2f25096d425d42ae546641ec525862b253",
-        "CHANGELOG.md": "2658f93179b4aaf32321ec632611e8dc3207696055ca7c108c59a80da99bd74a",
+        ".claude-plugin/plugin.json": "03d092668c6703b8f1f43a09fdf0d34849131b927b76ab593b236fa6618cbafd",
+        ".codex-plugin/plugin.json": "03d092668c6703b8f1f43a09fdf0d34849131b927b76ab593b236fa6618cbafd",
+        ".cursor-plugin/plugin.json": "03d092668c6703b8f1f43a09fdf0d34849131b927b76ab593b236fa6618cbafd",
+        "CHANGELOG.md": "fdbde5c783314a4c4fe3a46f3046881da287bf50c7433067990ea1d5e0343d98",
         "agents/researcher.md": "239051264f41b129ef5c59adb573b7e762a528bb58d0ff8dd1e32eee243baaaf",
         "agents/tdk-red-team-reliability.md": "8585ee27a9d1f6b79b9988fc6020317baa3be7e37f80be9086708bfc35c74ea8",
         "agents/tdk-red-team-security.md": "8e808e7330b21e83e830f70bf6221150ba0e91d235061ba0c6b2a32060ea7a33",
         "agents/tdk-red-team-skeptic.md": "7b10f9e26df7f1e5fc01fea44cfd1f34fbefa836130672168a3fb2a216a05508",
         "agents/tdk-scout-runner.md": "e12b66f1755440072f78f006938e8716a567e308dad6af41c44363d6caba05ea",
-        "skills/brainstorming/SKILL.md": "583b1c8afc286ee95bba050548ce38fcd1f647c3376e8bad8aff1db7234a299b",
-        "skills/brainstorming/scripts/README.md": "ee47937b3b2c9ce3e6d358b118c4f7693b3596b4085b93f0376e41b4028898e3",
+        "skills/brainstorming/SKILL.md": "51bc4fd4199fa7636350071c41e9adcab5f0c2c2bf036cb4bd86a8e162dbcdab",
+        "skills/brainstorming/scripts/README.md": "2cf2a585153087eb14e49daeef8de22c1904d6799058d3666c1710a95f36e566",
         "skills/brainstorming/scripts/brainstorm.py": "ae22620928cbd69e03b05e4db707367bfb166b5c87eb70aa22114ddd6fd8461e",
         "skills/brainstorming/scripts/tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "skills/brainstorming/scripts/tests/test_brainstorm_config.py": "b5debb7ff5071f2f64b4262fcaca625c22b300236e037b448a983602af9d252e",

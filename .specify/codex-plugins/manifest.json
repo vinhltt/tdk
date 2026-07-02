@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-02T09:41:07Z",
+  "generated_at": "2026-07-02T09:54:43Z",
   "plugins": {
     "tdk-core": {
       "version": "6.0.2",
@@ -190,11 +190,11 @@
       }
     },
     "tdk-utils": {
-      "version": "2.2.3",
+      "version": "2.2.4",
       "files": {
-        ".codex-plugin/plugin.json": "3f02b2f3cb7c9d83e9257960e14f2833c228e38e691c9ed5c428e520926a1b16",
-        "skills/brainstorming/SKILL.md": "583b1c8afc286ee95bba050548ce38fcd1f647c3376e8bad8aff1db7234a299b",
-        "skills/brainstorming/scripts/README.md": "ee47937b3b2c9ce3e6d358b118c4f7693b3596b4085b93f0376e41b4028898e3",
+        ".codex-plugin/plugin.json": "ff308c9dec008e9b1557ddcca2fb48f7383aa62a28108afb4db2a6f2684b37cd",
+        "skills/brainstorming/SKILL.md": "51bc4fd4199fa7636350071c41e9adcab5f0c2c2bf036cb4bd86a8e162dbcdab",
+        "skills/brainstorming/scripts/README.md": "2cf2a585153087eb14e49daeef8de22c1904d6799058d3666c1710a95f36e566",
         "skills/brainstorming/scripts/brainstorm.py": "ae22620928cbd69e03b05e4db707367bfb166b5c87eb70aa22114ddd6fd8461e",
         "skills/brainstorming/scripts/tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "skills/brainstorming/scripts/tests/test_brainstorm_config.py": "b5debb7ff5071f2f64b4262fcaca625c22b300236e037b448a983602af9d252e",
