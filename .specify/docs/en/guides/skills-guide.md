@@ -37,7 +37,7 @@ The TDK command suite provides a **specification-driven development** workflow. 
 
 ### Workflow Pipeline
 
-![TDK lifecycle workflow](../../assets/tdk-lifecycle-share-graph.png)
+![TDK lifecycle workflow](../../assets/lifecycle-share-graph.png)
 
 ```
                     ┌─────────────────────────────────────────────────────────────────────┐

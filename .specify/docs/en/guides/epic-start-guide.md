@@ -88,7 +88,7 @@ flowchart TD
 
 Feature-sized work should use the short path: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. In the epic workflow, `epic-prd/` feeds parent HLD, HLD feeds task breakdown, and `tasks-breakdown/` feeds child /tdk-specify commands. Child specs do not run HLD by default.
 
-![TDK Epic Start - Discovery to Task Breakdown](../../assets/tdk-epic-discovery-to-task-breakdown.png)
+![TDK Epic Start - Discovery to Task Breakdown](../../assets/epic-discovery-to-task-breakdown.png)
 
 ## Canonical Epic Path
 
@@ -580,7 +580,7 @@ Repeat the child loop for each selected seed. Do not plan and implement the pare
 ## Related Docs
 
 - [Hướng Dẫn Bắt Đầu Epic](../../vi/guides/epic-start-guide.md)
-- [TDK Skills Guide](tdk-skills-guide.md)
+- [TDK Skills Guide](skills-guide.md)
 - [Document Flow](document-flow.md)
 - [Full Feature Development Scenario](scenarios/01-full-feature-development.md)
 - [Promote Convention](promote-convention.md)

@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-02T03:23:18Z",
+  "generated_at": "2026-07-02T04:52:20Z",
   "plugins": {
     "tdk-core": {
       "version": "6.0.0",
@@ -394,7 +394,7 @@
       }
     },
     "tdk-utils": {
-      "version": "2.2.2",
+      "version": "2.2.3",
       "components": {
         "skills": {
           "brainstorming": {
@@ -410,7 +410,7 @@
             "version": "0.1.0"
           },
           "obsidian-brain": {
-            "version": "2.2.2"
+            "version": "2.2.3"
           },
           "problem-solving": {
             "version": "0.1.0"
@@ -437,7 +437,7 @@
             "version": "2.2.2"
           },
           "tdk-skill-guide": {
-            "version": "2.2.2"
+            "version": "2.2.3"
           },
           "tdk-validate-task-id": {
             "version": "1.10.6"
@@ -468,10 +468,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e68f07c43a122d63dbd44fafbd978b0adb4f5f18bb95537f80014e859846f8b4",
-        ".claude-plugin/plugin.json": "a510685e48b96786fd05c725a3b7da4769687a9801a477ea34a96c042a459bc5",
-        ".codex-plugin/plugin.json": "a510685e48b96786fd05c725a3b7da4769687a9801a477ea34a96c042a459bc5",
-        ".cursor-plugin/plugin.json": "a510685e48b96786fd05c725a3b7da4769687a9801a477ea34a96c042a459bc5",
-        "CHANGELOG.md": "9c958dd9d0b01ec0eb9e866dd5cd77e0494cb144cf740d91632f4985dc390222",
+        ".claude-plugin/plugin.json": "3f1ed2afcb641ea045477e1d503c5c2f25096d425d42ae546641ec525862b253",
+        ".codex-plugin/plugin.json": "3f1ed2afcb641ea045477e1d503c5c2f25096d425d42ae546641ec525862b253",
+        ".cursor-plugin/plugin.json": "3f1ed2afcb641ea045477e1d503c5c2f25096d425d42ae546641ec525862b253",
+        "CHANGELOG.md": "2658f93179b4aaf32321ec632611e8dc3207696055ca7c108c59a80da99bd74a",
         "agents/researcher.md": "239051264f41b129ef5c59adb573b7e762a528bb58d0ff8dd1e32eee243baaaf",
         "agents/tdk-red-team-reliability.md": "8585ee27a9d1f6b79b9988fc6020317baa3be7e37f80be9086708bfc35c74ea8",
         "agents/tdk-red-team-security.md": "8e808e7330b21e83e830f70bf6221150ba0e91d235061ba0c6b2a32060ea7a33",
@@ -500,7 +500,7 @@
         "skills/context-engineering/scripts/context_analyzer.py": "25209958471fa2a74ec9d6211f912c32117b6754eb382223e388e7060823b533",
         "skills/context-engineering/scripts/tests/test_edge_cases.py": "06d705178ded2fa7e571e35c7bc875580337dcb15e4b27b1814c644f15115dfe",
         "skills/docs-seeker/SKILL.md": "e1de5ea14889812fdb6ed4ae30e16db6fc2d5de4631ccc5fe3a3318546de027e",
-        "skills/obsidian-brain/SKILL.md": "f76223dd77180ba81e49e2725dc5b554e589b1604bad2e00cb6e0d8135511afb",
+        "skills/obsidian-brain/SKILL.md": "693b4e0c2766423e25d8d6e2b2a0dd3c3ded852586738fd363f6e5f3836a1ae3",
         "skills/obsidian-brain/references/json-canvas.md": "37b539a44c6173e28e2d0647b46bef1f6a291fa6e5165df6b5447c0d19e83377",
         "skills/obsidian-brain/references/obsidian-base.md": "e17bd8574a09ee278605ea7e55118b36f0bdcf2fe62f452807852a9a28225db8",
         "skills/obsidian-brain/references/obsidian-markdown.md": "676007714e1ff93d4c27e6b27ac4c67c603a5ffb15fcf88458aa9197d1fbc057",
@@ -532,7 +532,7 @@
         "skills/tdk-module-boundary-policy/SKILL.md": "797c06870b1c33f9aa5d10bf2d4ce8a034c9109af97107c0df6fc24127b8acac",
         "skills/tdk-scout/SKILL.md": "3ae073d7c22872345c67d1d8bf69c98fd601d99a49b0c8f8efbe86ce0be8fbf3",
         "skills/tdk-setup-guide/SKILL.md": "44b55f4810ddc4e2b30d0e407a4d2387ea88f85cd2071e7f74c487391962ecb8",
-        "skills/tdk-skill-guide/SKILL.md": "39fb4e3ac40f8bd611bdba9d5d47171c3232ade680a6aaf9df5fbf74f5b7b55d",
+        "skills/tdk-skill-guide/SKILL.md": "7f3783cbf74687f4941ab4d3d3bd383df25613f2337e6ae6fc970a73c4fbab99",
         "skills/tdk-validate-task-id/SKILL.md": "37fd8d518fa3de373b5a93c0384eee5b21fbc45ffe1264b6d490016745275f1b",
         "skills/tdk-workspace-dependency-policy/SKILL.md": "1e439c81c185169891c1c6261e08aaa82b0ca7b3f9823e0bc40226d46f2ff089",
         "skills/tdk-workspace-dependency-policy/references/ecosystem-boundary-candidates.md": "b81363436b53619ab8d9c97f9ea76705d93be866e106d0d5eb8f307ee9a986a7",

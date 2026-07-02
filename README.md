@@ -12,7 +12,7 @@ TDK works as a closed development loop:
 - **Learn**: collect evidence after implementation, propose reviewable deltas, and apply only approved learnings.
 - **Compound**: approved learnings improve the next TDK session instead of staying as one-off feedback.
 
-![TDK lifecycle workflow](assets/tdk-lifecycle-share-graph.svg)
+![TDK lifecycle workflow](assets/lifecycle-share-graph.svg)
 
 ## What It Does
 
@@ -220,7 +220,7 @@ Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup,
 
 ## Documentation
 
-- [TDK Skills Guide](.specify/docs/en/guides/tdk-skills-guide.md) — skill directory, cheat sheet, and usage reference
+- [TDK Skills Guide](.specify/docs/en/guides/skills-guide.md) — skill directory, cheat sheet, and usage reference
 - [tdk-setup README](packages/tdk-setup/README.md) — harness setup CLI reference
 - [Scenario Guides](.specify/docs/en/guides/scenarios/) — 10 workflow scenarios
 - [Setup Guide](.specify/docs/en/guides/setup/installation.md) — installation and configuration

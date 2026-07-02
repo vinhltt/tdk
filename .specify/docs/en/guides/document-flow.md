@@ -5,7 +5,7 @@
 
 ---
 
-![TDK lifecycle workflow](../../assets/tdk-lifecycle-share-graph.png)
+![TDK lifecycle workflow](../../assets/lifecycle-share-graph.png)
 
 ## Full Workflow Flow
 

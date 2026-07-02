@@ -80,7 +80,7 @@ flowchart TD
 
 Nếu work nhỏ kiểu feature-sized, dùng path ngắn: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. Với epic workflow, `epic-prd/` feed parent HLD, HLD feed task breakdown, và `tasks-breakdown/` feed child /tdk-specify. Child specs không chạy HLD mặc định.
 
-![TDK Epic Start - Discovery đến Task Breakdown](../../assets/tdk-epic-discovery-to-task-breakdown.png)
+![TDK Epic Start - Discovery đến Task Breakdown](../../assets/epic-discovery-to-task-breakdown.png)
 
 ## Đường Đi Chuẩn Cho Epic
 
@@ -572,7 +572,7 @@ Lặp child loop cho từng seed được chọn. Không plan và implement pare
 ## Docs Liên Quan
 
 - [Epic Start Guide English](../../en/guides/epic-start-guide.md)
-- [TDK Skills Guide](../../en/guides/tdk-skills-guide.md)
+- [TDK Skills Guide](../../en/guides/skills-guide.md)
 - [Document Flow](../../en/guides/document-flow.md)
 - [Full Feature Development Scenario](../../en/guides/scenarios/01-full-feature-development.md)
 - [Quy Ước Promote: Child Spec Seed → Child Spec](promote-convention.md)

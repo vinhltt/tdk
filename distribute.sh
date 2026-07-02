@@ -241,7 +241,7 @@ else
 fi
 if [[ -n "$BRAND_PREFIX" ]]; then
     echo -e "  ${WHITE}Brand:${NC}   safe .specify payload text tdk-/tdk/TDK -> $BRAND_PREFIX/$BRAND_WORD/$BRAND_WORD_UPPER"
-    echo -e "  ${DIM}         plugins/, codex-plugins/, scripts/, schemas/, and docs/assets/ stay source-identical${NC}"
+    echo -e "  ${DIM}         plugins/, codex-plugins/, non-setup scripts/, schemas/, and filename/path refs stay source-identical${NC}"
 fi
 $FORCE && echo -e "  ${YELLOW}Mode:    --force (skip MD5 comparison)${NC}"
 $NO_DELETE && echo -e "  ${YELLOW}Mode:    --no-delete (skip orphan removal)${NC}"
@@ -302,7 +302,7 @@ file_md5() {
 
 has_payload_text_extension() {
     case "$1" in
-        *.md|*.mdx|*.txt|*.json|*.yaml|*.yml|*.tpl|*.sh) return 0 ;;
+        *.md|*.mdx|*.txt|*.json|*.yaml|*.yml|*.tpl|*.sh|*.svg|*.excalidraw) return 0 ;;
         *) return 1 ;;
     esac
 }
@@ -311,7 +311,9 @@ is_payload_rewrite_candidate() {
     local rel_path="$1"
     case "$rel_path" in
         setup.sh|CHANGELOG.md|.specify*.example) return 0 ;;
-        plugins/*|codex-plugins/*|scripts/*|schemas/*|docs/assets/*) return 1 ;;
+        scripts/ts/src/commands/setup/setup.ts|scripts/ts/src/commands/setup/utils/output-helpers.ts) return 0 ;;
+        plugins/*|codex-plugins/*|scripts/*|schemas/*) return 1 ;;
+        docs/assets/*) has_payload_text_extension "$rel_path"; return ;;
         docs/*|templates/*) has_payload_text_extension "$rel_path"; return ;;
         *) return 1 ;;
     esac
@@ -321,6 +323,11 @@ should_rewrite_source_file() {
     local source_dir="$1" rel_path="$2"
     [[ -n "$BRAND_PREFIX" && "$source_dir" == "$SOURCE_SPECIFY" ]] || return 1
     is_payload_rewrite_candidate "$rel_path"
+}
+
+target_relative_path() {
+    local source_dir="$1" rel_path="$2"
+    printf '%s\n' "$rel_path"
 }
 
 payload_text_rewrite() {
@@ -346,9 +353,12 @@ def protect(pattern):
         return f"\ue000{len(protected) - 1}\ue001"
     text = re.sub(pattern, replace, text)
 
-# These references point to paths that distribute intentionally does not rename.
+# These references point to plugin paths that distribute intentionally does not rename.
 protect(r"\.specify/(?:codex-)?plugins/[^\s\"'`)\]}]+")
-protect(r"(?:[A-Za-z0-9_.-]+/)*assets/tdk-[^\s\"'`)\]}]+")
+
+# These references point to files/paths that distribute intentionally does not rename.
+protect(r"(?:(?:\.{1,2}|[A-Za-z0-9_.-]+)/)+[^\s\"'`)\]}]*tdk-[^\s\"'`)\]}]*")
+protect(r"(?:[A-Za-z0-9_.-]+/)*tdk-[^\s\"'`)\]}]+\.(?:md|mdx|png|svg|excalidraw|json|yaml|yml|tpl|ts|sh)")
 
 text = re.sub(r"(?<![a-z0-9-])" + re.escape(source_prefix), target_prefix, text)
 if source_brand and target_brand:
@@ -454,6 +464,15 @@ collect_target_orphans() {
     [[ "${1:-}" == "--" ]] && shift
     excludes=("$@")
 
+    local source_files mapped_targets
+    source_files=$(collect_files "$source_dir" "${includes[@]}" -- "${excludes[@]}")
+    mapped_targets=$(
+        while IFS= read -r source_rel; do
+            [[ -z "$source_rel" ]] && continue
+            target_relative_path "$source_dir" "$source_rel"
+        done <<< "$source_files"
+    )
+
     for pattern in "${includes[@]}"; do
         local target="$target_dir/${pattern%/}"
         if [[ -d "$target" ]]; then
@@ -462,14 +481,12 @@ collect_target_orphans() {
                 if is_excluded "$rel" "${excludes[@]}"; then
                     continue
                 fi
-                local src="$source_dir/$rel"
-                if [[ ! -f "$src" ]]; then
+                if ! grep -Fxq "$rel" <<< "$mapped_targets"; then
                     echo "$rel"
                 fi
             done < <(find "$target" -type f -print0 2>/dev/null | sort -z)
         elif [[ -f "$target" ]]; then
-            local src="$source_dir/${pattern%/}"
-            if [[ ! -f "$src" ]]; then
+            if ! grep -Fxq "${pattern%/}" <<< "$mapped_targets"; then
                 echo "${pattern%/}"
             fi
         fi
@@ -509,7 +526,9 @@ classify_files() {
         ((count+=1))
         printf "\r${DIM}  [%d/%d] Comparing...${NC}" "$count" "$total" >&2
         local src="$source_dir/$rel"
-        local dst="$target_dir/$rel"
+        local target_rel
+        target_rel="$(target_relative_path "$source_dir" "$rel")"
+        local dst="$target_dir/$target_rel"
 
         if [[ ! -f "$dst" ]]; then
             G_NEW+=("$rel")
@@ -764,7 +783,8 @@ delete_one() {
 
 # Sync .specify/ new + updated
 for rel in "${SPEC_NEW[@]}" "${SPEC_UPDATED[@]}"; do
-    copy_one "$SOURCE_SPECIFY/$rel" "$TARGET_SPECIFY/$rel" "$rel" ".specify"
+    target_rel="$(target_relative_path "$SOURCE_SPECIFY" "$rel")"
+    copy_one "$SOURCE_SPECIFY/$rel" "$TARGET_SPECIFY/$target_rel" "$rel" ".specify"
 done
 
 # Sync .claude/ new + updated

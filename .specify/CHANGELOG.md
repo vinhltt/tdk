@@ -9,6 +9,15 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.94.5] - 2026-07-02
+
+### Changed
+- **[Docs]** Rename TDK skills guide and strip prefixes from assets
+  - Rename `tdk-skills-guide.md` to `skills-guide.md` and update related guides and indices
+  - Strip `tdk-` prefix from excalidraw/image assets (`epic-discovery-to-task-breakdown` and `lifecycle-share-graph`)
+- **[Skills]** Update `obsidian-brain` and `tdk-skill-guide` to reference renamed `skills-guide.md`
+- **[Scripts]** Update `codex-distribute-e2e.test.ts` to match renamed files and verify prefix handling
+
 ## [1.94.4] - 2026-07-02
 
 ### Changed
