@@ -14,8 +14,9 @@ artifacts must not mint `FS-*`.
 ## Allowed Output Shape
 
 ```text
+{FEATURE_DIR}/index.md
+{FEATURE_DIR}/epic-prd.md
 {FEATURE_DIR}/epic-prd/
-  index.md
   prd.md
   slice-map.md
   open-questions.md
@@ -30,19 +31,31 @@ Each artifact begins with:
 ```yaml
 ---
 source_epic: "<task-id>"
-artifact_type: "<index|prd|slice-map|open-questions>"
+artifact_type: "<epic-prd|prd|slice-map|open-questions>"
 status: draft
 created: "<ISO-8601 timestamp>"
 ---
 ```
 
-## index.md
+## Epic Dashboard
+
+`{FEATURE_DIR}/index.md` is the TDK-owned epic dashboard. Epic PRD creates or
+updates generated dashboard sections for current stage, stage manifest links,
+readiness, authority boundary, and next command. The epic PRD stage manifest is
+`epic-prd.md`.
+
+If an existing dashboard has user-edited content inside a generated section the
+command would replace, ask for confirmation or require `--force`. In
+noninteractive contexts, STOP with guidance instead of overwriting user edits.
+User-owned sections outside generated markers are preserved.
+
+## epic-prd.md
 
 Purpose: manifest and navigation file for the epic PRD set.
 
 Required sections:
 
-- `# Epic PRD Index`
+- `# Epic PRD Manifest`
 - `## Source Discovery`
 - `## Artifact Map`
 - `## Readiness Gate`
@@ -131,3 +144,10 @@ Epic PRD MUST NOT create or emit:
 - Any additional epic PRD file beyond the four allowed files.
 
 Epic PRD remains tracker-neutral and does not create tracker issues.
+
+## Legacy Layout Detection
+
+If `epic-prd/index.md` exists and sibling `epic-prd.md` is missing, STOP with
+`legacy layout detected`. Tell the user to rerun `/tdk-epic-prd <epic-id>` with
+`--force` or recreate the test epic. do not auto-migrate old nested `index.md`
+content into the new layout.

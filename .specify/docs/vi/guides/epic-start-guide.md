@@ -14,7 +14,7 @@ Epic brief
   -> /tdk-epic-prd
   -> /tdk-epic-hld
   -> /tdk-task-breakdown
-  -> chọn một seed trong tasks-breakdown/index.md
+  -> chọn một seed trong tasks-breakdown.md
   -> child /tdk-specify
   -> child /tdk-clarify
   -> child /tdk-plan
@@ -78,7 +78,7 @@ flowchart TD
     P --> Q[/tdk-implement/]
 ```
 
-Nếu work nhỏ kiểu feature-sized, dùng path ngắn: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. Với epic workflow, `epic-prd/` feed parent HLD, HLD feed task breakdown, và `tasks-breakdown/` feed child /tdk-specify. Child specs không chạy HLD mặc định.
+Nếu work nhỏ kiểu feature-sized, dùng path ngắn: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. Với epic workflow, `epic-prd.md` + `epic-prd/` feed parent HLD, HLD feed task breakdown, và `tasks-breakdown.md` + `tasks-breakdown/` feed child /tdk-specify. Child specs không chạy HLD mặc định.
 
 ![TDK Epic Start - Discovery đến Task Breakdown](../../assets/epic-discovery-to-task-breakdown.png)
 
@@ -88,8 +88,8 @@ Dùng cùng một parent ID cho discovery và epic PRD. Tạo child IDs mới ch
 
 | Bước | Lệnh hoặc action | Gate trước khi đi tiếp |
 |---|---|---|
-| 1 | `/tdk-discovery <parent-id> <brief\|file> [--interview]` | `discovery/index.md` cho thấy problem, personas, MVP cut đủ rõ để specify |
-| 2 | `/tdk-epic-prd <parent-id> [--interview]` | `epic-prd/index.md` không còn Blocking Questions và `slice-map.md` không có catch-all slice |
+| 1 | `/tdk-discovery <parent-id> <brief\|file> [--interview]` | `discovery.md` cho thấy problem, personas, MVP cut đủ rõ để specify |
+| 2 | `/tdk-epic-prd <parent-id> [--interview]` | `epic-prd.md` không còn Blocking Questions và `slice-map.md` không có catch-all slice |
 | 3 | `/tdk-epic-hld <parent-id>` | Parent HLD nắm slice boundaries, dependencies, risks, design assumptions mà không tạo requirement IDs |
 | 4 | `/tdk-task-breakdown <parent-id>` | Seed files map PRD slices + HLD context thành child specs có thể specify riêng |
 | 5 | Chọn một child spec seed | Seed chỉ mô tả một child có thể specify riêng, không copy toàn bộ parent epic |
@@ -98,7 +98,7 @@ Dùng cùng một parent ID cho discovery và epic PRD. Tạo child IDs mới ch
 
 ## Nội Dung Output File
 
-Khi đọc output, luôn bắt đầu từ file manifest: `discovery/index.md`, `high-level-design/index.md`, hoặc `tasks-breakdown/index.md`. Đừng glob cả thư mục rồi tự đoán file nào đang còn hiệu lực.
+Khi đọc output, luôn bắt đầu từ file manifest: `discovery.md`, `high-level-design.md`, hoặc `tasks-breakdown.md`. Đừng glob cả thư mục rồi tự đoán file nào đang còn hiệu lực.
 
 ### Output của Discovery
 
@@ -107,7 +107,7 @@ Khi đọc output, luôn bắt đầu từ file manifest: `discovery/index.md`, 
 | `discovery/problem.md` | Frontmatter, `## Problem`, `## Affected Users`, `## Current Alternatives`, `## Constraints`, `## Open Questions` | Hiểu epic đang giải quyết pain nào, ai bị ảnh hưởng, constraint nào đã biết |
 | `discovery/personas.md` | `## Primary Personas`, `## Secondary Personas`, `## Jobs To Be Done`, `## Assumptions`, `## Open Questions` | Hiểu các nhóm user/actor và vì sao mỗi nhóm có thể cần behavior khác nhau |
 | `discovery/mvp-scope.md` | `## In Scope Candidates`, `## Out Of Scope Candidates`, `## MVP Cutline`, `## Risks`, `## Open Questions` | Nhìn được ranh giới MVP đầu tiên trước khi chuyển epic thành requirements |
-| `discovery/index.md` | `## Artifact Manifest`, `## Summary`, `## Product-level signals`, `## Ready For Specify` | Bắt đầu đọc từ đây; file này cho biết bộ discovery gồm file nào và đã sẵn sàng chạy `/tdk-specify` chưa |
+| `discovery.md` | `## Artifact Manifest`, `## Summary`, `## Product-level signals`, `## Ready For Specify` | Bắt đầu đọc từ đây; file này cho biết bộ discovery gồm file nào và đã sẵn sàng chạy `/tdk-specify` chưa |
 
 Discovery không phải requirement authority. Nó chỉ là context để viết `spec.md` đầu tiên.
 
@@ -115,7 +115,7 @@ Discovery không phải requirement authority. Nó chỉ là context để viế
 
 | File | Bên trong có gì | Junior nên dùng thế nào |
 |---|---|---|
-| `epic-prd/index.md` | Link về discovery source, artifact map, readiness gate, next commands | Bắt đầu từ đây; nếu còn Blocking Questions thì chưa sẵn sàng cho downstream design hoặc breakdown |
+| `epic-prd.md` | Link về discovery source, artifact map, readiness gate, next commands | Bắt đầu từ đây; nếu còn Blocking Questions thì chưa sẵn sàng cho downstream design hoặc breakdown |
 | `epic-prd/prd.md` | Product intent, problem/current state, personas, objectives, scope, MVP appetite, assumptions, risks, no-gos, source trace | Align hướng product, nhưng không xem là requirement spec |
 | `epic-prd/slice-map.md` | Slug slice keys, capabilities, actors, outcomes, dependencies, child spec titles, priority | Source cho HLD/task-breakdown; child `/tdk-specify` bắt đầu từ seed file |
 | `epic-prd/open-questions.md` | Blocking Questions, Non-Blocking Questions, assumptions cần evidence, source trace | Resolve blockers trước downstream epic design, breakdown, hoặc child specs |
@@ -162,7 +162,7 @@ Clarify có giá trị vì decision được lưu trong spec, không bị thất
 
 | File | Bên trong có gì | Junior nên dùng thế nào |
 |---|---|---|
-| `high-level-design/index.md` | Frontmatter, `## Source`, `## Artifact Map`, `## Breakdown Readiness Map`, `## Readiness Gate` | Bắt đầu từ đây; nó list HLD files và validate parent epic gate |
+| `high-level-design.md` | Frontmatter, `## Source`, `## Artifact Map`, `## Breakdown Readiness Map`, `## Readiness Gate` | Bắt đầu từ đây; nó list HLD files và validate parent epic gate |
 | `high-level-design/requirement-overview.md` | Product objective, scope, personas/jobs, slice source map, breakdown readiness | Xem epic PRD slices chuyển thành child spec seed implication thế nào |
 | `high-level-design/project-and-technical-overview.md` | System context, slice boundary map, dependency map, interface assumptions, security posture, operability | Hiểu decomposition impact cấp hệ thống; detail `assumed` cần validate |
 | `high-level-design/data-flow.md` | Key entities, cross-slice flows, external dependencies, state lifecycle, optional diagram | Hiểu data/state trước khi tạo child spec seeds |
@@ -175,10 +175,10 @@ HLD guide parent decomposition. Nó không tạo `UR-*`, `FR-*`, `SC-*`, child s
 
 | File | Bên trong có gì | Junior nên dùng thế nào |
 |---|---|---|
-| `tasks-breakdown/index.md` | Frontmatter, epic PRD/HLD links, `## Child Spec Seeds`, tracker boundary, sync boundary | Xem đây là manifest chính thức để biết child spec seed nào cần dùng |
+| `tasks-breakdown.md` | Frontmatter, epic PRD/HLD links, `## Child Spec Seeds`, tracker boundary, sync boundary | Xem đây là manifest chính thức để biết child spec seed nào cần dùng |
 | `tasks-breakdown/task-NNN-{slice}.md` | Frontmatter, source slice, suggested child `/tdk-specify` command, boundary, dependencies, assumptions/risks, child clarify questions | Dùng một seed file để bắt đầu một child spec |
 
-Bảng task trong `tasks-breakdown/index.md` có:
+Bảng task trong `tasks-breakdown.md` có:
 
 | Column | Ý nghĩa |
 |---|---|
@@ -221,7 +221,7 @@ Ví dụ interview:
 |---|---|
 | Input | Epic ID + brief ngắn hoặc file Markdown trong workspace; ID-only khi replay discovery đã có bằng `--interview` |
 | Reads | Project context, constitution, memory nếu có |
-| Creates | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md` |
+| Creates | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery.md` |
 | Tác dụng | Làm rõ problem, users, MVP cutline, risks, open questions |
 | Lệnh tiếp theo | `/tdk-epic-prd <id>` cho epic rộng, hoặc `/tdk-specify <id> <description>` cho feature nhỏ |
 
@@ -235,9 +235,9 @@ Skill này không làm:
 
 Checklist trước khi đi tiếp:
 
-- Mở `discovery/index.md`.
+- Mở `discovery.md`.
 - Kiểm tra problem, persona, MVP scope đã dễ hiểu chưa.
-- Nếu dùng `--interview`, kiểm tra accepted corrections đã nằm trong `problem.md`, `personas.md`, `mvp-scope.md`, hoặc `index.md`; unresolved points nằm trong `## Open Questions` phù hợp.
+- Nếu dùng `--interview`, kiểm tra accepted corrections đã nằm trong `problem.md`, `personas.md`, `mvp-scope.md`, hoặc `discovery.md`; unresolved points nằm trong `## Open Questions` phù hợp.
 - Nếu MVP boundary vẫn mơ hồ, làm rõ brief trước khi chạy `specify`.
 
 ### 2. `/tdk-epic-prd <epic-id> [--force] [--interview]`
@@ -253,8 +253,8 @@ Ví dụ:
 | Item | Chi tiết |
 |---|---|
 | Input | Epic ID đã có discovery artifacts |
-| Reads | `discovery/index.md`, `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md` |
-| Creates | `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` |
+| Reads | `discovery.md`, `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md` |
+| Creates | `epic-prd.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` |
 | Tác dụng | Align product intent, chặn catch-all slice, tạo seed cho child specs |
 | Lệnh tiếp theo | child `/tdk-specify <child-id> "<slice seed>"` |
 
@@ -268,7 +268,7 @@ Skill này không làm:
 
 Checklist trước khi đi tiếp:
 
-- Mở `epic-prd/index.md`.
+- Mở `epic-prd.md`.
 - Confirm Blocking Questions đã rỗng.
 - Confirm `slice-map.md` không có catch-all "all features" hoặc "entire MVP".
 - Chọn đúng một slice seed trước khi chạy child `/tdk-specify`.
@@ -294,7 +294,7 @@ Ví dụ interview:
 | Item | Chi tiết |
 |---|---|
 | Input | Feature ID + mô tả bằng ngôn ngữ tự nhiên; ID-only khi replay `spec.md` đã có bằng `--interview` |
-| Reads | Optional `discovery/index.md` nếu đã có discovery; existing `spec.md` cho ID-only replay |
+| Reads | Optional `discovery.md` nếu đã có discovery; existing `spec.md` cho ID-only replay |
 | Creates | `spec.md`, `checklists/requirements.md` |
 | Tác dụng | Định nghĩa problem, scope, impact surface, user requirements, functional requirements, success criteria, risks, unresolved questions |
 | Lệnh tiếp theo | `/tdk-clarify <id>` |
@@ -373,15 +373,15 @@ Ví dụ:
 
 | Item | Chi tiết |
 |---|---|
-| Input | `epic-prd/index.md`, `prd.md`, `slice-map.md`, `open-questions.md` |
-| Creates | `high-level-design/index.md` + 5 design artifacts |
+| Input | `epic-prd.md`, `prd.md`, `slice-map.md`, `open-questions.md` |
+| Creates | `high-level-design.md` + 5 design artifacts |
 | Tác dụng | Biến epic PRD slices thành parent product/system design context để breakdown an toàn |
 | Lệnh tiếp theo | `/tdk-task-breakdown <epic-id>` |
 
 Files được tạo:
 
 ```text
-high-level-design/index.md
+high-level-design.md
 high-level-design/requirement-overview.md
 high-level-design/project-and-technical-overview.md
 high-level-design/data-flow.md
@@ -399,8 +399,8 @@ Skill này không làm:
 
 Checklist trước khi đi tiếp:
 
-- Bắt đầu từ `high-level-design/index.md`.
-- Chỉ đọc artifacts được list trong index.
+- Bắt đầu từ `high-level-design.md`.
+- Chỉ đọc artifacts được list trong stage manifest.
 - Kiểm tra design statements trace về epic PRD sections hoặc slice keys.
 - Nếu HLD phát hiện slice hoặc product decision mới, quay lại `/tdk-epic-prd --interview` hoặc update epic PRD.
 
@@ -416,8 +416,8 @@ Ví dụ:
 
 | Item | Chi tiết |
 |---|---|
-| Input | `epic-prd/`; `high-level-design/` |
-| Creates | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-{slice}.md` |
+| Input | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` |
+| Creates | `tasks-breakdown.md`, `tasks-breakdown/task-NNN-{slice}.md` |
 | Tác dụng | Chuyển parent PRD slices và HLD context thành child spec seeds |
 | Lệnh tiếp theo | Child `/tdk-specify <child-id> "<seed>"` |
 
@@ -431,7 +431,7 @@ Skill này không làm:
 
 Checklist trước khi đi tiếp:
 
-- Mở `tasks-breakdown/index.md`.
+- Mở `tasks-breakdown.md`.
 - Xem nó là manifest chính thức.
 - Mở từng seed file được list.
 - Kiểm tra mỗi seed cite source slice key và PRD/HLD refs.
@@ -449,7 +449,7 @@ parent epic artifacts
   -> /tdk-epic-prd
   -> /tdk-epic-hld
   -> /tdk-task-breakdown
-  -> tasks-breakdown/index.md
+  -> tasks-breakdown.md
   -> child spec seed files
   -> consumer-owned tracker sync
   -> GitHub/GitLab/Backlog sub-issues
@@ -483,7 +483,7 @@ child spec.
 | Discovery -> Epic PRD | Problem, persona, MVP context đủ rõ để product alignment |
 | Epic PRD -> HLD | `epic-prd/open-questions.md` không có blocking questions và `slice-map.md` không có catch-all slice |
 | HLD -> Task Breakdown | HLD index tồn tại và đánh dấu parent design sẵn sàng breakdown |
-| Task Breakdown -> Child Spec | `tasks-breakdown/index.md` list seed files; mỗi seed cite source slice key và PRD/HLD refs |
+| Task Breakdown -> Child Spec | `tasks-breakdown.md` list seed files; mỗi seed cite source slice key và PRD/HLD refs |
 | Child Specify -> Child Clarify | Child `spec.md` tồn tại và requirements checklist đã được review |
 | Child Spec -> Child Plan | Child `spec.md` đã clarify và unresolved questions là `None` |
 | Child Plan -> Child Implement | Child `plan.md` có `## Phases` table usable |
@@ -566,7 +566,7 @@ Lặp child loop cho từng seed được chọn. Không plan và implement pare
 | HLD dừng trước khi ghi file | Epic PRD còn blocking questions hoặc catch-all slices | Update hoặc interview epic PRD |
 | Task breakdown dừng trước khi ghi file | Epic HLD thiếu hoặc parent readiness gates fail | Chạy `/tdk-epic-hld <id>` và resolve parent readiness issues |
 | Sub-issue không có đường triển khai | Task đã sync từ breakdown nhưng chưa seed thành child spec | Tạo child spec từ seed content |
-| Không biết nên đọc file nào tiếp | Đang glob thư mục thay vì đọc manifest | Bắt đầu từ `discovery/index.md`, `high-level-design/index.md`, hoặc `tasks-breakdown/index.md` |
+| Không biết nên đọc file nào tiếp | Đang glob thư mục thay vì đọc manifest | Bắt đầu từ `discovery.md`, `high-level-design.md`, hoặc `tasks-breakdown.md` |
 | Requirement conflict với HLD | Product/slice decision phát hiện quá muộn | Update epic PRD hoặc child spec ở đúng lane, rồi regenerate downstream artifacts |
 
 ## Docs Liên Quan

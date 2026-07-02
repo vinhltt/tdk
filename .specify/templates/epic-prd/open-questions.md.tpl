@@ -31,4 +31,4 @@ Questions here block downstream epic design or breakdown readiness.
 
 | Topic | Discovery source |
 |---|---|
-|  | `../discovery/index.md` |
+|  | `../discovery.md` |

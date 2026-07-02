@@ -46,7 +46,7 @@ parent epic -> /tdk-epic-prd -> /tdk-epic-hld -> /tdk-task-breakdown
 
 Các bước:
 
-1. Chọn seed từ `tasks-breakdown/index.md`.
+1. Chọn seed từ `tasks-breakdown.md`.
 2. Chọn `<child-id>`: một task id bình thường, ví dụ `feat-123`, được validate bằng task-id grammar hiện có. **Không có path nesting kiểu `{epic}/{child}`**; link chỉ nằm trong frontmatter, không nằm trong directory path.
 3. Chạy `/tdk-specify <child-id> "<seed content from the seed file>"`.
 4. Mang traceability của seed vào nội dung child spec: source slice key, PRD refs,
@@ -59,7 +59,7 @@ Các bước:
 ## Optional `parent_spec` Format Rule
 
 Chỉ dùng `parent_spec` khi child được link tới một parent `spec.md` thật sự.
-Không dùng `parent_spec` để trỏ tới `epic-prd/index.md`, HLD artifacts, hoặc
+Không dùng `parent_spec` để trỏ tới `epic-prd.md`, HLD artifacts, hoặc
 seed files trong `tasks-breakdown/`.
 
 Khi dùng, `parent_spec` MUST dùng cùng form `[folder/]ticket` như khi address spec.
@@ -99,7 +99,7 @@ nesting, giúp cả hai operation an toàn.
 **Revert child spec (quay lại seed/tracker item).** Khi sub-feature không nên là
 spec riêng nữa, chạy đầy đủ revert checklist trong task-breakdown output contract:
 delete hoặc archive `specs/<child-id>/`, đóng tracker issue nếu consumer
-tracker-sync tồn tại, và update `tasks-breakdown/index.md` nếu consumer workflow
+tracker-sync tồn tại, và update `tasks-breakdown.md` nếu consumer workflow
 đã ghi status child spec ở đó. Xem `.specify/plugins/tdk-core/skills/tdk-task-breakdown/references/task-breakdown-output-contract.md`.
 
 ---

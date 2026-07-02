@@ -2,7 +2,7 @@
 name: tdk-task-breakdown
 description: "Generate parent epic child-spec-seed breakdown artifacts from epic PRD plus /tdk-epic-hld context. Use before child /tdk-specify loops."
 metadata:
-  version: "6.0.0"
+  version: "6.0.1"
 ---
 
 # tdk-task-breakdown
@@ -20,8 +20,9 @@ Trigger: `/tdk-task-breakdown <epic-id> [--force]`
 ## Boundary Declaration
 
 **This command produces:**
+- Epic dashboard update at `{FEATURE_DIR}/index.md`
+- Task-breakdown stage manifest at `{FEATURE_DIR}/tasks-breakdown.md`
 - Markdown child spec seed artifacts under `{FEATURE_DIR}/tasks-breakdown/`
-- `tasks-breakdown/index.md`
 - `tasks-breakdown/task-NNN-{slice}.md` files
 
 **This command does NOT:**
@@ -61,7 +62,7 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 Require and read:
 
 ```text
-{FEATURE_DIR}/epic-prd/index.md
+{FEATURE_DIR}/epic-prd.md
 {FEATURE_DIR}/epic-prd/prd.md
 {FEATURE_DIR}/epic-prd/slice-map.md
 {FEATURE_DIR}/epic-prd/open-questions.md
@@ -72,7 +73,7 @@ If any file is missing, STOP before writing and tell the user to run
 
 ### Step 1.5 - Require Epic HLD Context
 
-Require `{FEATURE_DIR}/high-level-design/index.md` and read the artifacts it
+Require `{FEATURE_DIR}/high-level-design.md` and read the artifacts it
 lists. If it is missing, STOP and tell the user to run `/tdk-epic-hld {TASK_ID}`
 first.
 
@@ -87,7 +88,7 @@ STOP before writing any file when:
 - `epic-prd/slice-map.md` has no independently specifiable slice.
 - `epic-prd/slice-map.md` contains catch-all slices such as "all features",
   "entire MVP", or "whole epic".
-- `high-level-design/index.md` does not mark the HLD set ready for task breakdown.
+- `high-level-design.md` does not mark the HLD set ready for task breakdown.
 
 ### Step 3 - Load Output Contract
 
@@ -130,22 +131,37 @@ the epic PRD slice map before writing output.
 
 ### Step 6 - Write Markdown Artifacts
 
+If `tasks-breakdown/index.md` exists and sibling `tasks-breakdown.md` is missing,
+STOP with:
+
+```text
+legacy layout detected: tasks-breakdown/index.md is from the old nested-manifest layout. Re-run with --force to regenerate task breakdown in the new layout, or recreate the test epic. TDK does not auto-migrate old tasks-breakdown/index.md content.
+```
+
 Create or update only:
-- `{FEATURE_DIR}/tasks-breakdown/index.md`
+- `{FEATURE_DIR}/tasks-breakdown.md`
 - `{FEATURE_DIR}/tasks-breakdown/task-NNN-{slice}.md`
 
 Do not write `tasks.md`, child `spec.md`, plan files, tracker config, or
 implementation files.
 
-`index.md` is the authoritative manifest for the current generated set.
-Consumers and agents must read the child spec seed files listed in `index.md`,
-not glob every file in `tasks-breakdown/`.
+`tasks-breakdown.md` is the authoritative manifest for the current generated
+set. Consumers and agents must read the child spec seed files listed in the
+stage manifest, not glob every file in `tasks-breakdown/`.
+
+### Step 6.5 - Update Epic Dashboard
+
+Update the generated task-breakdown section in `{FEATURE_DIR}/index.md`. Link
+the `tasks-breakdown.md` stage manifest, summarize seed count and tracker
+boundary, and show the next command for child `/tdk-specify`. Preserve
+user-owned content outside generated sections. Replace an existing generated
+task-breakdown section only after confirmation or when `--force` is supplied.
 
 ### Step 7 - Report Results
 
 Report:
 - Number of child spec seed files written
-- Relative paths for `tasks-breakdown/index.md` and each seed file
+- Relative paths for `{FEATURE_DIR}/index.md`, `tasks-breakdown.md`, and each seed file
 - Reminder: child specs start with `/tdk-specify <child-id> "<seed>"`
 - Reminder: tracker issue creation is consumer-owned and out of TDK core scope
 
@@ -155,7 +171,7 @@ Report:
 - [ ] Epic HLD artifacts exist before any write
 - [ ] `epic-prd/open-questions.md` has no blocking questions
 - [ ] `references/task-breakdown-output-contract.md` was loaded
-- [ ] Only `tasks-breakdown/index.md` and `tasks-breakdown/task-NNN-{slice}.md` were written
+- [ ] Only `{FEATURE_DIR}/index.md`, `tasks-breakdown.md`, and `tasks-breakdown/task-NNN-{slice}.md` were written
 - [ ] Every seed cites a source slice key and PRD/HLD refs
 - [ ] No `UR-*`, `FR-*`, `SC-*`, or `FS-*` identifiers were minted
 - [ ] No child spec, plan, code, tracker API, or tracker CLI call was made

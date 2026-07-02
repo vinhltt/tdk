@@ -10,13 +10,13 @@ const SKILL_DIR = dirname(SKILL_PATH);
 const OUTPUT_CONTRACT_PATH = join(SKILL_DIR, 'references/epic-prd-output-contract.md');
 const QUALITY_GUIDE_PATH = join(SKILL_DIR, 'references/epic-prd-quality-guidelines.md');
 const TEMPLATE_DIR = resolve(import.meta.dir, '../../../templates/epic-prd');
-const COMMAND_REFERENCE_PATH = resolve(import.meta.dir, '../../../docs/en/guides/command-reference.md');
+const SKILLS_GUIDE_PATH = resolve(import.meta.dir, '../../../docs/en/guides/skills-guide.md');
 const DOCUMENT_FLOW_PATH = resolve(import.meta.dir, '../../../docs/en/guides/document-flow.md');
 const EPIC_GUIDE_PATH = resolve(import.meta.dir, '../../../docs/en/guides/epic-start-guide.md');
 const VI_EPIC_GUIDE_PATH = resolve(import.meta.dir, '../../../docs/vi/guides/epic-start-guide.md');
-const OUTPUT_FILES = ['index.md', 'prd.md', 'slice-map.md', 'open-questions.md'];
+const DETAIL_FILES = ['prd.md', 'slice-map.md', 'open-questions.md'];
 const REQUIRED_DISCOVERY_FILES = [
-  'discovery/index.md',
+  'discovery.md',
   'discovery/problem.md',
   'discovery/personas.md',
   'discovery/mvp-scope.md',
@@ -52,11 +52,14 @@ describe('tdk-epic-prd skill contract', () => {
     expect(skill).toContain('/tdk-discovery <epic-id>');
   });
 
-  it('restricts output to exactly four epic PRD artifacts', () => {
-    expect(outputContract).toContain('{FEATURE_DIR}/epic-prd/');
+  it('restricts output to the sibling epic PRD manifest and detail artifacts', () => {
+    expect(outputContract).toContain('{FEATURE_DIR}/epic-prd.md');
     expect(outputContract).toContain('No other epic PRD output is allowed');
+    expect(skill).toContain('epic-prd.md');
+    expect(outputContract).toContain('epic-prd.md');
+    expect(existsSync(join(TEMPLATE_DIR, 'epic-prd.md.tpl'))).toBe(true);
 
-    for (const file of OUTPUT_FILES) {
+    for (const file of DETAIL_FILES) {
       expect(skill).toContain(`epic-prd/${file}`);
       expect(outputContract).toContain(file);
       expect(existsSync(join(TEMPLATE_DIR, `${file}.tpl`))).toBe(true);
@@ -103,19 +106,33 @@ describe('tdk-epic-prd skill contract', () => {
     expect(skill).toContain('update only the four epic PRD files');
   });
 
+  it('updates the epic dashboard and detects legacy nested manifests', () => {
+    expect(combined).toContain('{FEATURE_DIR}/index.md');
+    expect(combined).toContain('stage manifest');
+    expect(combined).toContain('next command');
+    expect(combined).toContain('legacy layout detected');
+    expect(combined).toContain('epic-prd/index.md');
+    expect(combined).toContain('--force');
+    expect(combined).toContain('do not auto-migrate');
+  });
+
   it('documents the current epic flow through parent HLD without advertising future commands', () => {
-    const commandReference = readIfExists(COMMAND_REFERENCE_PATH);
+    const skillsGuide = readIfExists(SKILLS_GUIDE_PATH);
     const documentFlow = readIfExists(DOCUMENT_FLOW_PATH);
     const epicGuide = readIfExists(EPIC_GUIDE_PATH);
     const viEpicGuide = readIfExists(VI_EPIC_GUIDE_PATH);
-    const docsCombined = `${commandReference}\n${documentFlow}\n${epicGuide}\n${viEpicGuide}`;
+    const docsCombined = `${skillsGuide}\n${documentFlow}\n${epicGuide}\n${viEpicGuide}`;
 
-    expect(commandReference).toContain('/tdk-epic-prd <epic-id> [--force] [--interview]');
-    expect(docsCombined).toContain('epic-prd/');
+    expect(skillsGuide).toContain('/tdk-epic-prd <epic-id> [--force] [--interview]');
+    expect(docsCombined).toContain('epic-prd.md');
     expect(docsCombined).toContain('discovery');
     expect(docsCombined).toContain('/tdk-epic-hld');
     expect(docsCombined).toContain('/tdk-task-breakdown');
     expect(docsCombined).toContain('child /tdk-specify');
+    expect(docsCombined).toContain('/tdk-specify');
+    expect(docsCombined).toContain('/tdk-plan');
+    expect(docsCombined).not.toContain('/tdk:specify');
+    expect(docsCombined).not.toContain('/tdk:plan');
     expect(docsCombined).not.toContain('/tdk-high-level-design');
     expect(docsCombined).not.toContain('/tdk-epic-slice-breakdown');
   });

@@ -86,11 +86,11 @@ If `SPEC_REPLAY_INTERVIEW=true`, skip this step. Replay interviews the existing
 After `FEATURE_DIR` is resolved, check for discovery context:
 
 ```bash
-DISCOVERY_INDEX="$FEATURE_DIR/discovery/index.md"
-test -f "$DISCOVERY_INDEX" && echo "DISCOVERY_CONTEXT=$DISCOVERY_INDEX" || echo "NO_DISCOVERY_CONTEXT"
+DISCOVERY_MANIFEST="$FEATURE_DIR/discovery.md"
+test -f "$DISCOVERY_MANIFEST" && echo "DISCOVERY_CONTEXT=$DISCOVERY_MANIFEST" || echo "NO_DISCOVERY_CONTEXT"
 ```
 
-If `discovery/index.md` exists, read it as optional context before spec generation.
+If `discovery.md` exists, read it as optional context before spec generation.
 Do not require discovery for normal specify flow.
 Discovery is context only. Only `tdk-specify` mints `UR-*`, `FR-*`, and `SC-*`.
 Use discovery for concise source references in `## 1. Problem Statement` and `## 4. Evaluated Approaches`; do not copy discovery prose wholesale into `spec.md`.

@@ -14,7 +14,7 @@ Epic brief
   -> /tdk-epic-prd
   -> /tdk-epic-hld
   -> /tdk-task-breakdown
-  -> choose one seed from tasks-breakdown/index.md
+  -> choose one seed from tasks-breakdown.md
   -> child /tdk-specify
   -> child /tdk-clarify
   -> child /tdk-plan
@@ -86,7 +86,7 @@ flowchart TD
     P --> Q[/tdk-implement/]
 ```
 
-Feature-sized work should use the short path: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. In the epic workflow, `epic-prd/` feeds parent HLD, HLD feeds task breakdown, and `tasks-breakdown/` feeds child /tdk-specify commands. Child specs do not run HLD by default.
+Feature-sized work should use the short path: `/tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`. In the epic workflow, `epic-prd.md` plus `epic-prd/` feeds parent HLD, HLD feeds task breakdown, and `tasks-breakdown.md` plus `tasks-breakdown/` feeds child /tdk-specify commands. Child specs do not run HLD by default.
 
 ![TDK Epic Start - Discovery to Task Breakdown](../../assets/epic-discovery-to-task-breakdown.png)
 
@@ -96,8 +96,8 @@ Use one parent ID for discovery and epic PRD. Use new child IDs for implementati
 
 | Step | Command or action | Gate before next step |
 |---|---|---|
-| 1 | `/tdk-discovery <parent-id> <brief\|file> [--interview]` | `discovery/index.md` says the problem, personas, and MVP cut are ready enough for specify |
-| 2 | `/tdk-epic-prd <parent-id> [--interview]` | `epic-prd/index.md` says Blocking Questions are empty, and `slice-map.md` has no catch-all slice |
+| 1 | `/tdk-discovery <parent-id> <brief\|file> [--interview]` | `discovery.md` says the problem, personas, and MVP cut are ready enough for specify |
+| 2 | `/tdk-epic-prd <parent-id> [--interview]` | `epic-prd.md` says Blocking Questions are empty, and `slice-map.md` has no catch-all slice |
 | 3 | `/tdk-epic-hld <parent-id>` | Parent HLD captures slice boundaries, dependencies, risks, and design assumptions without minting requirement IDs |
 | 4 | `/tdk-task-breakdown <parent-id>` | Seed files map PRD slices + HLD context into independently specifiable child specs |
 | 5 | Choose one child spec seed | The seed describes one independently specifiable child, not the whole parent epic |
@@ -106,7 +106,7 @@ Use one parent ID for discovery and epic PRD. Use new child IDs for implementati
 
 ## Output File Contents
 
-Read generated files through the manifest first: `discovery/index.md`, `high-level-design/index.md`, or `tasks-breakdown/index.md`. Do not inspect a directory by globbing files and assuming every file is current.
+Read generated files through the manifest first: `discovery.md`, `high-level-design.md`, or `tasks-breakdown.md`. Do not inspect a directory by globbing files and assuming every file is current.
 
 ### Discovery outputs
 
@@ -115,7 +115,7 @@ Read generated files through the manifest first: `discovery/index.md`, `high-lev
 | `discovery/problem.md` | Frontmatter, `## Problem`, `## Affected Users`, `## Current Alternatives`, `## Constraints`, `## Open Questions` | Understand what pain the epic solves, who feels it, and what constraints already exist |
 | `discovery/personas.md` | `## Primary Personas`, `## Secondary Personas`, `## Jobs To Be Done`, `## Assumptions`, `## Open Questions` | Know the user roles and why different actors may need different behavior |
 | `discovery/mvp-scope.md` | `## In Scope Candidates`, `## Out Of Scope Candidates`, `## MVP Cutline`, `## Risks`, `## Open Questions` | See the first safe MVP boundary before turning the epic into requirements |
-| `discovery/index.md` | `## Artifact Manifest`, `## Summary`, `## Product-level signals`, `## Ready For Specify` | Start here; it tells you which discovery files matter and whether the epic is ready for `/tdk-specify` |
+| `discovery.md` | `## Artifact Manifest`, `## Summary`, `## Product-level signals`, `## Ready For Specify` | Start here; it tells you which discovery files matter and whether the epic is ready for `/tdk-specify` |
 
 Discovery output is not requirement authority. Treat it as context for writing the first `spec.md`.
 
@@ -123,7 +123,7 @@ Discovery output is not requirement authority. Treat it as context for writing t
 
 | File | What it contains | How a junior should use it |
 |---|---|---|
-| `epic-prd/index.md` | Source discovery links, artifact map, readiness gate, next commands | Start here; if Blocking Questions exist, do not treat the epic as ready for downstream design or breakdown |
+| `epic-prd.md` | Source discovery links, artifact map, readiness gate, next commands | Start here; if Blocking Questions exist, do not treat the epic as ready for downstream design or breakdown |
 | `epic-prd/prd.md` | Product intent, problem/current state, personas, objectives, scope, MVP appetite, assumptions, risks, no-gos, source trace | Align on product direction without treating it as a requirement spec |
 | `epic-prd/slice-map.md` | Slug slice keys, capabilities, actors, outcomes, dependencies, suggested child spec titles, priority | Source for HLD/task-breakdown; child `/tdk-specify` starts from the seed file |
 | `epic-prd/open-questions.md` | Blocking Questions, Non-Blocking Questions, assumptions needing evidence, source trace | Resolve blockers before downstream epic design, breakdown, or child specs |
@@ -170,7 +170,7 @@ Clarify is useful because it keeps decisions inside the spec instead of leaving 
 
 | File | What it contains | How a junior should use it |
 |---|---|---|
-| `high-level-design/index.md` | Frontmatter, `## Source`, `## Artifact Map`, `## Breakdown Readiness Map`, `## Readiness Gate` | Start here; it lists the HLD files that are current and validates the parent epic gate |
+| `high-level-design.md` | Frontmatter, `## Source`, `## Artifact Map`, `## Breakdown Readiness Map`, `## Readiness Gate` | Start here; it lists the HLD files that are current and validates the parent epic gate |
 | `high-level-design/requirement-overview.md` | Product objective, scope, personas/jobs, slice source map, breakdown readiness | See how epic PRD slices translate into child spec seed implications |
 | `high-level-design/project-and-technical-overview.md` | System context, slice boundary map, dependency map, interface assumptions, security posture, operability | Understand system-level decomposition impact; treat originated details marked `assumed` as assumptions to validate |
 | `high-level-design/data-flow.md` | Key entities, cross-slice flows, external dependencies, state lifecycle, optional diagram | Understand data movement and state behavior before creating child spec seeds |
@@ -183,10 +183,10 @@ HLD guides parent decomposition. It does not create `UR-*`, `FR-*`, `SC-*`, chil
 
 | File | What it contains | How a junior should use it |
 |---|---|---|
-| `tasks-breakdown/index.md` | Frontmatter, epic PRD/HLD links, `## Child Spec Seeds` table, tracker boundary, sync boundary | Treat as the authoritative manifest for child spec seed files |
+| `tasks-breakdown.md` | Frontmatter, epic PRD/HLD links, `## Child Spec Seeds` table, tracker boundary, sync boundary | Treat as the authoritative manifest for child spec seed files |
 | `tasks-breakdown/task-NNN-{slice}.md` | Frontmatter, source slice, suggested child `/tdk-specify` command, boundary, dependencies, assumptions/risks, child clarify questions | Use one seed file to start one child spec |
 
-The `tasks-breakdown/index.md` task table has:
+The `tasks-breakdown.md` task table has:
 
 | Column | Meaning |
 |---|---|
@@ -229,7 +229,7 @@ Interview example:
 |---|---|
 | Input | Epic ID plus a short brief or a workspace-local Markdown file; ID only when replaying existing discovery with `--interview` |
 | Reads | Project context, constitution, and memory when available |
-| Creates | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md` |
+| Creates | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery.md` |
 | Main value | Frames the problem, users, MVP cutline, risks, and open questions |
 | Next command | `/tdk-specify <id> <description>` |
 
@@ -243,9 +243,9 @@ What it does not do:
 
 Ready check:
 
-- Open `discovery/index.md`.
+- Open `discovery.md`.
 - Check that problem, personas, and MVP scope are understandable.
-- If you used `--interview`, confirm accepted corrections appear in `problem.md`, `personas.md`, `mvp-scope.md`, or `index.md`, and unresolved points are in the relevant `## Open Questions`.
+- If you used `--interview`, confirm accepted corrections appear in `problem.md`, `personas.md`, `mvp-scope.md`, or `discovery.md`, and unresolved points are in the relevant `## Open Questions`.
 - If the MVP boundary still feels vague, clarify the brief before moving on.
 
 ### 2. `/tdk-epic-prd <epic-id> [--force] [--interview]`
@@ -261,8 +261,8 @@ Example:
 | Item | Detail |
 |---|---|
 | Input | Epic ID with existing discovery artifacts |
-| Reads | `discovery/index.md`, `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md` |
-| Creates | `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` |
+| Reads | `discovery.md`, `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md` |
+| Creates | `epic-prd.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` |
 | Main value | Aligns product intent, rejects catch-all slices, and produces child spec seeds |
 | Next command | child `/tdk-specify <child-id> "<slice seed>"` |
 
@@ -276,7 +276,7 @@ What it does not do:
 
 Ready check:
 
-- Open `epic-prd/index.md`.
+- Open `epic-prd.md`.
 - Confirm Blocking Questions are empty.
 - Confirm `slice-map.md` has no catch-all "all features" or "entire MVP" row.
 - Pick exactly one slice seed before running child `/tdk-specify`.
@@ -302,7 +302,7 @@ Interview example:
 | Item | Detail |
 |---|---|
 | Input | Feature ID plus natural-language description; ID only when replaying existing `spec.md` with `--interview` |
-| Reads | Optional `discovery/index.md` if discovery exists; existing `spec.md` for ID-only replay |
+| Reads | Optional `discovery.md` if discovery exists; existing `spec.md` for ID-only replay |
 | Creates | `spec.md`, `checklists/requirements.md` |
 | Main value | Defines problem, scope, impact surface, user requirements, functional requirements, success criteria, risks, and unresolved questions |
 | Next command | `/tdk-clarify <id>` |
@@ -381,15 +381,15 @@ Example:
 
 | Item | Detail |
 |---|---|
-| Input | `epic-prd/index.md`, `prd.md`, `slice-map.md`, `open-questions.md` |
-| Creates | `high-level-design/index.md` plus 5 design artifacts |
+| Input | `epic-prd.md`, `prd.md`, `slice-map.md`, `open-questions.md` |
+| Creates | `high-level-design.md` plus 5 design artifacts |
 | Main value | Turns epic PRD slices into parent product/system design context for safe breakdown |
 | Next command | `/tdk-task-breakdown <epic-id>` |
 
 Created files:
 
 ```text
-high-level-design/index.md
+high-level-design.md
 high-level-design/requirement-overview.md
 high-level-design/project-and-technical-overview.md
 high-level-design/data-flow.md
@@ -407,8 +407,8 @@ What it does not do:
 
 Ready check:
 
-- Start with `high-level-design/index.md`.
-- Read only artifacts listed in the index.
+- Start with `high-level-design.md`.
+- Read only artifacts listed in the stage manifest.
 - Check that design statements trace to epic PRD sections or slice keys.
 - If HLD exposes a new slice or product decision, return to `/tdk-epic-prd --interview` or update the epic PRD instead of hiding it in design.
 
@@ -424,8 +424,8 @@ Example:
 
 | Item | Detail |
 |---|---|
-| Input | `epic-prd/`; `high-level-design/` |
-| Creates | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-{slice}.md` |
+| Input | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` |
+| Creates | `tasks-breakdown.md`, `tasks-breakdown/task-NNN-{slice}.md` |
 | Main value | Converts parent PRD slices and HLD context into child spec seeds |
 | Next command | Child `/tdk-specify <child-id> "<seed>"` |
 
@@ -439,7 +439,7 @@ What it does not do:
 
 Ready check:
 
-- Open `tasks-breakdown/index.md`.
+- Open `tasks-breakdown.md`.
 - Treat it as the authoritative manifest.
 - Open each listed seed file.
 - Confirm each seed cites a source slice key and PRD/HLD refs.
@@ -457,7 +457,7 @@ parent epic artifacts
   -> /tdk-epic-prd
   -> /tdk-epic-hld
   -> /tdk-task-breakdown
-  -> tasks-breakdown/index.md
+  -> tasks-breakdown.md
   -> child spec seed files
   -> consumer-owned tracker sync
   -> GitHub/GitLab/Backlog sub-issues
@@ -491,7 +491,7 @@ a child spec seed.
 | Discovery -> Epic PRD | Problem, persona, and MVP context are clear enough for product alignment |
 | Epic PRD -> HLD | `epic-prd/open-questions.md` has no blocking questions and `slice-map.md` has no catch-all slice |
 | HLD -> Task Breakdown | HLD index exists and marks the parent design ready for breakdown |
-| Task Breakdown -> Child Spec | `tasks-breakdown/index.md` lists seed files; every seed cites a source slice key and PRD/HLD refs |
+| Task Breakdown -> Child Spec | `tasks-breakdown.md` lists seed files; every seed cites a source slice key and PRD/HLD refs |
 | Child Specify -> Child Clarify | Child `spec.md` exists and the requirements checklist was reviewed |
 | Child Spec -> Child Plan | Child `spec.md` is clarified and unresolved questions are `None` |
 | Child Plan -> Child Implement | Child `plan.md` has a usable `## Phases` table |
@@ -574,7 +574,7 @@ Repeat the child loop for each selected seed. Do not plan and implement the pare
 | HLD stops before writing files | Epic PRD has blocking questions or catch-all slices | Update or interview the epic PRD |
 | Task breakdown stops before writing files | Epic HLD is missing or parent readiness gates fail | Run `/tdk-epic-hld <id>` and resolve parent readiness issues |
 | Sub-issue has no implementation path | It was synced from task breakdown but not seeded into a child spec | Create a child spec from the seed content |
-| User cannot tell what to inspect next | They are reading by globbing directories | Start from `discovery/index.md`, `high-level-design/index.md`, or `tasks-breakdown/index.md` |
+| User cannot tell what to inspect next | They are reading by globbing directories | Start from `discovery.md`, `high-level-design.md`, or `tasks-breakdown.md` |
 | Requirements conflict with HLD | Product/slice decision discovered too late | Update epic PRD or child spec in the owning lane, then regenerate downstream artifacts |
 
 ## Related Docs

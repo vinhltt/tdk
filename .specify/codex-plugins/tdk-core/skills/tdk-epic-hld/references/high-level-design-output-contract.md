@@ -11,9 +11,15 @@ Built-in lenses and optional consumer HLD routing may enrich design context
 before artifact generation. They are advisory design inputs only; they do not
 change the six-file output set or requirement authority.
 
-## Output Directory
+## Output Layout
 
-All files are written under:
+The stage manifest is written beside the epic dashboard:
+
+```text
+{FEATURE_DIR}/high-level-design.md
+```
+
+Detail artifacts are written under:
 
 ```text
 {FEATURE_DIR}/high-level-design/
@@ -22,7 +28,7 @@ All files are written under:
 Allowed files (exactly these six, no others):
 
 ```text
-high-level-design/index.md
+high-level-design.md
 high-level-design/requirement-overview.md
 high-level-design/project-and-technical-overview.md
 high-level-design/data-flow.md
@@ -34,17 +40,17 @@ Do not create `spec.md`, `tasks.md`, `tasks-breakdown/`, tracker config,
 implementation plans, or source code. Issue creation and tracker sync are out of
 scope for this stage.
 
-`high-level-design/index.md` is authoritative. Consumers must read the artifacts
-listed in `index.md`, not discover artifacts by globbing the directory.
+`high-level-design.md` is authoritative. Consumers must read the artifacts
+listed in the stage manifest, not discover artifacts by globbing the directory.
 
 ## Index Schema
 
-`high-level-design/index.md` must use this structure:
+`high-level-design.md` must use this structure:
 
 ```markdown
 ---
 task_id: "{TASK_ID}"
-source_epic_prd: "../epic-prd/index.md"
+source_epic_prd: "epic-prd.md"
 artifact_type: "high-level-design"
 mode: "epic"
 status: "draft"
@@ -54,21 +60,21 @@ status: "draft"
 
 ## Source
 
-- Epic PRD Index: `../epic-prd/index.md`
-- Epic PRD: `../epic-prd/prd.md`
-- Slice Map: `../epic-prd/slice-map.md`
-- Open Questions: `../epic-prd/open-questions.md`
+- Epic PRD Manifest: `epic-prd.md`
+- Epic PRD: `epic-prd/prd.md`
+- Slice Map: `epic-prd/slice-map.md`
+- Open Questions: `epic-prd/open-questions.md`
 - Blocking Questions: `None`
 
 ## Artifact Map
 
 | Artifact | Purpose | Primary Epic Sources |
 |----------|---------|----------------------|
-| [requirement-overview.md](./requirement-overview.md) | Product objective, scope, personas, slice source map | `prd.md`, `slice-map.md` |
-| [project-and-technical-overview.md](./project-and-technical-overview.md) | System context, slice boundaries, dependency map, interface assumptions | `slice-map.md`, HLD lenses |
-| [data-flow.md](./data-flow.md) | Cross-slice data/entity lifecycle assumptions | `prd.md`, `slice-map.md` |
-| [screen-flow.md](./screen-flow.md) | Epic-level journeys and slice touchpoints | `prd.md`, `slice-map.md` |
-| [decisions-and-risks.md](./decisions-and-risks.md) | Slice decisions, rejected splits/merges, risks, assumptions, follow-ups | `prd.md`, `open-questions.md`, HLD lenses |
+| [requirement-overview.md](./high-level-design/requirement-overview.md) | Product objective, scope, personas, slice source map | `prd.md`, `slice-map.md` |
+| [project-and-technical-overview.md](./high-level-design/project-and-technical-overview.md) | System context, slice boundaries, dependency map, interface assumptions | `slice-map.md`, HLD lenses |
+| [data-flow.md](./high-level-design/data-flow.md) | Cross-slice data/entity lifecycle assumptions | `prd.md`, `slice-map.md` |
+| [screen-flow.md](./high-level-design/screen-flow.md) | Epic-level journeys and slice touchpoints | `prd.md`, `slice-map.md` |
+| [decisions-and-risks.md](./high-level-design/decisions-and-risks.md) | Slice decisions, rejected splits/merges, risks, assumptions, follow-ups | `prd.md`, `open-questions.md`, HLD lenses |
 
 ## Breakdown Readiness Map
 
@@ -78,8 +84,8 @@ status: "draft"
 ## Readiness Gate
 
 - [ ] Epic PRD artifacts exist
-- [ ] `../epic-prd/open-questions.md` has no blocking questions
-- [ ] `../epic-prd/slice-map.md` has no catch-all slice
+- [ ] `epic-prd/open-questions.md` has no blocking questions
+- [ ] `epic-prd/slice-map.md` has no catch-all slice
 - [ ] Every artifact traces claims to epic PRD sections or slice keys
 - [ ] No `UR-*`, `FR-*`, `SC-*`, or `FS-*` identifiers are minted
 - [ ] Ready for `/tdk-task-breakdown`
@@ -176,6 +182,7 @@ MVP", or "whole epic".
 
 Valid traceability sources are:
 
+- `epic-prd.md`
 - epic PRD artifact paths
 - epic PRD section names
 - slice keys from `epic-prd/slice-map.md`
@@ -203,4 +210,19 @@ requirement and must not be cited as `UR-*`, `FR-*`, `SC-*`, or `FS-*`.
 HLD artifacts are tracker-neutral parent design documents. This stage does not
 create implementation plans (`/tdk-plan`), code (`/tdk-implement`), child spec
 seeds (`/tdk-task-breakdown`), child specs (`/tdk-specify`), or external tracker
-issues. Downstream stages consume `index.md`.
+issues. Downstream stages consume `high-level-design.md`.
+
+## Epic Dashboard
+
+The command also updates the generated HLD section in `{FEATURE_DIR}/index.md`.
+That epic dashboard section summarizes the current stage manifest, HLD readiness,
+and next command (`/tdk-task-breakdown {TASK_ID}`). Preserve user-owned content
+outside generated sections. If a generated section already exists, replace it
+only after explicit confirmation or when `--force` is supplied.
+
+## Legacy Layout Detection
+
+If `high-level-design/index.md` exists and sibling `high-level-design.md` is
+missing, STOP with `legacy layout detected`. Tell the user to rerun
+`/tdk-epic-hld <epic-id>` with `--force` or recreate the test epic. do not auto-migrate
+old nested `index.md` content into the new layout.

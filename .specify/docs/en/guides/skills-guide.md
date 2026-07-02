@@ -74,9 +74,9 @@ The TDK command suite provides a **specification-driven development** workflow. 
 
 **Epic flow**: `constitution` (project-level) -> optional `discovery` -> `epic-prd` -> `epic-hld` -> `task-breakdown` -> child `specify` -> child `clarify` -> child `plan` -> child `implement`
 
-For feature-sized work, skip discovery, epic PRD, HLD, and task breakdown by default. If the feature is small and clear, the current spec continues directly to `plan` and `implement`. For broad epics, `epic-prd/` turns discovery into product alignment and slice map, `/tdk-epic-hld` adds parent design context, and `/tdk-task-breakdown` creates child spec seeds. Each seed then starts a child `/tdk-specify` loop.
+For feature-sized work, skip discovery, epic PRD, HLD, and task breakdown by default. If the feature is small and clear, the current spec continues directly to `plan` and `implement`. For broad epics, `epic-prd.md` plus `epic-prd/` turns discovery into product alignment and slice map, `/tdk-epic-hld` adds parent design context, and `/tdk-task-breakdown` creates child spec seeds. Each seed then starts a child `/tdk-specify` loop.
 
-Each command reads the output of the previous one. For minimal feature work, the chain is `spec.md` -> `plan.md` (with `## Phases`) -> source code. For epic-sized work, optional `discovery/` feeds `epic-prd/`; `epic-prd/` feeds parent HLD; parent HLD feeds task breakdown; task breakdown seeds child specs. Child specs do not run HLD by default.
+Each command reads the output of the previous one. For minimal feature work, the chain is `spec.md` -> `plan.md` (with `## Phases`) -> source code. For epic-sized work, optional `discovery.md` plus `discovery/` feeds `epic-prd.md` plus `epic-prd/`; epic PRD feeds parent HLD; parent HLD feeds task breakdown; task breakdown seeds child specs. Child specs do not run HLD by default.
 
 `/tdk-epic-hld` always uses built-in design lenses and may optionally read `{docs.path}/custom-workflow/high-level-design-skill-routing.md` for advisory consumer design skills. This HLD routing file is separate from `plan-skill-routing.md`, which remains implementation/test routing for planning and UT workflows.
 
@@ -283,7 +283,7 @@ For a broad epic, optionally capture discovery context before product alignment:
 /tdk-discovery feat-001 "User avatar upload, cropping, validation, storage, and moderation"
 ```
 
-This creates `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, and `discovery/index.md`. Discovery is context-only: it does not create `spec.md`, plans, work items, tracker records, or `UR-*` / `FR-*` / `SC-*` IDs. Skip it for small feature-sized work.
+This creates `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, and `discovery.md`. Discovery is context-only: it does not create `spec.md`, plans, work items, tracker records, or `UR-*` / `FR-*` / `SC-*` IDs. Skip it for small feature-sized work.
 
 Add `--interview` when the epic is broad or risky enough that you want to challenge the generated discovery text before completion. It folds accepted changes into the same four discovery files and creates no separate interview artifact or tracker record.
 
@@ -295,7 +295,7 @@ Before writing child specs for a broad epic, create the epic PRD:
 /tdk-epic-prd feat-001 --interview
 ```
 
-This creates `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, and `epic-prd/open-questions.md`. Epic PRD is not `spec.md`; it does not mint requirement IDs or create tracker issues.
+This creates `epic-prd.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, and `epic-prd/open-questions.md`. Epic PRD is not `spec.md`; it does not mint requirement IDs or create tracker issues.
 
 Before writing child specs for a broad epic, create parent HLD and task breakdown:
 
@@ -304,7 +304,7 @@ Before writing child specs for a broad epic, create parent HLD and task breakdow
 /tdk-task-breakdown feat-001
 ```
 
-HLD reads epic PRD artifacts and produces `high-level-design/index.md` plus five design artifacts. Task breakdown reads epic PRD + HLD and creates `tasks-breakdown/index.md` plus child spec seed files. These stages do not mint `UR-*`, `FR-*`, or `SC-*`.
+HLD reads epic PRD artifacts and produces `high-level-design.md` plus five design artifacts. Task breakdown reads epic PRD + HLD and creates `tasks-breakdown.md` plus child spec seed files. These stages do not mint `UR-*`, `FR-*`, or `SC-*`.
 
 ```
 /tdk-specify feat-002 "Avatar upload image cropping slice"
@@ -332,7 +332,7 @@ For HLD, task breakdown, or child planning, `## 9. Unresolved Questions` must be
 /tdk-epic-hld feat-001
 ```
 
-Creates `high-level-design/index.md` and five design artifacts from epic PRD. Use this when stakeholders need parent design context before child spec seed breakdown. HLD does not create requirement IDs.
+Creates `high-level-design.md` and five design artifacts from epic PRD. Use this when stakeholders need parent design context before child spec seed breakdown. HLD does not create requirement IDs.
 
 ### Step 4 — Generate child spec seeds
 
@@ -340,7 +340,7 @@ Creates `high-level-design/index.md` and five design artifacts from epic PRD. Us
 /tdk-task-breakdown feat-001
 ```
 
-Creates `tasks-breakdown/index.md` and `tasks-breakdown/task-NNN-*.md` child spec seed files from epic PRD + HLD. This is tracker-neutral Markdown only; GitHub, GitLab, Backlog, Jira, or other issue sync stays consumer-owned.
+Creates `tasks-breakdown.md` and `tasks-breakdown/task-NNN-*.md` child spec seed files from epic PRD + HLD. This is tracker-neutral Markdown only; GitHub, GitLab, Backlog, Jira, or other issue sync stays consumer-owned.
 
 For epic-sized work, each seed starts a child spec and runs its own `specify -> clarify -> plan -> implement` loop. Child specs do not run HLD by default. For small feature-sized work, skip parent epic HLD and task breakdown and plan the current spec directly.
 
@@ -398,11 +398,16 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 ```
 .specify/specs/feat-001/
-├── discovery/           ← Optional epic context before Step 1
-├── epic-prd/            ← Optional epic PRD, slice map, and open questions
+├── index.md             ← Epic dashboard and next-command summary
+├── discovery.md         ← Optional discovery stage manifest
+├── discovery/           ← Optional discovery detail files
+├── epic-prd.md          ← Optional epic PRD stage manifest
+├── epic-prd/            ← Optional epic PRD details, slice map, and open questions
 ├── spec.md              ← Step 1
-├── high-level-design/   ← Parent epic HLD after epic PRD
-├── tasks-breakdown/     ← Parent child spec seeds after HLD
+├── high-level-design.md ← Parent epic HLD stage manifest
+├── high-level-design/   ← Parent epic HLD detail files
+├── tasks-breakdown.md   ← Parent child spec seed manifest
+├── tasks-breakdown/     ← Parent child spec seed files
 ├── plan.md              ← Step 4 (includes ## Phases table)
 ├── research/            ← Step 4 (if needed)
 ├── data-model.md        ← Step 4 (if needed)
@@ -418,13 +423,13 @@ Shows a progress bar, completed/remaining phases, and recommendations.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| discovery | `/tdk-discovery <epic-id> [<brief\|file>] [--force] [--interview]` | `--force`, `--interview` | Project context, constitution/memory, brief or file; existing discovery files for ID-only `--interview` | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md` | Optional after constitution, before epic-prd or specify |
-| epic-prd | `/tdk-epic-prd <epic-id> [--force] [--interview]` | `--force`, `--interview` | Existing `discovery/index.md`, `problem.md`, `personas.md`, `mvp-scope.md`; existing PRD files for ID-only `--interview` | `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` | discovery |
-| specify | `/tdk-specify <id> [<desc>] [--interview]` | `--interview` | `.specify.env`; optional `discovery/index.md` or `epic-prd/slice-map.md` seed; existing `spec.md` for ID-only `--interview` | `spec.md`, `checklists/requirements.md` | None, discovery context, or epic PRD slice seed |
+| discovery | `/tdk-discovery <epic-id> [<brief\|file>] [--force] [--interview]` | `--force`, `--interview` | Project context, constitution/memory, brief or file; existing discovery files for ID-only `--interview` | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery.md` | Optional after constitution, before epic-prd or specify |
+| epic-prd | `/tdk-epic-prd <epic-id> [--force] [--interview]` | `--force`, `--interview` | Existing `discovery.md`, `problem.md`, `personas.md`, `mvp-scope.md`; existing PRD files for ID-only `--interview` | `epic-prd.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` | discovery |
+| specify | `/tdk-specify <id> [<desc>] [--interview]` | `--interview` | `.specify.env`; optional `discovery.md` or `epic-prd/slice-map.md` seed; existing `spec.md` for ID-only `--interview` | `spec.md`, `checklists/requirements.md` | None, discovery context, or epic PRD slice seed |
 | specify (fast) | `/tdk-specify <id> <desc> --fast [--interview]` | `--fast`, `--interview` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
-| high-level-design | `/tdk-epic-hld <epic-id>` | `--force` | `epic-prd/index.md`, `prd.md`, `slice-map.md`, `open-questions.md`; optional HLD routing | `high-level-design/index.md` + 5 design artifacts | epic-prd |
-| task-breakdown | `/tdk-task-breakdown <epic-id>` | `--force` | `epic-prd/`; `high-level-design/` | `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md` child spec seed files | high-level-design |
+| high-level-design | `/tdk-epic-hld <epic-id>` | `--force` | `epic-prd.md`, `prd.md`, `slice-map.md`, `open-questions.md`; optional HLD routing | `high-level-design.md` + 5 design artifacts | epic-prd |
+| task-breakdown | `/tdk-task-breakdown <epic-id>` | `--force` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | `tasks-breakdown.md`, `tasks-breakdown/task-NNN-*.md` child spec seed files | high-level-design |
 | plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--red-team`, `--validate` | `spec.md` plus clarified requirements and optional context | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | clarify |
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
 | analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
@@ -677,10 +682,10 @@ Detailed walkthroughs for common development situations. Each scenario includes 
 | "plan.md not found" | Running implementation before `plan` | Run `/tdk-plan <id>` first |
 | "Invalid prefix" | Task ID prefix not in allowed list | Check `ERCSPEC_PREFIX_LIST` in `.specify/.specify.env` |
 | "Task ID already exists" | `spec.md` or an existing guarded artifact already exists | Work on existing feature or use a different ID. A directory containing only `discovery/` can continue to `/tdk-specify` |
-| "Discovery already exists" | `discovery/index.md` already exists | Re-run `/tdk-discovery ... --force` only when replacing discovery context intentionally |
+| "Discovery already exists" | `discovery.md` already exists | Re-run `/tdk-discovery ... --force` only when replacing discovery context intentionally |
 | "Discovery replay interview requires existing discovery artifacts" | Running `/tdk-discovery <id> --interview` before all four discovery files exist | Create discovery first with `/tdk-discovery <id> <brief\|file> --interview` |
 | "Epic PRD requires existing discovery artifacts" | Running `/tdk-epic-prd <id>` before the four discovery files exist | Create discovery first with `/tdk-discovery <id> <brief\|file>` |
-| "Epic PRD already exists" | `epic-prd/index.md` already exists | Re-run `/tdk-epic-prd ... --force` only when replacing PRD artifacts, or use `--interview` to replay alignment |
+| "Epic PRD already exists" | `epic-prd.md` already exists | Re-run `/tdk-epic-prd ... --force` only when replacing PRD artifacts, or use `--interview` to replay alignment |
 | "Spec replay interview requires existing `spec.md`" | Running `/tdk-specify <id> --interview` before spec creation | Create the spec first with `/tdk-specify <id> <description> --interview` |
 | "Did you mean `--interview`?" | Using positional `interview` as a mode | Replace `interview` with the `--interview` flag |
 | "No UT skill found" | Running UT commands without a consumer UT skill | Create one in `.claude/skills/{name}/SKILL.md` with UT conventions |

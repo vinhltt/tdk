@@ -8,9 +8,15 @@ turns epic PRD slices plus HLD design context into child spec seeds. It does not
 create child specs, implementation plans, code, formal requirement IDs, or
 tracker issues.
 
-## Output Directory
+## Output Layout
 
-All files are written under:
+The stage manifest is written beside the epic dashboard:
+
+```text
+{FEATURE_DIR}/tasks-breakdown.md
+```
+
+Seed files are written under:
 
 ```text
 {FEATURE_DIR}/tasks-breakdown/
@@ -19,25 +25,26 @@ All files are written under:
 Allowed files:
 
 ```text
-tasks-breakdown/index.md
+tasks-breakdown.md
 tasks-breakdown/task-NNN-{slice}.md
 ```
 
 Do not create `tasks.md`, `spec.md`, tracker config, implementation plans, or
 source code.
 
-`tasks-breakdown/index.md` is authoritative. Consumers and agents must read seed
-files listed in `index.md`, not discover files by globbing the directory.
+`tasks-breakdown.md` is authoritative. Consumers and agents must read seed
+files listed in the stage manifest, not discover files by globbing the
+directory.
 
 ## Index Schema
 
-`tasks-breakdown/index.md` must use this structure:
+`tasks-breakdown.md` must use this structure:
 
 ```markdown
 ---
 task_id: "{TASK_ID}"
-source_epic_prd: "../epic-prd/index.md"
-source_hld: "../high-level-design/index.md"
+source_epic_prd: "epic-prd.md"
+source_hld: "high-level-design.md"
 artifact_type: "child-spec-seed-breakdown"
 tracker_sync: "consumer-owned"
 ---
@@ -46,9 +53,9 @@ tracker_sync: "consumer-owned"
 
 ## Source
 
-- Epic PRD: `../epic-prd/index.md`
-- Slice Map: `../epic-prd/slice-map.md`
-- Epic HLD: `../high-level-design/index.md`
+- Epic PRD: `epic-prd.md`
+- Slice Map: `epic-prd/slice-map.md`
+- Epic HLD: `high-level-design.md`
 - Blocking Questions: `None`
 
 ## Child Spec Seeds
@@ -63,7 +70,7 @@ These files are portable Markdown child spec seeds. TDK core does not create ext
 
 ## Sync Boundary
 
-Consumer-owned tracker sync must treat `tasks-breakdown/index.md` as the manifest. Files not listed in the current index are non-authoritative and must not be synced just because they exist in the directory.
+Consumer-owned tracker sync must treat `tasks-breakdown.md` as the manifest. Files not listed in the current manifest are non-authoritative and must not be synced just because they exist in the directory.
 ```
 
 ## Seed File Schema
@@ -76,8 +83,8 @@ task_id: "{TASK_ID}"
 work_item: "NNN"
 slice_key: "avatar-upload-validation"
 child_spec_title: "Avatar upload validation"
-source_epic_prd: "../epic-prd/index.md"
-source_hld: "../high-level-design/index.md"
+source_epic_prd: "../epic-prd.md"
+source_hld: "../high-level-design.md"
 tracker_sync: "consumer-owned"
 ---
 
@@ -86,8 +93,8 @@ tracker_sync: "consumer-owned"
 ## Source Slice
 
 - Slice key: `avatar-upload-validation`
-- Source PRD refs: `epic-prd/slice-map.md`, `epic-prd/prd.md`
-- Source HLD refs: `high-level-design/index.md`, relevant listed artifact(s)
+- Source PRD refs: `../epic-prd/slice-map.md`, `../epic-prd/prd.md`
+- Source HLD refs: `../high-level-design.md`, relevant listed artifact(s)
 
 ## Suggested Child Spec Command
 
@@ -139,11 +146,11 @@ tracker_sync: "consumer-owned"
 
 Valid parent traceability sources:
 
-- `epic-prd/index.md`
+- `epic-prd.md`
 - `epic-prd/prd.md`
 - `epic-prd/slice-map.md`
 - `epic-prd/open-questions.md`
-- `high-level-design/index.md` and listed HLD artifacts
+- `high-level-design.md` and listed HLD artifacts
 - slice keys from `epic-prd/slice-map.md`
 
 Task breakdown must not mint `UR-*`, `FR-*`, `SC-*`, or `FS-*`. Only child
@@ -154,3 +161,19 @@ Task breakdown must not mint `UR-*`, `FR-*`, `SC-*`, or `FS-*`. Only child
 Generated seed files are tracker-neutral. Downstream GitHub, GitLab, Backlog,
 Jira, or other issue creation is owned by the consumer project and must not be
 performed by TDK core.
+
+## Epic Dashboard
+
+The command also updates the generated task-breakdown section in
+`{FEATURE_DIR}/index.md`. That epic dashboard section summarizes the current
+stage manifest, number of child spec seeds, tracker boundary, and next command
+for child `/tdk-specify`. Preserve user-owned content outside generated
+sections. If a generated section already exists, replace it only after explicit
+confirmation or when `--force` is supplied.
+
+## Legacy Layout Detection
+
+If `tasks-breakdown/index.md` exists and sibling `tasks-breakdown.md` is missing,
+STOP with `legacy layout detected`. Tell the user to rerun
+`/tdk-task-breakdown <epic-id>` with `--force` or recreate the test epic. do not auto-migrate
+old nested `index.md` content into the new layout.

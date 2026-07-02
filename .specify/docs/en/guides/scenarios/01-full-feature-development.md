@@ -28,7 +28,7 @@ Use discovery only when the work is broad enough to need epic-level context befo
 
 **What happens**: Claude writes context-only discovery artifacts for problem framing, personas, MVP boundary, and an index. It does not create `spec.md`, plans, work items, tracker records, or `UR-*` / `FR-*` / `SC-*` IDs.
 
-**Output**: `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery/index.md`
+**Output**: `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery.md`
 
 Add `--interview` when the discovery artifacts should be challenged before they influence the spec. Later, `/tdk-discovery feat-001 --interview` rechecks existing discovery artifacts without regenerating them.
 
@@ -42,7 +42,7 @@ Use epic PRD when discovery is still too broad to become one feature spec.
 
 **What happens**: Claude reads the four discovery artifacts and writes exactly four epic PRD artifacts: an index, product alignment PRD, slice map, and open questions. It does not create `spec.md`, requirement IDs, tracker issues, HLD, task files, plans, or code.
 
-**Output**: `epic-prd/index.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md`
+**Output**: `epic-prd.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md`
 
 Run parent HLD and task breakdown before starting child specs.
 
@@ -56,7 +56,7 @@ Skip this for the minimal feature path. Use it for broad epics before child spec
 
 **What happens**: Claude reads epic PRD artifacts and turns them into parent high-level design artifacts under `high-level-design/`. It applies built-in design lenses, optionally reads HLD routing, blocks on PRD blocking questions, and does not mint `UR-*`, `FR-*`, or `SC-*`.
 
-**Output**: `high-level-design/index.md` + 5 design artifacts
+**Output**: `high-level-design.md` + 5 design artifacts
 
 ### 2. Generate child spec seeds
 
@@ -66,7 +66,7 @@ Skip this for the minimal feature path. Use it for broad epics before child spec
 
 **What happens**: Claude reads epic PRD + HLD and writes tracker-neutral child spec seed files under `tasks-breakdown/`. Each seed includes boundary, dependencies, assumptions/risks, and suggested `/tdk-specify <child-id> "<seed>"` text.
 
-**Output**: `tasks-breakdown/index.md`, `tasks-breakdown/task-NNN-*.md`
+**Output**: `tasks-breakdown.md`, `tasks-breakdown/task-NNN-*.md`
 
 ### 3. Create a child specification
 
@@ -157,7 +157,7 @@ Run at any point to see a progress bar, completed phases, and recommendations.
 - Use `discovery` and `epic-prd` only for epic-sized ambiguity before child specification. Feature-sized work starts at `specify`.
 - Use `tdk-epic-hld` on parent epics before task breakdown; child specs do not run HLD by default.
 - Use `task-breakdown` when you need child spec seed Markdown files from epic PRD + HLD.
-- Read manifests first: `discovery/index.md`, `high-level-design/index.md`, and `tasks-breakdown/index.md`.
+- Read manifests first: `discovery.md`, `high-level-design.md`, and `tasks-breakdown.md`.
 - Run `analyze` before `implement` to catch inconsistencies early.
 - Use `status` after interruptions to see where you left off.
 - Task IDs must use prefixes from `.specify/.specify.env` (e.g., `feat`, `spec`, `docs`, `bug`).

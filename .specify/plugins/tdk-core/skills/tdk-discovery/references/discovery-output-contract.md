@@ -10,11 +10,12 @@ plans, tasks, code, or tracker issues.
 ## Allowed Output Shape
 
 ```text
+{FEATURE_DIR}/index.md
+{FEATURE_DIR}/discovery.md
 {FEATURE_DIR}/discovery/
   problem.md
   personas.md
   mvp-scope.md
-  index.md
 ```
 
 No other discovery output is allowed.
@@ -26,11 +27,23 @@ Each artifact begins with:
 ```yaml
 ---
 source_epic: "<task-id>"
-artifact_type: "<problem|personas|mvp-scope|index>"
+artifact_type: "<problem|personas|mvp-scope|discovery>"
 status: draft
 created: "<ISO-8601 timestamp>"
 ---
 ```
+
+## Epic Dashboard
+
+`{FEATURE_DIR}/index.md` is the TDK-owned epic dashboard. Discovery creates or
+updates generated dashboard sections for current stage, stage manifest links,
+readiness, authority boundary, and next command. The discovery stage manifest is
+`discovery.md`.
+
+If an existing dashboard has user-edited content inside a generated section the
+command would replace, ask for confirmation or require `--force`. In
+noninteractive contexts, STOP with guidance instead of overwriting user edits.
+User-owned sections outside generated markers are preserved.
 
 ## problem.md
 
@@ -73,13 +86,13 @@ Required sections:
 - `## Risks`
 - `## Open Questions`
 
-## index.md
+## discovery.md
 
 Purpose: manifest and navigation file for the discovery set.
 
 Required sections:
 
-- `# Discovery Index`
+- `# Discovery Manifest`
 - `## Artifact Manifest`
 - `## Summary`
 - `## Product-level signals`
@@ -116,3 +129,10 @@ Discovery MUST NOT create or emit:
 - GitHub, GitLab, Backlog, or other tracker commands.
 
 Discovery remains tracker-neutral.
+
+## Legacy Layout Detection
+
+If `discovery/index.md` exists and sibling `discovery.md` is missing, STOP with
+`legacy layout detected`. Tell the user to rerun `/tdk-discovery <epic-id> ...`
+with `--force` or recreate the test epic. do not auto-migrate old nested
+`index.md` content into the new layout.

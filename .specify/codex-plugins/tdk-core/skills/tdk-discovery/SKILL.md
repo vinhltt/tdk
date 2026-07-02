@@ -1,9 +1,9 @@
 ---
 name: tdk-discovery
-description: "EPIC-ONLY v1 discovery entry point that creates context-only problem, persona, MVP, and index artifacts before tdk-specify, or interviews existing discovery artifacts with --interview"
+description: "EPIC-ONLY v1 discovery entry point that creates context-only problem, persona, MVP, and discovery manifest artifacts before tdk-specify, or interviews existing discovery artifacts with --interview"
 argument-hint: "<epic-id> [<brief|file>] [--force] [--interview]"
 metadata:
-  version: "5.10.0"
+  version: "6.0.1"
 ---
 
 # tdk-discovery
@@ -22,11 +22,11 @@ Triggers:
 This command is **EPIC-ONLY v1** and **context-only**.
 
 **This command produces:**
-- Markdown discovery context under `{FEATURE_DIR}/discovery/`
+- Epic dashboard at `{FEATURE_DIR}/index.md`
+- Discovery stage manifest at `{FEATURE_DIR}/discovery.md`
 - `discovery/problem.md`
 - `discovery/personas.md`
 - `discovery/mvp-scope.md`
-- `discovery/index.md`
 
 **This command does NOT create specs, plans, work items, code, or tracker issues.**
 
@@ -52,8 +52,9 @@ discovery's existing capabilities; recovery adds no new execution branch.
 | Brief points to a missing, secret, dotenv, credential, token, or outside-workspace file | STOP and refuse, same as Step 2. |
 | `/tdk-discovery <epic-id> --interview` and all four discovery files exist | Run existing artifact interview replay. Do not regenerate discovery files. |
 | `/tdk-discovery <epic-id> --interview` and any discovery file is missing | STOP, same as Step 2. Tell the user to create discovery with a brief or file first. |
-| `discovery/index.md` already exists, no `--force` | STOP, same as Step 3. The user may move or archive the prior discovery manually, then re-run. |
-| `discovery/index.md` already exists, with `--force` | Reuse the directory and overwrite the four artifacts. |
+| `discovery/index.md` exists and `discovery.md` is missing | STOP with `legacy layout detected`; tell the user to rerun with `--force` or recreate the test epic. do not auto-migrate. |
+| `discovery.md` already exists, no `--force` | STOP, same as Step 3. The user may move or archive the prior discovery manually, then re-run. |
+| `discovery.md` already exists, with `--force` | Reuse the directory and overwrite the four discovery artifacts in the new layout. |
 
 Recovery is advisory guidance only. Discovery never opens, edits, or closes tracker items,
 and it adds no archive or migration step of its own.
@@ -122,17 +123,17 @@ If the brief is empty and both `--force` and `--interview` are present, STOP wit
 
 If the brief is empty and `INTERVIEW_DISCOVERY=true`, set `DISCOVERY_REPLAY_INTERVIEW=true` and validate the existing discovery set before continuing:
 
-- Require `discovery/index.md`, `problem.md`, `personas.md`, and `mvp-scope.md`.
-- Before Step 4.5, verify `discovery/` contains exactly the four allowed files and no extras.
+- Require `discovery.md`, `discovery/problem.md`, `discovery/personas.md`, and `discovery/mvp-scope.md`.
+- Before Step 4.5, verify `discovery/` contains exactly the three allowed detail files and no extras.
 - If any file is missing, STOP with:
 
 ```text
-Discovery replay interview requires existing discovery artifacts: `discovery/index.md`, `problem.md`, `personas.md`, and `mvp-scope.md`. Create discovery first with /tdk-discovery <epic-id> <brief|file> --interview.
+Discovery replay interview requires existing discovery artifacts: `discovery.md`, `discovery/problem.md`, `discovery/personas.md`, and `discovery/mvp-scope.md`. Create discovery first with /tdk-discovery <epic-id> <brief|file> --interview.
 ```
 - If any extra discovery file exists, STOP before interviewing with:
 
 ```text
-Discovery replay interview requires exactly the four discovery artifacts. Remove unexpected discovery files before rerunning --interview.
+Discovery replay interview requires exactly the three discovery detail artifacts. Remove unexpected discovery files before rerunning --interview.
 ```
 
 If the brief is empty and replay is not active, STOP with:
@@ -151,7 +152,13 @@ Create the epic feature directory idempotently:
 mkdir -p "$FEATURE_DIR/discovery"
 ```
 
-If `discovery/index.md` already exists and `FORCE_DISCOVERY` is not true, STOP with:
+If `discovery/index.md` exists and `discovery.md` is missing, STOP with:
+
+```text
+legacy layout detected: discovery/index.md is from the old nested-manifest layout. Re-run with --force to regenerate discovery in the new layout, or recreate the test epic. TDK does not auto-migrate old discovery/index.md content.
+```
+
+If `discovery.md` already exists and `FORCE_DISCOVERY` is not true, STOP with:
 
 ```text
 Discovery already exists. Re-run with --force only when you intend to replace discovery context.
@@ -164,10 +171,10 @@ If `DISCOVERY_REPLAY_INTERVIEW=true`, skip this step.
 Write exactly these files from local templates:
 
 ```text
+discovery.md
 discovery/problem.md
 discovery/personas.md
 discovery/mvp-scope.md
-discovery/index.md
 ```
 
 **Depth auto-detect (no flag).** Infer discovery depth from one signal: the brief's length
@@ -181,9 +188,15 @@ Use the discovery brief, project context, memory, and constitution as context.
 Do not create requirement IDs, specification sections, task files, plans, code,
 tracker records, or a `discovery_ref`.
 
-`discovery/index.md` is the manifest. It includes "Product-level signals" as a
+`discovery.md` is the stage manifest. It includes "Product-level signals" as a
 candidate checklist only. Product-level facts live in `product-context.md` and
 are updated only through `tdk-constitution`.
+
+Update `{FEATURE_DIR}/index.md` as the epic dashboard. The dashboard must link
+`discovery.md` as the current stage manifest, summarize readiness, state the
+next command, and restate that only child `spec.md` mints requirements. Preserve
+user-owned sections outside generated markers; if a generated section contains
+user edits and would be replaced, ask for confirmation or require `--force`.
 
 ### Step 4.5 - Optional Interview Alignment Gate
 
@@ -192,7 +205,7 @@ exist for creation, or after the current artifacts are loaded for
 `DISCOVERY_REPLAY_INTERVIEW=true`, and before validation:
 
 1. Load `../_shared/interview-alignment-protocol.md`.
-2. Read `problem.md`, `personas.md`, `mvp-scope.md`, and `index.md`.
+2. Read `discovery.md`, `discovery/problem.md`, `discovery/personas.md`, and `discovery/mvp-scope.md`.
 3. Build an internal claim map from problem, personas, MVP cutline,
    out-of-scope, risks, and open questions.
 4. Ask 3-5 artifact-grounded questions, one at a time, covering problem, personas, MVP cutline, out-of-scope, and risk/open question.
@@ -216,9 +229,12 @@ tasks, tracker records, or other discovery files may be created.
 
 Before completion, verify:
 
-- Only the four allowed files exist under `discovery/`.
+- `discovery.md` exists as the stage manifest.
+- `{FEATURE_DIR}/index.md` exists as the epic dashboard.
+- Only the three allowed detail files exist under `discovery/`.
 - No `interview.md` or any other extra discovery file exists.
-- `index.md` links all three detail artifacts.
+- `discovery.md` links all three detail artifacts.
+- `{FEATURE_DIR}/index.md` links `discovery.md`, states current stage, readiness, and next command.
 - Product-level signals are candidate notes, not authority.
 - No `UR-*`, `FR-*`, `SC-*`, `discovery_ref`, tracker command, or market/business-model file was created.
 
@@ -227,10 +243,11 @@ Before completion, verify:
 Report:
 
 - Discovery directory path
+- Epic dashboard path: `index.md`
 - Files written
 - Interview alignment: `creation`, `existing artifact`, or `disabled`
 - Whether product-level signal candidates need human review for a future
   `/tdk-constitution --update`
-- Readiness for `/tdk-specify <epic-id> <description>`. The `## Ready For Specify` checklist
-  in `index.md` is advisory only: discovery completion and `/tdk-specify` do not depend on
+- Readiness for `/tdk-epic-prd <epic-id>` for broad epics or `/tdk-specify <epic-id> <description>` for feature-sized work. The `## Ready For Specify` checklist
+  in `discovery.md` is advisory only: discovery completion and `/tdk-specify` do not depend on
   it, and no checklist item gates the handoff.

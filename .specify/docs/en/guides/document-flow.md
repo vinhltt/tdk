@@ -23,10 +23,10 @@ flowchart TD
     GOLDEN_PATH[golden-path-scaffold-plan.md<br/>golden-path-recipe.json]
     SUB_WORKSPACE_DOCS[sub-workspaces/name/<br/>README architecture interfaces engineering]
     AUTOMATION_RECOMMEND[automation-recommendation.md]
-    DISCOVERY[discovery/<br/>Epic Context]
-    EPIC_PRD[epic-prd/<br/>PRD + Slice Map]
-    HLD[high-level-design/<br/>Parent HLD]
-    TASK_BREAKDOWN[tasks-breakdown/<br/>Child Spec Seeds]
+    DISCOVERY[discovery.md + discovery/<br/>Epic Context]
+    EPIC_PRD[epic-prd.md + epic-prd/<br/>PRD + Slice Map]
+    HLD[high-level-design.md + high-level-design/<br/>Parent HLD]
+    TASK_BREAKDOWN[tasks-breakdown.md + tasks-breakdown/<br/>Child Spec Seeds]
 
     %% Phase 0: Feature Specification
     REQ -.->|/tdk-greenfield-start<br/>project intake| GREENFIELD_INCEPTION
@@ -100,10 +100,10 @@ flowchart LR
     GOLDEN_PATH[golden-path scaffold<br/>recipe/report]
     SUB_WORKSPACE_DOCS[sub-workspace docs<br/>arc42-lite]
     AUTOMATION_RECOMMEND[automation recommendation<br/>one workspace]
-    DISCOVERY[discovery/<br/>Epic Context]
-    EPIC_PRD[epic-prd/<br/>PRD + Slice Map]
-    HLD[high-level-design/<br/>Parent HLD]
-    TASKS[tasks-breakdown/<br/>Child Spec Seeds]
+    DISCOVERY[discovery.md + discovery/<br/>Epic Context]
+    EPIC_PRD[epic-prd.md + epic-prd/<br/>PRD + Slice Map]
+    HLD[high-level-design.md + high-level-design/<br/>Parent HLD]
+    TASKS[tasks-breakdown.md + tasks-breakdown/<br/>Child Spec Seeds]
     SPEC[spec.md]
     SPEC_CLAR[spec.md<br/>+ Clarifications]
 
@@ -318,13 +318,13 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `.specify/configurations/golden-path/generated-files-report.md` | `/tdk-golden-path-scaffold --dry-run` or `--yes` | recipe and safety gates | Review created/skipped/existing/refused paths | Scaffold report |
 | `<docsPath>/sub-workspaces/<name>/{README,architecture,interfaces,engineering}.md` | `/tdk-sub-workspace-docs` | configured sub-workspace path, repomix pack, scout output, optional dependency policy | `/tdk-sub-workspace-automation-recommend` | Per sub-workspace docs refresh |
 | `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | `/tdk-sub-workspace-automation-recommend` | selected sub-workspace docs, dependency policy, official docs, local skill catalog, optional direct skill search | `/tdk-scaffold-from-recommendation` after approval | Per sub-workspace automation review |
-| `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution; existing discovery files for ID-only `--interview` | Optional context for `/tdk-epic-prd` or `/tdk-specify` | Optional before epic PRD or specify |
-| `epic-prd/` | `/tdk-epic-prd` | Existing `discovery/index.md`, `problem.md`, `personas.md`, and `mvp-scope.md`; existing PRD files for ID-only `--interview` | Feeds `/tdk-epic-hld`, then `/tdk-task-breakdown` child spec seeds | Optional after discovery |
-| `spec.md` | `/tdk-specify` | User description, optional `discovery/index.md` or epic PRD slice seed; existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature start |
+| `discovery.md` + `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution; existing discovery files for ID-only `--interview` | Optional context for `/tdk-epic-prd` or `/tdk-specify` | Optional before epic PRD or specify |
+| `epic-prd.md` + `epic-prd/` | `/tdk-epic-prd` | Existing `discovery.md`, `problem.md`, `personas.md`, and `mvp-scope.md`; existing PRD files for ID-only `--interview` | Feeds `/tdk-epic-hld`, then `/tdk-task-breakdown` child spec seeds | Optional after discovery |
+| `spec.md` | `/tdk-specify` | User description, optional `discovery.md` or epic PRD slice seed; existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature start |
 | `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-plan` | After specify |
 | `{docs.path}/custom-workflow/high-level-design-skill-routing.md` | Human-authored from `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` | Consumer HLD design skills | `/tdk-epic-hld` as advisory read-only routing | Optional project setup |
-| `high-level-design/` | `/tdk-epic-hld` | `epic-prd/`; built-in lenses; optional HLD routing | `/tdk-task-breakdown` | Parent epic after PRD |
-| `tasks-breakdown/` | `/tdk-task-breakdown` | `epic-prd/`; `high-level-design/` | Child `/tdk-specify` seeds | Parent epic after HLD |
+| `high-level-design.md` + `high-level-design/` | `/tdk-epic-hld` | `epic-prd.md` + `epic-prd/`; built-in lenses; optional HLD routing | `/tdk-task-breakdown` | Parent epic after PRD |
+| `tasks-breakdown.md` + `tasks-breakdown/` | `/tdk-task-breakdown` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | Child `/tdk-specify` seeds | Parent epic after HLD |
 | `plan.md` | `/tdk-plan` | `spec.md`, `constitution.md`, optional context | `plan.md ## Phases`, `/tdk-implement [--phase NN]` | Feature start |
 | `plan.md ## Phases` | `/tdk-plan` | `spec.md`, design artifacts | `/tdk-implement [--phase NN]` | Feature start |
 | `research/` | `/tdk-plan` | `spec.md` | Reference | Feature start |
@@ -411,10 +411,15 @@ flowchart TD
 
 ```
 .specify/specs/{task-id}/
-├── discovery/                          # Optional epic discovery context
-├── epic-prd/                           # Optional epic PRD, slice map, and open questions
+├── index.md                            # Epic dashboard and next-command summary
+├── discovery.md                        # Optional discovery stage manifest
+├── discovery/                          # Optional discovery detail files
+├── epic-prd.md                         # Optional epic PRD stage manifest
+├── epic-prd/                           # Optional epic PRD details, slice map, and open questions
 ├── spec.md                             # Phase 0: Feature specification
-├── high-level-design/                  # Optional parent epic HLD after epic PRD
+├── high-level-design.md                # Optional parent epic HLD stage manifest
+├── high-level-design/                  # Optional parent epic HLD detail files
+├── tasks-breakdown.md                  # Optional child spec seed manifest
 ├── tasks-breakdown/                    # Optional child spec seed files after HLD
 ├── plan.md                             # Phase 1: Implementation plan
 ├── research/                           # Phase 1: Technology research

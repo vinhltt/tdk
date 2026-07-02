@@ -4,7 +4,7 @@ Use these checks before reporting `/tdk-epic-prd` completion.
 
 ## Source Trace
 
-- Every durable claim should trace to `discovery/index.md`, `problem.md`,
+- Every durable claim should trace to `discovery.md`, `problem.md`,
   `personas.md`, or `mvp-scope.md`.
 - Mark inferred claims with confidence: `high`, `medium`, or `low`.
 - Low-confidence claims should become assumptions or open questions.
@@ -36,13 +36,13 @@ Use these checks before reporting `/tdk-epic-prd` completion.
   or breakdown readiness.
 - `Non-Blocking Questions` are useful follow-ups that do not block child spec
   seeding.
-- Blocking questions must be reflected in `index.md` readiness.
+- Blocking questions must be reflected in `epic-prd.md` readiness.
 - If Blocking Questions are non-empty, the PRD blocks downstream epic design or breakdown readiness.
 
 ## Interview Alignment
 
 - Ask only artifact-grounded questions.
 - Persist durable answers into `prd.md`, `slice-map.md`, `open-questions.md`, or
-  `index.md`.
+  `epic-prd.md`.
 - Do not persist raw transcript content.
 - Do not add `interview.md`.

@@ -28,8 +28,8 @@ describe('tdk-specify discovery-first contract', () => {
   });
 
   it('allows discovery-first feature directories as optional context', () => {
-    expect(contract).toContain('DISCOVERY_INDEX="$FEATURE_DIR/discovery/index.md"');
-    expect(contract).toContain('test -f "$DISCOVERY_INDEX"');
+    expect(contract).toContain('DISCOVERY_MANIFEST="$FEATURE_DIR/discovery.md"');
+    expect(contract).toContain('test -f "$DISCOVERY_MANIFEST"');
     expect(contract).toContain('read it as optional context before spec generation');
     expect(contract).toContain('Do not require discovery for normal specify flow');
   });

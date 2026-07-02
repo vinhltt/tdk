@@ -3,7 +3,7 @@ name: tdk-epic-prd
 description: "EPIC-ONLY product alignment and slice-map step after tdk-discovery; writes tracker-neutral epic PRD artifacts without minting requirements"
 argument-hint: "<epic-id> [--force] [--interview]"
 metadata:
-  version: "5.13.0"
+  version: "6.0.1"
 ---
 
 # tdk-epic-prd
@@ -23,8 +23,8 @@ This command is **EPIC-ONLY** and tracker-neutral. It is product alignment for a
 broad epic; it is **not requirement authority**.
 
 **This command produces:**
-- Markdown epic PRD context under `{FEATURE_DIR}/epic-prd/`
-- `epic-prd/index.md`
+- Epic dashboard at `{FEATURE_DIR}/index.md`
+- Epic PRD stage manifest at `{FEATURE_DIR}/epic-prd.md`
 - `epic-prd/prd.md`
 - `epic-prd/slice-map.md`
 - `epic-prd/open-questions.md`
@@ -49,8 +49,9 @@ Load before writing any epic PRD file:
 | Situation | Action |
 |---|---|
 | Any required discovery artifact is missing | STOP before writing. Tell the user to run `/tdk-discovery <epic-id> <brief\|file>` first. |
-| `epic-prd/index.md` exists and `--force` is not set | STOP unless `--interview` is replaying existing PRD artifacts. |
-| `--force` is set | Regenerate exactly the four epic PRD files. Do not archive or migrate prior files. |
+| `epic-prd/index.md` exists and `epic-prd.md` is missing | STOP with `legacy layout detected`; tell the user to rerun with `--force` or recreate the test epic. do not auto-migrate. |
+| `epic-prd.md` exists and `--force` is not set | STOP unless `--interview` is replaying existing PRD artifacts. |
+| `--force` is set | Regenerate exactly the four epic PRD files in the new layout. Do not archive or migrate prior files. |
 | `--interview` is set and all four PRD files exist | Set `PRD_REPLAY_INTERVIEW=true` and run interview replay against the current artifacts. |
 | `--interview` is set and PRD files do not exist | Generate draft PRD artifacts, then interview them before validation. |
 
@@ -115,7 +116,7 @@ If `--interview` is present, set `INTERVIEW_PRD=true`.
 Before writing epic PRD artifacts, require:
 
 ```text
-discovery/index.md
+discovery.md
 discovery/problem.md
 discovery/personas.md
 discovery/mvp-scope.md
@@ -138,10 +139,16 @@ Set:
 PRD_DIR="$FEATURE_DIR/epic-prd"
 ```
 
+If `epic-prd/index.md` exists and `epic-prd.md` is missing, STOP with:
+
+```text
+legacy layout detected: epic-prd/index.md is from the old nested-manifest layout. Re-run with --force to regenerate epic PRD in the new layout, or recreate the test epic. TDK does not auto-migrate old epic-prd/index.md content.
+```
+
 If all four epic PRD files exist and `INTERVIEW_PRD=true` and `FORCE_PRD` is not
 true, set `PRD_REPLAY_INTERVIEW=true`.
 
-If `epic-prd/index.md` exists and neither `FORCE_PRD` nor
+If `epic-prd.md` exists and neither `FORCE_PRD` nor
 `PRD_REPLAY_INTERVIEW` is true, STOP with:
 
 ```text
@@ -151,13 +158,13 @@ Epic PRD already exists. Re-run with --force only when you intend to replace epi
 If `PRD_REPLAY_INTERVIEW=true`, verify `epic-prd/` contains exactly:
 
 ```text
-epic-prd/index.md
 epic-prd/prd.md
 epic-prd/slice-map.md
 epic-prd/open-questions.md
 ```
 
-If any file is missing or any extra file exists, STOP before interviewing.
+Also require sibling `epic-prd.md`. If any file is missing or any extra file
+exists in `epic-prd/`, STOP before interviewing.
 
 Otherwise create the directory:
 
@@ -173,7 +180,7 @@ Load `references/epic-prd-output-contract.md` and
 `references/epic-prd-quality-guidelines.md`, then write exactly:
 
 ```text
-epic-prd/index.md
+epic-prd.md
 epic-prd/prd.md
 epic-prd/slice-map.md
 epic-prd/open-questions.md
@@ -194,7 +201,7 @@ creation, or after the current artifacts are loaded for
 `PRD_REPLAY_INTERVIEW=true`, and before validation:
 
 1. Load `../_shared/interview-alignment-protocol.md`.
-2. Read `index.md`, `prd.md`, `slice-map.md`, and `open-questions.md`.
+2. Read `epic-prd.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, and `epic-prd/open-questions.md`.
 3. Build an internal claim map from product objective, MVP appetite, no-gos,
    slice boundaries, build order, and blocking questions.
 4. Ask 3-6 artifact-grounded questions, one at a time.
@@ -214,9 +221,12 @@ completion. Persist durable decisions only. No `interview.md`; update only the f
 
 Before completion, verify:
 
-- Only the four allowed files exist under `epic-prd/`.
+- `epic-prd.md` exists as the stage manifest.
+- `{FEATURE_DIR}/index.md` exists as the epic dashboard.
+- Only the three allowed detail files exist under `epic-prd/`.
 - No `interview.md` or other extra epic PRD file exists.
-- `index.md` links all three detail artifacts.
+- `epic-prd.md` links all three detail artifacts.
+- `{FEATURE_DIR}/index.md` links `epic-prd.md`, states current stage, readiness, and next command.
 - `slice-map.md` has at least one independently specifiable slice.
 - No slice key is a catch-all such as "all features" or "entire MVP".
 - `open-questions.md` separates Blocking Questions from Non-Blocking Questions.
@@ -229,7 +239,8 @@ Before completion, verify:
 Report:
 
 - Epic PRD directory path
+- Epic dashboard path: `index.md`
 - Files written or updated
 - Interview alignment: `creation`, `existing artifact`, or `disabled`
 - Blocking question count
-- Readiness for child `/tdk-specify <child-id> "<slice seed>"`
+- Readiness for `/tdk-epic-hld <epic-id>` when blocking questions are empty, and for child `/tdk-specify <child-id> "<slice seed>"` only after downstream breakdown creates seeds

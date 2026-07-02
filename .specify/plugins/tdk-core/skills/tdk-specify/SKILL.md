@@ -3,7 +3,7 @@ name: tdk-specify
 description: "Create spec.md from a feature description, or replay --interview against existing spec.md. Supports --fast, discovery, memory, checklist."
 argument-hint: "<id> [<desc>] [--fast] [--interview]"
 metadata: 
-  version: "5.10.0"
+  version: "6.0.1"
 ---
 
 # tdk-specify
@@ -105,7 +105,7 @@ Store: `FEATURE_DIR`, `SPEC_FILE`, `EXPECTED_BRANCH`, `CURRENT_BRANCH`.
 Follow `references/input-routing-and-mode-workflow.md` Step 0.2a.
 
 Replay skips discovery context loading. Normal specify may read
-`DISCOVERY_INDEX="$FEATURE_DIR/discovery/index.md"` as optional context only.
+`DISCOVERY_MANIFEST="$FEATURE_DIR/discovery.md"` as optional context only.
 Discovery is not required and never mints `UR-*`, `FR-*`, or `SC-*`.
 
 ### Step 0.3 — Mode Detection

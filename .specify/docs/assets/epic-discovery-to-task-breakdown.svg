@@ -124,7 +124,7 @@
 <tspan x="1648" dy="0">Task breakdown output</tspan>
 </text>
 <text x="1648" y="516" font-family="Noto Sans Mono" font-size="11" fill="#374151" text-anchor="start">
-<tspan x="1648" dy="0">tasks-breakdown/index.md</tspan>
+<tspan x="1648" dy="0">tasks-breakdown.md</tspan>
 <tspan x="1648" dy="13.75">= seed manifest</tspan>
 <tspan x="1648" dy="13.75"></tspan>
 <tspan x="1648" dy="13.75">task-NNN-{slice}.md</tspan>

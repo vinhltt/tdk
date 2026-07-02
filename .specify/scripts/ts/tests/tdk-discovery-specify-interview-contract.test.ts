@@ -71,10 +71,10 @@ describe('tdk discovery/specify interview contract', () => {
   it('documents discovery replay interview against existing artifacts', () => {
     expect(discoverySkill).toContain('/tdk-discovery <epic-id> --interview');
     expect(discoverySkill).toContain('set `DISCOVERY_REPLAY_INTERVIEW=true`');
-    expect(discoverySkill).toContain('discovery/index.md`, `problem.md`, `personas.md`, and `mvp-scope.md`');
+    expect(discoverySkill).toContain('discovery.md`, `discovery/problem.md`, `discovery/personas.md`, and `discovery/mvp-scope.md`');
     expect(discoverySkill).toContain('Discovery replay interview requires existing discovery artifacts');
     expect(discoverySkill).toContain('If the cleaned brief is exactly `interview`, STOP before creation or replay routing');
-    expect(discoverySkill).toContain('contains exactly the four allowed files and no extras');
+    expect(discoverySkill).toContain('contains exactly the three allowed detail files and no extras');
     expect(discoverySkill).toContain('skip Step 3 directory initialization and Step 4 artifact generation');
     expect(discoverySkill).toContain('`--force --interview` requires a replacement brief or file');
     expect(discoverySkill).toContain('Did you mean `--interview`?');

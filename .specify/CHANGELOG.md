@@ -9,6 +9,26 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.95.0] - 2026-07-02
+
+### Added
+- **[Templates]** Add new `high-level-design.md.tpl` for HLD stage manifest.
+
+### Changed
+- **[Skills]** Restructure epic layout to transition stage manifests to the root feature directory
+  - Update `tdk-discovery` to use root `discovery.md` manifest, introduce `{FEATURE_DIR}/index.md` epic dashboard, and add legacy layout checks.
+  - Update `tdk-epic-prd` to use root `epic-prd.md` manifest and add legacy layout checks.
+  - Update `tdk-epic-hld` to use root `high-level-design.md` manifest and add legacy layout checks.
+  - Update `tdk-task-breakdown` to reference the new root `high-level-design.md` and `epic-prd.md` manifests.
+  - Update `tdk-specify` to reference `discovery.md` instead of `discovery/index.md`.
+- **[Scripts]** Update test contract suites to align with the new stage manifest layouts.
+- **[Templates]** Update `epic-prd` and specify template files to support root stage manifests.
+- **[Docs]** Update README.md and guide documentation to reference the new stage manifest layout.
+- **[General]** Update manifests to reflect the restructuring of component files.
+
+### Removed
+- **[Templates]** Remove legacy `index.md.tpl` template from the `high-level-design` template directory.
+
 ## [1.94.5] - 2026-07-02
 
 ### Changed

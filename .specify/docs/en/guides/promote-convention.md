@@ -46,7 +46,7 @@ parent epic -> /tdk-epic-prd -> /tdk-epic-hld -> /tdk-task-breakdown
 
 Steps:
 
-1. Pick a seed from `tasks-breakdown/index.md`.
+1. Pick a seed from `tasks-breakdown.md`.
 2. Choose `<child-id>` — an ordinary task id (e.g. `feat-123`), validated by the normal
    task-id grammar. **No `{epic}/{child}` path nesting** — the link lives only in
    frontmatter, never in the directory path.
@@ -61,7 +61,7 @@ Steps:
 ## Optional `parent_spec` Format Rule
 
 Use `parent_spec` only when the child is linked to an actual parent `spec.md`.
-Do not use `parent_spec` to point at `epic-prd/index.md`, HLD artifacts, or
+Do not use `parent_spec` to point at `epic-prd.md`, HLD artifacts, or
 `tasks-breakdown/` seed files.
 
 When used, `parent_spec` MUST use the same `[folder/]ticket` form used to address the spec.
@@ -108,7 +108,7 @@ keeps its own spec, tasks, and history.
 **Revert the child spec (back to a seed/tracker item).** When the sub-feature should
 no longer be its own spec, run the full revert checklist in the task-breakdown output
 contract: delete or archive `specs/<child-id>/`, close its tracker issue when consumer
-tracker-sync exists, and update `tasks-breakdown/index.md` if your consumer workflow
+tracker-sync exists, and update `tasks-breakdown.md` if your consumer workflow
 recorded the child spec status there. See
 `.specify/plugins/tdk-core/skills/tdk-task-breakdown/references/task-breakdown-output-contract.md`.
 

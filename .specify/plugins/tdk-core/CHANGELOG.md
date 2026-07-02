@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [6.0.1] - 2026-07-02
+
+### Changed
+- Update tdk-discovery to use root discovery.md manifest, introduce {FEATURE_DIR}/index.md epic dashboard, and add legacy layout checks
+- Update tdk-epic-prd to use root epic-prd.md manifest and add legacy layout checks
+- Update tdk-epic-hld to use root high-level-design.md manifest and add legacy layout checks
+- Update tdk-task-breakdown to reference the new root high-level-design.md and epic-prd.md manifests
+- Update tdk-specify to reference discovery.md instead of discovery/index.md
+
 ## [6.0.0] - 2026-07-01
 
 ### Added

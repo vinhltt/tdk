@@ -1,11 +1,11 @@
 ---
 source_epic: "{{TASK_ID}}"
-artifact_type: "index"
+artifact_type: "discovery"
 status: draft
 created: "{{CREATED_AT}}"
 ---
 
-# Discovery Index
+# Discovery Manifest
 
 > Altitude: Epic-level. Product-wide facts belong in product-context.md.
 
@@ -13,9 +13,9 @@ created: "{{CREATED_AT}}"
 
 | Artifact | Purpose |
 |---|---|
-| problem.md | Epic-level problem context |
-| personas.md | Epic-level persona context |
-| mvp-scope.md | Epic-level MVP boundary context |
+| [problem.md](./discovery/problem.md) | Epic-level problem context |
+| [personas.md](./discovery/personas.md) | Epic-level persona context |
+| [mvp-scope.md](./discovery/mvp-scope.md) | Epic-level MVP boundary context |
 
 ## Summary
 

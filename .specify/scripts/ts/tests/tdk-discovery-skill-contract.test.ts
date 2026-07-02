@@ -9,7 +9,7 @@ const SKILL_PATH = resolve(
 const SKILL_DIR = dirname(SKILL_PATH);
 const REFERENCE_PATH = join(SKILL_DIR, 'references/discovery-output-contract.md');
 const TEMPLATE_DIR = join(SKILL_DIR, 'templates');
-const OUTPUT_FILES = ['problem.md', 'personas.md', 'mvp-scope.md', 'index.md'];
+const DETAIL_FILES = ['problem.md', 'personas.md', 'mvp-scope.md'];
 
 function readIfExists(path: string): string {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
@@ -43,12 +43,16 @@ describe('tdk-discovery skill contract', () => {
     expect(skill).toContain('set `FORCE_DISCOVERY=true`');
     expect(skill).toContain('set `INTERVIEW_DISCOVERY=true`');
     expect(skill).toContain('Strip `--force` and `--interview` from the second argument onward');
-    expect(skill).toContain('If `discovery/index.md` already exists and `FORCE_DISCOVERY` is not true');
+    expect(skill).toContain('If `discovery.md` already exists and `FORCE_DISCOVERY` is not true');
   });
 
-  it('restricts output to the four discovery artifacts', () => {
-    expect(reference).toContain('{FEATURE_DIR}/discovery/');
-    for (const file of OUTPUT_FILES) {
+  it('restricts output to the sibling discovery manifest and detail artifacts', () => {
+    expect(reference).toContain('{FEATURE_DIR}/discovery.md');
+    expect(skill).toContain('discovery.md');
+    expect(reference).toContain('discovery.md');
+    expect(existsSync(join(TEMPLATE_DIR, 'discovery.md.tpl'))).toBe(true);
+
+    for (const file of DETAIL_FILES) {
       expect(skill).toContain(`discovery/${file}`);
       expect(reference).toContain(file);
       expect(existsSync(join(TEMPLATE_DIR, `${file}.tpl`))).toBe(true);
@@ -59,6 +63,18 @@ describe('tdk-discovery skill contract', () => {
     expect(reference).not.toContain('competitor.md as an output');
     expect(reference).not.toContain('market.md');
     expect(reference).not.toContain('business-model.md');
+  });
+
+  it('updates the epic dashboard and detects legacy nested manifests', () => {
+    const combined = `${skill}\n${reference}`;
+
+    expect(combined).toContain('{FEATURE_DIR}/index.md');
+    expect(combined).toContain('stage manifest');
+    expect(combined).toContain('next command');
+    expect(combined).toContain('legacy layout detected');
+    expect(combined).toContain('discovery/index.md');
+    expect(combined).toContain('--force');
+    expect(combined).toContain('do not auto-migrate');
   });
 
   it('keeps discovery context-only and tracker-neutral', () => {

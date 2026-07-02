@@ -2,7 +2,7 @@
 name: tdk-epic-hld
 description: "Turn epic PRD artifacts into parent high-level design context before /tdk-task-breakdown. Use after /tdk-epic-prd; child specs do not run HLD by default."
 metadata:
-  version: "6.0.0"
+  version: "6.0.1"
 ---
 
 # tdk-epic-hld
@@ -24,9 +24,9 @@ Trigger: `/tdk-epic-hld <epic-id> [--force]`
 ## Boundary Declaration
 
 **This command produces:**
-- Six Markdown HLD artifacts under `{FEATURE_DIR}/high-level-design/`
-- `high-level-design/index.md` (authoritative manifest)
-- `requirement-overview.md`, `project-and-technical-overview.md`, `data-flow.md`, `screen-flow.md`, `decisions-and-risks.md`
+- Epic dashboard update at `{FEATURE_DIR}/index.md`
+- HLD stage manifest at `{FEATURE_DIR}/high-level-design.md`
+- Five detail artifacts under `{FEATURE_DIR}/high-level-design/`: `requirement-overview.md`, `project-and-technical-overview.md`, `data-flow.md`, `screen-flow.md`, `decisions-and-risks.md`
 
 **This command does NOT:**
 - Create child `spec.md` files (use `/tdk-specify` from task-breakdown seeds)
@@ -66,7 +66,7 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 Require and read exactly these parent epic PRD artifacts:
 
 ```text
-{FEATURE_DIR}/epic-prd/index.md
+{FEATURE_DIR}/epic-prd.md
 {FEATURE_DIR}/epic-prd/prd.md
 {FEATURE_DIR}/epic-prd/slice-map.md
 {FEATURE_DIR}/epic-prd/open-questions.md
@@ -92,7 +92,7 @@ Read `references/high-level-design-output-contract.md` from this skill directory
 
 Use that reference as the single source of truth for:
 - Output filenames and directory
-- `index.md` schema and per-artifact section schemas
+- `high-level-design.md` schema and per-artifact section schemas
 - Epic PRD source mapping
 - Slice-boundary and breakdown-readiness rules
 - Requirement-authority rules
@@ -134,7 +134,7 @@ From epic PRD artifacts, extract:
 - product objective and scope boundaries from `prd.md`
 - slice keys, boundaries, dependencies, and child spec seeds from `slice-map.md`
 - blocking/non-blocking ambiguity from `open-questions.md`
-- source discovery links from `index.md`
+- source discovery links from `epic-prd.md`
 
 Do not invent file paths, APIs, database tables, owners, estimates, labels, or
 formal requirement IDs. If the PRD or slice map is too vague for decomposition,
@@ -157,18 +157,33 @@ Generate the six artifacts from the templates under
 
 ### Step 6 - Duplicate Directory Handling
 
-If `{FEATURE_DIR}/high-level-design/` already exists:
+If `high-level-design/index.md` exists and sibling `high-level-design.md` is
+missing, STOP with:
+
+```text
+legacy layout detected: high-level-design/index.md is from the old nested-manifest layout. Re-run with --force to regenerate HLD in the new layout, or recreate the test epic. TDK does not auto-migrate old high-level-design/index.md content.
+```
+
+If `{FEATURE_DIR}/high-level-design.md` or `{FEATURE_DIR}/high-level-design/` already exists:
 - Without `--force`: ask the user (AskUserQuestion) whether to **update** or **overwrite**.
   - **update** = regenerate the skill-generated artifacts in place; do NOT delete the directory; preserve user-edited and non-generated files.
-  - **overwrite** = delete the directory and fully regenerate.
+  - **overwrite** = delete the stage manifest and directory, then fully regenerate.
 - With `--force`: skip the prompt and take the overwrite path.
 
 The Step 2 gates still run first regardless of `--force`.
 
+### Step 6.5 - Update Epic Dashboard
+
+Update the generated HLD section in `{FEATURE_DIR}/index.md`. Link the
+`high-level-design.md` stage manifest, summarize readiness, and show the next
+command: `/tdk-task-breakdown {TASK_ID}`. Preserve user-owned content outside
+generated sections. Replace an existing generated HLD section only after
+confirmation or when `--force` is supplied.
+
 ### Step 7 - Report Results
 
 Report:
-- Relative paths for `high-level-design/index.md` and each artifact written
+- Relative paths for `{FEATURE_DIR}/index.md`, `high-level-design.md`, and each detail artifact written
 - Whether update or overwrite was taken (when the directory pre-existed)
 - Readiness for `/tdk-task-breakdown {TASK_ID}`
 
@@ -180,6 +195,6 @@ Report:
 - [ ] `references/high-level-design-output-contract.md` was loaded
 - [ ] `references/high-level-design-lenses.md` was loaded
 - [ ] `references/high-level-design-skill-routing.md` was loaded
-- [ ] Only the six contracted artifacts under `high-level-design/` were written
+- [ ] Only `{FEATURE_DIR}/index.md`, `high-level-design.md`, and the five contracted detail artifacts under `high-level-design/` were written
 - [ ] No `UR-*`, `FR-*`, `SC-*`, or `FS-*` identifiers were minted
 - [ ] No child spec, implementation plan, code, task file, or tracker issue was produced

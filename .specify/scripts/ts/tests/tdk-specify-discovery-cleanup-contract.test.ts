@@ -40,8 +40,8 @@ describe('tdk-specify discovery cleanup contract', () => {
   });
 
   it('preserves optional discovery context from Plan 1', () => {
-    expect(contract).toContain('DISCOVERY_INDEX="$FEATURE_DIR/discovery/index.md"');
-    expect(contract).toContain('test -f "$DISCOVERY_INDEX"');
+    expect(contract).toContain('DISCOVERY_MANIFEST="$FEATURE_DIR/discovery.md"');
+    expect(contract).toContain('test -f "$DISCOVERY_MANIFEST"');
     expect(contract).toContain('read it as optional context before spec generation');
     expect(contract).toContain('Do not require discovery for normal specify flow');
   });
@@ -72,10 +72,10 @@ describe('tdk-specify discovery cleanup contract', () => {
       'Do not copy discovery content into `UR-*`, `FR-*`, or `SC-*`; derive explicit spec requirements from it.',
     );
     expect(template).toContain(
-      'When discovery exists, summarize the problem and point to `discovery/problem.md` or `discovery/index.md`.',
+      'When discovery exists, summarize the problem and point to `discovery/problem.md` or `discovery.md`.',
     );
     expect(template).toContain(
-      'When discovery exists, summarize the selected MVP boundary and point to `discovery/mvp-scope.md` or `discovery/index.md`.',
+      'When discovery exists, summarize the selected MVP boundary and point to `discovery/mvp-scope.md` or `discovery.md`.',
     );
   });
 

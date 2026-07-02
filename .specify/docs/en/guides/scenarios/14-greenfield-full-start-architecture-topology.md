@@ -76,7 +76,7 @@ proposed layout.
 |---|---|---|---|
 | 1 | `/tdk-greenfield-start --full` | `.specify/configurations/inception/project-inception.md` | No |
 | 2 | `/tdk-constitution --init` | `.specify/memory/constitution.md`, memory index/config, Arc42 summaries, typed memory files when evidence exists | No `.specify/.specify.json` mutation |
-| 3 | `/tdk-discovery <id> <brief>` | `<feature-dir>/discovery/problem.md`, `personas.md`, `mvp-scope.md`, `index.md` | No |
+| 3 | `/tdk-discovery <id> <brief>` | `<feature-dir>/discovery.md`, `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md` | No |
 | 4 | `/tdk-specify <id> <description>` | `<feature-dir>/spec.md`, `<feature-dir>/checklists/requirements.md` | No |
 | 5 | `/tdk-clarify <id>` | Updates `<feature-dir>/spec.md` and `## Clarifications` | No |
 | 6 | `/tdk-architecture-advisor` | `.specify/configurations/architecture/architecture-options.md`, `architecture-decision.md` | No |
@@ -145,7 +145,7 @@ Output:
 - `<feature-dir>/discovery/problem.md`
 - `<feature-dir>/discovery/personas.md`
 - `<feature-dir>/discovery/mvp-scope.md`
-- `<feature-dir>/discovery/index.md`
+- `<feature-dir>/discovery.md`
 
 Discovery does not create `UR-*`, `FR-*`, or `SC-*`; only `/tdk-specify` owns
 requirement IDs.
