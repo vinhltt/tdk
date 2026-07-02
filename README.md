@@ -54,6 +54,24 @@ bash .specify/setup.sh
 
 This bootstraps prerequisites, installs TypeScript dependencies, runs setup checks, and registers TDK plugin metadata from the consumer project's `.specify/` directory.
 
+### Distribute `.specify/` to a Consumer Project
+
+Maintainers sync the TDK `.specify/` substrate from this source checkout:
+
+```bash
+bash distribute.sh /path/to/consumer-project --dry-run
+bash distribute.sh /path/to/consumer-project --yes
+```
+
+For branded consumer payload text, pass a prefix:
+
+```bash
+bash distribute.sh /path/to/consumer-project --prefix pav --dry-run
+bash distribute.sh /path/to/consumer-project --prefix pav --yes
+```
+
+`--prefix pav` rewrites safe distributed payload text such as `.specify/setup.sh`, docs, and templates from `tdk-`/`tdk`/`TDK` to `pav-`/`pav`/`PAV`. It leaves manifest-managed `.specify/plugins/**` and `.specify/codex-plugins/**` source-identical. Harness artifacts still require an explicit setup CLI install with the same prefix.
+
 ### Setup CLI — Harness Installation
 
 The setup CLI is a standalone package for managing harness install, convert, and convert-flat commands. From a TDK source checkout, run it from `packages/tdk-setup/` and pass the consumer project root explicitly:
@@ -73,6 +91,7 @@ bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core,td
 # Install every plugin listed in .specify/plugins/manifest.json
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --dry-run
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --yes
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --prefix pav --yes
 
 # Install preconverted Codex artifacts
 bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --dry-run

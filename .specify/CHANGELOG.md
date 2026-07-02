@@ -9,6 +9,14 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.94.4] - 2026-07-02
+
+### Changed
+- **[Scripts]** Clean up distribute E2E tests and add branding test coverage
+  - Refactor test helper functions to copy and run `distribute.sh`
+  - Add integration test for branding payload files while preserving plugin and codex packages
+  - Verify distribute CLI help documentation for `--prefix` flag in skill contract tests
+
 ## [1.94.3] - 2026-07-02
 
 ### Changed

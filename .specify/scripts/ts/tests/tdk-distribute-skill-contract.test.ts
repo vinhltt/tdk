@@ -47,4 +47,11 @@ describe('tdk-distribute skill contract', () => {
     expect(script).toContain('"templates/"');
     expect(script).not.toContain('"templates" "setup.sh"');
   });
+
+  it('distribute.sh documents branded payload prefix distribution', () => {
+    const script = read(DISTRIBUTE_SH_PATH);
+    expect(script).toContain('--prefix PREFIX');
+    expect(script).toContain('bash distribute.sh /path/to/my-project --prefix pav --dry-run');
+    expect(script).toContain('tdk-setup install');
+  });
 });

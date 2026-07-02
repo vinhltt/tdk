@@ -17,6 +17,7 @@
 #   --dry-run         Show diff only, skip confirmation and writing
 #   --yes             Skip confirmation prompt (auto-approve)
 #   --with-claude     Legacy: also sync .claude/ files (prefer tdk-setup `install`)
+#   --prefix PREFIX   Brand safe .specify payload text (example: pav -> pav-/PAV)
 #   --force           Overwrite all files (skip MD5 comparison)
 #   --no-delete       Skip orphan removal (don't delete files missing from source)
 #   --yes-delete      Auto-approve file deletions (skip 'type delete' prompt)
@@ -28,6 +29,8 @@
 #   bash distribute.sh /path/to/my-project                  # sync .specify/ only
 #   bash distribute.sh /path/to/my-project --with-claude    # legacy .claude sync
 #   bash distribute.sh /path/to/my-project --dry-run        # preview changes
+#   bash distribute.sh /path/to/my-project --prefix pav --dry-run
+#   # Then run tdk-setup install with the same prefix for .claude/.codex harness output
 
 set -euo pipefail
 # ERR trap: only fires on unexpected failures (not inside || && if contexts per bash spec)
@@ -57,6 +60,21 @@ FORCE=false
 NO_DELETE=false
 AUTO_YES_DELETE=false
 TARGET_PATH=""
+BRAND_PREFIX=""
+BRAND_WORD=""
+BRAND_WORD_UPPER=""
+SOURCE_PREFIX="tdk-"
+
+normalize_prefix() {
+    local value="$1"
+    [[ "$value" != *- ]] && value="$value-"
+    if [[ ! "$value" =~ ^[a-z0-9][a-z0-9-]*-$ ]]; then
+        echo -e "${RED}Invalid --prefix value: $1${NC}" >&2
+        echo -e "${RED}Use lowercase letters, numbers, and hyphens only, for example: pav or pav-${NC}" >&2
+        return 1
+    fi
+    printf '%s' "$value"
+}
 
 # ─── Args ─────────────────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -64,6 +82,21 @@ while [[ $# -gt 0 ]]; do
         --dry-run)      DRY_RUN=true ;;
         --yes|-y)       AUTO_YES=true ;;
         --with-claude)  WITH_CLAUDE=true ;;
+        --prefix)
+            shift
+            BRAND_PREFIX="${1:-}"
+            if [[ -z "$BRAND_PREFIX" ]]; then
+                echo -e "${RED}--prefix requires a value${NC}" >&2
+                exit 1
+            fi
+            ;;
+        --prefix=*)
+            BRAND_PREFIX="${1#*=}"
+            if [[ -z "$BRAND_PREFIX" ]]; then
+                echo -e "${RED}--prefix requires a value${NC}" >&2
+                exit 1
+            fi
+            ;;
         --force)        FORCE=true ;;
         --no-delete)    NO_DELETE=true ;;
         --yes-delete)   AUTO_YES_DELETE=true ;;
@@ -94,6 +127,14 @@ while [[ $# -gt 0 ]]; do
     esac
     shift
 done
+
+if [[ -n "$BRAND_PREFIX" ]]; then
+    if ! BRAND_PREFIX="$(normalize_prefix "$BRAND_PREFIX")"; then
+        exit 1
+    fi
+    BRAND_WORD="${BRAND_PREFIX%-}"
+    BRAND_WORD_UPPER="${BRAND_WORD^^}"
+fi
 
 # ─── Log file tee setup ─────────────────────────────────────────────────────
 if [[ -n "$LOG_FILE" ]]; then
@@ -149,6 +190,18 @@ if [[ ! -d "$TARGET_ROOT" ]]; then
     exit 1
 fi
 
+PYTHON_BIN=""
+RENDER_TMP_DIR=""
+if [[ -n "$BRAND_PREFIX" ]]; then
+    PYTHON_BIN="$(command -v python3 2>/dev/null || true)"
+    if [[ -z "$PYTHON_BIN" ]]; then
+        echo -e "${RED}Error: --prefix requires python3 for payload text rewrite${NC}" >&2
+        exit 1
+    fi
+    RENDER_TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/tdk-distribute.XXXXXX")"
+    trap '[[ -n "${RENDER_TMP_DIR:-}" && -d "$RENDER_TMP_DIR" ]] && rm -rf "$RENDER_TMP_DIR"' EXIT
+fi
+
 # ─── Tool detection ──────────────────────────────────────────────────────────
 log_dim "MD5 tool: $(command -v md5sum 2>/dev/null || command -v md5 2>/dev/null || echo 'python fallback')"
 log_dim "yq: $(command -v yq 2>/dev/null && yq --version 2>/dev/null || echo 'not found')"
@@ -180,7 +233,15 @@ if $WITH_CLAUDE; then
     echo -e "  ${YELLOW}Note:${NC}    Prefer 'tdk-setup install <target> --harness claude' for explicit harness mutation"
 else
     echo -e "  ${WHITE}Scope:${NC}   .specify/ only"
-    echo -e "  ${WHITE}Next:${NC}    cd \"$SOURCE_ROOT/packages/tdk-setup\" && bun src/index.ts install \"$TARGET_ROOT\" --harness claude --plugins tdk-core --dry-run"
+    if [[ -n "$BRAND_PREFIX" ]]; then
+        echo -e "  ${WHITE}Next:${NC}    cd \"$SOURCE_ROOT/packages/tdk-setup\" && bun src/index.ts install \"$TARGET_ROOT\" --harness claude --all-plugins --prefix $BRAND_WORD --dry-run"
+    else
+        echo -e "  ${WHITE}Next:${NC}    cd \"$SOURCE_ROOT/packages/tdk-setup\" && bun src/index.ts install \"$TARGET_ROOT\" --harness claude --plugins tdk-core --dry-run"
+    fi
+fi
+if [[ -n "$BRAND_PREFIX" ]]; then
+    echo -e "  ${WHITE}Brand:${NC}   safe .specify payload text tdk-/tdk/TDK -> $BRAND_PREFIX/$BRAND_WORD/$BRAND_WORD_UPPER"
+    echo -e "  ${DIM}         plugins/, codex-plugins/, scripts/, schemas/, and docs/assets/ stay source-identical${NC}"
 fi
 $FORCE && echo -e "  ${YELLOW}Mode:    --force (skip MD5 comparison)${NC}"
 $NO_DELETE && echo -e "  ${YELLOW}Mode:    --no-delete (skip orphan removal)${NC}"
@@ -237,6 +298,96 @@ file_md5() {
         }
     fi
     echo "$result"
+}
+
+has_payload_text_extension() {
+    case "$1" in
+        *.md|*.mdx|*.txt|*.json|*.yaml|*.yml|*.tpl|*.sh) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_payload_rewrite_candidate() {
+    local rel_path="$1"
+    case "$rel_path" in
+        setup.sh|CHANGELOG.md|.specify*.example) return 0 ;;
+        plugins/*|codex-plugins/*|scripts/*|schemas/*|docs/assets/*) return 1 ;;
+        docs/*|templates/*) has_payload_text_extension "$rel_path"; return ;;
+        *) return 1 ;;
+    esac
+}
+
+should_rewrite_source_file() {
+    local source_dir="$1" rel_path="$2"
+    [[ -n "$BRAND_PREFIX" && "$source_dir" == "$SOURCE_SPECIFY" ]] || return 1
+    is_payload_rewrite_candidate "$rel_path"
+}
+
+payload_text_rewrite() {
+    local source_file="$1"
+    "$PYTHON_BIN" - "$SOURCE_PREFIX" "$BRAND_PREFIX" "$source_file" <<'PY'
+import pathlib
+import re
+import sys
+
+source_prefix = sys.argv[1]
+target_prefix = sys.argv[2]
+source_file = pathlib.Path(sys.argv[3])
+source_brand = source_prefix[:-1] if source_prefix.endswith("-") else source_prefix
+target_brand = target_prefix[:-1] if target_prefix.endswith("-") else target_prefix
+
+text = source_file.read_text(encoding="utf-8")
+protected = []
+
+def protect(pattern):
+    global text
+    def replace(match):
+        protected.append(match.group(0))
+        return f"\ue000{len(protected) - 1}\ue001"
+    text = re.sub(pattern, replace, text)
+
+# These references point to paths that distribute intentionally does not rename.
+protect(r"\.specify/(?:codex-)?plugins/[^\s\"'`)\]}]+")
+protect(r"(?:[A-Za-z0-9_.-]+/)*assets/tdk-[^\s\"'`)\]}]+")
+
+text = re.sub(r"(?<![a-z0-9-])" + re.escape(source_prefix), target_prefix, text)
+if source_brand and target_brand:
+    text = re.sub(r"(?<![\w${-])" + re.escape(source_brand.lower()) + r"(?![\w-])", target_brand.lower(), text)
+    text = re.sub(r"(?<![\w${-])" + re.escape(source_brand.upper()) + r"(?![\w-])", target_brand.upper(), text)
+
+for index, value in enumerate(protected):
+    text = text.replace(f"\ue000{index}\ue001", value)
+
+sys.stdout.write(text)
+PY
+}
+
+copy_source_mode() {
+    local src="$1" dst="$2" mode
+    mode="$(stat -c '%a' "$src" 2>/dev/null || stat -f '%Lp' "$src" 2>/dev/null || true)"
+    [[ -n "$mode" ]] && chmod "$mode" "$dst" 2>/dev/null || true
+}
+
+render_source_to_path() {
+    local src="$1" source_dir="$2" rel_path="$3" out="$4"
+    if should_rewrite_source_file "$source_dir" "$rel_path"; then
+        payload_text_rewrite "$src" > "$out"
+    else
+        cp -f "$src" "$out"
+    fi
+}
+
+rendered_source_md5() {
+    local src="$1" source_dir="$2" rel_path="$3"
+    if should_rewrite_source_file "$source_dir" "$rel_path"; then
+        local tmp
+        tmp="$(mktemp "$RENDER_TMP_DIR/md5.XXXXXX")"
+        render_source_to_path "$src" "$source_dir" "$rel_path" "$tmp"
+        file_md5 "$tmp"
+        rm -f "$tmp"
+    else
+        file_md5 "$src"
+    fi
 }
 
 # ─── Utility: check exclude match ────────────────────────────────────────────
@@ -368,7 +519,7 @@ classify_files() {
             log_dim "  [FORCE] $rel → UPDATED"
         else
             local src_md5 dst_md5
-            src_md5=$(file_md5 "$src")
+            src_md5=$(rendered_source_md5 "$src" "$source_dir" "$rel")
             dst_md5=$(file_md5 "$dst")
             if [[ "$src_md5" != "$dst_md5" ]]; then
                 G_UPDATED+=("$rel")
@@ -575,7 +726,20 @@ copy_one() {
         return
     fi
 
-    if cp -f "$src" "$dst" 2>/dev/null; then
+    local copied=false
+    if [[ "$label" == ".specify" ]] && should_rewrite_source_file "$SOURCE_SPECIFY" "$rel"; then
+        local tmp
+        tmp="$(mktemp "$dst_dir/.distribute.XXXXXX")"
+        if payload_text_rewrite "$src" > "$tmp" 2>/dev/null && copy_source_mode "$src" "$tmp" && mv -f "$tmp" "$dst" 2>/dev/null; then
+            copied=true
+        else
+            rm -f "$tmp" 2>/dev/null || true
+        fi
+    elif cp -f "$src" "$dst" 2>/dev/null; then
+        copied=true
+    fi
+
+    if $copied; then
         ((COPIED_COUNT+=1))
         echo -e "  ${GREEN}✓${NC} [$label] $rel"
     else

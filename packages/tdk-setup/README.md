@@ -19,6 +19,7 @@ Install Claude harness artifacts:
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --dry-run
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --yes
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --prefix pav --yes
 ```
 
 Install preconverted Codex artifacts:
@@ -45,6 +46,8 @@ bun src/index.ts convert-flat "$CONSUMER_ROOT" --yes
 ```
 
 Omit `--plugins` and `--all-plugins` to select plugins interactively with Space and Enter.
+
+If `.specify/` was distributed with `bash distribute.sh <consumer-root> --prefix pav`, use the same `--prefix pav` here. `distribute.sh --prefix` brands safe `.specify/` payload text; `tdk-setup install --prefix` brands installed `.claude/`, `.codex/`, and `.agents/skills/` harness artifacts.
 
 ## Commands
 
