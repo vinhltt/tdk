@@ -68,11 +68,11 @@ describe('runtime asset transform planning', () => {
       },
     });
 
-    const plan = buildPlan(consumer, ['tdk-memory'], 'pav-');
+    const plan = buildPlan(consumer, ['tdk-memory'], 'sample-');
     const write = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-memory-checksum/SKILL.md');
 
-    expect(write?.targetRelativePath).toBe('.claude/skills/pav-memory-checksum/SKILL.md');
-    expect(write?.content.toString('utf-8')).toContain('$(pwd)/.claude/skills/pav-memory-checksum/scripts/validate.py');
+    expect(write?.targetRelativePath).toBe('.claude/skills/sample-memory-checksum/SKILL.md');
+    expect(write?.content.toString('utf-8')).toContain('$(pwd)/.claude/skills/sample-memory-checksum/scripts/validate.py');
     expect(write?.content.toString('utf-8')).not.toContain('TDK_SKILL_ROOT');
   });
 
@@ -92,7 +92,7 @@ describe('runtime asset transform planning', () => {
     expect(() => buildPlan(consumer, ['tdk-memory'])).toThrow(/runtime asset/i);
   });
 
-  test('rewrites exact executable source-plugin script refs without changing source catalog mentions', () => {
+  test('rewrites exact source-plugin script refs in runnable and catalog mentions', () => {
     const consumer = makeConsumer();
     writeMemoryRuntimePlugin(
       consumer,
@@ -110,7 +110,7 @@ describe('runtime asset transform planning', () => {
       ?.content.toString('utf-8');
 
     expect(content).toContain('Run "$(pwd)/.claude/scripts/tdk-memory/compute-sha256-hashes.py"');
-    expect(content).toContain('Catalog mention: `.specify/plugins/tdk-memory/scripts/compute-sha256-hashes.py`');
+    expect(content).toContain('Catalog mention: `.claude/scripts/tdk-memory/compute-sha256-hashes.py`');
   });
 
   test('rewrites exact executable skill-local source script refs', () => {

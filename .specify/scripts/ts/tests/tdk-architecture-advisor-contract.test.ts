@@ -175,13 +175,13 @@ describe('TDK architecture advisor contracts', () => {
     const standardWorkflow = read(join(advisorDir, 'references/workflow-standard.md'));
     const recoveryWorkflow = read(join(advisorDir, 'references/workflow-recover-existing.md'));
     const decisionTemplate = read(join(advisorDir, 'templates/architecture-decision.md.tpl'));
-    const commandReference = read(join(DOCS_DIR, 'command-reference.md'));
+    const skillsGuide = read(join(DOCS_DIR, 'skills-guide.md'));
 
     expect(outputContract).toContain('Always write the decision artifact in standard mode');
     expect(standardWorkflow).toContain('Write `architecture-decision.md` every standard run');
     expect(standardWorkflow).toContain('set `## Status` to `Deferred`');
     expect(decisionTemplate).toContain('Deferred / Proposed / Accepted / Superseded');
-    expect(commandReference).toContain('the decision artifact uses `Status: Deferred`');
+    expect(skillsGuide).toContain('decision artifact uses `Status: Deferred`');
     expect(recoveryWorkflow).toContain('Write `architecture-recovery.md` by default');
     expect(recoveryWorkflow).toContain('Write or update `architecture-decision.md` only after explicit user');
   });
@@ -223,15 +223,15 @@ describe('TDK architecture advisor contracts', () => {
   });
 
   it('registers advisor command docs and manifest entries', () => {
-    const commandReference = read(join(DOCS_DIR, 'command-reference.md'));
-    const documentFlow = read(join(DOCS_DIR, 'document-flow.md'));
+    const skillsGuide = read(join(DOCS_DIR, 'skills-guide.md'));
+    const workflowMap = read(join(DOCS_DIR, 'workflow-map.md'));
     const manifest = read(MANIFEST_PATH);
     const readme = read(README_PATH);
 
-    expect(commandReference).toContain('/tdk-architecture-advisor [input|file] [--recover-existing|--unknown]');
-    expect(commandReference).toContain('.specify/configurations/architecture/architecture-decision.md');
-    expect(documentFlow).toContain('/tdk-architecture-advisor');
-    expect(documentFlow).toContain('.specify/configurations/architecture/architecture-options.md');
+    expect(skillsGuide).toContain('/tdk-architecture-advisor [input|file] [--recover-existing|--unknown]');
+    expect(skillsGuide).toContain('.specify/configurations/architecture/architecture-decision.md');
+    expect(workflowMap).toContain('/tdk-architecture-advisor');
+    expect(workflowMap).toContain('.specify/configurations/architecture/architecture-options.md');
     expect(manifest).toContain('"tdk-architecture-advisor"');
     expect(readme).toContain('/tdk-architecture-advisor');
     expect(readme).toContain('25 skills + 1 agent');

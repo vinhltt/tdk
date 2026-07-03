@@ -44,12 +44,12 @@ describe('runtime asset transform regressions', () => {
       '# Skill\nRun "$(pwd)/.specify/plugins/tdk-memory/skills/tdk-memory-checksum/scripts/validate.py"\n',
     );
 
-    const plan = buildPlan(consumer, ['tdk-memory'], 'pav-');
+    const plan = buildPlan(consumer, ['tdk-memory'], 'sample-');
     const content = plan.writes
       .find((item) => item.sourceRelativePath === 'skills/tdk-memory-checksum/SKILL.md')
       ?.content.toString('utf-8');
 
-    expect(content).toContain('$(pwd)/.claude/skills/pav-memory-checksum/scripts/validate.py');
+    expect(content).toContain('$(pwd)/.claude/skills/sample-memory-checksum/scripts/validate.py');
     expect(content).not.toContain('.specify/plugins/tdk-memory/skills');
   });
 
@@ -60,16 +60,16 @@ describe('runtime asset transform regressions', () => {
       '# Skill\nRun "${CLAUDE_SKILL_DIR}/scripts/validate.py"\n',
     );
 
-    const plan = buildPlan(consumer, ['tdk-memory'], 'pav-');
+    const plan = buildPlan(consumer, ['tdk-memory'], 'sample-');
     const content = plan.writes
       .find((item) => item.sourceRelativePath === 'skills/tdk-memory-checksum/SKILL.md')
       ?.content.toString('utf-8');
 
-    expect(content).toContain('$(pwd)/.claude/skills/pav-memory-checksum/scripts/validate.py');
+    expect(content).toContain('$(pwd)/.claude/skills/sample-memory-checksum/scripts/validate.py');
     expect(content).not.toContain('CLAUDE_SKILL_DIR');
   });
 
-  test('rewrites relative executable plugin script refs but preserves catalog mentions', () => {
+  test('rewrites relative executable plugin script refs and catalog mentions', () => {
     const consumer = makeConsumer();
     const script = '#!/usr/bin/env python3\nprint("ok")\n';
     const skill = [
@@ -96,7 +96,7 @@ describe('runtime asset transform regressions', () => {
       ?.content.toString('utf-8');
 
     expect(content).toContain('Run python $(pwd)/.claude/scripts/tdk-memory/compute-sha256-hashes.py');
-    expect(content).toContain('Catalog mention: `.specify/plugins/tdk-memory/scripts/compute-sha256-hashes.py`');
+    expect(content).toContain('Catalog mention: `.claude/scripts/tdk-memory/compute-sha256-hashes.py`');
   });
 
   test('actual migrated memory and utility skills install runnable script refs without source plugins', () => {

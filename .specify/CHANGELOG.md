@@ -9,6 +9,14 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.96.4] - 2026-07-03
+
+### Changed
+- **[Docs]** Removed direct references to internal repository structure and source paths (like `.specify/plugins/tdk-core/` and `packages/tdk-setup/`) in English and Vietnamese guides.
+- **[Scripts]** Updated helper script and validation tests:
+  - Updated `separate-folder` strategy deletion validation error message to point to the correct documentation location.
+  - Updated test suites to align with prefix-transform target changes and validation messages.
+
 ## [1.96.3] - 2026-07-02
 
 ### Added
@@ -265,7 +273,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
   - Restructured `SKILL.md` to reference externalized workflows.
   - Support `/tdk-specify <id> --interview` to replay interviews on existing specifications.
 - **[Docs]** Updated asset names and documentation references:
-  - Renamed `pav-lifecycle-share-graph.png` to `tdk-lifecycle-share-graph.png`.
+  - Renamed legacy lifecycle share graph image to `tdk-lifecycle-share-graph.png`.
   - Updated English and Vietnamese documentation, READMEs, epic start guides, and command references.
 - **[Scripts]** Updated test suites to cover new specify reference paths and verify line limit constraints.
 

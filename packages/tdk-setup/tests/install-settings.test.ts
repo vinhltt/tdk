@@ -15,7 +15,7 @@ describe('install settings', () => {
       version: 1,
       defaults: {
         sourcePrefix: 'tdk',
-        targetPrefix: 'pav',
+        targetPrefix: 'sample',
         selectedPlugins: ['tdk-core'],
         rewrite: { paths: true, textFiles: true, hooks: true },
       },
@@ -27,7 +27,7 @@ describe('install settings', () => {
     const settings = loadInstallSettings(consumer.root);
 
     expect(settings?.defaults.sourcePrefix).toBe('tdk-');
-    expect(settings?.defaults.targetPrefix).toBe('pav-');
+    expect(settings?.defaults.targetPrefix).toBe('sample-');
     expect(settings?.defaults.selectedPlugins).toEqual(['tdk-core']);
   });
 
@@ -46,7 +46,7 @@ describe('install settings', () => {
           enabled: true,
           targetDir: '.claude',
           settingsPath: '.claude/settings.json',
-          targetPrefix: 'pav-',
+          targetPrefix: 'sample-',
         },
       },
     }));

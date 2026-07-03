@@ -109,8 +109,8 @@ keeps its own spec, tasks, and history.
 no longer be its own spec, run the full revert checklist in the task-breakdown output
 contract: delete or archive `specs/<child-id>/`, close its tracker issue when consumer
 tracker-sync exists, and update `tasks-breakdown.md` if your consumer workflow
-recorded the child spec status there. See
-`.specify/plugins/tdk-core/skills/tdk-task-breakdown/references/task-breakdown-output-contract.md`.
+recorded the child spec status there. See the task-breakdown output contract
+reference shipped with the task-breakdown skill for the full checklist.
 
 ---
 

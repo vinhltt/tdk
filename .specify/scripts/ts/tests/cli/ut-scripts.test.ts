@@ -268,6 +268,6 @@ describe('ut-scripts.test.ts (integration)', () => {
     expect(cliError).not.toBeNull();
     expect(cliError!.error).toBe('parse_error');
     expect(cliError!.message).toContain(`Strategy 'separate-folder' has been removed`);
-    expect(cliError!.message).toContain('tdk-ut-backfill-skills-usage.md');
+    expect(cliError!.message).toContain('docs/en/guides/skills-guide.md');
   });
 });

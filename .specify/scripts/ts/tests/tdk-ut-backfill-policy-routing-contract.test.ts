@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const UT_BACKFILL_SKILL = resolve(import.meta.dir, '../../../plugins/tdk-core/skills/tdk-ut-backfill-plan/SKILL.md');
-const UT_USAGE_DOC = resolve(import.meta.dir, '../../../docs/en/guides/tdk-ut-backfill-skills-usage.md');
+const SKILLS_GUIDE = resolve(import.meta.dir, '../../../docs/en/guides/skills-guide.md');
+const WORKFLOW_MAP = resolve(import.meta.dir, '../../../docs/en/guides/workflow-map.md');
 
 function read(path: string): string {
   return readFileSync(path, 'utf-8');
@@ -11,7 +12,7 @@ function read(path: string): string {
 
 describe('TDK UT backfill module policy routing contracts', () => {
   const skill = read(UT_BACKFILL_SKILL);
-  const usage = read(UT_USAGE_DOC);
+  const usage = `${read(SKILLS_GUIDE)}\n${read(WORKFLOW_MAP)}`;
 
   it('does not offer ad hoc module creation from UT planning', () => {
     expect(skill).not.toContain('Create a module');
@@ -29,8 +30,8 @@ describe('TDK UT backfill module policy routing contracts', () => {
     expect(skill).toContain('Proceed at sub-workspace level');
   });
 
-  it('documents topology as the durable module ownership path', () => {
-    expect(usage).toContain('Durable module ownership belongs in workspace layout');
+  it('documents layout and policy as the durable module ownership path', () => {
+    expect(usage).toContain('/tdk-ut-backfill-plan <id>');
     expect(usage).toContain('/tdk-workspace-layout-propose');
     expect(usage).toContain('/tdk-workflow-config-apply');
     expect(usage).not.toContain('/tdk-workflow-config-apply --dry-run');

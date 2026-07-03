@@ -141,15 +141,15 @@ describe('codex install plan', () => {
       selectedPlugins: ['tdk-core'],
       previousManifest: emptyHarnessManifest('codex'),
       sourcePrefix: 'tdk-',
-      targetPrefix: 'pav-',
+      targetPrefix: 'sample-',
     });
 
     const targets = plan.writes.map((write) => write.targetRelativePath);
-    expect(targets).toContain('.agents/skills/pav-demo/SKILL.md');
-    expect(targets).toContain('.codex/agents/pav-helper.toml');
+    expect(targets).toContain('.agents/skills/sample-demo/SKILL.md');
+    expect(targets).toContain('.codex/agents/sample-helper.toml');
     const config = plan.writes.find((write) => write.targetRelativePath === '.codex/config.toml')?.content.toString('utf-8') ?? '';
-    expect(config).toContain('[agents.pav-helper]');
-    expect(config).toContain('config_file = "agents/pav-helper.toml"');
+    expect(config).toContain('[agents.sample-helper]');
+    expect(config).toContain('config_file = "agents/sample-helper.toml"');
   });
 
   test('skips internal shared skill entrypoints while preserving shared reference files', () => {

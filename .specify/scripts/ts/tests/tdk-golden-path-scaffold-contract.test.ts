@@ -191,18 +191,18 @@ describe('TDK golden-path scaffold contracts', () => {
   it('registers golden-path scaffold docs and manifest entries', () => {
     const manifest = read(MANIFEST_PATH);
     const readme = read(README_PATH);
-    const commandReference = read(join(DOCS_DIR, 'command-reference.md'));
-    const documentFlow = read(join(DOCS_DIR, 'document-flow.md'));
+    const skillsGuide = read(join(DOCS_DIR, 'skills-guide.md'));
+    const workflowMap = read(join(DOCS_DIR, 'workflow-map.md'));
     const sourceInterface = read(SCAFFOLD_INTERFACE_PATH);
     const codexPlugin = read(CODEX_SCAFFOLD_PLUGIN_PATH);
 
     expect(manifest).toContain('"tdk-golden-path-scaffold"');
     expect(readme).toContain('/tdk-golden-path-scaffold');
     expect(readme).toContain('tdk-scaffold/        # Skill/agent and golden-path scaffolding (3 skills)');
-    expect(commandReference).toContain('/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <name>]');
-    expect(commandReference).toContain('golden-path-recipe.json');
-    expect(documentFlow).toContain('/tdk-golden-path-scaffold');
-    expect(documentFlow).toContain('golden-path-scaffold-plan.md');
+    expect(skillsGuide).toContain('/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <name>]');
+    expect(skillsGuide).toContain('golden-path-recipe.json');
+    expect(workflowMap).toContain('/tdk-golden-path-scaffold');
+    expect(workflowMap).toContain('golden-path-scaffold-plan.md');
     expect(sourceInterface).toContain('golden-path');
     expect(sourceInterface).toContain('skeleton');
     expect(codexPlugin).toContain('golden-path');

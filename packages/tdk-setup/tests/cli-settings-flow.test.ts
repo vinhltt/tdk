@@ -19,11 +19,11 @@ describe('harness install CLI settings flow', () => {
     const consumer = makeConsumer();
     writePrefixedSkillPlugin(consumer);
 
-    const result = runInstall(consumer, ['--harness', 'claude', '--plugins', 'tdk-core', '--prefix', 'pav', '--yes']);
+    const result = runInstall(consumer, ['--harness', 'claude', '--plugins', 'tdk-core', '--prefix', 'sample', '--yes']);
 
     expect(result.exitCode).toBe(0);
-    expect(fs.existsSync(path.join(consumer.root, '.claude', 'skills', 'pav-demo', 'SKILL.md'))).toBe(true);
-    expect(JSON.parse(fs.readFileSync(path.join(consumer.root, '.specify', 'install-settings.json'), 'utf-8')).defaults.targetPrefix).toBe('pav-');
+    expect(fs.existsSync(path.join(consumer.root, '.claude', 'skills', 'sample-demo', 'SKILL.md'))).toBe(true);
+    expect(JSON.parse(fs.readFileSync(path.join(consumer.root, '.specify', 'install-settings.json'), 'utf-8')).defaults.targetPrefix).toBe('sample-');
   });
 
   test('existing settings allow non-TTY reuse without plugin selector', () => {
@@ -51,7 +51,7 @@ describe('harness install CLI settings flow', () => {
   test('blocks existing prefix changes unless explicit migration flag is used', () => {
     const consumer = makeConsumer();
     writePrefixedSkillPlugin(consumer);
-    expect(runInstall(consumer, ['--harness', 'claude', '--plugins', 'tdk-core', '--prefix', 'pav', '--yes']).exitCode).toBe(0);
+    expect(runInstall(consumer, ['--harness', 'claude', '--plugins', 'tdk-core', '--prefix', 'sample', '--yes']).exitCode).toBe(0);
 
     const blocked = runInstall(consumer, ['--harness', 'claude', '--prefix', 'ck', '--dry-run']);
     const migration = runInstall(consumer, ['--harness', 'claude', '--migrate-prefix', 'ck', '--dry-run']);
@@ -59,8 +59,8 @@ describe('harness install CLI settings flow', () => {
     expect(blocked.exitCode).toBe(1);
     expect(blocked.stderr.toString()).toContain('--migrate-prefix');
     expect(migration.exitCode).toBe(0);
-    expect(migration.stdout.toString()).toContain('Prefix migration: pav- -> ck-');
+    expect(migration.stdout.toString()).toContain('Prefix migration: sample- -> ck-');
     expect(migration.stdout.toString()).toContain('create: .claude/skills/ck-demo/SKILL.md');
-    expect(migration.stdout.toString()).toContain('remove: .claude/skills/pav-demo/SKILL.md');
+    expect(migration.stdout.toString()).toContain('remove: .claude/skills/sample-demo/SKILL.md');
   });
 });

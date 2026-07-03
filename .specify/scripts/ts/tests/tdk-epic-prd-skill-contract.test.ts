@@ -11,9 +11,9 @@ const OUTPUT_CONTRACT_PATH = join(SKILL_DIR, 'references/epic-prd-output-contrac
 const QUALITY_GUIDE_PATH = join(SKILL_DIR, 'references/epic-prd-quality-guidelines.md');
 const TEMPLATE_DIR = resolve(import.meta.dir, '../../../templates/epic-prd');
 const SKILLS_GUIDE_PATH = resolve(import.meta.dir, '../../../docs/en/guides/skills-guide.md');
-const DOCUMENT_FLOW_PATH = resolve(import.meta.dir, '../../../docs/en/guides/document-flow.md');
-const EPIC_GUIDE_PATH = resolve(import.meta.dir, '../../../docs/en/guides/epic-start-guide.md');
-const VI_EPIC_GUIDE_PATH = resolve(import.meta.dir, '../../../docs/vi/guides/epic-start-guide.md');
+const WORKFLOW_MAP_PATH = resolve(import.meta.dir, '../../../docs/en/guides/workflow-map.md');
+const EPIC_GUIDE_PATH = resolve(import.meta.dir, '../../../docs/en/guides/scenarios/00-epic-start-guide.md');
+const VI_EPIC_GUIDE_PATH = resolve(import.meta.dir, '../../../docs/vi/guides/scenarios/00-epic-start-guide.md');
 const DETAIL_FILES = ['prd.md', 'slice-map.md', 'open-questions.md'];
 const REQUIRED_DISCOVERY_FILES = [
   'discovery.md',
@@ -126,10 +126,10 @@ describe('tdk-epic-prd skill contract', () => {
 
   it('documents the current epic flow through parent HLD without advertising future commands', () => {
     const skillsGuide = readIfExists(SKILLS_GUIDE_PATH);
-    const documentFlow = readIfExists(DOCUMENT_FLOW_PATH);
+    const workflowMap = readIfExists(WORKFLOW_MAP_PATH);
     const epicGuide = readIfExists(EPIC_GUIDE_PATH);
     const viEpicGuide = readIfExists(VI_EPIC_GUIDE_PATH);
-    const docsCombined = `${skillsGuide}\n${documentFlow}\n${epicGuide}\n${viEpicGuide}`;
+    const docsCombined = `${skillsGuide}\n${workflowMap}\n${epicGuide}\n${viEpicGuide}`;
 
     expect(skillsGuide).toContain('/tdk-epic-prd <epic-id> [--force] [--interview]');
     expect(docsCombined).toContain('epic-prd.md');

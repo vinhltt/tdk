@@ -179,21 +179,21 @@ describe('TDK workspace dependency policy contracts', () => {
   it('registers policy docs and manifest entries', () => {
     const manifest = read(MANIFEST_PATH);
     const readme = read(README_PATH);
-    const commandReference = read(join(DOCS_DIR, 'command-reference.md'));
-    const documentFlow = read(join(DOCS_DIR, 'document-flow.md'));
+    const skillsGuide = read(join(DOCS_DIR, 'skills-guide.md'));
+    const workflowMap = read(join(DOCS_DIR, 'workflow-map.md'));
 
     expect(manifest).toContain('"tdk-workspace-dependency-policy"');
     expect(manifest).toContain('"tdk-module-boundary-policy"');
     expect(readme).toContain('/tdk-workspace-dependency-policy');
     expect(readme).toContain('/tdk-module-boundary-policy');
     expect(readme).toContain('16 skills + 5 agents');
-    expect(commandReference).toContain('/tdk-workspace-dependency-policy [layout|file] [--audit|--suggest]');
-    expect(commandReference).toContain('/tdk-module-boundary-policy [topology|file] [--audit|--suggest]');
-    expect(commandReference).toContain('workspace-dependency-policy.md');
-    expect(commandReference).toContain('module-boundary-policy.md');
-    expect(documentFlow).toContain('/tdk-workspace-dependency-policy');
-    expect(documentFlow).toContain('/tdk-module-boundary-policy');
-    expect(documentFlow).toContain('workspace-dependency-policy.md');
-    expect(documentFlow).toContain('module-boundary-policy.md');
+    expect(skillsGuide).toContain('/tdk-workspace-dependency-policy [layout|file] [--audit|--suggest]');
+    expect(skillsGuide).toContain('/tdk-module-boundary-policy [topology|file] [--audit|--suggest]');
+    expect(skillsGuide).toContain('workspace-dependency-policy.md');
+    expect(skillsGuide).toContain('module-boundary-policy.md');
+    expect(workflowMap).toContain('/tdk-workspace-dependency-policy');
+    expect(workflowMap).toContain('/tdk-module-boundary-policy');
+    expect(workflowMap).toContain('workspace-dependency-policy.md');
+    expect(workflowMap).toContain('module-boundary-policy.md');
   });
 });

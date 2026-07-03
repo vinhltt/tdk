@@ -55,14 +55,14 @@ describe('buildClaudeInstallPlan', () => {
       previousManifest: emptyHarnessManifest(),
       settings: {},
       sourcePrefix: 'tdk-',
-      targetPrefix: 'pav-',
+      targetPrefix: 'sample-',
     });
 
     const write = plan.writes.find((item) => item.targetRelativePath === '.claude/rules/primary-workflow-routing.md');
     expect(write).toBeDefined();
     expect(write!.plugin).toBe('claude-rules');
     expect(write!.sourceRelativePath).toBe('.specify/claude-rules/primary-workflow-routing.md');
-    expect(write!.content.toString('utf-8')).toBe('# PAV primary workflow\nRun `pav-specify` before `pav-plan`.\n');
+    expect(write!.content.toString('utf-8')).toBe('# SAMPLE primary workflow\nRun `sample-specify` before `sample-plan`.\n');
     expect(plan.nextManifest.managedFiles.some((file) => file.targetRelativePath === '.claude/rules/primary-workflow-routing.md')).toBe(true);
   });
 
@@ -337,8 +337,8 @@ describe('prefix migration install-level', () => {
     expect(write!.sourceChecksum).toBe(write!.installedChecksum);
   });
 
-  test('no residual tdk- in transformable regions after pav- migration; mapper-undefined source refs preserved', () => {
-    // After migration to pav-: all tdk- tokens in prose/converted paths must be replaced.
+  test('no residual tdk- in transformable regions after sample- migration; mapper-undefined source refs preserved', () => {
+    // After migration to sample-: all tdk- tokens in prose/converted paths must be replaced.
     // Intentional exception: mapper-undefined source refs (.specify/plugins/tdk-utils/manifest.json,
     // hooks/hooks.json) stay verbatim and are excluded from the no-residual assertion.
     const consumer = makeConsumer();
@@ -372,7 +372,7 @@ describe('prefix migration install-level', () => {
       previousManifest: emptyHarnessManifest(),
       settings: {},
       sourcePrefix: 'tdk-',
-      targetPrefix: 'pav-',
+      targetPrefix: 'sample-',
     });
 
     const content = plan.writes
@@ -391,11 +391,11 @@ describe('prefix migration install-level', () => {
     expect(transformableText).not.toContain('tdk-');
 
     // Positive spot-checks: blanket rewrites fired
-    expect(content).toContain('/pav-*');
-    expect(content).toContain('`pav-status`');
-    expect(content).toContain('pav-001');
-    expect(content).toContain('pav-specific');
+    expect(content).toContain('/sample-*');
+    expect(content).toContain('`sample-status`');
+    expect(content).toContain('sample-001');
+    expect(content).toContain('sample-specific');
     // Mapper-defined skills ref converted correctly
-    expect(content).toContain('.claude/skills/pav-scout/SKILL.md');
+    expect(content).toContain('.claude/skills/sample-scout/SKILL.md');
   });
 });

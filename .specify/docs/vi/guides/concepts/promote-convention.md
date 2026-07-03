@@ -109,8 +109,8 @@ tasks, và history riêng.
 là spec riêng, chạy full revert checklist trong task-breakdown output contract:
 delete hoặc archive `specs/<child-id>/`, close tracker issue khi consumer
 tracker-sync tồn tại, và update `tasks-breakdown.md` nếu consumer workflow của bạn
-record child spec status ở đó. Xem
-`.specify/plugins/tdk-core/skills/tdk-task-breakdown/references/task-breakdown-output-contract.md`.
+record child spec status ở đó. Xem task-breakdown output contract reference
+được ship cùng task-breakdown skill để biết checklist đầy đủ.
 
 ---
 

@@ -415,7 +415,7 @@ describe('config.test.ts', () => {
       ],
     };
     expect(() => SpecifyConfigSchema.parse(config)).toThrow(
-      /separate-folder.*mirror.*tdk-ut-backfill-skills-usage\.md/s,
+      /separate-folder.*mirror.*docs\/en\/guides\/skills-guide\.md/s,
     );
   });
 

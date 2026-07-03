@@ -17,7 +17,7 @@
 #   --dry-run         Show diff only, skip confirmation and writing
 #   --yes             Skip confirmation prompt (auto-approve)
 #   --with-claude     Legacy: also sync .claude/ files (prefer tdk-setup `install`)
-#   --prefix PREFIX   Brand safe .specify payload text (example: pav -> pav-/PAV)
+#   --prefix PREFIX   Brand safe .specify payload text (example: sample -> sample-/SAMPLE)
 #   --force           Overwrite all files (skip MD5 comparison)
 #   --no-delete       Skip orphan removal (don't delete files missing from source)
 #   --yes-delete      Auto-approve file deletions (skip 'type delete' prompt)
@@ -29,7 +29,7 @@
 #   bash distribute.sh /path/to/my-project                  # sync .specify/ only
 #   bash distribute.sh /path/to/my-project --with-claude    # legacy .claude sync
 #   bash distribute.sh /path/to/my-project --dry-run        # preview changes
-#   bash distribute.sh /path/to/my-project --prefix pav --dry-run
+#   bash distribute.sh /path/to/my-project --prefix sample --dry-run
 #   # Then run tdk-setup install with the same prefix for .claude/.codex harness output
 
 set -euo pipefail
@@ -70,7 +70,7 @@ normalize_prefix() {
     [[ "$value" != *- ]] && value="$value-"
     if [[ ! "$value" =~ ^[a-z0-9][a-z0-9-]*-$ ]]; then
         echo -e "${RED}Invalid --prefix value: $1${NC}" >&2
-        echo -e "${RED}Use lowercase letters, numbers, and hyphens only, for example: pav or pav-${NC}" >&2
+        echo -e "${RED}Use lowercase letters, numbers, and hyphens only, for example: sample or sample-${NC}" >&2
         return 1
     fi
     printf '%s' "$value"
@@ -241,7 +241,7 @@ else
 fi
 if [[ -n "$BRAND_PREFIX" ]]; then
     echo -e "  ${WHITE}Brand:${NC}   safe .specify payload text tdk-/tdk/TDK -> $BRAND_PREFIX/$BRAND_WORD/$BRAND_WORD_UPPER"
-    echo -e "  ${DIM}         plugins/, codex-plugins/, non-setup scripts/, schemas/, and filename/path refs stay source-identical${NC}"
+    echo -e "  ${DIM}         plugins/, codex-plugins/, schemas/, tests, and filename/path refs stay source-identical${NC}"
 fi
 $FORCE && echo -e "  ${YELLOW}Mode:    --force (skip MD5 comparison)${NC}"
 $NO_DELETE && echo -e "  ${YELLOW}Mode:    --no-delete (skip orphan removal)${NC}"
@@ -307,11 +307,29 @@ has_payload_text_extension() {
     esac
 }
 
-is_payload_rewrite_candidate() {
+has_scripts_ts_text_extension() {
+    case "$1" in
+        *.ts|*.json|*.md|*.txt|*.yaml|*.yml) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+is_scripts_ts_rewrite_candidate() {
     local rel_path="$1"
     case "$rel_path" in
+        scripts/ts/tests/*) return 1 ;;
+        scripts/ts/*) has_scripts_ts_text_extension "$rel_path"; return ;;
+        *) return 1 ;;
+    esac
+}
+
+is_payload_rewrite_candidate() {
+    local rel_path="$1"
+    if is_scripts_ts_rewrite_candidate "$rel_path"; then
+        return 0
+    fi
+    case "$rel_path" in
         setup.sh|CHANGELOG.md|.specify*.example) return 0 ;;
-        scripts/ts/src/commands/setup/setup.ts|scripts/ts/src/commands/setup/utils/output-helpers.ts) return 0 ;;
         plugins/*|codex-plugins/*|scripts/*|schemas/*) return 1 ;;
         docs/assets/*) has_payload_text_extension "$rel_path"; return ;;
         docs/*|templates/*|claude-rules/*) has_payload_text_extension "$rel_path"; return ;;
@@ -355,10 +373,37 @@ def protect(pattern):
 
 # These references point to plugin paths that distribute intentionally does not rename.
 protect(r"\.specify/(?:codex-)?plugins/[^\s\"'`)\]}]+")
+protect(r"\.specify/cache/tdk-[^\s\"'`)\]}]+")
 
 # These references point to files/paths that distribute intentionally does not rename.
 protect(r"(?:(?:\.{1,2}|[A-Za-z0-9_.-]+)/)+[^\s\"'`)\]}]*tdk-[^\s\"'`)\]}]*")
 protect(r"(?:[A-Za-z0-9_.-]+/)*tdk-[^\s\"'`)\]}]+\.(?:md|mdx|png|svg|excalidraw|json|yaml|yml|tpl|ts|sh)")
+protect(r"(['\"])" + re.escape(source_prefix) + r"[A-Za-z0-9_-]+\1(?=\s*:)")
+
+def rewrite_anchor_fragment(fragment):
+    if source_prefix and target_prefix:
+        fragment = re.sub(
+            r"(^|-)" + re.escape(source_prefix),
+            lambda match: f"{match.group(1)}{target_prefix}",
+            fragment,
+        )
+    if source_brand and target_brand:
+        fragment = re.sub(
+            r"(^|-)" + re.escape(source_brand.lower()) + r"(?=$|-)",
+            lambda match: f"{match.group(1)}{target_brand.lower()}",
+            fragment,
+        )
+        fragment = re.sub(
+            r"(^|-)" + re.escape(source_brand.upper()) + r"(?=$|-)",
+            lambda match: f"{match.group(1)}{target_brand.upper()}",
+            fragment,
+        )
+    return fragment
+
+def rewrite_markdown_link_fragment(match):
+    return f"{match.group(1)}{rewrite_anchor_fragment(match.group(2))}{match.group(3)}"
+
+text = re.sub(r"(\]\([^\s)]*#)([^)\s]+)(\))", rewrite_markdown_link_fragment, text)
 
 text = re.sub(r"(?<![a-z0-9-])" + re.escape(source_prefix), target_prefix, text)
 if source_brand and target_brand:

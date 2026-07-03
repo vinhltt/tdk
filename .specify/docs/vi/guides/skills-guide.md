@@ -384,7 +384,7 @@ Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [-
 | config:index | `/tdk-config-index` | `--sub-workspace`, `--full` | All docs files | `document-manager.md` | None |
 | config topology apply | `bun src/index.ts config topology apply [--dry-run] [--reconcile] [--topology <path>] [--yes --expect-hash <hash>] [--accept-overwrites]` | `--dry-run`, `--reconcile`, `--topology`, `--yes`, `--expect-hash`, `--accept-overwrites` | `workspace-layout-proposal.json`, legacy `workspace-topology.json`, existing JSON `.specify/.specify.json` | JSON dry-run patch preview hoặc guarded config write | None |
 
-> Harness install, convert, và convert-flat được quản lý bởi standalone tool `packages/tdk-setup/` trong TDK source checkout. Chúng không thuộc consumer-facing workflow CLI được document ở đây. Xem `packages/tdk-setup/README.md` để biết setup CLI usage.
+> Harness install, convert, và convert-flat được quản lý bởi standalone setup CLI trong source checkout. Chúng không thuộc consumer-facing workflow CLI được document ở đây. Xem setup CLI README trong source checkout để biết usage.
 
 ### Sub-workspace Commands
 

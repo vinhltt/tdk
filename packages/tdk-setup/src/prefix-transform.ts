@@ -145,6 +145,11 @@ function convertSourceSegment(segment: string, settings: PrefixTransformSettings
   const restParts = familyAndRest.split('/');
   if (!restParts.every(isValidSegment)) return segment;
 
+  if (restParts.length === 1) {
+    const familyRoot = claudeFamilyRoot(plugin, restParts[0]!, settings);
+    if (familyRoot !== undefined) return familyRoot + (trailingSlash ? '/' : '') + suffix;
+  }
+
   // Call mapper with the full family/rest string
   const mapped = claudeTargetMapper.mapTargetPath(plugin, familyAndRest);
   if (mapped === undefined) {
@@ -156,10 +161,23 @@ function convertSourceSegment(segment: string, settings: PrefixTransformSettings
   return brandRewrite(blanketRewrite(mapped, settings), settings) + (trailingSlash ? '/' : '') + suffix;
 }
 
-export function transformTextContent(text: string, settings: PrefixTransformSettings): string {
-  // byte-identical no-op gate: equal prefixes mean nothing to rewrite
-  if (settings.sourcePrefix === settings.targetPrefix) return text;
+function claudeFamilyRoot(plugin: string, family: string, settings: PrefixTransformSettings): string | undefined {
+  switch (family) {
+    case 'skills':
+    case 'agents':
+    case 'commands':
+    case 'lib':
+      return posixTargetPath('.claude', family);
+    case 'scripts':
+      return brandRewrite(blanketRewrite(claudeTargetMapper.scriptRoot(plugin), settings), settings);
+    case 'hooks':
+      return brandRewrite(blanketRewrite(claudeTargetMapper.hookRoot(plugin), settings), settings);
+    default:
+      return undefined;
+  }
+}
 
+export function transformTextContent(text: string, settings: PrefixTransformSettings): string {
   let result = '';
   let lastIndex = 0;
 
@@ -179,7 +197,7 @@ export function transformTextContent(text: string, settings: PrefixTransformSett
 }
 
 export function transformFileContent(sourcePath: string, content: Buffer, settings: PrefixTransformSettings): Buffer {
-  if (!isTextTransformCandidate(sourcePath) || settings.sourcePrefix === settings.targetPrefix) return content;
+  if (!isTextTransformCandidate(sourcePath)) return content;
   return Buffer.from(transformTextContent(content.toString('utf-8'), settings), 'utf-8');
 }
 

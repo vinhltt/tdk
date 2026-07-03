@@ -24,15 +24,15 @@ describe('prefix transform planning', () => {
       previousManifest: emptyHarnessManifest(),
       settings: {},
       sourcePrefix: 'tdk-',
-      targetPrefix: 'pav-',
+      targetPrefix: 'sample-',
     });
 
     const write = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-demo/SKILL.md');
-    expect(write?.targetRelativePath).toBe('.claude/skills/pav-demo/SKILL.md');
-    expect(write?.content.toString('utf-8')).toContain('pav-demo');
+    expect(write?.targetRelativePath).toBe('.claude/skills/sample-demo/SKILL.md');
+    expect(write?.content.toString('utf-8')).toContain('sample-demo');
     expect(write?.sourceChecksum).toBe(sha256('# tdk-demo\nUse tdk-demo from command text.\n'));
-    expect(write?.installedChecksum).toBe(sha256('# pav-demo\nUse pav-demo from command text.\n'));
-    expect(fs.existsSync(path.join(consumer.root, '.claude', 'skills', 'pav-demo', 'SKILL.md'))).toBe(false);
+    expect(write?.installedChecksum).toBe(sha256('# sample-demo\nUse sample-demo from command text.\n'));
+    expect(fs.existsSync(path.join(consumer.root, '.claude', 'skills', 'sample-demo', 'SKILL.md'))).toBe(false);
   });
 
   test('blocks duplicate transformed target paths', () => {
@@ -53,7 +53,7 @@ describe('prefix transform planning', () => {
       previousManifest: emptyHarnessManifest(),
       settings: {},
       sourcePrefix: 'tdk-',
-      targetPrefix: 'pav-',
+      targetPrefix: 'sample-',
     });
 
     expect(plan.collisions.some((collision) => collision.message.includes('Duplicate transformed target path'))).toBe(true);
@@ -71,12 +71,12 @@ describe('prefix transform planning', () => {
       previousManifest: emptyHarnessManifest(),
       settings: {},
       sourcePrefix: 'tdk-',
-      targetPrefix: 'pav-',
+      targetPrefix: 'sample-',
       rewrite: { paths: true, textFiles: false, hooks: true },
     });
 
     const write = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-demo/SKILL.md');
-    expect(write?.targetRelativePath).toBe('.claude/skills/pav-demo/SKILL.md');
+    expect(write?.targetRelativePath).toBe('.claude/skills/sample-demo/SKILL.md');
     expect(write?.content.toString('utf-8')).toContain('tdk-demo');
   });
 
@@ -185,19 +185,21 @@ describe('prefix transform planning', () => {
       'TDK Skill Guide',
       'Use the tdk guide before tdk-scout.',
       'Preserve TDK_PROJECT_ROOT.',
+      'Skill roots: .specify/plugins/tdk-scaffold/skills/ and .specify/plugins/tdk-core/skills/.',
       'Skill template: .specify/plugins/tdk-scaffold/skills/<name>/',
       'Agent template: .specify/plugins/tdk-scaffold/agents/<name>.md',
       'Existing skill dir: .specify/plugins/tdk-utils/skills/tdk-scout/',
       '',
     ].join('\n');
     const expected = [
-      '# pav-harness-guide',
-      'PAV Skill Guide',
-      'Use the pav guide before pav-scout.',
+      '# sample-harness-guide',
+      'SAMPLE Skill Guide',
+      'Use the sample guide before sample-scout.',
       'Preserve TDK_PROJECT_ROOT.',
+      'Skill roots: .claude/skills/ and .claude/skills/.',
       'Skill template: .claude/skills/<name>/',
       'Agent template: .claude/agents/<name>.md',
-      'Existing skill dir: .claude/skills/pav-scout/',
+      'Existing skill dir: .claude/skills/sample-scout/',
       '',
     ].join('\n');
     writePluginFile(consumer, 'skills/tdk-harness-guide/SKILL.md', skill, 'tdk-core');
@@ -216,11 +218,11 @@ describe('prefix transform planning', () => {
       previousManifest: emptyHarnessManifest(),
       settings: {},
       sourcePrefix: 'tdk-',
-      targetPrefix: 'pav-',
+      targetPrefix: 'sample-',
     });
 
     const write = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-harness-guide/SKILL.md');
-    expect(write?.targetRelativePath).toBe('.claude/skills/pav-harness-guide/SKILL.md');
+    expect(write?.targetRelativePath).toBe('.claude/skills/sample-harness-guide/SKILL.md');
     expect(write?.content.toString('utf-8')).toBe(expected);
     expect(write?.sourceChecksum).toBe(sha256(skill));
     expect(write?.installedChecksum).toBe(sha256(expected));

@@ -370,7 +370,7 @@ describe('applyInstallPlan', () => {
       installSettingsChanged: false,
       migration: {
         fromPrefix: 'tdk',
-        toPrefix: 'pav',
+        toPrefix: 'sample',
       },
     };
 

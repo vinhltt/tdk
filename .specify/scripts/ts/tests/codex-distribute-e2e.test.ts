@@ -262,6 +262,8 @@ describe('codex distribute payload', () => {
     const docsText = [
       '# TDK Guide',
       '',
+      '- [Why TDK?](#why-tdk)',
+      'See [TDK Skills Guide](guides/skills-guide.md#why-tdk).',
       'Run `/tdk-specify` for a tdk feature.',
       'Open [TDK Skills Guide](guides/skills-guide.md).',
       'Keep source package path `packages/tdk-setup/README.md` and `packages/tdk-setup/`.',
@@ -281,7 +283,23 @@ describe('codex distribute payload', () => {
       '',
     ].join('\n');
     const setupTsText = 'console.log("Automates TDK setup from docs.");\n';
-    const scriptText = 'console.log("TDK script keeps /tdk-plan and tdk-core untouched.");\n';
+    const scriptsPackageText = '{\n  "name": "@tdk/tdk"\n}\n';
+    const scriptText = [
+      "console.log('TDK script runs /tdk-plan for tdk features.');",
+      "console.log('Keep plugin path .specify/plugins/tdk-core/skills/tdk-demo/SKILL.md');",
+      "console.log('Keep codex path .specify/codex-plugins/tdk-core/skills/tdk-demo/SKILL.md');",
+      "console.log('Keep cache path .specify/cache/tdk-scout');",
+      "console.log('Keep installed parser .claude/skills/tdk-test-api-plan/scripts/parse_openapi_spec.py');",
+      "const pluginManifest = { 'tdk-core': { version: '1.0.0' } };",
+      '',
+    ].join('\n');
+    const cliIndexText = [
+      "program.name('tdk')",
+      "  .description('TDK specification toolkit CLI');",
+      '// CLI users run tdk config detect.',
+      '',
+    ].join('\n');
+    const testScriptText = 'test("TDK test fixture keeps /tdk-plan and @tdk/tdk source text", () => {});\n';
 
     const files: Record<string, string> = {
       'setup.sh': setupText,
@@ -292,9 +310,12 @@ describe('codex distribute payload', () => {
       'plugins/tdk-core/skills/tdk-demo/SKILL.md': pluginText,
       'codex-plugins/tdk-core/skills/tdk-demo/SKILL.md': codexText,
       'docs/assets/diagram.svg': assetText,
+      'scripts/ts/package.json': scriptsPackageText,
+      'scripts/ts/src/index.ts': cliIndexText,
       'scripts/ts/src/commands/setup/utils/output-helpers.ts': setupOutputHelpersText,
       'scripts/ts/src/commands/setup/setup.ts': setupTsText,
       'scripts/ts/src/commands/scout/index.ts': scriptText,
+      'scripts/ts/tests/sample.test.ts': testScriptText,
     };
 
     for (const [relativePath, content] of Object.entries(files)) {
@@ -313,19 +334,22 @@ describe('codex distribute payload', () => {
     ).toBe(0);
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'setup.sh'), 'utf-8')).toBe(setupText);
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'claude-rules', 'primary-workflow-routing.md'), 'utf-8')).toBe(claudeRuleText);
+    expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'scripts', 'ts', 'package.json'), 'utf-8')).toBe(scriptsPackageText);
+    expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'scripts', 'ts', 'tests', 'sample.test.ts'), 'utf-8')).toBe(testScriptText);
     expect(fileMode(path.join(plainConsumerRoot, '.specify', 'setup.sh'))).toBe(0o755);
     fs.writeFileSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'guides', 'tdk-skills-guide.md'), '# stale old guide\n', 'utf-8');
     fs.writeFileSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets', 'tdk-diagram.svg'), '<svg>stale old asset</svg>\n', 'utf-8');
 
-    const dryRun = runDistribute(sourceRoot, plainConsumerRoot, ['--prefix', 'pav', '--dry-run', '--no-delete']);
+    const dryRun = runDistribute(sourceRoot, plainConsumerRoot, ['--prefix', 'sample', '--dry-run', '--no-delete']);
     expect(
       dryRun.exitCode,
       `branded dry-run failed:\nstdout: ${dryRun.stdout.toString()}\nstderr: ${dryRun.stderr.toString()}`,
     ).toBe(0);
     expect(dryRun.stdout.toString()).toContain('~ setup.sh');
+    expect(dryRun.stdout.toString()).toContain('~ scripts/ts/package.json');
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'setup.sh'), 'utf-8')).toBe(setupText);
 
-    const migrated = runDistribute(sourceRoot, plainConsumerRoot, ['--prefix', 'pav', '--yes', '--yes-delete']);
+    const migrated = runDistribute(sourceRoot, plainConsumerRoot, ['--prefix', 'sample', '--yes', '--yes-delete']);
     expect(
       migrated.exitCode,
       `branded migration failed:\nstdout: ${migrated.stdout.toString()}\nstderr: ${migrated.stderr.toString()}`,
@@ -336,37 +360,51 @@ describe('codex distribute payload', () => {
     expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets', 'tdk-diagram.svg'))).toBe(false);
 
     const brandedConsumerRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tdk-dist-brand-branded-'));
-    const branded = runDistribute(sourceRoot, brandedConsumerRoot, ['--prefix', 'pav', '--yes', '--no-delete']);
+    const branded = runDistribute(sourceRoot, brandedConsumerRoot, ['--prefix', 'sample', '--yes', '--no-delete']);
     expect(
       branded.exitCode,
       `branded distribute failed:\nstdout: ${branded.stdout.toString()}\nstderr: ${branded.stderr.toString()}`,
     ).toBe(0);
 
     const brandedSetup = fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'setup.sh'), 'utf-8');
-    expect(brandedSetup).toContain('# PAV setup for pav consumers');
-    expect(brandedSetup).toContain('"/pav-plan uses pav-core"');
+    expect(brandedSetup).toContain('# SAMPLE setup for sample consumers');
+    expect(brandedSetup).toContain('"/sample-plan uses sample-core"');
     expect(brandedSetup).toContain('TDK_PROJECT_ROOT and ${TDK}');
     expect(fileMode(path.join(brandedConsumerRoot, '.specify', 'setup.sh'))).toBe(0o755);
 
     const brandedDocs = fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'index.md'), 'utf-8');
-    expect(brandedDocs).toContain('# PAV Guide');
-    expect(brandedDocs).toContain('`/pav-specify` for a pav feature');
-    expect(brandedDocs).toContain('[PAV Skills Guide](guides/skills-guide.md)');
+    expect(brandedDocs).toContain('# SAMPLE Guide');
+    expect(brandedDocs).toContain('- [Why SAMPLE?](#why-sample)');
+    expect(brandedDocs).toContain('[SAMPLE Skills Guide](guides/skills-guide.md#why-sample)');
+    expect(brandedDocs).toContain('`/sample-specify` for a sample feature');
+    expect(brandedDocs).toContain('[SAMPLE Skills Guide](guides/skills-guide.md)');
     expect(brandedDocs).toContain('`packages/tdk-setup/README.md` and `packages/tdk-setup/`');
     expect(brandedDocs).toContain('../assets/diagram.svg');
     expect(brandedDocs).toContain('.specify/plugins/tdk-core/skills/tdk-demo/SKILL.md');
     expect(brandedDocs).toContain('.specify/codex-plugins/tdk-core/skills/tdk-demo/SKILL.md');
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'templates', 'demo.md.tpl'), 'utf-8')).toBe('Generated by /pav-plan for PAV.\n');
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'claude-rules', 'primary-workflow-routing.md'), 'utf-8')).toBe('# PAV primary workflow\nRun `pav-specify` before `pav-plan`.\n');
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'src', 'commands', 'setup', 'utils', 'output-helpers.ts'), 'utf-8')).toContain('PAV Installer');
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'src', 'commands', 'setup', 'utils', 'output-helpers.ts'), 'utf-8')).toContain("Run '/pav-' commands in Claude Code to verify PAV is ready.");
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'src', 'commands', 'setup', 'setup.ts'), 'utf-8')).toContain('Automates PAV setup');
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'src', 'commands', 'scout', 'index.ts'), 'utf-8')).toBe(scriptText);
+    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'templates', 'demo.md.tpl'), 'utf-8')).toBe('Generated by /sample-plan for SAMPLE.\n');
+    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'claude-rules', 'primary-workflow-routing.md'), 'utf-8')).toBe('# SAMPLE primary workflow\nRun `sample-specify` before `sample-plan`.\n');
+    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'src', 'commands', 'setup', 'utils', 'output-helpers.ts'), 'utf-8')).toContain('SAMPLE Installer');
+    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'src', 'commands', 'setup', 'utils', 'output-helpers.ts'), 'utf-8')).toContain("Run '/sample-' commands in Claude Code to verify SAMPLE is ready.");
+    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'src', 'commands', 'setup', 'setup.ts'), 'utf-8')).toContain('Automates SAMPLE setup');
+    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'package.json'), 'utf-8')).toContain('"name": "@sample/sample"');
+    const brandedCliIndex = fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'src', 'index.ts'), 'utf-8');
+    expect(brandedCliIndex).toContain("program.name('sample')");
+    expect(brandedCliIndex).toContain('SAMPLE specification toolkit CLI');
+    expect(brandedCliIndex).toContain('sample config detect');
+    const brandedScoutScript = fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'src', 'commands', 'scout', 'index.ts'), 'utf-8');
+    expect(brandedScoutScript).toContain('SAMPLE script runs /sample-plan for sample features.');
+    expect(brandedScoutScript).toContain('.specify/plugins/tdk-core/skills/tdk-demo/SKILL.md');
+    expect(brandedScoutScript).toContain('.specify/codex-plugins/tdk-core/skills/tdk-demo/SKILL.md');
+    expect(brandedScoutScript).toContain('.specify/cache/tdk-scout');
+    expect(brandedScoutScript).toContain('.claude/skills/tdk-test-api-plan/scripts/parse_openapi_spec.py');
+    expect(brandedScoutScript).toContain("'tdk-core': { version: '1.0.0' }");
+    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'tests', 'sample.test.ts'), 'utf-8')).toBe(testScriptText);
     expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'guides', 'skills-guide.md'))).toBe(true);
     expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'guides', 'tdk-skills-guide.md'))).toBe(false);
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'guides', 'skills-guide.md'), 'utf-8')).toContain('# PAV Skills Guide');
+    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'guides', 'skills-guide.md'), 'utf-8')).toContain('# SAMPLE Skills Guide');
     expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'plugins', 'tdk-core', 'skills', 'tdk-demo', 'SKILL.md'), 'utf-8')).toBe(pluginText);
     expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'codex-plugins', 'tdk-core', 'skills', 'tdk-demo', 'SKILL.md'), 'utf-8')).toBe(codexText);
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'assets', 'diagram.svg'), 'utf-8')).toBe('<svg><text>PAV /pav-plan asset text brands</text><desc>lifecycle-share-graph.png</desc></svg>\n');
-  });
+    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'assets', 'diagram.svg'), 'utf-8')).toBe('<svg><text>SAMPLE /sample-plan asset text brands</text><desc>lifecycle-share-graph.png</desc></svg>\n');
+  }, 15000);
 });

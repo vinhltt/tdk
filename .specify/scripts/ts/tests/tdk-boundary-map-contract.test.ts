@@ -186,8 +186,8 @@ describe('TDK workspace layout proposal contracts', () => {
 
   it('keeps workflow config apply interactive while documenting new and legacy layout routes', () => {
     const topologyApply = read(join(CORE_SKILLS_DIR, 'tdk-workflow-config-apply/SKILL.md'));
-    const commandReference = read(join(DOCS_DIR, 'command-reference.md'));
-    const documentFlow = read(join(DOCS_DIR, 'document-flow.md'));
+    const skillsGuide = read(join(DOCS_DIR, 'skills-guide.md'));
+    const workflowMap = read(join(DOCS_DIR, 'workflow-map.md'));
 
     expect(topologyApply).toContain('no flags is the default human mode');
     expect(topologyApply).toContain('Apply this workflow config patch to `.specify/.specify.json`?');
@@ -200,26 +200,26 @@ describe('TDK workspace layout proposal contracts', () => {
     expect(topologyApply).toContain(
       '.specify/configurations/workspace-topology/workspace-topology.json',
     );
-    expect(commandReference).toContain('/tdk-workspace-layout-propose [input|file] [--from-existing|--unknown]');
-    expect(commandReference).toContain('/tdk-boundary-map [input|file] [--from-existing|--unknown]');
-    expect(commandReference).toContain('Interactive runtime config review/apply');
-    expect(documentFlow).toContain('/tdk-workspace-layout-propose');
-    expect(documentFlow).toContain('/tdk-boundary-map');
+    expect(skillsGuide).toContain('/tdk-workspace-layout-propose [input|file] [--from-existing|--unknown]');
+    expect(skillsGuide).toContain('/tdk-boundary-map [input|file] [--from-existing|--unknown]');
+    expect(skillsGuide).toContain('Interactive patch review/apply');
+    expect(workflowMap).toContain('/tdk-workspace-layout-propose');
+    expect(workflowMap).toContain('/tdk-boundary-map');
   });
 
   it('registers layout proposal docs and manifest entries', () => {
     const manifest = read(MANIFEST_PATH);
     const readme = read(README_PATH);
-    const commandReference = read(join(DOCS_DIR, 'command-reference.md'));
+    const skillsGuide = read(join(DOCS_DIR, 'skills-guide.md'));
 
     expect(manifest).toContain('"tdk-workspace-layout-propose"');
     expect(manifest).toContain('"tdk-boundary-map"');
     expect(readme).toContain('/tdk-workspace-layout-propose');
     expect(readme).toContain('/tdk-boundary-map');
     expect(readme).toContain('25 skills + 1 agent');
-    expect(commandReference).toContain('workspace-layout-proposal.md');
-    expect(commandReference).toContain('workspace-layout-proposal.json');
-    expect(commandReference).toContain('workspace-topology.md');
-    expect(commandReference).toContain('workspace-topology.json');
+    expect(skillsGuide).toContain('workspace-layout-proposal.md');
+    expect(skillsGuide).toContain('workspace-layout-proposal.json');
+    expect(skillsGuide).toContain('workspace-topology.md');
+    expect(skillsGuide).toContain('workspace-topology.json');
   });
 });

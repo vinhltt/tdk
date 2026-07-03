@@ -426,7 +426,7 @@ Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [-
 | config:index | `/tdk-config-index` | `--sub-workspace`, `--full` | All docs files | `document-manager.md` | None |
 | config topology apply | `bun src/index.ts config topology apply [--dry-run] [--reconcile] [--topology <path>] [--yes --expect-hash <hash>] [--accept-overwrites]` | `--dry-run`, `--reconcile`, `--topology`, `--yes`, `--expect-hash`, `--accept-overwrites` | `workspace-layout-proposal.json`, legacy `workspace-topology.json`, existing JSON `.specify/.specify.json` | JSON dry-run patch preview or guarded config write | None |
 
-> Harness install, convert, and convert-flat are managed by the standalone `packages/tdk-setup/` tool in the TDK source checkout. They are not part of the consumer-facing workflow CLI documented here. See `packages/tdk-setup/README.md` for setup CLI usage.
+> Harness install, convert, and convert-flat are managed by the standalone setup CLI in the source checkout. They are not part of the consumer-facing workflow CLI documented here. See the setup CLI README in the source checkout for usage.
 
 ### Sub-workspace Commands
 

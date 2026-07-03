@@ -66,11 +66,11 @@ bash distribute.sh /path/to/consumer-project --yes
 For branded consumer payload text, pass a prefix:
 
 ```bash
-bash distribute.sh /path/to/consumer-project --prefix pav --dry-run
-bash distribute.sh /path/to/consumer-project --prefix pav --yes
+bash distribute.sh /path/to/consumer-project --prefix sample --dry-run
+bash distribute.sh /path/to/consumer-project --prefix sample --yes
 ```
 
-`--prefix pav` rewrites safe distributed payload text such as `.specify/setup.sh`, docs, and templates from `tdk-`/`tdk`/`TDK` to `pav-`/`pav`/`PAV`. It leaves manifest-managed `.specify/plugins/**` and `.specify/codex-plugins/**` source-identical. Harness artifacts still require an explicit setup CLI install with the same prefix.
+`--prefix sample` rewrites safe distributed payload text such as `.specify/setup.sh`, docs, templates, and non-test `.specify/scripts/ts/**` text files from `tdk-`/`tdk`/`TDK` to `sample-`/`sample`/`SAMPLE`. It leaves `.specify/scripts/ts/tests/**`, manifest-managed `.specify/plugins/**`, and `.specify/codex-plugins/**` source-identical. Harness artifacts still require an explicit setup CLI install with the same prefix.
 
 ### Setup CLI — Harness Installation
 
@@ -91,7 +91,7 @@ bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core,td
 # Install every plugin listed in .specify/plugins/manifest.json
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --dry-run
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --yes
-bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --prefix pav --yes
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --prefix sample --yes
 
 # Install preconverted Codex artifacts
 bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --dry-run
