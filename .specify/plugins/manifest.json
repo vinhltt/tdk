@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-04T05:27:56Z",
+  "generated_at": "2026-07-04T15:14:57Z",
   "plugins": {
     "tdk-core": {
-      "version": "6.0.2",
+      "version": "6.0.3",
       "components": {
         "skills": {
           "_shared": {
@@ -99,11 +99,11 @@
       },
       "files": {
         ".claude-plugin/interface.json": "2e33cdc14ebf20e5074ae949db076e4e04d51a31ec94d99ef1c3d6278c4c929e",
-        ".claude-plugin/plugin.json": "775299cd8a07f263e9c799d536b6e668f68a464249769f931585eee6baa8f55a",
-        ".codex-plugin/plugin.json": "775299cd8a07f263e9c799d536b6e668f68a464249769f931585eee6baa8f55a",
-        ".cursor-plugin/plugin.json": "775299cd8a07f263e9c799d536b6e668f68a464249769f931585eee6baa8f55a",
-        "CHANGELOG.md": "0d18a0b9ada0d84e634c34b49621c4fb7d0179e0a772fc341368bcd3fe270a96",
-        "__tests__/context-builder.test.cjs": "39ea0d403e0154a14cfe8877ef76a6c8fc68ffa046ef2d1f59b152de68440fe2",
+        ".claude-plugin/plugin.json": "9623d166d87ab0c8d0dd6c9a01261adc1d618008f08768a8eba20909d660cd2f",
+        ".codex-plugin/plugin.json": "9623d166d87ab0c8d0dd6c9a01261adc1d618008f08768a8eba20909d660cd2f",
+        ".cursor-plugin/plugin.json": "9623d166d87ab0c8d0dd6c9a01261adc1d618008f08768a8eba20909d660cd2f",
+        "CHANGELOG.md": "069e93b7b1de0779ac1e27dee2c137179517254f8e60b23a1b6d2f5af3949676",
+        "__tests__/context-builder.test.cjs": "704c828646af0d26cab0be3b82b37d150114faf8406899d0f6bbc020b10f0d60",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
         "__tests__/path-rule-injector.integration.test.cjs": "43f91aa0e45f06c59ea7ca27d2ed775ad167ec29866084faea3f64a884682f27",
@@ -116,7 +116,7 @@
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
         "hooks/hooks.json": "d1b3892b48746e6d61eb6544b00cbf0c8f4a91ac1be558b2c3a1cad404401e1d",
         "hooks/path-rule-injector.cjs": "27bf731db01f161b6d6c4dd269b792926196fb9980fa501f052e2bec35cffa2b",
-        "lib/context-builder.cjs": "e3ed6517fb20e4251021e6151b8f5fca771f69b33fb050ab78553047f9c17aba",
+        "lib/context-builder.cjs": "642fe66b33fb94fbac34c5f077ef6993a7dc1a1461ee5cf4d502ff2d777291f5",
         "lib/hook-logger.cjs": "e91ecde96f3508b312ed0e58bee5010e166734388d58c24ad9a28f2ee77b3c73",
         "lib/rule-loader.cjs": "7658c99484fe3c55995f27fb409e5af11c3ee498b693159b602f3b0a8e9547dd",
         "lib/rule-matcher.cjs": "a8dbd4a51c337a2936fbf8fdb7ab021a9d8c7de447725ac2de00ba420d31119b",

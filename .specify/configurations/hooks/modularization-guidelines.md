@@ -1,7 +1,0 @@
-- Keep code files under 200 lines for optimal context management
-- Check existing modules before creating new
-- Analyze logical separation boundaries (functions, classes, concerns)
-- Prefer kebab-case for JS/TS/Python/shell; respect language conventions (C#/Java use PascalCase, Go/Rust use snake_case)
-- Write descriptive code comments
-- After modularization, continue with main task
-- When not to modularize: Markdown files, plain text files, bash scripts, configuration files

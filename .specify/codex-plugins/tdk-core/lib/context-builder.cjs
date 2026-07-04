@@ -55,8 +55,6 @@ function buildSessionSection(config, staticEnv = {}, cwd = process.cwd()) {
     `- CPU usage: ${cpuUsage}% user / ${cpuSystem}% system`
   ];
 
-  const subagentGuidelines = loadHookConfigFile('subagent-guidelines.md', config, cwd);
-  if (subagentGuidelines) lines.push(subagentGuidelines);
   lines.push('');
   return lines;
 }
@@ -84,8 +82,6 @@ function buildRulesSection(config, activeWorkspace, cwd = process.cwd()) {
     `- Dev rules: ${devRulesPath}`
   ];
 
-  const principles = loadHookConfigFile('development-principles.md', config, cwd);
-  if (principles) lines.push(principles);
   lines.push('');
   return lines;
 }
@@ -110,10 +106,10 @@ function buildGitSection(config) {
   ];
 }
 
-function buildModularizationSection(config, cwd = process.cwd()) {
-  const content = loadHookConfigFile('modularization-guidelines.md', config, cwd);
+function buildUserPromptContextSection(config, cwd = process.cwd()) {
+  const content = loadHookConfigFile('user-prompt-context.md', config, cwd);
   if (!content) return [];
-  return ['## Modularization', content, ''];
+  return [content, ''];
 }
 
 /** Get current git branch name, or null if detached/unavailable */
@@ -189,9 +185,9 @@ function buildSpeckitContext({ cwd = process.cwd(), staticEnv } = {}) {
     ...buildSessionSection(config, staticEnv, cwd),
     ...buildWorkspaceSection(config, activeWorkspace),
     ...buildRulesSection(config, activeWorkspace, cwd),
+    ...buildUserPromptContextSection(config, cwd),
     ...buildPathsSection(config),
     ...buildGitSection(config),
-    ...buildModularizationSection(config, cwd),
     ...buildSpecContextSection(config, cwd),
     ...buildNamingSection(config)
   ];
@@ -213,7 +209,7 @@ module.exports = {
   buildRulesSection,
   buildPathsSection,
   buildGitSection,
-  buildModularizationSection,
+  buildUserPromptContextSection,
   buildNamingSection,
   getGitBranch,
   extractTicketFromBranch,

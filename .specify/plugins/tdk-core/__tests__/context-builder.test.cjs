@@ -11,7 +11,7 @@ const {
   buildWorkspaceSection,
   buildRulesSection,
   buildPathsSection,
-  buildModularizationSection,
+  buildUserPromptContextSection,
   extractTicketFromBranch,
   buildSpecContextSection,
   buildSpeckitContext,
@@ -43,10 +43,10 @@ function makeTempSpeckitRoot() {
 
 test('loadHookConfigFile returns trimmed content when file exists', () => {
   const root = makeTempSpeckitRoot();
-  const filePath = path.join(root, '.specify', 'configurations', 'hooks', 'subagent-guidelines.md');
+  const filePath = path.join(root, '.specify', 'configurations', 'hooks', 'user-prompt-context.md');
   fs.writeFileSync(filePath, ' line-1\nline-2 \n', 'utf-8');
 
-  const content = loadHookConfigFile('subagent-guidelines.md', { __workspaceRoot: root }, root);
+  const content = loadHookConfigFile('user-prompt-context.md', { __workspaceRoot: root }, root);
   assert.equal(content, 'line-1\nline-2');
 });
 
@@ -55,19 +55,13 @@ test('loadHookConfigFile returns empty string for missing file', () => {
   assert.equal(loadHookConfigFile('missing.md', { __workspaceRoot: root }, root), '');
 });
 
-test('buildSessionSection includes base metrics and optional subagent guidelines', () => {
+test('buildSessionSection includes base metrics only', () => {
   const root = makeTempSpeckitRoot();
-  fs.writeFileSync(
-    path.join(root, '.specify', 'configurations', 'hooks', 'subagent-guidelines.md'),
-    '- subagent line',
-    'utf-8'
-  );
 
   const lines = buildSessionSection({ __workspaceRoot: root }, {}, root).join('\n');
   assert.match(lines, /## Session/);
   assert.match(lines, /Memory usage:/);
   assert.match(lines, /CPU usage:/);
-  assert.match(lines, /subagent line/);
 });
 
 test('buildWorkspaceSection renders project and active workspace', () => {
@@ -85,13 +79,8 @@ test('buildWorkspaceSection renders project and active workspace', () => {
   assert.match(lines, /frontend, backend/);
 });
 
-test('buildRulesSection includes workspace-specific rule path and principles content', () => {
+test('buildRulesSection includes workspace-specific rule path', () => {
   const root = makeTempSpeckitRoot();
-  fs.writeFileSync(
-    path.join(root, '.specify', 'configurations', 'hooks', 'development-principles.md'),
-    '- principle line',
-    'utf-8'
-  );
 
   const lines = buildRulesSection(
     {
@@ -104,7 +93,6 @@ test('buildRulesSection includes workspace-specific rule path and principles con
 
   assert.match(lines, /Workspace rules:/);
   assert.match(lines, /sub-workspaces\/backend\/rules/);
-  assert.match(lines, /principle line/);
 });
 
 test('buildPathsSection uses speckit conventions', () => {
@@ -118,22 +106,23 @@ test('buildPathsSection uses speckit conventions', () => {
   assert.match(lines, /\.specify\/memory\//);
 });
 
-test('buildModularizationSection returns empty when file missing', () => {
+test('buildUserPromptContextSection returns empty when file missing', () => {
   const root = makeTempSpeckitRoot();
-  const lines = buildModularizationSection({ __workspaceRoot: root }, root);
+  const lines = buildUserPromptContextSection({ __workspaceRoot: root }, root);
   assert.equal(lines.length, 0);
 });
 
-test('buildModularizationSection loads markdown content when file exists', () => {
+test('buildUserPromptContextSection loads consolidated markdown when file exists', () => {
   const root = makeTempSpeckitRoot();
   fs.writeFileSync(
-    path.join(root, '.specify', 'configurations', 'hooks', 'modularization-guidelines.md'),
-    '- Keep files under 200 lines',
+    path.join(root, '.specify', 'configurations', 'hooks', 'user-prompt-context.md'),
+    '## Agent Output Policy\n\n## Modularization',
     'utf-8'
   );
 
-  const lines = buildModularizationSection({ __workspaceRoot: root }, root).join('\n');  assert.match(lines, /## Modularization/);
-  assert.match(lines, /Keep files under 200 lines/);
+  const lines = buildUserPromptContextSection({ __workspaceRoot: root }, root).join('\n');
+  assert.match(lines, /## Agent Output Policy/);
+  assert.match(lines, /## Modularization/);
 });
 
 test('wasRecentlyInjected detects explicit dedup marker', () => {
@@ -177,8 +166,8 @@ test('buildSpecContextSection renders spec path and branch', () => {
 test('buildSpeckitContext returns all major sections', () => {
   const root = makeTempSpeckitRoot();
   fs.writeFileSync(
-    path.join(root, '.specify', 'configurations', 'hooks', 'modularization-guidelines.md'),
-    '- Keep files under 200 lines',
+    path.join(root, '.specify', 'configurations', 'hooks', 'user-prompt-context.md'),
+    '## Agent Output Policy\n\n## Modularization',
     'utf-8'
   );
 
@@ -188,6 +177,7 @@ test('buildSpeckitContext returns all major sections', () => {
   assert.match(content, /## Session/);
   assert.match(content, /## Workspace/);
   assert.match(content, /## Rules/);
+  assert.match(content, /## Agent Output Policy/);
   assert.match(content, /## Paths/);
   assert.match(content, /## Git/);
   assert.match(content, /## Modularization/);
@@ -197,4 +187,25 @@ test('buildSpeckitContext returns all major sections', () => {
   // Verify no duplicate Workspace section (bug fix)
   const workspaceCount = (content.match(/## Workspace/g) || []).length;
   assert.equal(workspaceCount, 1, 'should have exactly one Workspace section');
+});
+
+test('buildSpeckitContext ignores legacy split policy files', () => {
+  const root = makeTempSpeckitRoot();
+  const hookDir = path.join(root, '.specify', 'configurations', 'hooks');
+  const legacyFiles = [
+    ['subagent', 'guidelines.md'].join('-'),
+    ['development', 'principles.md'].join('-'),
+    ['modularization', 'guidelines.md'].join('-')
+  ];
+
+  for (const file of legacyFiles) {
+    fs.writeFileSync(path.join(hookDir, file), `legacy content from ${file}`, 'utf-8');
+  }
+
+  const content = buildSpeckitContext({ cwd: root }).content;
+
+  assert.doesNotMatch(content, /legacy content from/);
+  assert.doesNotMatch(content, /## Modularization/);
+  assert.match(content, /## Session/);
+  assert.match(content, /## Paths/);
 });

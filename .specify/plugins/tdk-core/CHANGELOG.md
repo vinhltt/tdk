@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [6.0.3] - 2026-07-04
+
+### Changed
+- Update context-builder to load user prompt context hook and ignore legacy split policy files.
+
 ## [6.0.2] - 2026-07-02
 
 ### Changed

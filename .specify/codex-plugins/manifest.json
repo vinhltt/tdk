@@ -1,18 +1,18 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-04T05:27:56Z",
+  "generated_at": "2026-07-04T15:14:57Z",
   "plugins": {
     "tdk-core": {
-      "version": "6.0.2",
+      "version": "6.0.3",
       "files": {
-        ".codex-plugin/plugin.json": "ceabeeee79f4fe4819b6c22df72fcd23cd3279ea3813ff8e3b08e11af4a57b48",
+        ".codex-plugin/plugin.json": "fdf3727f273a1833f9f81fdc25082400ef3b030cbdeb91ec138350af2882266a",
         "hooks/codex-hooks.json": "218a8071c85c110a249cf591026b9aa857daa7658f1863b69c7506e62a023e62",
         "hooks/dev-context-injector.cjs": "95ec8603b65686b85c2fe02e73addce8c753361ad920dbeec8a35bd8b85e3671",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
         "hooks/path-rule-injector.cjs": "27bf731db01f161b6d6c4dd269b792926196fb9980fa501f052e2bec35cffa2b",
         "hooks/wrappers/47d224a7-bun.cjs": "4e1b127b4d77c314c23e94b61dc6b6db747bd0556ce9bdee460c4801c86ebaff",
         "hooks/wrappers/54986a7c-bun.cjs": "3b0a06537c91ac332b6df41fd594d15ce7dc075bc85a5619ba4c9076df1847a2",
-        "lib/context-builder.cjs": "e3ed6517fb20e4251021e6151b8f5fca771f69b33fb050ab78553047f9c17aba",
+        "lib/context-builder.cjs": "642fe66b33fb94fbac34c5f077ef6993a7dc1a1461ee5cf4d502ff2d777291f5",
         "lib/hook-logger.cjs": "e91ecde96f3508b312ed0e58bee5010e166734388d58c24ad9a28f2ee77b3c73",
         "lib/rule-loader.cjs": "7658c99484fe3c55995f27fb409e5af11c3ee498b693159b602f3b0a8e9547dd",
         "lib/rule-matcher.cjs": "a8dbd4a51c337a2936fbf8fdb7ab021a9d8c7de447725ac2de00ba420d31119b",

@@ -1,3 +1,0 @@
-- Spawning multiple subagents can cause performance issues, spawn and delegate tasks intelligently based on available system resources
-- Each subagent only has 200K tokens in context window, delegate tasks intelligently to avoid context bloat
-- Include environment information when prompting subagents to perform tasks

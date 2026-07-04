@@ -9,6 +9,22 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [Unreleased]
+
+## [1.97.0] - 2026-07-04
+
+### Added
+- **[Hooks]** Add user prompt context hook configuration to consolidate agent output policy and modularization guidelines.
+
+### Changed
+- **[tdk-core]** Update context-builder to load user prompt context hook and ignore legacy split policy files.
+
+### Removed
+- **[Hooks]** Remove legacy hook files
+  - development-principles.md
+  - modularization-guidelines.md
+  - subagent-guidelines.md
+
 ## [1.96.5] - 2026-07-04
 
 ### Changed

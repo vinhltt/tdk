@@ -1,5 +1,5 @@
 {
   "name": "tdk-core",
   "description": "Core TDK workflow skills: specify, plan, implement, fix, review, analyze, config, tests",
-  "version": "6.0.2"
+  "version": "6.0.3"
 }
