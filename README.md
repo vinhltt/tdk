@@ -61,7 +61,10 @@ Maintainers sync the TDK `.specify/` substrate from this source checkout:
 ```bash
 bash distribute.sh /path/to/consumer-project --dry-run
 bash distribute.sh /path/to/consumer-project --yes
+bash distribute.sh /path/to/consumer-project --with-docs --dry-run
 ```
+
+Distribution omits `.specify/docs/**` by default, leaving existing consumer docs untouched. Pass `--with-docs` to opt into normal docs copy/update/delete behavior.
 
 For branded consumer payload text, pass a prefix:
 
@@ -70,7 +73,7 @@ bash distribute.sh /path/to/consumer-project --prefix sample --dry-run
 bash distribute.sh /path/to/consumer-project --prefix sample --yes
 ```
 
-`--prefix sample` rewrites safe distributed payload text such as `.specify/setup.sh`, docs, templates, and non-test `.specify/scripts/ts/**` text files from `tdk-`/`tdk`/`TDK` to `sample-`/`sample`/`SAMPLE`. It leaves `.specify/scripts/ts/tests/**`, manifest-managed `.specify/plugins/**`, and `.specify/codex-plugins/**` source-identical. Harness artifacts still require an explicit setup CLI install with the same prefix.
+`--prefix sample` rewrites safe distributed payload text such as `.specify/setup.sh`, templates, included docs, and non-test `.specify/scripts/ts/**` text files from `tdk-`/`tdk`/`TDK` to `sample-`/`sample`/`SAMPLE`. It leaves `.specify/scripts/ts/tests/**`, manifest-managed `.specify/plugins/**`, and `.specify/codex-plugins/**` source-identical. Harness artifacts still require an explicit setup CLI install with the same prefix.
 
 ### Setup CLI — Harness Installation
 

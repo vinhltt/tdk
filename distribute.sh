@@ -17,6 +17,7 @@
 #   --dry-run         Show diff only, skip confirmation and writing
 #   --yes             Skip confirmation prompt (auto-approve)
 #   --with-claude     Legacy: also sync .claude/ files (prefer tdk-setup `install`)
+#   --with-docs       Include .specify/docs/ in consumer payload (omitted by default)
 #   --prefix PREFIX   Brand safe .specify payload text (example: sample -> sample-/SAMPLE)
 #   --force           Overwrite all files (skip MD5 comparison)
 #   --no-delete       Skip orphan removal (don't delete files missing from source)
@@ -29,6 +30,7 @@
 #   bash distribute.sh /path/to/my-project                  # sync .specify/ only
 #   bash distribute.sh /path/to/my-project --with-claude    # legacy .claude sync
 #   bash distribute.sh /path/to/my-project --dry-run        # preview changes
+#   bash distribute.sh /path/to/my-project --with-docs --dry-run
 #   bash distribute.sh /path/to/my-project --prefix sample --dry-run
 #   # Then run tdk-setup install with the same prefix for .claude/.codex harness output
 
@@ -56,6 +58,7 @@ log_dim() { ts; echo -e "${DIM}$*${NC}"; }
 DRY_RUN=false
 AUTO_YES=false
 WITH_CLAUDE=false
+WITH_DOCS=false
 FORCE=false
 NO_DELETE=false
 AUTO_YES_DELETE=false
@@ -82,6 +85,7 @@ while [[ $# -gt 0 ]]; do
         --dry-run)      DRY_RUN=true ;;
         --yes|-y)       AUTO_YES=true ;;
         --with-claude)  WITH_CLAUDE=true ;;
+        --with-docs)    WITH_DOCS=true ;;
         --prefix)
             shift
             BRAND_PREFIX="${1:-}"
@@ -229,10 +233,18 @@ echo ""
 echo -e "  ${WHITE}Source:${NC}  $SOURCE_ROOT"
 echo -e "  ${WHITE}Target:${NC}  $TARGET_ROOT"
 if $WITH_CLAUDE; then
-    echo -e "  ${WHITE}Scope:${NC}   .specify/ + legacy .claude/"
+    if $WITH_DOCS; then
+        echo -e "  ${WHITE}Scope:${NC}   .specify/ including docs + legacy .claude/"
+    else
+        echo -e "  ${WHITE}Scope:${NC}   .specify/ docs omitted/left untouched + legacy .claude/"
+    fi
     echo -e "  ${YELLOW}Note:${NC}    Prefer 'tdk-setup install <target> --harness claude' for explicit harness mutation"
 else
-    echo -e "  ${WHITE}Scope:${NC}   .specify/ only"
+    if $WITH_DOCS; then
+        echo -e "  ${WHITE}Scope:${NC}   .specify/ including docs"
+    else
+        echo -e "  ${WHITE}Scope:${NC}   .specify/ only, docs omitted/left untouched"
+    fi
     if [[ -n "$BRAND_PREFIX" ]]; then
         echo -e "  ${WHITE}Next:${NC}    cd \"$SOURCE_ROOT/packages/tdk-setup\" && bun src/index.ts install \"$TARGET_ROOT\" --harness claude --all-plugins --prefix $BRAND_WORD --dry-run"
     else
@@ -274,6 +286,10 @@ else
     log_dim "sync-config.yaml not found — using built-in include/exclude rules"
     SPECIFY_INCLUDES=("_shared" "plugins/" "codex-plugins/" "claude-rules/" "scripts" "templates/" "setup.sh" "docs/" "schemas/" "CHANGELOG.md" ".specify.yaml.example" ".specify.env.example" ".specify.json.example")
     SPECIFY_EXCLUDES=("configurations/" "memory/" ".specify.yaml" ".specify.env" "scripts/ts/node_modules/" "__pycache__/")
+fi
+
+if ! $WITH_DOCS; then
+    SPECIFY_EXCLUDES+=("docs/")
 fi
 
 # .claude/ rules (only used with --with-claude)
@@ -847,6 +863,9 @@ done
 # Clean up empty directories (scoped to include-pattern subtrees only)
 if [[ $DELETED_COUNT -gt 0 ]]; then
     for pattern in "${SPECIFY_INCLUDES[@]}"; do
+        if is_excluded "${pattern%/}" "${SPECIFY_EXCLUDES[@]}"; then
+            continue
+        fi
         pdir="$TARGET_SPECIFY/${pattern%/}"
         [[ -d "$pdir" ]] || continue
         find "$pdir" -mindepth 1 -type d -empty -delete 2>/dev/null || true

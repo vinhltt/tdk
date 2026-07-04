@@ -9,6 +9,8 @@ metadata:
 
 One-way sync of common `.specify/` files from a source project to a target project.
 
+By default, `distribute.sh` omits `.specify/docs/**` and leaves existing target docs untouched. Use `--with-docs` to opt into normal docs copy/update/delete behavior.
+
 ## Usage
 
 ```
@@ -63,7 +65,7 @@ If user cancels: stop here.
 ### Step 6: Execute sync
 
 ```bash
-bash "{source_path}/../distribute.sh" <target-project-path> [--force] [--with-claude]
+bash "{source_path}/../distribute.sh" <target-project-path> [--force] [--with-claude] [--with-docs]
 ```
 
 ### Step 7: Report
@@ -75,7 +77,7 @@ Summarize what changed (`NEW`/`UPDATED`/`DELETED`), and note any command errors 
 For direct terminal usage without Claude skill:
 
 ```bash
-bash <tdk-source-root>/distribute.sh [target-path] [--with-claude] [--force] [--dry-run] [--yes] [--log-file path]
+bash <tdk-source-root>/distribute.sh [target-path] [--with-claude] [--with-docs] [--force] [--dry-run] [--yes] [--log-file path]
 ```
 
 Interactive mode (no args) prompts for target path and options when stdin is a TTY.

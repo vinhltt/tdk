@@ -9,6 +9,13 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## [1.96.5] - 2026-07-04
+
+### Changed
+- **[Scripts]** Updated `distribute.sh` to omit `.specify/docs/**` by default, leaving existing consumer docs files and directories untouched.
+- **[Scripts]** Added `--with-docs` to opt into normal docs copy/update/delete behavior, including existing prefix rewrite for safe docs payload text.
+- **[Skills]** Updated `tdk-distribute` usage docs and contract coverage for optional docs distribution.
+
 ## [1.96.4] - 2026-07-03
 
 ### Changed

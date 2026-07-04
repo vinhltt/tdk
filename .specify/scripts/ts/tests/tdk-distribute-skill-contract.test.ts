@@ -18,7 +18,7 @@ describe('tdk-distribute skill contract', () => {
     it(`${skillPath} uses resolved source path for distribute.sh`, () => {
       const skillText = read(skillPath);
       expect(skillText).toContain('bash "{source_path}/../distribute.sh" <target-project-path> --dry-run');
-      expect(skillText).toContain('bash "{source_path}/../distribute.sh" <target-project-path> [--force] [--with-claude]');
+      expect(skillText).toContain('bash "{source_path}/../distribute.sh" <target-project-path> [--force] [--with-claude] [--with-docs]');
       expect(skillText).not.toMatch(/^\s*bash\s+distribute\.sh\b/m);
     });
 
@@ -30,10 +30,15 @@ describe('tdk-distribute skill contract', () => {
     });
   }
 
-  it('distribute.sh built-in fallback ships the full docs tree', () => {
+  it('distribute.sh omits docs by default and supports opt-in docs sync', () => {
     const script = read(DISTRIBUTE_SH_PATH);
     expect(script).toContain('"docs/"');
     expect(script).not.toContain('"docs/setup/"');
+    expect(script).toContain('WITH_DOCS=false');
+    expect(script).toContain('--with-docs)    WITH_DOCS=true ;;');
+    expect(script).toContain('SPECIFY_EXCLUDES+=("docs/")');
+    expect(script).toContain('.specify/ only, docs omitted/left untouched');
+    expect(script).toContain('.specify/ including docs');
     expect(script).toContain('sync-config.yaml not found — using built-in include/exclude rules');
   });
 

@@ -208,8 +208,8 @@ describe('codex distribute payload', () => {
     ).toBe(true);
     expect(
       fs.existsSync(path.join(consumerRoot, '.specify', 'docs', 'en', 'index.md')),
-      '.specify/docs/ must be distributed to the consumer',
-    ).toBe(true);
+      '.specify/docs/ must be omitted by default',
+    ).toBe(false);
     expect(
       fs.existsSync(path.join(consumerRoot, '.specify', 'schemas', 'specify.schema.json')),
       '.specify/schemas/ must be distributed to the consumer',
@@ -241,6 +241,30 @@ describe('codex distribute payload', () => {
       `tdk-setup codex install dry-run failed:\nstdout: ${install.stdout.toString()}\nstderr: ${install.stderr.toString()}`,
     ).toBe(0);
     expect(install.stdout.toString()).toContain('.agents/skills/tdk-demo/SKILL.md');
+
+    const emptyDocsDir = path.join(consumerRoot, '.specify', 'docs', 'keep-empty');
+    const staleTemplatePath = path.join(consumerRoot, '.specify', 'templates', 'stale-orphan.md.tpl');
+    fs.mkdirSync(emptyDocsDir, { recursive: true });
+    fs.writeFileSync(staleTemplatePath, '# stale template orphan\n', 'utf-8');
+
+    const deleteOrphan = runDistribute(sourceRoot, consumerRoot, ['--yes', '--yes-delete']);
+    expect(
+      deleteOrphan.exitCode,
+      `distribute.sh default orphan cleanup failed:\nstdout: ${deleteOrphan.stdout.toString()}\nstderr: ${deleteOrphan.stderr.toString()}`,
+    ).toBe(0);
+    expect(fs.existsSync(staleTemplatePath), 'non-doc orphans must still be deleted by default').toBe(false);
+    expect(fs.existsSync(emptyDocsDir), 'default cleanup must leave existing docs directories untouched').toBe(true);
+
+    const docsConsumerRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tdk-dist-docs-consumer-'));
+    const docsDistribute = runDistribute(sourceRoot, docsConsumerRoot, ['--with-docs', '--yes', '--no-delete']);
+    expect(
+      docsDistribute.exitCode,
+      `distribute.sh --with-docs failed:\nstdout: ${docsDistribute.stdout.toString()}\nstderr: ${docsDistribute.stderr.toString()}`,
+    ).toBe(0);
+    expect(
+      fs.existsSync(path.join(docsConsumerRoot, '.specify', 'docs', 'en', 'index.md')),
+      '.specify/docs/ must be distributed when --with-docs is used',
+    ).toBe(true);
   });
 
   test('distribute.sh can brand safe payload text while preserving plugin and codex package bytes', () => {
@@ -336,7 +360,10 @@ describe('codex distribute payload', () => {
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'claude-rules', 'primary-workflow-routing.md'), 'utf-8')).toBe(claudeRuleText);
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'scripts', 'ts', 'package.json'), 'utf-8')).toBe(scriptsPackageText);
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'scripts', 'ts', 'tests', 'sample.test.ts'), 'utf-8')).toBe(testScriptText);
+    expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'index.md'))).toBe(false);
     expect(fileMode(path.join(plainConsumerRoot, '.specify', 'setup.sh'))).toBe(0o755);
+    fs.mkdirSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'guides'), { recursive: true });
+    fs.mkdirSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets'), { recursive: true });
     fs.writeFileSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'guides', 'tdk-skills-guide.md'), '# stale old guide\n', 'utf-8');
     fs.writeFileSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets', 'tdk-diagram.svg'), '<svg>stale old asset</svg>\n', 'utf-8');
 
@@ -354,13 +381,23 @@ describe('codex distribute payload', () => {
       migrated.exitCode,
       `branded migration failed:\nstdout: ${migrated.stdout.toString()}\nstderr: ${migrated.stderr.toString()}`,
     ).toBe(0);
+    expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'guides', 'skills-guide.md'))).toBe(false);
+    expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'guides', 'tdk-skills-guide.md'))).toBe(true);
+    expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets', 'diagram.svg'))).toBe(false);
+    expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets', 'tdk-diagram.svg'))).toBe(true);
+
+    const docsMigrated = runDistribute(sourceRoot, plainConsumerRoot, ['--prefix', 'sample', '--with-docs', '--yes', '--yes-delete']);
+    expect(
+      docsMigrated.exitCode,
+      `branded docs migration failed:\nstdout: ${docsMigrated.stdout.toString()}\nstderr: ${docsMigrated.stderr.toString()}`,
+    ).toBe(0);
     expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'guides', 'skills-guide.md'))).toBe(true);
     expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'guides', 'tdk-skills-guide.md'))).toBe(false);
     expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets', 'diagram.svg'))).toBe(true);
     expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets', 'tdk-diagram.svg'))).toBe(false);
 
     const brandedConsumerRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tdk-dist-brand-branded-'));
-    const branded = runDistribute(sourceRoot, brandedConsumerRoot, ['--prefix', 'sample', '--yes', '--no-delete']);
+    const branded = runDistribute(sourceRoot, brandedConsumerRoot, ['--prefix', 'sample', '--with-docs', '--yes', '--no-delete']);
     expect(
       branded.exitCode,
       `branded distribute failed:\nstdout: ${branded.stdout.toString()}\nstderr: ${branded.stderr.toString()}`,
