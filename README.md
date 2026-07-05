@@ -157,7 +157,7 @@ bun src/commands/manifest/compute.ts --root ../..
 │   ├── tdk-memory/          # Domain memory management (5 skills + 1 agent)
 │   ├── tdk-test-api/        # API test generation (3 skills)
 │   ├── tdk-retro/           # Retrospective learning loop (4 skills)
-│   └── tdk-scaffold/        # Skill/agent and golden-path scaffolding (3 skills)
+│   └── tdk-scaffold/        # Skill/agent, route proposal, and golden-path scaffolding (4 skills)
 ├── codex-plugins/        # Generated Codex packages (6 packages; skills/hooks/lib at package root)
 ├── templates/            # 60 templates (spec, plan, task, discovery, epic PRD, HLD, test, memory, output, design, docs)
 ├── docs/                 # User guides (scenarios, setup, concepts, command guide)
@@ -182,7 +182,7 @@ bun src/commands/manifest/compute.ts --root ../..
 | **tdk-memory** | 5 skills + 1 agent | Domain memory: init, update, checksum, changelog, query, and tdk-memory-agent |
 | **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |
 | **tdk-retro** | 4 | Retrospective feedback collection, learning proposal, and approved-delta application |
-| **tdk-scaffold** | 3 | `/tdk-sub-workspace-automation-recommend`, skill/agent scaffolding from approved automation recommendations, and guarded golden-path skeleton recipes |
+| **tdk-scaffold** | 4 | `/tdk-sub-workspace-automation-recommend`, skill/agent scaffolding from approved automation recommendations, reviewable plan-skill-routing proposal management, and guarded golden-path skeleton recipes |
 
 ## CLI Commands
 

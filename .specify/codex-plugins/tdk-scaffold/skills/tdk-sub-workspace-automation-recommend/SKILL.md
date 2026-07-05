@@ -4,7 +4,7 @@ description: "Recommend skills and agents for one selected sub-workspace from ar
 user-invocable: true
 argument-hint: "--sub-workspace <name> [--no-community-search]"
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
   author: "VinhLTT"
   category: scaffold
 ---
@@ -86,6 +86,7 @@ Do not use `ck:find-skills`. Use direct CLI/site lookup only, and summarize resu
    - Create the output directory.
    - If the output file exists, ask whether to overwrite or keep it.
    - Write the markdown file with YAML frontmatter and the sections below.
+   - Include routing suggestions only as reviewable proposals. Do not mutate `plan-skill-routing.md`.
 
 ## Output Format
 
@@ -134,6 +135,16 @@ skill_search_queries:
 - **Tools**:
 - **Caller contract**:
 
+## Routing Suggestions
+
+### 1. <domain> -> <skill-name> [<priority>]
+- **Sub-workspace**:
+- **Domain**:
+- **Skills**:
+- **Why**:
+- **Proposal notes**:
+- **Register with**: `/tdk-plan-skill-routing diff --proposal plan-skill-routing-proposal.json`, then `/tdk-plan-skill-routing register --proposal plan-skill-routing-proposal.json --yes` after review.
+
 ## Rejected Recommendations
 
 ## Scaffold Readiness
@@ -160,3 +171,4 @@ skill_search_queries:
 
 - Recommendations are not scaffold instructions until the user reviews them and changes frontmatter to `status: approved`.
 - Skills + agents only. Do not recommend hooks, MCP servers, or plugin packaging unless the selected sub-workspace evidence makes that explicitly necessary.
+- Routing suggestions are optional handoff notes for scaffold. Route mutation is a separate reviewed `/tdk-plan-skill-routing` workflow.

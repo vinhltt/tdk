@@ -11,6 +11,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+## [1.98.0] - 2026-07-05
+
+### Added
+- **[tdk-scaffold]** Plan skill routing workflow
+  - Added `tdk-plan-skill-routing` skill facade with route file contract, proposal schema, init, review/register, and conflict policy references.
+  - Added scaffold proposal format reference so approved automation recommendations can emit reviewable route proposals.
+- **[Scripts]** Plan skill routing CLI and coverage
+  - Added `routing plan-skill` subcommand for `init`, `inspect`, `check`, `diff`, `register`, `verify`, and `optimize`.
+  - Added route/proposal utilities for safe route file parsing, proposal validation, duplicate/conflict detection, diff planning, registration, verification, and optimization.
+  - Added command and utility tests for plan-skill routing flows.
+
+### Changed
+- **[tdk-scaffold]** Route proposal integration
+  - Updated `tdk-scaffold-from-recommendation` to parse routing suggestions and scaffold proposal artifacts without mutating route files.
+  - Updated `tdk-sub-workspace-automation-recommend` to include optional routing suggestions with explicit review/register handoff.
+  - Updated plugin metadata and manifests to advertise route proposal management.
+- **[Guides]** Document `/tdk-plan-skill-routing` in the command catalog, scenario map, and workflow guidance.
+- **[Scripts]** Updated scaffold contract tests to cover routing proposal handoff and new command expectations.
+
 ## [1.97.0] - 2026-07-04
 
 ### Added

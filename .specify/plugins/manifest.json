@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-04T15:14:57Z",
+  "generated_at": "2026-07-05T09:17:18Z",
   "plugins": {
     "tdk-core": {
       "version": "6.0.3",
@@ -320,17 +320,20 @@
       }
     },
     "tdk-scaffold": {
-      "version": "2.0.0",
+      "version": "2.1.0",
       "components": {
         "skills": {
           "tdk-golden-path-scaffold": {
             "version": "1.2.2"
           },
+          "tdk-plan-skill-routing": {
+            "version": "2.1.0"
+          },
           "tdk-scaffold-from-recommendation": {
-            "version": "2.0.0"
+            "version": "2.1.0"
           },
           "tdk-sub-workspace-automation-recommend": {
-            "version": "2.0.0"
+            "version": "2.1.0"
           }
         },
         "agents": {},
@@ -338,11 +341,11 @@
         "commands": {}
       },
       "files": {
-        ".claude-plugin/interface.json": "68760c7a49cdbe25dff7017c9f3832ac3c3f83758acc1be97d61c6bc2c19967e",
-        ".claude-plugin/plugin.json": "d5fa06aa4d0ff0ab6539aa736ac08cb4aa3a35a19e0d81da41f7ddebe70b03b0",
-        ".codex-plugin/plugin.json": "d5fa06aa4d0ff0ab6539aa736ac08cb4aa3a35a19e0d81da41f7ddebe70b03b0",
-        ".cursor-plugin/plugin.json": "d5fa06aa4d0ff0ab6539aa736ac08cb4aa3a35a19e0d81da41f7ddebe70b03b0",
-        "CHANGELOG.md": "289f53cd516819629bf9aab4dd08ae13706c6a40e7b6e02bdbc7a0fbc17671ac",
+        ".claude-plugin/interface.json": "4f50469bb11057946eb49b9342ec9029e3b297742ec5b80e4b212c8024954c21",
+        ".claude-plugin/plugin.json": "93e7904c23b83cc8b7921acb294605247c117062102e6f876e4e5e30ceb97290",
+        ".codex-plugin/plugin.json": "93e7904c23b83cc8b7921acb294605247c117062102e6f876e4e5e30ceb97290",
+        ".cursor-plugin/plugin.json": "93e7904c23b83cc8b7921acb294605247c117062102e6f876e4e5e30ceb97290",
+        "CHANGELOG.md": "a37dcd9decbbdbe305be9caf889522413cfabaede90ac51491dfcb857b1a92ff",
         "skills/tdk-golden-path-scaffold/SKILL.md": "cc1099c927acec094e0443d7db6f4990fa90f8f7377e17be559fe8e73729b390",
         "skills/tdk-golden-path-scaffold/references/golden-path-output-contract.md": "ef32bb4f620983e461f0bef02fcfda57da4703dc21bbad767f58c4ba116b4e7c",
         "skills/tdk-golden-path-scaffold/references/golden-path-recipe-schema.md": "10638a7933d1658ac8cc96288a49716ad2c97b7dc8c4ce8ac5cfbc995aa97a68",
@@ -354,10 +357,17 @@
         "skills/tdk-golden-path-scaffold/templates/golden-path-recipe.json.tpl": "ea9bb006bb56b228b9885c4f446bf221e15a8434a07239c85f8e8fc25724dec4",
         "skills/tdk-golden-path-scaffold/templates/golden-path-scaffold-plan.md.tpl": "c8e4714cbad9bd83c78b40526915fb8cbc2952a72275a347d3ac70eb060d90fa",
         "skills/tdk-golden-path-scaffold/templates/project-structure.md.tpl": "df95624033993e0ff899eb06a60cdfa55105481da98e4d5253b268d23094f1c3",
-        "skills/tdk-scaffold-from-recommendation/SKILL.md": "4de9ba27ebf6333783072c104b696ba365c4c8167739a727be6aa64abebc974e",
+        "skills/tdk-plan-skill-routing/SKILL.md": "56c815eb259c0ae59c02bc0079a094303ecd474f5e8a90891ed495089112be79",
+        "skills/tdk-plan-skill-routing/references/plan-skill-routing-file-contract.md": "288dd97cd137b759593825250e556d6200564e70a32b097940c478c6d162f564",
+        "skills/tdk-plan-skill-routing/references/plan-skill-routing-proposal-format.md": "b5530700ab8dece680efa26cfd6e4831348c9f59f2f8a7f01a806c8167db38dc",
+        "skills/tdk-plan-skill-routing/references/update-and-conflict-policy.md": "cb7dfb9d82ee4df07830b1d2702b5d5bb3c4e8a5b2049fb063da0b3952c70c4f",
+        "skills/tdk-plan-skill-routing/references/workflow-init.md": "9a3929b0fa57391604ba9f66b5d18c9d7c5c029a70695fe964dd8bceae8bdda5",
+        "skills/tdk-plan-skill-routing/references/workflow-review-register.md": "91a76367137bbe9755a8a6ba3b5865aaec356fcdd05707a7a5e799a0e22c35aa",
+        "skills/tdk-scaffold-from-recommendation/SKILL.md": "bee11b1f64d00e92d4b136704153dfa06c5c6cdccca0375cbee293329dd8ef05",
         "skills/tdk-scaffold-from-recommendation/references/agent-output-pattern.md": "6627c4769e50c541405e0c3d8db00653e0df4cd023030bf3116b746e5cf7677d",
+        "skills/tdk-scaffold-from-recommendation/references/plan-skill-routing-proposal-format.md": "637256cfa112de557f0089f7a7b6352a5daada9c0a15bf954f0686b4f6b28c3b",
         "skills/tdk-scaffold-from-recommendation/references/skill-output-pattern.md": "d373008520c731f6ea261a009d1a169da65a73c5441f7ddedfd04f5acf781b16",
-        "skills/tdk-sub-workspace-automation-recommend/SKILL.md": "f2ddf52874e881d97fc2c2fe46bd17c345b1844b1a6dc8f0af3b1ca165cadce9"
+        "skills/tdk-sub-workspace-automation-recommend/SKILL.md": "49ad239d5f915de58c87f7525087c7739fc1b154342262d10e0860046ff529c4"
       }
     },
     "tdk-test-api": {

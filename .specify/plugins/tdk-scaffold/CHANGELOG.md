@@ -4,6 +4,17 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.1.0] - 2026-07-05
+
+### Added
+- tdk-plan-skill-routing: add reviewed route file init, inspection, diff, register, verify, and optimization workflow
+- tdk-scaffold-from-recommendation: add plan-skill-routing proposal artifact format for approved routing suggestions
+
+### Changed
+- tdk-scaffold-from-recommendation: parse routing suggestions and scaffold reviewable proposals without mutating route files
+- tdk-sub-workspace-automation-recommend: document optional routing suggestions with explicit review/register handoff
+- Plugin metadata: advertise route proposal management alongside automation recommendation and golden-path scaffolding
+
 ## [2.0.0] - 2026-07-01
 
 ### Added

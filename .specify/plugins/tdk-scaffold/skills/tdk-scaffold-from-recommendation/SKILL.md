@@ -1,16 +1,16 @@
 ---
 name: tdk-scaffold-from-recommendation
-description: "Read approved automation recommendation markdown and scaffold SKILL.md plus references stubs for skills and agent.md files for agents."
+description: "Read approved automation recommendation markdown and scaffold SKILL.md, references stubs, agent.md files, and reviewable routing proposal artifacts."
 user-invocable: true
 argument-hint: "[<path-to-automation-recommendation.md>] [--dry-run] [--skills-only] [--agents-only]"
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
   author: "VinhLTT"
   category: scaffold
   requires:
     - tdk-sub-workspace-automation-recommend
   input_format: "[path] [flags]"
-  output_format: "Scaffolded SKILL.md, references/ stubs, agent.md files"
+  output_format: "Scaffolded SKILL.md, references/ stubs, agent.md files, optional plan-skill-routing-proposal.json"
 ---
 
 # tdk-scaffold-from-recommendation
@@ -21,13 +21,13 @@ Read approved recommendations and scaffold skill/agent starting points following
 
 - After `/tdk-sub-workspace-automation-recommend --sub-workspace <name>` writes a recommendation.
 - The user has reviewed recommendations and set `status: approved` in frontmatter.
-- The user wants initial files for recommended skills or agents.
+- The user wants initial files for recommended skills or agents, plus a reviewable route proposal when the recommendation includes routing suggestions.
 
 ## Prerequisites
 
 - A recommendation file exists in one of the supported paths.
 - The file has `status: approved`, or the user explicitly approves proceeding anyway.
-- The recommendation contains reviewed recommendations under `## Recommended Skills` or `## Recommended Agents`.
+- The recommendation contains reviewed recommendations under `## Recommended Skills`, `## Recommended Agents`, or `## Routing Suggestions`.
 
 ## Args
 
@@ -80,7 +80,8 @@ Default to abort. Scaffolding writes should happen only after reviewed recommend
 
 - Parse `## Recommended Skills`.
 - Parse `## Recommended Agents`.
-- Stop if both are empty.
+- Parse optional `## Routing Suggestions`.
+- Stop if skills, agents, and routing suggestions are all empty.
 - Respect `--skills-only` and `--agents-only`.
 
 ## Read Structural Exemplars
@@ -91,6 +92,7 @@ Read nearby existing files for style only:
 - Agent pattern: an existing agent file in `.specify/plugins/**/agents/`.
 - `references/skill-output-pattern.md`
 - `references/agent-output-pattern.md`
+- `references/plan-skill-routing-proposal-format.md`
 
 Do not copy recommendation content from exemplars. Use the approved recommendation as the content source.
 
@@ -128,6 +130,16 @@ For each agent recommendation:
    - Input Contract
    - Output Contract
 
+## Scaffold routing proposal
+
+When the approved recommendation includes route-worthy `## Routing Suggestions`:
+
+1. Target: write `plan-skill-routing-proposal.json` beside the approved recommendation file.
+2. Shape the proposal with `version`, `sourceRecommendation`, and `entries[]` from `references/plan-skill-routing-proposal-format.md`.
+3. If `--dry-run`, print the recommendation-adjacent proposal path and do not write.
+4. If the target exists, ask whether to overwrite or skip.
+5. Never mutate `plan-skill-routing.md` directly. Registration is separate through `/tdk-plan-skill-routing diff`, `/tdk-plan-skill-routing register --yes`, and `/tdk-plan-skill-routing verify`.
+
 ## Summary
 
 Print:
@@ -135,6 +147,7 @@ Print:
 - Source recommendation path.
 - `sub_workspace` when present.
 - Files created.
+- Routing proposal path when written or planned.
 - Count of scaffolded skills and agents.
 
 If `--dry-run` was used, print: `Dry run complete. No files written.`
@@ -153,4 +166,5 @@ If `--dry-run` was used, print: `Dry run complete. No files written.`
 
 - Output is a starting point and still requires human review.
 - Scaffold skills and Scaffold agents are separate phases in the summary so users can review them independently.
+- Scaffold routing proposal is a separate phase; it is reviewable and non-mutating until `/tdk-plan-skill-routing register --yes`.
 - Do not mark generated files complete just because the recommendation exists; scaffolding is only as good as the approved evidence.

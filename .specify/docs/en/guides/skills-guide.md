@@ -143,6 +143,7 @@ Excluded:
 | `/tdk-sub-workspace-docs` | Generate arc42-lite docs for one or all sub-workspaces. | `--sub-workspace NAME`, `--all`, `--force` | Sub-workspace docs need README, architecture, interfaces, and engineering pages. |
 | `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents for one sub-workspace. | `--sub-workspace <name>`, `--no-community-search` | Existing sub-workspace docs should drive automation recommendations. |
 | `/tdk-scaffold-from-recommendation` | Scaffold approved skill/agent recommendation stubs. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only` | A reviewed automation recommendation is approved for scaffolding. |
+| `/tdk-plan-skill-routing` | Manage reviewable plan-skill-routing init, diff, register, verify, and cleanup. | `init`, `inspect`, `check`, `diff`, `register --yes`, `verify`, `optimize` | Scaffold routing suggestions or custom skill routes need explicit review and registration. |
 
 ### Testing And API
 
@@ -258,6 +259,7 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 27 | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | Generate arc42-lite docs under `<docsPath>/sub-workspaces/<name>/` |
 | 28 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | Recommend skills/agents for one selected sub-workspace |
 | 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | Scaffold reviewed skills/agents from an approved recommendation |
+| 30 | `/tdk-plan-skill-routing <init\|inspect\|check\|diff\|register\|verify\|optimize> [--proposal <path>] [--yes]` | Review and register plan-skill-routing proposals explicitly |
 | — | **Primary Implementation** | |
 | 33 | `/tdk-implement <id> [--phase NN]` | Execute implementation directly from plan.md ## Phases (recommended) |
 
@@ -316,6 +318,7 @@ For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalo
 | sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `engineering.md` per sub-workspace | After config apply |
 | sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | `--sub-workspace`, `--no-community-search` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` or skills.sh lookup | `automation-recommendation.md` | After sub-workspace docs |
 | scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | `--dry-run`, `--skills-only`, `--agents-only` | approved `automation-recommendation.md` or legacy recommendation file | Scaffolded skill/agent starter files | After recommendation approval |
+| plan-skill:routing | `/tdk-plan-skill-routing <init\|inspect\|check\|diff\|register\|verify\|optimize> [--proposal <path>] [--yes]` | `--proposal`, `--yes` | `plan-skill-routing.md`, optional `plan-skill-routing-proposal.json` | JSON route inspection, diff, registration, verification, or optimization result | After scaffold routing proposal or custom routing opt-in |
 
 Greenfield and brownfield start commands are report/routing entrypoints. They do not create specs, plans, tracker issues, source code, or `.specify/.specify.json`. Greenfield full mode runs a project-inception interview before strong routing. Quick mode records unanswered critical gaps. Unknown mode classifies only unless minimum facts are present. Brownfield full mode uses bounded repo evidence, config-only mode focuses on `.specify` state, and unknown mode recommends one evidence-backed next route.
 
@@ -410,6 +413,13 @@ starter skill/agent files. It prefers
 and keeps legacy recommendation file fallbacks.
 
 Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]`.
+
+`/tdk-plan-skill-routing` manages the explicit route file used by planning and
+UT workflows. Use it to initialize the route file, inspect/check current routes,
+diff scaffolded `plan-skill-routing-proposal.json`, register approved entries
+with `--yes`, verify proposals, or dry-run optimize repeated entries.
+
+Syntax: `/tdk-plan-skill-routing <init|inspect|check|diff|register|verify|optimize> [--proposal <path>] [--yes]`.
 
 ### UT Commands
 

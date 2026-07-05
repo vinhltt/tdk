@@ -1,14 +1,14 @@
 {
   "displayName": "TDK Scaffold",
-  "shortDescription": "Architecture-aware automation and guarded golden-path scaffolding.",
-  "longDescription": "Recommends project-specific skills/agents from architecture evidence, scaffolds approved skill/agent recommendations, and produces dry-run-first golden-path skeleton recipes for approved topology.",
+  "shortDescription": "Architecture-aware automation, routing proposals, and guarded golden-path scaffolding.",
+  "longDescription": "Recommends project-specific skills/agents from architecture evidence, scaffolds approved skill/agent recommendations, manages reviewable plan-skill-routing proposals, and produces dry-run-first golden-path skeleton recipes for approved topology.",
   "developerName": "VinhLTT",
   "category": "Development",
   "capabilities": [
     "Skills"
   ],
   "defaultPrompt": [
-    "Recommend automations or prepare a guarded golden-path skeleton recipe from approved topology."
+    "Recommend automations, review route proposals, or prepare a guarded golden-path skeleton recipe from approved topology."
   ],
   "brandColor": "#10B981"
 }

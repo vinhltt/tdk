@@ -9,6 +9,7 @@ import { createDetectConfigCommand } from './commands/detect-config';
 import { createUtCommandGroup } from './commands/ut/index';
 import { createScoutCommand } from './commands/scout/index';
 import { createDocsCommand } from './commands/sub-workspace/docs';
+import { createRoutingCommandGroup } from './commands/routing/index';
 
 const program = new Command()
   .name('tdk')
@@ -32,6 +33,9 @@ program.addCommand(createUtCommandGroup());
 
 // Scout command: tdk scout --scope <dir> | --from-pack <file>
 program.addCommand(createScoutCommand());
+
+// Routing command group: tdk routing plan-skill <init|inspect|check|diff|register|verify|optimize>
+program.addCommand(createRoutingCommandGroup());
 
 // Sub-workspace command group: tdk sub-workspace <docs|...>
 const subWsGroup = new Command('sub-workspace')
