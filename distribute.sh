@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # distribute.sh — Distribute/update TDK from source to a target project
 #
-# One-way sync of .specify/ substrate from TDK source to target project.
-# Legacy .claude/ sync remains available, but explicit harness mutation should use
-# `bun src/index.ts install <target> --harness claude` from the tdk-setup package (packages/tdk-setup).
-# Uses built-in include/exclude rules, with optional legacy sync-config.yaml override.
+# One-way sync of root-relative paths from distribute.json to a target project.
+# Explicit harness mutation should use `bun src/index.ts install <target> --harness claude`
+# from the tdk-setup package (packages/tdk-setup).
+# Uses distribute.json include/exclude rules.
 # Compares files by MD5.
 # Always shows dry-run summary first, then asks for confirmation before writing.
 #
@@ -16,8 +16,6 @@
 # OPTIONS:
 #   --dry-run         Show diff only, skip confirmation and writing
 #   --yes             Skip confirmation prompt (auto-approve)
-#   --with-claude     Legacy: also sync .claude/ files (prefer tdk-setup `install`)
-#   --with-docs       Include .specify/docs/ in consumer payload (omitted by default)
 #   --prefix PREFIX   Brand safe .specify payload text (example: sample -> sample-/SAMPLE)
 #   --force           Overwrite all files (skip MD5 comparison)
 #   --no-delete       Skip orphan removal (don't delete files missing from source)
@@ -27,10 +25,8 @@
 #
 # Examples:
 #   bash distribute.sh                                      # interactive
-#   bash distribute.sh /path/to/my-project                  # sync .specify/ only
-#   bash distribute.sh /path/to/my-project --with-claude    # legacy .claude sync
+#   bash distribute.sh /path/to/my-project                  # sync paths from distribute.json
 #   bash distribute.sh /path/to/my-project --dry-run        # preview changes
-#   bash distribute.sh /path/to/my-project --with-docs --dry-run
 #   bash distribute.sh /path/to/my-project --prefix sample --dry-run
 #   # Then run tdk-setup install with the same prefix for .claude/.codex harness output
 
@@ -57,8 +53,6 @@ log_dim() { ts; echo -e "${DIM}$*${NC}"; }
 # ─── Defaults ─────────────────────────────────────────────────────────────────
 DRY_RUN=false
 AUTO_YES=false
-WITH_CLAUDE=false
-WITH_DOCS=false
 FORCE=false
 NO_DELETE=false
 AUTO_YES_DELETE=false
@@ -84,8 +78,6 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --dry-run)      DRY_RUN=true ;;
         --yes|-y)       AUTO_YES=true ;;
-        --with-claude)  WITH_CLAUDE=true ;;
-        --with-docs)    WITH_DOCS=true ;;
         --prefix)
             shift
             BRAND_PREFIX="${1:-}"
@@ -176,9 +168,8 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_ROOT="$SCRIPT_DIR"
 SOURCE_SPECIFY="$SOURCE_ROOT/.specify"
-SOURCE_CLAUDE="$SOURCE_ROOT/.claude"
 
-SYNC_CONFIG="$SOURCE_SPECIFY/plugins/specify-devtools/skills/specify-distribute/sync-config.yaml"
+DISTRIBUTE_CONFIG="$SOURCE_ROOT/distribute.json"
 
 if [[ ! -d "$SOURCE_SPECIFY" ]]; then
     echo -e "${RED}Error: source .specify/ not found at $SOURCE_SPECIFY${NC}" >&2
@@ -186,8 +177,6 @@ if [[ ! -d "$SOURCE_SPECIFY" ]]; then
 fi
 
 TARGET_ROOT="$(cd "$TARGET_PATH" 2>/dev/null && pwd || echo "$TARGET_PATH")"
-TARGET_SPECIFY="$TARGET_ROOT/.specify"
-TARGET_CLAUDE="$TARGET_ROOT/.claude"
 
 if [[ ! -d "$TARGET_ROOT" ]]; then
     echo -e "${RED}Error: target directory not found: $TARGET_ROOT${NC}" >&2
@@ -208,21 +197,21 @@ fi
 
 # ─── Tool detection ──────────────────────────────────────────────────────────
 log_dim "MD5 tool: $(command -v md5sum 2>/dev/null || command -v md5 2>/dev/null || echo 'python fallback')"
-log_dim "yq: $(command -v yq 2>/dev/null && yq --version 2>/dev/null || echo 'not found')"
+log_dim "JSON parser: $(command -v bun 2>/dev/null || command -v node 2>/dev/null || command -v python3 2>/dev/null || command -v python 2>/dev/null || echo 'not found')"
 
 # ─── Interactive option prompts (TTY only) ───────────────────────────────────
 is_interactive() { [[ -t 0 ]]; }
 
 if is_interactive; then
-    if ! $WITH_CLAUDE; then
-        read -r -p "$(echo -e "${WHITE}Sync .claude/ files too? [y/N]: ${NC}")" ans
-        [[ "$ans" == [yY]* ]] && WITH_CLAUDE=true
-    fi
     if ! $FORCE; then
         read -r -p "$(echo -e "${WHITE}Force overwrite all files? [y/N]: ${NC}")" ans
         [[ "$ans" == [yY]* ]] && FORCE=true
     fi
 fi
+
+scope_description() {
+    printf "paths from distribute.json"
+}
 
 # ─── Banner ───────────────────────────────────────────────────────────────────
 echo ""
@@ -232,24 +221,11 @@ echo -e "${BOLD}${CYAN}╚══════════════════
 echo ""
 echo -e "  ${WHITE}Source:${NC}  $SOURCE_ROOT"
 echo -e "  ${WHITE}Target:${NC}  $TARGET_ROOT"
-if $WITH_CLAUDE; then
-    if $WITH_DOCS; then
-        echo -e "  ${WHITE}Scope:${NC}   .specify/ including docs + legacy .claude/"
-    else
-        echo -e "  ${WHITE}Scope:${NC}   .specify/ docs omitted/left untouched + legacy .claude/"
-    fi
-    echo -e "  ${YELLOW}Note:${NC}    Prefer 'tdk-setup install <target> --harness claude' for explicit harness mutation"
+echo -e "  ${WHITE}Scope:${NC}   $(scope_description)"
+if [[ -n "$BRAND_PREFIX" ]]; then
+    echo -e "  ${WHITE}Next:${NC}    cd \"$SOURCE_ROOT/packages/tdk-setup\" && bun src/index.ts install \"$TARGET_ROOT\" --harness claude --all-plugins --prefix $BRAND_WORD --dry-run"
 else
-    if $WITH_DOCS; then
-        echo -e "  ${WHITE}Scope:${NC}   .specify/ including docs"
-    else
-        echo -e "  ${WHITE}Scope:${NC}   .specify/ only, docs omitted/left untouched"
-    fi
-    if [[ -n "$BRAND_PREFIX" ]]; then
-        echo -e "  ${WHITE}Next:${NC}    cd \"$SOURCE_ROOT/packages/tdk-setup\" && bun src/index.ts install \"$TARGET_ROOT\" --harness claude --all-plugins --prefix $BRAND_WORD --dry-run"
-    else
-        echo -e "  ${WHITE}Next:${NC}    cd \"$SOURCE_ROOT/packages/tdk-setup\" && bun src/index.ts install \"$TARGET_ROOT\" --harness claude --plugins tdk-core --dry-run"
-    fi
+    echo -e "  ${WHITE}Next:${NC}    cd \"$SOURCE_ROOT/packages/tdk-setup\" && bun src/index.ts install \"$TARGET_ROOT\" --harness claude --plugins tdk-core --dry-run"
 fi
 if [[ -n "$BRAND_PREFIX" ]]; then
     echo -e "  ${WHITE}Brand:${NC}   safe .specify payload text tdk-/tdk/TDK -> $BRAND_PREFIX/$BRAND_WORD/$BRAND_WORD_UPPER"
@@ -259,42 +235,107 @@ $FORCE && echo -e "  ${YELLOW}Mode:    --force (skip MD5 comparison)${NC}"
 $NO_DELETE && echo -e "  ${YELLOW}Mode:    --no-delete (skip orphan removal)${NC}"
 echo ""
 
-# ─── Parse sync-config.yaml ──────────────────────────────────────────────────
-# Reads simple YAML list format using yq (required by setup.sh prerequisites)
-SPECIFY_INCLUDES=()
-SPECIFY_EXCLUDES=()
+DISTRIBUTE_INCLUDES=()
+DISTRIBUTE_EXCLUDES=()
 
-if [[ -f "$SYNC_CONFIG" ]] && command -v yq &>/dev/null; then
-    log_dim "Reading sync-config.yaml..."
+read_json_array() {
+    local config_file="$1" query_path="$2"
+    local js='
+const fs = require("fs");
+const configFile = process.argv[1];
+const queryPath = process.argv[2];
+const data = JSON.parse(fs.readFileSync(configFile, "utf8"));
+let value = data;
+for (const part of queryPath.split(".")) {
+  value = value?.[part];
+}
+if (!Array.isArray(value)) {
+  console.error(`Missing array in ${configFile}: ${queryPath}`);
+  process.exit(2);
+}
+for (const entry of value) {
+  if (typeof entry !== "string" || entry.length === 0) {
+    console.error(`Invalid array entry in ${configFile}: ${queryPath}`);
+    process.exit(3);
+  }
+  console.log(entry);
+}
+'
+    if command -v bun &>/dev/null; then
+        bun -e "$js" "$config_file" "$query_path"
+    elif command -v node &>/dev/null; then
+        node -e "$js" "$config_file" "$query_path"
+    elif command -v python3 &>/dev/null; then
+        python3 - "$config_file" "$query_path" <<'PY'
+import json
+import sys
+
+config_file, query_path = sys.argv[1], sys.argv[2]
+with open(config_file, "r", encoding="utf-8") as handle:
+    value = json.load(handle)
+for part in query_path.split("."):
+    value = value.get(part) if isinstance(value, dict) else None
+if not isinstance(value, list):
+    print(f"Missing array in {config_file}: {query_path}", file=sys.stderr)
+    sys.exit(2)
+for entry in value:
+    if not isinstance(entry, str) or not entry:
+        print(f"Invalid array entry in {config_file}: {query_path}", file=sys.stderr)
+        sys.exit(3)
+    print(entry)
+PY
+    elif command -v python &>/dev/null; then
+        python - "$config_file" "$query_path" <<'PY'
+import json
+import sys
+
+config_file, query_path = sys.argv[1], sys.argv[2]
+with open(config_file, "r") as handle:
+    value = json.load(handle)
+for part in query_path.split("."):
+    value = value.get(part) if isinstance(value, dict) else None
+if not isinstance(value, list):
+    print("Missing array in %s: %s" % (config_file, query_path), file=sys.stderr)
+    sys.exit(2)
+for entry in value:
+    if not isinstance(entry, str) or not entry:
+        print("Invalid array entry in %s: %s" % (config_file, query_path), file=sys.stderr)
+        sys.exit(3)
+    print(entry)
+PY
+    else
+        echo "Error: distribute.json requires bun, node, python3, or python for parsing" >&2
+        return 127
+    fi
+}
+
+load_json_array() {
+    local array_name="$1" query_path="$2" output line
+    local -n target_array="$array_name"
+
+    if ! output="$(read_json_array "$DISTRIBUTE_CONFIG" "$query_path")"; then
+        echo -e "${RED}Error: failed to read $query_path from $DISTRIBUTE_CONFIG${NC}" >&2
+        exit 1
+    fi
+
+    target_array=()
     while IFS= read -r line; do
-        [[ -n "$line" ]] && SPECIFY_INCLUDES+=("$line")
-    done < <(yq -r '.include[]' "$SYNC_CONFIG" 2>/dev/null)
+        [[ -n "$line" ]] && target_array+=("$line")
+    done <<< "$output"
+}
 
-    while IFS= read -r line; do
-        [[ -n "$line" ]] && SPECIFY_EXCLUDES+=("$line")
-    done < <(yq -r '.exclude[]' "$SYNC_CONFIG" 2>/dev/null)
-
-    log_dim "  Config: $SYNC_CONFIG"
-    log_dim "  Includes: ${SPECIFY_INCLUDES[*]}"
-    log_dim "  Excludes: ${SPECIFY_EXCLUDES[*]}"
-elif [[ -f "$SYNC_CONFIG" ]]; then
-    log "${YELLOW}Warning: yq not found — using fallback include/exclude rules${NC}"
-    log "${YELLOW}Install yq for sync-config.yaml support: https://github.com/mikefarah/yq${NC}"
-    SPECIFY_INCLUDES=("_shared" "plugins/" "codex-plugins/" "claude-rules/" "scripts" "templates/" "setup.sh" "docs/" "schemas/" "CHANGELOG.md" ".specify.yaml.example" ".specify.env.example" ".specify.json.example")
-    SPECIFY_EXCLUDES=("configurations/" "memory/" ".specify.yaml" ".specify.env" "scripts/ts/node_modules/" "__pycache__/")
-else
-    log_dim "sync-config.yaml not found — using built-in include/exclude rules"
-    SPECIFY_INCLUDES=("_shared" "plugins/" "codex-plugins/" "claude-rules/" "scripts" "templates/" "setup.sh" "docs/" "schemas/" "CHANGELOG.md" ".specify.yaml.example" ".specify.env.example" ".specify.json.example")
-    SPECIFY_EXCLUDES=("configurations/" "memory/" ".specify.yaml" ".specify.env" "scripts/ts/node_modules/" "__pycache__/")
+if [[ ! -f "$DISTRIBUTE_CONFIG" ]]; then
+    echo -e "${RED}Error: distribute config not found: $DISTRIBUTE_CONFIG${NC}" >&2
+    exit 1
 fi
 
-if ! $WITH_DOCS; then
-    SPECIFY_EXCLUDES+=("docs/")
-fi
+log_dim "Reading distribute.json..."
+load_json_array DISTRIBUTE_INCLUDES "ship"
+load_json_array DISTRIBUTE_EXCLUDES "doNotShip"
 
-# .claude/ rules (only used with --with-claude)
-CLAUDE_INCLUDES=("skills" "hooks" "settings.json")
-CLAUDE_EXCLUDES=("settings.local.json" "session-state/" "worktrees/" "rules/")
+log_dim "  Config: $DISTRIBUTE_CONFIG"
+log_dim "  ship: ${DISTRIBUTE_INCLUDES[*]}"
+log_dim "  do-not-ship: ${DISTRIBUTE_EXCLUDES[*]}"
 
 echo ""
 
@@ -355,8 +396,13 @@ is_payload_rewrite_candidate() {
 
 should_rewrite_source_file() {
     local source_dir="$1" rel_path="$2"
-    [[ -n "$BRAND_PREFIX" && "$source_dir" == "$SOURCE_SPECIFY" ]] || return 1
-    is_payload_rewrite_candidate "$rel_path"
+    local specify_rel
+    [[ -n "$BRAND_PREFIX" && "$source_dir" == "$SOURCE_ROOT" ]] || return 1
+    case "$rel_path" in
+        .specify/*) specify_rel="${rel_path#.specify/}" ;;
+        *) return 1 ;;
+    esac
+    is_payload_rewrite_candidate "$specify_rel"
 }
 
 target_relative_path() {
@@ -547,6 +593,9 @@ collect_target_orphans() {
                 fi
             done < <(find "$target" -type f -print0 2>/dev/null | sort -z)
         elif [[ -f "$target" ]]; then
+            if is_excluded "${pattern%/}" "${excludes[@]}"; then
+                continue
+            fi
             if ! grep -Fxq "${pattern%/}" <<< "$mapped_targets"; then
                 echo "${pattern%/}"
             fi
@@ -703,39 +752,22 @@ print_section() {
 log "${BOLD}${CYAN}━━━ Analyzing changes ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
-# Classify .specify/ files
-classify_files "$SOURCE_SPECIFY" "$TARGET_SPECIFY" "${SPECIFY_INCLUDES[@]}" -- "${SPECIFY_EXCLUDES[@]}"
-SPEC_NEW=("${G_NEW[@]}")
-SPEC_UPDATED=("${G_UPDATED[@]}")
-SPEC_UNCHANGED=("${G_UNCHANGED[@]}")
-SPEC_DELETED=("${G_DELETED[@]}")
-print_section ".specify/ files" SPEC_NEW SPEC_UPDATED SPEC_UNCHANGED SPEC_DELETED
-
-# Classify .claude/ files (only with --with-claude)
-CLAUDE_NEW=()
-CLAUDE_UPDATED=()
-CLAUDE_UNCHANGED=()
-CLAUDE_DELETED=()
-if $WITH_CLAUDE && [[ -d "$SOURCE_CLAUDE" ]]; then
-    saved_no_delete=$NO_DELETE
-    NO_DELETE=true
-    classify_files "$SOURCE_CLAUDE" "$TARGET_CLAUDE" "${CLAUDE_INCLUDES[@]}" -- "${CLAUDE_EXCLUDES[@]}"
-    NO_DELETE=$saved_no_delete
-    CLAUDE_NEW=("${G_NEW[@]}")
-    CLAUDE_UPDATED=("${G_UPDATED[@]}")
-    CLAUDE_UNCHANGED=("${G_UNCHANGED[@]}")
-    CLAUDE_DELETED=()
-    print_section ".claude/ files" CLAUDE_NEW CLAUDE_UPDATED CLAUDE_UNCHANGED CLAUDE_DELETED
-fi
+# Classify root-relative files from distribute.json
+classify_files "$SOURCE_ROOT" "$TARGET_ROOT" "${DISTRIBUTE_INCLUDES[@]}" -- "${DISTRIBUTE_EXCLUDES[@]}"
+SYNC_NEW=("${G_NEW[@]}")
+SYNC_UPDATED=("${G_UPDATED[@]}")
+SYNC_UNCHANGED=("${G_UNCHANGED[@]}")
+SYNC_DELETED=("${G_DELETED[@]}")
+print_section "Distributed files" SYNC_NEW SYNC_UPDATED SYNC_UNCHANGED SYNC_DELETED
 
 # Show skill-level diffs
 show_skill_diffs
 
 # ─── Phase 2: Summary totals ─────────────────────────────────────────────────
-TOTAL_NEW=$(( ${#SPEC_NEW[@]} + ${#CLAUDE_NEW[@]} ))
-TOTAL_UPDATED=$(( ${#SPEC_UPDATED[@]} + ${#CLAUDE_UPDATED[@]} ))
-TOTAL_UNCHANGED=$(( ${#SPEC_UNCHANGED[@]} + ${#CLAUDE_UNCHANGED[@]} ))
-TOTAL_DELETED=$(( ${#SPEC_DELETED[@]} + ${#CLAUDE_DELETED[@]} ))
+TOTAL_NEW=${#SYNC_NEW[@]}
+TOTAL_UPDATED=${#SYNC_UPDATED[@]}
+TOTAL_UNCHANGED=${#SYNC_UNCHANGED[@]}
+TOTAL_DELETED=${#SYNC_DELETED[@]}
 TOTAL_CHANGES=$(( TOTAL_NEW + TOTAL_UPDATED + TOTAL_DELETED ))
 
 log "${BOLD}${CYAN}━━━ Summary ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -778,7 +810,7 @@ if [[ $TOTAL_DELETED -gt 0 ]] && ! $AUTO_YES_DELETE; then
     read -r delete_confirm
     if [[ "$delete_confirm" != "delete" ]]; then
         echo -e "${YELLOW}Deletions skipped. Only new/updated files will be synced.${NC}"
-        SPEC_DELETED=()
+        SYNC_DELETED=()
         TOTAL_DELETED=0
     fi
     echo ""
@@ -807,7 +839,7 @@ copy_one() {
     fi
 
     local copied=false
-    if [[ "$label" == ".specify" ]] && should_rewrite_source_file "$SOURCE_SPECIFY" "$rel"; then
+    if should_rewrite_source_file "$SOURCE_ROOT" "$rel"; then
         local tmp
         tmp="$(mktemp "$dst_dir/.distribute.XXXXXX")"
         if payload_text_rewrite "$src" > "$tmp" 2>/dev/null && copy_source_mode "$src" "$tmp" && mv -f "$tmp" "$dst" 2>/dev/null; then
@@ -842,31 +874,24 @@ delete_one() {
     fi
 }
 
-# Sync .specify/ new + updated
-for rel in "${SPEC_NEW[@]}" "${SPEC_UPDATED[@]}"; do
-    target_rel="$(target_relative_path "$SOURCE_SPECIFY" "$rel")"
-    copy_one "$SOURCE_SPECIFY/$rel" "$TARGET_SPECIFY/$target_rel" "$rel" ".specify"
+# Sync new + updated files
+for rel in "${SYNC_NEW[@]}" "${SYNC_UPDATED[@]}"; do
+    target_rel="$(target_relative_path "$SOURCE_ROOT" "$rel")"
+    copy_one "$SOURCE_ROOT/$rel" "$TARGET_ROOT/$target_rel" "$rel" "root"
 done
 
-# Sync .claude/ new + updated
-if $WITH_CLAUDE; then
-    for rel in "${CLAUDE_NEW[@]}" "${CLAUDE_UPDATED[@]}"; do
-        copy_one "$SOURCE_CLAUDE/$rel" "$TARGET_CLAUDE/$rel" "$rel" ".claude"
-    done
-fi
-
-# Delete .specify/ orphans (copy first, delete after)
-for rel in "${SPEC_DELETED[@]}"; do
-    delete_one "$TARGET_SPECIFY/$rel" "$rel" ".specify"
+# Delete orphans (copy first, delete after)
+for rel in "${SYNC_DELETED[@]}"; do
+    delete_one "$TARGET_ROOT/$rel" "$rel" "root"
 done
 
 # Clean up empty directories (scoped to include-pattern subtrees only)
 if [[ $DELETED_COUNT -gt 0 ]]; then
-    for pattern in "${SPECIFY_INCLUDES[@]}"; do
-        if is_excluded "${pattern%/}" "${SPECIFY_EXCLUDES[@]}"; then
+    for pattern in "${DISTRIBUTE_INCLUDES[@]}"; do
+        if is_excluded "${pattern%/}" "${DISTRIBUTE_EXCLUDES[@]}"; then
             continue
         fi
-        pdir="$TARGET_SPECIFY/${pattern%/}"
+        pdir="$TARGET_ROOT/${pattern%/}"
         [[ -d "$pdir" ]] || continue
         find "$pdir" -mindepth 1 -type d -empty -delete 2>/dev/null || true
     done

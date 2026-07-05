@@ -54,17 +54,16 @@ bash .specify/setup.sh
 
 This bootstraps prerequisites, installs TypeScript dependencies, runs setup checks, and registers TDK plugin metadata from the consumer project's `.specify/` directory.
 
-### Distribute `.specify/` to a Consumer Project
+### Distribute Configured Payload to a Consumer Project
 
-Maintainers sync the TDK `.specify/` substrate from this source checkout:
+Maintainers sync the TDK payload paths from this source checkout:
 
 ```bash
 bash distribute.sh /path/to/consumer-project --dry-run
 bash distribute.sh /path/to/consumer-project --yes
-bash distribute.sh /path/to/consumer-project --with-docs --dry-run
 ```
 
-Distribution omits `.specify/docs/**` by default, leaving existing consumer docs untouched. Pass `--with-docs` to opt into normal docs copy/update/delete behavior.
+Distribution reads root-relative `ship` and `doNotShip` rules from `distribute.json`. It omits `.specify/docs/**` and `.specify/CHANGELOG.md` by default, leaving existing consumer docs and changelog untouched. Edit `distribute.json` to change shipped paths.
 
 For branded consumer payload text, pass a prefix:
 

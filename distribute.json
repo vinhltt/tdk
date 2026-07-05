@@ -1,0 +1,24 @@
+{
+  "ship": [
+    ".specify/_shared",
+    ".specify/plugins/",
+    ".specify/claude-rules/",
+    ".specify/scripts",
+    ".specify/templates/",
+    ".specify/setup.sh",
+    ".specify/schemas/",
+    ".specify/.specify.json.example"
+  ],
+  "doNotShip": [
+    ".specify/configurations/",
+    ".specify/memory/",
+    ".specify/docs/",
+    ".specify/CHANGELOG.md",
+    ".specify/scripts/ts/node\u005fmodules/",
+    ".specify/\u005f\u005fpycache\u005f\u005f/",
+    ".claude/settings.local.json",
+    ".claude/session-state/",
+    ".claude/worktrees/",
+    ".claude/rules/"
+  ]
+}
