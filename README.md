@@ -42,6 +42,7 @@ Authority boundaries: discovery is context-only and does not mint requirement ID
 
 ### Prerequisites
 
+- [Git](https://git-scm.com)
 - [Bun](https://bun.sh) runtime
 - [Claude Code](https://claude.ai/code) CLI
 
@@ -63,7 +64,7 @@ bash distribute.sh /path/to/consumer-project --dry-run
 bash distribute.sh /path/to/consumer-project --yes
 ```
 
-Distribution reads root-relative `ship` and `doNotShip` rules from `distribute.json`. It omits `.specify/docs/**` and `.specify/CHANGELOG.md` by default, leaving existing consumer docs and changelog untouched. Edit `distribute.json` to change shipped paths.
+Distribution reads root-relative `ship` and `doNotShip` rules from `distribute.json`. The current default payload ships `.specify/_shared/`, `.specify/plugins/`, `.specify/claude-rules/`, `.specify/scripts/`, `.specify/templates/`, `.specify/setup.sh`, `.specify/schemas/`, and `.specify/.specify.json.example`. It omits `.specify/docs/**`, `.specify/codex-plugins/**`, and `.specify/CHANGELOG.md` by default, leaving existing consumer docs and changelog untouched. Edit `distribute.json` to change shipped paths.
 
 For branded consumer payload text, pass a prefix:
 
@@ -72,7 +73,7 @@ bash distribute.sh /path/to/consumer-project --prefix sample --dry-run
 bash distribute.sh /path/to/consumer-project --prefix sample --yes
 ```
 
-`--prefix sample` rewrites safe distributed payload text such as `.specify/setup.sh`, templates, included docs, and non-test `.specify/scripts/ts/**` text files from `tdk-`/`tdk`/`TDK` to `sample-`/`sample`/`SAMPLE`. It leaves `.specify/scripts/ts/tests/**`, manifest-managed `.specify/plugins/**`, and `.specify/codex-plugins/**` source-identical. Harness artifacts still require an explicit setup CLI install with the same prefix.
+`--prefix sample` rewrites safe distributed payload text such as `.specify/setup.sh`, templates, and non-test `.specify/scripts/ts/**` text files from `tdk-`/`tdk`/`TDK` to `sample-`/`sample`/`SAMPLE`. It leaves `.specify/scripts/ts/tests/**`, manifest-managed `.specify/plugins/**`, and `.specify/codex-plugins/**` source-identical when those paths are shipped. Harness artifacts still require an explicit setup CLI install with the same prefix.
 
 ### Setup CLI — Harness Installation
 
@@ -113,11 +114,11 @@ bun src/index.ts convert-flat "$CONSUMER_ROOT" --dry-run
 bun src/index.ts convert-flat "$CONSUMER_ROOT" --yes
 ```
 
-The `packages/tdk-setup/` package is a separate dev tool (not shipped to consumers). The workflow scripts (config, scout, ut, sub-workspace) and generated Codex packages under `.specify/codex-plugins/` are shipped to consumer projects.
+The `packages/tdk-setup/` package is a separate dev tool (not shipped to consumers). The workflow scripts (config, scout, ut, routing, sub-workspace) are shipped through `.specify/scripts/`.
 
 `convert` is source-tree/maintainer-only. It emits generated Codex packages to `.specify/codex-plugins/<plugin>/` following the official OpenAI layout (only `.codex-plugin/plugin.json` inside `.codex-plugin/`; `skills/`, `hooks/`, `lib/` at the package root) from plugin source trees; `--check` re-emits in memory and fails if the committed packages drift from source.
 
-`install --harness codex` reads the generated packages from `.specify/codex-plugins/` and verifies them against `.specify/codex-plugins/manifest.json`, writes skills to `.agents/skills/` and hooks/lib to `.codex/`, generates `.codex/agents/*.toml` and `.codex/config.toml` at install time from plugin source agents, merges `.codex/hooks.json`, and writes Codex ownership state to `.specify/state/harness-install/codex.json`.
+`install --harness codex` reads generated packages from the consumer project's `.specify/codex-plugins/` directory and verifies them against `.specify/codex-plugins/manifest.json`, writes skills to `.agents/skills/` and hooks/lib to `.codex/`, generates `.codex/agents/*.toml` and `.codex/config.toml` at install time from plugin source agents, merges `.codex/hooks.json`, and writes Codex ownership state to `.specify/state/harness-install/codex.json`. Run Codex harness install only after those generated packages exist in the consumer project; the current default `distribute.json` payload does not copy them.
 
 Underscore-prefixed shared skill directories such as `_shared` are copied as reference assets, but their `SKILL.md` entrypoint is not installed as a loadable Codex skill.
 
@@ -157,7 +158,7 @@ bun src/commands/manifest/compute.ts --root ../..
 │   ├── tdk-test-api/        # API test generation (3 skills)
 │   ├── tdk-retro/           # Retrospective learning loop (4 skills)
 │   └── tdk-scaffold/        # Skill/agent, route proposal, and golden-path scaffolding (4 skills)
-├── codex-plugins/        # Generated Codex packages (6 packages; skills/hooks/lib at package root)
+├── codex-plugins/        # Generated Codex packages (6 packages; required by Codex harness install)
 ├── templates/            # 60 templates (spec, plan, task, discovery, epic PRD, HLD, test, memory, output, design, docs)
 ├── docs/                 # User guides (scenarios, setup, concepts, command guide)
 ├── configurations/       # Hook configs, sub-workspace configs
@@ -168,9 +169,11 @@ bun src/commands/manifest/compute.ts --root ../..
     │   │   ├── commands/        # Integrated command groups + standalone scripts
     │   │   ├── lib/             # Library modules (parsers, generators)
     │   │   └── utils/           # Zod schemas, shared utilities
-    │   └── tests/               # Bun test suite (114 .test.ts files)
+    │   └── tests/               # Bun test suite (85 .test.ts files)
     └── bash/             # Legacy shell scripts (maintenance-only)
 ```
+
+The source checkout also contains `packages/tdk-setup/` for harness install, Codex package conversion, and flat `.claude/` migration. That package has its own Bun test suite and is not part of the consumer `.specify/` payload.
 
 ## Plugins
 
@@ -198,7 +201,8 @@ Integrated commands (via `bun src/index.ts`; no installed `tdk` binary yet):
 | `bun src/index.ts ut backfill auto` | Automated unit test backfill |
 | `bun src/index.ts ut backfill plan` | Plan unit test coverage |
 | `bun src/index.ts ut backfill impl` | Implement unit tests from plan |
-| `bun src/index.ts scout` | Codebase analysis (repomix + tier-1 extraction) |
+| `bun src/index.ts scout` | Codebase navigation preprocessor for repomix pack extraction |
+| `bun src/index.ts routing plan-skill` | Manage custom workflow plan-skill routing files |
 | `bun src/index.ts sub-workspace docs` | Generate arc42-lite sub-workspace documentation for `/tdk-sub-workspace-docs` |
 
 **Setup CLI commands** (run from `packages/tdk-setup/`):
@@ -222,11 +226,12 @@ Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup,
 
 ## Documentation
 
-- [TDK Guides](.specify/docs/en/index.md) — start here for setup, epic flow, child feature implementation, scenarios, concepts, and command lookup
-- [Epic Start Guide](.specify/docs/en/guides/epic-start-guide.md) — start project/epic work, break it into child specs, then implement child features
-- [Child Feature Implementation](.specify/docs/en/guides/scenarios/00-child-feature-implementation.md) — use after task breakdown or for a small already-clear feature
+- [TDK Docs Index](.specify/docs/README.md) — language index for English and Vietnamese docs
+- [TDK Guides](.specify/docs/en/guides/index.md) — start here for setup, epic flow, child feature implementation, scenarios, concepts, and command lookup
+- [Epic Start Guide](.specify/docs/en/guides/scenarios/00-epic-start-guide.md) — start project/epic work, break it into child specs, then implement child features
+- [Child Feature Implementation](.specify/docs/en/guides/scenarios/01-child-feature-implementation.md) — use after task breakdown or for a small already-clear feature
 - [TDK Skills Guide](.specify/docs/en/guides/skills-guide.md) — skill directory, cheat sheet, and usage reference
 - [tdk-setup README](packages/tdk-setup/README.md) — harness setup CLI reference
-- [Scenario Guides](.specify/docs/en/guides/scenarios/) — 10 workflow scenarios
-- [Setup Guide](.specify/docs/en/guides/setup/installation.md) — installation and configuration
-- [Document Flow](.specify/docs/en/guides/document-flow.md) — spec → plan → task lifecycle
+- [Scenario Catalog](.specify/docs/en/guides/scenarios/scenario-catalog.md) — workflow scenario index
+- [Setup Guide](.specify/docs/en/guides/setup/setup-guide.md) — installation and configuration
+- [Workflow Map](.specify/docs/en/guides/workflow-map.md) — command input/output relationships
