@@ -1,13 +1,11 @@
 // Fresh-consumer distribute guard.
-// Proves distribute.sh carries .specify/codex-plugins/ to consumers:
-// generated Codex packages are part of the consumer payload because
-// `tdk-setup install --harness codex` installs from .specify/codex-plugins/.
+// Proves distribute.sh carries the configured default payload to consumers.
 // Two-dir construction: Dir A is a synthetic source with codex-plugins/ generated via
 // the tdk-setup CLI's convert command + compute --write. Dir B is a fresh consumer.
 // distribute.sh is invoked as `bash A/distribute.sh B --yes --no-delete` so
 // BASH_SOURCE[0] resolves SOURCE_ROOT = A.
 // The synthetic source deliberately contains a generated codex-plugins/ tree so the test
-// proves the tree is distributed when present at the source.
+// proves the tree is omitted unless distribute.json opts into it.
 
 import { describe, expect, test } from 'bun:test';
 import * as fs from 'node:fs';
@@ -64,12 +62,55 @@ const tdkRoot = path.resolve(import.meta.dir, '../../../..');
 const setupCliPath = path.resolve(tdkRoot, 'packages', 'tdk-setup', 'src', 'index.ts');
 const manifestCliPath = path.resolve(import.meta.dir, '..', 'src', 'commands', 'manifest', 'compute.ts');
 const distributeShPath = path.resolve(tdkRoot, 'distribute.sh');
+const releaseManifestCliPath = path.resolve(tdkRoot, '.claude', 'skills', 'tdk-bump', 'scripts', 'generate-release-manifest.ts');
+const releaseManifestToolingPath = path.resolve(tdkRoot, '.claude', 'skills', 'tdk-bump', 'scripts');
+
+const defaultDistributeConfig = {
+  ship: [
+    '.specify/_shared',
+    '.specify/plugins/',
+    '.specify/claude-rules/',
+    '.specify/scripts',
+    '.specify/templates/',
+    '.specify/setup.sh',
+    '.specify/schemas/',
+    '.specify/.specify.json.example',
+    '.specify/release-manifest.json',
+  ],
+  doNotShip: [
+    '.specify/configurations/',
+    '.specify/memory/',
+    '.specify/docs/',
+    '.specify/CHANGELOG.md',
+    '.claude/settings.local.json',
+    '.claude/session-state/',
+    '.claude/worktrees/',
+    '.claude/rules/',
+  ],
+};
 
 function copyDistributeScript(sourceRoot: string): string {
   const localDistributeSh = path.join(sourceRoot, 'distribute.sh');
   fs.copyFileSync(distributeShPath, localDistributeSh);
   fs.chmodSync(localDistributeSh, 0o755);
   return localDistributeSh;
+}
+
+function prepareDistributeSource(sourceRoot: string): void {
+  copyDistributeScript(sourceRoot);
+  fs.writeFileSync(path.join(sourceRoot, 'distribute.json'), JSON.stringify(defaultDistributeConfig, null, 2) + '\n', 'utf-8');
+  fs.cpSync(releaseManifestToolingPath, path.join(sourceRoot, '.claude', 'skills', 'tdk-bump', 'scripts'), {
+    recursive: true,
+  });
+  const manifest = Bun.spawnSync({
+    cmd: ['bun', releaseManifestCliPath, '--project-root', sourceRoot, '--write'],
+    cwd: sourceRoot,
+    stdout: 'pipe',
+    stderr: 'pipe',
+  });
+  if (manifest.exitCode !== 0) {
+    throw new Error(`release manifest generation failed: ${manifest.stderr.toString()}`);
+  }
 }
 
 function runDistribute(sourceRoot: string, consumerRoot: string, args: string[] = []) {
@@ -165,7 +206,7 @@ function buildSyntheticSource(): string {
 }
 
 describe('codex distribute payload', () => {
-  test('distribute.sh carries .specify/codex-plugins/ into a fresh consumer', () => {
+  test('distribute.sh carries configured default payload into a fresh consumer', () => {
     // Graceful skip if distribute.sh is not accessible
     if (!fs.existsSync(distributeShPath)) {
       process.stderr.write(`[skip] distribute.sh not found at ${distributeShPath}\n`);
@@ -187,8 +228,8 @@ describe('codex distribute payload', () => {
       'precondition: synthetic source must contain a generated codex-plugins/ tree',
     ).toBe(true);
 
-    // Copy distribute.sh into Dir A so BASH_SOURCE[0] makes SOURCE_ROOT = sourceRoot
-    copyDistributeScript(sourceRoot);
+    // Prepare Dir A so BASH_SOURCE[0] makes SOURCE_ROOT = sourceRoot and release manifest exists.
+    prepareDistributeSource(sourceRoot);
 
     // Dir B: fresh empty consumer (just needs to exist as a directory)
     const consumerRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tdk-dist-consumer-'));
@@ -223,24 +264,16 @@ describe('codex distribute payload', () => {
       '.specify/memory/ state must stay local to the source project',
     ).toBe(false);
 
-    // PRIMARY guard: codex-plugins/ is required for consumer Codex install.
+    // codex-plugins are generated in source but omitted by the current default distribute.json.
     const codexPluginsDir = path.join(consumerRoot, '.specify', 'codex-plugins');
     expect(
       fs.existsSync(codexPluginsDir),
-      '.specify/codex-plugins/ must be distributed to consumers for Codex install',
-    ).toBe(true);
-
-    const install = Bun.spawnSync({
-      cmd: ['bun', setupCliPath, 'install', consumerRoot, '--harness', 'codex', '--plugins', 'tdk-core', '--dry-run'],
-      cwd: sourceRoot,
-      stdout: 'pipe',
-      stderr: 'pipe',
-    });
+      '.specify/codex-plugins/ must stay omitted unless distribute.json opts into it',
+    ).toBe(false);
     expect(
-      install.exitCode,
-      `tdk-setup codex install dry-run failed:\nstdout: ${install.stdout.toString()}\nstderr: ${install.stderr.toString()}`,
-    ).toBe(0);
-    expect(install.stdout.toString()).toContain('.agents/skills/tdk-demo/SKILL.md');
+      fs.existsSync(path.join(consumerRoot, '.specify', 'release-manifest.json')),
+      '.specify/release-manifest.json must be distributed to consumers',
+    ).toBe(true);
 
     const emptyDocsDir = path.join(consumerRoot, '.specify', 'docs', 'keep-empty');
     const staleTemplatePath = path.join(consumerRoot, '.specify', 'templates', 'stale-orphan.md.tpl');
@@ -252,19 +285,8 @@ describe('codex distribute payload', () => {
       deleteOrphan.exitCode,
       `distribute.sh default orphan cleanup failed:\nstdout: ${deleteOrphan.stdout.toString()}\nstderr: ${deleteOrphan.stderr.toString()}`,
     ).toBe(0);
-    expect(fs.existsSync(staleTemplatePath), 'non-doc orphans must still be deleted by default').toBe(false);
+    expect(fs.existsSync(staleTemplatePath), 'unmanaged target files must not be deleted by manifest fast path').toBe(true);
     expect(fs.existsSync(emptyDocsDir), 'default cleanup must leave existing docs directories untouched').toBe(true);
-
-    const docsConsumerRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tdk-dist-docs-consumer-'));
-    const docsDistribute = runDistribute(sourceRoot, docsConsumerRoot, ['--with-docs', '--yes', '--no-delete']);
-    expect(
-      docsDistribute.exitCode,
-      `distribute.sh --with-docs failed:\nstdout: ${docsDistribute.stdout.toString()}\nstderr: ${docsDistribute.stderr.toString()}`,
-    ).toBe(0);
-    expect(
-      fs.existsSync(path.join(docsConsumerRoot, '.specify', 'docs', 'en', 'index.md')),
-      '.specify/docs/ must be distributed when --with-docs is used',
-    ).toBe(true);
   });
 
   test('distribute.sh can brand safe payload text while preserving plugin and codex package bytes', () => {
@@ -348,7 +370,7 @@ describe('codex distribute payload', () => {
       fs.writeFileSync(filePath, content, 'utf-8');
     }
     fs.chmodSync(path.join(specifyRoot, 'setup.sh'), 0o755);
-    copyDistributeScript(sourceRoot);
+    prepareDistributeSource(sourceRoot);
 
     const plainConsumerRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tdk-dist-brand-plain-'));
     const plain = runDistribute(sourceRoot, plainConsumerRoot, ['--yes', '--no-delete']);
@@ -361,6 +383,7 @@ describe('codex distribute payload', () => {
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'scripts', 'ts', 'package.json'), 'utf-8')).toBe(scriptsPackageText);
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'scripts', 'ts', 'tests', 'sample.test.ts'), 'utf-8')).toBe(testScriptText);
     expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'index.md'))).toBe(false);
+    expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'release-manifest.json'))).toBe(true);
     expect(fileMode(path.join(plainConsumerRoot, '.specify', 'setup.sh'))).toBe(0o755);
     fs.mkdirSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'guides'), { recursive: true });
     fs.mkdirSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets'), { recursive: true });
@@ -372,8 +395,8 @@ describe('codex distribute payload', () => {
       dryRun.exitCode,
       `branded dry-run failed:\nstdout: ${dryRun.stdout.toString()}\nstderr: ${dryRun.stderr.toString()}`,
     ).toBe(0);
-    expect(dryRun.stdout.toString()).toContain('~ setup.sh');
-    expect(dryRun.stdout.toString()).toContain('~ scripts/ts/package.json');
+    expect(dryRun.stdout.toString()).toContain('~ .specify/setup.sh');
+    expect(dryRun.stdout.toString()).toContain('~ .specify/scripts/ts/package.json');
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'setup.sh'), 'utf-8')).toBe(setupText);
 
     const migrated = runDistribute(sourceRoot, plainConsumerRoot, ['--prefix', 'sample', '--yes', '--yes-delete']);
@@ -386,18 +409,8 @@ describe('codex distribute payload', () => {
     expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets', 'diagram.svg'))).toBe(false);
     expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets', 'tdk-diagram.svg'))).toBe(true);
 
-    const docsMigrated = runDistribute(sourceRoot, plainConsumerRoot, ['--prefix', 'sample', '--with-docs', '--yes', '--yes-delete']);
-    expect(
-      docsMigrated.exitCode,
-      `branded docs migration failed:\nstdout: ${docsMigrated.stdout.toString()}\nstderr: ${docsMigrated.stderr.toString()}`,
-    ).toBe(0);
-    expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'guides', 'skills-guide.md'))).toBe(true);
-    expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'guides', 'tdk-skills-guide.md'))).toBe(false);
-    expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets', 'diagram.svg'))).toBe(true);
-    expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'assets', 'tdk-diagram.svg'))).toBe(false);
-
     const brandedConsumerRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'tdk-dist-brand-branded-'));
-    const branded = runDistribute(sourceRoot, brandedConsumerRoot, ['--prefix', 'sample', '--with-docs', '--yes', '--no-delete']);
+    const branded = runDistribute(sourceRoot, brandedConsumerRoot, ['--prefix', 'sample', '--yes', '--no-delete']);
     expect(
       branded.exitCode,
       `branded distribute failed:\nstdout: ${branded.stdout.toString()}\nstderr: ${branded.stderr.toString()}`,
@@ -409,16 +422,7 @@ describe('codex distribute payload', () => {
     expect(brandedSetup).toContain('TDK_PROJECT_ROOT and ${TDK}');
     expect(fileMode(path.join(brandedConsumerRoot, '.specify', 'setup.sh'))).toBe(0o755);
 
-    const brandedDocs = fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'index.md'), 'utf-8');
-    expect(brandedDocs).toContain('# SAMPLE Guide');
-    expect(brandedDocs).toContain('- [Why SAMPLE?](#why-sample)');
-    expect(brandedDocs).toContain('[SAMPLE Skills Guide](guides/skills-guide.md#why-sample)');
-    expect(brandedDocs).toContain('`/sample-specify` for a sample feature');
-    expect(brandedDocs).toContain('[SAMPLE Skills Guide](guides/skills-guide.md)');
-    expect(brandedDocs).toContain('`packages/tdk-setup/README.md` and `packages/tdk-setup/`');
-    expect(brandedDocs).toContain('../assets/diagram.svg');
-    expect(brandedDocs).toContain('.specify/plugins/tdk-core/skills/tdk-demo/SKILL.md');
-    expect(brandedDocs).toContain('.specify/codex-plugins/tdk-core/skills/tdk-demo/SKILL.md');
+    expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'index.md'))).toBe(false);
     expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'templates', 'demo.md.tpl'), 'utf-8')).toBe('Generated by /sample-plan for SAMPLE.\n');
     expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'claude-rules', 'primary-workflow-routing.md'), 'utf-8')).toBe('# SAMPLE primary workflow\nRun `sample-specify` before `sample-plan`.\n');
     expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'src', 'commands', 'setup', 'utils', 'output-helpers.ts'), 'utf-8')).toContain('SAMPLE Installer');
@@ -437,11 +441,11 @@ describe('codex distribute payload', () => {
     expect(brandedScoutScript).toContain('.claude/skills/tdk-test-api-plan/scripts/parse_openapi_spec.py');
     expect(brandedScoutScript).toContain("'tdk-core': { version: '1.0.0' }");
     expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'tests', 'sample.test.ts'), 'utf-8')).toBe(testScriptText);
-    expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'guides', 'skills-guide.md'))).toBe(true);
+    expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'release-manifest.json'))).toBe(true);
+    expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'guides', 'skills-guide.md'))).toBe(false);
     expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'guides', 'tdk-skills-guide.md'))).toBe(false);
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'guides', 'skills-guide.md'), 'utf-8')).toContain('# SAMPLE Skills Guide');
     expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'plugins', 'tdk-core', 'skills', 'tdk-demo', 'SKILL.md'), 'utf-8')).toBe(pluginText);
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'codex-plugins', 'tdk-core', 'skills', 'tdk-demo', 'SKILL.md'), 'utf-8')).toBe(codexText);
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'assets', 'diagram.svg'), 'utf-8')).toBe('<svg><text>SAMPLE /sample-plan asset text brands</text><desc>lifecycle-share-graph.png</desc></svg>\n');
+    expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'codex-plugins', 'tdk-core', 'skills', 'tdk-demo', 'SKILL.md'))).toBe(false);
+    expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'assets', 'diagram.svg'))).toBe(false);
   }, 15000);
 });

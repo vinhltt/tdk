@@ -7,7 +7,8 @@
     ".specify/templates/",
     ".specify/setup.sh",
     ".specify/schemas/",
-    ".specify/.specify.json.example"
+    ".specify/.specify.json.example",
+    ".specify/release-manifest.json"
   ],
   "doNotShip": [
     ".specify/configurations/",

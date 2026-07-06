@@ -2,7 +2,7 @@
 name: tdk-bump
 description: "Generate Keep-a-Changelog entries for .specify/, .claude/, .github/ config changes. Use when updating commands, scripts, templates, or governance files."
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # tdk-bump
@@ -16,7 +16,7 @@ This skill completes SUCCESS only when ALL:
 2. `marketplace.json.metadata.version` matches the bumped version
 3. All affected plugin.json bumped **across every existing manifest format** (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`). Missing Codex/Cursor mirrors are auto-scaffolded by `plugin-bump`.
 4. All changed skill/agent/hook/command components bumped — "changed" = any file in component directory M/A/D (not just SKILL.md). Removed components NOT bumped, listed under `### Removed` in CHANGELOG.
-5. Step 14 `verify.ts` exits 0 — includes per-format checks on claude/codex/cursor `plugin.json`.
+5. Step 14 `verify.ts` and release manifest check both exit 0 — includes per-format checks on claude/codex/cursor `plugin.json` and `.specify/release-manifest.json` freshness.
 
 ANY fail → report FAILED, DO NOT print success summary.
 
@@ -270,7 +270,7 @@ Run all affected plugins sequentially (or in parallel via background tasks if ch
 
 ### Step 12: Workspace-level finalization
 
-After every affected plugin has been bumped by `plugin-bump`, tdk-bump owns ONLY the workspace-scope files that `plugin-bump` deliberately ignores. Two writes total:
+After every affected plugin has been bumped by `plugin-bump`, tdk-bump owns ONLY the workspace-scope files that `plugin-bump` deliberately ignores. Three generated writes total:
 
 1. **Bump `marketplace.json`** — set `.claude-plugin/marketplace.json` → `metadata.version` to the new workspace version (from Step 8).
    Codex reads this same file as a legacy-compatible marketplace catalog — no separate `.codex-plugin/marketplace.json` needed.
@@ -280,6 +280,12 @@ After every affected plugin has been bumped by `plugin-bump`, tdk-bump owns ONLY
    bun run manifest --project-root <project-root> --write
    ```
    `manifest compute` reads component versions directly from each definition file (SKILL.md `metadata.version`, agent `version`, hooks.json `version`) — the source-of-truth files `plugin-bump` just wrote. No explicit version propagation needed; the new versions are picked up automatically.
+
+3. **Refresh `.specify/release-manifest.json`** — run:
+   ```bash
+   bun .claude/skills/tdk-bump/scripts/generate-release-manifest.ts --project-root <project-root> --write
+   ```
+   The release manifest records the shippable `.specify/` payload from `distribute.json`. It is maintainer-only tooling, but the generated JSON is shipped to consumers.
 
 **Version consistency rule:** After Step 12, the version string for each plugin MUST match across:
 - `manifest.json` → `plugins.{plugin}.version`
@@ -316,4 +322,15 @@ Expected output on success: `ALL CHECKS PASSED` (exit 0).
 3. Re-run `verify.ts` with the same flags until it exits 0.
 4. Only after exit 0 may you print the Step 13 success summary.
 
-**Never report SUCCESS after a non-zero verify exit.** The Definition of Done pins the success contract to `verify.ts` exit 0 — no exception.
+Then run the release manifest freshness check:
+
+```bash
+bun .claude/skills/tdk-bump/scripts/generate-release-manifest.ts --project-root <project-root> --check
+```
+
+**On non-zero release manifest check:**
+1. Run the same script with `--write`.
+2. Inspect the `.specify/release-manifest.json` diff.
+3. Re-run `--check` until it exits 0.
+
+**Never report SUCCESS after a non-zero verify or release manifest check exit.** The Definition of Done pins the success contract to both checks exiting 0 — no exception.

@@ -64,7 +64,15 @@ bash distribute.sh /path/to/consumer-project --dry-run
 bash distribute.sh /path/to/consumer-project --yes
 ```
 
-Distribution reads root-relative `ship` and `doNotShip` rules from `distribute.json`. The current default payload ships `.specify/_shared/`, `.specify/plugins/`, `.specify/claude-rules/`, `.specify/scripts/`, `.specify/templates/`, `.specify/setup.sh`, `.specify/schemas/`, and `.specify/.specify.json.example`. It omits `.specify/docs/**`, `.specify/codex-plugins/**`, and `.specify/CHANGELOG.md` by default, leaving existing consumer docs and changelog untouched. Edit `distribute.json` to change shipped paths.
+Distribution reads root-relative `ship` and `doNotShip` rules from `distribute.json`. The current default payload ships `.specify/_shared/`, `.specify/plugins/`, `.specify/claude-rules/`, `.specify/scripts/`, `.specify/templates/`, `.specify/setup.sh`, `.specify/schemas/`, `.specify/.specify.json.example`, and `.specify/release-manifest.json`. It omits `.specify/docs/**`, `.specify/codex-plugins/**`, and `.specify/CHANGELOG.md` by default, leaving existing consumer docs and changelog untouched. Edit `distribute.json` to change shipped paths.
+
+`distribute.sh` requires the source `.specify/release-manifest.json`. Regenerate it before shipping when payload files or `distribute.json` change:
+
+```bash
+bun .claude/skills/tdk-bump/scripts/generate-release-manifest.ts --project-root . --write
+```
+
+When the target already has a release manifest, the default path trusts source and target manifests to classify new, updated, deleted, and unchanged files without hashing target bytes. `--prefix` bypasses that fast path because rendered payload bytes differ from source hashes. Use `--force` when you want to overwrite target files through the full classification path.
 
 For branded consumer payload text, pass a prefix:
 

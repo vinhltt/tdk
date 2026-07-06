@@ -11,6 +11,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+## [1.99.0] - 2026-07-06
+
+### Added
+- **[tdk-bump]** Release manifest tooling for distributed payloads
+  - Added a generator/check script that hashes shippable `.specify/` files from `distribute.json`, preserves `generatedAt` when semantic manifest content is unchanged, and writes `.specify/release-manifest.json`.
+  - Added a source-target manifest diff helper with schema and algorithm compatibility checks.
+  - Added resolver and type support for ship/do-not-ship rules, directory traversal, root-anchored excludes, and self-exclusion of `.specify/release-manifest.json`.
+  - Added tests covering manifest generation, manifest diffs, resolver exclusions, and distribution contract behavior.
+- **[Scripts]** Added release manifest contract coverage for `distribute.sh`, including missing source manifests, target manifest fallback, schema/algorithm mismatch failures, `--force` bypass, and `--no-delete` handling.
+- **[General]** Added the generated `.specify/release-manifest.json` for the current shippable payload.
+
+### Changed
+- **[tdk-bump]** Updated the bump workflow to refresh and verify `.specify/release-manifest.json` as a required release gate.
+- **[Scripts]** Updated distribution E2E coverage to prepare source release manifests, distribute the manifest to consumers, assert default payload omissions, preserve unmanaged target files, and expect full `.specify/` paths in dry-run output.
+
+### Removed
+- **[Skills]** Removed the interactive `tdk-distribute` skill (was 1.0.8) and its contract test suite; distribution behavior is now governed by manifest-backed scripts.
+
 ## [1.98.0] - 2026-07-05
 
 ### Added

@@ -5,7 +5,8 @@
 # Explicit harness mutation should use `bun src/index.ts install <target> --harness claude`
 # from the tdk-setup package (packages/tdk-setup).
 # Uses distribute.json include/exclude rules.
-# Compares files by MD5.
+# Compares files by release manifest when available, with MD5 fallback for
+# --prefix/--force modes.
 # Always shows dry-run summary first, then asks for confirmation before writing.
 #
 # Usage:
@@ -170,6 +171,9 @@ SOURCE_ROOT="$SCRIPT_DIR"
 SOURCE_SPECIFY="$SOURCE_ROOT/.specify"
 
 DISTRIBUTE_CONFIG="$SOURCE_ROOT/distribute.json"
+RELEASE_MANIFEST_REL=".specify/release-manifest.json"
+SOURCE_RELEASE_MANIFEST="$SOURCE_ROOT/$RELEASE_MANIFEST_REL"
+DIFF_RELEASE_MANIFESTS_TS_SCRIPT="$SOURCE_ROOT/.claude/skills/tdk-bump/scripts/diff-release-manifests.ts"
 
 if [[ ! -d "$SOURCE_SPECIFY" ]]; then
     echo -e "${RED}Error: source .specify/ not found at $SOURCE_SPECIFY${NC}" >&2
@@ -182,6 +186,8 @@ if [[ ! -d "$TARGET_ROOT" ]]; then
     echo -e "${RED}Error: target directory not found: $TARGET_ROOT${NC}" >&2
     exit 1
 fi
+
+TARGET_RELEASE_MANIFEST="$TARGET_ROOT/$RELEASE_MANIFEST_REL"
 
 PYTHON_BIN=""
 RENDER_TMP_DIR=""
@@ -322,6 +328,7 @@ load_json_array() {
     while IFS= read -r line; do
         [[ -n "$line" ]] && target_array+=("$line")
     done <<< "$output"
+    return 0
 }
 
 if [[ ! -f "$DISTRIBUTE_CONFIG" ]]; then
@@ -338,6 +345,12 @@ log_dim "  ship: ${DISTRIBUTE_INCLUDES[*]}"
 log_dim "  do-not-ship: ${DISTRIBUTE_EXCLUDES[*]}"
 
 echo ""
+
+if [[ ! -f "$SOURCE_RELEASE_MANIFEST" ]]; then
+    echo -e "${RED}Error: source release manifest not found: $SOURCE_RELEASE_MANIFEST${NC}" >&2
+    echo -e "${RED}Run: bun .claude/skills/tdk-bump/scripts/generate-release-manifest.ts --project-root \"$SOURCE_ROOT\" --write${NC}" >&2
+    exit 1
+fi
 
 # ─── Utility: cross-platform MD5 ─────────────────────────────────────────────
 file_md5() {
@@ -673,6 +686,114 @@ classify_files() {
     fi
 }
 
+classify_target_without_release_manifest() {
+    local source_dir="$1"
+    local target_dir="$2"
+    shift 2
+
+    G_NEW=()
+    G_UPDATED=()
+    G_UNCHANGED=()
+    G_DELETED=()
+
+    local -a saved_includes=() saved_excludes=()
+    while [[ $# -gt 0 && "$1" != "--" ]]; do saved_includes+=("$1"); shift; done
+    [[ "${1:-}" == "--" ]] && shift
+    saved_excludes=("$@")
+
+    local files
+    files=$(collect_files "$source_dir" "${saved_includes[@]}" -- "${saved_excludes[@]}")
+    while IFS= read -r rel; do
+        [[ -z "$rel" ]] && continue
+        local target_rel
+        target_rel="$(target_relative_path "$source_dir" "$rel")"
+        if [[ -f "$target_dir/$target_rel" ]]; then
+            G_UPDATED+=("$rel")
+            log_dim "  [BOOTSTRAP] $rel → UPDATED"
+        else
+            G_NEW+=("$rel")
+            log_dim "  [BOOTSTRAP] $rel → NEW"
+        fi
+    done <<< "$files"
+}
+
+append_release_manifest_copy_state() {
+    if [[ ! -f "$TARGET_RELEASE_MANIFEST" ]]; then
+        G_NEW+=("$RELEASE_MANIFEST_REL")
+    elif [[ "$(file_md5 "$SOURCE_RELEASE_MANIFEST")" != "$(file_md5 "$TARGET_RELEASE_MANIFEST")" ]]; then
+        G_UPDATED+=("$RELEASE_MANIFEST_REL")
+    else
+        G_UNCHANGED+=("$RELEASE_MANIFEST_REL")
+    fi
+}
+
+classify_with_release_manifest_diff() {
+    local source_dir="$1"
+    local target_dir="$2"
+
+    G_NEW=()
+    G_UPDATED=()
+    G_UNCHANGED=()
+    G_DELETED=()
+
+    if ! command -v bun &>/dev/null; then
+        echo -e "${RED}Error: release manifest diff requires bun${NC}" >&2
+        exit 1
+    fi
+    if [[ ! -f "$DIFF_RELEASE_MANIFESTS_TS_SCRIPT" ]]; then
+        echo -e "${RED}Error: release manifest diff script not found: $DIFF_RELEASE_MANIFESTS_TS_SCRIPT${NC}" >&2
+        exit 1
+    fi
+
+    local output stderr_file
+    stderr_file="$(mktemp "${TMPDIR:-/tmp}/tdk-release-manifest-diff.XXXXXX")"
+    if ! output="$(bun "$DIFF_RELEASE_MANIFESTS_TS_SCRIPT" \
+        --source-root "$source_dir" \
+        --target-root "$target_dir" \
+        --output tsv 2>"$stderr_file")"; then
+        cat "$stderr_file" >&2
+        rm -f "$stderr_file"
+        exit 1
+    fi
+    rm -f "$stderr_file"
+
+    while IFS=$'\t' read -r action rel; do
+        [[ -z "$action" || -z "$rel" ]] && continue
+        case "$action" in
+            new) G_NEW+=("$rel"); log_dim "  [MANIFEST] $rel → NEW" ;;
+            updated) G_UPDATED+=("$rel"); log_dim "  [MANIFEST] $rel → UPDATED" ;;
+            unchanged) G_UNCHANGED+=("$rel"); log_dim "  [MANIFEST] $rel → UNCHANGED" ;;
+            deleted) G_DELETED+=("$rel"); log_dim "  [MANIFEST] $rel → DELETED" ;;
+            *)
+                echo -e "${RED}Error: unknown release manifest action: $action${NC}" >&2
+                exit 1
+                ;;
+        esac
+    done <<< "$output"
+
+    if $NO_DELETE; then
+        G_DELETED=()
+    fi
+    append_release_manifest_copy_state
+}
+
+classify_distribution_files() {
+    local source_dir="$1"
+    local target_dir="$2"
+    shift 2
+
+    if [[ ! -f "$TARGET_RELEASE_MANIFEST" ]]; then
+        log_dim "Target release manifest missing; first ship will not delete target orphans"
+        classify_target_without_release_manifest "$source_dir" "$target_dir" "$@"
+    elif [[ -n "$BRAND_PREFIX" || "$FORCE" == true ]]; then
+        log_dim "Release manifest fast path bypassed (--prefix or --force)"
+        classify_files "$source_dir" "$target_dir" "$@"
+    else
+        log_dim "Using release manifest fast path"
+        classify_with_release_manifest_diff "$source_dir" "$target_dir"
+    fi
+}
+
 # ─── Component-level diffs via bun run manifest (TS implementation) ──────────────
 CHECKSUMS_TS_SCRIPT="$SOURCE_SPECIFY/scripts/ts/src/commands/manifest/compute.ts"
 
@@ -753,7 +874,7 @@ log "${BOLD}${CYAN}━━━ Analyzing changes ━━━━━━━━━━━
 echo ""
 
 # Classify root-relative files from distribute.json
-classify_files "$SOURCE_ROOT" "$TARGET_ROOT" "${DISTRIBUTE_INCLUDES[@]}" -- "${DISTRIBUTE_EXCLUDES[@]}"
+classify_distribution_files "$SOURCE_ROOT" "$TARGET_ROOT" "${DISTRIBUTE_INCLUDES[@]}" -- "${DISTRIBUTE_EXCLUDES[@]}"
 SYNC_NEW=("${G_NEW[@]}")
 SYNC_UPDATED=("${G_UPDATED[@]}")
 SYNC_UNCHANGED=("${G_UNCHANGED[@]}")
@@ -847,7 +968,7 @@ copy_one() {
         else
             rm -f "$tmp" 2>/dev/null || true
         fi
-    elif cp -f "$src" "$dst" 2>/dev/null; then
+    elif cp -f "$src" "$dst" 2>/dev/null && copy_source_mode "$src" "$dst"; then
         copied=true
     fi
 
@@ -874,8 +995,14 @@ delete_one() {
     fi
 }
 
+MANIFEST_SHOULD_COPY=false
+
 # Sync new + updated files
 for rel in "${SYNC_NEW[@]}" "${SYNC_UPDATED[@]}"; do
+    if [[ "$rel" == "$RELEASE_MANIFEST_REL" ]]; then
+        MANIFEST_SHOULD_COPY=true
+        continue
+    fi
     target_rel="$(target_relative_path "$SOURCE_ROOT" "$rel")"
     copy_one "$SOURCE_ROOT/$rel" "$TARGET_ROOT/$target_rel" "$rel" "root"
 done
@@ -884,6 +1011,10 @@ done
 for rel in "${SYNC_DELETED[@]}"; do
     delete_one "$TARGET_ROOT/$rel" "$rel" "root"
 done
+
+if $MANIFEST_SHOULD_COPY; then
+    copy_one "$SOURCE_RELEASE_MANIFEST" "$TARGET_RELEASE_MANIFEST" "$RELEASE_MANIFEST_REL" "root"
+fi
 
 # Clean up empty directories (scoped to include-pattern subtrees only)
 if [[ $DELETED_COUNT -gt 0 ]]; then
