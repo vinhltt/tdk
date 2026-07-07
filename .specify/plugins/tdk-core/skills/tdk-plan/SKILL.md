@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "5.7.2"
+  version: "7.0.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -44,7 +44,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 - Write implementation code.
 - Execute tests.
 - Create PRs or commits.
-- Write unit tests (delegates UT planning to `/tdk-ut-backfill-plan`; UT implementation is handled by `/tdk-implement` through `## Delegate Skills` in generated UT phase files).
+- Write unit tests itself (`--tdd` / `--ut-backfill` generate test-first or backfill phase sections; UT implementation is handled by `/tdk-implement` through `## Delegate Skills` in generated phase files).
 
 ## When to Use
 
@@ -82,13 +82,14 @@ flowchart TD
 
 ### Step 0 — Parse Arguments & Validate Task ID
 **Inline.** <!-- safety-critical: deterministic split before any script invocation -->
-Split `$ARGUMENTS` into `TASK_ID`, `FLAGS`, and `USER_CONTENT`.
+Split `$ARGUMENTS` into `TASK_ID`, `FLAGS`, `BACKFILL_TARGET`, and `USER_CONTENT`.
 
 - `TASK_ID`: first argument token. It must be a valid task ID. Validate only this cleaned token with `tdk-validate-task-id` and host skill name `/tdk-plan`.
-- `FLAGS`: known mode flags `--fast | --hard | --red-team | --validate`, allowed anywhere after `TASK_ID`.
+- `FLAGS`: known mode flags `--fast | --hard | --tdd | --ut-backfill | --red-team | --validate`, allowed anywhere after `TASK_ID`. Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`). When `--ut-backfill` is present, also accept backfill targeting flags `--sub-workspace <name>`, `--module <name>` (requires `--sub-workspace`), and `--standalone`; these targeting flags are unknown-flag STOP errors when `--ut-backfill` is absent.
+- `BACKFILL_TARGET`: only populated when `--ut-backfill` is present. Shape: `{ sub_workspace: string | "", module: string | "", standalone: boolean }`. Remove targeting flags and their values from `USER_CONTENT`.
 - `USER_CONTENT`: remaining non-flag text after `TASK_ID`, preserving order. Empty string if no content was supplied.
 
-Reject with STOP if the first argument token is missing or invalid, a known mode flag appears before `TASK_ID`, any token beginning with `--` is not an exact whitelisted mode flag, or multiple mode flags are present. Multiple flags or unknown flag → STOP with explicit error (see `references/modes.md`). If `tdk-validate-task-id` STOPs → halt. Store: `TASK_ID`, `TASK_ID_SOURCE`, `FLAGS`, `USER_CONTENT`.
+Reject with STOP if the first argument token is missing or invalid, a known mode flag appears before `TASK_ID`, any token beginning with `--` is not an exact whitelisted mode flag, more than one flag from the same category (speed / test / action) is present, `--fast` is combined with `--tdd` or `--ut-backfill`, a backfill targeting flag appears without `--ut-backfill`, `--sub-workspace` or `--module` is missing its value, or `--module` appears without `--sub-workspace`. Unknown flag or category conflict → STOP with explicit error (see `references/modes.md`). If `tdk-validate-task-id` STOPs → halt. Store: `TASK_ID`, `TASK_ID_SOURCE`, `FLAGS`, `BACKFILL_TARGET`, `USER_CONTENT`.
 
 ### Script Command Contract
 **Inline.** <!-- script invocation contract -->
@@ -139,7 +140,7 @@ Load: `references/handle-existing-plan.md`
 
 ### Step 1.7 — Mode Detection
 Load: `references/modes.md`
-Resolve `MODE` from `FLAGS`: `fast` | `hard` | `red-team` | `validate` | `default` (no flag). Conflict / unknown → already STOPped at Step 0. `--red-team` / `--validate` short-circuit to Phase 06 / 07 over the existing plan and skip Steps 2–4, using `USER_CONTENT` as focus text when non-empty. Other modes continue to Step 2 and use `USER_CONTENT` as planning instruction when non-empty.
+Resolve `MODE` from `FLAGS`: `fast` | `hard` | `red-team` | `validate` | `default` (no flag). Resolve `test_mode` independently from `FLAGS`: `tdd` | `ut_backfill` | `none` (no test flag). Conflict / unknown → already STOPped at Step 0. `--red-team` / `--validate` short-circuit to Phase 06 / 07 over the existing plan and skip Steps 2–4, using `USER_CONTENT` as focus text when non-empty. Other modes continue to Step 2 and use `USER_CONTENT` as planning instruction when non-empty; `test_mode` and `BACKFILL_TARGET` carry forward to Step 3b Design and the plan output contract.
 
 ### Step 2 — Load Context
 Load: `references/gates.md`

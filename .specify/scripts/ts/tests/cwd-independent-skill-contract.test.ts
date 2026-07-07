@@ -60,7 +60,6 @@ const LEGACY_TDK_SCRIPT_SKILLS = [
   '../../../plugins/tdk-core/skills/tdk-analyze/SKILL.md',
   '../../../plugins/tdk-core/skills/tdk-checklist/SKILL.md',
   '../../../plugins/tdk-core/skills/tdk-clarify/SKILL.md',
-  '../../../plugins/tdk-core/skills/tdk-ut-backfill-plan/SKILL.md',
   '../../../plugins/tdk-utils/skills/tdk-setup-guide/SKILL.md',
 ].map((path) => resolve(import.meta.dir, path));
 

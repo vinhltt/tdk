@@ -111,7 +111,7 @@ Excluded:
 | `/tdk-clarify` | Hỏi targeted questions và ghi answer lại vào `spec.md`. | `<id>` | `spec.md` có gaps cần resolve trước planning. |
 | `/tdk-epic-hld` | Tạo parent epic high-level design context. | `<epic-id>`, `--force` | Epic PRD tồn tại và cần design lenses trước child breakdown. |
 | `/tdk-task-breakdown` | Generate child spec seed Markdown từ epic PRD cộng HLD. | `<epic-id>`, `--force` | Một epic cần các child slices có thể spec độc lập. |
-| `/tdk-plan` | Generate implementation plan và design artifacts. | `<id> [content]`, `--fast`, `--hard`, `--red-team`, `--validate` | `spec.md` đã sẵn sàng trở thành implementation phases. |
+| `/tdk-plan` | Generate implementation plan và design artifacts. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate` | `spec.md` đã sẵn sàng trở thành implementation phases; thêm `--tdd`/`--ut-backfill` khi test planning nên nằm trong cùng phases. |
 | `/tdk-implement` | Execute runnable rows từ `plan.md ## Phases`. | `<id>`, `--phase NN` | Plan đã tồn tại và một hoặc nhiều implementation phases đã ready. |
 | `/tdk-analyze` | Cross-artifact consistency và quality analysis. | `<id>` | Bạn cần read-only verification trên spec, plan, và phases. |
 | `/tdk-checklist` | Generate focused quality checklist. | `<id> [focus]` | Requirements cần gate trước downstream implementation. |
@@ -149,7 +149,7 @@ Excluded:
 
 | Skill | Summary | Main modes/options | Dùng khi |
 |-------|---------|--------------------|----------|
-| `/tdk-ut-backfill-plan` | Generate unit-test plan và phase files. | `<id>`, `--sub-workspace`, `--review`, `--force`, `--standalone` | Existing feature/code cần routed unit-test plan. |
+| `/tdk-plan --tdd` / `--ut-backfill` | Fold test-first hoặc backfill planning vào `/tdk-plan` phases. | `<id>`, `--sub-workspace`, `--module`, `--standalone` (chỉ backfill) | Existing feature/code cần test-first hoặc routed unit-test phases như một phần của cùng plan. |
 | `/tdk-test-api-plan` | Generate API test plan từ endpoints. | OpenAPI, scout, hoặc manual endpoint input | API coverage cần structured plan trước testcase generation. |
 | `/tdk-test-api-generate-testcase` | Generate per-endpoint API testcase files và execution manifest. | reads API test plan | Test plan ready để thành concrete testcase files. |
 | `/tdk-test-api-gen-code-playwright-ts` | Generate Playwright TypeScript API test code. | reads testcase files và execution manifest | Testcase files nên thành executable Playwright API tests. |
@@ -248,7 +248,7 @@ Các helper này tồn tại trong source nhưng không được catalog như di
 | 18c | `/tdk-module-boundary-policy [topology\|file] [--audit\|--suggest]` | Deprecated compatibility route cho workspace dependency policy |
 | 19 | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | Guarded golden-path scaffold plan và recipe |
 | — | **Unit Testing** | |
-| 20 | `/tdk-ut-backfill-plan <id>` | Generate unit test plan và phase files |
+| 20 | `/tdk-plan <id> --tdd` \| `/tdk-plan <id> --ut-backfill` | Fold TDD hoặc unit-test backfill planning vào `/tdk-plan` phases |
 | — | **Config & Workspace** | |
 | 21 | `/tdk-config-diff` | Compare workspace vs sub-workspace docs |
 | 22 | `/tdk-config-sync` | Sync docs giữa workspace và sub-workspaces |
@@ -373,7 +373,7 @@ Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [-
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| unit-test backfill plan | `/tdk-ut-backfill-plan <id>` | `--sub-workspace`, `--review`, `--force`, `--standalone` | `spec.md` optional, consumer test skill routing | `ut/plan.md`, `ut/phases/*.md` | plan hoặc direct invocation |
+| unit-test planning | `/tdk-plan <id> --tdd` \| `/tdk-plan <id> --ut-backfill` | `--sub-workspace`, `--module`, `--standalone` (chỉ backfill) | `spec.md` optional, consumer test skill routing | `plan.md`, `phases/phase-NN-*.md` với TDD hoặc backfill sections | plan |
 
 ### Config Commands
 
@@ -448,11 +448,11 @@ Walkthrough chi tiết nằm trong [Scenario Catalog](scenarios/scenario-catalog
 
 | Flag | Used by | Purpose |
 |------|---------|---------|
-| `--sub-workspace <name>` | `/tdk-ut-backfill-plan`, config commands | Target sub-workspace cụ thể, ví dụ `frontend`, `backend` |
-| `--force` | `/tdk-ut-backfill-plan`, `/tdk-config-sync` | Overwrite existing artifacts không cần confirmation |
+| `--sub-workspace <name>` | `/tdk-plan --ut-backfill`, config commands | Target sub-workspace cụ thể, ví dụ `frontend`, `backend` |
+| `--force` | `/tdk-config-sync` | Overwrite existing artifacts không cần confirmation |
 | `--dry-run` | config:sync, workflow-config:apply | Preview changes mà không ghi files; workflow config apply emit `planHash` cho automation/debug |
-| `--standalone` | `/tdk-ut-backfill-plan` | Generate UT plan cho existing code không có spec |
-| `--review` | `/tdk-ut-backfill-plan` | Review và update existing UT plan |
+| `--standalone` | `/tdk-plan --ut-backfill` | Generate UT phases cho existing code không có spec |
+| `--tdd` / `--ut-backfill` | `/tdk-plan` | Chọn test-first hoặc backfill sections cho generated phases |
 
 ### Khi Nào Skip Optional Commands
 

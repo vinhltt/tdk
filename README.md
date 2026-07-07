@@ -31,7 +31,7 @@ TDK structures the full development loop:
 11. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
 12. **Plan** — break specs into phased implementation plans (`/tdk-plan`)
 13. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
-14. **Verify** — plan and route unit-test work through consumer test skills (`/tdk-ut-backfill-plan`)
+14. **Verify** — fold tests-first or unit-test backfill planning into phases and route implementation through consumer test skills (`/tdk-plan --tdd`, `/tdk-plan --ut-backfill`)
 15. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
 
 Additional workflows: constitution-owned `product-context.md`, workspace layout proposal and dry-run workspace config previews, config management, sub-workspace docs generation, scout (codebase analysis), memory management, API test generation.
@@ -160,7 +160,7 @@ bun src/commands/manifest/compute.ts --root ../..
 ```
 .specify/
 ├── plugins/              # Marketplace plugins (installed by setup.sh)
-│   ├── tdk-core/            # Core workflow (25 skills + 1 agent)
+│   ├── tdk-core/            # Core workflow (24 loadable skills + 1 agent)
 │   ├── tdk-utils/           # Utilities: scout, research, dependency policy, problem solving (16 skills + 5 agents)
 │   ├── tdk-memory/          # Domain memory management (5 skills + 1 agent)
 │   ├── tdk-test-api/        # API test generation (3 skills)
@@ -187,41 +187,12 @@ The source checkout also contains `packages/tdk-setup/` for harness install, Cod
 
 | Plugin | Skills | Purpose |
 |--------|--------|---------|
-| **tdk-core** | 25 skills + 1 agent | Greenfield/brownfield start, architecture advisor, workspace layout proposal, boundary-map compatibility, workflow config apply, constitution, discovery, epic PRD, specify, clarify, HLD, task breakdown, plan, implement, config, `/tdk-sub-workspace-docs`, ut-backfill |
+| **tdk-core** | 24 loadable skills + 1 agent | Greenfield/brownfield start, architecture advisor, workspace layout proposal, boundary-map compatibility, workflow config apply, constitution, discovery, epic PRD, specify, clarify, HLD, task breakdown, plan, implement, config, `/tdk-sub-workspace-docs`, and `/tdk-plan` test modes |
 | **tdk-utils** | 16 skills + 5 agents | Scout, research, workspace dependency policy, module-boundary compatibility, brainstorming, docs-seeker, context-engineering, problem-solving |
 | **tdk-memory** | 5 skills + 1 agent | Domain memory: init, update, checksum, changelog, query, and tdk-memory-agent |
 | **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |
 | **tdk-retro** | 4 | Retrospective feedback collection, learning proposal, and approved-delta application |
 | **tdk-scaffold** | 4 | `/tdk-sub-workspace-automation-recommend`, skill/agent scaffolding from approved automation recommendations, reviewable plan-skill-routing proposal management, and guarded golden-path skeleton recipes |
-
-## CLI Commands
-
-Integrated commands (via `bun src/index.ts`; no installed `tdk` binary yet):
-
-**Workflow commands** (run from `.specify/scripts/ts/`):
-
-| Command | Description |
-|---------|-------------|
-| `bun src/index.ts config detect` | Detect `.specify.json` configuration |
-| `bun src/index.ts config index` | Index configuration files |
-| `bun src/index.ts config diff` | Compare docs between workspace and sub-workspace |
-| `bun src/index.ts config topology apply --dry-run` | Preview `.specify/.specify.json` changes and emit `planHash`; apply with `--yes --expect-hash <planHash>` |
-| `bun src/index.ts ut backfill auto` | Automated unit test backfill |
-| `bun src/index.ts ut backfill plan` | Plan unit test coverage |
-| `bun src/index.ts ut backfill impl` | Implement unit tests from plan |
-| `bun src/index.ts scout` | Codebase navigation preprocessor for repomix pack extraction |
-| `bun src/index.ts routing plan-skill` | Manage custom workflow plan-skill routing files |
-| `bun src/index.ts sub-workspace docs` | Generate arc42-lite sub-workspace documentation for `/tdk-sub-workspace-docs` |
-
-**Setup CLI commands** (run from `packages/tdk-setup/`):
-
-| Command | Description |
-|---------|-------------|
-| `bun src/index.ts install <consumer-root>` | Install selected TDK plugin artifacts into `.claude/` or preconverted `.codex/` + `.agents/skills/` targets with dry-run, saved install settings, prefix rewrite, ownership, collision, and drift safety |
-| `bun src/index.ts convert` | Maintainer-only command that emits generated Codex packages under `.specify/codex-plugins/<plugin>/` and checks converter freshness |
-| `bun src/index.ts convert-flat` | Convert an existing flat `.claude/` tree into additive `.codex/` and `.agents/skills/` artifacts with dry-run, conflict reporting, and `.specify/state/harness-install/codex.json` ownership manifest |
-
-Standalone scripts (via `bun src/commands/<path>.ts`): manifest, feature, setup, changelog, util, test-api.
 
 ## Tech Stack
 

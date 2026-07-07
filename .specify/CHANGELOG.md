@@ -11,6 +11,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+## [1.100.0] - 2026-07-06
+
+### Added
+- **[tdk-core]** Test-mode planning support
+  - Added `/tdk-plan --tdd` and `/tdk-plan --ut-backfill` as first-class test modes that write tests-first or backfill sections into canonical phase files.
+  - Added `/tdk-implement` execution rules for TDD/backfill phase shapes, including routed test-delegate ordering, matrix completion checks, and regression gates before a phase can be marked done.
+- **[Scripts]** Added contract coverage for `/tdk-plan` test-mode grammar, implementation routing, status recommendations, and retired UT-backfill skill references.
+
+### Changed
+- **[Scripts]** Updated `tdk-status` to read `test_mode` from plan frontmatter and recommend `/tdk-plan <id> --tdd` or `/tdk-plan <id> --ut-backfill` instead of the retired UT planning skill.
+- **[tdk-retro]** Retrospective collection now reads test evidence from canonical `phases/phase-*.md` files with TDD/backfill sections instead of legacy `ut/plan.md`.
+- **[tdk-scaffold]** Plan skill routing guidance now treats `/tdk-plan` test modes and `/tdk-implement` as the route-file consumers.
+- **[tdk-skill-docs-sync]** Replaced the removed `tdk-ut-backfill-plan` example with the active `tdk-plan` skill.
+- **[Guides]** Updated English and Vietnamese guide content, workflow diagrams, README counts, and primary routing rules to describe `/tdk-plan --tdd` / `--ut-backfill` as the unit-test planning path.
+- **[General]** Refreshed plugin, Codex-package, and release manifests for the new plugin/component payloads.
+
+### Removed
+- **[tdk-core]** Removed legacy UT planning surfaces
+  - `tdk-ut-backfill-plan` (was 5.11.0) public skill retired; test planning now lives in `/tdk-plan --tdd` and `/tdk-plan --ut-backfill`.
+  - Removed legacy `ut/plan.md` and `ut/phases/*.md` templates because test-mode content now lives in canonical phase files.
+  - Removed the public `tdk ut backfill plan` CLI registration; the underlying plan helper remains internal support for `/tdk-plan --ut-backfill`.
+
 ## [1.99.0] - 2026-07-06
 
 ### Added

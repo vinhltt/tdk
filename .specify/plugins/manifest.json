@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-06T01:10:17Z",
+  "generated_at": "2026-07-06T09:20:52Z",
   "plugins": {
     "tdk-core": {
-      "version": "6.0.3",
+      "version": "7.0.0",
       "components": {
         "skills": {
           "_shared": {
@@ -52,10 +52,10 @@
             "version": "6.0.0"
           },
           "tdk-implement": {
-            "version": "5.1.0"
+            "version": "7.0.0"
           },
           "tdk-plan": {
-            "version": "5.7.2"
+            "version": "7.0.0"
           },
           "tdk-specify": {
             "version": "6.0.2"
@@ -74,9 +74,6 @@
           },
           "tdk-task-breakdown": {
             "version": "6.0.2"
-          },
-          "tdk-ut-backfill-plan": {
-            "version": "5.11.0"
           },
           "tdk-workflow-config-apply": {
             "version": "5.11.0"
@@ -99,10 +96,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "2e33cdc14ebf20e5074ae949db076e4e04d51a31ec94d99ef1c3d6278c4c929e",
-        ".claude-plugin/plugin.json": "9623d166d87ab0c8d0dd6c9a01261adc1d618008f08768a8eba20909d660cd2f",
-        ".codex-plugin/plugin.json": "9623d166d87ab0c8d0dd6c9a01261adc1d618008f08768a8eba20909d660cd2f",
-        ".cursor-plugin/plugin.json": "9623d166d87ab0c8d0dd6c9a01261adc1d618008f08768a8eba20909d660cd2f",
-        "CHANGELOG.md": "069e93b7b1de0779ac1e27dee2c137179517254f8e60b23a1b6d2f5af3949676",
+        ".claude-plugin/plugin.json": "ddbc982718ad31b4ee3978bc582cded3e815a44471fa2948cd68d07f8e211777",
+        ".codex-plugin/plugin.json": "ddbc982718ad31b4ee3978bc582cded3e815a44471fa2948cd68d07f8e211777",
+        ".cursor-plugin/plugin.json": "ddbc982718ad31b4ee3978bc582cded3e815a44471fa2948cd68d07f8e211777",
+        "CHANGELOG.md": "a39171387a60ff237e10d18e08cb9a590cd56ae20cb74ff657b507ee564d96dd",
         "__tests__/context-builder.test.cjs": "704c828646af0d26cab0be3b82b37d150114faf8406899d0f6bbc020b10f0d60",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
@@ -170,22 +167,22 @@
         "skills/tdk-greenfield-start/references/workflow-quick.md": "92be32b30471da354f137034fb94af9bad4593ac61953933ac9b818677b26b9c",
         "skills/tdk-greenfield-start/references/workflow-unknown.md": "09843c29cb8b3f2a8ce7c86d38bbc03f4e45d33329a0ea49fe4668340208f2ff",
         "skills/tdk-greenfield-start/templates/project-inception.md.tpl": "499d59ff03a33d8fe23c7c51243eecf0838b97ed66181a62d35240f7e1c8707e",
-        "skills/tdk-implement/SKILL.md": "c4de40f65441e71013f5ff6c1a891f1f65a4c24ba06d46c304035d7ae892014a",
-        "skills/tdk-implement/references/phase-execution.md": "13c49525313e4524c355ca3f620f4fd6d5e06a90be63eb9aa5f99ed4240c4a63",
+        "skills/tdk-implement/SKILL.md": "b3c22db7d1273575f7f091f1dcaf160102c1283ad5549a9ac9e3051b0596467e",
+        "skills/tdk-implement/references/phase-execution.md": "2d4c6c5b3b93745cc031f45b66c865850705ceccd268b11f453bfd1b04653e46",
         "skills/tdk-implement/references/project-and-phase-contract.md": "93bafb807ab3a4e4272c9264e5c8da1edc9b42a862f29e9a68d4112bb04abbe2",
         "skills/tdk-implement/references/routing-preflight.md": "794db5940ab7f9f2b928c03dcef6fc8bb8474642ff8244acb544166f727e5de9",
-        "skills/tdk-plan/SKILL.md": "0c66bf23e2a3d03121cb91cb2629332282ead1d9f85279551a247583f61eb26d",
+        "skills/tdk-plan/SKILL.md": "5a39867596de9111449d70de09f4dbb927c23d303d7ab61d422ebb5c8a1d0e02",
         "skills/tdk-plan/references/cross-plan-deps.md": "8678be6c9d45e0ac8269a2087fbf40d053ef83ae0cbf95b3e5a2c10f1b512e69",
-        "skills/tdk-plan/references/design-phase.md": "c12111ef6064fd868fd50dc8e37fd66706e3873000cbf16ff76e7fb2a375d828",
+        "skills/tdk-plan/references/design-phase.md": "d20eabe776268ae64b73165925f798addf8dad059fc679f5b746e6a160743490",
         "skills/tdk-plan/references/gates.md": "e0d22f6966d095c184f9b57acac0e964de19915d3089a3f747a9d341cf1de56d",
         "skills/tdk-plan/references/handle-existing-plan.md": "4fed435cbab240b053c6c5e786f58640e6c339c0c3e210aa7253d5a5b4e3dfab",
-        "skills/tdk-plan/references/modes.md": "91e1626f2d74fcb5604da80f4e6be0044f65baa62a421a6cf0c606c901b241e0",
-        "skills/tdk-plan/references/plan-output-contract.md": "da6d73cce8aabc6e39f77306d556d65ecef105300c8a3192b1283b49c879b82e",
+        "skills/tdk-plan/references/modes.md": "3a0262d7b63b0d5853bb3bd41487de3c7a9524c06ced0361b85d4361591e20bc",
+        "skills/tdk-plan/references/plan-output-contract.md": "a95f697ad26b2d6c920915924138be1809bd803f49cd38761463b176be790455",
         "skills/tdk-plan/references/red-team-workflow.md": "368314e8cf60d323bc3849206c87947539e237da605e4794614548abd2e83b3d",
         "skills/tdk-plan/references/research-phase.md": "a6d56b6624877cc680919feff120ea060c4746d38dd42db761a922820a0aa33a",
         "skills/tdk-plan/references/scope-challenge.md": "9f341caed80d5e83989c2e83efc24e8aec7ffcaf84d512919990b0e75dbc1913",
-        "skills/tdk-plan/references/skill-routing.md": "97513d6919cfcc219b65dee7cf40310d72e9aeefd478a387a068a298830d6465",
-        "skills/tdk-plan/references/validate-question-framework.md": "eb6972acb7a093ff4253a2af0764681e617a62cbf95b5f3e99d987e4934ae6e6",
+        "skills/tdk-plan/references/skill-routing.md": "acf5a675401ba0be10baf93a349733724de96f616134b3afbca5e8158e3af532",
+        "skills/tdk-plan/references/validate-question-framework.md": "655b9cb2adb9d33c8d683ff92b878fb441fd4b01354db051bdd3f395beb8ecec",
         "skills/tdk-plan/references/validate-workflow.md": "504ffc62d2c156f239d7143eab585490365e1c1d32ae85963df195f00867661b",
         "skills/tdk-specify/SKILL.md": "7f2ddf2dfd7d3434299a4afd45ec2d1fdd67c73f55c1f42dea2f00f13b9c3620",
         "skills/tdk-specify/evals/evals.json": "6c432121010453d7024c9abff36e5c9517010c7e486f59474a4742b642d526bd",
@@ -200,7 +197,6 @@
         "skills/tdk-sub-workspace-list/SKILL.md": "048d5207d474ab4e349e4ad9b32d0ed1da3727de44eb49e720e32a8316fbe04e",
         "skills/tdk-task-breakdown/SKILL.md": "864b18ecab84d1fb551f2301112f468a136387e044c37bd65d27fc49965670e2",
         "skills/tdk-task-breakdown/references/task-breakdown-output-contract.md": "16cf177a4354bf708d2342d7decff3ef7358a0c15ad3cad47b1a289114b4b706",
-        "skills/tdk-ut-backfill-plan/SKILL.md": "d2e78697cee04a50892adb4cf85ede9c10e50ad352cee4bb1d43325b4872692f",
         "skills/tdk-workflow-config-apply/SKILL.md": "fea1f871c529c3c5f4b07243a435b1ae5e52a21ee14b009ab880e8310f27f25b",
         "skills/tdk-workflow-config-apply/templates/topology-apply-report.md.tpl": "1697848bb41e48a3549dfaa39904d22d8d6632131be9c5ac8071302585f8759b",
         "skills/tdk-workspace-layout-propose/SKILL.md": "86b9872705f8d6211e597a6686071f6130c27f87179b8e65e8c566f1bb05b1d2",
@@ -276,17 +272,17 @@
       }
     },
     "tdk-retro": {
-      "version": "1.0.3",
+      "version": "1.0.4",
       "components": {
         "skills": {
           "_shared": {
-            "version": "1.0.3"
+            "version": "1.0.4"
           },
           "tdk-retro-apply": {
             "version": "0.1.1"
           },
           "tdk-retro-collect": {
-            "version": "0.1.1"
+            "version": "1.0.4"
           },
           "tdk-retro-propose": {
             "version": "0.1.1"
@@ -298,36 +294,36 @@
       },
       "files": {
         ".claude-plugin/interface.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
-        ".claude-plugin/plugin.json": "9df684dc47e9dcf765491000842db9b0fc42b43534d3d4e2a9c7a23e0ec5860c",
-        ".codex-plugin/plugin.json": "9df684dc47e9dcf765491000842db9b0fc42b43534d3d4e2a9c7a23e0ec5860c",
-        ".cursor-plugin/plugin.json": "9df684dc47e9dcf765491000842db9b0fc42b43534d3d4e2a9c7a23e0ec5860c",
-        "CHANGELOG.md": "913c838ae1ac7b844ae9f3d0a795d11f416ed3ded8366e987e3ce8d2b80ca78d",
+        ".claude-plugin/plugin.json": "4fb740b2308c44e0c3845f88f9b29f5314bc4253982aac694073c8bf6584e5e2",
+        ".codex-plugin/plugin.json": "4fb740b2308c44e0c3845f88f9b29f5314bc4253982aac694073c8bf6584e5e2",
+        ".cursor-plugin/plugin.json": "4fb740b2308c44e0c3845f88f9b29f5314bc4253982aac694073c8bf6584e5e2",
+        "CHANGELOG.md": "8752ec8307d6beec1c519bd8d43e2136b45cb6689cdfe395d15c35f17f3c036b",
         "README.md": "c74e7f4263e8aec94548695e08de4d7faf0c899429f5520e1cf57134c2cb0657",
-        "skills/_shared/SKILL.md": "5367eaf03f98e427e981c166cff507aa3ad38de5ccaab36a663d63fe2d2d990f",
+        "skills/_shared/SKILL.md": "38641e5b16911a45e9d002837bacfacd3c2a03fc6b60b1c4125f4a2483961edc",
         "skills/_shared/consumer-skill-discovery.md": "452a972210fbd4889544f917d2f61a03ebbb23271f53d9611d23e7134b146958",
         "skills/_shared/learning-delta-schema.md": "75ea06307874ce5e92579e0e8de381c94e7b4ab2f6b5fbe61e7b22dda13b20ba",
-        "skills/_shared/retro-feedback-schema.md": "2a459f6a69e424075e6d4bb7027507324652ab11aa9277b97933c6ec36a38aa2",
+        "skills/_shared/retro-feedback-schema.md": "2713c595ed38d92929ca2f0b74fd67f5109b52940629686bb2e6a1e1610c0636",
         "skills/_shared/script-command-contract.md": "9bc0cfdc5316b6b19ddd72b6bd3fe267d71d7e6831f35ac15e65533098061116",
         "skills/_shared/signal-target-routing.md": "21ab5e3891dfc63db40429219529a5067eb752f993b60b4b8f7e96d8dd06c867",
         "skills/tdk-retro-apply/SKILL.md": "66a83d1ec6be93090877b0e880a068c52f059b2c682f40be19907be72b9c674f",
         "skills/tdk-retro-apply/references/apply-flow-memory.md": "13a66a5ee193c53232ea56cf9c42c0c914315f33ef3a2c11f6b156dba45b100a",
         "skills/tdk-retro-apply/references/apply-flow-technical.md": "b4d34fb99eee4982007ff3f0c758b069c28d7e871fe3bfacce9b01cc4136809e",
         "skills/tdk-retro-apply/references/memory-delegate-contract.md": "81e9da7995fd021b78262976a47cfed8fc41a9b75e49261582f13edd2f8bf1fa",
-        "skills/tdk-retro-collect/SKILL.md": "c43f2b07bec04adad8189fddec4d5fdbdd888071c1dcc80f6df6990857406eeb",
+        "skills/tdk-retro-collect/SKILL.md": "7c5a0235330548d2a1d5452631d2f43d54309b6377962395ec31afe9e1e82e14",
         "skills/tdk-retro-collect/references/langfuse-trace-analysis.md": "4c72df23d5165b9b9d7ac91d3c93b45418bd1f59efab1b6f8ab7bcbfef25f1de",
         "skills/tdk-retro-collect/references/phase-drift-detection.md": "a70cea214d69689f5ae481ef81ae714ed94031b2a440c470f33cfa79c7546eab",
         "skills/tdk-retro-propose/SKILL.md": "6e4f5af1bb0c733053f55d0b8702d527423f9b3f1d2ca93f050a2f861900f504"
       }
     },
     "tdk-scaffold": {
-      "version": "2.1.0",
+      "version": "2.1.1",
       "components": {
         "skills": {
           "tdk-golden-path-scaffold": {
             "version": "1.2.2"
           },
           "tdk-plan-skill-routing": {
-            "version": "2.1.0"
+            "version": "2.1.1"
           },
           "tdk-scaffold-from-recommendation": {
             "version": "2.1.0"
@@ -342,10 +338,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "4f50469bb11057946eb49b9342ec9029e3b297742ec5b80e4b212c8024954c21",
-        ".claude-plugin/plugin.json": "93e7904c23b83cc8b7921acb294605247c117062102e6f876e4e5e30ceb97290",
-        ".codex-plugin/plugin.json": "93e7904c23b83cc8b7921acb294605247c117062102e6f876e4e5e30ceb97290",
-        ".cursor-plugin/plugin.json": "93e7904c23b83cc8b7921acb294605247c117062102e6f876e4e5e30ceb97290",
-        "CHANGELOG.md": "a37dcd9decbbdbe305be9caf889522413cfabaede90ac51491dfcb857b1a92ff",
+        ".claude-plugin/plugin.json": "932866d2aaee1aabd2ff1f577f016dd2a79c8e3891f7f1d1d71d640919bae4c5",
+        ".codex-plugin/plugin.json": "932866d2aaee1aabd2ff1f577f016dd2a79c8e3891f7f1d1d71d640919bae4c5",
+        ".cursor-plugin/plugin.json": "932866d2aaee1aabd2ff1f577f016dd2a79c8e3891f7f1d1d71d640919bae4c5",
+        "CHANGELOG.md": "b9407420ff26ca6ff0c2a41e86c29efa77c824bf59db6f17929fa31adcc1b760",
         "skills/tdk-golden-path-scaffold/SKILL.md": "cc1099c927acec094e0443d7db6f4990fa90f8f7377e17be559fe8e73729b390",
         "skills/tdk-golden-path-scaffold/references/golden-path-output-contract.md": "ef32bb4f620983e461f0bef02fcfda57da4703dc21bbad767f58c4ba116b4e7c",
         "skills/tdk-golden-path-scaffold/references/golden-path-recipe-schema.md": "10638a7933d1658ac8cc96288a49716ad2c97b7dc8c4ce8ac5cfbc995aa97a68",
@@ -357,7 +353,7 @@
         "skills/tdk-golden-path-scaffold/templates/golden-path-recipe.json.tpl": "ea9bb006bb56b228b9885c4f446bf221e15a8434a07239c85f8e8fc25724dec4",
         "skills/tdk-golden-path-scaffold/templates/golden-path-scaffold-plan.md.tpl": "c8e4714cbad9bd83c78b40526915fb8cbc2952a72275a347d3ac70eb060d90fa",
         "skills/tdk-golden-path-scaffold/templates/project-structure.md.tpl": "df95624033993e0ff899eb06a60cdfa55105481da98e4d5253b268d23094f1c3",
-        "skills/tdk-plan-skill-routing/SKILL.md": "56c815eb259c0ae59c02bc0079a094303ecd474f5e8a90891ed495089112be79",
+        "skills/tdk-plan-skill-routing/SKILL.md": "4ce7d9543ad5e6d96ca26a9b3d36079d26b759bc21edee73b9ae400dd1dc76d7",
         "skills/tdk-plan-skill-routing/references/plan-skill-routing-file-contract.md": "288dd97cd137b759593825250e556d6200564e70a32b097940c478c6d162f564",
         "skills/tdk-plan-skill-routing/references/plan-skill-routing-proposal-format.md": "b5530700ab8dece680efa26cfd6e4831348c9f59f2f8a7f01a806c8167db38dc",
         "skills/tdk-plan-skill-routing/references/update-and-conflict-policy.md": "cb7dfb9d82ee4df07830b1d2702b5d5bb3c4e8a5b2049fb063da0b3952c70c4f",

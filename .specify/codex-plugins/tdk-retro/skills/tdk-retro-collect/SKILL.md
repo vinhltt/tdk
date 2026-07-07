@@ -2,7 +2,7 @@
 name: tdk-retro-collect
 description: "Create or update retrospective feedback after a TDK spec: reviews, phase drift, UT results, Langfuse traces when available, and user feedback. Writes retro-feedback.md and supports adding or removing user feedback entries across repeated collection runs."
 metadata:
-  version: "0.1.1"
+  version: "1.0.4"
   category: "TDK Retro"
   requires:
     - tdk-implement
@@ -87,11 +87,11 @@ Did any phase change approach, scope, or implementation strategy during executio
 
 Record only confirmed or evidence-backed drift.
 
-## Step 5: Read UT Results
+## Step 5: Read Test-Mode Phase Results
 
-Read `{FEATURE_DIR}/ut/plan.md` when it exists. Summarize pass/fail rows, incomplete phases, and repeated test issues.
+Read canonical `{FEATURE_DIR}/phases/phase-*.md` files that contain TDD/backfill test sections such as `## Tests Before`, `## Tests After`, `## Regression Gate`, or `## Test Matrix`. Summarize pass/fail rows, incomplete phases, and repeated test issues.
 
-If missing, record `Status: skipped` for UT execution with reason `ut/plan.md not found`.
+If no test-mode phase evidence exists, record `Status: skipped` for test execution with reason `test-mode phase evidence not found`.
 
 ## Step 6: Analyze Langfuse Traces
 

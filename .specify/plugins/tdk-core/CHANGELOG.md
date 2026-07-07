@@ -4,6 +4,32 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [7.0.0] - 2026-07-06
+
+### Added
+- tdk-plan: add --tdd and --ut-backfill test modes that generate tests-first or backfill sections in canonical phase files and write test_mode/test_target metadata.
+- tdk-implement: add TDD/backfill execution gates that run routed test delegates before implementation and require regression or matrix completion before marking phases done.
+
+### Changed
+- tdk-status: detect plan test_mode frontmatter and recommend /tdk-plan <id> --tdd or /tdk-plan <id> --ut-backfill.
+- UT backfill CLI: keep the legacy plan helper internal and remove it from the public tdk ut backfill command group.
+
+### Removed
+- tdk-ut-backfill-plan: retire the public UT planning skill; planning now lives in /tdk-plan --tdd and /tdk-plan --ut-backfill.
+- UT templates: remove legacy ut/plan.md and ut/phases templates because canonical phase files now carry test-mode sections.
+
+## [6.1.0] - 2026-07-06
+
+### Added
+- **[tdk-plan]** `--tdd` and `--ut-backfill` test-mode flags fold tests-first and unit-test backfill planning directly into generated phases (`test_mode` in the plan output contract); `--fast` is incompatible with either flag, `--hard` and default compose with both.
+- **[tdk-implement]** TDD phase execution semantics: run the routed test delegate first, then implementation, then regression gate; test delegate success alone no longer marks a TDD phase done.
+
+### Removed
+- **[tdk-ut-backfill-plan]** Public skill retired. Unit-test planning now lives in `/tdk-plan <id> --tdd` / `/tdk-plan <id> --ut-backfill`; the public `tdk ut backfill plan` CLI route was also removed (the underlying script remains as internal support, invoked directly).
+
+### Changed
+- **[tdk-status]** Recommendations point to `/tdk-plan <id> --tdd` and `/tdk-plan <id> --ut-backfill` instead of the retired `/tdk-ut-backfill-plan` skill.
+
 ## [6.0.3] - 2026-07-04
 
 ### Changed

@@ -9,6 +9,7 @@ import { execFileSync } from 'node:child_process';
 import { Command } from 'commander';
 import { loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson } from '../../utils/index';
 import { parsePhasesTable, type PhaseRow } from '../util/phases-table-parser';
+import { extractFrontmatter } from '../util/parse-plan-frontmatter';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,6 +31,8 @@ export interface PhasesStatus {
   nextPhase: string;     // file of first todo row, or ''
   rows: Array<{ number: number; file: string; fileLabel: string; phase_status: string }>;
 }
+
+type TestMode = 'none' | 'tdd' | 'ut_backfill';
 
 // ---------------------------------------------------------------------------
 // Artifact helpers
@@ -56,6 +59,12 @@ function getDaysAgo(file: string): number {
 function artifactJson(file: string): object {
   if (!existsSync(file)) return { exists: false, modified: 'none', daysAgo: -1 };
   return { exists: true, modified: getModDate(file), daysAgo: getDaysAgo(file) };
+}
+
+function readPlanTestMode(planFile: string, fallbackTaskId: string): TestMode {
+  const frontmatter = extractFrontmatter(planFile, fallbackTaskId);
+  const value = frontmatter?.parsed['test_mode'];
+  return value === 'tdd' || value === 'ut_backfill' ? value : 'none';
 }
 
 // ---------------------------------------------------------------------------
@@ -272,6 +281,8 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
   const hasSpec = existsSync(join(featureDir, 'spec.md'));
   const planFile = join(featureDir, 'plan.md');
   const hasPlan = existsSync(planFile);
+  const testMode = hasPlan ? readPlanTestMode(planFile, ticket) : 'none';
+  const hasPlanTestMode = testMode !== 'none';
 
   // Artifacts — plan.md is the primary SoT; tasks.md entry removed (Phase 05)
   const artifacts = {
@@ -286,7 +297,7 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
 
   // ErcSpec workflow presence: spec.md or plan.md
   const hasErcspec = hasSpec || hasPlan;
-  const hasUt = existsSync(join(featureDir, 'ut-spec.md')) || existsSync(join(featureDir, 'coverage-report.json')) || existsSync(join(featureDir, 'ut-plan.md'));
+  const hasUt = hasPlanTestMode || existsSync(join(featureDir, 'ut-spec.md')) || existsSync(join(featureDir, 'coverage-report.json')) || existsSync(join(featureDir, 'ut-plan.md'));
 
   // Parse plan.md ## Phases table
   let phasesData: PhasesStatus = {
@@ -315,6 +326,7 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
   // UT state
   let utState = 'none';
   if (hasUt) {
+    if (hasPlanTestMode) utState = 'planned';
     if (existsSync(join(featureDir, 'ut-spec.md'))) utState = 'specified';
     if (existsSync(join(featureDir, 'coverage-report.json'))) utState = 'analyzed';
     if (existsSync(join(featureDir, 'ut-plan.md'))) utState = 'planned';
@@ -332,7 +344,7 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
       break;
     case 'specified':
       rec.primary = { command: `/tdk-plan ${id}`, reason: 'Spec complete, create implementation plan' };
-      rec.alternative = { command: `/tdk-ut-backfill-plan ${id}`, reason: 'TDD: write tests first' };
+      rec.alternative = { command: `/tdk-plan ${id} --tdd`, reason: 'TDD: write tests first' };
       break;
     case 'planned':
       rec.primary = { command: `/tdk-implement ${id}`, reason: 'Plan ready, start implementing from plan' };
@@ -349,7 +361,7 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
     case 'complete':
       rec.primary = hasUt
         ? { command: '', reason: 'All workflows complete' }
-        : { command: `/tdk-ut-backfill-plan ${id}`, reason: 'Implementation done, add tests' };
+        : { command: `/tdk-plan ${id} --ut-backfill`, reason: 'Implementation done, add tests' };
       break;
   }
 
@@ -376,6 +388,7 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
     location: featureDir.replace(repoRoot + '/', ''),
     workflows: { ercspec: hasErcspec, ut: hasUt },
     feature_status,
+    testMode,
     utState,
     artifacts,
     phases: {

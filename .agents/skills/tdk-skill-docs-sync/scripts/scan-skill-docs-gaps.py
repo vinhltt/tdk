@@ -7,7 +7,7 @@ Usage:
 Output: JSON gap report to stdout.
 
 Arguments:
-    <skill-name>    Name of skill to check (e.g., tdk-ut-backfill-plan)
+    <skill-name>    Name of skill to check (e.g., tdk-plan)
     --plugin <name> Limit search to specific plugin
     --all           Scan ALL skills across all marketplace plugins
 """

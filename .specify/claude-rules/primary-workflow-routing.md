@@ -41,7 +41,7 @@ PARENT EPIC LANE, optional for broad work
         ↓
 child tdk-specify -> child tdk-clarify -> child tdk-plan
         ↓                                      ↓
-child tdk-analyze                       tdk-ut-backfill-plan when UT coverage needs a routed plan
+child tdk-analyze                       tdk-plan --ut-backfill when UT coverage needs a routed plan
         ↓
 child tdk-implement
 
@@ -72,8 +72,9 @@ tdk-checklist                            optional quality checklist
   HLD by default.
 - `tdk-analyze` is read-only spec/plan consistency checking. Use it before build
   for non-trivial plans.
-- `tdk-ut-backfill-plan` plans and routes unit-test coverage work. It is not the
-  implementation plan for product behavior.
+- `tdk-plan --tdd` / `tdk-plan --ut-backfill` fold tests-first or unit-test
+  backfill planning into the same plan. They are not the implementation plan
+  for product behavior.
 
 ## Artifact authority
 
@@ -126,7 +127,7 @@ legacy-layout guidance instead of auto-migrating them.
 | Design a phased implementation plan | `tdk-plan` | `tdk-task-breakdown`, `tdk-specify` |
 | Check spec <-> plan consistency | `tdk-analyze` | `tdk-clarify` |
 | Build / execute plan phases | `tdk-implement` | `tdk-plan` |
-| Plan & route unit-test coverage | `tdk-ut-backfill-plan` | `tdk-plan` |
+| Plan & route unit-test coverage | `tdk-plan --tdd` / `tdk-plan --ut-backfill` | `tdk-plan` (without test mode) |
 | Track workflow progress/status | `tdk-status` | — |
 | Generate a focused checklist | `tdk-checklist` | — |
 
@@ -148,7 +149,7 @@ Have an idea/seed but no spec                  -> tdk-specify
 Spec exists but is vague/ambiguous             -> tdk-clarify
 Ready to design the build                      -> tdk-plan
 Plan + spec exist, verify they agree           -> tdk-analyze
-Need unit-test coverage planned                -> tdk-ut-backfill-plan
+Need unit-test coverage planned                -> tdk-plan --tdd or tdk-plan --ut-backfill
 Plan approved, time to build                   -> tdk-implement
 "Where are we?" / progress                     -> tdk-status
 ```

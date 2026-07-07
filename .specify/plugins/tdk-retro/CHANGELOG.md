@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.0.4] - 2026-07-06
+
+### Changed
+- tdk-retro-collect: read test-mode phase evidence from canonical phase files instead of legacy ut/plan.md.
+- retro feedback schema: record test execution evidence from phases/phase-*.md outputs.
+
 ## [1.0.3] - 2026-07-02
 
 ### Changed

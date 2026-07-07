@@ -35,7 +35,7 @@ export function createImplCommand(): Command {
 
     const planFile = join(feature.featureDir, 'ut', 'plan.md');
     if (!existsSync(planFile)) {
-      process.stderr.write(`Error: ut/plan.md not found: ${planFile}\n`);
+      process.stderr.write(`Error: legacy UT plan not found: ${planFile}\n`);
       process.exit(1);
     }
 

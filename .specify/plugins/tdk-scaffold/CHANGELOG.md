@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.1.1] - 2026-07-06
+
+### Changed
+- tdk-plan-skill-routing: describe plan-skill-routing.md as the route file for /tdk-plan test modes and /tdk-implement after retiring /tdk-ut-backfill-plan.
+
 ## [2.1.0] - 2026-07-05
 
 ### Added

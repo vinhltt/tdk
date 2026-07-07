@@ -30,7 +30,7 @@
 
 ## From: UT Execution
 - [severity] {test signal}
-  - Evidence: `{ut/plan.md}` or command output summary
+  - Evidence: `{phases/phase-*.md}` or command output summary
 
 ## From: Langfuse Traces
 - Status: fetched | skipped

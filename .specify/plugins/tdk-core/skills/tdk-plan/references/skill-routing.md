@@ -44,7 +44,7 @@ Parse the markdown structure:
 
 Domains are freeform strings (e.g. research, implement, test, database, design, clarify, styling). The built-in unit-test implementation lookup uses the single `test` domain only. Do not introduce separate `test-plan` or `test-implement` domains.
 
-`/tdk-ut-backfill-plan` is not listed in the routing file. It is the TDK planning adapter that reads this file, resolves the matching `test` skill, and writes that consumer implementation skill into generated `ut/phases/*.md` files.
+`/tdk-plan` itself resolves the matching `test` skill for TDD/backfill phases (via `--tdd` / `--ut-backfill`, see `references/modes.md`) and injects it into generated phase files. No separate planning adapter skill reads this file on `/tdk-plan`'s behalf.
 
 ## Sub-workspace Matching
 
@@ -100,10 +100,10 @@ Before injecting skills in Step 3b, re-read `{docs.path}/custom-workflow/plan-sk
 
 ## Unit Test Phase Routing
 
-`/tdk-plan` may delegate UT artifact creation to `/tdk-ut-backfill-plan {TASK_ID}` when unit-test planning is required. The generated UT phase files then receive `## Delegate Skills` from the matched `test` entry:
+`/tdk-plan {TASK_ID} --tdd` or `/tdk-plan {TASK_ID} --ut-backfill` generate TDD/backfill canonical phases directly (see `references/design-phase.md` Test Mode Phase Generation). The generated phase files receive `## Delegate Skills` from the matched `test` entry:
 
 1. Prefer the matched sub-workspace section's `test` entry.
 2. Fall back to `global.test`.
-3. If neither exists, emit a warning and generate UT phase files without an implementation delegate.
+3. If neither exists, emit a warning during planning and generate the phase without a `test` delegate; `/tdk-implement` still STOPs at implementation time when a test-like phase has no usable delegate.
 
-This keeps UT planning inside TDK and UT implementation inside the consumer project skill selected by `plan-skill-routing.md`.
+This keeps test planning and test implementation delegate resolution inside `/tdk-plan`, with implementation execution handled by `/tdk-implement`.

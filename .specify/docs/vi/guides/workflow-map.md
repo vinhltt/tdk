@@ -211,9 +211,9 @@ flowchart TD
     UT_SKILL["consumer UT skill<br/>.claude/skills/{name}/SKILL.md"]
 
     subgraph PLANNING_UT["Test Planning"]
-        UT_PLAN_CMD["/tdk-ut-backfill-plan id<br/>--sub-workspace name"]
-        UT_PLAN["ut/plan.md<br/>Test Strategy"]
-        UT_PHASES["ut/phases/{module1}.md<br/>ut/phases/{module2}.md<br/>..."]
+        UT_PLAN_CMD["/tdk-plan id --ut-backfill<br/>--sub-workspace name"]
+        UT_PLAN["plan.md<br/>Test Strategy"]
+        UT_PHASES["phases/phase-NN-{module1}.md<br/>phases/phase-NN-{module2}.md<br/>..."]
     end
 
     subgraph GENERATION_UT["Routed Test Implementation"]
@@ -242,7 +242,7 @@ flowchart TD
     class SPEC_UT,UT_SKILL reference
 ```
 
-Dùng `/tdk-ut-backfill-plan` để tạo unit-test plan và phase files, sau đó `/tdk-implement` chạy phase delegates qua consumer test skill được liệt kê trong `## Delegate Skills`. `--sub-workspace` target workspace cụ thể, ví dụ `backend`, `frontend`. `--standalone` trên `/tdk-ut-backfill-plan` bỏ qua spec dependency cho existing code.
+Dùng `/tdk-plan <id> --ut-backfill` (hoặc `--tdd` cho tests-first phases) để fold unit-test planning vào `plan.md` phases, sau đó `/tdk-implement` chạy phase delegates qua consumer test skill được liệt kê trong `## Delegate Skills`. `--sub-workspace` target workspace cụ thể, ví dụ `backend`, `frontend`, `--module` narrow xuống một module, và `--standalone` trên `--ut-backfill` bỏ qua spec dependency cho existing code.
 
 ### Config & Workspace Management
 
@@ -331,9 +331,9 @@ Luôn chạy `config:diff` trước `config:sync` để preview changes. Dùng `
 | `data-model.md` | `/tdk-plan` | `spec.md` | Reference | Feature start |
 | `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
-| `ut/plan.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), consumer test skill routing | `/tdk-implement` | Feature UT |
-| `ut/phases/{module}.md` | `/tdk-ut-backfill-plan` | `spec.md` (opt), `plan-skill-routing.md` | consumer test skill qua `## Delegate Skills` | Feature UT |
-| `*.test.ts` / `test_*.py` etc. | consumer test skill | `ut/phases/{module}.md` | Test runner | Feature UT |
+| `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), consumer test skill routing | `/tdk-implement` | Feature UT |
+| `phases/phase-NN-{module}.md` (backfill sections) | `/tdk-plan --ut-backfill` | `spec.md` (opt), `plan-skill-routing.md` | consumer test skill qua `## Delegate Skills` | Feature UT |
+| `*.test.ts` / `test_*.py` etc. | consumer test skill | `phases/phase-NN-{module}.md` | Test runner | Feature UT |
 | `.specify/.specify.json` | `/tdk-sub-workspace-init` | Project config | `config:*`, unit-test routing, sub-workspace docs | Project setup |
 | `document-manager.md` | `/tdk-config-index` | Tất cả docs files | Manual reference, LLM tools | Khi cần |
 
@@ -396,7 +396,7 @@ flowchart TD
     CLARIFY --> PLAN[tdk-plan]
     CHILD_PLAN --> IMPLEMENT[tdk-implement]
     PLAN --> IMPLEMENT
-    
+
     UPDATE_CONTRACT --> PLAN
 
     classDef event fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#0f172a

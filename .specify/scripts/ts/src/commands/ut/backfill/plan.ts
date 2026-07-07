@@ -1,4 +1,5 @@
-// CLI: UT plan — feature ID + config validation
+// Internal support script for /tdk-plan --ut-backfill — not a registered public CLI subcommand.
+// Invoke directly: bun src/commands/ut/backfill/plan.ts <feature-id> [flags]
 
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -6,7 +7,7 @@ import { Command } from 'commander';
 import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson } from '../../../utils/index';
 import { handleCliError } from '../cli-error-handler';
 
-/** Create ut-plan command for CLI registration (group: tdk ut plan) */
+/** Build the `plan` Commander command; used for standalone invocation only (not registered in the public CLI tree) */
 export function createPlanCommand(): Command {
   return new Command('plan')
     .description('Validate environment for UT plan creation')
@@ -51,7 +52,7 @@ export function createPlanCommand(): Command {
     // Check existing files
     const existingFiles: string[] = [];
     if (existsSync(testSpecFile)) existingFiles.push('ut-spec.md');
-    if (existsSync(planFile)) existingFiles.push('ut/plan.md');
+    if (existsSync(planFile)) existingFiles.push('legacy UT plan');
     const mode = existingFiles.length > 0 ? 'exists' : 'create';
 
     const output: Record<string, unknown> = {

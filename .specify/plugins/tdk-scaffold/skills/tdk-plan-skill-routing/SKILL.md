@@ -4,14 +4,14 @@ description: "Initialize, inspect, check, diff, register, verify, and optimize p
 user-invocable: true
 argument-hint: "<init|inspect|check|diff|register|verify|optimize> [--project-root <root>] [--proposal <path>] [--yes]"
 metadata:
-  version: "2.1.0"
+  version: "2.1.1"
   author: "VinhLTT"
   category: scaffold
 ---
 
 # tdk-plan-skill-routing
 
-Manage the explicit `{docs.path}/custom-workflow/plan-skill-routing.md` workflow used by `/tdk-plan`, `/tdk-implement`, and `/tdk-ut-backfill-plan`.
+Manage the explicit `{docs.path}/custom-workflow/plan-skill-routing.md` workflow used by `/tdk-plan` (including `--tdd` / `--ut-backfill` test-mode phases) and `/tdk-implement`.
 
 ## When To Use
 

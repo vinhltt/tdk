@@ -129,4 +129,41 @@ describe('tdk-implement skill routing contract', () => {
     expect(implementContract).not.toContain('tester/code-reviewer/project-management');
     expect(implementContract).not.toContain('.specify/codex-plugins');
   });
+
+  it('documents TDD phase execution: test delegate first, then implementation, then regression gate', () => {
+    expect(implementContract).toContain('## TDD Phase Execution');
+    for (const heading of [
+      '## Tests Before',
+      '## Refactor / Implementation',
+      '## Tests After',
+      '## Regression Gate',
+    ]) {
+      expect(implementContract).toContain(heading);
+    }
+    expect(implementContract).toContain('Test delegate success alone never marks a TDD phase done');
+    expect(implementContract).toContain('/tdk-plan <TASK_ID> --ut-backfill');
+    expect(implementContract).not.toContain('/tdk-ut-backfill-plan');
+  });
+
+  it('documents UT backfill phase execution and matrix implementation gate', () => {
+    expect(implementContract).toContain('## UT Backfill Phase Execution');
+    for (const heading of [
+      '## Code Summary',
+      '## Mocks & Fixtures Required',
+      '## Test Matrix',
+    ]) {
+      expect(implementContract).toContain(heading);
+    }
+
+    for (const term of [
+      'Run the routed `test` delegate',
+      'each non-N/A `## Test Matrix` row',
+      'the `Impl` column filled with a test file path',
+      'Run the phase\'s test command(s)',
+      'do not mark the phase done',
+      'Backfill phases are test implementation work only.',
+    ]) {
+      expect(implementContract).toContain(term);
+    }
+  });
 });

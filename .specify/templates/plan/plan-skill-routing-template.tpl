@@ -6,7 +6,7 @@ Line format: `- {domain}: {skill-name} [, {skill-name}]`
 Auto-detected domains: `research`, `implement`, `test`, `database`, `design`. Other domains (e.g. `clarify`, `styling`) require manual assignment in phase files.
 
 <!-- Test implementation is handled by the consumer skill mapped to the test domain.
-     /tdk-ut-backfill-plan reads this same file and injects that skill into UT phase files. -->
+     /tdk-plan --tdd / --ut-backfill reads this same file and injects that skill into generated phase files. -->
 
 ## global
 

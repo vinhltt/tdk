@@ -80,8 +80,37 @@ Phase NN left in_progress. Add/fix the skill in plan-skill-routing.md or edit th
 Unit-test guard: if the phase appears to be a unit-test phase but has no usable `## Delegate Skills`, do not write tests inline. STOP with:
 
 ```text
-Unit-test phase has no delegate skill. Run /tdk-ut-backfill-plan {TASK_ID} after adding a test entry to plan-skill-routing.md, or add ## Delegate Skills manually.
+Unit-test phase has no delegate skill. Add a test entry to plan-skill-routing.md, then rerun /tdk-plan <TASK_ID> --ut-backfill or edit ## Delegate Skills manually.
 ```
+
+## TDD Phase Execution
+
+**Detect TDD markers:** a phase is TDD-shaped when its file contains all four headings `## Tests Before`, `## Refactor / Implementation`, `## Tests After`, `## Regression Gate` (written by `/tdk-plan <TASK_ID> --tdd`, see `plan-output-contract.md` Test Mode Sections).
+
+For a TDD-shaped phase:
+
+1. Run the routed `test` delegate from `## Delegate Skills` first, covering the `## Tests Before` step (tests capturing current behavior).
+2. If no usable `test` delegate exists, STOP with the unit-test guard message above — do not write tests inline.
+3. After the test delegate completes, continue to the routed implementation delegate (if listed after the `test` skill in `## Delegate Skills`) or generic implementation, covering `## Refactor / Implementation`.
+4. Re-run the `## Tests After` step (re-run `## Tests Before` tests, plus any new tests for new behavior).
+5. Run the `## Regression Gate` command(s); all must pass.
+6. **Test delegate success alone never marks a TDD phase done.** Mark done only after steps 3–5 all complete successfully.
+
+If the implementation step or regression gate fails, leave the phase `in_progress`, report the failure, and emit the F3 recovery reminder — do not mark done on partial completion.
+
+## UT Backfill Phase Execution
+
+**Detect UT backfill markers:** a phase is backfill-shaped when its file contains all three headings `## Code Summary`, `## Mocks & Fixtures Required`, and `## Test Matrix` (written by `/tdk-plan <TASK_ID> --ut-backfill`, see `plan-output-contract.md` Test Mode Sections).
+
+For a backfill-shaped phase:
+
+1. Run the routed `test` delegate from `## Delegate Skills` first. If no usable `test` delegate exists, STOP with the unit-test guard message above — do not write tests inline.
+2. The test delegate must implement each non-N/A `## Test Matrix` row or explicitly defer it with `N/A: <reason>` in the row.
+3. Before marking the phase done, verify every non-N/A `## Test Matrix` row has the `Impl` column filled with a test file path, test name, or stable test identifier.
+4. Run the phase's test command(s) from `## Success Criteria`, `## Next Steps`, or delegate output; all must pass.
+5. If any required matrix row lacks `Impl`, any test command fails, or the delegate cannot map a row to code, leave the phase `in_progress`, report the missing ID(s), and emit the F3 recovery reminder — do not mark the phase done.
+
+Backfill phases are test implementation work only. Do not create production source changes unless the phase explicitly states a testability seam is required and the change is covered by the phase success criteria.
 
 ## Generic Implementation Phase - Auto-continue
 

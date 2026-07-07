@@ -19,7 +19,7 @@ Scan tdk-speckit marketplace skills against `.specify/docs/` documentation and u
 /tdk-skill-docs-sync <skill-name> [--plugin <plugin-name>] [--dry-run]
 ```
 
-- **`<skill-name>`**: Name of the skill to sync docs for (e.g., `tdk-ut-backfill-plan`)
+- **`<skill-name>`**: Name of the skill to sync docs for (e.g., `tdk-plan`)
 - **`--plugin <name>`**: Target plugin (default: auto-detect from skill name)
 - **`--dry-run`**: Report gaps only, do not modify any files
 
