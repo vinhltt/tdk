@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-08T10:45:58Z",
+  "generated_at": "2026-07-08T12:53:30Z",
   "plugins": {
     "tdk-core": {
-      "version": "7.0.3",
+      "version": "7.0.4",
       "components": {
         "skills": {
           "_shared": {
@@ -52,10 +52,10 @@
             "version": "6.0.0"
           },
           "tdk-implement": {
-            "version": "7.0.0"
+            "version": "7.0.4"
           },
           "tdk-plan": {
-            "version": "7.0.0"
+            "version": "7.0.4"
           },
           "tdk-specify": {
             "version": "6.0.2"
@@ -96,10 +96,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "2e33cdc14ebf20e5074ae949db076e4e04d51a31ec94d99ef1c3d6278c4c929e",
-        ".claude-plugin/plugin.json": "ed30d5be90458818d6cca233c5fb82f1356006a5e35ffdb1d002d83ee0da7fe1",
-        ".codex-plugin/plugin.json": "ed30d5be90458818d6cca233c5fb82f1356006a5e35ffdb1d002d83ee0da7fe1",
-        ".cursor-plugin/plugin.json": "ed30d5be90458818d6cca233c5fb82f1356006a5e35ffdb1d002d83ee0da7fe1",
-        "CHANGELOG.md": "2d87da0398cda01f7057e5621e05dc68fd48ee5fe1589c41ac792aa451cfe09f",
+        ".claude-plugin/plugin.json": "a22e2d92ee837b90b952eec0303eb7c00959bcf5f040755d99c1d3825386ed57",
+        ".codex-plugin/plugin.json": "a22e2d92ee837b90b952eec0303eb7c00959bcf5f040755d99c1d3825386ed57",
+        ".cursor-plugin/plugin.json": "a22e2d92ee837b90b952eec0303eb7c00959bcf5f040755d99c1d3825386ed57",
+        "CHANGELOG.md": "e35bbd577bd08a83df189da76da517e9ad81b771d2079544acb88ec52291d086",
         "__tests__/context-builder.test.cjs": "704c828646af0d26cab0be3b82b37d150114faf8406899d0f6bbc020b10f0d60",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
@@ -167,22 +167,22 @@
         "skills/tdk-greenfield-start/references/workflow-quick.md": "92be32b30471da354f137034fb94af9bad4593ac61953933ac9b818677b26b9c",
         "skills/tdk-greenfield-start/references/workflow-unknown.md": "09843c29cb8b3f2a8ce7c86d38bbc03f4e45d33329a0ea49fe4668340208f2ff",
         "skills/tdk-greenfield-start/templates/project-inception.md.tpl": "499d59ff03a33d8fe23c7c51243eecf0838b97ed66181a62d35240f7e1c8707e",
-        "skills/tdk-implement/SKILL.md": "b3c22db7d1273575f7f091f1dcaf160102c1283ad5549a9ac9e3051b0596467e",
-        "skills/tdk-implement/references/phase-execution.md": "2d4c6c5b3b93745cc031f45b66c865850705ceccd268b11f453bfd1b04653e46",
+        "skills/tdk-implement/SKILL.md": "78fdcf04e8dbffc1c0ea609484257581caa0c8c8d1f9be621d947c966c096381",
+        "skills/tdk-implement/references/phase-execution.md": "0ded175cb5523251be5a695e28c10315697850e1004d21bf5ea219710f4c073f",
         "skills/tdk-implement/references/project-and-phase-contract.md": "93bafb807ab3a4e4272c9264e5c8da1edc9b42a862f29e9a68d4112bb04abbe2",
         "skills/tdk-implement/references/routing-preflight.md": "794db5940ab7f9f2b928c03dcef6fc8bb8474642ff8244acb544166f727e5de9",
-        "skills/tdk-plan/SKILL.md": "5a39867596de9111449d70de09f4dbb927c23d303d7ab61d422ebb5c8a1d0e02",
+        "skills/tdk-plan/SKILL.md": "a49cf6627bcfdce1dd0c81b82a37e4da46cc6871001f36e531c767225b2cc0b2",
         "skills/tdk-plan/references/cross-plan-deps.md": "8678be6c9d45e0ac8269a2087fbf40d053ef83ae0cbf95b3e5a2c10f1b512e69",
-        "skills/tdk-plan/references/design-phase.md": "d20eabe776268ae64b73165925f798addf8dad059fc679f5b746e6a160743490",
+        "skills/tdk-plan/references/design-phase.md": "ad53d755eec0b2a1497ea4d13fbc23223285d4da6523f2d3326b80ade21a6f7f",
         "skills/tdk-plan/references/gates.md": "e0d22f6966d095c184f9b57acac0e964de19915d3089a3f747a9d341cf1de56d",
         "skills/tdk-plan/references/handle-existing-plan.md": "4fed435cbab240b053c6c5e786f58640e6c339c0c3e210aa7253d5a5b4e3dfab",
-        "skills/tdk-plan/references/modes.md": "3a0262d7b63b0d5853bb3bd41487de3c7a9524c06ced0361b85d4361591e20bc",
-        "skills/tdk-plan/references/plan-output-contract.md": "a95f697ad26b2d6c920915924138be1809bd803f49cd38761463b176be790455",
+        "skills/tdk-plan/references/modes.md": "930f87aaf31a10400332b316e27a598a6c64d3526b5a3d48f0199cd3d9a06148",
+        "skills/tdk-plan/references/plan-output-contract.md": "c34d3f0354b5ea54a672cefd7012989426a389a14944a62fdb9e008330d13221",
         "skills/tdk-plan/references/red-team-workflow.md": "368314e8cf60d323bc3849206c87947539e237da605e4794614548abd2e83b3d",
         "skills/tdk-plan/references/research-phase.md": "a6d56b6624877cc680919feff120ea060c4746d38dd42db761a922820a0aa33a",
         "skills/tdk-plan/references/scope-challenge.md": "9f341caed80d5e83989c2e83efc24e8aec7ffcaf84d512919990b0e75dbc1913",
-        "skills/tdk-plan/references/skill-routing.md": "acf5a675401ba0be10baf93a349733724de96f616134b3afbca5e8158e3af532",
-        "skills/tdk-plan/references/validate-question-framework.md": "655b9cb2adb9d33c8d683ff92b878fb441fd4b01354db051bdd3f395beb8ecec",
+        "skills/tdk-plan/references/skill-routing.md": "500f9c1ee47669d853503e0dfa52674a2b42e4d0d275c857a66adeb45d27c635",
+        "skills/tdk-plan/references/validate-question-framework.md": "e8583d7ce9f401a2424c0d3fabcb4739e2e45b0a016ad385912b7ff64ac39b75",
         "skills/tdk-plan/references/validate-workflow.md": "504ffc62d2c156f239d7143eab585490365e1c1d32ae85963df195f00867661b",
         "skills/tdk-specify/SKILL.md": "7f2ddf2dfd7d3434299a4afd45ec2d1fdd67c73f55c1f42dea2f00f13b9c3620",
         "skills/tdk-specify/evals/evals.json": "6c432121010453d7024c9abff36e5c9517010c7e486f59474a4742b642d526bd",

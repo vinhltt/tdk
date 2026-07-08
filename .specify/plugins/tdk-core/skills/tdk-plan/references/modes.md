@@ -24,8 +24,12 @@ Single source of truth for `/tdk-plan` flag dispatch. SKILL.md only routes; this
 | test_mode | Flag | Behavior |
 |---|---|---|
 | `none` | (no flag) | Current non-test planning behavior. |
-| `tdd` | `--tdd` | Canonical phases add tests-first sections (`## Tests Before`, `## Refactor / Implementation`, `## Tests After`, `## Regression Gate`). |
-| `ut_backfill` | `--ut-backfill` | Canonical phases add backfill-focused sections (`## Code Summary`, `## Mocks & Fixtures Required`, `## Test Matrix`). |
+| `tdd` | `--tdd` | Canonical phases add tests-first sections (`## Tests Before`, `## Refactor / Implementation`, `## Tests After`, `## Test Quality Gate`, `## Regression Gate`). |
+| `ut_backfill` | `--ut-backfill` | Canonical phases add backfill-focused sections (`## Code Summary`, `## Mocks & Fixtures Required`, `## Test Matrix`, `## Test Quality Gate`). |
+
+TDD phases order `## Tests Before`, `## Refactor / Implementation`, `## Tests After`, `## Test Quality Gate`, `## Regression Gate`.
+
+UT backfill phases order `## Code Summary`, `## Mocks & Fixtures Required`, `## Test Matrix`, `## Test Quality Gate`, then `## Delegate Skills` when routing injects delegates.
 
 `--fast` is incompatible with `--tdd` and `--ut-backfill`. `--hard` and the default speed mode both compose with either test flag. Future rigor modes such as `--deep` or `--parallel`, if added to `/tdk-plan`, should compose with test modes the same way `--hard` does.
 

@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [7.0.4] - 2026-07-08
+
+### Changed
+- tdk-plan: add Test Quality Gate sections for TDD/UT backfill phase output, gate status and command semantics, and test-mode delegate placement after the gate
+- tdk-implement: enforce Test Quality Gate validation before TDD/backfill phases can be marked done and stop old-shape phases missing the gate
+
 ## [7.0.3] - 2026-07-08
 
 ### Changed
@@ -81,7 +87,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 - Added new `tdk-epic-prd` skill for epic product alignment, mapping, and child specification slice seeds.
 
 ### Changed
-- TODO: describe
+- Updated guides and skill-count contract tests to integrate the epic PRD step.
 
 ## [5.12.0] - 2026-07-01
 

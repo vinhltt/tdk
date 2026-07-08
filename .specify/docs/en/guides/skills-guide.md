@@ -149,7 +149,7 @@ Excluded:
 
 | Skill | Summary | Main modes/options | Use when |
 |-------|---------|--------------------|----------|
-| `/tdk-plan --tdd` / `--ut-backfill` | Fold test-first or backfill planning into `/tdk-plan` phases. | `<id>`, `--sub-workspace`, `--module`, `--standalone` (backfill only) | Existing feature/code needs test-first or routed unit-test phases as part of the same plan. |
+| `/tdk-plan --tdd` / `--ut-backfill` | Fold test-first or backfill planning plus `Test Quality Gate` rows into `/tdk-plan` phases. | `<id>`, `--sub-workspace`, `--module`, `--standalone` (backfill only) | Existing feature/code needs test-first or routed unit-test phases as part of the same plan. |
 | `/tdk-test-api-plan` | Generate API test plan from endpoints. | OpenAPI, scout, or manual endpoint input | API coverage needs a structured plan before testcase generation. |
 | `/tdk-test-api-generate-testcase` | Generate per-endpoint API testcase files and execution manifest. | reads API test plan | Test plan is ready to become concrete testcase files. |
 | `/tdk-test-api-gen-code-playwright-ts` | Generate Playwright TypeScript API test code. | reads testcase files and execution manifest | Testcase files should become executable Playwright API tests. |
@@ -184,12 +184,21 @@ Excluded:
 | default | Normal planning workflow from `spec.md`, with research/design artifacts when needed. |
 | `--fast` | Minimal planning path for small clear work; skips heavier research/review steps. Incompatible with `--tdd` and `--ut-backfill`. |
 | `--hard` | More rigorous planning with expanded research and review. Composes with `--tdd` or `--ut-backfill`. |
-| `--tdd` | Add tests-first sections (`Tests Before` / `Refactor` / `Tests After` / `Regression Gate`) to implementation phases. |
-| `--ut-backfill` | Generate backfill-focused phases (`Code Summary` / `Mocks & Fixtures Required` / `Test Matrix`) for existing code. Accepts `--sub-workspace <name>`, `--module <name>` (requires `--sub-workspace`), and `--standalone`. |
+| `--tdd` | Add tests-first sections (`Tests Before` / `Refactor` / `Tests After` / `Test Quality Gate` / `Regression Gate`) to implementation phases. |
+| `--ut-backfill` | Generate backfill-focused phases (`Code Summary` / `Mocks & Fixtures Required` / `Test Matrix` / `Test Quality Gate`) for existing code. Accepts `--sub-workspace <name>`, `--module <name>` (requires `--sub-workspace`), and `--standalone`. |
 | `--red-team` | Review an existing plan with adversarial focus. Freeform content becomes review focus. |
 | `--validate` | Interview/validate an existing plan. Freeform content becomes validation focus. |
 
 Outputs: `plan.md`, phase details, optional `research/`, `data-model.md`, and `contracts/`.
+
+Test-mode phases include `Test Quality Gate` rows. TDK owns baseline rubric,
+traceability, and gate row completion; the routed consumer `test` skill owns
+framework commands and numeric coverage policy.
+
+Codex harness installs require generated `.specify/codex-plugins/**` packages.
+The default distribution payload omits those generated packages, so use the
+existing setup CLI `convert` / Codex install path instead of changing
+`distribute.json` for test-mode planning.
 
 #### `/tdk-specify`
 
@@ -302,7 +311,7 @@ For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalo
 | analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report (no file created) | specify |
 
-`/tdk-plan` accepts freeform content after `<id>` in every mode. Default, `--fast`, and `--hard` treat content as planning instruction; `--red-team` treats it as review focus; `--validate` treats it as validation focus. Known mode flags can appear after `<id>` before or after the content. `--tdd` and `--ut-backfill` are independent test-mode flags: they select whether generated phases include tests-first or backfill sections, and compose with the default or `--hard` speed mode (not `--fast`).
+`/tdk-plan` accepts freeform content after `<id>` in every mode. Default, `--fast`, and `--hard` treat content as planning instruction; `--red-team` treats it as review focus; `--validate` treats it as validation focus. Known mode flags can appear after `<id>` before or after the content. `--tdd` and `--ut-backfill` are independent test-mode flags: they select whether generated phases include tests-first or backfill sections with `Test Quality Gate` rows, and compose with the default or `--hard` speed mode (not `--fast`).
 
 ### Project Inception Commands
 
@@ -427,7 +436,7 @@ Syntax: `/tdk-plan-skill-routing <init|inspect|check|diff|register|verify|optimi
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| unit-test planning | `/tdk-plan <id> --tdd` \| `/tdk-plan <id> --ut-backfill` | `--sub-workspace`, `--module`, `--standalone` (backfill only) | `spec.md` (opt), consumer test skill routing | `plan.md`, `phases/phase-NN-*.md` with TDD or backfill sections | plan |
+| unit-test planning | `/tdk-plan <id> --tdd` \| `/tdk-plan <id> --ut-backfill` | `--sub-workspace`, `--module`, `--standalone` (backfill only) | `spec.md` (opt), consumer test skill routing | `plan.md`, `phases/phase-NN-*.md` with TDD/backfill sections and `Test Quality Gate` rows | plan |
 
 ### Config Commands
 

@@ -10,6 +10,16 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 
+## [1.100.3] - 2026-07-08
+
+### Changed
+- **[tdk-core]** Strengthen test-mode planning and implementation gates
+  - `tdk-plan` now emits `## Test Quality Gate` sections for TDD and UT backfill phases, defines gate row status/command semantics, and places routed delegates after the gate for test-mode phases.
+  - `tdk-implement` now blocks TDD/backfill phase completion until Test Quality Gate commands and structural evidence pass, and stops old-shape test-mode phases that lack the gate.
+- **[Docs]** Document Test Quality Gate behavior in the skills guide and workflow map, including the split between TDK-owned baseline rubric/gate checks and consumer test-skill framework or numeric coverage policy.
+- **[Scripts]** Expand contract tests for `tdk-plan` and `tdk-implement` test-mode gate rows, ordering, N/A handling, numeric coverage source rules, and old-shape phase guards.
+- **[General]** Refresh classic plugin, Codex plugin, and release manifests for the updated `tdk-core` reference and contract-test payload hashes.
+
 ## [1.100.2] - 2026-07-08
 
 ### Changed

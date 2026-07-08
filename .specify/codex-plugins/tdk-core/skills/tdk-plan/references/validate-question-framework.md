@@ -121,11 +121,11 @@ Each template defines: `question` body, 3 substantive options + 1 `Skip this que
     - { label: "Missing — chain will break",                 action: revise }
     - { label: "Skip this question",                         action: no-op }
 - id: speckit.test_mode_completeness
-  question: "For TDD/backfill plans, do phase files apply the Test Case Completeness Rubric and trace every public surface to test rows?"
+  question: "For TDD/backfill plans, do phase files apply the Test Case Completeness Rubric, trace every public surface to test rows, and include a Test Quality Gate?"
   options:
-    - { label: "Complete — rubric dimensions covered or marked N/A", action: no-op }
-    - { label: "Partial — some dimensions or trace links missing", action: revise }
-    - { label: "Missing — test cases are mostly prose or incomplete", action: revise }
+    - { label: "Complete — rubric, trace links, gate row statuses, numeric coverage policy source, and non-N/A commands are covered", action: no-op }
+    - { label: "Partial — some dimensions, trace links, gate rows, or command evidence missing", action: revise }
+    - { label: "Missing — test cases are mostly prose or the Test Quality Gate is absent", action: revise }
     - { label: "Skip this question",                         action: no-op }
 ```
 

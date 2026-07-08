@@ -136,6 +136,7 @@ describe('tdk-implement skill routing contract', () => {
       '## Tests Before',
       '## Refactor / Implementation',
       '## Tests After',
+      '## Test Quality Gate',
       '## Regression Gate',
     ]) {
       expect(implementContract).toContain(heading);
@@ -151,6 +152,7 @@ describe('tdk-implement skill routing contract', () => {
       '## Code Summary',
       '## Mocks & Fixtures Required',
       '## Test Matrix',
+      '## Test Quality Gate',
     ]) {
       expect(implementContract).toContain(heading);
     }
@@ -162,6 +164,47 @@ describe('tdk-implement skill routing contract', () => {
       'Run the phase\'s test command(s)',
       'do not mark the phase done',
       'Backfill phases are test implementation work only.',
+    ]) {
+      expect(implementContract).toContain(term);
+    }
+  });
+
+  it('enforces Test Quality Gate commands before test-mode phase completion', () => {
+    for (const term of [
+      'Run every safe runnable `Command` in `## Test Quality Gate`',
+      'A gate row can pass only when structural target evidence is satisfied and any runnable command exits 0',
+      'Do not parse coverage percentages',
+      'required gate row is `pending` or `fail`',
+      'unsafe command',
+      'missing structural evidence',
+      'invalid N/A encoding',
+      'Bare `Command: N/A` is invalid',
+      'A non-applicable row must use `Command: -` and `Status: N/A: <reason>`',
+    ]) {
+      expect(implementContract).toContain(term);
+    }
+  });
+
+  it('stops old-shape TDD and backfill phases that lack Test Quality Gate', () => {
+    for (const term of [
+      'Old-shape TDD/backfill phase missing `## Test Quality Gate`',
+      'rerun `/tdk-plan` with the same test-mode flag',
+      'manually add `## Test Quality Gate` before rerunning `/tdk-implement`',
+      'do not fall through to delegate completion or generic done',
+    ]) {
+      expect(implementContract).toContain(term);
+    }
+  });
+
+  it('requires gate validation after delegate execution and before done status writes', () => {
+    for (const term of [
+      'Delegate completion alone cannot mark a TDD or backfill phase done',
+      'validate `## Test Quality Gate` after delegates and before any phase `done` write',
+      'TDD ID reuse',
+      'rubric dimensions by test ID or `N/A: <reason>`',
+      'backfill matrix rows',
+      'branch traceability',
+      'dependency traceability',
     ]) {
       expect(implementContract).toContain(term);
     }

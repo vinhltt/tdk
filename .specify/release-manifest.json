@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-07-08T10:46:11.829Z",
+  "generatedAt": "2026-07-08T12:53:37.243Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -45,7 +45,7 @@
       "mode": "0664"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "e1a3e4995d79bac3e248845a42364b58a3b917cbb4bf5382dfe0c386e9a073e3",
+      "sha256": "99598c737ffb3d5f9ce8999a9e4fb0235df2b74e06ac591d1e6600a7bc683dc4",
       "size": 41296,
       "mode": "0644"
     },
@@ -55,28 +55,28 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "ed30d5be90458818d6cca233c5fb82f1356006a5e35ffdb1d002d83ee0da7fe1",
+      "sha256": "a22e2d92ee837b90b952eec0303eb7c00959bcf5f040755d99c1d3825386ed57",
       "size": 155,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "ed30d5be90458818d6cca233c5fb82f1356006a5e35ffdb1d002d83ee0da7fe1",
+      "sha256": "a22e2d92ee837b90b952eec0303eb7c00959bcf5f040755d99c1d3825386ed57",
       "size": 155,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "ed30d5be90458818d6cca233c5fb82f1356006a5e35ffdb1d002d83ee0da7fe1",
+      "sha256": "a22e2d92ee837b90b952eec0303eb7c00959bcf5f040755d99c1d3825386ed57",
       "size": 155,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.logs/hook-log.jsonl": {
-      "sha256": "884badbceeef4c6b59946363c4061cffe76921af6154632f13ce1fcefa605c2a",
-      "size": 91306,
+      "sha256": "1280201a545cf9eb29d5b76e011bb0f425aff756a79173b423f41faa8197a227",
+      "size": 101820,
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "2d87da0398cda01f7057e5621e05dc68fd48ee5fe1589c41ac792aa451cfe09f",
-      "size": 25542,
+      "sha256": "e35bbd577bd08a83df189da76da517e9ad81b771d2079544acb88ec52291d086",
+      "size": 25946,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/__tests__/context-builder.test.cjs": {
@@ -415,13 +415,13 @@
       "mode": "0664"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/SKILL.md": {
-      "sha256": "b3c22db7d1273575f7f091f1dcaf160102c1283ad5549a9ac9e3051b0596467e",
+      "sha256": "78fdcf04e8dbffc1c0ea609484257581caa0c8c8d1f9be621d947c966c096381",
       "size": 6435,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/references/phase-execution.md": {
-      "sha256": "2d4c6c5b3b93745cc031f45b66c865850705ceccd268b11f453bfd1b04653e46",
-      "size": 8490,
+      "sha256": "0ded175cb5523251be5a695e28c10315697850e1004d21bf5ea219710f4c073f",
+      "size": 11520,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/references/project-and-phase-contract.md": {
@@ -435,7 +435,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/SKILL.md": {
-      "sha256": "5a39867596de9111449d70de09f4dbb927c23d303d7ab61d422ebb5c8a1d0e02",
+      "sha256": "a49cf6627bcfdce1dd0c81b82a37e4da46cc6871001f36e531c767225b2cc0b2",
       "size": 13341,
       "mode": "0644"
     },
@@ -445,8 +445,8 @@
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/design-phase.md": {
-      "sha256": "d20eabe776268ae64b73165925f798addf8dad059fc679f5b746e6a160743490",
-      "size": 12386,
+      "sha256": "ad53d755eec0b2a1497ea4d13fbc23223285d4da6523f2d3326b80ade21a6f7f",
+      "size": 15695,
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/gates.md": {
@@ -460,13 +460,13 @@
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/modes.md": {
-      "sha256": "3a0262d7b63b0d5853bb3bd41487de3c7a9524c06ced0361b85d4361591e20bc",
-      "size": 9137,
+      "sha256": "930f87aaf31a10400332b316e27a598a6c64d3526b5a3d48f0199cd3d9a06148",
+      "size": 9495,
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/plan-output-contract.md": {
-      "sha256": "a95f697ad26b2d6c920915924138be1809bd803f49cd38761463b176be790455",
-      "size": 7495,
+      "sha256": "c34d3f0354b5ea54a672cefd7012989426a389a14944a62fdb9e008330d13221",
+      "size": 9427,
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/red-team-workflow.md": {
@@ -485,13 +485,13 @@
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/skill-routing.md": {
-      "sha256": "acf5a675401ba0be10baf93a349733724de96f616134b3afbca5e8158e3af532",
-      "size": 6577,
+      "sha256": "500f9c1ee47669d853503e0dfa52674a2b42e4d0d275c857a66adeb45d27c635",
+      "size": 6845,
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/validate-question-framework.md": {
-      "sha256": "655b9cb2adb9d33c8d683ff92b878fb441fd4b01354db051bdd3f395beb8ecec",
-      "size": 11376,
+      "sha256": "e8583d7ce9f401a2424c0d3fabcb4739e2e45b0a016ad385912b7ff64ac39b75",
+      "size": 11522,
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/validate-workflow.md": {
@@ -2450,8 +2450,8 @@
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/tdk-implement-skill-routing-contract.test.ts": {
-      "sha256": "be2adf56e949d62f493e1501c723ae4777f320f73df39421dfd4f1824a2650d4",
-      "size": 7676,
+      "sha256": "1ab46f123464228dcf2d00d6da911fb1332a7bcadb875c05fdd497f6278f4efc",
+      "size": 9385,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-inception-workflow-depth-contract.test.ts": {
@@ -2485,8 +2485,8 @@
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/tdk-plan-test-modes-contract.test.ts": {
-      "sha256": "bb89fc6ae5fcc7e4568f9f75d8881eb82c5e1579e129922c1b611c83175d5181",
-      "size": 10018,
+      "sha256": "1f2114494f3b4bfe0a092f5db84b74a6767a6e145ff34aaefc1c16b0198b23ff",
+      "size": 15523,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-scaffold-from-recommendation-contract.test.ts": {

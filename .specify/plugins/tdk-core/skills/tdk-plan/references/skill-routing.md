@@ -55,7 +55,11 @@ Domains are freeform strings (e.g. research, implement, test, database, design, 
 
 ## Injection Format
 
-Inject `## Delegate Skills` into phase body (after `## Key Insights`, before `## Requirements`):
+Inject `## Delegate Skills` into phase body according to phase shape:
+
+- Non-test phases inject `## Delegate Skills` after `## Key Insights` and before `## Requirements`.
+- TDD phases inject `## Delegate Skills` after `## Test Quality Gate` and before `## Regression Gate`.
+- UT backfill phases inject `## Delegate Skills` immediately after `## Test Quality Gate`.
 
 ```markdown
 ## Delegate Skills

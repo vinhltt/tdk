@@ -20,6 +20,25 @@ function read(path: string): string {
   return readFileSync(path, 'utf-8');
 }
 
+function sliceBetween(content: string, start: string, end: string): string {
+  const startIndex = content.indexOf(start);
+  expect(startIndex).toBeGreaterThanOrEqual(0);
+  const endIndex = content.indexOf(end, startIndex + start.length);
+  expect(endIndex).toBeGreaterThan(startIndex);
+
+  return content.slice(startIndex, endIndex);
+}
+
+function expectInOrder(content: string, terms: string[]): void {
+  let previousIndex = -1;
+
+  for (const term of terms) {
+    const index = content.indexOf(term);
+    expect(index).toBeGreaterThan(previousIndex);
+    previousIndex = index;
+  }
+}
+
 describe('tdk-plan test mode grammar contract', () => {
   const skill = read(PLAN_SKILL);
   const modes = read(MODES_REFERENCE);
@@ -162,6 +181,77 @@ describe('tdk-plan test mode grammar contract', () => {
     expect(outputContract).toContain('`## Tests After` must reuse every before-test ID');
   });
 
+  it('documents Test Quality Gate rows for TDD and UT backfill phases', () => {
+    const designPhase = read(DESIGN_PHASE_REFERENCE);
+
+    for (const contract of [designPhase, outputContract]) {
+      expect(contract).toContain('## Test Quality Gate');
+      expect(contract).toContain('| Metric | Target | Source | Command | Status |');
+      expect(contract).toContain(
+        '| Tests Before reuse | 100% before IDs reused in Tests After | TDK core | <test command> | pending |',
+      );
+      expect(contract).toContain(
+        '| Rubric dimensions | Happy/EP/BVA/Branch/Error/Deps/State/Regression covered by test IDs or N/A reasons | TDK core | <test command> | pending |',
+      );
+      expect(contract).toContain(
+        '| Numeric cov | Project-defined or N/A reason | routed consumer test skill | <cov command> or - | pending |',
+      );
+      expect(contract).toContain(
+        '| Matrix rows | 100% non-N/A rows implemented | TDK core | <test command> | pending |',
+      );
+      expect(contract).toContain(
+        '| Branch traceability | 100% mapped or N/A reason | TDK core | <test command> | pending |',
+      );
+      expect(contract).toContain(
+        '| Dependency traceability | 100% deps mapped or N/A reason | TDK core | <test command> | pending |',
+      );
+      expect(contract).not.toContain('pending or N/A: <reason>');
+    }
+  });
+
+  it('orders Test Quality Gate within TDD and UT backfill phase sections', () => {
+    const designPhase = read(DESIGN_PHASE_REFERENCE);
+    const designTdd = sliceBetween(designPhase, '### test_mode: tdd', '### test_mode: ut_backfill');
+    const designBackfill = sliceBetween(
+      designPhase,
+      '### test_mode: ut_backfill',
+      '### Test Case Completeness Rubric',
+    );
+    const outputTdd = sliceBetween(
+      outputContract,
+      'When `test_mode: tdd`',
+      'When `test_mode: ut_backfill`',
+    );
+    const outputBackfill = sliceBetween(
+      outputContract,
+      'When `test_mode: ut_backfill`',
+      'Backfill phases must satisfy traceability before write:',
+    );
+
+    for (const tddContract of [designTdd, outputTdd]) {
+      expectInOrder(tddContract, ['## Tests After', '## Test Quality Gate', '## Regression Gate']);
+    }
+    for (const backfillContract of [designBackfill, outputBackfill]) {
+      expectInOrder(backfillContract, ['## Test Matrix', '## Test Quality Gate', '## Delegate Skills']);
+    }
+  });
+
+  it('documents quality gate status, N/A, command, and numeric policy semantics', () => {
+    const designPhase = read(DESIGN_PHASE_REFERENCE);
+
+    for (const contract of [designPhase, outputContract]) {
+      expect(contract).toContain('Status values: `pending`, `pass`, `fail`, `N/A: <reason>`');
+      expect(contract).toContain('A non-applicable row uses `Command: -` and `Status: N/A: <reason>`');
+      expect(contract).toContain('Bare `Command: N/A` is invalid');
+      expect(contract).toContain(
+        'A row can become `pass` only after structural target evidence is satisfied and any runnable command exits 0',
+      );
+      expect(contract).toContain('Numeric cov source order');
+      expect(contract).toContain('routed consumer test skill');
+      expect(contract).toContain('Do not invent numeric coverage thresholds');
+    }
+  });
+
   it('documents the baseline test case completeness rubric', () => {
     const designPhase = read(DESIGN_PHASE_REFERENCE);
 
@@ -183,6 +273,9 @@ describe('tdk-plan test mode grammar contract', () => {
 
     expect(outputContract).toContain('All test-mode phases must apply the Test Case Completeness Rubric');
     expect(outputContract).toContain('Test-mode phases apply the completeness rubric');
+    expect(outputContract).toContain(
+      'TDD rubric dimensions must cite test IDs or `N/A: <reason>`, not prose-only claims.',
+    );
   });
 
   it('documents backfill traceability from public surfaces to test matrix rows', () => {
@@ -208,7 +301,38 @@ describe('tdk-plan test mode grammar contract', () => {
     expect(validateQuestions).toContain('Test Case Completeness Rubric');
     expect(validateQuestions).toContain('trace every public surface to test rows');
     expect(validateQuestions).toContain('canonical phase files with test-mode sections');
+    expect(validateQuestions).toContain('Test Quality Gate');
+    expect(validateQuestions).toContain('gate row statuses');
+    expect(validateQuestions).toContain('numeric coverage policy source');
+    expect(validateQuestions).toContain('non-N/A commands');
     expect(validateQuestions).not.toContain('ut-plan.md');
+  });
+
+  it('keeps modes reference aligned with Test Quality Gate section shapes', () => {
+    expect(modes).toContain('## Test Quality Gate');
+    expect(modes).toContain(
+      'TDD phases order `## Tests Before`, `## Refactor / Implementation`, `## Tests After`, `## Test Quality Gate`, `## Regression Gate`.',
+    );
+    expect(modes).toContain(
+      'UT backfill phases order `## Code Summary`, `## Mocks & Fixtures Required`, `## Test Matrix`, `## Test Quality Gate`, then `## Delegate Skills` when routing injects delegates.',
+    );
+  });
+
+  it('special-cases test-mode delegate placement after Test Quality Gate', () => {
+    const designPhase = read(DESIGN_PHASE_REFERENCE);
+    const skillRouting = read(SKILL_ROUTING_REFERENCE);
+
+    for (const contract of [designPhase, skillRouting]) {
+      expect(contract).toContain(
+        'Non-test phases inject `## Delegate Skills` after `## Key Insights` and before `## Requirements`.',
+      );
+      expect(contract).toContain(
+        'TDD phases inject `## Delegate Skills` after `## Test Quality Gate` and before `## Regression Gate`.',
+      );
+      expect(contract).toContain(
+        'UT backfill phases inject `## Delegate Skills` immediately after `## Test Quality Gate`.',
+      );
+    }
   });
 
   it('documents the module ownership guard for backfill planning', () => {

@@ -118,7 +118,7 @@ File names use `phases/phase-NN-kebab-case-slug.md`: lowercase, hyphen-separated
 
 ### Test Mode Sections
 
-When `test_mode: tdd`, phase files replace the generic `## Implementation Steps` execution order with tests-first sections, in order: `## Tests Before`, `## Refactor / Implementation`, `## Tests After`, `## Regression Gate`.
+When `test_mode: tdd`, phase files replace the generic `## Implementation Steps` execution order with tests-first sections, in order: `## Tests Before`, `## Refactor / Implementation`, `## Tests After`, `## Test Quality Gate`, `## Regression Gate`.
 
 Both `## Tests Before` and `## Tests After` must contain this table:
 
@@ -129,7 +129,34 @@ Both `## Tests Before` and `## Tests After` must contain this table:
 
 `## Tests Before` uses `Status` values `expected_fail`, `characterization`, or `existing_pass`. `## Tests After` must reuse every before-test ID and may add IDs for new behavior. The `## Regression Gate` section must list the command(s) required before the phase can be marked done.
 
-When `test_mode: ut_backfill`, phase files add `## Code Summary`, `## Mocks & Fixtures Required`, and `## Test Matrix` before `## Delegate Skills`.
+TDD phase files must include this gate between `## Tests After` and
+`## Regression Gate`:
+
+```markdown
+## Test Quality Gate
+| Metric | Target | Source | Command | Status |
+|---|---|---|---|---|
+| Tests Before reuse | 100% before IDs reused in Tests After | TDK core | <test command> | pending |
+| Rubric dimensions | Happy/EP/BVA/Branch/Error/Deps/State/Regression covered by test IDs or N/A reasons | TDK core | <test command> | pending |
+| Numeric cov | Project-defined or N/A reason | routed consumer test skill | <cov command> or - | pending |
+```
+
+When `test_mode: ut_backfill`, phase files add `## Code Summary`, `## Mocks & Fixtures Required`, `## Test Matrix`, and `## Test Quality Gate`.
+
+Backfill phase files must include this gate after `## Test Matrix`:
+
+```markdown
+## Test Quality Gate
+| Metric | Target | Source | Command | Status |
+|---|---|---|---|---|
+| Matrix rows | 100% non-N/A rows implemented | TDK core | <test command> | pending |
+| Branch traceability | 100% mapped or N/A reason | TDK core | <test command> | pending |
+| Dependency traceability | 100% deps mapped or N/A reason | TDK core | <test command> | pending |
+| Numeric cov | Project-defined or N/A reason | routed consumer test skill | <cov command> or - | pending |
+```
+
+When routing injects delegates, `## Delegate Skills` follows `## Test Quality
+Gate`.
 
 Backfill phases must satisfy traceability before write:
 - each public export / route / method in `## Code Summary` has at least one `## Test Matrix` row;
@@ -137,7 +164,20 @@ Backfill phases must satisfy traceability before write:
 - each external dependency has a `Deps` row or `N/A: <reason>`;
 - each row has a semantic test ID and leaves `Impl` empty for `/tdk-implement` to fill.
 
-All test-mode phases must apply the Test Case Completeness Rubric from `references/design-phase.md`: Happy, EP, BVA, Branch L<n>, Error, Deps, State, Regression. Do not omit a non-applicable dimension silently; write `N/A: <reason>`.
+All test-mode phases must apply the Test Case Completeness Rubric from `references/design-phase.md`: Happy, EP, BVA, Branch L<n>, Error, Deps, State, Regression. Do not omit a non-applicable dimension silently; write `N/A: <reason>`. TDD rubric dimensions must cite test IDs or `N/A: <reason>`, not prose-only claims.
+
+Status values: `pending`, `pass`, `fail`, `N/A: <reason>`.
+
+Gate command and evidence rules:
+- A non-applicable row uses `Command: -` and `Status: N/A: <reason>` only
+  when evidence proves no project numeric coverage policy or other row target
+  applies.
+- Bare `Command: N/A` is invalid.
+- A row can become `pass` only after structural target evidence is satisfied and any runnable command exits 0.
+- Numeric cov source order is routed consumer `test` skill policy, then named
+  project docs or routing evidence, then `N/A: no project numeric cov policy
+  configured in <source>`.
+- Do not invent numeric coverage thresholds.
 
 See `references/design-phase.md` Test Mode Phase Generation for section content rules.
 

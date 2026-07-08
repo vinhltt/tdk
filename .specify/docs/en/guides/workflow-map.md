@@ -242,7 +242,11 @@ flowchart TD
     class SPEC_UT,UT_SKILL reference
 ```
 
-Use `/tdk-plan <id> --ut-backfill` (or `--tdd` for tests-first phases) to fold unit-test planning into `plan.md` phases, then `/tdk-implement` runs phase delegates through the consumer test skill listed in `## Delegate Skills`. `--sub-workspace` targets a specific workspace (e.g., `backend`, `frontend`), `--module` narrows to a module, and `--standalone` on `--ut-backfill` skips spec dependency for existing code.
+Use `/tdk-plan <id> --ut-backfill` (or `--tdd` for tests-first phases) to fold unit-test planning into `plan.md` phases. Test-mode phases include `Test Quality Gate` rows before implementation can mark the phase done: TDK owns baseline rubric, traceability, and gate row completion; the consumer test skill listed in `## Delegate Skills` owns framework commands and numeric coverage policy. `--sub-workspace` targets a specific workspace (e.g., `backend`, `frontend`), `--module` narrows to a module, and `--standalone` on `--ut-backfill` skips spec dependency for existing code.
+
+For Codex harness installs, generated `.specify/codex-plugins/**` packages must
+exist via the setup CLI `convert` / Codex install path. The default distribution
+payload omits those generated packages.
 
 ### Config & Workspace Management
 
@@ -331,8 +335,8 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `data-model.md` | `/tdk-plan` | `spec.md` | Reference | Feature start |
 | `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
-| `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), consumer test skill routing | `/tdk-implement` | Feature UT |
-| `phases/phase-NN-{module}.md` (backfill sections) | `/tdk-plan --ut-backfill` | `spec.md` (opt), `plan-skill-routing.md` | consumer test skill via `## Delegate Skills` | Feature UT |
+| `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), consumer test skill routing | `/tdk-implement` with `Test Quality Gate` before done | Feature UT |
+| `phases/phase-NN-{module}.md` (backfill sections) | `/tdk-plan --ut-backfill` | `spec.md` (opt), `plan-skill-routing.md` | consumer test skill via `## Delegate Skills`, then gate validation | Feature UT |
 | `*.test.ts` / `test_*.py` etc. | consumer test skill | `phases/phase-NN-{module}.md` | Test runner | Feature UT |
 | `.specify/.specify.json` | `/tdk-sub-workspace-init` | Project config | `config:*`, unit-test routing, sub-workspace docs | Project setup |
 | `document-manager.md` | `/tdk-config-index` | All docs files | Manual reference, LLM tools | On demand |

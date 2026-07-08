@@ -100,7 +100,10 @@ For each phase being created:
    - Fallback: `SKILL_ROUTING["global"][domain]`
    - If no match at all → skip injection for this phase
 
-4. **Inject `## Delegate Skills`** into phase body (after `## Key Insights`, before `## Requirements`):
+4. **Inject `## Delegate Skills`** into phase body:
+   - Non-test phases inject `## Delegate Skills` after `## Key Insights` and before `## Requirements`.
+   - TDD phases inject `## Delegate Skills` after `## Test Quality Gate` and before `## Regression Gate`.
+   - UT backfill phases inject `## Delegate Skills` immediately after `## Test Quality Gate`.
    - `/{skill-name}` — {brief purpose from routing file context}
    - One bullet per skill, ordered as listed in routing file.
    - For `test_mode: tdd` phases, list the routed `test` skill first, then the routed implementation delegate (if any) for the phase's domain.
@@ -132,6 +135,13 @@ Add tests-first sections to each implementation phase, replacing the generic `##
 ## Tests After
 | ID | Source | Scenario | Technique | Input | Expected | Command | Status |
 
+## Test Quality Gate
+| Metric | Target | Source | Command | Status |
+|---|---|---|---|---|
+| Tests Before reuse | 100% before IDs reused in Tests After | TDK core | <test command> | pending |
+| Rubric dimensions | Happy/EP/BVA/Branch/Error/Deps/State/Regression covered by test IDs or N/A reasons | TDK core | <test command> | pending |
+| Numeric cov | Project-defined or N/A reason | routed consumer test skill | <cov command> or - | pending |
+
 ## Regression Gate
 {command(s) that must pass before the phase is marked done}
 ```
@@ -156,7 +166,18 @@ Generate backfill-focused canonical phases describing existing code behavior and
 
 ## Test Matrix
 | ID | Source | Scenario | Technique | Input | Expected | Priority | Impl |
+
+## Test Quality Gate
+| Metric | Target | Source | Command | Status |
+|---|---|---|---|---|
+| Matrix rows | 100% non-N/A rows implemented | TDK core | <test command> | pending |
+| Branch traceability | 100% mapped or N/A reason | TDK core | <test command> | pending |
+| Dependency traceability | 100% deps mapped or N/A reason | TDK core | <test command> | pending |
+| Numeric cov | Project-defined or N/A reason | routed consumer test skill | <cov command> or - | pending |
 ```
+
+When routing injects delegates, `## Delegate Skills` follows `## Test Quality
+Gate`.
 
 **Semantic test ID format** (`Test Matrix` ID column):
 
@@ -175,9 +196,48 @@ Slug rules: snake_case, 1–3 words, no `test_` prefix. Validation regex: `^[a-z
 - Every dependency listed in `## Mocks & Fixtures Required` must map to a `Deps` row or an explicit `N/A: <reason>` note.
 - The `Impl` column starts empty during planning and is filled during `/tdk-implement` with the test file path, test name, or an explicit `N/A: <reason>` when a row is intentionally deferred.
 
+### Test Quality Gate
+
+Every `tdd` and `ut_backfill` phase must include `## Test Quality Gate` before
+completion gates or delegate execution can mark the phase done.
+
+Status values: `pending`, `pass`, `fail`, `N/A: <reason>`.
+
+Command semantics:
+- A runnable `Command` must come from the phase, delegate output, or committed
+  project docs and run from an explicit project-relative cwd.
+- STOP before execution when a command is destructive, network-installing,
+  secrets-exposing, or uses shell metacharacters, pipes, redirection, or
+  control operators without explicit project documentation or user approval.
+- A non-applicable row uses `Command: -` and `Status: N/A: <reason>` only
+  when evidence proves no project numeric coverage policy or other row target
+  applies.
+- Bare `Command: N/A` is invalid.
+- `Status: pending` with no runnable command, or `Status: pass` with no
+  evidence, is invalid.
+- A row can become `pass` only after structural target evidence is satisfied and any runnable command exits 0.
+
+Structural target evidence:
+- TDD `Tests Before reuse` verifies every before-test ID appears in
+  `## Tests After`.
+- TDD `Rubric dimensions` verifies Happy/EP/BVA/Branch/Error/Deps/State/
+  Regression are covered by test IDs or explicit `N/A: <reason>` entries.
+- UT backfill `Matrix rows` verifies every non-N/A matrix row has implementation
+  evidence.
+- UT backfill `Branch traceability` and `Dependency traceability` verify all
+  listed branches/dependencies map to rows or explicit `N/A: <reason>` entries.
+
+Numeric cov source order:
+1. Routed consumer `test` skill policy.
+2. Project docs or routing evidence named in the gate row.
+3. `N/A: no project numeric cov policy configured in <source>`.
+
+Do not invent numeric coverage thresholds. TDK core does not parse coverage
+percentages; it validates gate status, evidence, and command success.
+
 ### Test Case Completeness Rubric
 
-Apply this rubric to both `tdd` and `ut_backfill` phases. Do not silently omit a dimension; if it does not apply, write `N/A: <reason>` in the nearest table cell or section note.
+Apply this rubric to both `tdd` and `ut_backfill` phases. Do not silently omit a dimension; if it does not apply, write `N/A: <reason>` in the nearest table cell or section note. TDD rubric dimensions must cite test IDs or `N/A: <reason>`, not prose-only claims.
 
 | Dimension | Required signal |
 |---|---|
@@ -190,7 +250,7 @@ Apply this rubric to both `tdd` and `ut_backfill` phases. Do not silently omit a
 | State | State transitions, persisted state, cache/session behavior, idempotency, and retry effects. |
 | Regression | At least one case for the original bug, accepted risk, or highest-risk behavior in the phase. |
 
-**Core vs consumer test skill boundary:** TDK core owns the baseline coverage rubric, traceability tables, and phase gates above. The routed consumer `test` skill may enrich framework-specific commands, fixture factories, mock libraries, and domain edge cases, but it must not be the only source of baseline case completeness.
+**Core vs consumer test skill boundary:** TDK core owns the baseline coverage rubric, traceability tables, gate row completion, and structural evidence checks. The routed consumer `test` skill owns framework-specific commands, fixture factories, mock libraries, domain edge cases, and project numeric coverage policy. It may enrich baseline case completeness, but it must not be the only source of baseline case completeness.
 
 **Backfill targeting** (see `references/modes.md` Backfill Targeting Flags):
 - `BACKFILL_TARGET.sub_workspace` from `--sub-workspace <name>` scopes phase generation to one sub-workspace.
