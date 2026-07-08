@@ -167,6 +167,20 @@ describe('TDK workspace layout proposal contracts', () => {
     expect(JSON.stringify(parsedTopology.topology)).not.toContain('..');
   });
 
+  it('keeps workspace layout out of test skill routing', () => {
+    const combined = [
+      read(join(layoutDir, 'templates/workspace-layout-proposal.md.tpl')),
+      read(join(layoutDir, 'templates/workspace-layout-proposal.json.tpl')),
+      read(join(layoutDir, 'references/workspace-layout-proposal-output-contract.md')),
+      read(join(layoutDir, 'references/workspace-layout-taxonomy-and-runtime-projection.md')),
+    ].join('\n');
+
+    expect(combined).not.toContain('testMapping');
+    expect(combined).not.toContain('docs/test mapping');
+    expect(combined).toContain('plan-skill-routing.md');
+    expect(combined).toContain('## Delegate Skills');
+  });
+
   it('keeps proposal text free of apply, scaffold, policy, and tracker promises', () => {
     const combined = walkFiles(layoutDir)
       .filter((path) => path.endsWith('.md') || path.endsWith('.tpl'))

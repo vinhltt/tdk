@@ -3,7 +3,6 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve, relative, dirname, join, normalize } from 'node:path';
-import { z } from 'zod';
 import { SpecifyConfigSchema, type SpecifyConfig, type SubWorkspace, type Module } from './types';
 
 const MAX_SEARCH_DEPTH = 20;
@@ -35,7 +34,6 @@ export interface ConfigResult {
   subWorkspaces: SubWorkspace[];
   targetSubWorkspace?: SubWorkspaceInfo;
   targetModule?: ModuleInfo;
-  testStrategy?: string;
   error?: string;
   // Extended fields for bash parity
   docsSyncBackup: boolean;
@@ -82,17 +80,6 @@ export function parseConfig(configPath: string): { config: SpecifyConfig | null;
     const validated = SpecifyConfigSchema.parse(parsed);
     return { config: validated, error: null };
   } catch (e) {
-    // [A7] Machine-parseable signal: hoist separate-folder migration hint to first line.
-    if (e instanceof z.ZodError) {
-      const migrationIssue = e.issues.find(
-        (i) =>
-          i.code === 'invalid_enum_value' &&
-          (i as { received?: unknown }).received === 'separate-folder',
-      );
-      if (migrationIssue?.message) {
-        return { config: null, error: `parse_error:${migrationIssue.message}` };
-      }
-    }
     const msg = e instanceof Error ? e.message : String(e);
     return { config: null, error: `parse_error:${msg}` };
   }
@@ -163,10 +150,6 @@ export function autoDetectModule(sw: SubWorkspace, swRoot: string, cwd?: string)
   return bestMatch;
 }
 
-export function getTestStrategy(sw: SubWorkspace): string | undefined {
-  return sw.testMapping?.strategy;
-}
-
 // --- Validation ---
 
 export function validateModules(config: SpecifyConfig): string[] {
@@ -189,12 +172,6 @@ export function validateModules(config: SpecifyConfig): string[] {
         warnings.push(`Overlapping module path '${mod.path}' in sub-workspace '${sw.name}'`);
       }
       paths.add(normPath);
-      // [A3] mirror strategy defaults testPath='test' per validator contract — no warning.
-      const strategy = sw.testMapping?.strategy;
-      const needsTestPathWarning = strategy && strategy !== 'co-location' && strategy !== 'mirror' && !mod.testPath;
-      if (needsTestPathWarning) {
-        warnings.push(`Module '${mod.name}' in '${sw.name}': testPath recommended for strategy '${strategy}'`);
-      }
     }
   }
   return warnings;
@@ -273,8 +250,6 @@ export function detectConfig(opts: DetectConfigOptions = {}): ConfigResult {
       modules: (sw.modules ?? []).map<ModuleInfo>(m => ({ name: m.name, path: m.path, root: resolve(swRoot, m.path), testPath: m.testPath })),
       hasModules: sw.hasModules ?? ((sw.modules?.length ?? 0) > 0),
     };
-    result.testStrategy = getTestStrategy(sw);
-
     // Module targeting
     let modName = opts.module ?? autoDetectModule(sw, swRoot, opts.cwd);
     if (opts.module && !modName) modName = opts.module; // explicit request

@@ -11,6 +11,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## [Unreleased]
 
+## [1.100.1] - 2026-07-08
+
+### Changed
+- **[Scripts]** Remove `testMapping` from workspace config parsing, topology application, schema, and UT backfill JSON output so runtime config no longer carries test strategy routing.
+- **[Scripts]** Update config/topology/UT tests to assert removed `testMapping` input is stripped or omitted and `testStrategy` is no longer emitted.
+- **[tdk-core]** Update workspace layout proposal references/templates to omit `subWorkspaces[].testMapping` and route test skills through `plan-skill-routing.md` / `## Delegate Skills`.
+- **[Guides]** Update English and Vietnamese greenfield architecture topology guidance to keep test skill routing outside workspace layout JSON.
+- **[General]** Refresh classic plugin, Codex plugin, and release manifests for the updated payload hashes.
+
+### Removed
+- **[Scripts]** Remove the mirror test-mapping validator utility, its exports/types, schema advertising, and orphan-test coverage.
+
 ## [1.100.0] - 2026-07-06
 
 ### Added

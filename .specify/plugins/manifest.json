@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-06T09:20:52Z",
+  "generated_at": "2026-07-08T01:43:14Z",
   "plugins": {
     "tdk-core": {
-      "version": "7.0.0",
+      "version": "7.0.1",
       "components": {
         "skills": {
           "_shared": {
@@ -79,7 +79,7 @@
             "version": "5.11.0"
           },
           "tdk-workspace-layout-propose": {
-            "version": "5.11.0"
+            "version": "7.0.1"
           }
         },
         "agents": {
@@ -96,10 +96,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "2e33cdc14ebf20e5074ae949db076e4e04d51a31ec94d99ef1c3d6278c4c929e",
-        ".claude-plugin/plugin.json": "ddbc982718ad31b4ee3978bc582cded3e815a44471fa2948cd68d07f8e211777",
-        ".codex-plugin/plugin.json": "ddbc982718ad31b4ee3978bc582cded3e815a44471fa2948cd68d07f8e211777",
-        ".cursor-plugin/plugin.json": "ddbc982718ad31b4ee3978bc582cded3e815a44471fa2948cd68d07f8e211777",
-        "CHANGELOG.md": "a39171387a60ff237e10d18e08cb9a590cd56ae20cb74ff657b507ee564d96dd",
+        ".claude-plugin/plugin.json": "8f9f8d46d73726979313dc34e6ff5737aa5130954b9db863787b39768e8031a5",
+        ".codex-plugin/plugin.json": "8f9f8d46d73726979313dc34e6ff5737aa5130954b9db863787b39768e8031a5",
+        ".cursor-plugin/plugin.json": "8f9f8d46d73726979313dc34e6ff5737aa5130954b9db863787b39768e8031a5",
+        "CHANGELOG.md": "5df6202f3bc501ba1784b0f9c31fe15a808eb879410fc14683844101325630cd",
         "__tests__/context-builder.test.cjs": "704c828646af0d26cab0be3b82b37d150114faf8406899d0f6bbc020b10f0d60",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
@@ -199,14 +199,14 @@
         "skills/tdk-task-breakdown/references/task-breakdown-output-contract.md": "16cf177a4354bf708d2342d7decff3ef7358a0c15ad3cad47b1a289114b4b706",
         "skills/tdk-workflow-config-apply/SKILL.md": "fea1f871c529c3c5f4b07243a435b1ae5e52a21ee14b009ab880e8310f27f25b",
         "skills/tdk-workflow-config-apply/templates/topology-apply-report.md.tpl": "1697848bb41e48a3549dfaa39904d22d8d6632131be9c5ac8071302585f8759b",
-        "skills/tdk-workspace-layout-propose/SKILL.md": "86b9872705f8d6211e597a6686071f6130c27f87179b8e65e8c566f1bb05b1d2",
+        "skills/tdk-workspace-layout-propose/SKILL.md": "ded592c7f37f71c9aca4a8038c1dbfcfd4cef6689e8b1a9862802d9073fdccf8",
         "skills/tdk-workspace-layout-propose/references/workflow-from-existing.md": "f0594f5f9ff48543292794e325c3b722253e6b6741c98561e979eeaad09619f9",
         "skills/tdk-workspace-layout-propose/references/workflow-standard.md": "5a3686946580b93015bf6f4883a03f7f0bd80a7db2996197225fa6e552806a6a",
         "skills/tdk-workspace-layout-propose/references/workflow-unknown.md": "9e71e8f95d89a0d774f8ca5860377b990e9fab365b86f22228c5f1c1e81ee393",
-        "skills/tdk-workspace-layout-propose/references/workspace-layout-proposal-output-contract.md": "105ea8c57724bad05bf56db77c601c4a14a01cea91923e96ef10d68968bf4eaf",
-        "skills/tdk-workspace-layout-propose/references/workspace-layout-taxonomy-and-runtime-projection.md": "6d3727821cdf598698fe40b223b15a3794f31cc79987d9086dd9634a0c33a325",
-        "skills/tdk-workspace-layout-propose/templates/workspace-layout-proposal.json.tpl": "3c1c448e651ad065ba3b5427576e1ee53ec49faf4588364996945aa7d2c84ca2",
-        "skills/tdk-workspace-layout-propose/templates/workspace-layout-proposal.md.tpl": "46282098686abecc757c041356fb086396655b0cd3fba68f3228d32184ddf114"
+        "skills/tdk-workspace-layout-propose/references/workspace-layout-proposal-output-contract.md": "4815df08c70c239eef561012b66ca6260c3244bea917c215ab2a9fe19bedc3fa",
+        "skills/tdk-workspace-layout-propose/references/workspace-layout-taxonomy-and-runtime-projection.md": "3512630a1ab4e4524e9b8a7fa72ac05ae9af11d283b21ea7210efd55fbfa2fda",
+        "skills/tdk-workspace-layout-propose/templates/workspace-layout-proposal.json.tpl": "b5327ceaab710f028048a43446173cec7000a323cf96cde0cc2214422c81ea0c",
+        "skills/tdk-workspace-layout-propose/templates/workspace-layout-proposal.md.tpl": "b3f8aaf5feb1b0bc151fca2a17994ecb3d2239ce189b213d988356e02de3eb97"
       }
     },
     "tdk-memory": {

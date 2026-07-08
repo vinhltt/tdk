@@ -5,5 +5,4 @@ export * from './types';
 export * from './config';
 export * from './feature';
 export * from './common';
-export * from './mirror-validator';
 export * from './agent-output';

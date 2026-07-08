@@ -16,6 +16,30 @@ describe('ut-scripts.test.ts (integration)', () => {
     rmSync(tempDir, { recursive: true, force: true });
   });
 
+  async function runBackfillCommand(command: 'auto' | 'plan' | 'impl'): Promise<Record<string, unknown>> {
+    const commandPath = join(import.meta.dir, '..', '..', 'src', 'commands', 'ut', 'backfill', `${command}.ts`);
+    const proc = Bun.spawn([
+      'bun',
+      'run',
+      commandPath,
+      'feat-001',
+      '--sub-workspace',
+      'backend',
+      '--module',
+      'api',
+      ...(command === 'plan' ? ['--standalone'] : []),
+    ], {
+      cwd: tempDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+    const stdout = await new Response(proc.stdout).text();
+    await new Response(proc.stderr).text();
+    const exitCode = await proc.exited;
+    expect(exitCode).toBe(0);
+    return JSON.parse(stdout) as Record<string, unknown>;
+  }
+
   it('U-04: detectConfig resolves module target', () => {
     const specDir = join(tempDir, '.specify');
     mkdirSync(specDir);
@@ -41,6 +65,7 @@ describe('ut-scripts.test.ts (integration)', () => {
     const config = detectConfig({ cwd: tempDir, subWorkspace: 'backend', module: 'api' });
     expect(config.configFound).toBe(true);
     expect(config.targetModule?.name).toBe('api');
+    expect(Object.prototype.hasOwnProperty.call(config, 'testStrategy')).toBe(false);
   });
 
   it('U-04d: handleCliError returns error when module not found', () => {
@@ -248,26 +273,29 @@ describe('ut-scripts.test.ts (integration)', () => {
     expect(mapped.find(s => s.name === 'explicitFalse')!.hasModules).toBe(false);
   });
 
-  it('U-parse-error: separate-folder config → handleCliError returns parse_error', () => {
+  it('U-15: UT backfill command JSON omits removed testStrategy', async () => {
     const specDir = join(tempDir, '.specify');
     mkdirSync(specDir);
     writeFileSync(join(specDir, '.specify.json'), JSON.stringify({
-      name: 'legacy',
+      version: '1.0',
+      name: 'dotnet-app',
+      specs: { root: '.specify', defaultFolder: 'feature' },
       subWorkspaces: [
         {
           name: 'backend',
           path: 'backend',
-          testMapping: { strategy: 'separate-folder' },
+          modules: [{ name: 'api', path: 'api' }],
         },
       ],
     }));
+    mkdirSync(join(tempDir, 'backend', 'api'), { recursive: true });
+    mkdirSync(join(tempDir, '.specify', 'feature', 'feat-001', 'ut'), { recursive: true });
+    writeFileSync(join(tempDir, '.specify', 'feature', 'feat-001', 'ut', 'plan.md'), '# UT Plan\n');
 
-    const config = detectConfig({ cwd: tempDir, subWorkspace: 'backend' });
-    const cliError = handleCliError(config, { subWorkspace: 'backend' });
-
-    expect(cliError).not.toBeNull();
-    expect(cliError!.error).toBe('parse_error');
-    expect(cliError!.message).toContain(`Strategy 'separate-folder' has been removed`);
-    expect(cliError!.message).toContain('docs/en/guides/skills-guide.md');
+    for (const command of ['auto', 'plan', 'impl'] as const) {
+      const output = await runBackfillCommand(command);
+      expect(output.moduleName).toBe('api');
+      expect(Object.prototype.hasOwnProperty.call(output, 'testStrategy')).toBe(false);
+    }
   });
 });

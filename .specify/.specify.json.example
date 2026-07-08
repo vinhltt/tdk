@@ -40,7 +40,6 @@
         { "name": "api", "path": "src/MyApp.Api", "testPath": "tests/MyApp.Api.Tests" },
         { "name": "services", "path": "src/MyApp.Services", "testPath": "tests/MyApp.Services.Tests" }
       ],
-      "testMapping": { "strategy": "separate-project" },
       "docs": { "path": ".specify/configurations" }
     },
     {

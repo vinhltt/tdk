@@ -62,7 +62,6 @@ export function createAutoCommand(): Command {
 
     if (config.targetModule) {
       output.moduleName = config.targetModule.name;
-      output.testStrategy = config.testStrategy ?? '';
     }
 
     writeAgentJson(output);

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-07-06T09:20:56.819Z",
+  "generatedAt": "2026-07-08T01:43:14.900Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -30,8 +30,8 @@
   },
   "files": {
     ".specify/.specify.json.example": {
-      "sha256": "a5c091670a61aeebe22e38cf3ff5210cd6bc3346e2577605ea5aa36da139a31c",
-      "size": 1558,
+      "sha256": "9f8ed049b424694c9068108ea4dae2b96565f39dde458623dce57af30dddca3a",
+      "size": 1501,
       "mode": "0775"
     },
     ".specify/_shared/skills/embedded-brainstorm.md": {
@@ -45,8 +45,8 @@
       "mode": "0664"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "92c6dbd1e5d69ff95d5d55a898dbbd7a36e01865c2017d5b4c58944f66500dbb",
-      "size": 41297,
+      "sha256": "873527f79509ef745e89acb56c3aad823768d3b55a1bf8fda15dc06069c4bc15",
+      "size": 41296,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/interface.json": {
@@ -55,17 +55,17 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "ddbc982718ad31b4ee3978bc582cded3e815a44471fa2948cd68d07f8e211777",
+      "sha256": "8f9f8d46d73726979313dc34e6ff5737aa5130954b9db863787b39768e8031a5",
       "size": 155,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "ddbc982718ad31b4ee3978bc582cded3e815a44471fa2948cd68d07f8e211777",
+      "sha256": "8f9f8d46d73726979313dc34e6ff5737aa5130954b9db863787b39768e8031a5",
       "size": 155,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "ddbc982718ad31b4ee3978bc582cded3e815a44471fa2948cd68d07f8e211777",
+      "sha256": "8f9f8d46d73726979313dc34e6ff5737aa5130954b9db863787b39768e8031a5",
       "size": 155,
       "mode": "0644"
     },
@@ -75,8 +75,8 @@
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "a39171387a60ff237e10d18e08cb9a590cd56ae20cb74ff657b507ee564d96dd",
-      "size": 25143,
+      "sha256": "5df6202f3bc501ba1784b0f9c31fe15a808eb879410fc14683844101325630cd",
+      "size": 25358,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/__tests__/context-builder.test.cjs": {
@@ -575,9 +575,9 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-workspace-layout-propose/SKILL.md": {
-      "sha256": "86b9872705f8d6211e597a6686071f6130c27f87179b8e65e8c566f1bb05b1d2",
-      "size": 5295,
-      "mode": "0664"
+      "sha256": "ded592c7f37f71c9aca4a8038c1dbfcfd4cef6689e8b1a9862802d9073fdccf8",
+      "size": 5294,
+      "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-workspace-layout-propose/references/workflow-from-existing.md": {
       "sha256": "f0594f5f9ff48543292794e325c3b722253e6b6741c98561e979eeaad09619f9",
@@ -595,23 +595,23 @@
       "mode": "0664"
     },
     ".specify/plugins/tdk-core/skills/tdk-workspace-layout-propose/references/workspace-layout-proposal-output-contract.md": {
-      "sha256": "105ea8c57724bad05bf56db77c601c4a14a01cea91923e96ef10d68968bf4eaf",
-      "size": 2658,
+      "sha256": "4815df08c70c239eef561012b66ca6260c3244bea917c215ab2a9fe19bedc3fa",
+      "size": 2793,
       "mode": "0664"
     },
     ".specify/plugins/tdk-core/skills/tdk-workspace-layout-propose/references/workspace-layout-taxonomy-and-runtime-projection.md": {
-      "sha256": "6d3727821cdf598698fe40b223b15a3794f31cc79987d9086dd9634a0c33a325",
-      "size": 2441,
+      "sha256": "3512630a1ab4e4524e9b8a7fa72ac05ae9af11d283b21ea7210efd55fbfa2fda",
+      "size": 2564,
       "mode": "0664"
     },
     ".specify/plugins/tdk-core/skills/tdk-workspace-layout-propose/templates/workspace-layout-proposal.json.tpl": {
-      "sha256": "3c1c448e651ad065ba3b5427576e1ee53ec49faf4588364996945aa7d2c84ca2",
-      "size": 785,
+      "sha256": "b5327ceaab710f028048a43446173cec7000a323cf96cde0cc2214422c81ea0c",
+      "size": 724,
       "mode": "0664"
     },
     ".specify/plugins/tdk-core/skills/tdk-workspace-layout-propose/templates/workspace-layout-proposal.md.tpl": {
-      "sha256": "46282098686abecc757c041356fb086396655b0cd3fba68f3228d32184ddf114",
-      "size": 3891,
+      "sha256": "b3f8aaf5feb1b0bc151fca2a17994ecb3d2239ce189b213d988356e02de3eb97",
+      "size": 3975,
       "mode": "0664"
     },
     ".specify/plugins/tdk-memory/.claude-plugin/interface.json": {
@@ -1430,8 +1430,8 @@
       "mode": "0644"
     },
     ".specify/schemas/specify.schema.json": {
-      "sha256": "c5523eb0d3f42bcc49880012060cc19badf1bd983303b2c01ab6a4222c0ee87a",
-      "size": 9683,
+      "sha256": "11dd33162fc0002f523ceb53c18f0151fbca9a02f9742bd9acc066d38f10b963",
+      "size": 8548,
       "mode": "0644"
     },
     ".specify/scripts/bash/setup-python-venv.sh": {
@@ -1525,13 +1525,13 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/config/topology/patch.ts": {
-      "sha256": "0af80fc593f6cc31d21fbd91009220b115ec53c05d7afd8b35b5eeb796ca099d",
-      "size": 6722,
+      "sha256": "0e15faf21c4bb5171435ad9ab7aa558bcbe3abc985dc5d9af0a0cc11b9c89ddb",
+      "size": 6519,
       "mode": "0664"
     },
     ".specify/scripts/ts/src/commands/config/topology/schema.ts": {
-      "sha256": "cb1157ceec03b360175b80634ed815d9d91eb01b7d4af7a554dc244f9e4b6801",
-      "size": 5747,
+      "sha256": "9f60105588c278d6cc2603d763711a8ca27b7937e5f6b13c98f103620a153d95",
+      "size": 5644,
       "mode": "0664"
     },
     ".specify/scripts/ts/src/commands/detect-config.ts": {
@@ -1755,13 +1755,13 @@
       "mode": "0775"
     },
     ".specify/scripts/ts/src/commands/ut/backfill/auto.ts": {
-      "sha256": "a9ee6a4286ceb9a6fa2cbac44a3b9ca2fcc87fb7ee9975eacf513668a43beb9f",
-      "size": 2689,
+      "sha256": "0d6155a8349fd5851c8eba1e5e27097a1baf5c86029f847ca2d41c92c03f5289",
+      "size": 2634,
       "mode": "0775"
     },
     ".specify/scripts/ts/src/commands/ut/backfill/impl.ts": {
-      "sha256": "1f850fbfe2ed19ecd1002b1b372f414e052b47788255a124deb2e85a1878df87",
-      "size": 2557,
+      "sha256": "59a3d492415fc7d1940212885d4311e63fdc110080f8435215ba69b560b076dc",
+      "size": 2502,
       "mode": "0775"
     },
     ".specify/scripts/ts/src/commands/ut/backfill/index.ts": {
@@ -1770,13 +1770,13 @@
       "mode": "0775"
     },
     ".specify/scripts/ts/src/commands/ut/backfill/plan.ts": {
-      "sha256": "8ebe766ada3c9ea31e15916d83f87c45fb2a9389486fa9432762979f113dfb88",
-      "size": 3491,
+      "sha256": "72efee5cbcb598a9dc61c3ae56476c6c9ae3cd90ba6c4316e88986d3e1a90ef3",
+      "size": 3436,
       "mode": "0775"
     },
     ".specify/scripts/ts/src/commands/ut/cli-error-handler.ts": {
-      "sha256": "2762402df447c34187e2253729986957ac7bf01cd7a90b5c03713c0678510776",
-      "size": 1581,
+      "sha256": "36467fff9e14c0da1f71eca77672f60aa02725907b44411779d82d2650b9863d",
+      "size": 1575,
       "mode": "0775"
     },
     ".specify/scripts/ts/src/commands/ut/index.ts": {
@@ -1920,8 +1920,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/utils/config.ts": {
-      "sha256": "aaeb22527ce43814bd3c417470a3991bd52f98cf593d8ecd231cdde342a3217e",
-      "size": 10679,
+      "sha256": "0cb067bb36ce0c00a6d4264ebbc5f331aded22a295d523f6a2824dc0e71b110c",
+      "size": 9615,
       "mode": "0775"
     },
     ".specify/scripts/ts/src/utils/exit-codes.ts": {
@@ -1935,18 +1935,13 @@
       "mode": "0775"
     },
     ".specify/scripts/ts/src/utils/index.ts": {
-      "sha256": "c07dcbe4284fb6e7da2816ff81e677625a907f1e2f09304e5e1760f4d7d8d368",
-      "size": 251,
+      "sha256": "0f4aaad527f32c0433c01f6f05bda180537d91013cfe73176cfd4169265dcf30",
+      "size": 215,
       "mode": "0775"
     },
     ".specify/scripts/ts/src/utils/json-field.ts": {
       "sha256": "397250a25563266c201d988e5a3063bd8d794d186c6601c32b82e2bdb66c28e0",
       "size": 2229,
-      "mode": "0775"
-    },
-    ".specify/scripts/ts/src/utils/mirror-validator.ts": {
-      "sha256": "786e0f741d8705158dc4dee2726e1676333d79c398141831cecef7661eac4862",
-      "size": 3088,
       "mode": "0775"
     },
     ".specify/scripts/ts/src/utils/plan-skill-routing-proposal.ts": {
@@ -1960,8 +1955,8 @@
       "mode": "0664"
     },
     ".specify/scripts/ts/src/utils/types.ts": {
-      "sha256": "982bfc913c48b6db3e870b15fe15be2dec3272b218a75a6694fb425f289f6b70",
-      "size": 7055,
+      "sha256": "29a92fac1d17f234ded0d13bff09d0b41bcd15d01b10ec939ec93fddba1d6f93",
+      "size": 5558,
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/architecture-workflow-contract.test.ts": {
@@ -1970,13 +1965,13 @@
       "mode": "0664"
     },
     ".specify/scripts/ts/tests/cli/detect-config.test.ts": {
-      "sha256": "1372ae3895be6620065906176481b5b4f788da1f62d9663b7ac31ba27931f7cb",
-      "size": 5660,
+      "sha256": "2a0ac97c2e81dae63fa9c63506618ea8533cef4cb59219dd2e43a99453f17ccb",
+      "size": 5701,
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/cli/ut-scripts.test.ts": {
-      "sha256": "429a9d1156e26af6d331256489e793c1fd51d925f6f66025132d9353818a5bc1",
-      "size": 10223,
+      "sha256": "24fe1aefd5771979cfcbb9f56572cc836612661551dc1c2d030f6e9ee718886c",
+      "size": 11255,
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/codex-distribute-e2e.test.ts": {
@@ -2010,8 +2005,8 @@
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/config/topology-apply.test.ts": {
-      "sha256": "4a7a0de7b4c1d97e3058c32adbab1ad22fd2bd785d4590af6fb827c124e0886f",
-      "size": 17860,
+      "sha256": "aa960f64f95167381dd048e9161c739964a4e33d7be1bdaa2e2aba4720beffa7",
+      "size": 17889,
       "mode": "0664"
     },
     ".specify/scripts/ts/tests/cwd-independent-skill-contract.test.ts": {
@@ -2410,8 +2405,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-boundary-map-contract.test.ts": {
-      "sha256": "8295174cbc18313d45a707112ed74b1d00b0e6bc98aed3c6d910da795282b98f",
-      "size": 9766,
+      "sha256": "a9bff4e96fa0c147e3f2e40b621957707a3f549dead7a2330d3187eccdb00e2b",
+      "size": 10434,
       "mode": "0664"
     },
     ".specify/scripts/ts/tests/tdk-constitution-product-context-contract.test.ts": {
@@ -2545,23 +2540,18 @@
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/utils/config-json-schema.test.ts": {
-      "sha256": "05e77b9df9d598842d6b2b966201e12d72dd01e0c3720af3e33815a262178194",
-      "size": 2290,
+      "sha256": "fdc61a4a0c378adec97b9bb66f7e5a50bb7c96e55def628d3168db801d68f7a1",
+      "size": 2209,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/utils/config.test.ts": {
-      "sha256": "6474140efe6437e07a4f1a67ce6837ce5e69d27f875573bedfe028f80ca94512",
-      "size": 13854,
+      "sha256": "d777295fab5fe2b9d94bafc42399dc6bfe4008b2cc105469e8bd0ad3de474790",
+      "size": 11913,
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/utils/feature.test.ts": {
       "sha256": "01df845408aa0e0a876310df7651e0dc460b1018848b2423a11243ee9655a6f4",
       "size": 3693,
-      "mode": "0775"
-    },
-    ".specify/scripts/ts/tests/utils/mirror-validator.test.ts": {
-      "sha256": "1db290aa1a339f6a69ddb7f1ac485c6270dd4c2ec91c3a72d61c9f103243b756",
-      "size": 7057,
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/utils/plan-skill-routing.test.ts": {

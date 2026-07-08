@@ -7,7 +7,7 @@ export function handleCliError(
   config: ConfigResult,
   opts: { subWorkspace?: string; module?: string }
 ): { error: string; message: string; availableSubWorkspaces?: string[]; availableModules?: string[] } | null {
-  // [A7] Surface parseConfig migration hint (separate-folder, YAML, invalid JSON).
+  // Surface parseConfig failures from YAML, invalid JSON, and schema errors.
   if (config.error?.startsWith('parse_error:')) {
     return { error: 'parse_error', message: config.error };
   }

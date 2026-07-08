@@ -213,8 +213,8 @@ Output:
 - `.specify/configurations/workspace-layout/workspace-layout-proposal.json`
 
 The JSON is an authoring proposal, not runtime config. Runtime-backed fields are
-limited to `architecture.type`, `subWorkspaces[]`, docs/test mapping, and
-`modules[]`. Fields such as `boundaryType`, `owner`, `contracts`,
+limited to `architecture.type`, `subWorkspaces[]`, docs, and `modules[]`. Test
+skill routing uses `plan-skill-routing.md` and `## Delegate Skills`. Fields such as `boundaryType`, `owner`, `contracts`,
 `allowedDependencies`, and `routing` are report-only unless a future schema
 expansion promotes them.
 

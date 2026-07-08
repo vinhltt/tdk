@@ -9,13 +9,12 @@ import {
   autoDetectSubWorkspace,
   findModule,
   autoDetectModule,
-  getTestStrategy,
   validateModules,
   validatePathContainment,
   detectConfig,
   type SpecifyConfig,
 } from '../../src/utils/index';
-import { SpecifyConfigSchema, type TestStrategy } from '../../src/utils/types';
+import { SpecifyConfigSchema } from '../../src/utils/types';
 
 const TDK_CONFIG_PATH = resolve(import.meta.dir, '../../../../.specify.json');
 
@@ -148,6 +147,26 @@ describe('config.test.ts', () => {
     }));
 
     expect(detectConfig({ cwd: tempDir }).inlineRules).toEqual(inlineRules);
+  });
+
+  it('C-05f: parseConfig strips removed testMapping field', () => {
+    const specDir = join(tempDir, '.specify');
+    mkdirSync(specDir);
+    const configPath = join(specDir, '.specify.json');
+    writeFileSync(configPath, JSON.stringify({
+      name: 'removed-field-workspace',
+      subWorkspaces: [
+        {
+          name: 'backend',
+          path: 'backend',
+          testMapping: { strategy: 'mirror' },
+        },
+      ],
+    }));
+
+    const { config: parsed, error } = parseConfig(configPath);
+    expect(error).toBeNull();
+    expect(Object.prototype.hasOwnProperty.call(parsed?.subWorkspaces?.[0] ?? {}, 'testMapping')).toBe(false);
   });
 
   it('C-06: parseConfig invalid JSON → error', () => {
@@ -315,14 +334,6 @@ describe('config.test.ts', () => {
     expect(result).toBe('api-internal');
   });
 
-  // --- getTestStrategy tests ---
-
-  it('C-19: getTestStrategy not defined → undefined', () => {
-    const sw = { name: 'backend', path: 'backend' };
-    const strategy = getTestStrategy(sw);
-    expect(strategy).toBeUndefined();
-  });
-
   // --- validateModules tests ---
 
   it('C-20: validateModules duplicate names → warning', () => {
@@ -363,82 +374,6 @@ describe('config.test.ts', () => {
 
     const warnings = validateModules(config);
     expect(warnings.some(w => w.includes('Overlapping module path'))).toBe(true);
-  });
-
-  it('C-22: validateModules missing testPath → warning', () => {
-    const config: SpecifyConfig = {
-      version: '1.0',
-      name: 'test',
-      subWorkspaces: [
-        {
-          name: 'backend',
-          path: 'backend',
-          testMapping: { strategy: 'separate-project' satisfies TestStrategy },
-          modules: [{ name: 'api', path: 'api' }],
-        },
-      ],
-    };
-
-    const warnings = validateModules(config);
-    expect(warnings.some(w => w.includes('testPath recommended'))).toBe(true);
-  });
-
-  it('C-22b: validateModules mirror + no testPath → no warning (testPath defaults to "test")', () => {
-    const config: SpecifyConfig = {
-      version: '1.0',
-      name: 'test',
-      subWorkspaces: [
-        {
-          name: 'backend',
-          path: 'backend',
-          testMapping: { strategy: 'mirror' satisfies TestStrategy },
-          modules: [{ name: 'api', path: 'api' }],
-        },
-      ],
-    };
-
-    const warnings = validateModules(config);
-    expect(warnings.some(w => w.includes('testPath recommended'))).toBe(false);
-  });
-
-  // --- separate-folder rejection + migration hint tests ---
-
-  it('rejects legacy separate-folder strategy with migration hint', () => {
-    const config = {
-      name: 'legacy',
-      subWorkspaces: [
-        {
-          name: 'backend',
-          path: 'backend',
-          testMapping: { strategy: 'separate-folder' },
-        },
-      ],
-    };
-    expect(() => SpecifyConfigSchema.parse(config)).toThrow(
-      /separate-folder.*mirror.*docs\/en\/guides\/skills-guide\.md/s,
-    );
-  });
-
-  it('parseConfig surfaces migration hint as first line of error for separate-folder', () => {
-    const specDir = join(tempDir, '.specify');
-    mkdirSync(specDir);
-    const configPath = join(specDir, '.specify.json');
-    writeFileSync(configPath, JSON.stringify({
-      name: 'legacy',
-      subWorkspaces: [
-        {
-          name: 'backend',
-          path: 'backend',
-          testMapping: { strategy: 'separate-folder' },
-        },
-      ],
-    }));
-
-    const { config, error } = parseConfig(configPath);
-    expect(config).toBeNull();
-    expect(error).not.toBeNull();
-    const firstLine = (error ?? '').split('\n')[0];
-    expect(firstLine.startsWith(`parse_error:Strategy 'separate-folder' has been removed`)).toBe(true);
   });
 
   // --- validatePathContainment tests ---

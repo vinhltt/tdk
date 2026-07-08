@@ -263,41 +263,6 @@
             "description": "Sub-workspace path relative to the workspace root.",
             "type": "string",
             "minLength": 1
-          },
-          "testMapping": {
-            "description": "Optional test mapping behavior for this sub-workspace.",
-            "type": "object",
-            "properties": {
-              "exclude": {
-                "description": "Source and test globs excluded from test mapping.",
-                "type": "object",
-                "properties": {
-                  "source": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "default": []
-                  },
-                  "test": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "default": []
-                  }
-                }
-              },
-              "strategy": {
-                "description": "How tests are mapped for this sub-workspace.",
-                "type": "string",
-                "enum": [
-                  "co-location",
-                  "mirror",
-                  "separate-project"
-                ]
-              }
-            }
           }
         }
       }

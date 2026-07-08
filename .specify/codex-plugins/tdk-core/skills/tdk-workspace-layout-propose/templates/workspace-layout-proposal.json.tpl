@@ -22,9 +22,6 @@
       "docs": {
         "path": "docs/app"
       },
-      "testMapping": {
-        "strategy": "mirror"
-      },
       "modules": [
         {
           "name": "api",

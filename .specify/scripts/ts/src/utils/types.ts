@@ -3,11 +3,6 @@
 
 import { z } from 'zod';
 
-// --- Test strategy enum source of truth ---
-
-export const TEST_STRATEGIES = ['co-location', 'mirror', 'separate-project'] as const;
-export type TestStrategy = typeof TEST_STRATEGIES[number];
-
 // --- Sub-schemas ---
 
 export const ModuleSchema = z.object({
@@ -16,39 +11,11 @@ export const ModuleSchema = z.object({
   testPath: z.string().optional().describe('Optional test path for this module.'),
 });
 
-// ExcludeSchema: NO outer .default — validator handles nullish via `?? []`.
-// Inner .default([]) keeps parsed shape stable when `exclude` IS provided.
-export const ExcludeSchema = z.object({
-  source: z.array(z.string()).default([]),
-  test: z.array(z.string()).default([]),
-}).optional();
-
-export const TestMappingSchema = z.object({
-  strategy: z.enum(TEST_STRATEGIES, {
-    errorMap: (issue, ctx) => {
-      if (issue.code === 'invalid_enum_value') {
-        const received = String((issue as { received?: unknown }).received ?? '');
-        if (received === 'separate-folder') {
-          return {
-            message: `Strategy 'separate-folder' has been removed. Migrate to 'mirror' — see docs/en/guides/skills-guide.md UT Commands.`,
-          };
-        }
-        return {
-          message: `Unknown testMapping.strategy: '${received}'. Allowed: ${TEST_STRATEGIES.join(', ')}`,
-        };
-      }
-      return { message: ctx.defaultError };
-    },
-  }).optional().describe('How tests are mapped for this sub-workspace.'),
-  exclude: ExcludeSchema.describe('Source and test globs excluded from test mapping.'),
-});
-
 export const SubWorkspaceSchema = z.object({
   name: z.string().min(1).describe('Sub-workspace identifier.'),
   path: z.string().min(1).describe('Sub-workspace path relative to the workspace root.'),
   modules: z.array(ModuleSchema).optional().describe('Optional modules inside this sub-workspace.'),
   hasModules: z.boolean().optional().describe('Whether this sub-workspace should be treated as modular.'),
-  testMapping: TestMappingSchema.optional().describe('Optional test mapping behavior for this sub-workspace.'),
   docs: z.object({
     path: z.string().optional().describe('Documentation path override for this sub-workspace.'),
   }).optional().describe('Sub-workspace documentation settings.'),
@@ -124,5 +91,4 @@ export const SpecifyConfigSchema = z.object({
 export type SpecifyConfig = z.infer<typeof SpecifyConfigSchema>;
 export type SubWorkspace = z.infer<typeof SubWorkspaceSchema>;
 export type Module = z.infer<typeof ModuleSchema>;
-export type TestMapping = z.infer<typeof TestMappingSchema>;
 export type Architecture = z.infer<typeof ArchitectureSchema>;

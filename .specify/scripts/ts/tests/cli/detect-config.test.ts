@@ -105,7 +105,7 @@ describe('detect-config.test.ts (integration)', () => {
     expect(result.configFound).toBe(false);
   });
 
-  it('D-06: minimal with --sub-workspace backend → no testStrategy', () => {
+  it('D-06: minimal with --sub-workspace backend → no testStrategy key', () => {
     const specDir = join(tempDir, '.specify');
     mkdirSync(specDir);
     const configPath = join(specDir, '.specify.json');
@@ -129,7 +129,7 @@ describe('detect-config.test.ts (integration)', () => {
     });
 
     expect(result.configFound).toBe(true);
-    expect(result.testStrategy).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(result, 'testStrategy')).toBe(false);
   });
 
   it('D-extra: sub-workspace auto-detect from cwd inside sw', () => {

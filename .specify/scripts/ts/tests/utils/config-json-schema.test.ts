@@ -10,6 +10,7 @@ import {
 
 const SCHEMA_PATH = resolve(import.meta.dir, '../../../../schemas/specify.schema.json');
 const TDK_CONFIG_PATH = resolve(import.meta.dir, '../../../../.specify.json');
+const EXAMPLE_CONFIG_PATH = resolve(import.meta.dir, '../../../../.specify.json.example');
 
 function createValidator() {
   const ajv = new Ajv({ allErrors: true, strict: false });
@@ -52,20 +53,9 @@ describe('config-json-schema.test.ts', () => {
     expect(result.errors).toBeNull();
   });
 
-  it('rejects legacy separate-folder test mapping strategy', () => {
-    const validate = createValidator();
-    const result = validate({
-      name: 'legacy-workspace',
-      subWorkspaces: [
-        {
-          name: 'backend',
-          path: 'backend',
-          testMapping: { strategy: 'separate-folder' },
-        },
-      ],
-    });
-
-    expect(result.valid).toBe(false);
-    expect(result.errors?.some((error) => error.instancePath.endsWith('/testMapping/strategy'))).toBe(true);
+  it('does not advertise removed subWorkspaces testMapping field', () => {
+    expect(getSpecifyConfigJsonSchemaText()).not.toContain('"testMapping"');
+    expect(readFileSync(SCHEMA_PATH, 'utf-8')).not.toContain('"testMapping"');
+    expect(readFileSync(EXAMPLE_CONFIG_PATH, 'utf-8')).not.toContain('"testMapping"');
   });
 });

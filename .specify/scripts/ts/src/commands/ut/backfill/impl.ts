@@ -60,7 +60,6 @@ export function createImplCommand(): Command {
 
     if (config.targetModule) {
       output.moduleName = config.targetModule.name;
-      output.testStrategy = config.testStrategy ?? '';
     }
 
     writeAgentJson(output);

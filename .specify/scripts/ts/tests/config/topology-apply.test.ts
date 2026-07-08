@@ -93,10 +93,10 @@ describe('config topology apply dry-run', () => {
       name: 'app',
       path: 'apps/app',
       docs: { path: 'docs/app' },
-      testMapping: { strategy: 'mirror' },
       modules: [{ name: 'api', path: 'src/api' }],
       hasModules: true,
     });
+    expect(JSON.stringify(result.config)).not.toContain('testMapping');
     expect(JSON.stringify(result.config)).not.toContain('boundaryType');
     expect(JSON.stringify(result.config)).not.toContain('owner');
     expect(JSON.stringify(result.config)).not.toContain('contracts');

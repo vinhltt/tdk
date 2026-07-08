@@ -1,6 +1,5 @@
 import { isAbsolute, win32 } from 'node:path';
 import { z } from 'zod';
-import { TestMappingSchema } from '../../../utils/types';
 
 const reportOnlyFields = ['boundaryType', 'owner', 'contracts', 'allowedDependencies', 'routing'] as const;
 const shellLikePattern = /(&&|\|\||;|`|\$\(|\||>|<|\r|\n)/;
@@ -21,7 +20,6 @@ const TopologySubWorkspaceSchema = z.object({
   docs: z.object({
     path: z.string().optional(),
   }).optional(),
-  testMapping: TestMappingSchema.optional(),
   modules: z.array(TopologyModuleSchema).optional(),
 });
 

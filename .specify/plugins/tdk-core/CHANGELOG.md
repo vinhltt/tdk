@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [7.0.1] - 2026-07-08
+
+### Changed
+- tdk-workspace-layout-propose: remove testMapping from workspace layout proposal templates and references and route test skills through plan-skill-routing.md / Delegate Skills
+
 ## [7.0.0] - 2026-07-06
 
 ### Added

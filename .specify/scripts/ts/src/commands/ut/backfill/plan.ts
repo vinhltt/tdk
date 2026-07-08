@@ -79,7 +79,6 @@ export function createPlanCommand(): Command {
 
     if (config.targetModule) {
       output.moduleName = config.targetModule.name;
-      output.testStrategy = config.testStrategy ?? '';
     }
 
     writeAgentJson(output);

@@ -10,10 +10,10 @@ import type { WorkspaceTopology, WorkspaceTopologySubWorkspace } from './schema'
 
 export interface ConfirmationFinding {
   name: string;
-  fields: Array<'path' | 'docs' | 'testMapping' | 'modules' | 'architecture.type' | 'pathCollision'>;
+  fields: Array<'path' | 'docs' | 'modules' | 'architecture.type' | 'pathCollision'>;
 }
 
-type RuntimeConfirmationField = 'path' | 'docs' | 'testMapping' | 'modules';
+type RuntimeConfirmationField = 'path' | 'docs' | 'modules';
 
 export interface DerivedConfigResult {
   config: SpecifyConfig;
@@ -52,10 +52,6 @@ function createRuntimeSubWorkspace(
   if (topologySubWorkspace.docs !== undefined) {
     providedFields.push('docs');
     next = { ...next, docs: topologySubWorkspace.docs };
-  }
-  if (topologySubWorkspace.testMapping !== undefined) {
-    providedFields.push('testMapping');
-    next = { ...next, testMapping: topologySubWorkspace.testMapping };
   }
   if (topologySubWorkspace.modules !== undefined) {
     providedFields.push('modules');
