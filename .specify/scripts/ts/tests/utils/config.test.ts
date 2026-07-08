@@ -149,7 +149,7 @@ describe('config.test.ts', () => {
     expect(detectConfig({ cwd: tempDir }).inlineRules).toEqual(inlineRules);
   });
 
-  it('C-05f: parseConfig strips removed testMapping field', () => {
+  it('C-05f: parseConfig strips unknown sub-workspace and module fields', () => {
     const specDir = join(tempDir, '.specify');
     mkdirSync(specDir);
     const configPath = join(specDir, '.specify.json');
@@ -159,14 +159,18 @@ describe('config.test.ts', () => {
         {
           name: 'backend',
           path: 'backend',
-          testMapping: { strategy: 'mirror' },
+          pluginOwnedValue: { enabled: true },
+          modules: [
+            { name: 'api', path: 'api', pluginOwnedValue: { enabled: true } },
+          ],
         },
       ],
     }));
 
     const { config: parsed, error } = parseConfig(configPath);
     expect(error).toBeNull();
-    expect(Object.prototype.hasOwnProperty.call(parsed?.subWorkspaces?.[0] ?? {}, 'testMapping')).toBe(false);
+    expect(Object.keys(parsed?.subWorkspaces?.[0] ?? {}).sort()).toEqual(['modules', 'name', 'path']);
+    expect(Object.keys(parsed?.subWorkspaces?.[0]?.modules?.[0] ?? {}).sort()).toEqual(['name', 'path']);
   });
 
   it('C-06: parseConfig invalid JSON → error', () => {

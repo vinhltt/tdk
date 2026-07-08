@@ -7,7 +7,6 @@ const shellLikePattern = /(&&|\|\||;|`|\$\(|\||>|<|\r|\n)/;
 const TopologyModuleSchema = z.object({
   name: z.string().min(1),
   path: z.string().min(1),
-  testPath: z.string().optional(),
 });
 
 const TopologySubWorkspaceSchema = z.object({
@@ -150,9 +149,6 @@ function validateTopologyPathsAndNames(topology: WorkspaceTopology): void {
     for (const module of subWorkspace.modules ?? []) {
       validateUniqueName(moduleNames, 'module name', module.name);
       validateRelativePath(`subWorkspaces.${subWorkspace.name}.modules.${module.name}.path`, module.path);
-      if (module.testPath !== undefined) {
-        validateRelativePath(`subWorkspaces.${subWorkspace.name}.modules.${module.name}.testPath`, module.testPath);
-      }
     }
   }
 }

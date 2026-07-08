@@ -9,7 +9,17 @@ will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## [Unreleased]
+
+## [1.100.2] - 2026-07-08
+
+### Changed
+- **[Scripts]** Strengthen config, topology, UT backfill, and schema tests with explicit output key allowlists for sub-workspaces, modules, and command JSON.
+- **[tdk-core]** Update workspace layout proposal templates and taxonomy reference to omit module test paths, keeping test routing delegated through plan skill rules.
+- **[Templates]** Rename the source-code structure module table `Tests Path` column to `Notes`.
+- **[General]** Refresh classic plugin, Codex plugin, and release manifests for updated schema/plugin payload hashes.
+
+### Removed
+- **[Scripts]** Remove `subWorkspaces[].modules[].testPath` from config schema, topology validation, generated config types, detection output, and example config payloads.
 
 ## [1.100.1] - 2026-07-08
 

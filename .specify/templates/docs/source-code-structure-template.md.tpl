@@ -23,9 +23,9 @@
 
 ## Modules / Sub-Workspaces
 
-| Name | Path | Purpose | Tests Path |
-|------|------|---------|-----------|
-| [name] | [path] | [1 dòng] | [test path] |
+| Name | Path | Purpose | Notes |
+|------|------|---------|-------|
+| [name] | [path] | [1 dòng] | [notes] |
 
 ## Test Layout
 

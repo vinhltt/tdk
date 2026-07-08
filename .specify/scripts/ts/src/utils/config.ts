@@ -13,7 +13,6 @@ export interface ModuleInfo {
   name: string;
   path: string;        // relative to sub-workspace
   root: string;        // absolute path
-  testPath?: string;
 }
 
 export interface SubWorkspaceInfo {
@@ -247,7 +246,7 @@ export function detectConfig(opts: DetectConfigOptions = {}): ConfigResult {
     const swDocsPath = sw.docs?.path ?? result.docsPath;
     result.targetSubWorkspace = {
       name: sw.name, path: sw.path, root: swRoot, docsPath: swDocsPath,
-      modules: (sw.modules ?? []).map<ModuleInfo>(m => ({ name: m.name, path: m.path, root: resolve(swRoot, m.path), testPath: m.testPath })),
+      modules: (sw.modules ?? []).map<ModuleInfo>(m => ({ name: m.name, path: m.path, root: resolve(swRoot, m.path) })),
       hasModules: sw.hasModules ?? ((sw.modules?.length ?? 0) > 0),
     };
     // Module targeting
@@ -265,7 +264,6 @@ export function detectConfig(opts: DetectConfigOptions = {}): ConfigResult {
         name: mod.name,
         path: mod.path,
         root: resolve(swRoot, mod.path),
-        testPath: mod.testPath,
       };
     }
   }

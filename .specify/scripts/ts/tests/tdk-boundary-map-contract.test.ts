@@ -167,16 +167,30 @@ describe('TDK workspace layout proposal contracts', () => {
     expect(JSON.stringify(parsedTopology.topology)).not.toContain('..');
   });
 
-  it('keeps workspace layout out of test skill routing', () => {
+  it('keeps workspace layout routing delegated through plan skill rules', () => {
     const combined = [
       read(join(layoutDir, 'templates/workspace-layout-proposal.md.tpl')),
       read(join(layoutDir, 'templates/workspace-layout-proposal.json.tpl')),
       read(join(layoutDir, 'references/workspace-layout-proposal-output-contract.md')),
       read(join(layoutDir, 'references/workspace-layout-taxonomy-and-runtime-projection.md')),
     ].join('\n');
+    const jsonTemplate = read(join(layoutDir, 'templates/workspace-layout-proposal.json.tpl'));
+    const parsedJson = JSON.parse(jsonTemplate);
+    const subWorkspace = parsedJson.subWorkspaces[0] as Record<string, unknown>;
 
-    expect(combined).not.toContain('testMapping');
-    expect(combined).not.toContain('docs/test mapping');
+    expect(Object.keys(subWorkspace).sort()).toEqual([
+      'allowedDependencies',
+      'boundaryType',
+      'contracts',
+      'docs',
+      'modules',
+      'name',
+      'owner',
+      'path',
+      'routing',
+    ]);
+    const module = (subWorkspace.modules as Array<Record<string, unknown>> | undefined)?.[0];
+    expect(module ? Object.keys(module).sort() : []).toEqual(['name', 'path']);
     expect(combined).toContain('plan-skill-routing.md');
     expect(combined).toContain('## Delegate Skills');
   });

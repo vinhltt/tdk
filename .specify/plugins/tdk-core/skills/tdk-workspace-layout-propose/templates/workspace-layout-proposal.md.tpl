@@ -33,9 +33,9 @@
 
 ## Proposed Modules
 
-| Sub-workspace | Module | Path | Test path | Boundary type | Runtime-backed? | Confidence |
-|---|---|---|---|---|---|---|
-| app | api | src/api | tests/api | component | Yes | Medium |
+| Sub-workspace | Module | Path | Boundary type | Runtime-backed? | Confidence |
+|---|---|---|---|---|---|
+| app | api | src/api | component | Yes | Medium |
 
 ## Runtime Projection
 

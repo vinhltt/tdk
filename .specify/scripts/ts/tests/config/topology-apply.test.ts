@@ -76,7 +76,6 @@ describe('config topology apply dry-run', () => {
           allowedDependencies: ['shared'],
           routing: { next: 'tdk-plan' },
           docs: { path: 'docs/app' },
-          testMapping: { strategy: 'mirror' },
           modules: [{ name: 'api', path: 'src/api' }],
         },
       ],
@@ -96,7 +95,17 @@ describe('config topology apply dry-run', () => {
       modules: [{ name: 'api', path: 'src/api' }],
       hasModules: true,
     });
-    expect(JSON.stringify(result.config)).not.toContain('testMapping');
+    expect(Object.keys(result.config.subWorkspaces?.[0] ?? {}).sort()).toEqual([
+      'docs',
+      'hasModules',
+      'modules',
+      'name',
+      'path',
+    ]);
+    expect(Object.keys(result.config.subWorkspaces?.[0]?.modules?.[0] ?? {}).sort()).toEqual([
+      'name',
+      'path',
+    ]);
     expect(JSON.stringify(result.config)).not.toContain('boundaryType');
     expect(JSON.stringify(result.config)).not.toContain('owner');
     expect(JSON.stringify(result.config)).not.toContain('contracts');

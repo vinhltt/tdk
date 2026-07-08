@@ -65,7 +65,27 @@ describe('ut-scripts.test.ts (integration)', () => {
     const config = detectConfig({ cwd: tempDir, subWorkspace: 'backend', module: 'api' });
     expect(config.configFound).toBe(true);
     expect(config.targetModule?.name).toBe('api');
-    expect(Object.prototype.hasOwnProperty.call(config, 'testStrategy')).toBe(false);
+    expect(Object.keys(config.targetModule ?? {}).sort()).toEqual(['name', 'path', 'root']);
+    expect(Object.keys(config.targetSubWorkspace?.modules?.[0] ?? {}).sort()).toEqual(['name', 'path', 'root']);
+    expect(Object.keys(config).sort()).toEqual([
+      'commands',
+      'configFound',
+      'defaultFolder',
+      'docsPath',
+      'docsSyncBackup',
+      'docsSyncExclude',
+      'inlineRules',
+      'memoryPath',
+      'metadata',
+      'rulesFiles',
+      'specsRoot',
+      'subWorkspaces',
+      'targetModule',
+      'targetSubWorkspace',
+      'warnings',
+      'workspaceName',
+      'workspaceRoot',
+    ]);
   });
 
   it('U-04d: handleCliError returns error when module not found', () => {
@@ -273,7 +293,7 @@ describe('ut-scripts.test.ts (integration)', () => {
     expect(mapped.find(s => s.name === 'explicitFalse')!.hasModules).toBe(false);
   });
 
-  it('U-15: UT backfill command JSON omits removed testStrategy', async () => {
+  it('U-15: UT backfill command JSON matches current output key allowlists', async () => {
     const specDir = join(tempDir, '.specify');
     mkdirSync(specDir);
     writeFileSync(join(specDir, '.specify.json'), JSON.stringify({
@@ -295,7 +315,59 @@ describe('ut-scripts.test.ts (integration)', () => {
     for (const command of ['auto', 'plan', 'impl'] as const) {
       const output = await runBackfillCommand(command);
       expect(output.moduleName).toBe('api');
-      expect(Object.prototype.hasOwnProperty.call(output, 'testStrategy')).toBe(false);
+      const firstSubWorkspace = (output.subWorkspaces as Array<{ modules?: Array<Record<string, unknown>> }>)[0];
+      expect(Object.keys(firstSubWorkspace?.modules?.[0] ?? {}).sort()).toEqual(['name', 'path']);
+      const expectedKeys = {
+        auto: [
+          'createdFeatureDir',
+          'featureDir',
+          'featureId',
+          'force',
+          'hasPlan',
+          'hasSpec',
+          'moduleName',
+          'planFile',
+          'planOnly',
+          'skipRun',
+          'specFile',
+          'subWorkspaceName',
+          'subWorkspaces',
+          'workspaceRoot',
+        ],
+        plan: [
+          'coverageFile',
+          'existingFiles',
+          'featureDir',
+          'featureId',
+          'forceMode',
+          'hasSpecFile',
+          'mode',
+          'moduleName',
+          'needsStandalonePrompt',
+          'planFile',
+          'reviewMode',
+          'specFile',
+          'standaloneMode',
+          'subWorkspaceName',
+          'subWorkspaces',
+          'testSpecFile',
+          'workspaceRoot',
+        ],
+        impl: [
+          'coverageFile',
+          'featureDir',
+          'featureId',
+          'hasCoverage',
+          'hasTestSpec',
+          'moduleName',
+          'planFile',
+          'subWorkspaceName',
+          'subWorkspaces',
+          'testSpecFile',
+          'workspaceRoot',
+        ],
+      }[command];
+      expect(Object.keys(output).sort()).toEqual(expectedKeys);
     }
   });
 });

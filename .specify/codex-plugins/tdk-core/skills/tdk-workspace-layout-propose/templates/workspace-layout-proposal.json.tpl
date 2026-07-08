@@ -25,8 +25,7 @@
       "modules": [
         {
           "name": "api",
-          "path": "src/api",
-          "testPath": "tests/api"
+          "path": "src/api"
         }
       ]
     }

@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [7.0.3] - 2026-07-08
+
+### Changed
+- tdk-workspace-layout-propose: remove module test paths from workspace layout proposals and keep test routing delegated through plan skill rules
+
 ## [7.0.1] - 2026-07-08
 
 ### Changed

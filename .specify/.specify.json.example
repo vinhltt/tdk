@@ -37,8 +37,8 @@
       "name": "backend",
       "path": "backend",
       "modules": [
-        { "name": "api", "path": "src/MyApp.Api", "testPath": "tests/MyApp.Api.Tests" },
-        { "name": "services", "path": "src/MyApp.Services", "testPath": "tests/MyApp.Services.Tests" }
+        { "name": "api", "path": "src/MyApp.Api" },
+        { "name": "services", "path": "src/MyApp.Services" }
       ],
       "docs": { "path": ".specify/configurations" }
     },

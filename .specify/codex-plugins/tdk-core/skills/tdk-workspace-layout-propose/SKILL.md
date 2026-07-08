@@ -10,7 +10,7 @@ related-skills:
   - tdk-scout
   - tdk-workflow-config-apply
 metadata:
-  version: "7.0.1"
+  version: "7.0.3"
   author: "VinhLTT"
   category: architecture-workflow
 ---

@@ -65,7 +65,9 @@ describe('detect-config.test.ts (integration)', () => {
 
     expect(result.configFound).toBe(true);
     expect((result.targetModule as any)?.name).toBe('api');
+    expect(Object.keys(result.targetModule ?? {}).sort()).toEqual(['name', 'path', 'root']);
     expect((result.targetSubWorkspace as any)?.name).toBe('backend');
+    expect(Object.keys(result.targetSubWorkspace?.modules?.[0] ?? {}).sort()).toEqual(['name', 'path', 'root']);
   });
 
   it('D-03: dotnet config with --module nope → error=module_not_found', () => {
@@ -105,7 +107,7 @@ describe('detect-config.test.ts (integration)', () => {
     expect(result.configFound).toBe(false);
   });
 
-  it('D-06: minimal with --sub-workspace backend → no testStrategy key', () => {
+  it('D-06: minimal with --sub-workspace backend → current output key allowlist', () => {
     const specDir = join(tempDir, '.specify');
     mkdirSync(specDir);
     const configPath = join(specDir, '.specify.json');
@@ -129,7 +131,24 @@ describe('detect-config.test.ts (integration)', () => {
     });
 
     expect(result.configFound).toBe(true);
-    expect(Object.prototype.hasOwnProperty.call(result, 'testStrategy')).toBe(false);
+    expect(Object.keys(result).sort()).toEqual([
+      'commands',
+      'configFound',
+      'defaultFolder',
+      'docsPath',
+      'docsSyncBackup',
+      'docsSyncExclude',
+      'inlineRules',
+      'memoryPath',
+      'metadata',
+      'rulesFiles',
+      'specsRoot',
+      'subWorkspaces',
+      'targetSubWorkspace',
+      'warnings',
+      'workspaceName',
+      'workspaceRoot',
+    ]);
   });
 
   it('D-extra: sub-workspace auto-detect from cwd inside sw', () => {

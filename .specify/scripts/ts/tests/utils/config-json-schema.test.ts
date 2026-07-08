@@ -53,9 +53,29 @@ describe('config-json-schema.test.ts', () => {
     expect(result.errors).toBeNull();
   });
 
-  it('does not advertise removed subWorkspaces testMapping field', () => {
-    expect(getSpecifyConfigJsonSchemaText()).not.toContain('"testMapping"');
-    expect(readFileSync(SCHEMA_PATH, 'utf-8')).not.toContain('"testMapping"');
-    expect(readFileSync(EXAMPLE_CONFIG_PATH, 'utf-8')).not.toContain('"testMapping"');
+  it('advertises only current subWorkspaces fields', () => {
+    const schema = getSpecifyConfigJsonSchema();
+    const schemaProperties = schema.properties as Record<string, JsonObject>;
+    const subWorkspaces = schemaProperties.subWorkspaces as JsonObject;
+    const item = subWorkspaces.items as JsonObject;
+    const properties = item.properties as Record<string, JsonObject>;
+    const modules = properties.modules as JsonObject;
+    const moduleItem = modules.items as JsonObject;
+    const moduleProperties = moduleItem.properties as Record<string, JsonObject>;
+
+    expect(Object.keys(properties).sort()).toEqual(['docs', 'hasModules', 'modules', 'name', 'path']);
+    expect(Object.keys(moduleProperties).sort()).toEqual(['name', 'path']);
+    expect(readFileSync(SCHEMA_PATH, 'utf-8')).toBe(getSpecifyConfigJsonSchemaText());
+
+    const exampleConfig = JSON.parse(readFileSync(EXAMPLE_CONFIG_PATH, 'utf-8')) as JsonObject;
+    const exampleSubWorkspace = (exampleConfig.subWorkspaces as JsonObject[] | undefined)?.[0];
+    expect(exampleSubWorkspace ? Object.keys(exampleSubWorkspace).sort() : []).toEqual([
+      'docs',
+      'modules',
+      'name',
+      'path',
+    ]);
+    const exampleModule = (exampleSubWorkspace?.modules as JsonObject[] | undefined)?.[0];
+    expect(exampleModule ? Object.keys(exampleModule).sort() : []).toEqual(['name', 'path']);
   });
 });

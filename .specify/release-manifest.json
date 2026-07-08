@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-07-08T01:43:14.900Z",
+  "generatedAt": "2026-07-08T10:46:11.829Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -30,8 +30,8 @@
   },
   "files": {
     ".specify/.specify.json.example": {
-      "sha256": "9f8ed049b424694c9068108ea4dae2b96565f39dde458623dce57af30dddca3a",
-      "size": 1501,
+      "sha256": "6ff41a560dd8b540e17e30a20cb1ee6f573e5f000b9190baad41a26e4ee30a42",
+      "size": 1422,
       "mode": "0775"
     },
     ".specify/_shared/skills/embedded-brainstorm.md": {
@@ -45,7 +45,7 @@
       "mode": "0664"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "873527f79509ef745e89acb56c3aad823768d3b55a1bf8fda15dc06069c4bc15",
+      "sha256": "e1a3e4995d79bac3e248845a42364b58a3b917cbb4bf5382dfe0c386e9a073e3",
       "size": 41296,
       "mode": "0644"
     },
@@ -55,17 +55,17 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "8f9f8d46d73726979313dc34e6ff5737aa5130954b9db863787b39768e8031a5",
+      "sha256": "ed30d5be90458818d6cca233c5fb82f1356006a5e35ffdb1d002d83ee0da7fe1",
       "size": 155,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "8f9f8d46d73726979313dc34e6ff5737aa5130954b9db863787b39768e8031a5",
+      "sha256": "ed30d5be90458818d6cca233c5fb82f1356006a5e35ffdb1d002d83ee0da7fe1",
       "size": 155,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "8f9f8d46d73726979313dc34e6ff5737aa5130954b9db863787b39768e8031a5",
+      "sha256": "ed30d5be90458818d6cca233c5fb82f1356006a5e35ffdb1d002d83ee0da7fe1",
       "size": 155,
       "mode": "0644"
     },
@@ -75,8 +75,8 @@
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "5df6202f3bc501ba1784b0f9c31fe15a808eb879410fc14683844101325630cd",
-      "size": 25358,
+      "sha256": "2d87da0398cda01f7057e5621e05dc68fd48ee5fe1589c41ac792aa451cfe09f",
+      "size": 25542,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/__tests__/context-builder.test.cjs": {
@@ -575,7 +575,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-workspace-layout-propose/SKILL.md": {
-      "sha256": "ded592c7f37f71c9aca4a8038c1dbfcfd4cef6689e8b1a9862802d9073fdccf8",
+      "sha256": "bda1f47e92353484d0e0d4a4bb0b2773dd84e507008290d6f593a0cc9ef89aac",
       "size": 5294,
       "mode": "0644"
     },
@@ -600,18 +600,18 @@
       "mode": "0664"
     },
     ".specify/plugins/tdk-core/skills/tdk-workspace-layout-propose/references/workspace-layout-taxonomy-and-runtime-projection.md": {
-      "sha256": "3512630a1ab4e4524e9b8a7fa72ac05ae9af11d283b21ea7210efd55fbfa2fda",
-      "size": 2564,
+      "sha256": "1a9a6d338baf0368bf47e3bd46c7d202f937f77b2edc950f010806a6d5569ee4",
+      "size": 2525,
       "mode": "0664"
     },
     ".specify/plugins/tdk-core/skills/tdk-workspace-layout-propose/templates/workspace-layout-proposal.json.tpl": {
-      "sha256": "b5327ceaab710f028048a43446173cec7000a323cf96cde0cc2214422c81ea0c",
-      "size": 724,
+      "sha256": "99190a51dd42eeaa5d5eb8cdc401381a522424f9e4ca4a55a9bb4ad137012987",
+      "size": 689,
       "mode": "0664"
     },
     ".specify/plugins/tdk-core/skills/tdk-workspace-layout-propose/templates/workspace-layout-proposal.md.tpl": {
-      "sha256": "b3f8aaf5feb1b0bc151fca2a17994ecb3d2239ce189b213d988356e02de3eb97",
-      "size": 3975,
+      "sha256": "965dd33f31a7a1888b8f79b0472bfbe42c35090bcf8db6a846ae4cd38fb02c63",
+      "size": 3947,
       "mode": "0664"
     },
     ".specify/plugins/tdk-memory/.claude-plugin/interface.json": {
@@ -1430,8 +1430,8 @@
       "mode": "0644"
     },
     ".specify/schemas/specify.schema.json": {
-      "sha256": "11dd33162fc0002f523ceb53c18f0151fbca9a02f9742bd9acc066d38f10b963",
-      "size": 8548,
+      "sha256": "d2f00499085b0ebe5f7a741406c13a35e86461d90744ce8bc8a4011b66e5ee05",
+      "size": 8392,
       "mode": "0644"
     },
     ".specify/scripts/bash/setup-python-venv.sh": {
@@ -1530,8 +1530,8 @@
       "mode": "0664"
     },
     ".specify/scripts/ts/src/commands/config/topology/schema.ts": {
-      "sha256": "9f60105588c278d6cc2603d763711a8ca27b7937e5f6b13c98f103620a153d95",
-      "size": 5644,
+      "sha256": "b9f9b3eb1f50da65097e2027b334d6b5d134fae5442139be8994d9bca4620bdf",
+      "size": 5441,
       "mode": "0664"
     },
     ".specify/scripts/ts/src/commands/detect-config.ts": {
@@ -1920,8 +1920,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/utils/config.ts": {
-      "sha256": "0cb067bb36ce0c00a6d4264ebbc5f331aded22a295d523f6a2824dc0e71b110c",
-      "size": 9615,
+      "sha256": "607f8c92309af03e817e2812c29d1acce77d3cd3d091cec9003b400ce66ebda0",
+      "size": 9540,
       "mode": "0775"
     },
     ".specify/scripts/ts/src/utils/exit-codes.ts": {
@@ -1955,8 +1955,8 @@
       "mode": "0664"
     },
     ".specify/scripts/ts/src/utils/types.ts": {
-      "sha256": "29a92fac1d17f234ded0d13bff09d0b41bcd15d01b10ec939ec93fddba1d6f93",
-      "size": 5558,
+      "sha256": "fa8877a1c45d6e0c23de24b9fd5640af17a0d71dad92d8c8a24aec79b8491c68",
+      "size": 5475,
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/architecture-workflow-contract.test.ts": {
@@ -1965,13 +1965,13 @@
       "mode": "0664"
     },
     ".specify/scripts/ts/tests/cli/detect-config.test.ts": {
-      "sha256": "2a0ac97c2e81dae63fa9c63506618ea8533cef4cb59219dd2e43a99453f17ccb",
-      "size": 5701,
+      "sha256": "827a76c84549faafd7ae55320bfd19ab3cc5e23371b5f71f208e55c42d787f0e",
+      "size": 6229,
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/cli/ut-scripts.test.ts": {
-      "sha256": "24fe1aefd5771979cfcbb9f56572cc836612661551dc1c2d030f6e9ee718886c",
-      "size": 11255,
+      "sha256": "dc51c1f89368a567b6bd4e3f419f20716f59cc69621ad5d85f312fd39cc82104",
+      "size": 13168,
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/codex-distribute-e2e.test.ts": {
@@ -2005,8 +2005,8 @@
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/config/topology-apply.test.ts": {
-      "sha256": "aa960f64f95167381dd048e9161c739964a4e33d7be1bdaa2e2aba4720beffa7",
-      "size": 17889,
+      "sha256": "afec9e37c4bd94e027f1a86d3cc07d7f0a7e2bff9a58bbf4af2ea63eabdb0a7a",
+      "size": 18069,
       "mode": "0664"
     },
     ".specify/scripts/ts/tests/cwd-independent-skill-contract.test.ts": {
@@ -2405,8 +2405,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-boundary-map-contract.test.ts": {
-      "sha256": "a9bff4e96fa0c147e3f2e40b621957707a3f549dead7a2330d3187eccdb00e2b",
-      "size": 10434,
+      "sha256": "5eedce790bfb874c713b0c84cd18488b7580717974ba3fc94095a89c56f8268a",
+      "size": 10967,
       "mode": "0664"
     },
     ".specify/scripts/ts/tests/tdk-constitution-product-context-contract.test.ts": {
@@ -2540,13 +2540,13 @@
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/utils/config-json-schema.test.ts": {
-      "sha256": "fdc61a4a0c378adec97b9bb66f7e5a50bb7c96e55def628d3168db801d68f7a1",
-      "size": 2209,
+      "sha256": "d4b14983d3bfc3f33db5107e1a3c44b2d31bc9032993a7a0cd3367d44c634cb1",
+      "size": 3262,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/utils/config.test.ts": {
-      "sha256": "d777295fab5fe2b9d94bafc42399dc6bfe4008b2cc105469e8bd0ad3de474790",
-      "size": 11913,
+      "sha256": "196968f946c5096869d245ddf7ee6f6f17d9dcc6d7c232ff8375cc425be44fa8",
+      "size": 12138,
       "mode": "0775"
     },
     ".specify/scripts/ts/tests/utils/feature.test.ts": {
@@ -2585,8 +2585,8 @@
       "mode": "0775"
     },
     ".specify/templates/docs/source-code-structure-template.md.tpl": {
-      "sha256": "9cd779a4c4325e1b416efa83057f54e7969b83d8011304164d09c6f582b78ec7",
-      "size": 1292,
+      "sha256": "4123929968211dfec4d19602271e77301c56de31244d33c93b89a077ac731830",
+      "size": 1279,
       "mode": "0775"
     },
     ".specify/templates/docs/technical-context-template.md.tpl": {

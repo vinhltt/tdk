@@ -8,7 +8,6 @@ import { z } from 'zod';
 export const ModuleSchema = z.object({
   name: z.string().regex(/^[a-zA-Z0-9._-]+$/, 'alphanumeric, dots, hyphens only').describe('Module identifier used by TDK commands.'),
   path: z.string().min(1).refine(p => !p.includes('..'), 'path traversal (..) not allowed').describe('Module path relative to its sub-workspace.'),
-  testPath: z.string().optional().describe('Optional test path for this module.'),
 });
 
 export const SubWorkspaceSchema = z.object({

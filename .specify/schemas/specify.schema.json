@@ -246,10 +246,6 @@
                   "description": "Module path relative to its sub-workspace.",
                   "type": "string",
                   "minLength": 1
-                },
-                "testPath": {
-                  "description": "Optional test path for this module.",
-                  "type": "string"
                 }
               }
             }
