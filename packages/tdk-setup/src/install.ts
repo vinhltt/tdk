@@ -40,6 +40,19 @@ function parsePlugins(value: string | undefined): string[] {
   if (plugins.length === 0) throw new Error('--plugins requires at least one plugin name');
   return [...new Set(plugins)];
 }
+function assertCompanionPlugins(selectedPlugins: string[]): void {
+  const selected = new Set(selectedPlugins);
+  const missingCompanion = ['tdk-core', 'tdk-epic']
+    .filter((plugin) => selected.has(plugin) && !selected.has('tdk-utils'));
+  if (missingCompanion.length === 0) return;
+
+  const suggested = [...selectedPlugins, 'tdk-utils']
+    .filter((plugin, index, plugins) => plugins.indexOf(plugin) === index)
+    .join(',');
+  throw new Error(
+    `Selected ${missingCompanion.join(', ')} requires companion plugin tdk-utils. Use --plugins ${suggested} or --all-plugins.`,
+  );
+}
 function manifestHasState(manifest: ReturnType<typeof loadHarnessManifest>): boolean {
   return manifest.selectedPlugins.length > 0 || manifest.managedFiles.length > 0 || manifest.managedHooks.length > 0;
 }
@@ -159,6 +172,7 @@ export function createInstallCommand(): Command {
           baseSettings.selectedPlugins,
           manifestHasState(previousManifest),
         );
+        assertCompanionPlugins(selectedPlugins);
         const prefix = await resolveTargetPrefix(opts, baseSettings);
         const resolvedSettings = {
           ...baseSettings,

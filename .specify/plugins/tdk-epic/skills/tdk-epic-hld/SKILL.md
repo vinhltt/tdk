@@ -2,7 +2,7 @@
 name: tdk-epic-hld
 description: "Turn epic PRD artifacts into parent high-level design context before /tdk-task-breakdown. Use after /tdk-epic-prd; child specs do not run HLD by default."
 metadata:
-  version: "6.0.2"
+  version: "1.0.0"
 ---
 
 # tdk-epic-hld

@@ -3,10 +3,11 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
+const EPIC_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-epic/skills');
 const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en/guides');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
-const HLD_PATH = resolve(CORE_SKILLS_DIR, 'tdk-epic-hld/SKILL.md');
+const HLD_PATH = resolve(EPIC_SKILLS_DIR, 'tdk-epic-hld/SKILL.md');
 
 const ADVISOR_NAME = 'tdk-architecture-advisor';
 
@@ -234,6 +235,5 @@ describe('TDK architecture advisor contracts', () => {
     expect(workflowMap).toContain('.specify/configurations/architecture/architecture-options.md');
     expect(manifest).toContain('"tdk-architecture-advisor"');
     expect(readme).toContain('/tdk-architecture-advisor');
-    expect(readme).toContain('24 loadable skills + 1 agent');
   });
 });

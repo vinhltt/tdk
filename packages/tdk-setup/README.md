@@ -16,8 +16,10 @@ CONSUMER_ROOT=/path/to/consumer-project
 Install Claude harness artifacts:
 
 ```bash
-bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --dry-run
-bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --yes
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core,tdk-utils --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core,tdk-utils --yes
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-epic,tdk-utils --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core,tdk-epic,tdk-utils --dry-run
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --dry-run
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --prefix sample --yes
 ```
@@ -25,8 +27,10 @@ bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --prefi
 Install preconverted Codex artifacts:
 
 ```bash
-bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --dry-run
-bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --yes
+bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core,tdk-utils --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core,tdk-utils --yes
+bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-epic,tdk-utils --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core,tdk-epic,tdk-utils --dry-run
 bun src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --dry-run
 ```
 
@@ -46,6 +50,11 @@ bun src/index.ts convert-flat "$CONSUMER_ROOT" --yes
 ```
 
 Omit `--plugins` and `--all-plugins` to select plugins interactively with Space and Enter.
+
+Selected child workflow installs use `tdk-core,tdk-utils`. Selected parent epic
+workflow installs use `tdk-epic,tdk-utils`. Selected combined workflow installs
+use `tdk-core,tdk-epic,tdk-utils`. Selecting `tdk-core` or `tdk-epic` without
+`tdk-utils` fails fast because both workflow plugins call shared helper skills.
 
 If `.specify/` was distributed with `bash distribute.sh <consumer-root> --prefix sample`, use the same `--prefix sample` here. `distribute.sh --prefix` brands safe `.specify/` payload text; `tdk-setup install --prefix` brands installed `.claude/`, `.codex/`, and `.agents/skills/` harness artifacts.
 

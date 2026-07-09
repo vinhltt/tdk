@@ -2,7 +2,7 @@
 name: tdk-task-breakdown
 description: "Generate parent epic child-spec-seed breakdown artifacts from epic PRD plus /tdk-epic-hld context. Use before child /tdk-specify loops."
 metadata:
-  version: "6.0.2"
+  version: "1.0.0"
 ---
 
 # tdk-task-breakdown

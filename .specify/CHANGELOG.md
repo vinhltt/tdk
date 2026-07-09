@@ -10,6 +10,25 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 
+## [1.101.0] - 2026-07-09
+
+### Added
+- **[tdk-epic]** Scaffold new plugin containing parent epic workflow skills (moved from `tdk-core`)
+  - Added `tdk-discovery`, `tdk-epic-hld`, `tdk-epic-prd`, and `tdk-task-breakdown` skills.
+- **[Scripts]** Add `tdk-epic-plugin-ownership.test.ts` test to validate epic plugin ownership.
+
+### Changed
+- **[tdk-core]** Move epic workflow components out to `tdk-epic` plugin
+  - Update `tdk-specify` and its generation workflow references to load the shared `interview-alignment-protocol.md` from the new global `.specify/_shared/skills/` directory.
+- **[tdk-utils]** Update setup and skill guides
+  - `tdk-setup-guide`: Align Claude command registration verification steps to remove deprecated plugin marketplace references.
+  - `tdk-skill-guide`: Restructure skills guide listing to group by user-facing workflow areas rather than package IDs.
+- **[Setup]** Enforce companion plugin `tdk-utils` in the installer CLI when `tdk-core` or `tdk-epic` is selected.
+- **[Scripts]** Update architecture, boundary, and task contract tests to support the restructured plugins.
+
+### Removed
+- **[tdk-core]** Remove epic-related skills (`tdk-discovery`, `tdk-epic-hld`, `tdk-epic-prd`, `tdk-task-breakdown`) and local shared interview-alignment-protocol.
+
 ## [1.100.3] - 2026-07-08
 
 ### Changed

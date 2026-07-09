@@ -2,7 +2,7 @@
 name: tdk-skill-guide
 description: "Interactive guide for TDK skills and commands. Shows usage, scenarios, tips, and skill discovery. Use when asking 'how to use /tdk-*', 'what skills are available', 'show scenario', 'find a skill for X', 'tdk guide', 'tdk help'."
 metadata:
-  version: 2.2.5
+  version: 2.2.6
 ---
 
 # TDK Skill Guide
@@ -98,19 +98,21 @@ Parse `$ARGUMENTS` to determine mode:
    - Fallback: `Read` `.specify/docs/en/guides/skills-guide.md`
 3. `list_vault_files("plugins")` → filter for `SKILL.md` files → `get_vault_file` each for name+description
    - Fallback: `Glob` `.specify/plugins/*/skills/*/SKILL.md` → `Read` each
-4. Group skills by plugin and display as categorized table:
+4. Group skills by user-facing workflow area, not by package id. Derive the
+   area from the skill descriptions and package folder, but do not display
+   package ids as headings:
 
    ```markdown
    ## Available Skills
 
-   ### tdk-core (31 skills)
+   ### Core Workflows
    | Skill | Description |
    |-------|-------------|
    | /tdk-specify | Create feature spec from natural language |
    | /tdk-plan | Generate implementation plan |
    | ... |
 
-   ### tdk-utils (15 skills)
+   ### Utilities And Setup
    | ... |
    ```
 
@@ -136,7 +138,6 @@ Parse `$ARGUMENTS` to determine mode:
    ```markdown
    ## /tdk-specify
 
-   **Plugin:** tdk-core
    **Description:** Create feature specification from natural language
 
    ### Usage
@@ -183,7 +184,7 @@ Present results grouped by source:
 ## Search Results for "<keyword>"
 
 ### Skills
-- **/tdk-specify** (tdk-core) — Create feature spec from natural language
+- **/tdk-specify** — Create feature spec from natural language
 
 ### TDK Skills Guide
 - Line 142: "Use /tdk-specify to kick off the workflow..."

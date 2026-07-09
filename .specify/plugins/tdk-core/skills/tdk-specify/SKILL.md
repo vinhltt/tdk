@@ -3,7 +3,7 @@ name: tdk-specify
 description: "Create spec.md from a feature or child-slice description, or replay --interview against existing spec.md. Supports --fast, memory, checklist."
 argument-hint: "<id> [<desc>] [--fast] [--interview]"
 metadata: 
-  version: "6.0.2"
+  version: "9.0.0"
 ---
 
 # tdk-specify
@@ -46,7 +46,7 @@ Load references only when their step is reached:
 - `references/spec-generation-and-validation-workflow.md` for Steps 2, 2.5, 3, 5, and 6.
 - `references/spec-writing-principles.md` before Step 2 for YAGNI/KISS/DRY and embedded brainstorming.
 - `references/spec-quality-guidelines.md` before Step 2 and Step 5 for section/checklist requirements.
-- `../_shared/interview-alignment-protocol.md` when `--interview` is set.
+- `.specify/_shared/skills/interview-alignment-protocol.md` when `--interview` is set.
 
 ## Boundary Declaration
 
@@ -158,7 +158,7 @@ current `spec.md`, then continues to Step 2.5. Emit frontmatter with `title`,
 ### Step 2.5: Optional Interview Alignment Gate
 
 Follow `references/spec-generation-and-validation-workflow.md` Step 2.5 and
-load `../_shared/interview-alignment-protocol.md`.
+load `.specify/_shared/skills/interview-alignment-protocol.md`.
 
 Run after draft `spec.md` is written for creation, or after current `spec.md` is
 read for `SPEC_REPLAY_INTERVIEW=true`. Ask 4-6 artifact-grounded questions;

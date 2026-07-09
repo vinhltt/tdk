@@ -33,9 +33,9 @@ export function writePluginFile(consumer: FixtureConsumer, relativePath: string,
   fs.writeFileSync(filePath, content, 'utf-8');
 }
 
-export function writeManifest(consumer: FixtureConsumer, files: Record<string, string>): void {
+export function writeManifest(consumer: FixtureConsumer, files: Record<string, string>, plugin = 'tdk-core'): void {
   writeMultiPluginManifest(consumer, {
-    'tdk-core': { version: '1.0.0', files },
+    [plugin]: { version: '1.0.0', files },
   });
 }
 

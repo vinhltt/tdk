@@ -74,7 +74,7 @@ If `SPEC_INTERVIEW=true`, run the interview after the draft `spec.md` is written
 for creation, or after current `spec.md` is read for `SPEC_REPLAY_INTERVIEW=true`,
 and before unresolved-question handling:
 
-1. Load `../_shared/interview-alignment-protocol.md`.
+1. Load `.specify/_shared/skills/interview-alignment-protocol.md`.
 2. Read current `spec.md` and build an internal claim map from sections 1-9 and `## Clarifications`.
 3. Ask 4-6 artifact-grounded questions, one at a time, covering problem, scope, impact surface, top UR/FR/entity, success criteria, risk, and unresolved questions.
 4. For each answer, record classification: `aligned`, `mismatch`, or `unclear`.

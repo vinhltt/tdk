@@ -4,6 +4,10 @@
 > Reader level: fresher-safe
 > Main path: `/tdk-discovery -> /tdk-epic-prd -> /tdk-epic-hld -> /tdk-task-breakdown -> child /tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`
 
+Với selective harness install, đảm bảo cả parent epic commands và child feature
+commands đã có trước khi đi theo guide này. Nếu một command không có, chạy lại
+harness installer với workflow commands cần dùng.
+
 ## Fast Path
 
 Gõ các command này trong Claude Code chat, không phải terminal:

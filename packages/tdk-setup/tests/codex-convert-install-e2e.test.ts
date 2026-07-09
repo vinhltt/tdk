@@ -9,7 +9,8 @@ const manifestCliPath = path.resolve('../../.specify/scripts/ts/src/commands/man
 
 function writeConverterFixture() {
   const consumer = makeConsumer('tdk-codex-e2e-');
-  const pluginJson = JSON.stringify({ name: 'tdk-core', description: 'Core plugin', version: '1.0.0' }, null, 2) + '\n';
+  const plugin = 'tdk-memory';
+  const pluginJson = JSON.stringify({ name: plugin, description: 'Memory plugin', version: '1.0.0' }, null, 2) + '\n';
   const skill = '---\nname: tdk-demo\ndescription: Demo skill\n---\n\nUse tdk-demo.\n';
   const agent = '---\nname: tdk-helper\ndescription: TDK helper\ntools: Read\n---\n\nHelp with TDK.\n';
   const gateway = '"use strict";\nprocess.stdin.pipe(process.stdout);\n';
@@ -24,13 +25,13 @@ function writeConverterFixture() {
     },
   }, null, 2) + '\n';
 
-  writePluginFile(consumer, '.claude-plugin/plugin.json', pluginJson);
-  writePluginFile(consumer, 'skills/tdk-demo/SKILL.md', skill);
-  writePluginFile(consumer, 'agents/tdk-helper.md', agent);
-  writePluginFile(consumer, 'hooks/hook-gateway.cjs', gateway);
-  writePluginFile(consumer, 'hooks/demo-hook.cjs', hook);
-  writePluginFile(consumer, 'hooks/hooks.json', hooksJson);
-  writePluginFile(consumer, 'lib/demo.cjs', lib);
+  writePluginFile(consumer, '.claude-plugin/plugin.json', pluginJson, plugin);
+  writePluginFile(consumer, 'skills/tdk-demo/SKILL.md', skill, plugin);
+  writePluginFile(consumer, 'agents/tdk-helper.md', agent, plugin);
+  writePluginFile(consumer, 'hooks/hook-gateway.cjs', gateway, plugin);
+  writePluginFile(consumer, 'hooks/demo-hook.cjs', hook, plugin);
+  writePluginFile(consumer, 'hooks/hooks.json', hooksJson, plugin);
+  writePluginFile(consumer, 'lib/demo.cjs', lib, plugin);
   writeManifest(consumer, {
     '.claude-plugin/plugin.json': sha256(pluginJson),
     'skills/tdk-demo/SKILL.md': sha256(skill),
@@ -39,16 +40,16 @@ function writeConverterFixture() {
     'hooks/demo-hook.cjs': sha256(hook),
     'hooks/hooks.json': sha256(hooksJson),
     'lib/demo.cjs': sha256(lib),
-  });
-  return consumer;
+  }, plugin);
+  return { consumer, plugin };
 }
 
 describe('codex convert/install e2e', () => {
   test('converts plugin source, installs dual-target Codex artifacts, and runs generated wrapper', () => {
-    const consumer = writeConverterFixture();
+    const { consumer, plugin } = writeConverterFixture();
 
     const convert = Bun.spawnSync({
-      cmd: ['bun', cliPath, 'convert', '--plugins', 'tdk-core'],
+      cmd: ['bun', cliPath, 'convert', '--plugins', plugin],
       cwd: consumer.scriptsDir,
       stdout: 'pipe',
       stderr: 'pipe',
@@ -64,7 +65,7 @@ describe('codex convert/install e2e', () => {
     expect(manifest.exitCode).toBe(0);
 
     const install = Bun.spawnSync({
-      cmd: ['bun', cliPath, 'install', '--harness', 'codex', '--plugins', 'tdk-core', '--yes'],
+      cmd: ['bun', cliPath, 'install', '--harness', 'codex', '--plugins', plugin, '--yes'],
       cwd: consumer.scriptsDir,
       stdout: 'pipe',
       stderr: 'pipe',
@@ -77,7 +78,7 @@ describe('codex convert/install e2e', () => {
     expect(fs.existsSync(path.join(consumer.root, '.codex', 'lib', 'demo.cjs'))).toBe(true);
     expect(fs.readFileSync(path.join(consumer.root, '.codex', 'config.toml'), 'utf-8')).toContain('[agents.tdk-helper]');
     expect(JSON.parse(fs.readFileSync(path.join(consumer.root, '.codex', 'hooks.json'), 'utf-8')).PreToolUse).toHaveLength(1);
-    expect(JSON.parse(fs.readFileSync(path.join(consumer.root, '.specify', 'state', 'harness-install', 'codex.json'), 'utf-8')).selectedPlugins).toEqual(['tdk-core']);
+    expect(JSON.parse(fs.readFileSync(path.join(consumer.root, '.specify', 'state', 'harness-install', 'codex.json'), 'utf-8')).selectedPlugins).toEqual([plugin]);
 
     const wrapperDir = path.join(consumer.root, '.codex', 'hooks', 'wrappers');
     const wrapper = fs.readdirSync(wrapperDir).find((file) => file.endsWith('.cjs'));

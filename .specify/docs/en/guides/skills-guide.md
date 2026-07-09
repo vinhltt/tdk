@@ -4,8 +4,6 @@
 >
 > **Source baseline**: TDK `547655e v1.94.1`
 >
-> **Terminology**: In this guide, `/tdk-*` items are called "commands." Internally they are Claude Code plugin skills. Both terms refer to the same thing.
->
 > **Where to run**: All `/tdk-*` commands are typed in the **Claude Code chat interface** (VSCode extension or Claude CLI prompt), NOT in a terminal or bash shell.
 
 ---
@@ -73,6 +71,12 @@ The TDK command suite provides a **specification-driven development** workflow. 
 **Minimal feature flow**: `specify` -> `clarify` -> `plan` -> `implement`
 
 **Epic flow**: `constitution` (project-level) -> optional `discovery` -> `epic-prd` -> `epic-hld` -> `task-breakdown` -> child `specify` -> child `clarify` -> child `plan` -> child `implement`
+
+For selective harness installs, make sure the workflow commands you plan to use
+are included: feature commands for minimal specs, parent epic commands for
+discovery/PRD/HLD/breakdown, or both when following the full epic-to-child flow.
+If a `/tdk-` command is unavailable, rerun the harness installer with the needed
+workflow commands enabled.
 
 For feature-sized work, skip discovery, epic PRD, HLD, and task breakdown by default. If the feature is small and clear, the current spec continues directly to `plan` and `implement`. For broad epics, `epic-prd.md` plus `epic-prd/` turns discovery into product alignment and slice map, `/tdk-epic-hld` adds parent design context, and `/tdk-task-breakdown` creates child spec seeds. Each seed then starts a child `/tdk-specify` loop.
 
@@ -195,10 +199,10 @@ Test-mode phases include `Test Quality Gate` rows. TDK owns baseline rubric,
 traceability, and gate row completion; the routed consumer `test` skill owns
 framework commands and numeric coverage policy.
 
-Codex harness installs require generated `.specify/codex-plugins/**` packages.
-The default distribution payload omits those generated packages, so use the
-existing setup CLI `convert` / Codex install path instead of changing
-`distribute.json` for test-mode planning.
+Codex harness installs require generated Codex command artifacts. The default
+distribution payload omits those generated artifacts, so use the existing setup
+CLI `convert` / Codex install path instead of changing `distribute.json` for
+test-mode planning.
 
 #### `/tdk-specify`
 

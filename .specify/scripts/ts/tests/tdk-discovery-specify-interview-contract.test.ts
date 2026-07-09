@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 const DISCOVERY_SKILL_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-discovery/SKILL.md',
+  '../../../plugins/tdk-epic/skills/tdk-discovery/SKILL.md',
 );
 const SPECIFY_SKILL_PATH = resolve(
   import.meta.dir,
@@ -20,30 +20,30 @@ const SPECIFY_GENERATION_REF_PATH = resolve(
 );
 const DISCOVERY_CONTRACT_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-discovery/references/discovery-output-contract.md',
+  '../../../plugins/tdk-epic/skills/tdk-discovery/references/discovery-output-contract.md',
 );
 const SHARED_PROTOCOL_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/_shared/interview-alignment-protocol.md',
+  '../../../_shared/skills/interview-alignment-protocol.md',
 );
 
-function read(path: string): string {
-  return readFileSync(path, 'utf-8');
+function readIfExists(path: string): string {
+  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
 describe('tdk discovery/specify interview contract', () => {
-  const discoverySkill = read(DISCOVERY_SKILL_PATH);
-  const specifySkill = read(SPECIFY_SKILL_PATH);
-  const specifyInputRoutingRef = read(SPECIFY_INPUT_ROUTING_REF_PATH);
-  const specifyGenerationRef = read(SPECIFY_GENERATION_REF_PATH);
+  const discoverySkill = readIfExists(DISCOVERY_SKILL_PATH);
+  const specifySkill = readIfExists(SPECIFY_SKILL_PATH);
+  const specifyInputRoutingRef = readIfExists(SPECIFY_INPUT_ROUTING_REF_PATH);
+  const specifyGenerationRef = readIfExists(SPECIFY_GENERATION_REF_PATH);
   const specifyContract = `${specifySkill}\n${specifyInputRoutingRef}\n${specifyGenerationRef}`;
-  const discoveryContract = read(DISCOVERY_CONTRACT_PATH);
+  const discoveryContract = readIfExists(DISCOVERY_CONTRACT_PATH);
   const combined = `${discoverySkill}\n${specifyContract}\n${discoveryContract}`;
 
   it('defines one shared artifact-alignment protocol', () => {
     expect(existsSync(SHARED_PROTOCOL_PATH)).toBe(true);
 
-    const protocol = read(SHARED_PROTOCOL_PATH);
+    const protocol = readIfExists(SHARED_PROTOCOL_PATH);
     expect(protocol).toContain('artifact alignment');
     expect(protocol).toContain('3-6 questions');
     expect(protocol).toContain('teach-back');
@@ -58,7 +58,8 @@ describe('tdk discovery/specify interview contract', () => {
 
   it('documents optional interview mode for discovery without changing output ownership', () => {
     expect(discoverySkill).toContain('[--force] [--interview]');
-    expect(discoverySkill).toContain('../_shared/interview-alignment-protocol.md');
+    expect(discoverySkill).toContain('.specify/_shared/skills/interview-alignment-protocol.md');
+    expect(discoverySkill).not.toContain('../_shared/interview-alignment-protocol.md');
     expect(discoverySkill).toContain('set `INTERVIEW_DISCOVERY=true`');
     expect(discoverySkill).toContain('Unknown flags STOP');
     expect(discoverySkill).toContain('3-5 artifact-grounded questions');
@@ -82,7 +83,8 @@ describe('tdk discovery/specify interview contract', () => {
 
   it('documents optional interview mode for specify while allowing fast composition', () => {
     expect(specifySkill).toContain('[--fast] [--interview]');
-    expect(specifySkill).toContain('../_shared/interview-alignment-protocol.md');
+    expect(specifySkill).toContain('.specify/_shared/skills/interview-alignment-protocol.md');
+    expect(specifySkill).not.toContain('../_shared/interview-alignment-protocol.md');
     expect(specifyContract).toContain('set `SPEC_INTERVIEW=true`');
     expect(specifyContract).toContain('Unknown flags STOP');
     expect(specifyContract).toContain('`--fast --interview` is valid');

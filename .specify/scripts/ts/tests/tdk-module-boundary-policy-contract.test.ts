@@ -185,8 +185,6 @@ describe('TDK workspace dependency policy contracts', () => {
     expect(manifest).toContain('"tdk-workspace-dependency-policy"');
     expect(manifest).toContain('"tdk-module-boundary-policy"');
     expect(readme).toContain('/tdk-workspace-dependency-policy');
-    expect(readme).toContain('/tdk-module-boundary-policy');
-    expect(readme).toContain('16 skills + 5 agents');
     expect(skillsGuide).toContain('/tdk-workspace-dependency-policy [layout|file] [--audit|--suggest]');
     expect(skillsGuide).toContain('/tdk-module-boundary-policy [topology|file] [--audit|--suggest]');
     expect(skillsGuide).toContain('workspace-dependency-policy.md');

@@ -3,7 +3,7 @@ name: tdk-epic-prd
 description: "EPIC-ONLY product alignment and slice-map step after tdk-discovery; writes tracker-neutral epic PRD artifacts without minting requirements"
 argument-hint: "<epic-id> [--force] [--interview]"
 metadata:
-  version: "6.0.2"
+  version: "1.0.0"
 ---
 
 # tdk-epic-prd
@@ -42,7 +42,7 @@ Feature-sized work skips epic PRD and starts at `/tdk-specify`.
 Load before writing any epic PRD file:
 - `references/epic-prd-output-contract.md`
 - `references/epic-prd-quality-guidelines.md`
-- `../_shared/interview-alignment-protocol.md` when `--interview` is set
+- `.specify/_shared/skills/interview-alignment-protocol.md` when `--interview` is set
 
 ## Error Recovery
 
@@ -200,7 +200,7 @@ If `INTERVIEW_PRD=true`, run the interview after draft PRD artifacts exist for
 creation, or after the current artifacts are loaded for
 `PRD_REPLAY_INTERVIEW=true`, and before validation:
 
-1. Load `../_shared/interview-alignment-protocol.md`.
+1. Load `.specify/_shared/skills/interview-alignment-protocol.md`.
 2. Read `epic-prd.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, and `epic-prd/open-questions.md`.
 3. Build an internal claim map from product objective, MVP appetite, no-gos,
    slice boundaries, build order, and blocking questions.

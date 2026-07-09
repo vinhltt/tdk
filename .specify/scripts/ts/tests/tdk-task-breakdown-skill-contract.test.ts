@@ -1,25 +1,26 @@
 import { describe, expect, it } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 const SKILL_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-task-breakdown/SKILL.md',
+  '../../../plugins/tdk-epic/skills/tdk-task-breakdown/SKILL.md',
 );
 const REFERENCE_PATH = resolve(
   dirname(SKILL_PATH),
   'references/task-breakdown-output-contract.md',
 );
 
-function read(path: string): string {
-  return readFileSync(path, 'utf-8');
+function readIfExists(path: string): string {
+  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
 describe('tdk-task-breakdown skill contract', () => {
-  const skill = read(SKILL_PATH);
-  const reference = read(REFERENCE_PATH);
+  const skill = readIfExists(SKILL_PATH);
+  const reference = readIfExists(REFERENCE_PATH);
 
   it('declares the parent epic child-spec-seed breakdown command and hard boundary', () => {
+    expect(existsSync(SKILL_PATH)).toBe(true);
     expect(skill).toContain('tdk-task-breakdown');
     expect(skill).toContain('child-spec-seed');
     expect(skill).toContain('Use before child /tdk-specify loops');

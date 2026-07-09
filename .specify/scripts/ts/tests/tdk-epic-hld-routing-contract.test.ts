@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 const HLD_SKILL_DIR = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-epic-hld',
+  '../../../plugins/tdk-epic/skills/tdk-epic-hld',
 );
 const HLD_SKILL_PATH = resolve(HLD_SKILL_DIR, 'SKILL.md');
 const HLD_CONTRACT_PATH = resolve(
@@ -28,23 +28,24 @@ const PLAN_ROUTING_TEMPLATE_PATH = resolve(
   '../../../templates/plan/plan-skill-routing-template.tpl',
 );
 
-function read(path: string): string {
-  return readFileSync(path, 'utf-8');
+function readIfExists(path: string): string {
+  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
 describe('tdk-epic-hld routing contract', () => {
-  const skill = read(HLD_SKILL_PATH);
-  const contract = read(HLD_CONTRACT_PATH);
-  const planRoutingTemplate = read(PLAN_ROUTING_TEMPLATE_PATH);
+  const skill = readIfExists(HLD_SKILL_PATH);
+  const contract = readIfExists(HLD_CONTRACT_PATH);
+  const planRoutingTemplate = readIfExists(PLAN_ROUTING_TEMPLATE_PATH);
 
   it('loads built-in HLD lenses and the HLD-specific routing reference', () => {
+    expect(existsSync(HLD_SKILL_PATH)).toBe(true);
     expect(skill).toContain('references/high-level-design-lenses.md');
     expect(skill).toContain('references/high-level-design-skill-routing.md');
     expect(existsSync(HLD_LENSES_PATH)).toBe(true);
     expect(existsSync(HLD_ROUTING_PATH)).toBe(true);
     expect(existsSync(HLD_ROUTING_TEMPLATE_PATH)).toBe(true);
 
-    const lenses = read(HLD_LENSES_PATH);
+    const lenses = readIfExists(HLD_LENSES_PATH);
     expect(lenses).toContain('C4 / arc42 altitude');
     expect(lenses).toContain('Quality attribute scenarios');
     expect(lenses).toContain('Security posture');
@@ -63,19 +64,19 @@ describe('tdk-epic-hld routing contract', () => {
   });
 
   it('treats missing HLD routing as non-blocking', () => {
-    const routing = read(HLD_ROUTING_PATH);
+    const routing = readIfExists(HLD_ROUTING_PATH);
     expect(routing).toContain(
       '{docs.path}/custom-workflow/high-level-design-skill-routing.md',
     );
     expect(routing).toContain('Missing file behavior: continue with built-in lenses');
-    expect(read(HLD_ROUTING_TEMPLATE_PATH)).toContain(
+    expect(readIfExists(HLD_ROUTING_TEMPLATE_PATH)).toContain(
       '{docs.path}/custom-workflow/high-level-design-skill-routing.md',
     );
     expect(skill).toContain('missing HLD routing file is non-blocking');
   });
 
   it('documents consumer HLD skills as advisory and file-read only', () => {
-    const routing = read(HLD_ROUTING_PATH);
+    const routing = readIfExists(HLD_ROUTING_PATH);
     expect(routing).toContain('advisory output only');
     expect(routing).toContain('must not write files');
     expect(routing).toContain('must not create new requirement IDs');

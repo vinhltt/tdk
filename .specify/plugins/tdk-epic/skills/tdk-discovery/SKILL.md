@@ -3,7 +3,7 @@ name: tdk-discovery
 description: "EPIC-ONLY v1 discovery entry point that creates context-only problem, persona, MVP, and discovery manifest artifacts before tdk-epic-prd, or interviews existing discovery artifacts with --interview"
 argument-hint: "<epic-id> [<brief|file>] [--force] [--interview]"
 metadata:
-  version: "6.0.2"
+  version: "1.0.0"
 ---
 
 # tdk-discovery
@@ -39,7 +39,7 @@ Feature-sized work skips discovery and starts at `/tdk-specify`.
 
 Load before writing any discovery file:
 - `references/discovery-output-contract.md`
-- `../_shared/interview-alignment-protocol.md` when `--interview` is set
+- `.specify/_shared/skills/interview-alignment-protocol.md` when `--interview` is set
 
 ## Error Recovery
 
@@ -204,7 +204,7 @@ If `INTERVIEW_DISCOVERY=true`, run the interview after the four draft artifacts
 exist for creation, or after the current artifacts are loaded for
 `DISCOVERY_REPLAY_INTERVIEW=true`, and before validation:
 
-1. Load `../_shared/interview-alignment-protocol.md`.
+1. Load `.specify/_shared/skills/interview-alignment-protocol.md`.
 2. Read `discovery.md`, `discovery/problem.md`, `discovery/personas.md`, and `discovery/mvp-scope.md`.
 3. Build an internal claim map from problem, personas, MVP cutline,
    out-of-scope, risks, and open questions.

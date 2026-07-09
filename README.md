@@ -102,6 +102,11 @@ Use this when the work is broad, vague, or likely to split into multiple child f
 /tdk-task-breakdown epic-001
 ```
 
+For selective harness installs, make sure the parent epic commands are
+included. Include child feature commands too when you want to continue from
+task breakdown into `/tdk-specify`, `/tdk-clarify`, `/tdk-plan`, and
+`/tdk-implement`.
+
 Then choose one generated child seed and promote it into a child spec:
 
 ```text
@@ -213,7 +218,8 @@ See [tdk-setup README](packages/tdk-setup/README.md) for the full setup CLI refe
 
 | Plugin | Purpose |
 |---|---|
-| **tdk-core** | Greenfield/brownfield start, constitution, discovery, epic PRD, HLD, task breakdown, specify, clarify, plan, implement, config, status, and test planning modes |
+| **tdk-core** | Greenfield/brownfield start, constitution, specify, clarify, plan, implement, config, status, and test planning modes |
+| **tdk-epic** | Parent epic discovery, epic PRD, HLD, and task breakdown before child specs |
 | **tdk-utils** | Scout, research, workspace dependency policy, docs-seeker, context engineering, brainstorming, and problem solving |
 | **tdk-memory** | Domain memory init, update, query, changelog, checksum, and memory agent |
 | **tdk-test-api** | API test planning, testcase generation, and Playwright TypeScript code generation |

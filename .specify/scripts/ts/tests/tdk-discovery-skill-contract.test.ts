@@ -4,7 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 
 const SKILL_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-discovery/SKILL.md',
+  '../../../plugins/tdk-epic/skills/tdk-discovery/SKILL.md',
 );
 const SKILL_DIR = dirname(SKILL_PATH);
 const REFERENCE_PATH = join(SKILL_DIR, 'references/discovery-output-contract.md');

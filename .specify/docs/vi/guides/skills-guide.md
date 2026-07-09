@@ -4,8 +4,6 @@
 >
 > **Source baseline**: TDK `547655e v1.94.1`
 >
-> **Terminology**: Trong guide này, các item `/tdk-*` được gọi là "commands". Bên trong chúng là Claude Code plugin skills. Hai từ này cùng chỉ một thứ trong ngữ cảnh TDK.
->
 > **Chạy ở đâu**: Tất cả command `/tdk-*` được gõ trong **Claude Code chat interface** như VSCode extension hoặc Claude CLI prompt, KHÔNG gõ trong terminal hoặc bash shell.
 
 ---
@@ -74,6 +72,12 @@ TDK command suite cung cấp workflow **specification-driven development**. Bạ
 **Minimal feature flow**: `specify` -> `clarify` -> `plan` -> `implement`
 
 **Epic flow**: `constitution` (project-level) -> optional `discovery` -> `epic-prd` -> `epic-hld` -> `task-breakdown` -> child `specify` -> child `clarify` -> child `plan` -> child `implement`
+
+Với selective harness install, đảm bảo các workflow command bạn định dùng đã
+được include: feature commands cho minimal specs, parent epic commands cho
+discovery/PRD/HLD/breakdown, hoặc cả hai khi đi full epic-to-child flow. Nếu
+một command `/tdk-` không có, chạy lại harness installer với workflow commands
+cần dùng.
 
 Với feature-sized work, mặc định bỏ qua discovery, epic PRD, HLD, và task breakdown. Nếu feature nhỏ và rõ, spec hiện tại đi thẳng đến `plan` và `implement`. Với broad epic, `epic-prd.md` cộng với `epic-prd/` biến discovery thành product alignment và slice map, `/tdk-epic-hld` thêm parent design context, và `/tdk-task-breakdown` tạo child spec seeds. Mỗi seed sau đó bắt đầu một child `/tdk-specify` loop.
 

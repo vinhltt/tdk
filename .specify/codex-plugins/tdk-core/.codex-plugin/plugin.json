@@ -1,5 +1,5 @@
 {
-  "description": "Core TDK workflow skills: specify, plan, implement, fix, review, analyze, config, tests",
+  "description": "Core TDK project and child-feature workflows: intake, constitution, architecture/workspace setup, specify, clarify, plan, implement, analyze, checklist, config, status, and tests",
   "hooks": "./hooks/codex-hooks.json",
   "interface": {
     "brandColor": "#1D4ED8",
@@ -8,16 +8,16 @@
     ],
     "category": "Development",
     "defaultPrompt": [
-      "Use Speckit to plan this feature before coding.",
+      "Use TDK to specify and plan this child feature before coding.",
       "Help me review or fix an implementation with the core workflow.",
       "Generate a task-oriented execution plan for this repo."
     ],
     "developerName": "Tihon",
     "displayName": "TDK Core",
-    "longDescription": "The main Speckit plugin for specification, planning, implementation, debugging, review, configuration, and test-oriented development workflows.",
-    "shortDescription": "Core TDK workflow skills for daily engineering tasks."
+    "longDescription": "The main TDK plugin for project intake, constitution, architecture and workspace setup, child feature specification, clarification, planning, implementation, analysis, checklist, configuration, status, and test-oriented development workflows. Parent epic decomposition commands live in tdk-epic.",
+    "shortDescription": "Core TDK project setup and child-feature workflow skills."
   },
   "name": "tdk-core",
   "skills": "./skills/",
-  "version": "7.0.4"
+  "version": "9.0.0"
 }

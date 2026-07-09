@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [2.2.6] - 2026-07-09
+
+### Changed
+- Update tdk-setup-guide command verification and tdk-skill-guide skills listing layout
+
 ## [2.2.5] - 2026-07-02
 
 ### Changed

@@ -2,7 +2,7 @@
 name: tdk-setup-guide
 description: "Interactive setup guide for TDK environment. Checks prerequisites, verifies config, troubleshoots issues. Use when asking 'how to set up', 'setup help', 'verify setup', 'check prerequisites', 'tdk setup', 'installation guide', 'troubleshoot setup'."
 metadata:
-  version: "2.2.5"
+  version: "2.2.6"
 ---
 
 # TDK Setup Guide
@@ -104,9 +104,9 @@ fi
 
 Ask the user for the project root if `<agent-resolved-project-root>` cannot be identified confidently; do not pass the placeholder literally.
 
-### Step 4 — Plugin marketplace
+### Step 4 — Claude command registration
 ```bash
-# Check if claude CLI available and plugins registered
+# Check if Claude CLI can list installed command packages
 claude plugin marketplace list 2>/dev/null
 ```
 
@@ -126,7 +126,7 @@ test -f .mcp.json && echo ".mcp.json: EXISTS" || echo ".mcp.json: MISSING"
 | Python | OK | 3.11.5 |
 | Python venv | OK | .venv/ exists, imports pass |
 | .specify.json | OK | configFound=true, WORKSPACE=example-workspace |
-| Plugin marketplace | OK | tdk-core, tdk-utils registered |
+| TDK command packages | OK | command packages registered |
 | .mcp.json | OK | EXISTS |
 
 ### Actions needed:
@@ -146,7 +146,7 @@ test -f .mcp.json && echo ".mcp.json: EXISTS" || echo ".mcp.json: MISSING"
 | Input | Matches |
 |-------|---------|
 | `python`, `venv` | setup-guide.md |
-| `plugin`, `marketplace` | setup-guide.md |
+| `commands`, `registration` | setup-guide.md |
 | `ctx7`, `context7` | setup-guide.md |
 | `github`, `gh` | setup-guide.md |
 | `obsidian` | setup-guide.md |

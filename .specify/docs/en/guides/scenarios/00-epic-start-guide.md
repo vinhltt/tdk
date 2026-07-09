@@ -4,6 +4,11 @@
 > Reader level: fresher-safe
 > Main path: `/tdk-discovery -> /tdk-epic-prd -> /tdk-epic-hld -> /tdk-task-breakdown -> child /tdk-specify -> /tdk-clarify -> /tdk-plan -> /tdk-implement`
 
+For selective harness installs, make sure both parent epic commands and child
+feature commands are available before following this guide. If a command is
+unavailable, rerun the harness installer with the needed workflow commands
+enabled.
+
 ## Fast Path
 
 Type these in Claude Code chat, not in a terminal:

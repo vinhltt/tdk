@@ -5,8 +5,18 @@ skill for a user's intent and to run the steps in the right order.
 
 Skill names use the default `tdk-` prefix. If this install configured a custom
 prefix, substitute it (e.g. `tdk-specify` -> `<prefix>specify`). Names are skill
-identifiers; activate the matching skill by name. Some harnesses namespace
-skills by plugin, e.g. `tdk-core:tdk-specify`.
+identifiers; activate the matching skill by name.
+
+Route only to workflow commands available in the current session:
+
+- Child feature commands cover specify, clarify, plan, analyze, implement,
+  status, and checklist.
+- Parent epic commands cover discovery, epic PRD, epic HLD, and task breakdown.
+- Project setup commands cover greenfield/brownfield start, constitution,
+  architecture advisor, workspace layout, config apply, dependency policy, and
+  skeleton recipe workflows.
+- If a command in the recommended route is unavailable, say which command is
+  unavailable and point the user to the setup guide.
 
 ## Canonical order
 

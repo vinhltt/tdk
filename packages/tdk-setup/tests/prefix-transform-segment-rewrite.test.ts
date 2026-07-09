@@ -28,7 +28,7 @@ describe('transformTextContent (new settings-based signature)', () => {
   });
 
   test('prefix-equal settings: still converts flat Claude skill reference paths', () => {
-    const text = '.specify/plugins/tdk-core/skills/tdk-task-breakdown/references/task-breakdown-output-contract.md';
+    const text = '.specify/plugins/tdk-epic/skills/tdk-task-breakdown/references/task-breakdown-output-contract.md';
     expect(transformTextContent(text, TDK_TO_TDK)).toBe(
       '.claude/skills/tdk-task-breakdown/references/task-breakdown-output-contract.md',
     );

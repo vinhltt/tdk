@@ -1,0 +1,22 @@
+{
+  "description": "TDK parent epic workflow skills: discovery, epic PRD, HLD, and task breakdown",
+  "interface": {
+    "brandColor": "#7C3AED",
+    "capabilities": [
+      "Skills"
+    ],
+    "category": "Development",
+    "defaultPrompt": [
+      "Explore this broad feature as an epic before child specs.",
+      "Create an epic PRD and high-level design for this initiative.",
+      "Break this epic into child spec seeds."
+    ],
+    "developerName": "Tihon",
+    "displayName": "TDK Epic",
+    "longDescription": "TDK workflow skills for broad epic discovery, epic PRD alignment, parent high-level design, and task breakdown into child spec seeds.",
+    "shortDescription": "Parent epic decomposition workflow skills."
+  },
+  "name": "tdk-epic",
+  "skills": "./skills/",
+  "version": "1.0.0"
+}

@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "TDK project plugin marketplace",
-    "version": "1.100.3"
+    "version": "1.101.0"
   },
   "plugins": [
     {
@@ -43,6 +43,12 @@
       "name": "tdk-scaffold",
       "description": "Architecture-aware scaffolding: recommend automations from project config + docs, then scaffold skill/agent files from approved recommendations",
       "source": "./.specify/plugins/tdk-scaffold",
+      "strict": true
+    },
+    {
+      "name": "tdk-epic",
+      "description": "TDK parent epic workflow skills: discovery, epic PRD, HLD, and task breakdown",
+      "source": "./.specify/plugins/tdk-epic",
       "strict": true
     }
   ]

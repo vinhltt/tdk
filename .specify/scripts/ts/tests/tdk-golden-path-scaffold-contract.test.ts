@@ -197,8 +197,8 @@ describe('TDK golden-path scaffold contracts', () => {
     const codexPlugin = read(CODEX_SCAFFOLD_PLUGIN_PATH);
 
     expect(manifest).toContain('"tdk-golden-path-scaffold"');
-    expect(readme).toContain('/tdk-golden-path-scaffold');
-    expect(readme).toContain('tdk-scaffold/        # Skill/agent, route proposal, and golden-path scaffolding (4 skills)');
+    expect(readme).toContain('**tdk-scaffold**');
+    expect(readme).toContain('guarded golden-path recipes');
     expect(skillsGuide).toContain('/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <name>]');
     expect(skillsGuide).toContain('golden-path-recipe.json');
     expect(workflowMap).toContain('/tdk-golden-path-scaffold');

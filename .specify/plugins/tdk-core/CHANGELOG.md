@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [9.0.0] - 2026-07-09
+
+### Changed
+- Update tdk-specify reference paths to load interview-alignment-protocol.md globally
+
+### Removed
+- Move epic-related skills (tdk-discovery, tdk-epic-hld, tdk-epic-prd, tdk-task-breakdown) and interview-alignment-protocol out to tdk-epic
+
 ## [7.0.4] - 2026-07-08
 
 ### Changed

@@ -84,8 +84,8 @@ describe('TDK sub-workspace automation recommendation contracts', () => {
 
     expect(manifest).toContain('"tdk-sub-workspace-automation-recommend"');
     expect(manifest).not.toContain('"tdk-recommend-automations"');
-    expect(readme).toContain('/tdk-sub-workspace-automation-recommend');
+    expect(readme).toContain('**tdk-scaffold**');
+    expect(readme).toContain('Sub-workspace automation recommendations');
     expect(readme).not.toContain('/tdk-recommend-automations');
-    expect(readme).toContain('tdk-scaffold/        # Skill/agent, route proposal, and golden-path scaffolding (4 skills)');
   });
 });

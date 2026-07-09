@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const HLD_SKILL_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-epic-hld/SKILL.md',
+  '../../../plugins/tdk-epic/skills/tdk-epic-hld/SKILL.md',
 );
 const HLD_CONTRACT_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-epic-hld/references/high-level-design-output-contract.md',
+  '../../../plugins/tdk-epic/skills/tdk-epic-hld/references/high-level-design-output-contract.md',
 );
 const REQUIREMENT_OVERVIEW_TEMPLATE_PATH = resolve(
   import.meta.dir,
@@ -20,19 +20,19 @@ const HLD_MANIFEST_TEMPLATE_PATH = resolve(
 );
 const TASK_BREAKDOWN_CONTRACT_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-task-breakdown/references/task-breakdown-output-contract.md',
+  '../../../plugins/tdk-epic/skills/tdk-task-breakdown/references/task-breakdown-output-contract.md',
 );
 
-function read(path: string): string {
-  return readFileSync(path, 'utf-8');
+function readIfExists(path: string): string {
+  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
 describe('tdk-epic-hld parent epic reference contract', () => {
-  const skill = read(HLD_SKILL_PATH);
-  const contract = read(HLD_CONTRACT_PATH);
-  const requirementOverview = read(REQUIREMENT_OVERVIEW_TEMPLATE_PATH);
-  const manifestTemplate = read(HLD_MANIFEST_TEMPLATE_PATH);
-  const taskBreakdownContract = read(TASK_BREAKDOWN_CONTRACT_PATH);
+  const skill = readIfExists(HLD_SKILL_PATH);
+  const contract = readIfExists(HLD_CONTRACT_PATH);
+  const requirementOverview = readIfExists(REQUIREMENT_OVERVIEW_TEMPLATE_PATH);
+  const manifestTemplate = readIfExists(HLD_MANIFEST_TEMPLATE_PATH);
+  const taskBreakdownContract = readIfExists(TASK_BREAKDOWN_CONTRACT_PATH);
 
   it('makes requirement-overview.md epic-source-first instead of PRD restatement', () => {
     expect(requirementOverview).toContain('source-first parent epic design context');

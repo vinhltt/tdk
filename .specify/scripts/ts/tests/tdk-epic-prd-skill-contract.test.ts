@@ -4,7 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 
 const SKILL_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-epic-prd/SKILL.md',
+  '../../../plugins/tdk-epic/skills/tdk-epic-prd/SKILL.md',
 );
 const SKILL_DIR = dirname(SKILL_PATH);
 const OUTPUT_CONTRACT_PATH = join(SKILL_DIR, 'references/epic-prd-output-contract.md');
@@ -99,7 +99,8 @@ describe('tdk-epic-prd skill contract', () => {
   });
 
   it('keeps interview replay constrained to existing PRD artifacts', () => {
-    expect(skill).toContain('../_shared/interview-alignment-protocol.md');
+    expect(skill).toContain('.specify/_shared/skills/interview-alignment-protocol.md');
+    expect(skill).not.toContain('../_shared/interview-alignment-protocol.md');
     expect(skill).toContain('when `--interview` is set');
     expect(skill).toContain('PRD_REPLAY_INTERVIEW');
     expect(skill).toContain('No `interview.md`');

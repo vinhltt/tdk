@@ -5,13 +5,41 @@ import { makeConsumer, sha256, writeBasicPlugin, writeMultiPluginManifest, write
 
 const cliPath = path.resolve('src/index.ts');
 
+function addUtilsPlugin(consumer: ReturnType<typeof makeConsumer>): void {
+  const skill = '# tdk-validate-task-id\n';
+  writePluginFile(consumer, 'skills/tdk-validate-task-id/SKILL.md', skill, 'tdk-utils');
+  addSourcePluginToManifest(consumer, 'tdk-utils', { 'skills/tdk-validate-task-id/SKILL.md': sha256(skill) });
+}
+
+function addEpicPlugin(consumer: ReturnType<typeof makeConsumer>): void {
+  const skill = '# tdk-discovery\n';
+  writePluginFile(consumer, 'skills/tdk-discovery/SKILL.md', skill, 'tdk-epic');
+  addSourcePluginToManifest(consumer, 'tdk-epic', { 'skills/tdk-discovery/SKILL.md': sha256(skill) });
+}
+
+function addSourcePluginToManifest(
+  consumer: ReturnType<typeof makeConsumer>,
+  plugin: string,
+  files: Record<string, string>,
+): void {
+  const manifestPath = path.join(consumer.root, '.specify', 'plugins', 'manifest.json');
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+  manifest.plugins[plugin] = {
+    version: '1.0.0',
+    components: { skills: {}, agents: {}, hooks: {}, commands: {} },
+    files,
+  };
+  fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, 'utf-8');
+}
+
 describe('harness install CLI', () => {
   test('dry-run lists planned writes without mutation', () => {
     const consumer = makeConsumer();
     writeBasicPlugin(consumer);
+    addUtilsPlugin(consumer);
 
     const result = Bun.spawnSync({
-      cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--plugins', 'tdk-core', '--dry-run'],
+      cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--plugins', 'tdk-core,tdk-utils', '--dry-run'],
       cwd: consumer.scriptsDir,
       stdout: 'pipe',
       stderr: 'pipe',
@@ -25,9 +53,10 @@ describe('harness install CLI', () => {
   test('dry-run accepts explicit consumer root when invoked outside the consumer tree', () => {
     const consumer = makeConsumer();
     writeBasicPlugin(consumer);
+    addUtilsPlugin(consumer);
 
     const result = Bun.spawnSync({
-      cmd: ['bun', cliPath, 'install', consumer.root, '--harness', 'claude', '--plugins', 'tdk-core', '--dry-run'],
+      cmd: ['bun', cliPath, 'install', consumer.root, '--harness', 'claude', '--plugins', 'tdk-core,tdk-utils', '--dry-run'],
       cwd: path.resolve('.'),
       stdout: 'pipe',
       stderr: 'pipe',
@@ -53,10 +82,102 @@ describe('harness install CLI', () => {
     expect(result.stderr.toString()).toContain('No plugin selector provided');
   });
 
+  test('selected tdk-core requires tdk-utils companion plugin', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+
+    const result = Bun.spawnSync({
+      cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--plugins', 'tdk-core', '--dry-run'],
+      cwd: consumer.scriptsDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr.toString()).toContain('tdk-utils');
+    expect(result.stderr.toString()).toContain('--plugins tdk-core,tdk-utils');
+  });
+
+  test('selected tdk-epic requires tdk-utils companion plugin', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+
+    const result = Bun.spawnSync({
+      cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--plugins', 'tdk-epic', '--dry-run'],
+      cwd: consumer.scriptsDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr.toString()).toContain('tdk-utils');
+    expect(result.stderr.toString()).toContain('--plugins tdk-epic,tdk-utils');
+  });
+
+  test('selected tdk-epic with tdk-utils succeeds and installs epic plus helpers', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    addUtilsPlugin(consumer);
+    addEpicPlugin(consumer);
+
+    const result = Bun.spawnSync({
+      cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--plugins', 'tdk-epic,tdk-utils', '--dry-run'],
+      cwd: consumer.scriptsDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+
+    const stdout = result.stdout.toString();
+    expect(result.exitCode).toBe(0);
+    expect(stdout).toContain('.claude/skills/tdk-discovery/SKILL.md');
+    expect(stdout).toContain('.claude/skills/tdk-validate-task-id/SKILL.md');
+    expect(stdout).not.toContain('.claude/skills/demo/SKILL.md');
+  });
+
+  test('selected tdk-core,tdk-epic,tdk-utils succeeds and installs both workflow lanes', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    addUtilsPlugin(consumer);
+    addEpicPlugin(consumer);
+
+    const result = Bun.spawnSync({
+      cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--plugins', 'tdk-core,tdk-epic,tdk-utils', '--dry-run'],
+      cwd: consumer.scriptsDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+
+    const stdout = result.stdout.toString();
+    expect(result.exitCode).toBe(0);
+    expect(stdout).toContain('.claude/skills/demo/SKILL.md');
+    expect(stdout).toContain('.claude/skills/tdk-discovery/SKILL.md');
+    expect(stdout).toContain('.claude/skills/tdk-validate-task-id/SKILL.md');
+  });
+
+  test('--all-plugins succeeds when core epic and utils are available', () => {
+    const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    addUtilsPlugin(consumer);
+    addEpicPlugin(consumer);
+
+    const result = Bun.spawnSync({
+      cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--all-plugins', '--dry-run'],
+      cwd: consumer.scriptsDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+
+    const stdout = result.stdout.toString();
+    expect(result.exitCode).toBe(0);
+    expect(stdout).toContain('.claude/skills/demo/SKILL.md');
+    expect(stdout).toContain('.claude/skills/tdk-discovery/SKILL.md');
+    expect(stdout).toContain('.claude/skills/tdk-validate-task-id/SKILL.md');
+  });
+
   test('codex dry-run lists dual-target planned writes (new sibling layout)', () => {
     const consumer = makeConsumer('tdk-cli-codex-');
     const root = consumer.root;
-    const plugin = 'tdk-core';
+    const plugin = 'tdk-memory';
     const skill = '# demo\n';
     const agentMd = '---\nname: tdk-demo\ndescription: Demo\ntools: Read\n---\n\nDemo agent.\n';
 
@@ -65,10 +186,10 @@ describe('harness install CLI', () => {
     fs.mkdirSync(path.join(codexBase, 'skills', 'tdk-demo'), { recursive: true });
     fs.writeFileSync(path.join(codexBase, 'skills', 'tdk-demo', 'SKILL.md'), skill, 'utf-8');
     fs.mkdirSync(path.join(codexBase, '.codex-plugin'), { recursive: true });
-    fs.writeFileSync(path.join(codexBase, '.codex-plugin', 'plugin.json'), '{"name":"tdk-core"}\n', 'utf-8');
+    fs.writeFileSync(path.join(codexBase, '.codex-plugin', 'plugin.json'), '{"name":"tdk-memory"}\n', 'utf-8');
 
     // Write source agent in plugins source dir (two-root model)
-    writePluginFile(consumer, 'agents/tdk-demo.md', agentMd);
+    writePluginFile(consumer, 'agents/tdk-demo.md', agentMd, plugin);
 
     // Source plugins manifest
     writeMultiPluginManifest(consumer, {
@@ -89,14 +210,14 @@ describe('harness install CLI', () => {
           components: { skills: {}, agents: {}, hooks: {}, commands: {} },
           files: {
             'skills/tdk-demo/SKILL.md': sha256(skill),
-            '.codex-plugin/plugin.json': sha256('{"name":"tdk-core"}\n'),
+            '.codex-plugin/plugin.json': sha256('{"name":"tdk-memory"}\n'),
           },
         },
       },
     }, null, 2), 'utf-8');
 
     const result = Bun.spawnSync({
-      cmd: ['bun', cliPath, 'install', '--harness', 'codex', '--plugins', 'tdk-core', '--dry-run'],
+      cmd: ['bun', cliPath, 'install', '--harness', 'codex', '--plugins', plugin, '--dry-run'],
       cwd: consumer.scriptsDir,
       stdout: 'pipe',
       stderr: 'pipe',
@@ -127,12 +248,13 @@ describe('harness install CLI', () => {
   test('dry-run reports overwrite prompts without blocker exit', () => {
     const consumer = makeConsumer();
     writeBasicPlugin(consumer);
+    addUtilsPlugin(consumer);
     const target = path.join(consumer.root, '.claude', 'skills', 'demo', 'SKILL.md');
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, 'user content', 'utf-8');
 
     const result = Bun.spawnSync({
-      cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--plugins', 'tdk-core', '--dry-run'],
+      cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--plugins', 'tdk-core,tdk-utils', '--dry-run'],
       cwd: consumer.scriptsDir,
       stdout: 'pipe',
       stderr: 'pipe',

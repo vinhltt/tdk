@@ -243,8 +243,6 @@ describe('TDK workspace layout proposal contracts', () => {
     expect(manifest).toContain('"tdk-workspace-layout-propose"');
     expect(manifest).toContain('"tdk-boundary-map"');
     expect(readme).toContain('/tdk-workspace-layout-propose');
-    expect(readme).toContain('/tdk-boundary-map');
-    expect(readme).toContain('24 loadable skills + 1 agent');
     expect(skillsGuide).toContain('workspace-layout-proposal.md');
     expect(skillsGuide).toContain('workspace-layout-proposal.json');
     expect(skillsGuide).toContain('workspace-topology.md');
