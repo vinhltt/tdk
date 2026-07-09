@@ -1,216 +1,241 @@
 # TDK - TiHon Development Kit
 
-**TDK (TiHon Development Kit)** is a specification-driven coding workflow toolkit for Claude Code with generated Codex harness support. It generates specs, child spec seed breakdowns, plans, and code from natural language — shipped as a set of marketplace plugins + a TypeScript CLI.
+**TDK (TiHon Development Kit)** is a specification-driven development toolkit for AI coding agents. It helps a consumer project move from intent to specs, plans, implementation, review, and durable project memory.
 
-Core philosophy: **SDD (Specification-Driven Development)** — every feature starts from a formal spec, broad epics can produce child spec seeds, each child flows through structured plans, and implementation is verified against the spec before shipping.
+TDK currently targets **Claude Code** and supports generated **Codex** harness artifacts. Cursor, Copilot, and Antigravity support are coming soon.
 
-## Workflow Overview
-
-TDK works as a closed development loop:
-
-- **Build**: turn intent into specs, plans, implementation phases, tests, and status.
-- **Learn**: collect evidence after implementation, propose reviewable deltas, and apply only approved learnings.
-- **Compound**: approved learnings improve the next TDK session instead of staying as one-off feedback.
+Core idea: write the work down first. Broad work becomes discovery, epic PRD, high-level design, and child spec seeds. Small clear work starts at a feature spec. Implementation follows the accepted plan and feeds review/memory afterward.
 
 ![TDK lifecycle workflow](assets/lifecycle-share-graph.svg)
 
-## What It Does
+## Fast Path
 
-TDK structures the full development loop:
+Use this when you are installing TDK from a source checkout into a consumer project.
 
-1. **Start** — classify greenfield or brownfield repo shape and recommend the safe workflow path (`/tdk-greenfield-start`, `/tdk-brownfield-start`)
-2. **Advise** — optionally produce project-level architecture options, decisions, or recovery reports without layout/config writes (`/tdk-architecture-advisor`)
-3. **Propose layout** — optionally produce workspace layout proposal markdown and JSON without runtime config writes (`/tdk-workspace-layout-propose`; `/tdk-boundary-map` is a compatibility route)
-4. **Guide dependencies** — optionally turn approved layout into workspace dependency policy and non-applied snippets (`/tdk-workspace-dependency-policy`; `/tdk-module-boundary-policy` is a compatibility route)
-5. **Scaffold safely** — optionally turn approved layout into a dry-run golden-path skeleton recipe (`/tdk-golden-path-scaffold`)
-6. **Discover** — optionally create epic-only context before spec (`/tdk-discovery`)
-7. **Align epic PRD** — optionally turn discovery into product alignment, blocking questions, and child spec slice seeds (`/tdk-epic-prd`)
-8. **Design epic** — optionally turn epic PRD into parent HLD context before child seed breakdown (`/tdk-epic-hld`)
-9. **Break down epic** — optionally turn epic PRD + HLD into child spec seed Markdown (`/tdk-task-breakdown`)
-10. **Specify** — generate child or feature specs from natural language or task-breakdown seed text (`/tdk-specify`)
-11. **Clarify** — resolve unresolved questions before planning (`/tdk-clarify`)
-12. **Plan** — break specs into phased implementation plans (`/tdk-plan`)
-13. **Implement** — execute plans with guided phase tracking (`/tdk-implement`)
-14. **Verify** — fold tests-first or unit-test backfill planning into phases and route implementation through consumer test skills (`/tdk-plan --tdd`, `/tdk-plan --ut-backfill`)
-15. **Track** — status dashboards, checklists, progress sync (`/tdk-status`)
-
-Additional workflows: constitution-owned `product-context.md`, workspace layout proposal and dry-run workspace config previews, config management, sub-workspace docs generation, scout (codebase analysis), memory management, API test generation.
-
-Authority boundaries: discovery is context-only and does not mint requirement IDs; epic PRD is product alignment and slice-map context only; epic HLD guides parent decomposition and does not mint requirement IDs; task breakdown creates child spec seeds; child `spec.md` owns `UR-*`/`FR-*`/`SC-*`.
-
-## Quick Start
-
-### Prerequisites
-
-- [Git](https://git-scm.com)
-- [Bun](https://bun.sh) runtime
-- [Claude Code](https://claude.ai/code) CLI
-
-### Install into a Consumer Project
+### 1. Clone TDK Source
 
 ```bash
-# From the consumer project root after TDK .specify/ is present:
+git clone <tdk-source-url> tdk
+cd tdk
+CONSUMER_ROOT=/path/to/consumer-project
+```
+
+### 2. Distribute the Payload
+
+```bash
+bash distribute.sh "$CONSUMER_ROOT" --dry-run
+bash distribute.sh "$CONSUMER_ROOT" --yes
+```
+
+This copies the configured `.specify/` payload into the consumer project. The default payload includes the workflow plugins, templates, scripts, schemas, setup script, and release manifest.
+
+### 3. Bootstrap the Consumer Project
+
+Run from the consumer project root after `.specify/` exists:
+
+```bash
+cd "$CONSUMER_ROOT"
 bash .specify/setup.sh
 ```
 
-This bootstraps prerequisites, installs TypeScript dependencies, runs setup checks, and registers TDK plugin metadata from the consumer project's `.specify/` directory.
+This checks prerequisites, installs TypeScript dependencies, verifies setup, and registers available plugin metadata from the consumer project's `.specify/` directory.
 
-### Distribute Configured Payload to a Consumer Project
+### 4. Install a Harness
 
-Maintainers sync the TDK payload paths from this source checkout:
+Run harness install from the TDK source checkout:
 
 ```bash
-bash distribute.sh /path/to/consumer-project --dry-run
-bash distribute.sh /path/to/consumer-project --yes
+cd /path/to/tdk/packages/tdk-setup
 ```
 
-Distribution reads root-relative `ship` and `doNotShip` rules from `distribute.json`. The current default payload ships `.specify/_shared/`, `.specify/plugins/`, `.specify/claude-rules/`, `.specify/scripts/`, `.specify/templates/`, `.specify/setup.sh`, `.specify/schemas/`, `.specify/.specify.json.example`, and `.specify/release-manifest.json`. It omits `.specify/docs/**`, `.specify/codex-plugins/**`, and `.specify/CHANGELOG.md` by default, leaving existing consumer docs and changelog untouched. Edit `distribute.json` to change shipped paths.
+For Claude Code:
 
-`distribute.sh` requires the source `.specify/release-manifest.json`. Regenerate it before shipping when payload files or `distribute.json` change:
+```bash
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --yes
+```
+
+For Codex:
+
+```bash
+# Maintainers: generate Codex packages in the TDK source checkout when needed.
+bun src/index.ts convert --dry-run
+bun src/index.ts convert
+
+# After generated packages exist in the consumer project's .specify/codex-plugins/:
+bun src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --yes
+```
+
+Claude and Codex installs are separate runs. A combined Claude+Codex install is unsupported.
+
+Important Codex caveat: `install --harness codex` reads generated packages from the consumer project's `.specify/codex-plugins/` directory. The default `distribute.json` payload currently does not copy `.specify/codex-plugins/**`, so make those generated packages available before running the Codex install.
+
+## How You Use TDK
+
+Type `/tdk-*` workflow commands in the agent chat, not in a terminal. Use terminal commands only for shell snippets such as `bash`, `bun`, `git`, or test runners.
+
+### Greenfield to Sub-Workspace Setup
+
+Use this when starting a new project or shaping a repo into sub-workspaces:
+
+```text
+/tdk-greenfield-start "Project brief..." --full
+/tdk-constitution --init .specify/configurations/inception/project-inception.md
+/tdk-architecture-advisor .specify/configurations/inception/project-inception.md
+/tdk-workspace-layout-propose .specify/configurations/architecture/architecture-decision.md
+/tdk-workflow-config-apply
+/tdk-workspace-dependency-policy .specify/configurations/workspace-layout/workspace-layout-proposal.json
+/tdk-sub-workspace-docs --all
+```
+
+The config apply step previews changes first. Approve it only after the shown diff matches the intended workspace layout.
+
+### Start a Large Epic
+
+Use this when the work is broad, vague, or likely to split into multiple child features:
+
+```text
+/tdk-discovery epic-001 "Broad epic brief"
+/tdk-epic-prd epic-001 --interview
+/tdk-epic-hld epic-001
+/tdk-task-breakdown epic-001
+```
+
+Then choose one generated child seed and promote it into a child spec:
+
+```text
+/tdk-specify feat-001 "Seed from tasks-breakdown/task-001-slice.md"
+/tdk-clarify feat-001
+/tdk-plan feat-001
+/tdk-implement feat-001
+```
+
+### Start a Small Spec
+
+Use this when the feature or fix is already clear enough to skip the parent epic flow:
+
+```text
+/tdk-specify feat-001 "Small feature or fix description"
+/tdk-clarify feat-001
+/tdk-plan feat-001
+/tdk-implement feat-001
+```
+
+Run `/tdk-clarify` until unresolved questions are gone or explicitly deferred. Treat `spec.md` as the requirement authority.
+
+### Review, Status, and Tests
+
+Use status and review commands after planning or implementation:
+
+```text
+/tdk-status feat-001
+/tdk-plan feat-001 --validate
+/tdk-plan feat-001 --red-team
+/tdk-plan feat-001 --tdd
+/tdk-plan feat-001 --ut-backfill --sub-workspace backend
+```
+
+`--validate` interviews the plan for missing assumptions. `--red-team` reviews the plan adversarially. `--tdd` folds tests-first phases into the implementation plan. `--ut-backfill` plans unit-test coverage for existing code and routes test implementation through the configured consumer test skill.
+
+### Update Memory and Learning
+
+Use memory for accepted durable project knowledge. Use retro for post-work learning proposals:
+
+```text
+/tdk-memory-update "Accepted business rule, architecture decision, or domain fact"
+/tdk-retro-collect
+/tdk-retro-propose
+/tdk-retro-apply
+```
+
+Retrospectives propose changes. Memory updates store accepted domain knowledge.
+
+## Maintainer Setup Notes
+
+`distribute.sh` is a source-checkout maintainer tool. It reads root-relative `ship` and `doNotShip` rules from `distribute.json`.
+
+Current default shipped payload:
+
+- `.specify/_shared/`
+- `.specify/plugins/`
+- `.specify/claude-rules/`
+- `.specify/scripts/`
+- `.specify/templates/`
+- `.specify/setup.sh`
+- `.specify/schemas/`
+- `.specify/.specify.json.example`
+- `.specify/release-manifest.json`
+
+Current default omitted payload:
+
+- `.specify/docs/**`
+- `.specify/codex-plugins/**`
+- `.specify/CHANGELOG.md`
+
+Regenerate the source release manifest before shipping when payload files or `distribute.json` change:
 
 ```bash
 bun .claude/skills/tdk-bump/scripts/generate-release-manifest.ts --project-root . --write
 ```
 
-When the target already has a release manifest, the default path trusts source and target manifests to classify new, updated, deleted, and unchanged files without hashing target bytes. `--prefix` bypasses that fast path because rendered payload bytes differ from source hashes. Use `--force` when you want to overwrite target files through the full classification path.
-
 For branded consumer payload text, pass a prefix:
 
 ```bash
-bash distribute.sh /path/to/consumer-project --prefix sample --dry-run
-bash distribute.sh /path/to/consumer-project --prefix sample --yes
+bash distribute.sh "$CONSUMER_ROOT" --prefix sample --dry-run
+bash distribute.sh "$CONSUMER_ROOT" --prefix sample --yes
 ```
 
-`--prefix sample` rewrites safe distributed payload text such as `.specify/setup.sh`, templates, and non-test `.specify/scripts/ts/**` text files from `tdk-`/`tdk`/`TDK` to `sample-`/`sample`/`SAMPLE`. It leaves `.specify/scripts/ts/tests/**`, manifest-managed `.specify/plugins/**`, and `.specify/codex-plugins/**` source-identical when those paths are shipped. Harness artifacts still require an explicit setup CLI install with the same prefix.
-
-### Setup CLI — Harness Installation
-
-The setup CLI is a standalone package for managing harness install, convert, and convert-flat commands. From a TDK source checkout, run it from `packages/tdk-setup/` and pass the consumer project root explicitly:
+Use the same prefix for harness install:
 
 ```bash
 cd packages/tdk-setup
-CONSUMER_ROOT=/path/to/consumer-project
-
-# Install one plugin
-bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --dry-run
-bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --yes
-
-# Install multiple plugins
-bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core,tdk-memory --dry-run
-bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core,tdk-memory --yes
-
-# Install every plugin listed in .specify/plugins/manifest.json
-bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --dry-run
-bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --yes
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --prefix sample --yes
-
-# Install preconverted Codex artifacts
-bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --dry-run
-bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --yes
-bun src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --dry-run
-
-# Select plugins interactively
-bun src/index.ts install "$CONSUMER_ROOT" --harness claude
-
-# Maintainers: regenerate generated Codex packages under .specify/codex-plugins/
-bun src/index.ts convert --dry-run
-bun src/index.ts convert
-bun src/index.ts convert --check
-
-# Migrate an existing flat .claude/ tree to Codex artifacts
-bun src/index.ts convert-flat "$CONSUMER_ROOT" --dry-run
-bun src/index.ts convert-flat "$CONSUMER_ROOT" --yes
 ```
 
-The `packages/tdk-setup/` package is a separate dev tool (not shipped to consumers). The workflow scripts (config, scout, ut, routing, sub-workspace) are shipped through `.specify/scripts/`.
+`--prefix sample` rewrites safe distributed payload text from `tdk-`/`tdk`/`TDK` to `sample-`/`sample`/`SAMPLE`. It keeps manifest-managed plugin paths and generated package paths source-identical when those paths are shipped.
 
-`convert` is source-tree/maintainer-only. It emits generated Codex packages to `.specify/codex-plugins/<plugin>/` following the official OpenAI layout (only `.codex-plugin/plugin.json` inside `.codex-plugin/`; `skills/`, `hooks/`, `lib/` at the package root) from plugin source trees; `--check` re-emits in memory and fails if the committed packages drift from source.
+See [tdk-setup README](packages/tdk-setup/README.md) for the full setup CLI reference, including plugin selection, Codex conversion, and `convert-flat`.
 
-`install --harness codex` reads generated packages from the consumer project's `.specify/codex-plugins/` directory and verifies them against `.specify/codex-plugins/manifest.json`, writes skills to `.agents/skills/` and hooks/lib to `.codex/`, generates `.codex/agents/*.toml` and `.codex/config.toml` at install time from plugin source agents, merges `.codex/hooks.json`, and writes Codex ownership state to `.specify/state/harness-install/codex.json`. Run Codex harness install only after those generated packages exist in the consumer project; the current default `distribute.json` payload does not copy them.
+## Core Workflows
 
-Underscore-prefixed shared skill directories such as `_shared` are copied as reference assets, but their `SKILL.md` entrypoint is not installed as a loadable Codex skill.
-
-`convert-flat` leaves the source `.claude/` tree untouched, reports unknown entries as skipped, and writes Codex ownership state to `.specify/state/harness-install/codex.json`. Use `--force` to overwrite conflicts on unowned or user-edited `.codex/` targets.
-
-Omit `--plugins` and `--all-plugins` to select plugins interactively with Space and Enter.
-
-Existing unmanaged `.claude/` files require explicit interactive overwrite approval; `--yes` does not approve those overwrites.
-
-Claude hook runtime entries are merged into `.claude/settings.json`. Hook scripts are installed under plugin-scoped paths like `.claude/hooks/tdk-core/`; plugin `hooks/hooks.json` files stay source declarations and are not installed as `.claude/hooks/hooks.json`.
-
-Claude and Codex harness installs are separate runs. A combined Claude+Codex install is unsupported.
-
-See [tdk-setup README](packages/tdk-setup/README.md) for the full setup CLI reference.
-
-### CLI Usage (Development)
-
-```bash
-cd .specify/scripts/ts
-
-# Run integrated CLI
-bun src/index.ts --help
-
-# Run individual commands
-bun src/commands/detect-config.ts
-bun src/commands/manifest/compute.ts --root ../..
-```
-
-## Architecture
-
-```
-.specify/
-├── plugins/              # Marketplace plugins (installed by setup.sh)
-│   ├── tdk-core/            # Core workflow (24 loadable skills + 1 agent)
-│   ├── tdk-utils/           # Utilities: scout, research, dependency policy, problem solving (16 skills + 5 agents)
-│   ├── tdk-memory/          # Domain memory management (5 skills + 1 agent)
-│   ├── tdk-test-api/        # API test generation (3 skills)
-│   ├── tdk-retro/           # Retrospective learning loop (4 skills)
-│   └── tdk-scaffold/        # Skill/agent, route proposal, and golden-path scaffolding (4 skills)
-├── codex-plugins/        # Generated Codex packages (6 packages; required by Codex harness install)
-├── templates/            # 60 templates (spec, plan, task, discovery, epic PRD, HLD, test, memory, output, design, docs)
-├── docs/                 # User guides (scenarios, setup, concepts, command guide)
-├── configurations/       # Hook configs, sub-workspace configs
-└── scripts/
-    ├── ts/               # TypeScript CLI (@tdk/tdk) — primary
-    │   ├── src/
-    │   │   ├── index.ts         # Unified CLI entry
-    │   │   ├── commands/        # Integrated command groups + standalone scripts
-    │   │   ├── lib/             # Library modules (parsers, generators)
-    │   │   └── utils/           # Zod schemas, shared utilities
-    │   └── tests/               # Bun test suite (85 .test.ts files)
-    └── bash/             # Legacy shell scripts (maintenance-only)
-```
-
-The source checkout also contains `packages/tdk-setup/` for harness install, Codex package conversion, and flat `.claude/` migration. That package has its own Bun test suite and is not part of the consumer `.specify/` payload.
+| Workflow | Start here |
+|---|---|
+| Install or troubleshoot setup | [Setup Guide](.specify/docs/en/guides/setup/setup-guide.md) |
+| New greenfield project and sub-workspaces | [Greenfield Full Start](.specify/docs/en/guides/scenarios/10-greenfield-full-start-architecture-topology.md) |
+| Broad epic to child specs | [Epic Start Guide](.specify/docs/en/guides/scenarios/00-epic-start-guide.md) |
+| Small child feature implementation | [Child Feature Implementation](.specify/docs/en/guides/scenarios/01-child-feature-implementation.md) |
+| Command and artifact relationships | [Workflow Map](.specify/docs/en/guides/workflow-map.md) |
+| Command catalog and tips | [TDK Skills Guide](.specify/docs/en/guides/skills-guide.md) |
+| Harness install and Codex conversion | [tdk-setup README](packages/tdk-setup/README.md) |
 
 ## Plugins
 
-| Plugin | Skills | Purpose |
-|--------|--------|---------|
-| **tdk-core** | 24 loadable skills + 1 agent | Greenfield/brownfield start, architecture advisor, workspace layout proposal, boundary-map compatibility, workflow config apply, constitution, discovery, epic PRD, specify, clarify, HLD, task breakdown, plan, implement, config, `/tdk-sub-workspace-docs`, and `/tdk-plan` test modes |
-| **tdk-utils** | 16 skills + 5 agents | Scout, research, workspace dependency policy, module-boundary compatibility, brainstorming, docs-seeker, context-engineering, problem-solving |
-| **tdk-memory** | 5 skills + 1 agent | Domain memory: init, update, checksum, changelog, query, and tdk-memory-agent |
-| **tdk-test-api** | 3 | Test plan, testcase generation, Playwright code gen |
-| **tdk-retro** | 4 | Retrospective feedback collection, learning proposal, and approved-delta application |
-| **tdk-scaffold** | 4 | `/tdk-sub-workspace-automation-recommend`, skill/agent scaffolding from approved automation recommendations, reviewable plan-skill-routing proposal management, and guarded golden-path skeleton recipes |
+| Plugin | Purpose |
+|---|---|
+| **tdk-core** | Greenfield/brownfield start, constitution, discovery, epic PRD, HLD, task breakdown, specify, clarify, plan, implement, config, status, and test planning modes |
+| **tdk-utils** | Scout, research, workspace dependency policy, docs-seeker, context engineering, brainstorming, and problem solving |
+| **tdk-memory** | Domain memory init, update, query, changelog, checksum, and memory agent |
+| **tdk-test-api** | API test planning, testcase generation, and Playwright TypeScript code generation |
+| **tdk-retro** | Retrospective feedback collection, learning proposal, and approved learning application |
+| **tdk-scaffold** | Sub-workspace automation recommendations, skill/agent scaffolding, plan-skill-routing, and guarded golden-path recipes |
 
 ## Tech Stack
 
 - **Runtime:** Bun
-- **Language:** TypeScript (strict mode, `noUncheckedIndexedAccess`)
+- **Language:** TypeScript with strict mode and `noUncheckedIndexedAccess`
 - **CLI:** Commander.js
-- **Validation:** Zod schemas for config/data, Commander for CLI args
-- **Testing:** Bun test runner (TDD-first)
+- **Validation:** Zod schemas and Commander argument parsing
+- **Testing:** Bun test runner
 - **Config format:** `.specify.json`
+- **Setup package:** `packages/tdk-setup/`
 
 ## Documentation
 
-- [TDK Docs Index](.specify/docs/README.md) — language index for English and Vietnamese docs
-- [TDK Guides](.specify/docs/en/guides/index.md) — start here for setup, epic flow, child feature implementation, scenarios, concepts, and command lookup
-- [Epic Start Guide](.specify/docs/en/guides/scenarios/00-epic-start-guide.md) — start project/epic work, break it into child specs, then implement child features
-- [Child Feature Implementation](.specify/docs/en/guides/scenarios/01-child-feature-implementation.md) — use after task breakdown or for a small already-clear feature
-- [TDK Skills Guide](.specify/docs/en/guides/skills-guide.md) — skill directory, cheat sheet, and usage reference
-- [tdk-setup README](packages/tdk-setup/README.md) — harness setup CLI reference
-- [Scenario Catalog](.specify/docs/en/guides/scenarios/scenario-catalog.md) — workflow scenario index
-- [Setup Guide](.specify/docs/en/guides/setup/setup-guide.md) — installation and configuration
-- [Workflow Map](.specify/docs/en/guides/workflow-map.md) — command input/output relationships
+- [TDK Docs Index](.specify/docs/README.md)
+- [TDK Guides](.specify/docs/en/guides/index.md)
+- [Scenario Catalog](.specify/docs/en/guides/scenarios/scenario-catalog.md)
+- [Setup Guide](.specify/docs/en/guides/setup/setup-guide.md)
+- [Workflow Map](.specify/docs/en/guides/workflow-map.md)
+- [TDK Skills Guide](.specify/docs/en/guides/skills-guide.md)
+- [tdk-setup README](packages/tdk-setup/README.md)
