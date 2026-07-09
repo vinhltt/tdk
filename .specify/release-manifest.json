@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-07-09T13:57:17.521Z",
+  "generatedAt": "2026-07-09T14:51:01.036Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -12,13 +12,13 @@
       ".specify/templates/",
       ".specify/setup.sh",
       ".specify/schemas/",
+      ".specify/docs/",
       ".specify/.specify.json.example",
       ".specify/release-manifest.json"
     ],
     "doNotShip": [
       ".specify/configurations/",
       ".specify/memory/",
-      ".specify/docs/",
       ".specify/CHANGELOG.md",
       ".specify/scripts/ts/node_modules/",
       ".specify/__pycache__/",
@@ -49,8 +49,158 @@
       "size": 10258,
       "mode": "0664"
     },
+    ".specify/docs/README.md": {
+      "sha256": "a9db569fef6acae8d522cb5c75d4d574905d5ed0daff8bfca76466991d4a1b55",
+      "size": 1234,
+      "mode": "0775"
+    },
+    ".specify/docs/assets/epic-discovery-to-task-breakdown.excalidraw": {
+      "sha256": "4ee2d89126558bf124024059f26b451cc2ec12acca8f69bbec4bdca0f85edf56",
+      "size": 77858,
+      "mode": "0644"
+    },
+    ".specify/docs/assets/epic-discovery-to-task-breakdown.png": {
+      "sha256": "7db3c8a267153ea6b58777ed97632d16134f76649c602390604709256894b774",
+      "size": 409146,
+      "mode": "0644"
+    },
+    ".specify/docs/assets/epic-discovery-to-task-breakdown.svg": {
+      "sha256": "5ec26955cfd0f2722cf2dec6fa964d97ed6f4d3bc0a2d6d38994d6bd3274873b",
+      "size": 18112,
+      "mode": "0644"
+    },
+    ".specify/docs/assets/lifecycle-share-graph-v4.excalidraw": {
+      "sha256": "dd69d1d34ac386ad3bd8edbc2e5622f99023a0338b8b40bc9ae1f080822573b8",
+      "size": 118829,
+      "mode": "0644"
+    },
+    ".specify/docs/assets/lifecycle-share-graph.png": {
+      "sha256": "c3154410f7ec2f6b908a29b98fed61b8672138bd953f2a0cef3c4d62f73bae4d",
+      "size": 1921511,
+      "mode": "0644"
+    },
+    ".specify/docs/en/guides/concepts/glossary.md": {
+      "sha256": "a85f69c04ee5071d397ed4502c183247c6946b04c9fbc6f6b586295b8ba2ccf8",
+      "size": 1922,
+      "mode": "0644"
+    },
+    ".specify/docs/en/guides/concepts/promote-convention.md": {
+      "sha256": "19b505ba32f91046537682cadbcdb0e9a9828e32ca68d5d5f14cbb14f7b911a7",
+      "size": 5372,
+      "mode": "0644"
+    },
+    ".specify/docs/en/guides/index.md": {
+      "sha256": "6c28b293fc4ef6b64d73a7b44d2f1b99aba6dba917cb6a9b52a4d228dbc120dc",
+      "size": 1959,
+      "mode": "0644"
+    },
+    ".specify/docs/en/guides/scenarios/00-epic-start-guide.md": {
+      "sha256": "1e36bcbf647ad2df1be9399a944e1a30b8fdb1578ee9b3f24bb2ccce1480cf20",
+      "size": 7857,
+      "mode": "0644"
+    },
+    ".specify/docs/en/guides/scenarios/01-child-feature-implementation.md": {
+      "sha256": "981a5f116be9d9924d2411a42384caf0920ef264cc59a4505924535177b59459",
+      "size": 4041,
+      "mode": "0644"
+    },
+    ".specify/docs/en/guides/scenarios/02-quick-specification.md": {
+      "sha256": "574e2450fe683000d2a593b5a962d3dc80a457917a3b5cc46344fafbe07202f1",
+      "size": 2005,
+      "mode": "0775"
+    },
+    ".specify/docs/en/guides/scenarios/04-progress-tracking.md": {
+      "sha256": "4a73d767b5732ca4af2e745e4a07c2594402597dbb31cf7907979130c0e3cbe5",
+      "size": 1599,
+      "mode": "0775"
+    },
+    ".specify/docs/en/guides/scenarios/10-greenfield-full-start-architecture-topology.md": {
+      "sha256": "9ce7ea50db2e48761150572490394828153ad6e361ae9217ef32f65182cbaf06",
+      "size": 12409,
+      "mode": "0664"
+    },
+    ".specify/docs/en/guides/scenarios/scenario-catalog.md": {
+      "sha256": "64e38ddee3601ce88953439de6383403a151c46ae6551eecb3ba96207d5de3a4",
+      "size": 1207,
+      "mode": "0644"
+    },
+    ".specify/docs/en/guides/setup/setup-guide.md": {
+      "sha256": "6748ece30ff07ff27053e2eec312f19d4c021d71710186953e1dc9e856bce809",
+      "size": 1577,
+      "mode": "0644"
+    },
+    ".specify/docs/en/guides/skills-guide.md": {
+      "sha256": "dd29ed338ccb004a44fa8fd0bf8325a683fc6e50afd9bb3ae095deab802bdc2e",
+      "size": 48553,
+      "mode": "0664"
+    },
+    ".specify/docs/en/guides/workflow-map.md": {
+      "sha256": "dd66f89d35dd4f8097ea2291fc7384b413452a13663d77a6951afb8d9b59756e",
+      "size": 25676,
+      "mode": "0775"
+    },
+    ".specify/docs/vi/guides/concepts/glossary.md": {
+      "sha256": "f6042b2d2faab9f1be13d3178b945a9ee50fbfe36e3960308ac997e79553e647",
+      "size": 2082,
+      "mode": "0644"
+    },
+    ".specify/docs/vi/guides/concepts/promote-convention.md": {
+      "sha256": "79106c78d5780cac08e219beae07bdd738a5fbb4cfe68e62be15e5ebe59dc1c2",
+      "size": 5655,
+      "mode": "0644"
+    },
+    ".specify/docs/vi/guides/index.md": {
+      "sha256": "6ee3ad8e79aa2ed5ecb9a41e2af13f7f8c88d66b81d2934811187a40b09492b1",
+      "size": 2173,
+      "mode": "0644"
+    },
+    ".specify/docs/vi/guides/scenarios/00-epic-start-guide.md": {
+      "sha256": "b061ebac6879c6bd122a7788b2adfcf837f4ee6fa52fd2f984777a6521041567",
+      "size": 8124,
+      "mode": "0644"
+    },
+    ".specify/docs/vi/guides/scenarios/01-child-feature-implementation.md": {
+      "sha256": "419991aeed1a32557161fbe2e60041880b22f032f8b913063bcd9cf986414361",
+      "size": 4157,
+      "mode": "0644"
+    },
+    ".specify/docs/vi/guides/scenarios/02-quick-specification.md": {
+      "sha256": "6090b3368e34a69fd195a9123e796e528bda9e58384ea330efc041b25cc6ef65",
+      "size": 2153,
+      "mode": "0644"
+    },
+    ".specify/docs/vi/guides/scenarios/04-progress-tracking.md": {
+      "sha256": "4b7b0d2bfdcc9f189c5805e753675ed7bb8af6c2a1c8c9f38514beda35deed7a",
+      "size": 1803,
+      "mode": "0644"
+    },
+    ".specify/docs/vi/guides/scenarios/10-greenfield-full-start-architecture-topology.md": {
+      "sha256": "25d5ff250141082cf38ef2b2a170e6f95919e65dacfbf413a1956642571de69d",
+      "size": 12776,
+      "mode": "0644"
+    },
+    ".specify/docs/vi/guides/scenarios/scenario-catalog.md": {
+      "sha256": "a142956e8c2b6c1984e62ee838f6b76948f7afb4f036a3b78525542719505877",
+      "size": 1270,
+      "mode": "0644"
+    },
+    ".specify/docs/vi/guides/setup/setup-guide.md": {
+      "sha256": "145c473839f5c4e000838ab298864564c40c1d63e697d784208bae935908379c",
+      "size": 1588,
+      "mode": "0644"
+    },
+    ".specify/docs/vi/guides/skills-guide.md": {
+      "sha256": "1099d5c7f58070b4aa3e043f2c573017b4035835b1dbf352acc07a4ab2375c26",
+      "size": 46844,
+      "mode": "0644"
+    },
+    ".specify/docs/vi/guides/workflow-map.md": {
+      "sha256": "0db9ea1bb362d6ff6cfe72927744be540ffb941a52ac31cc60d603a7c2720b14",
+      "size": 25496,
+      "mode": "0644"
+    },
     ".specify/plugins/manifest.json": {
-      "sha256": "15602b1bd51c9526944bd8c47e5b0b7c0126ee8155aed086a3f515e4591e3759",
+      "sha256": "4ab4edf1db4843abb4d099cd4a87dfb761ee5c00afe6a2d1eda99af8ecc9efed",
       "size": 41823,
       "mode": "0644"
     },
@@ -60,17 +210,17 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "1f06b00efa02df3c6b8db5b30e7742fe820198139ed36a8a9e145a3ee4bb99c8",
+      "sha256": "54c03f2c07795c931954cae2ff5b49e3e4b7faa229a5cd632e26ac3405345818",
       "size": 246,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "1f06b00efa02df3c6b8db5b30e7742fe820198139ed36a8a9e145a3ee4bb99c8",
+      "sha256": "54c03f2c07795c931954cae2ff5b49e3e4b7faa229a5cd632e26ac3405345818",
       "size": 246,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "1f06b00efa02df3c6b8db5b30e7742fe820198139ed36a8a9e145a3ee4bb99c8",
+      "sha256": "54c03f2c07795c931954cae2ff5b49e3e4b7faa229a5cd632e26ac3405345818",
       "size": 246,
       "mode": "0644"
     },
@@ -80,8 +230,8 @@
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "79071f71388f19b3830e47242f90f5699a190c58a7bae6e2062406d817cdbb63",
-      "size": 26365,
+      "sha256": "c826c05aea3b399393234f3e6fb007f0e8189b33b9dbb4942090d34aaa45a7a5",
+      "size": 26223,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/__tests__/context-builder.test.cjs": {
@@ -435,7 +585,7 @@
       "mode": "0775"
     },
     ".specify/plugins/tdk-core/skills/tdk-specify/SKILL.md": {
-      "sha256": "947befca3ddf9435f51a44c87b818b03c6eab8a182e5c94e924ef4bd27c4d2d3",
+      "sha256": "3ed9c03a007dbb1e8dbe234f6c5842216ef5a04e258a1c179a90d8aa39ef28d1",
       "size": 7293,
       "mode": "0644"
     },
@@ -560,12 +710,12 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-epic/CHANGELOG.md": {
-      "sha256": "9a94ce4578b9e1d37360de35d966d248959101047f86bb64a7e576a9f5e11aa9",
-      "size": 416,
+      "sha256": "af4fd845744d3304a5f2a0238f280a40ff7822c0808bbe291f05233cc398ee9e",
+      "size": 311,
       "mode": "0644"
     },
     ".specify/plugins/tdk-epic/skills/tdk-discovery/SKILL.md": {
-      "sha256": "e84f654445dc91dae72ce9e3c12c5a52519bc3ad51f895ef8f7cdb3afd0d7e97",
+      "sha256": "ad3b0ec5bad14205f64b13aeb2f9758e018aaf2cd346a37f1769651ba65b709b",
       "size": 11594,
       "mode": "0644"
     },
@@ -595,7 +745,7 @@
       "mode": "0664"
     },
     ".specify/plugins/tdk-epic/skills/tdk-epic-hld/SKILL.md": {
-      "sha256": "c2a7ef958cef3835b7b2062ade3a1dff28c73a33d360480bcf5884ba63968835",
+      "sha256": "55dc9820ee2dfc4628dff518b3fbae87717e415a3ad932fcd99941010702c6e0",
       "size": 8122,
       "mode": "0644"
     },
@@ -615,7 +765,7 @@
       "mode": "0664"
     },
     ".specify/plugins/tdk-epic/skills/tdk-epic-prd/SKILL.md": {
-      "sha256": "52ae23863e394a5b470c1145d8cdd86f0659df05d7e950687e680baee87faabf",
+      "sha256": "ae2e17df7f42b1aee312cbb37ef86a5b8c54668043823fec8b1492b32ebc4578",
       "size": 9216,
       "mode": "0644"
     },
@@ -630,7 +780,7 @@
       "mode": "0664"
     },
     ".specify/plugins/tdk-epic/skills/tdk-task-breakdown/SKILL.md": {
-      "sha256": "864b18ecab84d1fb551f2301112f468a136387e044c37bd65d27fc49965670e2",
+      "sha256": "7205f026386dfaf5571d12c84af829ddf8db2fa5811eaa35e92d54fd683ef613",
       "size": 6767,
       "mode": "0644"
     },
@@ -1080,23 +1230,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.claude-plugin/plugin.json": {
-      "sha256": "3d313a5e84e7c850fb05506c4d3ce757de02e80db8e943c406ad4aa84a74d21f",
+      "sha256": "f1c1e7eb226302febdacd705cd1e127e25367cd2ec0980c5169a4e38e3025e46",
       "size": 162,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.codex-plugin/plugin.json": {
-      "sha256": "3d313a5e84e7c850fb05506c4d3ce757de02e80db8e943c406ad4aa84a74d21f",
+      "sha256": "f1c1e7eb226302febdacd705cd1e127e25367cd2ec0980c5169a4e38e3025e46",
       "size": 162,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.cursor-plugin/plugin.json": {
-      "sha256": "3d313a5e84e7c850fb05506c4d3ce757de02e80db8e943c406ad4aa84a74d21f",
+      "sha256": "f1c1e7eb226302febdacd705cd1e127e25367cd2ec0980c5169a4e38e3025e46",
       "size": 162,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/CHANGELOG.md": {
-      "sha256": "a52eb9db1157a606c37d3f95a8e112995b62e2e0e1d3c1a3cc16d205ad4f2062",
-      "size": 5528,
+      "sha256": "5bf817daf1abdc5177ca47749f88ff7bc17ff9e61b7c0e2bacc1a12ed4b77979",
+      "size": 5654,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/researcher.md": {
@@ -1395,12 +1545,12 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-setup-guide/SKILL.md": {
-      "sha256": "d5b03929a96122793fea40d3c8d57f529e0a76aa6304d4b3003a84725c44fffc",
+      "sha256": "18ff64ec1cf1cb4e223702f808a25373fe525e57323f678c48455c279e49063f",
       "size": 6342,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-skill-guide/SKILL.md": {
-      "sha256": "b6e14a71ec72519324cb2162881051ef46d9f48ef11b55c263f2843aafce50a0",
+      "sha256": "a2dd1cbffdb3882d6db1240454ff41a1b3d213e647fb69882690d2adc4f75d4d",
       "size": 10125,
       "mode": "0644"
     },
