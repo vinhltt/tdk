@@ -7,13 +7,13 @@
     ".specify/templates/",
     ".specify/setup.sh",
     ".specify/schemas/",
+    ".specify/docs/",
     ".specify/.specify.json.example",
     ".specify/release-manifest.json"
   ],
   "doNotShip": [
     ".specify/configurations/",
     ".specify/memory/",
-    ".specify/docs/",
     ".specify/CHANGELOG.md",
     ".specify/scripts/ts/node\u005fmodules/",
     ".specify/\u005f\u005fpycache\u005f\u005f/",
