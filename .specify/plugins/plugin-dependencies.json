@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "requiredPlugins": [
+    "tdk-core",
+    "tdk-inception"
+  ],
+  "dependencies": {
+    "tdk-core": [
+      "tdk-utils"
+    ],
+    "tdk-inception": [
+      "tdk-utils",
+      "tdk-memory"
+    ]
+  }
+}

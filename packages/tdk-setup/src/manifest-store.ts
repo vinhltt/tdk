@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { assertSafeClaudeTargetRelativePath, assertSafeCodexTargetRelativePath } from './target-relative-path';
+import { validateHarnessTargetPath } from './target-path-safety';
 import type { HarnessInstallManifest, HarnessName } from './types';
 
 export function emptyHarnessManifest(harness: HarnessName = 'claude'): HarnessInstallManifest {
@@ -58,8 +59,17 @@ export function loadHarnessManifest(consumerRoot: string, harness: HarnessName =
 
 export function saveHarnessManifest(consumerRoot: string, data: HarnessInstallManifest, harness: HarnessName = data.harness): void {
   const manifestPath = manifestPathFor(consumerRoot, harness);
+  const stateRoot = path.join(consumerRoot, '.specify', 'state', 'harness-install');
+  validateHarnessTargetPath({
+    consumerRoot,
+    targetPath: manifestPath,
+    allowedRoots: [stateRoot],
+    label: 'Ownership manifest',
+  });
   fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
   const tmpPath = `${manifestPath}.tmp`;
+  validateHarnessTargetPath({ consumerRoot, targetPath: tmpPath, allowedRoots: [stateRoot], label: 'Ownership manifest temp file' });
   fs.writeFileSync(tmpPath, `${JSON.stringify(data, null, 2)}\n`, 'utf-8');
+  validateHarnessTargetPath({ consumerRoot, targetPath: manifestPath, allowedRoots: [stateRoot], label: 'Ownership manifest' });
   fs.renameSync(tmpPath, manifestPath);
 }

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'bun:test';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
-const CORE_AGENTS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/agents');
+const INCEPTION_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-inception/skills');
+const INCEPTION_AGENTS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-inception/agents');
 const TEMPLATES_DIR = resolve(import.meta.dir, '../../../templates/sub-workspace-docs');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
@@ -24,8 +24,8 @@ function walkFiles(dir: string): string[] {
 }
 
 describe('TDK sub-workspace docs contracts', () => {
-  const skillPath = join(CORE_SKILLS_DIR, SKILL_NAME, 'SKILL.md');
-  const writerPath = join(CORE_AGENTS_DIR, 'tdk-docs-writer.md');
+  const skillPath = join(INCEPTION_SKILLS_DIR, SKILL_NAME, 'SKILL.md');
+  const writerPath = join(INCEPTION_AGENTS_DIR, 'tdk-docs-writer.md');
   const skill = existsSync(skillPath) ? read(skillPath) : '';
   const writer = existsSync(writerPath) ? read(writerPath) : '';
 

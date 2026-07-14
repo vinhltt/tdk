@@ -1,4 +1,9 @@
-import { stdin as input, stdout as output } from 'node:process';
+import { stdin as defaultInput, stdout as defaultOutput } from 'node:process';
+
+export interface CheckboxPromptIo {
+  input: NodeJS.ReadStream;
+  output: NodeJS.WriteStream;
+}
 
 export interface CheckboxOpts {
   title: string;
@@ -6,6 +11,7 @@ export interface CheckboxOpts {
   emptyMsg: string;
   selectedMsgPrefix: string;
   cancelMsg: string;
+  allowEmpty?: boolean;
 }
 
 export function canUseCheckboxPrompt(
@@ -16,6 +22,7 @@ export function canUseCheckboxPrompt(
 }
 
 function renderCheckboxPrompt(
+  output: NodeJS.WriteStream,
   items: string[],
   selected: Set<number>,
   cursor: number,
@@ -37,7 +44,9 @@ function renderCheckboxPrompt(
 export async function selectFromCheckbox(
   items: string[],
   opts: CheckboxOpts,
+  io: CheckboxPromptIo = { input: defaultInput, output: defaultOutput },
 ): Promise<string[]> {
+  const { input, output } = io;
   const selected = new Set<number>();
   let cursor = 0;
   let message = '';
@@ -57,9 +66,9 @@ export async function selectFromCheckbox(
       output.write('\x1b[?25h');
     };
     const finish = () => {
-      if (selected.size === 0) {
+      if (selected.size === 0 && !opts.allowEmpty) {
         message = opts.emptyMsg;
-        renderCheckboxPrompt(items, selected, cursor, message, opts.title, opts.hint);
+        renderCheckboxPrompt(output, items, selected, cursor, message, opts.title, opts.hint);
         return;
       }
       const names = items.filter((_, index) => selected.has(index));
@@ -86,10 +95,10 @@ export async function selectFromCheckbox(
       } else if (value === '\u001b[B' || value === 'j' || value === 'J') {
         cursor = (cursor + 1) % items.length;
       }
-      renderCheckboxPrompt(items, selected, cursor, message, opts.title, opts.hint);
+      renderCheckboxPrompt(output, items, selected, cursor, message, opts.title, opts.hint);
     };
 
     input.on('data', onData);
-    renderCheckboxPrompt(items, selected, cursor, message, opts.title, opts.hint);
+    renderCheckboxPrompt(output, items, selected, cursor, message, opts.title, opts.hint);
   });
 }

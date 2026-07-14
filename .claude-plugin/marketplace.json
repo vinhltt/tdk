@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "TDK project plugin marketplace",
-    "version": "1.101.0"
+    "version": "1.102.0"
   },
   "plugins": [
     {
@@ -17,8 +17,14 @@
     },
     {
       "name": "tdk-core",
-      "description": "Core TDK workflow skills: specify, plan, implement, fix, review, analyze, config, tests",
+      "description": "Core TDK child-feature delivery workflows: specify, clarify, plan, implement, analyze, checklist, status, and test planning",
       "source": "./.specify/plugins/tdk-core",
+      "strict": true
+    },
+    {
+      "name": "tdk-inception",
+      "description": "TDK project inception and workspace foundation workflows: intake, constitution, architecture, layout, configuration, dependency policy, and sub-workspace documentation",
+      "source": "./.specify/plugins/tdk-inception",
       "strict": true
     },
     {
@@ -29,7 +35,7 @@
     },
     {
       "name": "tdk-utils",
-      "description": "Utility skills for TDK workflow: brainstorming, planning, problem solving, and more",
+      "description": "Generic TDK utilities: brainstorming, research, scouting, problem solving, context engineering, documentation lookup, and project-context helpers",
       "source": "./.specify/plugins/tdk-utils",
       "strict": true
     },

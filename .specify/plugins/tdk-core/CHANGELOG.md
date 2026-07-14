@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [10.0.0] - 2026-07-14
+
+### Changed
+- Clarify tdk-core as the child-feature delivery and shared runtime plugin after extracting inception workflows
+
+### Removed
+- Project inception suite: move 13 project-inception and workspace-foundation skills plus tdk-docs-writer to tdk-inception
+
 ## [9.0.0] - 2026-07-09
 
 ### Changed

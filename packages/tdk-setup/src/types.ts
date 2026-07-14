@@ -139,6 +139,7 @@ export interface InstallPlan {
   nextInstallSettings?: unknown;
   installSettingsChanged: boolean;
   migration?: PrefixMigrationPlan;
+  operationStamp?: string;
 }
 
 export interface BuildPlanInput {

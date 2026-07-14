@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const IMPLEMENT_SKILL = resolve(
@@ -53,18 +53,27 @@ const RETRO_APPLY_SKILL = resolve(
   '../../../plugins/tdk-retro/skills/tdk-retro-apply/SKILL.md',
 );
 
-const LEGACY_TDK_SCRIPT_SKILLS = [
-  '../../../plugins/tdk-core/skills/tdk-config-sync/SKILL.md',
-  '../../../plugins/tdk-core/skills/tdk-config-diff/SKILL.md',
-  '../../../plugins/tdk-core/skills/tdk-config-index/SKILL.md',
+const INCEPTION_SCRIPT_SKILLS = [
+  '../../../plugins/tdk-inception/skills/tdk-config-sync/SKILL.md',
+  '../../../plugins/tdk-inception/skills/tdk-config-diff/SKILL.md',
+  '../../../plugins/tdk-inception/skills/tdk-config-index/SKILL.md',
+].map((path) => resolve(import.meta.dir, path));
+
+const RETAINED_CORE_SCRIPT_SKILLS = [
   '../../../plugins/tdk-core/skills/tdk-analyze/SKILL.md',
   '../../../plugins/tdk-core/skills/tdk-checklist/SKILL.md',
   '../../../plugins/tdk-core/skills/tdk-clarify/SKILL.md',
+].map((path) => resolve(import.meta.dir, path));
+
+const UTILS_SCRIPT_SKILLS = [
   '../../../plugins/tdk-utils/skills/tdk-setup-guide/SKILL.md',
 ].map((path) => resolve(import.meta.dir, path));
 
-const AGENT_ROOT_GUIDANCE_SKILLS = [
-  '../../../plugins/tdk-core/skills/tdk-sub-workspace-docs/SKILL.md',
+const INCEPTION_AGENT_ROOT_GUIDANCE_SKILLS = [
+  '../../../plugins/tdk-inception/skills/tdk-sub-workspace-docs/SKILL.md',
+].map((path) => resolve(import.meta.dir, path));
+
+const UTILS_AGENT_ROOT_GUIDANCE_SKILLS = [
   '../../../plugins/tdk-utils/skills/tdk-scout/SKILL.md',
 ].map((path) => resolve(import.meta.dir, path));
 
@@ -122,8 +131,6 @@ describe('cwd-independent skill command contract', () => {
   const retroCollectSkill = read(RETRO_COLLECT_SKILL);
   const retroProposeSkill = read(RETRO_PROPOSE_SKILL);
   const retroApplySkill = read(RETRO_APPLY_SKILL);
-  const legacyTdkScriptSkills = LEGACY_TDK_SCRIPT_SKILLS.map((path) => read(path));
-  const agentRootGuidanceSkills = AGENT_ROOT_GUIDANCE_SKILLS.map((path) => read(path));
 
   it('tdk-implement receives project root as an agent-provided argument before script calls', () => {
     expectAgentProvidedProjectRoot(implementContract);
@@ -199,15 +206,36 @@ describe('cwd-independent skill command contract', () => {
     expect(retroCollectSkill).toContain('(cd "$PROJECT_DIR" && langfuse --env .env api traces list --session-id "{session_id}")');
   });
 
-  it('legacy TDK script examples use the agent-provided project root contract', () => {
-    for (const skillText of legacyTdkScriptSkills) {
+  it('requires moved config script examples under tdk-inception', () => {
+    for (const skillPath of INCEPTION_SCRIPT_SKILLS) {
+      expect(existsSync(skillPath)).toBe(true);
+      const skillText = read(skillPath);
       expectAgentProvidedProjectRoot(skillText);
       expectNoFragilePlanCommand(skillText);
     }
   });
 
-  it('project-root guidance examples do not require shell-side root discovery', () => {
-    for (const skillText of agentRootGuidanceSkills) {
+  it('keeps retained core and utils script examples portable', () => {
+    for (const skillPath of [...RETAINED_CORE_SCRIPT_SKILLS, ...UTILS_SCRIPT_SKILLS]) {
+      const skillText = read(skillPath);
+      expectAgentProvidedProjectRoot(skillText);
+      expectNoFragilePlanCommand(skillText);
+    }
+  });
+
+  it('requires inception docs root guidance under tdk-inception', () => {
+    for (const skillPath of INCEPTION_AGENT_ROOT_GUIDANCE_SKILLS) {
+      expect(existsSync(skillPath)).toBe(true);
+      const skillText = read(skillPath);
+      expectNoShellRootDiscovery(skillText);
+      expect(skillText).toContain('<agent-resolved-project-root>');
+      expect(skillText).toContain('Ask the user for the project root');
+    }
+  });
+
+  it('keeps utils project-root guidance free of shell-side root discovery', () => {
+    for (const skillPath of UTILS_AGENT_ROOT_GUIDANCE_SKILLS) {
+      const skillText = read(skillPath);
       expectNoShellRootDiscovery(skillText);
       expect(skillText).toContain('<agent-resolved-project-root>');
       expect(skillText).toContain('Ask the user for the project root');

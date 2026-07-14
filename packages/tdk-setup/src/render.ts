@@ -1,10 +1,11 @@
 import type { ApplyResult, InstallPlan } from './types';
 import { blockingCollisions } from './collisions';
 
-export function renderInstallPlan(plan: InstallPlan): string {
+export function renderInstallPlan(plan: InstallPlan, requestedOptionalPlugins: string[] = []): string {
   const lines: string[] = [];
   const blockers = blockingCollisions(plan.collisions, plan.prompts);
-  lines.push(`Harness install plan: ${plan.selectedPlugins.join(', ') || '(none)'}`);
+  lines.push(`Requested optional plugins: ${requestedOptionalPlugins.join(', ') || '(none)'}`);
+  lines.push(`Resolved plugins: ${plan.selectedPlugins.join(', ') || '(none)'}`);
   lines.push(`Target dir: ${plan.targetDir}`);
   lines.push(`${plan.harness === 'codex' ? 'Codex config' : 'Claude settings'}: ${plan.claudeSettingsPath}`);
   lines.push(`Manifest: ${plan.manifestPath}`);

@@ -1,14 +1,24 @@
----
-tags: [changelog, config]
-status: active
----
 # Changelog
 
 All notable changes to the project configuration (.specify/, .claude/, .github/)
 will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.102.0] - 2026-07-14
+
+### Added
+- **[Configurations]** Establish plugin packaging and dependency policy for project inception
+  - Add `tdk-inception` with Claude, Codex, and Cursor manifests plus interface metadata for project inception and workspace foundation workflows.
+  - Define `tdk-core` and `tdk-inception` as required plugins, with explicit dependencies on `tdk-utils` and `tdk-memory`.
+- **[Scripts]** Add contract coverage for plugin dependency resolution and `tdk-inception` ownership boundaries.
+
+### Changed
+- **[Embedded Skills]** Move 15 project-inception and workspace-foundation skills from `tdk-core` and `tdk-utils` into `tdk-inception`.
+- **[Claude Agent Config]** Move `tdk-docs-writer` from `tdk-core` into `tdk-inception`.
+- **[Configurations]** Narrow `tdk-core` to child-feature delivery and shared runtime responsibilities, then refresh plugin and source manifests for the new ownership model.
+- **[Scripts]** Update workflow and path contract tests to resolve inception-owned components from `tdk-inception`.
 
 ## [1.101.0] - 2026-07-09
 

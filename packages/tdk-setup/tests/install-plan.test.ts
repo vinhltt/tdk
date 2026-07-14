@@ -310,6 +310,84 @@ describe('buildClaudeInstallPlan', () => {
       collision.kind === 'managed-drift' && collision.message.includes(staleTarget)
     ))).toBe(true);
   });
+
+  test('transfers unchanged target ownership to the newly selected plugin once', () => {
+    const consumer = makeConsumer();
+    const content = '# shared skill\n';
+    const sourceRelativePath = 'skills/shared/SKILL.md';
+    const targetRelativePath = '.claude/skills/shared/SKILL.md';
+    const target = path.join(consumer.root, targetRelativePath);
+    writePluginFile(consumer, sourceRelativePath, content, 'tdk-new');
+    writeMultiPluginManifest(consumer, {
+      'tdk-old': { version: '1.0.0', files: {} },
+      'tdk-new': { version: '1.0.0', files: { [sourceRelativePath]: sha256(content) } },
+    });
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, content, 'utf-8');
+
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-new'],
+      plugins: discoverPluginInventory(consumer.root, ['tdk-new']).plugins,
+      previousManifest: {
+        ...emptyHarnessManifest(),
+        managedFiles: [{
+          plugin: 'tdk-old',
+          sourceRelativePath,
+          targetRelativePath,
+          sourceChecksum: sha256(content),
+          installedChecksum: sha256(content),
+        }],
+      },
+      settings: {},
+    });
+
+    expect(plan.removals).toEqual([]);
+    expect(plan.collisions).toEqual([]);
+    expect(plan.writes.filter((write) => write.targetRelativePath === targetRelativePath)).toHaveLength(1);
+    expect(plan.nextManifest.managedFiles.filter((file) => file.targetRelativePath === targetRelativePath)).toEqual([
+      expect.objectContaining({ plugin: 'tdk-new' }),
+    ]);
+  });
+
+  test('requires drift confirmation instead of removing a prior owner target', () => {
+    const consumer = makeConsumer();
+    const content = '# shared skill\n';
+    const sourceRelativePath = 'skills/shared/SKILL.md';
+    const targetRelativePath = '.claude/skills/shared/SKILL.md';
+    const target = path.join(consumer.root, targetRelativePath);
+    writePluginFile(consumer, sourceRelativePath, content, 'tdk-new');
+    writeMultiPluginManifest(consumer, {
+      'tdk-old': { version: '1.0.0', files: {} },
+      'tdk-new': { version: '1.0.0', files: { [sourceRelativePath]: sha256(content) } },
+    });
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, '# user-edited shared skill\n', 'utf-8');
+
+    const plan = buildClaudeInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-new'],
+      plugins: discoverPluginInventory(consumer.root, ['tdk-new']).plugins,
+      previousManifest: {
+        ...emptyHarnessManifest(),
+        managedFiles: [{
+          plugin: 'tdk-old',
+          sourceRelativePath,
+          targetRelativePath,
+          sourceChecksum: sha256(content),
+          installedChecksum: sha256(content),
+        }],
+      },
+      settings: {},
+    });
+
+    expect(plan.removals).toEqual([]);
+    expect(plan.collisions.some((collision) => collision.kind === 'managed-drift')).toBe(true);
+    expect(plan.prompts).toContainEqual(expect.objectContaining({
+      type: 'managed-drift-overwrite',
+      targetRelativePath,
+    }));
+  });
 });
 
 describe('prefix migration install-level', () => {
@@ -398,4 +476,31 @@ describe('prefix migration install-level', () => {
     // Mapper-defined skills ref converted correctly
     expect(content).toContain('.claude/skills/sample-scout/SKILL.md');
   });
+
+  for (const scenario of [
+    { name: 'top-level Claude root', link: '.claude' },
+    { name: 'nested Claude skills directory', link: '.claude/skills' },
+  ]) {
+    test(`rejects a symlinked ${scenario.name} before planning a write`, () => {
+      const consumer = makeConsumer();
+      writeBasicPlugin(consumer);
+      const outside = fs.mkdtempSync(path.join(consumer.root, '..', 'tdk-claude-outside-'));
+      const sentinel = path.join(outside, 'sentinel.txt');
+      const link = path.join(consumer.root, scenario.link);
+      fs.writeFileSync(sentinel, 'unchanged', 'utf-8');
+      fs.mkdirSync(path.dirname(link), { recursive: true });
+      fs.rmSync(link, { recursive: true, force: true });
+      fs.symlinkSync(outside, link);
+      const inventory = discoverPluginInventory(consumer.root, ['tdk-core']);
+
+      expect(() => buildClaudeInstallPlan({
+        consumerRoot: consumer.root,
+        selectedPlugins: ['tdk-core'],
+        plugins: inventory.plugins,
+        previousManifest: emptyHarnessManifest(),
+        settings: {},
+      })).toThrow(/symlinked ancestor/);
+      expect(fs.readFileSync(sentinel, 'utf-8')).toBe('unchanged');
+    });
+  }
 });

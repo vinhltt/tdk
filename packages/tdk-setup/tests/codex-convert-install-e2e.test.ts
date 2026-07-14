@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { makeConsumer, sha256, writeManifest, writePluginFile } from './fixtures';
+import { makeConsumer, sha256, writeManifest, writePluginDependencyPolicy, writePluginFile } from './fixtures';
 
 const cliPath = path.resolve('src/index.ts');
 // manifest compute lives in the sibling .specify/scripts/ts package, not in tdk-setup.
@@ -41,6 +41,7 @@ function writeConverterFixture() {
     'hooks/hooks.json': sha256(hooksJson),
     'lib/demo.cjs': sha256(lib),
   }, plugin);
+  writePluginDependencyPolicy(consumer);
   return { consumer, plugin };
 }
 

@@ -113,6 +113,31 @@ describe('codex install plan', () => {
     expect(plan.nextManifest.managedFiles.every((file) => file.plugin !== 'convert-flat')).toBe(true);
   });
 
+  test('rejects two Codex plugins that plan the same target before apply', () => {
+    const consumer = makeConsumer('tdk-codex-duplicate-target-');
+    const relativePath = 'skills/tdk-shared/SKILL.md';
+    const coreChecksum = writeCodexPkgFile(consumer.root, 'tdk-core', relativePath, '# core shared skill\n');
+    const utilsChecksum = writeCodexPkgFile(consumer.root, 'tdk-utils', relativePath, '# utils shared skill\n');
+    writeMultiPluginManifest(consumer, {
+      'tdk-core': { version: '1.0.0', files: {} },
+      'tdk-utils': { version: '1.0.0', files: {} },
+    });
+    writeCodexManifest(consumer.root, {
+      'tdk-core': { version: '1.0.0', files: { [relativePath]: coreChecksum } },
+      'tdk-utils': { version: '1.0.0', files: { [relativePath]: utilsChecksum } },
+    });
+
+    expect(() => buildCodexInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core', 'tdk-utils'],
+      previousManifest: emptyHarnessManifest('codex'),
+      sourcePrefix: 'tdk-',
+      targetPrefix: 'tdk-',
+    })).toThrow(/more than once/);
+    expect(fs.existsSync(path.join(consumer.root, '.agents', 'skills', 'tdk-shared', 'SKILL.md'))).toBe(false);
+    expect(fs.existsSync(path.join(consumer.root, '.specify', 'state', 'harness-install', 'codex.json'))).toBe(false);
+  });
+
   test('install-time agent conversion reads source agents/*.md and writes .codex/agents/*.toml', () => {
     const consumer = writePreconvertedPlugin();
     const plan = buildCodexInstallPlan({
@@ -279,4 +304,252 @@ describe('codex install plan', () => {
     // Lib still goes to .codex/lib/
     expect(targets.some((t) => t.startsWith('.codex/lib/'))).toBe(true);
   });
+
+  test('transfers an unchanged target to the newly selected Codex plugin once', () => {
+    const consumer = makeConsumer('tdk-codex-owner-transfer-');
+    const content = '# shared skill\n';
+    const sourceRelativePath = 'skills/tdk-shared/SKILL.md';
+    const targetRelativePath = '.agents/skills/tdk-shared/SKILL.md';
+    const pluginJson = '{"name":"tdk-new","version":"1.0.0"}\n';
+    const target = path.join(consumer.root, targetRelativePath);
+    const skillChecksum = writeCodexPkgFile(consumer.root, 'tdk-new', sourceRelativePath, content);
+    const pluginJsonChecksum = writeCodexPkgFile(consumer.root, 'tdk-new', '.codex-plugin/plugin.json', pluginJson);
+    writeMultiPluginManifest(consumer, { 'tdk-new': { version: '1.0.0', files: {} } });
+    writeCodexManifest(consumer.root, {
+      'tdk-new': {
+        version: '1.0.0',
+        files: {
+          [sourceRelativePath]: skillChecksum,
+          '.codex-plugin/plugin.json': pluginJsonChecksum,
+        },
+      },
+    });
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, content, 'utf-8');
+
+    const plan = buildCodexInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-new'],
+      previousManifest: {
+        ...emptyHarnessManifest('codex'),
+        managedFiles: [{
+          plugin: 'tdk-old',
+          sourceRelativePath: '.specify/codex-plugins/tdk-old/skills/tdk-shared/SKILL.md',
+          targetRelativePath,
+          sourceChecksum: skillChecksum,
+          installedChecksum: skillChecksum,
+        }],
+      },
+      sourcePrefix: 'tdk-',
+      targetPrefix: 'tdk-',
+    });
+
+    expect(plan.removals).toEqual([]);
+    expect(plan.collisions).toEqual([]);
+    expect(plan.writes.filter((write) => write.targetRelativePath === targetRelativePath)).toEqual([]);
+    expect(plan.nextManifest.managedFiles.filter((file) => file.targetRelativePath === targetRelativePath)).toEqual([
+      expect.objectContaining({ plugin: 'tdk-new' }),
+    ]);
+  });
+
+  test('preserves the previous Codex owner when the transfer target drifted', () => {
+    const consumer = makeConsumer('tdk-codex-owner-drift-');
+    const content = '# shared skill\n';
+    const sourceRelativePath = 'skills/tdk-shared/SKILL.md';
+    const targetRelativePath = '.agents/skills/tdk-shared/SKILL.md';
+    const pluginJson = '{"name":"tdk-new","version":"1.0.0"}\n';
+    const target = path.join(consumer.root, targetRelativePath);
+    const skillChecksum = writeCodexPkgFile(consumer.root, 'tdk-new', sourceRelativePath, content);
+    const pluginJsonChecksum = writeCodexPkgFile(consumer.root, 'tdk-new', '.codex-plugin/plugin.json', pluginJson);
+    writeMultiPluginManifest(consumer, { 'tdk-new': { version: '1.0.0', files: {} } });
+    writeCodexManifest(consumer.root, {
+      'tdk-new': {
+        version: '1.0.0',
+        files: {
+          [sourceRelativePath]: skillChecksum,
+          '.codex-plugin/plugin.json': pluginJsonChecksum,
+        },
+      },
+    });
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, '# user-edited shared skill\n', 'utf-8');
+
+    const plan = buildCodexInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-new'],
+      previousManifest: {
+        ...emptyHarnessManifest('codex'),
+        managedFiles: [{
+          plugin: 'tdk-old',
+          sourceRelativePath: '.specify/codex-plugins/tdk-old/skills/tdk-shared/SKILL.md',
+          targetRelativePath,
+          sourceChecksum: skillChecksum,
+          installedChecksum: skillChecksum,
+        }],
+      },
+      sourcePrefix: 'tdk-',
+      targetPrefix: 'tdk-',
+    });
+
+    expect(plan.removals).toEqual([]);
+    expect(plan.writes.filter((write) => write.targetRelativePath === targetRelativePath)).toEqual([]);
+    expect(plan.collisions).toContainEqual(expect.objectContaining({ kind: 'managed-drift' }));
+    expect(plan.nextManifest.managedFiles.filter((file) => file.targetRelativePath === targetRelativePath)).toEqual([
+      expect.objectContaining({ plugin: 'tdk-old' }),
+    ]);
+  });
+
+  test('preserves hook origins not authorized by previous Codex ownership', () => {
+    const cases = [
+      { name: 'duplicate selected plugin', selectedPlugins: ['tdk-memory', 'tdk-memory'], origin: 'tdk-memory', currentManifestIncludesOrigin: true },
+      { name: 'unsafe selected plugin segment', selectedPlugins: ['../tdk-memory'], origin: '../tdk-memory' },
+      { name: 'unknown selected plugin ID', selectedPlugins: ['external-plugin'], origin: 'external-plugin' },
+      { name: 'stale selected plugin ID', selectedPlugins: ['tdk-memory'], origin: 'tdk-memory' },
+    ];
+
+    for (const scenario of cases) {
+      const consumer = writePreconvertedPlugin(makeConsumer(`tdk-codex-${scenario.name.replaceAll(' ', '-')}-`));
+      if (scenario.currentManifestIncludesOrigin) {
+        const sourceManifestPath = path.join(consumer.root, '.specify', 'plugins', 'manifest.json');
+        const sourceManifest = JSON.parse(fs.readFileSync(sourceManifestPath, 'utf-8'));
+        sourceManifest.plugins['tdk-memory'] = {
+          version: '1.0.0',
+          components: { skills: {}, agents: {}, hooks: {}, commands: {} },
+          files: {},
+        };
+        fs.writeFileSync(sourceManifestPath, `${JSON.stringify(sourceManifest, null, 2)}\n`, 'utf-8');
+      }
+
+      const existingHooks = path.join(consumer.root, '.codex', 'hooks.json');
+      const priorCommand = `node ${scenario.origin}-prior.cjs`;
+      const existingContent = `${JSON.stringify({
+        PreToolUse: [{ command: priorCommand, _origin: scenario.origin }],
+      }, null, 2)}\n`;
+      fs.mkdirSync(path.dirname(existingHooks), { recursive: true });
+      fs.writeFileSync(existingHooks, existingContent, 'utf-8');
+      const previous = emptyHarnessManifest('codex');
+      previous.selectedPlugins = scenario.selectedPlugins;
+      previous.managedFiles = [{
+        plugin: 'tdk-core',
+        sourceRelativePath: '.specify/codex-plugins/tdk-core/hooks/codex-hooks.json',
+        targetRelativePath: '.codex/hooks.json',
+        sourceChecksum: sha256(existingContent),
+        installedChecksum: sha256(existingContent),
+      }];
+
+      const plan = buildCodexInstallPlan({
+        consumerRoot: consumer.root,
+        selectedPlugins: ['tdk-core'],
+        previousManifest: previous,
+        sourcePrefix: 'tdk-',
+        targetPrefix: 'tdk-',
+      });
+      const hooks = plan.writes.find((write) => write.targetRelativePath === '.codex/hooks.json')?.content.toString('utf-8') ?? '';
+
+      expect(hooks).toContain(priorCommand);
+      expect(hooks).toContain(`\"_origin\": \"${scenario.origin}\"`);
+    }
+  });
+
+  test('replaces the current valid tdk-core hook origin', () => {
+    const consumer = writePreconvertedPlugin(makeConsumer('tdk-codex-current-origin-'));
+    const existingHooks = path.join(consumer.root, '.codex', 'hooks.json');
+    const priorCommand = 'node tdk-core-prior.cjs';
+    const existingContent = `${JSON.stringify({
+      PreToolUse: [{ command: priorCommand, _origin: 'tdk-core' }],
+    }, null, 2)}\n`;
+    fs.mkdirSync(path.dirname(existingHooks), { recursive: true });
+    fs.writeFileSync(existingHooks, existingContent, 'utf-8');
+    const previous = emptyHarnessManifest('codex');
+    previous.selectedPlugins = ['tdk-core'];
+    previous.managedFiles = [{
+      plugin: 'tdk-core',
+      sourceRelativePath: '.specify/codex-plugins/tdk-core/hooks/codex-hooks.json',
+      targetRelativePath: '.codex/hooks.json',
+      sourceChecksum: sha256(existingContent),
+      installedChecksum: sha256(existingContent),
+    }];
+
+    const plan = buildCodexInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      previousManifest: previous,
+      sourcePrefix: 'tdk-',
+      targetPrefix: 'tdk-',
+    });
+    const hooks = plan.writes.find((write) => write.targetRelativePath === '.codex/hooks.json')?.content.toString('utf-8') ?? '';
+
+    expect(hooks).not.toContain(priorCommand);
+    expect(hooks).toContain('hooks/wrappers/demo.cjs');
+    expect((hooks.match(/\"_origin\": \"tdk-core\"/g) ?? [])).toHaveLength(1);
+  });
+
+  test('cleans an origin trusted only by prior Codex ownership', () => {
+    const consumer = writePreconvertedPlugin(makeConsumer('tdk-codex-prior-origin-'));
+    const sourceManifestPath = path.join(consumer.root, '.specify', 'plugins', 'manifest.json');
+    const sourceManifest = JSON.parse(fs.readFileSync(sourceManifestPath, 'utf-8'));
+    sourceManifest.plugins['tdk-memory'] = {
+      version: '1.0.0',
+      components: { skills: {}, agents: {}, hooks: {}, commands: {} },
+      files: {},
+    };
+    fs.writeFileSync(sourceManifestPath, `${JSON.stringify(sourceManifest, null, 2)}\n`, 'utf-8');
+
+    const existingHooks = path.join(consumer.root, '.codex', 'hooks.json');
+    const priorCommand = 'node tdk-memory-prior.cjs';
+    const existingContent = `${JSON.stringify({
+      PreToolUse: [{ command: priorCommand, _origin: 'tdk-memory' }],
+    }, null, 2)}\n`;
+    fs.mkdirSync(path.dirname(existingHooks), { recursive: true });
+    fs.writeFileSync(existingHooks, existingContent, 'utf-8');
+    const previous = emptyHarnessManifest('codex');
+    previous.selectedPlugins = ['tdk-memory'];
+    previous.managedFiles = [{
+      plugin: 'tdk-core',
+      sourceRelativePath: '.specify/codex-plugins/tdk-core/hooks/codex-hooks.json',
+      targetRelativePath: '.codex/hooks.json',
+      sourceChecksum: sha256(existingContent),
+      installedChecksum: sha256(existingContent),
+    }];
+
+    const plan = buildCodexInstallPlan({
+      consumerRoot: consumer.root,
+      selectedPlugins: ['tdk-core'],
+      previousManifest: previous,
+      sourcePrefix: 'tdk-',
+      targetPrefix: 'tdk-',
+    });
+    const hooks = plan.writes.find((write) => write.targetRelativePath === '.codex/hooks.json')?.content.toString('utf-8') ?? '';
+
+    expect(hooks).not.toContain(priorCommand);
+    expect(hooks).not.toContain('"_origin": "tdk-memory"');
+    expect(hooks).toContain('"_origin": "tdk-core"');
+  });
+
+  for (const scenario of [
+    { name: '.agents top-level root', link: '.agents' },
+    { name: '.agents nested skills directory', link: '.agents/skills' },
+    { name: '.codex top-level root', link: '.codex' },
+    { name: '.codex nested hooks directory', link: '.codex/hooks' },
+  ]) {
+    test(`rejects a symlinked ${scenario.name} before planning a Codex write`, () => {
+      const consumer = writePreconvertedPlugin(makeConsumer('tdk-codex-symlink-'));
+      const outside = fs.mkdtempSync(path.join(consumer.root, '..', 'tdk-codex-outside-'));
+      const sentinel = path.join(outside, 'sentinel.txt');
+      const link = path.join(consumer.root, scenario.link);
+      fs.writeFileSync(sentinel, 'unchanged', 'utf-8');
+      fs.mkdirSync(path.dirname(link), { recursive: true });
+      fs.rmSync(link, { recursive: true, force: true });
+      fs.symlinkSync(outside, link);
+
+      expect(() => buildCodexInstallPlan({
+        consumerRoot: consumer.root,
+        selectedPlugins: ['tdk-core'],
+        previousManifest: emptyHarnessManifest('codex'),
+        sourcePrefix: 'tdk-',
+        targetPrefix: 'tdk-',
+      })).toThrow(/symlinked ancestor/);
+      expect(fs.readFileSync(sentinel, 'utf-8')).toBe('unchanged');
+    });
+  }
 });

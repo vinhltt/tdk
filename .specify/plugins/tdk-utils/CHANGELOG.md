@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.0.0] - 2026-07-14
+
+### Changed
+- Synchronize Claude, Codex, and Cursor manifests after extracting workspace governance skills.
+
+### Removed
+- tdk-module-boundary-policy and tdk-workspace-dependency-policy: move workspace governance skills to tdk-inception
+
 ## [2.2.6] - 2026-07-09
 
 ### Changed

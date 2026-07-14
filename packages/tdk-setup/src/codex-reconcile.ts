@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { sha256File } from './checksum';
 import { manifestPathFor } from './manifest-store';
 import { normalizeTargetRelativePath } from './target-relative-path';
+import { validateInstallPlanTargets } from './target-path-safety';
 import type { CodexTargetFile, MigrationReport } from './flat-claude-types';
 import type { CodexReconcilePlan, ReconcileItem } from './codex-reconcile-types';
 import type {
@@ -206,7 +207,9 @@ export function buildCodexReconcilePlan(params: {
     nextManifest,
     settingsChanged: false,
     installSettingsChanged: false,
+    operationStamp: nowIso().replace(/[:.]/g, '-'),
   };
+  validateInstallPlanTargets(installPlan);
   const conflicts = items.filter((item) => item.action === 'conflict');
   return {
     consumerRoot: params.consumerRoot,

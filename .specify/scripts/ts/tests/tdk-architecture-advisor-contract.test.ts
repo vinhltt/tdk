@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
+const INCEPTION_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-inception/skills');
 const EPIC_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-epic/skills');
 const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en/guides');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
@@ -101,7 +101,7 @@ const FORBIDDEN_ADVISOR_PROMISES = [
 ];
 
 function skillDir(name: string): string {
-  return resolve(CORE_SKILLS_DIR, name);
+  return resolve(INCEPTION_SKILLS_DIR, name);
 }
 
 function read(path: string): string {
@@ -120,7 +120,7 @@ describe('TDK architecture advisor contracts', () => {
   const skillPath = join(advisorDir, 'SKILL.md');
   const skill = existsSync(skillPath) ? read(skillPath) : '';
 
-  it('registers the advisor as a report-only TDK core skill', () => {
+  it('registers the advisor as a report-only TDK inception skill', () => {
     expect(existsSync(skillPath)).toBe(true);
     expect(skill).toContain('name: tdk-architecture-advisor');
     expect(skill).toContain('[input|file] [--recover-existing|--unknown]');

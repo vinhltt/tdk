@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import * as path from 'node:path';
-import { makeConsumer, writeBasicPlugin } from './fixtures';
+import { makeConsumer, writeBasicPlugin, writePluginDependencyPolicy } from './fixtures';
 
 const cliPath = path.resolve('src/index.ts');
 
@@ -22,6 +22,8 @@ describe('harness install --harness interactive/optional behaviour', () => {
 
   test('--harness codex only: enters install pipeline and requires plugin selector', () => {
     const consumer = makeConsumer();
+    writeBasicPlugin(consumer);
+    writePluginDependencyPolicy(consumer);
 
     const result = Bun.spawnSync({
       cmd: ['bun', cliPath, 'install', '--harness', 'codex'],

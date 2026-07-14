@@ -15,6 +15,7 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
 import type { Command } from 'commander';
+import { makeConsumer, writeBasicPlugin, writePluginDependencyPolicy } from './fixtures';
 
 // Absolute path to the harness source directory — mock.module requires absolute keys.
 const harnessPath = path.resolve('src');
@@ -95,6 +96,10 @@ describe('harness install picker seam (mocked checkbox-capable terminal)', () =>
   });
 
   test('omitted --harness + capable checkbox + picker returns codex → no coming-soon shortcut remains', async () => {
+    const consumer = makeConsumer('tdk-picker-codex-');
+    writeBasicPlugin(consumer);
+    writePluginDependencyPolicy(consumer);
+    consumerRoot = consumer.root;
     pickerResult = ['codex'];
 
     const stderrChunks: string[] = [];

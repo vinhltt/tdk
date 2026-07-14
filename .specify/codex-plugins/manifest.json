@@ -1,11 +1,11 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-09T14:20:18Z",
+  "generated_at": "2026-07-14T06:51:50Z",
   "plugins": {
     "tdk-core": {
-      "version": "9.0.0",
+      "version": "10.0.0",
       "files": {
-        ".codex-plugin/plugin.json": "4e9d6285080ef0cc72250f6e9bdb520c8a79a94342d1d6d930441f682644590e",
+        ".codex-plugin/plugin.json": "e7a7cb3ac832bbe9c3028bfc115b8ca45735347d4137842ba5385e64e2b52224",
         "hooks/codex-hooks.json": "218a8071c85c110a249cf591026b9aa857daa7658f1863b69c7506e62a023e62",
         "hooks/dev-context-injector.cjs": "95ec8603b65686b85c2fe02e73addce8c753361ad920dbeec8a35bd8b85e3671",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
@@ -201,9 +201,9 @@
       }
     },
     "tdk-utils": {
-      "version": "2.2.6",
+      "version": "3.0.0",
       "files": {
-        ".codex-plugin/plugin.json": "543dd44b63f5b8e1ed8c5d049e66f099b67d26409de933041622a60fa8e756f0",
+        ".codex-plugin/plugin.json": "6f11cb862fc03c4576a4da114943b1523452866d193da0086841e46e5e3bd441",
         "skills/brainstorming/SKILL.md": "51bc4fd4199fa7636350071c41e9adcab5f0c2c2bf036cb4bd86a8e162dbcdab",
         "skills/brainstorming/scripts/README.md": "2cf2a585153087eb14e49daeef8de22c1904d6799058d3666c1710a95f36e566",
         "skills/brainstorming/scripts/brainstorm.py": "ae22620928cbd69e03b05e4db707367bfb166b5c87eb70aa22114ddd6fd8461e",

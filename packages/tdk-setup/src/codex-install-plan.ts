@@ -24,6 +24,7 @@ import {
 } from './codex-target-mapper';
 import { manifestPathFor } from './manifest-store';
 import { assertSafeCodexTargetRelativePath, normalizeTargetRelativePath } from './target-relative-path';
+import { validateInstallPlanTargets } from './target-path-safety';
 import type { Manifest } from './manifest-types';
 import type {
   Collision,
@@ -292,6 +293,17 @@ function previousByTarget(previous: ManagedFile[]): Map<string, ManagedFile> {
   return new Map(previous.map((file) => [normalizeTargetRelativePath(file.targetRelativePath), file]));
 }
 
+function trustedPreviousHookOrigins(previous: HarnessInstallManifest, knownPluginIds: Set<string>): string[] {
+  const counts = new Map<string, number>();
+  for (const plugin of previous.selectedPlugins) counts.set(plugin, (counts.get(plugin) ?? 0) + 1);
+  return previous.selectedPlugins.filter((plugin) => (
+    plugin !== 'convert-flat'
+    && counts.get(plugin) === 1
+    && /^[a-z0-9][a-z0-9-]*$/.test(plugin)
+    && knownPluginIds.has(plugin)
+  ));
+}
+
 function classifyDesiredFile(root: string, artifact: CodexInstallArtifact, previous?: ManagedFile): {
   write?: PlannedWrite;
   managed?: ManagedFile;
@@ -364,7 +376,9 @@ export function buildCodexInstallPlan(input: BuildCodexInstallPlanInput): Instal
   const existingHooks = fs.existsSync(targetPath(input.consumerRoot, codexHooksJsonTarget()))
     ? fs.readFileSync(targetPath(input.consumerRoot, codexHooksJsonTarget()), 'utf-8')
     : '';
-  const managedOrigins = new Set([...input.previousManifest.selectedPlugins.filter((plugin) => plugin !== 'convert-flat'), ...input.selectedPlugins]);
+  const sourceManifest = readJson<Manifest>(path.join(input.consumerRoot, '.specify', 'plugins', 'manifest.json'));
+  const knownPluginIds = new Set(Object.keys(sourceManifest.plugins));
+  const managedOrigins = new Set([...trustedPreviousHookOrigins(input.previousManifest, knownPluginIds), ...input.selectedPlugins]);
   const hooksFragment = hooksFragmentFromArtifacts(input);
   if (Object.keys(hooksFragment).length > 0 || existingHooks.trim()) {
     const mergedHooks = mergeCodexHooksJson(existingHooks, hooksFragment, managedOrigins);
@@ -414,7 +428,7 @@ export function buildCodexInstallPlan(input: BuildCodexInstallPlanInput): Instal
     managedHooks: input.previousManifest.managedHooks,
   };
 
-  return {
+  const plan: InstallPlan = {
     harness: 'codex',
     consumerRoot: input.consumerRoot,
     selectedPlugins: [...input.selectedPlugins].sort(),
@@ -432,5 +446,8 @@ export function buildCodexInstallPlan(input: BuildCodexInstallPlanInput): Instal
     settingsChanged: false,
     nextInstallSettings: input.nextInstallSettings,
     installSettingsChanged: input.nextInstallSettings !== undefined,
+    operationStamp: nowIso().replace(/[:.]/g, '-'),
   };
+  validateInstallPlanTargets(plan);
+  return plan;
 }

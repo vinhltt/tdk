@@ -1,5 +1,5 @@
-import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { validateHarnessTargetPath } from './target-path-safety';
 
 const PROTECTED_ROOTS = [
   path.join('.', 'git'),
@@ -34,19 +34,6 @@ function assertRelativePath(value: string, label: string): void {
   }
 }
 
-function assertNoSymlinkAncestors(root: string, absolutePath: string, label: string): void {
-  const rootReal = fs.realpathSync(root);
-  const relative = path.relative(rootReal, path.resolve(absolutePath));
-  let current = rootReal;
-  for (const segment of relative.split(path.sep).filter(Boolean).slice(0, -1)) {
-    current = path.join(current, segment);
-    if (!fs.existsSync(current)) break;
-    if (fs.lstatSync(current).isSymbolicLink()) {
-      throw new Error(`${label} has symlinked ancestor: ${current}`);
-    }
-  }
-}
-
 function assertNotProtected(relativePath: string, label: string): void {
   const normalized = path.normalize(relativePath);
   if (PROTECTED_FILES.has(normalized)) throw new Error(`${label} targets protected file: ${relativePath}`);
@@ -60,11 +47,12 @@ function assertNotProtected(relativePath: string, label: string): void {
 export function validateContainedNoFollowPath(root: string, relativePath: string, label: string): string {
   assertRelativePath(relativePath, label);
   assertNotProtected(relativePath, label);
-  const absolutePath = path.resolve(root, relativePath);
-  const rootReal = fs.realpathSync(root);
-  if (!isInside(rootReal, absolutePath)) throw new Error(`${label} escapes consumer root: ${relativePath}`);
-  assertNoSymlinkAncestors(root, absolutePath, label);
-  return absolutePath;
+  return validateHarnessTargetPath({
+    consumerRoot: root,
+    targetPath: path.resolve(root, relativePath),
+    allowedRoots: [root],
+    label,
+  });
 }
 
 export function validateSafeSegment(input: string, label: string): string {

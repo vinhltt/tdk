@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseWorkspaceTopology } from '../src/commands/config/topology/schema';
 
-const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
+const INCEPTION_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-inception/skills');
 const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en/guides');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
@@ -60,7 +60,7 @@ const FORBIDDEN_PROMISES = [
 ];
 
 function skillDir(name: string): string {
-  return resolve(CORE_SKILLS_DIR, name);
+  return resolve(INCEPTION_SKILLS_DIR, name);
 }
 
 function read(path: string): string {
@@ -82,7 +82,7 @@ describe('TDK workspace layout proposal contracts', () => {
   const skill = existsSync(skillPath) ? read(skillPath) : '';
   const legacySkill = existsSync(legacySkillPath) ? read(legacySkillPath) : '';
 
-  it('registers workspace-layout-propose as the proposal-only TDK core skill', () => {
+  it('registers workspace-layout-propose as the proposal-only TDK inception skill', () => {
     expect(existsSync(skillPath)).toBe(true);
     expect(skill).toContain('name: tdk-workspace-layout-propose');
     expect(skill).toContain('[input|file] [--from-existing|--unknown]');
@@ -213,7 +213,7 @@ describe('TDK workspace layout proposal contracts', () => {
   });
 
   it('keeps workflow config apply interactive while documenting new and legacy layout routes', () => {
-    const topologyApply = read(join(CORE_SKILLS_DIR, 'tdk-workflow-config-apply/SKILL.md'));
+    const topologyApply = read(join(INCEPTION_SKILLS_DIR, 'tdk-workflow-config-apply/SKILL.md'));
     const skillsGuide = read(join(DOCS_DIR, 'skills-guide.md'));
     const workflowMap = read(join(DOCS_DIR, 'workflow-map.md'));
 

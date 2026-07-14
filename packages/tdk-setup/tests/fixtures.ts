@@ -56,6 +56,29 @@ export function writeMultiPluginManifest(consumer: FixtureConsumer, plugins: Rec
   }, null, 2), 'utf-8');
 }
 
+export function writePluginDependencyPolicy(
+  consumer: FixtureConsumer,
+  policy: { requiredPlugins: string[]; dependencies: Record<string, string[]> } = {
+    requiredPlugins: [],
+    dependencies: {},
+  },
+): void {
+  const policyPath = path.join(consumer.root, '.specify', 'plugins', 'plugin-dependencies.json');
+  const policyContent = `${JSON.stringify({ version: 1, ...policy }, null, 2)}\n`;
+  fs.writeFileSync(policyPath, policyContent, 'utf-8');
+  const releaseManifestPath = path.join(consumer.root, '.specify', 'release-manifest.json');
+  fs.writeFileSync(releaseManifestPath, JSON.stringify({
+    schemaVersion: 1,
+    algorithm: 'sha256',
+    files: {
+      '.specify/plugins/plugin-dependencies.json': {
+        sha256: sha256(policyContent),
+        size: Buffer.byteLength(policyContent),
+      },
+    },
+  }, null, 2), 'utf-8');
+}
+
 export function writeBasicPlugin(consumer: FixtureConsumer): void {
   const skill = '# Skill\n';
   const agent = '# Agent\n';

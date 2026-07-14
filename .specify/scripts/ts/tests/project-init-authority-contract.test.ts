@@ -64,21 +64,21 @@ describe('constitution-driven project init contract', () => {
   });
 
   it('preserves tdk-docs-writer for sub-workspace documentation', () => {
-    expect(existsSync(resolve(SPECIFY_ROOT, 'plugins/tdk-core/agents/tdk-docs-writer.md'))).toBe(true);
+    expect(existsSync(resolve(SPECIFY_ROOT, 'plugins/tdk-inception/agents/tdk-docs-writer.md'))).toBe(true);
 
-    const subWorkspaceSkill = readSpecify('plugins/tdk-core/skills/tdk-sub-workspace-docs/SKILL.md');
+    const subWorkspaceSkill = readSpecify('plugins/tdk-inception/skills/tdk-sub-workspace-docs/SKILL.md');
     expect(subWorkspaceSkill).toContain('tdk-docs-writer');
 
     const manifest = JSON.parse(readSpecify('plugins/manifest.json')) as {
       plugins?: Record<string, { components?: { agents?: Record<string, unknown> }; files?: Record<string, string> }>;
     };
-    const core = manifest.plugins?.['tdk-core'];
-    expect(core?.components?.agents ?? {}).toHaveProperty('tdk-docs-writer');
-    expect(Object.keys(core?.files ?? {})).toContain('agents/tdk-docs-writer.md');
+    const inception = manifest.plugins?.['tdk-inception'];
+    expect(inception?.components?.agents ?? {}).toHaveProperty('tdk-docs-writer');
+    expect(Object.keys(inception?.files ?? {})).toContain('agents/tdk-docs-writer.md');
   });
 
   it('documents fresh and existing memory behavior in tdk-constitution', () => {
-    const skill = readSpecify('plugins/tdk-core/skills/tdk-constitution/SKILL.md');
+    const skill = readSpecify('plugins/tdk-inception/skills/tdk-constitution/SKILL.md');
 
     expect(skill).toContain('--init');
     expect(skill).toContain('create-if-missing');
@@ -93,7 +93,7 @@ describe('constitution-driven project init contract', () => {
   });
 
   it('wires constitution init to arc42 summaries and typed memory templates', () => {
-    const skill = readSpecify('plugins/tdk-core/skills/tdk-constitution/SKILL.md');
+    const skill = readSpecify('plugins/tdk-inception/skills/tdk-constitution/SKILL.md');
 
     const canonicalSection = section(skill, '### Arc42 And Typed Memory Templates');
     const templateTargets = [
@@ -119,7 +119,7 @@ describe('constitution-driven project init contract', () => {
   });
 
   it('handles legacy root project docs with report plus stub policy', () => {
-    const skill = readSpecify('plugins/tdk-core/skills/tdk-constitution/SKILL.md');
+    const skill = readSpecify('plugins/tdk-inception/skills/tdk-constitution/SKILL.md');
     const legacySection = section(skill, '### Legacy Root Project Docs Policy');
 
     for (const legacyFile of [
@@ -139,7 +139,7 @@ describe('constitution-driven project init contract', () => {
   });
 
   it('constitution bootstrap template has source and instruction comments', () => {
-    const template = readSpecify('plugins/tdk-core/skills/tdk-constitution/templates/constitution.md.tpl');
+    const template = readSpecify('plugins/tdk-inception/skills/tdk-constitution/templates/constitution.md.tpl');
     const sections = parseAutoGenSections(template);
     const ids = sections.map(section => section.id);
 

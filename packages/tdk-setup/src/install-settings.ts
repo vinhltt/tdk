@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { z } from 'zod';
 import { validateContainedNoFollowPath, validateSafeSegment } from './install-settings-paths';
+import { validateHarnessTargetPath } from './target-path-safety';
 import type { HarnessInstallManifest, HarnessName } from './types';
 
 export interface RewriteSettings {
@@ -15,6 +16,7 @@ export interface InstallSettings {
   defaults: {
     sourcePrefix: string;
     targetPrefix: string;
+    // Last globally requested optional plugin IDs; harness ownership records resolved IDs.
     selectedPlugins: string[];
     rewrite: RewriteSettings;
   };
@@ -115,7 +117,7 @@ export function defaultInstallSettings(selectedPlugins: string[] = []): InstallS
     },
     harnesses: {
       claude: { enabled: true, targetDir: '.claude', settingsPath: '.claude/settings.json' },
-      codex: { enabled: false, targetDir: '.codex' },
+      codex: { enabled: true, targetDir: '.codex' },
     },
   };
 }
@@ -234,6 +236,18 @@ export function parseHarnessList(value: string): HarnessName[] {
 
 export function saveInstallSettings(root: string, settings: InstallSettings): void {
   const filePath = settingsPathFor(root);
+  validateHarnessTargetPath({
+    consumerRoot: root,
+    targetPath: filePath,
+    allowedRoots: [filePath],
+    label: 'Install settings',
+  });
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  validateHarnessTargetPath({
+    consumerRoot: root,
+    targetPath: filePath,
+    allowedRoots: [filePath],
+    label: 'Install settings',
+  });
   fs.writeFileSync(filePath, `${JSON.stringify(validateSettings(root, settings), null, 2)}\n`, 'utf-8');
 }

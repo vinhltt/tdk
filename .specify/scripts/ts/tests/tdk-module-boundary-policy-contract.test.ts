@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
+const INCEPTION_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-inception/skills');
 const UTILS_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-utils/skills');
 const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
 const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en/guides');
@@ -55,7 +56,7 @@ const FORBIDDEN_POLICY_PROMISES = [
 ];
 
 function skillDir(name: string): string {
-  return resolve(UTILS_SKILLS_DIR, name);
+  return resolve(INCEPTION_SKILLS_DIR, name);
 }
 
 function read(path: string): string {
@@ -77,7 +78,7 @@ describe('TDK workspace dependency policy contracts', () => {
   const skill = existsSync(skillPath) ? read(skillPath) : '';
   const legacySkill = existsSync(legacySkillPath) ? read(legacySkillPath) : '';
 
-  it('registers workspace-dependency-policy as a TDK utils report skill', () => {
+  it('registers workspace-dependency-policy as a TDK inception report skill', () => {
     expect(existsSync(skillPath)).toBe(true);
     expect(skill).toContain('name: tdk-workspace-dependency-policy');
     expect(skill).toContain('[layout|file] [--audit|--suggest]');
@@ -90,7 +91,10 @@ describe('TDK workspace dependency policy contracts', () => {
     );
     expect(skill).toContain('does not create or update `.specify/.specify.json`');
     expect(skill).toContain('does not enforce imports directly');
-    expect(existsSync(join(CORE_SKILLS_DIR, POLICY_NAME, 'SKILL.md'))).toBe(false);
+    for (const oldOwnerSkillsDir of [CORE_SKILLS_DIR, UTILS_SKILLS_DIR]) {
+      expect(existsSync(join(oldOwnerSkillsDir, POLICY_NAME, 'SKILL.md'))).toBe(false);
+      expect(existsSync(join(oldOwnerSkillsDir, LEGACY_POLICY_NAME, 'SKILL.md'))).toBe(false);
+    }
   });
 
   it('keeps module-boundary-policy as a deprecated compatibility wrapper', () => {

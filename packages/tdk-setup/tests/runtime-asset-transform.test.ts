@@ -4,7 +4,14 @@ import * as path from 'node:path';
 import { discoverPluginInventory } from '../src/plugin-discovery';
 import { emptyHarnessManifest } from '../src/manifest-store';
 import { buildClaudeInstallPlan } from '../src/install-plan';
-import { makeConsumer, pluginRoot, sha256, writeMultiPluginManifest, writePluginFile } from './fixtures';
+import {
+  makeConsumer,
+  pluginRoot,
+  sha256,
+  writeMultiPluginManifest,
+  writePluginDependencyPolicy,
+  writePluginFile,
+} from './fixtures';
 
 const cliPath = path.resolve('src/index.ts');
 
@@ -144,6 +151,7 @@ describe('runtime asset transform planning', () => {
       consumer,
       '# Skill\nRun "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py"\n',
     );
+    writePluginDependencyPolicy(consumer);
 
     const result = Bun.spawnSync({
       cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--plugins', 'tdk-memory', '--yes'],

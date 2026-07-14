@@ -10,6 +10,7 @@ import { manifestPathFor } from './manifest-store';
 import { buildPrefixRewriteMap, transformFileContent, transformTargetRelativePath } from './prefix-transform';
 import { buildRuntimeAssetMap, transformRuntimeAssetContent } from './runtime-asset-transform';
 import { assertSafeClaudeTargetRelativePath, normalizeTargetRelativePath, posixTargetPath } from './target-relative-path';
+import { validateInstallPlanTargets } from './target-path-safety';
 import type {
   BuildPlanInput,
   Collision,
@@ -141,7 +142,8 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
     }
   }
 
-  for (const file of selectedFiles) {
+  const uniqueSelectedFiles = [...seenTargets.values()];
+  for (const file of uniqueSelectedFiles) {
     desiredTargets.add(file.targetRelativePath);
     const result = classifyFile({
       consumerRoot: input.consumerRoot,
@@ -177,7 +179,7 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
   });
   collisions.push(...hookMerge.collisions);
 
-  const managedFiles: ManagedFile[] = selectedFiles.map((file) => ({
+  const managedFiles: ManagedFile[] = uniqueSelectedFiles.map((file) => ({
     plugin: file.plugin,
     sourceRelativePath: file.sourceRelativePath,
     targetRelativePath: file.targetRelativePath,
@@ -195,7 +197,7 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
     managedHooks: hookMerge.managedHooks,
   };
 
-  return {
+  const plan: InstallPlan = {
     harness: 'claude',
     consumerRoot: input.consumerRoot,
     selectedPlugins: [...input.selectedPlugins].sort(),
@@ -215,5 +217,8 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
     nextInstallSettings: input.nextInstallSettings,
     installSettingsChanged: input.nextInstallSettings !== undefined,
     migration: input.migration,
+    operationStamp: nowIso().replace(/[:.]/g, '-'),
   };
+  validateInstallPlanTargets(plan);
+  return plan;
 }

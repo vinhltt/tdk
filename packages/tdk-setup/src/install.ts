@@ -4,6 +4,9 @@ import { blockingCollisions } from './collisions';
 import { resolveConsumerRoot } from './root-resolution';
 import { discoverPluginInventory, discoverPrefixRewritePlugins, listManifestPluginNames } from './plugin-discovery';
 import { loadHarnessManifest } from './manifest-store';
+import { assertResolvedCodexPackages } from './codex-install-preflight';
+import { loadPluginDependencyPolicy, resolvePluginSelection } from './plugin-dependencies';
+import { validateInstallPlanTargets } from './target-path-safety';
 import { readSettings } from './hook-merge';
 import {
   defaultInstallSettings,
@@ -40,39 +43,17 @@ function parsePlugins(value: string | undefined): string[] {
   if (plugins.length === 0) throw new Error('--plugins requires at least one plugin name');
   return [...new Set(plugins)];
 }
-function assertCompanionPlugins(selectedPlugins: string[]): void {
-  const selected = new Set(selectedPlugins);
-  const missingCompanion = ['tdk-core', 'tdk-epic']
-    .filter((plugin) => selected.has(plugin) && !selected.has('tdk-utils'));
-  if (missingCompanion.length === 0) return;
-
-  const suggested = [...selectedPlugins, 'tdk-utils']
-    .filter((plugin, index, plugins) => plugins.indexOf(plugin) === index)
-    .join(',');
-  throw new Error(
-    `Selected ${missingCompanion.join(', ')} requires companion plugin tdk-utils. Use --plugins ${suggested} or --all-plugins.`,
-  );
-}
-function manifestHasState(manifest: ReturnType<typeof loadHarnessManifest>): boolean {
-  return manifest.selectedPlugins.length > 0 || manifest.managedFiles.length > 0 || manifest.managedHooks.length > 0;
-}
-async function resolveSelection(consumerRoot: string, opts: InstallOptions, savedPlugins: string[], hasOwnershipState: boolean): Promise<string[]> {
+async function resolveRequestedPlugins(opts: InstallOptions, optionalPlugins: string[]): Promise<string[]> {
   const explicit = parsePlugins(opts.plugins);
   if (opts.allPlugins && explicit.length > 0) {
     throw new Error('--plugins conflicts with --all-plugins');
   }
-  if (opts.allPlugins) return listManifestPluginNames(consumerRoot);
+  if (opts.allPlugins) return optionalPlugins;
   if (explicit.length > 0) return explicit;
-  if (savedPlugins.length > 0) {
-    if (!process.stdin.isTTY && !hasOwnershipState) {
-      throw new Error('Saved plugin selection requires an ownership manifest. Use --plugins <name[,name]> or --all-plugins to reinstall explicitly.');
-    }
-    return savedPlugins;
-  }
   if (!process.stdin.isTTY) {
     throw new Error('No plugin selector provided. Use --plugins <name[,name]> or --all-plugins.');
   }
-  return selectPluginsInteractively(listManifestPluginNames(consumerRoot));
+  return selectPluginsInteractively(optionalPlugins);
 }
 async function resolveHarnessOption(value: string | undefined): Promise<HarnessName[]> {
   if (value) return parseHarnessList(value);
@@ -81,7 +62,11 @@ async function resolveHarnessOption(value: string | undefined): Promise<HarnessN
   }
   throw new Error('No harness provided. Use --harness claude.');
 }
-function buildNextInstallSettings(settings: InstallSettings | undefined, resolved: ResolvedClaudeSettings | ResolvedCodexSettings): InstallSettings {
+function buildNextInstallSettings(
+  settings: InstallSettings | undefined,
+  resolved: ResolvedClaudeSettings | ResolvedCodexSettings,
+  requestedOptionalPlugins: string[],
+): InstallSettings {
   const base = settings ?? defaultInstallSettings();
   const harnesses = resolved.harness === 'claude'
     ? {
@@ -104,7 +89,7 @@ function buildNextInstallSettings(settings: InstallSettings | undefined, resolve
     defaults: {
       sourcePrefix: resolved.sourcePrefix,
       targetPrefix: resolved.targetPrefix,
-      selectedPlugins: [...resolved.selectedPlugins].sort(),
+      selectedPlugins: [...requestedOptionalPlugins].sort(),
       rewrite: resolved.rewrite,
     },
     harnesses,
@@ -154,6 +139,11 @@ export function createInstallCommand(): Command {
           throw new Error('Combined Claude+Codex installs are not supported in v1. Run one harness at a time.');
         }
         const root = resolveConsumerRoot(rootArg ? path.resolve(rootArg) : process.cwd());
+        const manifestPluginNames = listManifestPluginNames(root.consumerRoot);
+        const policy = loadPluginDependencyPolicy(root.consumerRoot, manifestPluginNames);
+        const optionalPlugins = resolvePluginSelection(policy, manifestPluginNames, []).optionalPlugins;
+        const requestedInput = await resolveRequestedPlugins(opts, optionalPlugins);
+        const selection = resolvePluginSelection(policy, manifestPluginNames, requestedInput);
         const installSettings = loadInstallSettings(root.consumerRoot);
         const targetHarness = harnesses.includes('codex') ? 'codex' : 'claude';
         const previousManifest = loadHarnessManifest(root.consumerRoot, targetHarness);
@@ -166,34 +156,24 @@ export function createInstallCommand(): Command {
           settings: installSettings,
           oldManifest: previousManifest,
         });
-        const selectedPlugins = await resolveSelection(
-          root.consumerRoot,
-          opts,
-          baseSettings.selectedPlugins,
-          manifestHasState(previousManifest),
-        );
-        assertCompanionPlugins(selectedPlugins);
         const prefix = await resolveTargetPrefix(opts, baseSettings);
         const resolvedSettings = {
           ...baseSettings,
-          selectedPlugins,
+          selectedPlugins: selection.requestedPlugins,
           targetPrefix: prefix.targetPrefix,
         };
-        if (!opts.dryRun && process.stdin.isTTY) {
-          const confirmed = await confirmInstallTarget({
-            consumerRoot: root.consumerRoot,
-            targetDir: resolvedSettings.targetDir,
-            settingsPath: resolvedSettings.harness === 'claude' ? resolvedSettings.settingsPath : '.codex/config.toml',
-            targetPrefix: resolvedSettings.targetPrefix,
-            selectedPlugins,
-          });
-          if (!confirmed) throw new Error('Install cancelled.');
+        const nextInstallSettings = buildNextInstallSettings(
+          installSettings,
+          resolvedSettings,
+          selection.requestedPlugins,
+        );
+        if (targetHarness === 'codex') {
+          assertResolvedCodexPackages({ consumerRoot: root.consumerRoot, resolvedPlugins: selection.resolvedPlugins });
         }
-        const nextInstallSettings = buildNextInstallSettings(installSettings, resolvedSettings);
         const plan = resolvedSettings.harness === 'codex'
           ? buildCodexInstallPlan({
             consumerRoot: root.consumerRoot,
-            selectedPlugins,
+            selectedPlugins: selection.resolvedPlugins,
             previousManifest,
             sourcePrefix: resolvedSettings.sourcePrefix,
             targetPrefix: resolvedSettings.targetPrefix,
@@ -201,12 +181,12 @@ export function createInstallCommand(): Command {
             nextInstallSettings,
           })
           : (() => {
-            const inventory = discoverPluginInventory(root.consumerRoot, selectedPlugins);
+            const inventory = discoverPluginInventory(root.consumerRoot, selection.resolvedPlugins);
             const rewritePlugins = discoverPrefixRewritePlugins(root.consumerRoot);
             const settings = readSettings(root.consumerRoot, resolvedSettings.settingsPath);
             const claudePlan = buildClaudeInstallPlan({
               consumerRoot: root.consumerRoot,
-              selectedPlugins,
+              selectedPlugins: selection.resolvedPlugins,
               plugins: inventory.plugins,
               rewritePlugins,
               previousManifest,
@@ -224,8 +204,20 @@ export function createInstallCommand(): Command {
             return claudePlan;
           })();
         plan.warnings.push(...root.warnings);
+        validateInstallPlanTargets(plan);
+        if (!opts.dryRun && process.stdin.isTTY) {
+          const confirmed = await confirmInstallTarget({
+            consumerRoot: root.consumerRoot,
+            targetDir: resolvedSettings.targetDir,
+            settingsPath: resolvedSettings.harness === 'claude' ? resolvedSettings.settingsPath : '.codex/config.toml',
+            targetPrefix: resolvedSettings.targetPrefix,
+            requestedOptionalPlugins: selection.requestedPlugins,
+            resolvedPlugins: selection.resolvedPlugins,
+          });
+          if (!confirmed) throw new Error('Install cancelled.');
+        }
 
-        process.stdout.write(renderInstallPlan(plan));
+        process.stdout.write(renderInstallPlan(plan, selection.requestedPlugins));
         if (opts.dryRun) {
           if (blockingCollisions(plan.collisions, plan.prompts).length > 0) process.exitCode = 1;
           return;

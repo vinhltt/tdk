@@ -17,8 +17,8 @@ function parsePluginSelection(answer: string, pluginNames: string[]): string[] {
 async function selectPluginsByQuestion(pluginNames: string[]): Promise<string[]> {
   const rl = readline.createInterface({ input, output });
   try {
-    output.write(`Available plugins:\n${pluginNames.map((name, index) => `  ${index + 1}. ${name}`).join('\n')}\n`);
-    const answer = await rl.question('Select plugins by number or name (comma-separated): ');
+    output.write(`Optional plugins:\n${pluginNames.map((name, index) => `  ${index + 1}. ${name}`).join('\n')}\n`);
+    const answer = await rl.question('Select optional plugins by number or name (comma-separated, blank for base only): ');
     return parsePluginSelection(answer, pluginNames);
   } finally {
     rl.close();
@@ -26,14 +26,15 @@ async function selectPluginsByQuestion(pluginNames: string[]): Promise<string[]>
 }
 
 export async function selectPluginsInteractively(pluginNames: string[]): Promise<string[]> {
-  if (pluginNames.length === 0) throw new Error('No plugins are available in .specify/plugins/manifest.json.');
+  if (pluginNames.length === 0) return [];
   if (!canUseCheckboxPrompt(input, output)) return selectPluginsByQuestion(pluginNames);
   return selectFromCheckbox(pluginNames, {
-    title: 'Select plugins to install',
-    hint: 'Use Up/Down or j/k to move, Space to toggle, a to select/clear all, Enter to install, Esc to cancel.',
-    emptyMsg: 'Select at least one plugin.',
-    selectedMsgPrefix: 'Selected plugins: ',
+    title: 'Select optional plugins to install',
+    hint: 'Use Up/Down or j/k to move, Space to toggle, a to select/clear all, Enter to install base only, Esc to cancel.',
+    emptyMsg: 'No optional plugins selected; base plugins will be installed.',
+    selectedMsgPrefix: 'Selected optional plugins: ',
     cancelMsg: 'Plugin selection cancelled.',
+    allowEmpty: true,
   });
 }
 
@@ -68,7 +69,8 @@ export async function confirmInstallTarget(details: {
   targetDir: string;
   settingsPath: string;
   targetPrefix: string;
-  selectedPlugins: string[];
+  requestedOptionalPlugins: string[];
+  resolvedPlugins: string[];
 }): Promise<boolean> {
   const rl = readline.createInterface({ input, output });
   try {
@@ -76,7 +78,8 @@ export async function confirmInstallTarget(details: {
     output.write(`Target dir: ${details.targetDir}\n`);
     output.write(`Claude settings: ${details.settingsPath}\n`);
     output.write(`Target prefix: ${details.targetPrefix}\n`);
-    output.write(`Plugins: ${details.selectedPlugins.join(', ') || '(none)'}\n`);
+    output.write(`Requested optional plugins: ${details.requestedOptionalPlugins.join(', ') || '(none)'}\n`);
+    output.write(`Resolved plugins: ${details.resolvedPlugins.join(', ') || '(none)'}\n`);
     const answer = await rl.question('Apply this harness install? Type yes to continue: ');
     return answer.trim().toLowerCase() === 'yes';
   } finally {

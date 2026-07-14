@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
+const INCEPTION_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-inception/skills');
 
 type SkillContract = {
   name: string;
@@ -62,7 +62,7 @@ const FORBIDDEN_RUNTIME_REFERENCES = [
 ];
 
 function skillDir(name: string): string {
-  return resolve(CORE_SKILLS_DIR, name);
+  return resolve(INCEPTION_SKILLS_DIR, name);
 }
 
 function read(path: string): string {

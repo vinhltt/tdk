@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 const CONSTITUTION_SKILL_PATH = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-constitution/SKILL.md',
+  '../../../plugins/tdk-inception/skills/tdk-constitution/SKILL.md',
 );
 const ARC42_SUMMARY_TEMPLATE_PATH = resolve(
   import.meta.dir,

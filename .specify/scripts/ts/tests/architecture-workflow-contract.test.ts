@@ -2,14 +2,14 @@ import { describe, expect, it } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const CORE_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-core/skills');
+const INCEPTION_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-inception/skills');
 const EPIC_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-epic/skills');
 const INDEX_PATH = resolve(import.meta.dir, '../src/index.ts');
 const APPLY_PATH = resolve(import.meta.dir, '../src/commands/config/topology/apply.ts');
 const OLD_TOPOLOGY_APPLY_SKILL = ['tdk', 'workspace', 'topology', 'apply'].join('-');
 
 function skillPath(name: string): string {
-  return resolve(CORE_SKILLS_DIR, name, 'SKILL.md');
+  return resolve(INCEPTION_SKILLS_DIR, name, 'SKILL.md');
 }
 
 function epicSkillPath(name: string): string {

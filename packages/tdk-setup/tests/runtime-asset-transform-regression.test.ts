@@ -4,7 +4,14 @@ import * as path from 'node:path';
 import { buildClaudeInstallPlan } from '../src/install-plan';
 import { emptyHarnessManifest } from '../src/manifest-store';
 import { discoverPluginInventory } from '../src/plugin-discovery';
-import { makeConsumer, pluginRoot, sha256, writeMultiPluginManifest, writePluginFile } from './fixtures';
+import {
+  makeConsumer,
+  pluginRoot,
+  sha256,
+  writeMultiPluginManifest,
+  writePluginDependencyPolicy,
+  writePluginFile,
+} from './fixtures';
 
 const cliPath = path.resolve('src/index.ts');
 
@@ -108,6 +115,7 @@ describe('runtime asset transform regressions', () => {
       path.join(sourcePlugins, 'manifest.json'),
       path.join(consumer.root, '.specify', 'plugins', 'manifest.json'),
     );
+    writePluginDependencyPolicy(consumer);
 
     const result = Bun.spawnSync({
       cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--plugins', 'tdk-memory,tdk-utils', '--yes'],
@@ -147,6 +155,7 @@ describe('runtime asset transform regressions', () => {
       path.join(sourcePlugins, 'manifest.json'),
       path.join(consumer.root, '.specify', 'plugins', 'manifest.json'),
     );
+    writePluginDependencyPolicy(consumer);
 
     const result = Bun.spawnSync({
       cmd: ['bun', cliPath, 'install', '--harness', 'claude', '--plugins', 'tdk-memory', '--prefix', 'erc', '--yes'],
