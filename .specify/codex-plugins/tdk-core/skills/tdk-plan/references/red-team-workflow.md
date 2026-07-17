@@ -34,7 +34,10 @@ Adversarial review by 3 personas in parallel. Findings flow raw to a markdown-ta
 8. Adjudicate (next section).
 9. Apply accepted findings (transaction-log section).
 10. Append `## Red Team Review` to `plan.md`.
-11. Write full report to `reports/red-team-{YYMMDD}-{HHMM}-{mode}.md` (mode = `manual | hard | parallel | two`).
+11. Write one final report to `reports/red-team-{yyMMdd-HHmmss}-{mode}.md`
+    (mode = `manual | hard | parallel | two`).
+12. After the final report and `plan.md` session block are committed, remove
+    that session's committed `.tdk-tmp/red-team/{timestamp}/` directory.
 
 ## Agent Prompt Fence (S1.F6 mitigation)
 
@@ -92,7 +95,7 @@ Print identities, not just counts:
 About to APPLY:
   Accept: #1 "SQLi in auth.ts", #3 "Missing rollback on phase-04"
   Reject: #2, #4
-  Defer:  #5, #6 → reports/red-team-{ts}-deferred.md
+  Defer:  #5, #6 → reports/red-team-{yyMMdd-HHmmss}-deferred.md
 Apply? [y/N]
 ```
 
@@ -101,11 +104,14 @@ User must reply `y` (case-insensitive) to proceed. Anything else → halt; no ma
 ### Parser Failure Policy (S2.F9)
 
 - 1st parse fail (interpretation produced 0 valid indices): re-prompt once with the example syntax above.
-- 2nd parse fail: STOP. Save the raw user reply to `reports/red-team-{ts}-reply.txt`. **No silent default-to-defer-all.**
+- 2nd parse fail: STOP. Save the raw user reply to
+  `.tdk-tmp/red-team/{timestamp}/reply.txt`. Keep it as recovery state, not
+  durable review evidence. **No silent default-to-defer-all.**
 
 ## `defer` Semantics (S2.F9)
 
-Deferred findings are written in full to `reports/red-team-{ts}-deferred.md`:
+Only unresolved deferred findings are written in full to
+`reports/red-team-{yyMMdd-HHmmss}-deferred.md`:
 
 ```markdown
 # Deferred Red Team Findings (Session {N})
@@ -121,11 +127,17 @@ Deferred findings DO NOT apply markers. They DO NOT count toward `accepted_count
 
 Before any marker write:
 
-1. Create `reports/red-team-{ts}-apply-log.json`:
+1. Create `.tdk-tmp/red-team/{timestamp}/apply-log.json`:
    ```json
    {
      "session": N,
      "status": "pending",
+     "evidence": {
+       "plan_block_marker": "<!-- Red Team Session N -->",
+       "plan_block": "<exact intended plan.md session block>",
+       "final_report_path": "reports/red-team-{yyMMdd-HHmmss}-{mode}.md",
+       "final_report": "<exact intended final report>"
+     },
      "entries": [
        { "finding_id": 1, "target_phase": "phase-02-auth.md", "marker_text": "...", "status": "pending" },
        ...
@@ -133,12 +145,21 @@ Before any marker write:
    }
    ```
 2. Loop over entries, applying via Edit tool. After each successful Edit, flip `entries[i].status` → `applied`.
-3. After all `applied`, flip top-level `status` → `committed`.
-4. On Ctrl-C / failure mid-loop, the log retains `pending` entries for orphan detection.
+3. After all entries are `applied`, flip top-level `status` → `finalizing`.
+4. Write `plan.md ## Red Team Review` and the final report while the log remains
+   recoverable as `finalizing`.
+5. Only after both final writes succeed, flip top-level `status` → `committed`,
+   then remove the committed temp directory.
+6. On Ctrl-C / failure before evidence commit, the log remains `pending` or
+   `finalizing` for orphan detection.
 
 ### Orphan Detection on Session Start
 
-At the start of every red-team invocation, scan `reports/red-team-*-apply-log.json` for any file whose top-level `status != "committed"`. If found → AskUserQuestion:
+At the start of every red-team invocation, scan every
+`.tdk-tmp/red-team/*/` session directory. Treat either an `apply-log.json`
+whose top-level `status != "committed"` or a reply-only session containing
+`reply.txt` without a committed final report as recoverable orphan state. If
+found → AskUserQuestion:
 
 ```
 Prior session left N markers partially applied (log: {filepath}).
@@ -146,6 +167,20 @@ Prior session left N markers partially applied (log: {filepath}).
 [Discard — delete pending entries, mark log as abandoned]
 [Cancel — exit; resolve manually]
 ```
+
+For a reply-only session, show Review reply, Discard reply, and Cancel. Never
+silently delete parse-failure evidence.
+
+Resume by state:
+
+- `pending`: verify already-applied marker bytes, then apply only remaining
+  pending entries and advance to `finalizing`.
+- `finalizing`: do not reapply markers. Use the exact evidence payload stored
+  in the log to verify or idempotently write the missing `plan.md` session
+  block and final report. If either path exists with different bytes, STOP as
+  a user-edit conflict. Only after both match, set `committed` and clean up.
+- reply-only: review or discard the saved reply explicitly; it cannot enter
+  marker/evidence finalization automatically.
 
 (Mirrors the Phase 07 D5 resume pattern.)
 
@@ -197,12 +232,18 @@ Fail → finding flagged `unfixable_target` in the report; no marker written.
 
 Re-runs append `### Session N+1 — ...` after the prior block; never overwrite.
 
-## Reports Layout
+## Persistence Layout
 
 ```
 .specify/<specsRoot>/<...>/<task_id>/reports/
-├── red-team-260425-1530-hard.md           # full per-session report
-├── red-team-260425-1530-deferred.md       # deferred findings (full content)
-├── red-team-260425-1530-apply-log.json    # transaction log (cleanup-safe)
-└── red-team-260425-1530-reply.txt         # raw user reply (only on parse fail)
+├── red-team-260425-153045-hard.md         # one final per-session report
+└── red-team-260425-153045-deferred.md     # only while deferred findings remain
+
+.specify/<specsRoot>/<...>/<task_id>/.tdk-tmp/red-team/260425-153045/
+├── apply-log.json                         # crash recovery; delete after commit
+└── reply.txt                              # parse-fail recovery only
 ```
+
+Never treat `.tdk-tmp/red-team/**` as final evidence or include it in retro
+collection. Do not keep separate raw persona transcripts after their findings
+have been summarized in the final report.

@@ -21,14 +21,20 @@
 
 **Fallback:** if file missing → use template Option 1/2/3 boilerplate (current behavior).
 
-1. Extract entities from spec ## 6. Functional Requirements > Key Entities → `data-model.md`.
-2. Define API contracts from ## 6. Functional Requirements → `contracts/`.
-3. Plan file structure based on framework.
-4. Identify dependencies and risks (also read ## 8. Risks & Mitigations from spec).
-5. Record deployment, rollback, and observability notes when the implementation
+1. Assign entity/schema design to the first phase that implements it and write
+   a concise `## Data Model` section in that phase.
+2. Assign interface design to the implementing phase. Keep prose in
+   `## Interfaces & Contracts`; create `contracts/` only for a declared
+   machine consumer and validation command.
+3. Assign setup, rollout, rollback, and operational verification to an owner
+   phase under `## Verification / Runbook`.
+4. Plan file structure based on framework.
+5. Identify dependencies and risks (also read ## 8. Risks & Mitigations from spec).
+6. Record deployment, rollback, and observability notes when the implementation
    changes runtime behavior, public interfaces, or operational workflows.
 
-**Output:** `data-model.md`, `contracts/`, `quickstart.md`.
+**Output:** `plan.md`, executable `phases/*.md`, and only justified conditional
+supporting artifacts indexed by `plan.md`.
 
 ## Embedded Brainstorming (Architecture Decisions)
 
@@ -66,6 +72,11 @@ Mode: **embedded — reasoning technique only.**
    - Consider creating per-subworkspace phases when modules are independent
    - Use tags as **soft hints** — may group multiple modules into one phase for efficiency
    - If no tags present (legacy spec): fall back to current behavior
+7. Reject research-only, investigate-only, and evaluate-only phases. Keep
+   ordinary evidence gathering in Step 3a research. Create `phase_type: spike`
+   only for an executable experiment/prototype with concrete deliverables and a
+   decision gate; initialize every direct dependent as `blocked` until approval
+   or replan.
 
 ## Skill Routing Injection
 

@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "TDK project plugin marketplace",
-    "version": "1.102.0"
+    "version": "1.103.0"
   },
   "plugins": [
     {
@@ -17,7 +17,7 @@
     },
     {
       "name": "tdk-core",
-      "description": "Core TDK child-feature delivery workflows: specify, clarify, plan, implement, analyze, checklist, status, and test planning",
+      "description": "Core TDK child-feature delivery workflows: specify, clarify, plan, implement, analyze, status, and test planning",
       "source": "./.specify/plugins/tdk-core",
       "strict": true
     },

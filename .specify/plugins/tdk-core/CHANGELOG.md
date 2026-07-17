@@ -4,6 +4,20 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [11.0.0] - 2026-07-17
+
+### Added
+- tdk-plan: add an opt-in transactional migration workflow for legacy checklist, data-model, quickstart, and prose-contract artifacts with dry-run, backup, resume, and rollback safeguards
+- tdk-plan and tdk-implement: add executable spike phase validation with explicit approve or replan gates before dependent work unblocks
+
+### Changed
+- tdk-specify, tdk-clarify, and tdk-plan: replace standalone requirements checklists with an embedded Specification Quality Gate and deterministic planning preflight
+- tdk-plan: make phase-owned data models, prose interfaces, and runbooks the default while limiting supporting files to indexed consumer-driven research, reports, and machine contracts
+- tdk-plan: keep red-team crash-recovery state temporary and persist only final or unresolved review evidence
+
+### Removed
+- tdk-checklist: retire the standalone checklist skill in favor of the embedded specification quality gate
+
 ## [10.0.0] - 2026-07-14
 
 ### Changed

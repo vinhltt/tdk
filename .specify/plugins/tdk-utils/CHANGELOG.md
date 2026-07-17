@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.0.1] - 2026-07-17
+
+### Changed
+- tdk-red-team-skeptic: review phase-owned design and runbook sections plus indexed machine contracts as implementation inputs
+- tdk-load-project-context and tdk-validate-task-id: remove retired tdk-checklist caller metadata
+
 ## [3.0.0] - 2026-07-14
 
 ### Changed

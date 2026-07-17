@@ -7,14 +7,6 @@ import { join } from 'node:path';
 import { Command } from 'commander';
 import { loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson } from '../../utils/index';
 
-function checkFile(file: string, label: string): void {
-  console.log(existsSync(file) ? `  ✓ ${label}` : `  ✗ ${label}`);
-}
-
-function checkDir(dir: string, label: string): void {
-  console.log(existsSync(dir) ? `  ✓ ${label}` : `  ✗ ${label}`);
-}
-
 const program = new Command()
   .name('check-prerequisites')
   .description('Validate feature directory and required docs exist before workflow steps')
@@ -36,10 +28,6 @@ const program = new Command()
     const featureSpec = paths['featureSpec'] as string;
     const implPlan = paths['implPlan'] as string;
     const tasks = paths['tasks'] as string;
-    const researchDir = join(featureDir, 'research');
-    const dataModel = paths['dataModel'] as string;
-    const contractsDir = paths['contractsDir'] as string;
-    const quickstart = paths['quickstart'] as string;
 
     // Paths-only mode
     if (opts.pathsOnly) {
@@ -99,11 +87,8 @@ const program = new Command()
       console.log(`TASK_ID: ${taskId}`);
       console.log(`FEATURE_DIR: ${featureDir}`);
       console.log('AVAILABLE_DOCS:');
-      checkDir(researchDir, 'research/');
-      checkFile(dataModel, 'data-model.md');
-      checkDir(contractsDir, 'contracts/');
-      checkFile(quickstart, 'quickstart.md');
-      if (opts.includeTasks) checkFile(tasks, 'tasks.md');
+      if (docs.length === 0) console.log('  (none)');
+      for (const doc of docs) console.log(`  ✓ ${doc}`);
     }
   });
 

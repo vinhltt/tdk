@@ -1,6 +1,8 @@
 # State Transitions Template
 
-This file is a reference template for generating `state-transitions.md` for new features.
+Legacy migration reference only. New plans MUST NOT generate standalone
+`state-transitions.md`. Put the relevant transition contract in the owning
+implementation phase under `## Interfaces & Contracts`.
 
 ## Governance Rules
 - Every transition MUST specify:
@@ -8,8 +10,8 @@ This file is a reference template for generating `state-transitions.md` for new 
   - **Preconditions**: required data/state constraints that must be true before transition
   - **Postconditions**: invariant updates and required side effects (timestamps, counters, denorm fields)
   - **Audit**: what gets logged (who, when, from_state → to_state, context)
-- Only transitions described here are allowed. APIs and services MUST enforce them.
-- If an enum or status behavior changes, update this file and add/adjust tests in the same PR.
+- Only transitions described in the owner-phase contract are allowed. APIs and services MUST enforce them.
+- If an enum or status behavior changes, update that owner-phase section and add/adjust tests in the same PR.
 - Database constraints: keep the enum values aligned with these states; use CHECK constraints and foreign keys where applicable.
 - Soft delete vs hard delete: when soft delete is a state, document the allowed entry points and irreversibility.
 
@@ -125,15 +127,15 @@ Document any cross-entity constraints related to state transitions:
 
 ## Usage Instructions
 
-When generating a new `state-transitions.md`:
+When migrating legacy state-transition content into its owner phase:
 
-1. **Identify Status Enums**: Extract all status enums from `data-model.md`
+1. **Identify Status Enums**: Extract status enums from the owning phase's `## Data Model` section, falling back to `spec.md ## 6. Functional Requirements / Key Entities` for legacy plans
 2. **Determine Pattern**: Choose appropriate state flow pattern (Lifecycle, Process, Approval, Boolean)
 3. **Create Mermaid Diagram**: Visualize all allowed transitions
 4. **Document Each Transition**: Include trigger, preconditions, postconditions, audit for every arrow in diagram
 5. **Add Validation Contracts**: Specify API enforcement rules
 6. **Cross-Entity Constraints**: Document any interactions with other entities
-7. **Implementation Guidance**: Reference common patterns for consistency
+7. **Implementation Guidance**: Keep the result in that phase's `## Interfaces & Contracts` section and reference common patterns for consistency
 
 **Status Enums to Document**:
 - Lifecycle: `product_status`, `order_status`, `user_status`, `campaign_status`

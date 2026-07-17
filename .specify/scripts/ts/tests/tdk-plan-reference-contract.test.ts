@@ -58,8 +58,24 @@ describe('tdk-plan reference contract', () => {
 
   it('hard-gates plan artifact writes on loading the output contract', () => {
     expect(step3c).toContain('STOP before writing');
-    expect(step3c).toContain('`plan.md`, `phases/*.md`, `research/*.md`, `data-model.md`, or `contracts/`');
-    expect(step3c).toContain('do not guess or reconstruct the layout');
+    expect(step3c).toContain('`plan.md`, `phases/*.md`, or any conditional supporting');
+    expect(step3c).toContain('supporting-artifact index');
+    expect(step3c).toContain('or reconstruct the layout from memory');
+  });
+
+  it('defaults to core artifacts and indexes only justified supporting artifacts', () => {
+    const outputContract = read(resolve(REFERENCES_DIR, 'plan-output-contract.md'));
+
+    expect(outputContract).toContain('Default output is `spec.md`, `plan.md`, and `phases/*.md`');
+    expect(outputContract).toContain('optional directories.');
+    expect(outputContract).toContain('## Supporting Artifacts');
+    expect(outputContract).toContain('| Path | Type | Reason | Owner Phase | Consumer |');
+    expect(outputContract).toContain('Prose-only contracts are not');
+    expect(outputContract).toContain('valid `contracts/` entries.');
+    expect(outputContract).toContain('### Machine-contract classifier');
+    expect(outputContract).toContain('`.json`, `.yaml`, `.yml`, `.graphql`, or `.proto`');
+    expect(outputContract).toContain('`machine-contract:<format>`');
+    expect(outputContract).toContain('exact validation command');
   });
 
   it('documents timestamped research report output instead of top-level research.md', () => {
@@ -71,7 +87,8 @@ describe('tdk-plan reference contract', () => {
     expect(outputContract).not.toContain('researcher-NN-{topic}.md');
     expect(researchPhase).toContain('Spawn `N` `researcher` subagents in parallel');
     expect(researchPhase).toContain('{FEATURE_DIR}/research/yyMMdd-HHmmss-{slug}.md');
-    expect(researchPhase).toContain('do not create a top-level `research.md`');
+    expect(researchPhase).toContain('do not');
+    expect(researchPhase).toContain('create a top-level `research.md`');
   });
 
   it('defines deterministic required-reference loading behavior', () => {

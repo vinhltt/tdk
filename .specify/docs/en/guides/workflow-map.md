@@ -50,15 +50,14 @@ flowchart TD
     PRODUCT_CONTEXT -.->|project authority| BROWNFIELD_ONBOARDING
     PRODUCT_CONTEXT -.->|project authority| DISCOVERY
     PRODUCT_CONTEXT -.->|project authority| SPEC
-    SPEC -->|/tdk-clarify| SPEC_CLARIFIED[spec.md<br/>+ Clarifications]
+    SPEC -->|/tdk-clarify| SPEC_CLARIFIED[spec.md<br/>+ Clarifications<br/>+ Quality Gate]
 
     %% Phase 1: Architecture & Design
     SPEC_CLARIFIED -->|/tdk-plan| PLAN[plan.md<br/>Implementation Plan]
-    SPEC_CLARIFIED -->|/tdk-plan| RESEARCH[research/<br/>Technology Research]
-    SPEC_CLARIFIED -->|/tdk-plan| DATAMODEL[data-model.md<br/>+ Enum Definitions]
-    SPEC_CLARIFIED -->|/tdk-plan| STATETRANS[state-transitions.md<br/>State Transitions]
-    SPEC_CLARIFIED -->|/tdk-plan| CONTRACTS[contracts/<br/>API Specs YAML/MD]
-    SPEC_CLARIFIED -->|/tdk-plan| QUICKSTART[quickstart.md<br/>Setup Guide]
+    SPEC_CLARIFIED -->|/tdk-plan| PHASES[phases/<br/>Executable Work + Owner Sections]
+    SPEC_CLARIFIED -.->|when evidence needed| RESEARCH[research/<br/>Conditional External Evidence]
+    SPEC_CLARIFIED -.->|when durable evidence needed| REPORTS[reports/<br/>Conditional Internal Evidence]
+    SPEC_CLARIFIED -.->|declared machine consumer| CONTRACTS[contracts/<br/>JSON/YAML/GraphQL/Proto]
     SPEC_CLARIFIED -->|/tdk-plan| WIREFRAMES[design/wireframes/<br/>wf-*.html]
 
     %% Phase 2: Implementation (Solo Path - Primary)
@@ -158,23 +157,23 @@ flowchart TD
 
     subgraph PLAN_OUTPUT["/tdk-plan output"]
         PLAN[plan.md]
-        RESEARCH[research/]
-        DATAMODEL[data-model.md]
-        STATE[state-transitions.md]
-        CONTRACTS[contracts/]
+        PHASES[phases/*.md<br/>Data Model / Interfaces / Runbook owner sections]
+        RESEARCH[research/<br/>conditional]
+        REPORTS[reports/<br/>conditional]
+        CONTRACTS[contracts/<br/>conditional machine files]
     end
 
     SPEC_CLAR -->|/tdk-plan| PLAN_OUTPUT
 
     CONST -.->|ref| RESEARCH
-    REF_DM -.->|ref| DATAMODEL
+    REF_DM -.->|legacy migration reference| PHASES
 
     classDef input fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#0f172a
     classDef output fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#0f172a
     classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5,color:#0f172a
 
     class SPEC_CLAR input
-    class PLAN,RESEARCH,DATAMODEL,STATE,CONTRACTS output
+    class PLAN,PHASES,RESEARCH,REPORTS,CONTRACTS output
     class CONST,UIUX,REF_DM reference
 ```
 
@@ -324,15 +323,16 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | `/tdk-sub-workspace-automation-recommend` | selected sub-workspace docs, dependency policy, official docs, local skill catalog, optional direct skill search | `/tdk-scaffold-from-recommendation` after approval | Per sub-workspace automation review |
 | `discovery.md` + `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution; existing discovery files for ID-only `--interview` | Optional context for `/tdk-epic-prd` | Optional before epic PRD |
 | `epic-prd.md` + `epic-prd/` | `/tdk-epic-prd` | Existing `discovery.md`, `problem.md`, `personas.md`, and `mvp-scope.md`; existing PRD files for ID-only `--interview` | Feeds `/tdk-epic-hld`, then `/tdk-task-breakdown` child spec seeds | Optional after discovery |
-| `spec.md` | `/tdk-specify` | User description, child seed from `tasks-breakdown/`, or existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature or child-slice start |
-| `spec.md` (+ Clarifications) | `/tdk-clarify` | `spec.md` | `/tdk-plan` | After specify |
+| `spec.md` + `## Specification Quality Gate` | `/tdk-specify` | User description, child seed from `tasks-breakdown/`, or existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature or child-slice start |
+| `spec.md` (+ Clarifications + refreshed quality gate) | `/tdk-clarify` | `spec.md` | `/tdk-plan` | After specify |
 | `{docs.path}/custom-workflow/high-level-design-skill-routing.md` | Human-authored from `.specify/templates/high-level-design/high-level-design-skill-routing-template.tpl` | Consumer HLD design skills | `/tdk-epic-hld` as advisory read-only routing | Optional project setup |
 | `high-level-design.md` + `high-level-design/` | `/tdk-epic-hld` | `epic-prd.md` + `epic-prd/`; built-in lenses; optional HLD routing | `/tdk-task-breakdown` | Parent epic after PRD |
 | `tasks-breakdown.md` + `tasks-breakdown/` | `/tdk-task-breakdown` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | Child `/tdk-specify` seeds | Parent epic after HLD |
 | `plan.md` | `/tdk-plan` | `spec.md`, `constitution.md`, optional context | `plan.md ## Phases`, `/tdk-implement [--phase NN]` | Feature start |
 | `plan.md ## Phases` | `/tdk-plan` | `spec.md`, design files | `/tdk-implement [--phase NN]` | Feature start |
-| `research/` | `/tdk-plan` | `spec.md` | Reference | Feature start |
-| `data-model.md` | `/tdk-plan` | `spec.md` | Reference | Feature start |
+| `phases/*.md` owner sections | `/tdk-plan` | `spec.md`, plan graph | `/tdk-implement` | Required; data model, prose interfaces, and runbook live with owning work |
+| `research/`, `reports/` | `/tdk-plan` | Unresolved external question or declared durable evidence consumer | Indexed supporting evidence | Conditional only |
+| `contracts/*.{json,yaml,yml,graphql,proto}` | `/tdk-plan` | Declared machine consumer plus validation command | Generator, validator, runtime, or downstream integration | Conditional only |
 | `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
 | `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), consumer test skill routing | `/tdk-implement` with `Test Quality Gate` before done | Feature UT |
@@ -387,7 +387,7 @@ flowchart TD
 
     START -->|New epic| DISCOVERY[tdk-discovery]
     START -->|New feature| SPECIFY[tdk-specify]
-    START -->|API change| UPDATE_CONTRACT[contracts/ manual edit]
+    START -->|API change| UPDATE_CONTRACT[owner phase contract<br/>or declared machine contract]
 
     DISCOVERY --> EPIC_PRD[tdk-epic-prd]
     EPIC_PRD --> HLD_CMD[tdk-epic-hld]
@@ -425,18 +425,16 @@ flowchart TD
 ├── high-level-design/                  # Optional parent epic HLD detail files
 ├── tasks-breakdown.md                  # Optional child spec seed manifest
 ├── tasks-breakdown/                    # Optional child spec seed files after HLD
-├── plan.md                             # Phase 1: Implementation plan
-├── research/                           # Phase 1: Technology research
-├── data-model.md                       # Phase 1: Entity definitions + enums
-├── state-transitions.md                # Phase 1: State machine definitions
-├── quickstart.md                       # Phase 1: Setup guide
-├── contracts/                          # Phase 1: API specifications
-│   └── *.yaml
+├── plan.md                             # Required implementation plan + optional artifact index
+├── phases/                             # Required executable phases; owns data model/contracts/runbook prose
+│   └── phase-NN-*.md
+├── research/                           # Conditional external research evidence
+├── reports/                            # Conditional durable internal evidence
+├── contracts/                          # Conditional machine-consumable contracts
+│   └── *.{json,yaml,yml,graphql,proto}
 ├── design/wireframes/                  # Phase 1: UI wireframes
 │   └── wf-*.html
 ├── page-designs/                       # Phase 1: Screen specifications
 │   └── {category}/
 │       └── {screen}.md
-└── checklists/                         # Quality checklists
-    └── requirements.md
 ```

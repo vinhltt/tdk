@@ -1,7 +1,7 @@
 ---
 name: tdk-load-project-context
 description: "Load project configuration and resolve feature directory from validated TASK_ID.
-  Called by: tdk-analyze, tdk-checklist, tdk-clarify,
+  Called by: tdk-analyze, tdk-clarify,
   tdk-implement, tdk-plan,
   tdk-specify (supports --fast mode).
   NOT user-invocable."

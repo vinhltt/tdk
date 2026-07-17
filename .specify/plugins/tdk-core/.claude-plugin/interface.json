@@ -1,7 +1,7 @@
 {
   "displayName": "TDK Core",
   "shortDescription": "Child-feature delivery workflows and shared TDK runtime.",
-  "longDescription": "TDK workflows for child feature specification, clarification, planning, implementation, analysis, checklist, status, and test-oriented development. The shared hook runtime remains in this plugin; project inception and workspace foundation workflows live in tdk-inception, and parent epic decomposition lives in tdk-epic.",
+  "longDescription": "TDK workflows for child feature specification, clarification, planning, implementation, analysis, status, and test-oriented development. The shared hook runtime remains in this plugin; project inception and workspace foundation workflows live in tdk-inception, and parent epic decomposition lives in tdk-epic.",
   "developerName": "Tihon",
   "category": "Development",
   "capabilities": [

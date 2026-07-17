@@ -1,5 +1,5 @@
 {
-  "description": "Core TDK project and child-feature workflows: intake, constitution, architecture/workspace setup, specify, clarify, plan, implement, analyze, checklist, config, status, and tests",
+  "description": "Core TDK child-feature delivery workflows: specify, clarify, plan, implement, analyze, status, and test planning",
   "hooks": "./hooks/codex-hooks.json",
   "interface": {
     "brandColor": "#1D4ED8",
@@ -14,10 +14,10 @@
     ],
     "developerName": "Tihon",
     "displayName": "TDK Core",
-    "longDescription": "The main TDK plugin for project intake, constitution, architecture and workspace setup, child feature specification, clarification, planning, implementation, analysis, checklist, configuration, status, and test-oriented development workflows. Parent epic decomposition commands live in tdk-epic.",
-    "shortDescription": "Core TDK project setup and child-feature workflow skills."
+    "longDescription": "TDK workflows for child feature specification, clarification, planning, implementation, analysis, status, and test-oriented development. The shared hook runtime remains in this plugin; project inception and workspace foundation workflows live in tdk-inception, and parent epic decomposition lives in tdk-epic.",
+    "shortDescription": "Child-feature delivery workflows and shared TDK runtime."
   },
   "name": "tdk-core",
   "skills": "./skills/",
-  "version": "10.0.0"
+  "version": "11.0.0"
 }

@@ -9,8 +9,8 @@ identifiers; activate the matching skill by name.
 
 Route only to workflow commands available in the current session:
 
-- Child feature commands cover specify, clarify, plan, analyze, implement,
-  status, and checklist.
+- Child feature commands cover specify, clarify, plan, analyze, implement, and
+  status.
 - Parent epic commands cover discovery, epic PRD, epic HLD, and task breakdown.
 - Project setup commands cover greenfield/brownfield start, constitution,
   architecture advisor, workspace layout, config apply, dependency policy, and
@@ -60,7 +60,6 @@ FEATURE-SIZED LANE, default for small/clear work
 tdk-specify -> tdk-clarify -> tdk-plan -> [tdk-analyze] -> tdk-implement
 
 tdk-status                               track progress at any point
-tdk-checklist                            optional quality checklist
 ```
 
 - `tdk-greenfield-start` and `tdk-brownfield-start` classify project shape and
@@ -139,7 +138,6 @@ legacy-layout guidance instead of auto-migrating them.
 | Build / execute plan phases | `tdk-implement` | `tdk-plan` |
 | Plan & route unit-test coverage | `tdk-plan --tdd` / `tdk-plan --ut-backfill` | `tdk-plan` (without test mode) |
 | Track workflow progress/status | `tdk-status` | — |
-| Generate a focused checklist | `tdk-checklist` | — |
 
 ## Decision tree
 

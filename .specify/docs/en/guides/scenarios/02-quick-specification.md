@@ -29,7 +29,7 @@
 
 **What happens**: Same as `/tdk-specify` but skips the embedded brainstorming step. Claude generates `spec.md` directly from your description without exploring scope boundary options.
 
-**Output**: `spec.md`, `checklists/requirements.md`
+**Output**: `spec.md` with an embedded `## Specification Quality Gate`
 
 ### 2. Generate the plan
 

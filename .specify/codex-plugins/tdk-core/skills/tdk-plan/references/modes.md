@@ -5,14 +5,16 @@ Single source of truth for `/tdk-plan` flag dispatch. SKILL.md only routes; this
 ## Grammar
 
 ```
-/tdk-plan <TASK_ID> [USER_CONTENT...] [--fast | --hard] [--tdd | --ut-backfill] [--sub-workspace <name>] [--module <name>] [--standalone] [--red-team | --validate] [USER_CONTENT...]
+/tdk-plan <TASK_ID> [USER_CONTENT...] [--fast | --hard] [--tdd | --ut-backfill] [--sub-workspace <name>] [--module <name>] [--standalone] [--red-team | --validate | --migrate-artifacts] [USER_CONTENT...]
 ```
 
 - `<TASK_ID>` — first argument token, mandatory. Regex: `^([a-zA-Z]+/)?([a-zA-Z]+)-([0-9]+)$`.
 - `USER_CONTENT` — optional freeform text after `<TASK_ID>`. Preserve order after removing known flags.
 - Known mode flags may appear anywhere after `<TASK_ID>`.
-- Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`). Flags within the same category are **mutually exclusive**. Multiple flags from the same category → STOP with error.
+- Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`, `--migrate-artifacts`). Flags within the same category are **mutually exclusive**. Multiple flags from the same category → STOP with error.
 - `--fast` is incompatible with `--tdd` and `--ut-backfill` (fast prunes research/UT work). `--hard` and default (no speed flag) both compose with either test flag.
+- `--migrate-artifacts` is action-only and conflicts with every speed, test,
+  targeting, red-team, and validate flag. It defaults to a mutation-free dry run.
 - Any token beginning with `--` that is not an exact whitelisted mode flag → STOP with error.
 - Backfill targeting flag values are not `USER_CONTENT`; parse and store them in `BACKFILL_TARGET`.
 - No `--auto` flag. No auto-detection. No-flag invocation = default full flow.
@@ -62,6 +64,7 @@ Natural-language sub-workspace/module mentions and CWD auto-detection remain acc
 | default, `--fast`, `--hard` | Treat `USER_CONTENT` as planning instruction for Step 2/3 and append/update intent. |
 | `--red-team` | Treat `USER_CONTENT` as red-team focus for reviewer prompts. |
 | `--validate` | Treat `USER_CONTENT` as validation focus for question generation. |
+| `--migrate-artifacts` | Ignore freeform planning intent; dry-run legacy artifact consolidation for the resolved feature. |
 
 ## Per-Mode Matrix
 
@@ -87,7 +90,7 @@ Natural-language sub-workspace/module mentions and CWD auto-detection remain acc
 
 `--fast` keeps Step 0.memory **and** Phase 0.guardian per Key Constraint #2 — tdk-memory-agent `--mode validate` is binding-invariant cheap and the regression risk of bypassing it dwarfs the ~500-token cost. See `references/gates.md` Phase 0.guardian for spawn details and MCP_UNAVAILABLE handling. Only research / scope / deps / red-team / validate are skipped in `--fast`; test modes are rejected before dispatch.
 
-`--red-team` and `--validate` are subcommand-equivalent action flags. They short-circuit straight into Phase 06 / 07 over an existing plan; they do NOT run Steps 0–4 again. See `red-team-workflow.md` and `validate-workflow.md`.
+`--red-team` and `--validate` are subcommand-equivalent action flags. They short-circuit straight into Phase 06 / 07 over an existing plan; they do NOT run Steps 0–4 again. `--migrate-artifacts` short-circuits immediately after project context and follows `migrate-artifacts-workflow.md`.
 
 ## Frontmatter Write Rules
 
@@ -114,6 +117,8 @@ Natural-language sub-workspace/module mentions and CWD auto-detection remain acc
 | `<TASK_ID> <content> --red-team` | dispatch red-team subcommand with `USER_CONTENT` as red-team focus |
 | `<TASK_ID> --validate` | dispatch validate subcommand |
 | `<TASK_ID> --validate <content>` | dispatch validate subcommand with `USER_CONTENT` as validation focus |
+| `<TASK_ID> --migrate-artifacts` | dispatch migration dry-run; ask before apply |
+| `<TASK_ID> --migrate-artifacts --hard` | STOP — `Error: --migrate-artifacts cannot combine with planning or review modes.` |
 | `<TASK_ID> --fast --hard` | STOP — `Error: --fast and --hard are mutually exclusive.` |
 | `<TASK_ID> --tdd` | dispatch default with `test_mode: tdd` |
 | `<TASK_ID> --hard --tdd` | dispatch hard with `test_mode: tdd` |
@@ -129,11 +134,11 @@ Natural-language sub-workspace/module mentions and CWD auto-detection remain acc
 | `<TASK_ID> --ut-backfill --sub-workspace` | STOP — `Error: --sub-workspace requires a value.` |
 | `<TASK_ID> --ut-backfill --module orders` | STOP — `Error: --module requires --sub-workspace.` |
 | `<TASK_ID> --ut-backfill --sub-workspace api --module` | STOP — `Error: --module requires a value.` |
-| `<TASK_ID> --foo` | STOP — `Error: unknown flag --foo. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate.` |
-| `<TASK_ID> --foo=bar` | STOP — `Error: unknown flag --foo=bar. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate.` |
-| `<TASK_ID> --phase=02` | STOP — `Error: unknown flag --phase=02. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate.` |
-| `<TASK_ID> --fast=true` | STOP — `Error: unknown flag --fast=true. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate.` |
-| `<TASK_ID> --fast --foo <content>` | STOP — `Error: unknown flag --foo. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate.` |
+| `<TASK_ID> --foo` | STOP — `Error: unknown flag --foo. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.` |
+| `<TASK_ID> --foo=bar` | STOP — `Error: unknown flag --foo=bar. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.` |
+| `<TASK_ID> --phase=02` | STOP — `Error: unknown flag --phase=02. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.` |
+| `<TASK_ID> --fast=true` | STOP — `Error: unknown flag --fast=true. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.` |
+| `<TASK_ID> --fast --foo <content>` | STOP — `Error: unknown flag --foo. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.` |
 | `<content> <TASK_ID>` | STOP — `Error: TASK_ID must be the first argument; known mode flags must appear after TASK_ID.` |
 
 ## Banner Output

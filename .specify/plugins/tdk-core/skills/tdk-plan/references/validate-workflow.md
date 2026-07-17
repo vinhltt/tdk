@@ -154,4 +154,6 @@ If `recommendation == spec-update-needed` → also print `Hint: run /tdk-specify
 
 ## Reports
 
-Validation logs live **inline in plan.md** (single source of truth, easier diff in PRs). No separate `reports/validate-*.md` file by design — different from red-team which dumps full per-agent transcripts.
+Validation logs live **inline in plan.md** (single source of truth, easier diff
+in PRs). Do not create `reports/validate-*.md`. Red-team keeps one final
+timestamped report; validation does not need a parallel artifact.

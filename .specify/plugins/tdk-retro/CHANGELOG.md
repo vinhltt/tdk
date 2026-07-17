@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.0.5] - 2026-07-17
+
+### Changed
+- tdk-retro-collect: collect final red-team reports while excluding temporary recovery logs and parse-failure replies from retrospective evidence
+
 ## [1.0.4] - 2026-07-06
 
 ### Changed

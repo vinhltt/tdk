@@ -2,7 +2,9 @@
 
 ## Skip Conditions
 
-- **Skip research phase if:** user provides technical context or researcher reports.
+- **Skip research if:** repository evidence, supplied technical context, or
+  researcher reports settle every external/technical question. Do not create
+  a research phase as a substitute.
 - **Skip design phase if:** architecture already documented in spec.
 - **Skip constitution check if:** constitution not configured for project.
 
@@ -22,7 +24,8 @@
 
 Read `.specify/memory/constitution.md` (if present) and evaluate the plan against each binding rule. ERROR on unjustified gate failure.
 
-Re-evaluate after `data-model.md` + `contracts/` are written (post-design).
+Re-evaluate after phase-owned data-model/interface sections and any declared
+machine contracts are written (post-design).
 
 ## UPDATE vs REGENERATE Mode (Step 2)
 

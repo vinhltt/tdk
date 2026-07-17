@@ -1,7 +1,7 @@
 ---
 name: tdk-validate-task-id
 description: "Validate and normalize task ID from $ARGUMENTS or conversation context.
-  Called by: tdk-analyze, tdk-checklist, tdk-clarify,
+  Called by: tdk-analyze, tdk-clarify,
   tdk-implement, tdk-plan,
   tdk-specify (supports --fast mode).
   NOT user-invocable."

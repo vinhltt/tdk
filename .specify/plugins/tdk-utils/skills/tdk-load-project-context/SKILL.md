@@ -1,13 +1,13 @@
 ---
 name: tdk-load-project-context
 description: "Load project configuration and resolve feature directory from validated TASK_ID.
-  Called by: tdk-analyze, tdk-checklist, tdk-clarify,
+  Called by: tdk-analyze, tdk-clarify,
   tdk-implement, tdk-plan,
   tdk-specify (supports --fast mode).
   NOT user-invocable."
 user-invocable: false
 metadata:
-  version: "1.11.4"
+  version: "3.0.1"
   category: "Configuration"
   input_format: "Validated TASK_ID, require_feature_dir flag (default true), require_prefix_validation flag (default true)"
   output_format: "PROJECT_CONTEXT object, FEATURE_DIR path"

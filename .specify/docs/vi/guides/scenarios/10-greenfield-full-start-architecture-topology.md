@@ -24,7 +24,7 @@ Chain này có hai nhóm artifact khác nhau:
 
 - **Project-level artifacts**: inception, constitution/memory, architecture,
   workspace layout, dependency policy, sub-workspace docs, và automation recommendations.
-- **Feature/epic artifacts**: discovery, `spec.md`, requirements checklist, và
+- **Feature/epic artifacts**: discovery, `spec.md` với embedded quality gate, và
   clarifications.
 
 Important gate: `/tdk-workflow-config-apply` preview trước và hỏi trước khi
@@ -77,7 +77,7 @@ proposed layout.
 | 1 | `/tdk-greenfield-start --full` | `.specify/configurations/inception/project-inception.md` | No |
 | 2 | `/tdk-constitution --init` | `.specify/memory/constitution.md`, memory index/config, Arc42 summaries, typed memory files when evidence exists | No `.specify/.specify.json` mutation |
 | 3 | `/tdk-discovery <id> <brief>` | `<feature-dir>/discovery.md`, `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md` | No |
-| 4 | `/tdk-specify <id> <description>` | `<feature-dir>/spec.md`, `<feature-dir>/checklists/requirements.md` | No |
+| 4 | `/tdk-specify <id> <description>` | `<feature-dir>/spec.md` với `## Specification Quality Gate` | No |
 | 5 | `/tdk-clarify <id>` | Updates `<feature-dir>/spec.md` and `## Clarifications` | No |
 | 6 | `/tdk-architecture-advisor` | `.specify/configurations/architecture/architecture-options.md`, `architecture-decision.md` | No |
 | 7 | `/tdk-workspace-layout-propose` | `.specify/configurations/workspace-layout/workspace-layout-proposal.md`, `workspace-layout-proposal.json` | No |
@@ -157,7 +157,7 @@ requirement IDs.
 Output:
 
 - `<feature-dir>/spec.md`
-- `<feature-dir>/checklists/requirements.md`
+- `## Specification Quality Gate` trong `<feature-dir>/spec.md`
 
 `spec.md` là requirement authority. Nó nên có 9 numbered sections cộng với
 `## Clarifications`. Tất cả `UR-*`, `FR-*`, và `SC-*` IDs thuộc về file này.

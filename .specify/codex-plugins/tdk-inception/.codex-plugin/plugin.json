@@ -1,0 +1,22 @@
+{
+  "description": "TDK project inception and workspace foundation workflows: intake, constitution, architecture, layout, configuration, dependency policy, and sub-workspace documentation",
+  "interface": {
+    "brandColor": "#0F766E",
+    "capabilities": [
+      "Skills"
+    ],
+    "category": "Development",
+    "defaultPrompt": [
+      "Start this project with the appropriate greenfield or brownfield intake workflow.",
+      "Turn the project context into constitution, architecture, and workspace layout decisions.",
+      "Apply workspace configuration and generate sub-workspace documentation from approved evidence."
+    ],
+    "developerName": "Tihon",
+    "displayName": "TDK Inception",
+    "longDescription": "TDK workflows for greenfield and brownfield intake, project constitution, architecture guidance, workspace layout and configuration, dependency policy, and sub-workspace documentation. Child feature delivery remains in tdk-core.",
+    "shortDescription": "Project inception and workspace foundation workflows."
+  },
+  "name": "tdk-inception",
+  "skills": "./skills/",
+  "version": "1.0.0"
+}

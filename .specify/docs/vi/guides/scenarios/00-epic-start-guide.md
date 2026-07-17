@@ -147,7 +147,8 @@ Chọn một seed, rồi run:
 Kết quả mong đợi:
 
 - `.specify/specs/feat-001/spec.md` tồn tại.
-- `.specify/specs/feat-001/checklists/requirements.md` tồn tại.
+- `.specify/specs/feat-001/spec.md` chứa `## Specification Quality Gate` ở
+  trạng thái pass hoặc warn không có blocker.
 - Child spec sở hữu `UR-*`, `FR-*`, và `SC-*` IDs riêng.
 
 Chỉ tiếp tục nếu:

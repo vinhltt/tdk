@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "7.0.4"
+  version: "11.0.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -36,9 +36,9 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 **This command produces:**
 - Implementation plan (`plan.md`)
-- Research documentation (`research/yyMMdd-HHmmss-{slug}.md`)
-- Data models (`data-model.md`)
-- API contracts (`contracts/`)
+- Executable implementation phases (`phases/phase-NN-*.md`)
+- Conditional research, durable reports, and machine-consumable contracts when
+  a named downstream consumer requires them
 
 **This command does NOT:**
 - Write implementation code.
@@ -58,11 +58,14 @@ You **MUST** consider the user input before proceeding (if not empty).
 ```mermaid
 flowchart TD
     A[Step 0 Parse Args + Validate TASK_ID] --> B[Step 0.1 Load Project Context]
-    B --> B2[Step 0.1b Load Skill Routing]
+    B --> BM{--migrate-artifacts?}
+    BM -->|yes| MW[Step 0.migrate Dry-run + Confirm + Transaction]
+    BM -->|no| B2[Step 0.1b Load Skill Routing]
     B2 --> C[Step 0.memory Memory Pre-load]
     C --> S[Step 0.scope Scope Challenge]
     S --> X[Step 0.deps Cross-Plan Scan]
-    X --> D[Step 1 Setup]
+    X --> Q[Step 0.9 Specification Quality Gate]
+    Q --> D[Step 1 Setup]
     D --> E{planExists?}
     E -->|yes| F[Step 1.5 Handle Existing Plan]
     E -->|no| M[Step 1.7 Mode Detection]
@@ -85,11 +88,11 @@ flowchart TD
 Split `$ARGUMENTS` into `TASK_ID`, `FLAGS`, `BACKFILL_TARGET`, and `USER_CONTENT`.
 
 - `TASK_ID`: first argument token. It must be a valid task ID. Validate only this cleaned token with `tdk-validate-task-id` and host skill name `/tdk-plan`.
-- `FLAGS`: known mode flags `--fast | --hard | --tdd | --ut-backfill | --red-team | --validate`, allowed anywhere after `TASK_ID`. Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`). When `--ut-backfill` is present, also accept backfill targeting flags `--sub-workspace <name>`, `--module <name>` (requires `--sub-workspace`), and `--standalone`; these targeting flags are unknown-flag STOP errors when `--ut-backfill` is absent.
+- `FLAGS`: known mode flags `--fast | --hard | --tdd | --ut-backfill | --red-team | --validate | --migrate-artifacts`, allowed anywhere after `TASK_ID`. Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`, `--migrate-artifacts`). When `--ut-backfill` is present, also accept backfill targeting flags `--sub-workspace <name>`, `--module <name>` (requires `--sub-workspace`), and `--standalone`; these targeting flags are unknown-flag STOP errors when `--ut-backfill` is absent.
 - `BACKFILL_TARGET`: only populated when `--ut-backfill` is present. Shape: `{ sub_workspace: string | "", module: string | "", standalone: boolean }`. Remove targeting flags and their values from `USER_CONTENT`.
 - `USER_CONTENT`: remaining non-flag text after `TASK_ID`, preserving order. Empty string if no content was supplied.
 
-Reject with STOP if the first argument token is missing or invalid, a known mode flag appears before `TASK_ID`, any token beginning with `--` is not an exact whitelisted mode flag, more than one flag from the same category (speed / test / action) is present, `--fast` is combined with `--tdd` or `--ut-backfill`, a backfill targeting flag appears without `--ut-backfill`, `--sub-workspace` or `--module` is missing its value, or `--module` appears without `--sub-workspace`. Unknown flag or category conflict → STOP with explicit error (see `references/modes.md`). If `tdk-validate-task-id` STOPs → halt. Store: `TASK_ID`, `TASK_ID_SOURCE`, `FLAGS`, `BACKFILL_TARGET`, `USER_CONTENT`.
+Reject with STOP if the first argument token is missing or invalid, a known mode flag appears before `TASK_ID`, any token beginning with `--` is not an exact whitelisted mode flag, more than one flag from the same category (speed / test / action) is present, `--fast` is combined with `--tdd` or `--ut-backfill`, `--migrate-artifacts` is combined with any speed, test, targeting, red-team, or validate flag, a backfill targeting flag appears without `--ut-backfill`, `--sub-workspace` or `--module` is missing its value, or `--module` appears without `--sub-workspace`. Unknown flag or category conflict → STOP with explicit error (see `references/modes.md`). If `tdk-validate-task-id` STOPs → halt. Store: `TASK_ID`, `TASK_ID_SOURCE`, `FLAGS`, `BACKFILL_TARGET`, `USER_CONTENT`.
 
 ### Script Command Contract
 **Inline.** <!-- script invocation contract -->
@@ -112,6 +115,14 @@ Replace `<agent-resolved-project-root>` with the actual absolute project root; d
 **Inline.** <!-- script invocation -->
 Invoke `tdk-load-project-context` with the validated `TASK_ID`. Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
+### Step 0.migrate — Opt-in Legacy Artifact Migration
+
+Load: `references/migrate-artifacts-workflow.md`
+Run only when `FLAGS` contains `--migrate-artifacts`, immediately after project
+context resolves `FEATURE_DIR`. Execute the dry-run/confirmation transaction
+and end the command; skip skill routing, memory, scope, dependency scan, setup,
+existing-plan handling, design, red-team, and validation.
+
 ### Step 0.1b — Load Skill Routing
 Load: `references/skill-routing.md`
 Resolve skill-routing file per reference. Parse sub-workspace sections. Store: `SKILL_ROUTING` map. Missing file → AskUserQuestion per reference (opt-in create or skip with empty map).
@@ -129,6 +140,24 @@ Skip if `--fast`, spec.md `$ARGUMENTS` <20 words, "just plan / quick / already d
 ### Step 0.deps — Cross-Plan Dependencies Scan
 Load: `references/cross-plan-deps.md`
 Skip if `--fast` in `FLAGS` (Step 1.7 hasn't resolved `MODE` yet at this point in the flow). Otherwise invoke `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/scan-cross-plan-deps.ts --current <TASK_ID> --json)`, parse findings, optionally auto-fix D1 bidirectional gaps via AskUserQuestion + dirty-tree gate (Validation S3 D12). Advisory only — never STOPs plan creation.
+
+### Step 0.9 — Specification Quality Gate Preflight
+
+Derive `featureSpec` and `featureDir` from the already resolved project context
+and task ID without creating files or directories. Run this read-only gate
+before `setup-plan.ts` so a blocked spec cannot leave a new `plan.md` template.
+
+Run:
+
+```bash
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-specification-quality-gate.ts "{featureSpec}" --legacy-checklist "{featureDir}/checklists/requirements.md" --json)
+```
+
+An embedded `pass` gate is accepted. `warn` is accepted only with no blocking
+issues. A legacy spec may use an existing `checklists/requirements.md` only
+when the embedded gate is absent; report this fallback explicitly. STOP on
+`fail`, malformed gate data, blocking issues, or when both gate and legacy
+fallback are missing.
 
 ### Step 1 — Setup
 **Inline.** <!-- safety-critical script invocation -->
@@ -159,7 +188,12 @@ Includes Solution Design, Embedded Brainstorming, Sequential Thinking for phase 
 
 #### 3c — Plan Layout & Output
 Load: `references/plan-output-contract.md`
-STOP before writing `plan.md`, `phases/*.md`, `research/*.md`, `data-model.md`, or `contracts/` unless `references/plan-output-contract.md` has been loaded successfully in this step. Use the loaded contract as the only source for output layout, frontmatter, phase file conventions, quality checklist, Decisions Made table, and sanitization rules; do not guess or reconstruct the layout from memory.
+STOP before writing `plan.md`, `phases/*.md`, or any conditional supporting
+artifact unless `references/plan-output-contract.md` has been loaded
+successfully in this step. Use the loaded contract as the only source for
+output layout, frontmatter, phase file conventions, supporting-artifact index,
+quality checklist, Decisions Made table, and sanitization rules; do not guess
+or reconstruct the layout from memory.
 
 ### Phase 0.guardian — Business Logic Validation
 Load: `references/gates.md` <!-- semantics in same file as Step 0.memory -->

@@ -114,7 +114,7 @@ Each template defines: `question` body, 3 substantive options + 1 `Skip this que
     - { label: "No — spec is materially out of date",        action: spec-update-needed }
     - { label: "Skip this question",                         action: no-op }
 - id: speckit.chain_artifacts
-  question: "Will `/tdk-implement` find every artifact it needs (data-model.md, contracts/, quickstart.md, and canonical phase files with test-mode sections when applicable)?"
+  question: "Will `/tdk-implement` find every required phase-owned design/runbook section and every indexed machine contract?"
   options:
     - { label: "Yes — every artifact present or scheduled in a phase", action: no-op }
     - { label: "Partial — 1–2 artifacts deferred",           action: revise }

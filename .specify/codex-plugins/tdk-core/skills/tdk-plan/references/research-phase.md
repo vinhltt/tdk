@@ -1,6 +1,9 @@
 # Research Phase
 
-**Skip if:** User provides researcher reports or technical context docs.
+**Run only if:** At least one unresolved external or technical question needs
+evidence before phase design. Skip when repository evidence, supplied reports,
+and project context already settle every design choice. When skipped, do not
+create `research/`.
 
 **Sequential Thinking:** Break down problems step-by-step, hypothesis → verification → refinement.
 
@@ -13,12 +16,14 @@
 
 ## Subagent Delegation
 
-Spawn `N` `researcher` subagents in parallel, one per independent research topic.
+Spawn `N` `researcher` subagents in parallel, one per independent unresolved
+research topic.
 
 - `N` = number of distinct unresolved technical questions or approach areas.
 - Default to 1 when only one topic exists; cap at 5 unless the user explicitly asks for more.
 - Give each researcher a caller-provided absolute `output_path`.
-- Ensure `{FEATURE_DIR}/research/` exists before spawning researchers.
+- Create `{FEATURE_DIR}/research/` only after at least one research topic is
+  accepted for delegation.
 - Output path format: `{FEATURE_DIR}/research/yyMMdd-HHmmss-{slug}.md`.
 - `{slug}` is a lowercase kebab-case topic slug. Make it unique per researcher by using a specific topic slug, not an agent index.
 
@@ -68,7 +73,8 @@ searched when the feature area overlaps existing work.
 
 ## Codebase Understanding
 
-**Skip if:** User provides scout reports or codebase docs.
+**Skip if:** User provides scout reports or codebase docs that answer the
+required repository questions.
 
 **Essential docs to read first:**
 - `./.specify/memory/development-rules.md` — conventions, standards
@@ -86,6 +92,14 @@ Scout: Find all files related to [feature]
 Output: .specify/specs/{task-id}/reports/scout-{area}.md
 ```
 
+Persist a scout report only when a later phase or reviewer needs it as durable
+evidence. Otherwise keep internal repository discovery ephemeral and do not
+create `reports/`.
+
 ## Output
 
-`research/yyMMdd-HHmmss-{slug}.md` reports with Decision, Rationale, Alternatives, References for every relevant `## 9. Unresolved Questions` item. Synthesize only the key decisions into `plan.md`; do not create a top-level `research.md`.
+When research runs, write `research/yyMMdd-HHmmss-{slug}.md` reports with
+Decision, Rationale, Alternatives, and References for each researched item.
+Index every persisted report in `plan.md ## Supporting Artifacts`, including its
+owner phase and consumer. Synthesize only key decisions into `plan.md`; do not
+create a top-level `research.md` or an empty `research/` directory.

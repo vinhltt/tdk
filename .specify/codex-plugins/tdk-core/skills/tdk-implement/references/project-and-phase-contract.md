@@ -102,7 +102,7 @@ Decision table:
 | `planned` | Show todo count and first todo phase; continue to parse/confirm. |
 | `in_progress` + `nextPhase` + no `currentPhase` | Show progress and resume target; continue to parse/confirm from `nextPhase`. |
 | `in_progress` + `currentPhase` | Continue to parse, then enter F3 recovery gate before any status mutation. |
-| `blocked` | STOP. Show blocked rows and recommend `/tdk-plan {TASK_ID}` or manual dependency/status repair. |
+| `blocked` | If `todo == 0`, STOP. If at least one todo row exists, show blocked rows and continue to parse/confirm; a runnable spike or independent phase may resolve them. |
 | `complete` | STOP. Report complete. Appended phases must be present in `plan.md` `## Phases` to be detected. |
 | `specified` | STOP. Recommend `/tdk-plan {TASK_ID}`. |
 | `empty` | STOP. Recommend `/tdk-specify {TASK_ID}`. |
@@ -178,6 +178,12 @@ for each row in rows:
 ```
 
 Use AskUserQuestion with Retry this phase, Mark done, Mark skipped, and Cancel. Recovery writes MUST use the same order as normal status transitions: `update-phase-frontmatter-status.ts "{phasePath}" {todo|done|skipped}` first, then `update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} {todo|done|skipped}`. After any recovery write, re-run `parse-phases-table.ts` and restart this scan before proceeding.
+
+For an `in_progress` spike, validate the phase file before showing recovery.
+Never offer direct `Mark done` or `Mark skipped`, because either would bypass
+the spike decision gate. Offer Retry experiment, Resume decision gate when a
+non-pending `## Spike Result` exists, Replan, and Cancel. Approval/replan then
+follows the spike lifecycle in `phase-execution.md`.
 
 On phase-work failure during execution, emit: `"Phase NN left in_progress. Recover as described above."`
 

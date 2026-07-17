@@ -58,8 +58,8 @@ TDK command suite cung cấp workflow **specification-driven development**. Bạ
                            │               │                  │                       │
                            v               v                  v                       v
                       ┌──────────┐   ┌──────────────┐   ┌──────────────┐       ┌──────────────┐
-                      │checklist │   │spec.md gaps  │   │routed test   │       │status/analyze│
-                      │optional  │   │resolved      │   │skill         │       │any time      │
+                      │quality   │   │spec.md gaps  │   │routed test   │       │status/analyze│
+                      │gate in spec│  │resolved      │   │skill         │       │any time      │
                       └──────────┘   └──────────────┘   └──────────────┘       └──────────────┘
 
   PROJECT-LEVEL (no task ID needed):
@@ -115,10 +115,9 @@ Excluded:
 | `/tdk-clarify` | Hỏi targeted questions và ghi answer lại vào `spec.md`. | `<id>` | `spec.md` có gaps cần resolve trước planning. |
 | `/tdk-epic-hld` | Tạo parent epic high-level design context. | `<epic-id>`, `--force` | Epic PRD tồn tại và cần design lenses trước child breakdown. |
 | `/tdk-task-breakdown` | Generate child spec seed Markdown từ epic PRD cộng HLD. | `<epic-id>`, `--force` | Một epic cần các child slices có thể spec độc lập. |
-| `/tdk-plan` | Generate implementation plan và design artifacts. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate` | `spec.md` đã sẵn sàng trở thành implementation phases; thêm `--tdd`/`--ut-backfill` khi test planning nên nằm trong cùng phases. |
+| `/tdk-plan` | Generate implementation plan và conditional supporting artifacts. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` đã sẵn sàng thành implementation phases; chỉ dùng migration cho legacy feature folder. |
 | `/tdk-implement` | Execute runnable rows từ `plan.md ## Phases`. | `<id>`, `--phase NN` | Plan đã tồn tại và một hoặc nhiều implementation phases đã ready. |
 | `/tdk-analyze` | Cross-artifact consistency và quality analysis. | `<id>` | Bạn cần read-only verification trên spec, plan, và phases. |
-| `/tdk-checklist` | Generate focused quality checklist. | `<id> [focus]` | Requirements cần gate trước downstream implementation. |
 | `/tdk-status` | Hiển thị workflow progress. | `<id>` | Bạn cần read-only status snapshot. |
 
 ### Project And Architecture
@@ -186,12 +185,31 @@ Excluded:
 | Mode | Effect |
 |------|--------|
 | default | Normal planning workflow từ `spec.md`, có research/design artifacts khi cần. |
-| `--fast` | Minimal planning path cho work nhỏ rõ; skip research/review nặng hơn. |
-| `--hard` | Planning nghiêm ngặt hơn với expanded research và review. |
-| `--red-team` | Review existing plan theo adversarial focus. Freeform content trở thành review focus. |
+| `--fast` | Minimal planning path cho work nhỏ rõ; skip research/review nặng hơn. Không tương thích với `--tdd` và `--ut-backfill`. |
+| `--hard` | Planning nghiêm ngặt hơn với expanded research và review. Có thể kết hợp với `--tdd` hoặc `--ut-backfill`. |
+| `--tdd` | Thêm các section tests-first (`Tests Before` / `Refactor` / `Tests After` / `Test Quality Gate` / `Regression Gate`) vào implementation phases. |
+| `--ut-backfill` | Tạo backfill-focused phases (`Code Summary` / `Mocks & Fixtures Required` / `Test Matrix` / `Test Quality Gate`) cho existing code. Hỗ trợ `--sub-workspace <name>`, `--module <name>` (yêu cầu `--sub-workspace`), và `--standalone`. |
+| `--red-team` | Review existing plan theo adversarial focus. Recovery state nằm trong `.tdk-tmp`; chỉ final timestamped report ở `reports/`. |
 | `--validate` | Interview/validate existing plan. Freeform content trở thành validation focus. |
+| `--migrate-artifacts` | Dry-run việc gộp legacy checklist/data-model/quickstart/prose contract, rồi yêu cầu confirmation trước transaction có backup. |
 
-Outputs: `plan.md`, phase details, optional `research/`, `data-model.md`, và `contracts/`.
+Default outputs: existing `spec.md`, `plan.md`, và `phases/*.md`. Optional
+`research/`, `reports/`, và machine-consumable `contracts/` chỉ tồn tại khi có
+declared consumer và được index trong `plan.md`. Data model, prose contract, và
+runbook nằm trong owner phase.
+
+Executable experiment có thể dùng `phase_type: spike`; downstream phases giữ
+`blocked` đến khi `/tdk-implement` ghi evidence và result được approve hoặc plan
+được revise.
+
+Test-mode phases có các row `Test Quality Gate`. TDK sở hữu baseline rubric,
+traceability, và gate row completion; consumer `test` skill được route sở hữu
+framework commands và numeric coverage policy.
+
+Codex harness install cần generated Codex command artifacts. Default
+distribution payload không chứa các generated artifacts này, nên dùng setup
+CLI `convert` / Codex install path thay vì sửa `distribute.json` cho test-mode
+planning.
 
 #### `/tdk-specify`
 
@@ -201,7 +219,8 @@ Outputs: `plan.md`, phase details, optional `research/`, `data-model.md`, và `c
 | `--fast` | Token-efficient specification cho work rõ. |
 | `--interview` | Recheck existing hoặc newly generated spec qua targeted questions. |
 
-Outputs: `spec.md` và `checklists/requirements.md`.
+Output: `spec.md`, gồm `## Specification Quality Gate`. `/tdk-clarify` rerun
+embedded gate này sau requirement changes.
 
 #### Architecture Inception
 
@@ -241,7 +260,6 @@ Các helper này tồn tại trong source nhưng không được catalog như di
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan với design artifacts |
 | 10 | `/tdk-analyze <id>` | Cross-artifact consistency và quality analysis |
 | 11 | `/tdk-status <id>` | Hiển thị workflow progress, read-only, bất cứ lúc nào |
-| 12 | `/tdk-checklist <id> [focus]` | Generate quality checklist cho requirements |
 | 13 | `/tdk-constitution [--init <brief\|file>]` | Create/update project architecture principles và initialize project memory artifacts |
 | 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake và routing report |
 | 15 | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | Existing-repo onboarding và safe setup recommendations |
@@ -293,12 +311,12 @@ Dùng file này để tra cứu command. Nếu cần workflow từng bước đ�
 |---------|--------|-----------|-------|--------|------------|
 | discovery | `/tdk-discovery <epic-id> [<brief\|file>] [--force] [--interview]` | `--force`, `--interview` | Project context, constitution/memory, brief hoặc file; existing discovery files cho ID-only `--interview` | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery.md` | Optional sau constitution, trước epic-prd |
 | epic-prd | `/tdk-epic-prd <epic-id> [--force] [--interview]` | `--force`, `--interview` | Existing `discovery.md`, `problem.md`, `personas.md`, `mvp-scope.md`; existing PRD files cho ID-only `--interview` | `epic-prd.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` | discovery |
-| specify | `/tdk-specify <id> [<desc>] [--interview]` | `--interview` | `.specify.env`; explicit feature description hoặc `tasks-breakdown` seed; existing `spec.md` cho ID-only `--interview` | `spec.md`, `checklists/requirements.md` | None, hoặc child seed từ task breakdown |
-| specify (fast) | `/tdk-specify <id> <desc> --fast [--interview]` | `--fast`, `--interview` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
+| specify | `/tdk-specify <id> [<desc>] [--interview]` | `--interview` | `.specify.env`; explicit feature description hoặc `tasks-breakdown` seed; existing `spec.md` cho ID-only `--interview` | `spec.md` với embedded quality gate | None, hoặc child seed từ task breakdown |
+| specify (fast) | `/tdk-specify <id> <desc> --fast [--interview]` | `--fast`, `--interview` | `.specify.env` | `spec.md` với embedded quality gate | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` updated | specify |
 | high-level-design | `/tdk-epic-hld <epic-id>` | `--force` | `epic-prd.md`, `prd.md`, `slice-map.md`, `open-questions.md`; optional HLD routing | `high-level-design.md` + 5 design artifacts | epic-prd |
 | task-breakdown | `/tdk-task-breakdown <epic-id>` | `--force` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | `tasks-breakdown.md`, `tasks-breakdown/task-NNN-*.md` child spec seed files | high-level-design |
-| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--red-team`, `--validate` | `spec.md` cộng clarified requirements và optional context | `plan.md` với ## Phases table, `research/`, `data-model.md`, `contracts/` | clarify |
+| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` cộng clarified requirements và optional context | `plan.md`, `phases/*.md`; conditional indexed `research/`, `reports/`, machine `contracts/` | clarify |
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
 | analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report, không tạo file | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report, không tạo file | specify |
@@ -402,7 +420,6 @@ Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [-
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
 | constitution | `/tdk-constitution [principles]` | `--init <brief\|file>` | `constitution.md`, templates | `constitution.md`, `product-context.md`, project docs | None, project-level |
-| checklist | `/tdk-checklist <id> [focus]` | — | `spec.md`, `plan.md` optional | `checklists/{domain}.md` | specify |
 
 ### Primary Implementation Path
 
@@ -425,7 +442,7 @@ Xem [workflow-map.md](workflow-map.md) để có full Mermaid flow diagrams mô 
 
 ```text
 req → /specify → spec.md → /clarify → spec.md (clarified)
-  → /plan → plan.md (with ## Phases table), research/, data-model.md, contracts/, wireframes/
+  → /plan → plan.md + phases/*.md; optional indexed research/, reports/, machine contracts/
   → /implement → source code
 ```
 

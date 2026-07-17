@@ -247,9 +247,13 @@ export function getFeaturePaths(featureDir: string, repoRoot: string, taskId: st
     implPlan: join(featureDir, 'plan.md'),
     /** @deprecated Use getPlanPath() from phases-table-parser instead. Legacy path — consumers migrated per Phase 02-07. */
     tasks: join(featureDir, 'tasks.md'),
+    /** @deprecated Legacy standalone artifact. New research uses conditional research/*.md. */
     research: join(featureDir, 'research.md'),
+    /** @deprecated Legacy standalone artifact. New data models live in owner phases. */
     dataModel: join(featureDir, 'data-model.md'),
+    /** @deprecated Legacy standalone artifact. New runbooks live in owner phases. */
     quickstart: join(featureDir, 'quickstart.md'),
+    /** Conditional directory for declared machine-consumable contracts only. */
     contractsDir: join(featureDir, 'contracts'),
   };
 }

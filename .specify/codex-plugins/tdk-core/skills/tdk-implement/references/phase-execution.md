@@ -21,12 +21,15 @@ Execution pseudo-code, ascending `row.number`:
    d. BlockedBy check: for each id in row.blockedBy, phaseByNumber.get(id)?.status must be done or skipped
       Error: "phase NN blocked by MM which is status='X' — run phase MM first or mark phase NN skipped"
       skipped blocker satisfies dependency
+   d1. Run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-phase-file.ts "{phasePath}" --plan "{FEATURE_DIR}/plan.md" --phase-number {row.number} --json)`.
+      Validation failure STOPs before status mutation.
    e0. Run routing preflight from 7A. If it cancels, STOP before status mutation.
    e. Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" in_progress)` -> phase file FIRST
       Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} in_progress)` -> plan.md SECOND
    f. Execute phase per phase-NN-*.md instructions
-   g. Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done)` -> phase file FIRST
+   g. For normal phases, run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" done)` -> phase file FIRST
       Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} done)` -> plan.md SECOND
+      Spike phases follow `## Spike Phase Execution` instead.
 ```
 
 For each phase:
@@ -35,8 +38,51 @@ For each phase:
 2. If the phase file contains `## Delegate Skills`, execute those delegates first.
 3. If the phase appears to be a unit-test phase but has no usable `## Delegate Skills`, STOP with the unit-test guard message below.
 4. If the phase is TDD/backfill-shaped, validate `## Test Quality Gate` after delegates and before any phase `done` write.
-5. Otherwise execute as a generic implementation phase.
-6. Log: `"✓ Phase {N}: {name} — complete"`
+5. If validation returns `phaseType: spike`, follow `## Spike Phase Execution`.
+6. Otherwise execute as a generic implementation phase.
+7. Log: `"✓ Phase {N}: {name} — complete"`
+
+## Spike Phase Execution
+
+A spike is an executable exception, not a research-note phase.
+
+1. Run the phase's reproducible `## Experiment`, obeying the same destructive,
+   network-install, and secrets safety boundary as Test Quality Gate commands.
+2. Produce every `## Deliverables` item and replace the heading-bounded
+   `## Spike Result` body with:
+
+   ```markdown
+   | Field | Value |
+   |---|---|
+   | Status | proposed |
+   | Decision | approve or replan |
+   | Evidence | concise paths, commands, and observed results |
+   | Recommendation | one concrete recommendation |
+   ```
+3. Run `validate-phase-file.ts` again with `--require-result`. Failure leaves
+   the spike `in_progress` and STOPs.
+4. AskUserQuestion with `Approve result`, `Replan`, and `Cancel`:
+   - Approve: run `resolve-spike-decision.ts "{FEATURE_DIR}/plan.md"
+     --phase-number {row.number} --decision approve --json`. Change result
+     `Status` to `approved`. Change only phase numbers returned in `unblock`
+     from `blocked` to `todo`, updating each dependent's phase frontmatter
+     first and plan table second. Keep `remainBlocked` unchanged and reparse
+     `plan.md` after each update. Only after every returned dependent is
+     reflected in both files, mark the spike `done` using phase frontmatter
+     first and plan table second. This keeps the spike `in_progress` as an F3
+     recovery anchor until the multi-file transition is complete; retrying the
+     same approved transition is idempotent because the helper reports prior
+     `todo` transitions in `alreadyUnblocked`. Refresh `phaseByNumber` and
+     remaining `TARGET_ROWS` before continuing.
+   - Replan: run the same helper with `--decision replan`; it must return no
+     unblocks. Change result `Status` to `replan-required`, mark the spike
+     `blocked`, leave every dependent blocked, STOP, and recommend
+     `/tdk-plan {TASK_ID}` to update the graph from recorded evidence.
+   - Cancel: leave the spike `in_progress` and every dependent blocked.
+
+Never mark a spike done from delegate completion, generic success criteria, or
+F3 recovery. Never unblock a dependent from an unapproved result. A replan may
+unblock or replace dependents only by rewriting and revalidating the phase graph.
 
 ## Delegate Skills Phase - Auto-continue
 

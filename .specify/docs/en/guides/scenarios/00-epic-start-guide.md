@@ -148,7 +148,8 @@ Choose one seed, then run:
 Expected result:
 
 - `.specify/specs/feat-001/spec.md` exists.
-- `.specify/specs/feat-001/checklists/requirements.md` exists.
+- `.specify/specs/feat-001/spec.md` contains a passing or non-blocking
+  `## Specification Quality Gate`.
 - The child spec owns its own `UR-*`, `FR-*`, and `SC-*` IDs.
 
 Continue only if:

@@ -2,7 +2,7 @@
 name: tdk-retro-collect
 description: "Create or update retrospective feedback after a TDK spec: reviews, phase drift, UT results, Langfuse traces when available, and user feedback. Writes retro-feedback.md and supports adding or removing user feedback entries across repeated collection runs."
 metadata:
-  version: "1.0.4"
+  version: "1.0.5"
   category: "TDK Retro"
   requires:
     - tdk-implement
@@ -69,7 +69,12 @@ Read review files from:
 ```text
 {FEATURE_DIR}/reviews/*.md
 {FEATURE_DIR}/review-reports/*.md
+{FEATURE_DIR}/reports/red-team-yyMMdd-HHmmss-*.md
 ```
+
+Never read `{FEATURE_DIR}/.tdk-tmp/red-team/**`. Apply logs and parse-fail
+replies are transaction recovery state, not retrospective evidence. For
+red-team sessions, use the final report and any unresolved deferred report.
 
 If neither directory exists, record `Status: skipped` for reviews with reason `no review files found`.
 

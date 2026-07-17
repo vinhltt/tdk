@@ -150,6 +150,19 @@ schema_version: 1
 
 *(Write "None" if all requirements are clear)*
 
+## Specification Quality Gate
+
+| Field | Value |
+|---|---|
+| Status | [pass/warn/fail] |
+| Iterations | [0-3] |
+| Source | tdk-specify |
+| Last Checked | [YYYY-MM-DD HH:mm] |
+
+### Blocking Issues
+
+[None. or concise blocking issues]
+
 ## Clarifications
 
 <!-- Reserved for /tdk-clarify sessions. Do not remove this section. -->

@@ -69,7 +69,12 @@ Read review files from:
 ```text
 {FEATURE_DIR}/reviews/*.md
 {FEATURE_DIR}/review-reports/*.md
+{FEATURE_DIR}/reports/red-team-yyMMdd-HHmmss-*.md
 ```
+
+Never read `{FEATURE_DIR}/.tdk-tmp/red-team/**`. Apply logs and parse-fail
+replies are transaction recovery state, not retrospective evidence. For
+red-team sessions, use the final report and any unresolved deferred report.
 
 If neither directory exists, record `Status: skipped` for reviews with reason `no review files found`.
 

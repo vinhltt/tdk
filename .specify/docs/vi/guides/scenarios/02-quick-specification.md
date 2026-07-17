@@ -29,7 +29,7 @@
 
 **Điều xảy ra**: Giống `/tdk-specify` nhưng skip embedded brainstorming step. Claude tạo `spec.md` trực tiếp từ description của bạn mà không explore scope boundary options.
 
-**Output**: `spec.md`, `checklists/requirements.md`
+**Output**: `spec.md` với embedded `## Specification Quality Gate`
 
 ### 2. Generate plan
 

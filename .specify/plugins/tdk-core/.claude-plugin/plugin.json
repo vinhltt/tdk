@@ -1,5 +1,5 @@
 {
   "name": "tdk-core",
-  "description": "Core TDK child-feature delivery workflows: specify, clarify, plan, implement, analyze, checklist, status, and test planning",
-  "version": "10.0.0"
+  "description": "Core TDK child-feature delivery workflows: specify, clarify, plan, implement, analyze, status, and test planning",
+  "version": "11.0.0"
 }

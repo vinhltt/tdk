@@ -1,5 +1,5 @@
 {
-  "description": "Utility skills for TDK workflow: brainstorming, research, scouting, problem solving, and more",
+  "description": "Generic TDK utilities: brainstorming, research, scouting, problem solving, context engineering, documentation lookup, and project-context helpers",
   "interface": {
     "brandColor": "#4F46E5",
     "capabilities": [
@@ -18,5 +18,5 @@
   },
   "name": "tdk-utils",
   "skills": "./skills/",
-  "version": "3.0.0"
+  "version": "3.0.1"
 }

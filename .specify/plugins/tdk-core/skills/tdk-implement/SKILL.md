@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "7.0.4"
+  version: "11.0.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -30,6 +30,8 @@ This skill reads plan.md and executes phases using the `## Phases` table as the 
 - **Selected phase path**: optional `--phase NN` / `--phase=NN` executes one numeric phase only
 - **Status tracking**: reads/writes Status column via `updatePhaseStatus` - no HTML comment markers
 - **Dependency enforcement**: validates BlockedBy before each phase; aborts on unsatisfied deps
+- **Phase validation**: validates every phase contract before status mutation;
+  spike phases require executable evidence and a user decision gate
 - **F3 crash recovery**: detects stale `in_progress` rows at startup and requires explicit recovery choice before any status mutation
 - **Future worker routing**: selected mode is serial per invocation; parallel phase workers need separate status/recovery design
 
@@ -113,6 +115,10 @@ Run phases in ascending row order. Before each `todo` phase status transition:
 
 Load routing expectations from `references/routing-preflight.md`. This is read-only before the first `in_progress` status transition; cancel stops without status mutation. Actual status writes still keep phase frontmatter first, then `plan.md`.
 
+Before routing preflight, run `validate-phase-file.ts` for the current phase as
+defined in `references/phase-execution.md`. Validation failure stops before
+status mutation.
+
 #### 7B. Delegate Skills Phase — Auto-continue
 
 If the phase contains usable `## Delegate Skills`, run listed delegates in order. Delegate failures leave the phase `in_progress` and emit the F3 recovery reminder.
@@ -121,7 +127,10 @@ If the phase contains usable `## Delegate Skills`, run listed delegates in order
 
 If no delegate section applies, execute the phase as generic implementation. You MUST actually implement the code, not just read and summarize the plan.
 
-For every phase, validate success criteria when present, mark done with phase frontmatter first and `plan.md` second, then log completion.
+For every normal phase, validate success criteria when present, mark done with
+phase frontmatter first and `plan.md` second, then log completion. For a spike,
+write `## Spike Result`, run its decision gate, and keep dependents blocked
+until approval or a replan updates the graph.
 
 ### Step 8: Completion Summary
 

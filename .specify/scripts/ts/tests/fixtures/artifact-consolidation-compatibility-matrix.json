@@ -1,0 +1,42 @@
+[
+  {
+    "id": "new-spec-new-plan",
+    "expected": "embedded-gate-and-lean-core-artifacts",
+    "ownerPhase": 2
+  },
+  {
+    "id": "legacy-spec-checklist-new-plan",
+    "expected": "read-only-checklist-fallback",
+    "ownerPhase": 2
+  },
+  {
+    "id": "schema-v3-status-readers",
+    "expected": "unchanged",
+    "ownerPhase": 1
+  },
+  {
+    "id": "rewrite-and-append",
+    "expected": "lean-contract-on-new-writes",
+    "ownerPhase": 3
+  },
+  {
+    "id": "default-fast-hard-tdd-backfill",
+    "expected": "same-artifact-policy",
+    "ownerPhase": 3
+  },
+  {
+    "id": "red-team-and-validate",
+    "expected": "temp-recovery-final-evidence-only",
+    "ownerPhase": 5
+  },
+  {
+    "id": "interrupted-migration",
+    "expected": "resume-or-rollback",
+    "ownerPhase": 4
+  },
+  {
+    "id": "spike-phase-lifecycle",
+    "expected": "blocked-until-approved-or-replanned",
+    "ownerPhase": 6
+  }
+]

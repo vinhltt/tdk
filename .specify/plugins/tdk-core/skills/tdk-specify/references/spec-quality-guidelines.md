@@ -5,7 +5,9 @@
 - Focus on **WHAT** users need and **WHY**.
 - Avoid HOW to implement (no tech stack, APIs, code structure).
 - Written for business stakeholders, not developers.
-- DO NOT create any checklists that are embedded in the spec. That will be a separate command.
+- Persist requirement-quality results in the embedded
+  `## Specification Quality Gate`; do not create a standalone checklist for a
+  new spec.
 
 ## Section Requirements
 
@@ -55,49 +57,36 @@ Success criteria must be:
 - "React components render efficiently" (framework-specific)
 - "Redis cache hit rate above 80%" (technology-specific)
 
-## Checklist Template
+## Specification Quality Gate
 
-Use this template for `FEATURE_DIR/checklists/requirements.md`:
+Use the existing checklist dimensions below as an internal validation rubric.
+Persist only this compact block in `spec.md`, after `## 9. Unresolved Questions`
+and before `## Clarifications`:
 
 ```markdown
-# Specification Quality Checklist: [FEATURE NAME]
+## Specification Quality Gate
 
-**Purpose**: Validate specification completeness and quality before proceeding to planning
-**Created**: [DATE]
-**Feature**: [Link to spec.md]
+| Field | Value |
+|---|---|
+| Status | pass |
+| Iterations | 1 |
+| Source | tdk-specify |
+| Last Checked | YYYY-MM-DD HH:mm |
 
-## Structure Completeness
+### Blocking Issues
 
-- [ ] ## 1. Problem Statement is concrete (not vague "improve X")
-- [ ] ## 2. Scope Boundary has >=1 in-scope + >=1 out-of-scope item
-- [ ] ## 3. Impact Surface has >=1 row (unless monolith with no modules)
-- [ ] ## 4. Evaluated Approaches is scope-level only (reject tech/framework mentions)
-- [ ] ## 7. Success Criteria are measurable and technology-agnostic
-- [ ] ## 8. Risks & Mitigations has >=1 entry
-- [ ] ## 9. Unresolved Questions is "None" or numbered list
-- [ ] ## Clarifications section exists at end
-
-## Tagging & Cross-references (conditional -- skip if IMPACT_SURFACE is empty)
-
-- [ ] Every UR tagged with [sw/module] matching Impact Surface
-- [ ] Every FR tagged with [sw/module] matching Impact Surface
-
-## Content Quality
-
-- [ ] No implementation details (languages, frameworks, APIs)
-- [ ] Focused on user value and business needs
-- [ ] Written for non-technical stakeholders
-- [ ] All mandatory sections completed
-
-## Requirement Completeness
-
-- [ ] No inline [NEEDS CLARIFICATION] markers remain (all in ## 9. Unresolved Questions)
-- [ ] Requirements are testable and unambiguous
-- [ ] All acceptance scenarios defined (Given/When/Then)
-- [ ] Edge cases identified
-- [ ] Scope is clearly bounded (## 2. Scope Boundary)
-
-## Notes
-
-- Items marked incomplete require spec updates before `/tdk-clarify` or `/tdk-plan`
+None.
 ```
+
+Allowed status values: `pass`, `warn`, `fail`. `warn` is valid only when
+`Blocking Issues` is `None.`. Iterations must be `0-3`. Source is
+`tdk-specify` or `tdk-clarify`.
+
+Validation dimensions: structure completeness, Impact Surface tag alignment,
+content quality, requirement testability, acceptance scenarios, edge cases,
+scope boundaries, unresolved-question placement, and measurable
+technology-agnostic success criteria.
+
+Legacy compatibility: an existing `checklists/requirements.md` remains a
+read-only fallback when a legacy spec has no embedded gate. New workflows do
+not create or update that file.

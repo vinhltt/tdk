@@ -53,7 +53,8 @@ Gõ trong Claude Code chat:
 Kết quả nên có:
 
 - TDK tạo `.specify/specs/feat-001/spec.md`.
-- TDK tạo `.specify/specs/feat-001/checklists/requirements.md`.
+- TDK ghi `## Specification Quality Gate` trong
+  `.specify/specs/feat-001/spec.md`.
 - Claude có thể hỏi clarifying questions nếu seed chưa concrete.
 
 Đọc `spec.md` trước khi tiếp tục. Kiểm tra:
@@ -93,7 +94,10 @@ Kết quả nên có:
 
 - TDK tạo `.specify/specs/feat-001/plan.md`.
 - Plan có phases mô tả implementation order.
-- Có thể có thêm files như `research/`, `data-model.md`, `contracts/`, hoặc `quickstart.md`.
+- Default plan output là `plan.md` cộng executable `phases/*.md`.
+- `research/`, `reports/`, và machine `contracts/` chỉ xuất hiện khi có declared
+  consumer và được index trong `plan.md`; data model, prose interface, và
+  runbook nằm trong owner phase.
 
 Đọc `plan.md` trước implementation. Kiểm tra:
 

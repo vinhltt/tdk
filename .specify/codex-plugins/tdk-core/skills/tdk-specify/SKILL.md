@@ -1,9 +1,9 @@
 ---
 name: tdk-specify
-description: "Create spec.md from a feature or child-slice description, or replay --interview against existing spec.md. Supports --fast, memory, checklist."
+description: "Create spec.md from a feature or child-slice description, or replay --interview against existing spec.md. Supports --fast, memory, and an embedded quality gate."
 argument-hint: "<id> [<desc>] [--fast] [--interview]"
 metadata: 
-  version: "9.0.0"
+  version: "11.0.0"
 ---
 
 # tdk-specify
@@ -52,7 +52,7 @@ Load references only when their step is reached:
 
 **This command produces:**
 - Feature specification (spec.md) with 9 numbered sections + Clarifications
-- Quality validation checklist
+- Embedded `## Specification Quality Gate`
 - Unresolved questions (## 9. Unresolved Questions) presented to user for resolution
 
 **This command does NOT:**
@@ -177,14 +177,14 @@ user explicitly accepts remaining questions.
 
 Follow `references/spec-generation-and-validation-workflow.md` Step 5.
 
-Create `FEATURE_DIR/checklists/requirements.md` from
-`references/spec-quality-guidelines.md`, validate all checklist items, fix and
-re-run up to 3 iterations, then document any remaining issues in checklist notes.
+Validate against `references/spec-quality-guidelines.md`, write or replace only
+the heading-bounded `## Specification Quality Gate` block in `spec.md`, fix and
+re-run up to 3 iterations, then list any remaining blockers in that block.
 
 ### Step 6: Report Completion
 
 Follow `references/spec-generation-and-validation-workflow.md` Step 6.
 
-Report branch, spec path, checklist summary, Impact Surface summary, unresolved
+Report branch, spec path, quality-gate summary, Impact Surface summary, unresolved
 question count, mode, interview alignment (`creation`, `existing artifact`, or
 `disabled`), and readiness for `/tdk-clarify` or `/tdk-plan`.

@@ -6,6 +6,35 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.103.0] - 2026-07-17
+
+### Added
+- **[tdk-core]** Add lean planning safety workflows
+  - `tdk-plan`: Add an opt-in transactional migration workflow for legacy checklist, data-model, quickstart, and prose-contract artifacts with dry-run, backup, resume, and rollback safeguards.
+  - `tdk-plan` and `tdk-implement`: Add executable spike phase validation with explicit approve or replan gates before dependent work unblocks.
+- **[Scripts]** Add deterministic migration and workflow-gate tooling
+  - Add atomic artifact migration planning, owner resolution, link rewriting, validation, apply, resume, and rollback helpers.
+  - Add specification-quality and phase/spike validators plus safe spike-decision transition helpers.
+  - Add compatibility and contract tests for lean artifacts, quality gates, migration, spikes, and red-team persistence.
+
+### Changed
+- **[tdk-core]** Consolidate feature artifacts and gates
+  - `tdk-specify`, `tdk-clarify`, and `tdk-plan`: Replace standalone requirements checklists with an embedded Specification Quality Gate and deterministic planning preflight.
+  - `tdk-plan`: Make phase-owned data models, prose interfaces, and runbooks the default while limiting supporting files to indexed consumer-driven research, reports, and machine contracts.
+  - `tdk-plan`: Keep red-team crash-recovery state temporary and persist only final or unresolved review evidence.
+- **[tdk-retro]** `tdk-retro-collect`: Collect final red-team reports while excluding temporary recovery logs and parse-failure replies from retrospective evidence.
+- **[tdk-utils]** Align helper components with the phase-owned workflow and retired checklist command
+  - `tdk-red-team-skeptic`: Review phase-owned design and runbook sections plus indexed machine contracts as implementation inputs.
+  - `tdk-load-project-context` and `tdk-validate-task-id`: Remove retired `tdk-checklist` caller metadata.
+- **[Scripts]** Report actual available prerequisite documents and mark standalone research, data-model, and quickstart paths as legacy.
+- **[Templates]** Align specification and planning templates with embedded gates, phase-owned design/runbooks, machine-only contracts, and explicit legacy migration.
+- **[Guides]** Update English and Vietnamese workflows and scenarios for embedded quality gates, lean planning outputs, migration, and spike phases.
+- **[Configurations]** Refresh Codex packaging for `tdk-inception` ownership and update core/utils metadata, routing, and manifests.
+
+### Removed
+- **[tdk-core]** Remove `tdk-checklist` (was 3.4.11), retiring the standalone checklist skill in favor of the embedded specification-quality gate.
+- **[Templates]** Remove the standalone checklist template because new specifications carry their quality gate inline.
+
 ## [1.102.0] - 2026-07-14
 
 ### Added

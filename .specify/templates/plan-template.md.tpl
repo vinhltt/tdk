@@ -52,10 +52,10 @@ Document any necessary deviations with rationale in Complexity Tracking section 
 ```text
 .specify/specs/aa-###/
 ├── plan.md              # This file (/tdk-plan command output)
-├── research/            # Phase 0 researcher reports (/tdk-plan command)
-├── data-model.md        # Phase 1 output (/tdk-plan command)
-├── quickstart.md        # Phase 1 output (/tdk-plan command)
-├── contracts/           # Phase 1 output (/tdk-plan command)
+├── phases/              # Executable phase files (required)
+├── research/            # Conditional external research evidence
+├── reports/             # Conditional durable internal evidence
+└── contracts/           # Conditional machine-consumable contracts only
 ```
 
 ### Source Code (repository root)

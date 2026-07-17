@@ -110,23 +110,29 @@ After writing spec, check `## 9. Unresolved Questions`:
 
 After writing the spec and resolving unresolved questions:
 
-1. Create `FEATURE_DIR/checklists/requirements.md` from the "## Checklist Template" in `references/spec-quality-guidelines.md`.
-2. Run validation against every checklist item.
-3. For each item, mark pass/fail and document specific issues with quoted spec sections.
-4. If all items pass, mark checklist complete and proceed to Step 6.
-5. If items fail:
+1. Run every validation dimension in `references/spec-quality-guidelines.md`.
+2. For each failure, record a concise issue anchored to the affected spec section.
+3. If all dimensions pass, write `Status: pass` and proceed to Step 6.
+4. If only non-blocking cautions remain, write `Status: warn` and
+   `Blocking Issues: None.`.
+5. If blocking dimensions fail:
    - List failing items and specific issues.
    - Update spec to address each issue.
    - Re-run validation until all pass, max 3 iterations.
-   - If still failing after 3 iterations, document remaining issues in checklist notes and warn user.
-6. Update checklist after each validation iteration.
+   - If still failing after 3 iterations, write `Status: fail`, list remaining
+     issues under `### Blocking Issues`, warn the user, and do not recommend
+     `/tdk-plan`.
+6. Write or replace only the heading-bounded `## Specification Quality Gate`
+   block using the contract in `references/spec-quality-guidelines.md`. Set
+   `Source` to `tdk-specify`; do not create `checklists/requirements.md` for a
+   new spec.
 
 ## Step 6: Report Completion
 
 Report:
 
 - Branch name and spec file path.
-- Checklist results, pass/fail summary.
+- Embedded quality-gate status and iteration count.
 - Impact Surface summary: N subworkspaces, M modules touched.
 - Unresolved Questions count from `## 9. Unresolved Questions`; 0 if all resolved.
 - Mode used: `SPEC_MODE` (`MODE_SOURCE`).

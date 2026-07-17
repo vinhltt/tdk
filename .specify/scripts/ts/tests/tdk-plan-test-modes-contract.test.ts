@@ -48,7 +48,7 @@ describe('tdk-plan test mode grammar contract', () => {
   it('accepts --tdd and --ut-backfill as known flags after TASK_ID', () => {
     expect(skill).toContain('--fast | --hard | --tdd | --ut-backfill | --red-team | --validate');
     expect(modes).toContain(
-      '/tdk-plan <TASK_ID> [USER_CONTENT...] [--fast | --hard] [--tdd | --ut-backfill] [--sub-workspace <name>] [--module <name>] [--standalone] [--red-team | --validate] [USER_CONTENT...]',
+      '/tdk-plan <TASK_ID> [USER_CONTENT...] [--fast | --hard] [--tdd | --ut-backfill] [--sub-workspace <name>] [--module <name>] [--standalone] [--red-team | --validate | --migrate-artifacts] [USER_CONTENT...]',
     );
   });
 
@@ -75,15 +75,15 @@ describe('tdk-plan test mode grammar contract', () => {
     expect(modes).toContain('compose with test modes the same way `--hard` does');
   });
 
-  it('keeps --red-team and --validate as action flags separate from test/speed modes', () => {
+  it('keeps review and migration action flags separate from test/speed modes', () => {
     expect(modes).toContain(
-      'Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`)',
+      'Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`, `--migrate-artifacts`)',
     );
   });
 
   it('keeps strict unknown-flag STOP behavior including the new flags in the allow-list', () => {
     expect(modes).toContain(
-      'Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate.',
+      'Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.',
     );
   });
 
@@ -300,7 +300,7 @@ describe('tdk-plan test mode grammar contract', () => {
     expect(validateQuestions).toContain('speckit.test_mode_completeness');
     expect(validateQuestions).toContain('Test Case Completeness Rubric');
     expect(validateQuestions).toContain('trace every public surface to test rows');
-    expect(validateQuestions).toContain('canonical phase files with test-mode sections');
+    expect(validateQuestions).toContain('do phase files apply the Test Case Completeness Rubric');
     expect(validateQuestions).toContain('Test Quality Gate');
     expect(validateQuestions).toContain('gate row statuses');
     expect(validateQuestions).toContain('numeric coverage policy source');

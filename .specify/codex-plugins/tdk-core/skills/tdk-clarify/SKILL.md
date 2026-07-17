@@ -2,7 +2,7 @@
 name: tdk-clarify
 description: "Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec."
 metadata:
-  version: "5.0.1"
+  version: "11.0.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -288,6 +288,18 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
 7. Write the updated spec back to `FEATURE_SPEC`.
 
+7.5. Re-run the specification-quality dimensions from
+`.specify/plugins/tdk-core/skills/tdk-specify/references/spec-quality-guidelines.md`
+after the final clarification write, even when no questions were asked. Replace
+only the heading-bounded `## Specification Quality Gate` block, set `Source` to
+`tdk-clarify`, increment `Iterations` without exceeding 3, and set `Status` to
+`pass`, `warn`, or `fail`. `warn` is allowed only with `Blocking Issues: None.`;
+`fail` must list concise blockers and must not recommend `/tdk-plan`.
+
+For a legacy spec without the embedded gate, create the block in `spec.md`.
+Do not rewrite or delete an existing `checklists/requirements.md`; it remains a
+read-only compatibility artifact until explicit migration.
+
 8. Report completion (after questioning loop ends or early termination):
    - Number of questions asked & answered.
    - Path to updated spec.
@@ -295,6 +307,7 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
    - Coverage summary table listing each taxonomy category (including new categories: Problem Clarity, Scope Boundary Completeness, Impact Surface Coverage, Risk Identification) with Status: Resolved (was Partial/Missing and addressed), Deferred (exceeds question quota or better suited for planning), Clear (already sufficient), Outstanding (still Partial/Missing but low impact).
    - If any Outstanding or Deferred remain, recommend whether to proceed to `/tdk-plan` or run `/tdk-clarify` again later post-plan.
    - Suggested next command.
+   - Specification Quality Gate status and iteration count.
 
 Behavior rules:
 

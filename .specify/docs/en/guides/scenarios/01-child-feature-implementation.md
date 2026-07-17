@@ -53,7 +53,8 @@ Type this in Claude Code chat:
 What should happen:
 
 - TDK creates `.specify/specs/feat-001/spec.md`.
-- TDK creates `.specify/specs/feat-001/checklists/requirements.md`.
+- TDK writes `## Specification Quality Gate` inside
+  `.specify/specs/feat-001/spec.md`.
 - Claude may ask clarifying questions if the seed is not concrete.
 
 Read `spec.md` before moving on. Check:
@@ -93,7 +94,10 @@ What should happen:
 
 - TDK creates `.specify/specs/feat-001/plan.md`.
 - The plan contains phases that describe implementation order.
-- Extra files may appear, such as `research/`, `data-model.md`, `contracts/`, or `quickstart.md`.
+- Default plan output is `plan.md` plus executable `phases/*.md`.
+- `research/`, `reports/`, and machine `contracts/` appear only for declared
+  consumers and are indexed in `plan.md`; data models, prose interfaces, and
+  runbooks live in their owner phases.
 
 Read `plan.md` before implementation. Check:
 

@@ -57,8 +57,8 @@ The TDK command suite provides a **specification-driven development** workflow. 
                            │               │                  │                       │
                            v               v                  v                       v
                       ┌──────────┐   ┌──────────────┐   ┌──────────────┐       ┌──────────────┐
-                      │checklist │   │spec.md gaps  │   │routed test   │       │status/analyze│
-                      │optional  │   │resolved      │   │skill         │       │any time      │
+                      │quality   │   │spec.md gaps  │   │routed test   │       │status/analyze│
+                      │gate in spec│  │resolved      │   │skill         │       │any time      │
                       └──────────┘   └──────────────┘   └──────────────┘       └──────────────┘
 
   PROJECT-LEVEL (no task ID needed):
@@ -114,10 +114,9 @@ Excluded:
 | `/tdk-clarify` | Ask targeted questions and write answers back into `spec.md`. | `<id>` | `spec.md` has gaps that should be resolved before planning. |
 | `/tdk-epic-hld` | Create parent epic high-level design context. | `<epic-id>`, `--force` | Epic PRD exists and needs design lenses before child breakdown. |
 | `/tdk-task-breakdown` | Generate child spec seed Markdown from epic PRD plus HLD. | `<epic-id>`, `--force` | An epic needs independently specifiable child slices. |
-| `/tdk-plan` | Generate implementation plan and design artifacts. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate` | `spec.md` is ready to become implementation phases; add `--tdd`/`--ut-backfill` when test planning should be part of the same phases. |
+| `/tdk-plan` | Generate implementation plan and conditional supporting artifacts. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` is ready to become implementation phases; use migration only for an existing legacy feature folder. |
 | `/tdk-implement` | Execute runnable rows from `plan.md ## Phases`. | `<id>`, `--phase NN` | A plan exists and one or more implementation phases are ready. |
 | `/tdk-analyze` | Cross-artifact consistency and quality analysis. | `<id>` | You need read-only verification across spec, plan, and phases. |
-| `/tdk-checklist` | Generate a focused quality checklist. | `<id> [focus]` | Requirements need a gate before downstream implementation. |
 | `/tdk-status` | Show workflow progress. | `<id>` | You need a read-only status snapshot. |
 
 ### Project And Architecture
@@ -190,10 +189,18 @@ Excluded:
 | `--hard` | More rigorous planning with expanded research and review. Composes with `--tdd` or `--ut-backfill`. |
 | `--tdd` | Add tests-first sections (`Tests Before` / `Refactor` / `Tests After` / `Test Quality Gate` / `Regression Gate`) to implementation phases. |
 | `--ut-backfill` | Generate backfill-focused phases (`Code Summary` / `Mocks & Fixtures Required` / `Test Matrix` / `Test Quality Gate`) for existing code. Accepts `--sub-workspace <name>`, `--module <name>` (requires `--sub-workspace`), and `--standalone`. |
-| `--red-team` | Review an existing plan with adversarial focus. Freeform content becomes review focus. |
+| `--red-team` | Review an existing plan with adversarial focus. Recovery state stays in `.tdk-tmp`; one final timestamped report stays under `reports/`. |
 | `--validate` | Interview/validate an existing plan. Freeform content becomes validation focus. |
+| `--migrate-artifacts` | Dry-run legacy checklist/data-model/quickstart/prose-contract consolidation, then require confirmation before a backed-up transaction. |
 
-Outputs: `plan.md`, phase details, optional `research/`, `data-model.md`, and `contracts/`.
+Default outputs: existing `spec.md`, `plan.md`, and `phases/*.md`. Optional
+`research/`, `reports/`, and machine-consumable `contracts/` exist only for a
+declared consumer and are indexed in `plan.md`. Data models, prose contracts,
+and runbooks live in their owner phases.
+
+Executable experiments may use `phase_type: spike`; downstream phases remain
+blocked until `/tdk-implement` records evidence and the result is approved or
+the plan is revised.
 
 Test-mode phases include `Test Quality Gate` rows. TDK owns baseline rubric,
 traceability, and gate row completion; the routed consumer `test` skill owns
@@ -212,7 +219,8 @@ test-mode planning.
 | `--fast` | Token-efficient specification for clear work. |
 | `--interview` | Recheck existing or newly generated spec through targeted questions. |
 
-Outputs: `spec.md` and `checklists/requirements.md`.
+Output: `spec.md`, including `## Specification Quality Gate`. `/tdk-clarify`
+reruns the same embedded gate after requirement changes.
 
 #### Architecture Inception
 
@@ -252,7 +260,6 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
 | 10 | `/tdk-analyze <id>` | Cross-artifact consistency and quality analysis |
 | 11 | `/tdk-status <id>` | Show workflow progress (read-only, any time) |
-| 12 | `/tdk-checklist <id> [focus]` | Generate quality checklist for requirements |
 | 13 | `/tdk-constitution [--init <brief\|file>]` | Create/update project architecture principles and initialize project memory artifacts |
 | 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake and routing report |
 | 15 | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | Existing-repo onboarding and safe setup recommendations |
@@ -305,12 +312,12 @@ For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalo
 |---------|--------|-----------|-------|--------|------------|
 | discovery | `/tdk-discovery <epic-id> [<brief\|file>] [--force] [--interview]` | `--force`, `--interview` | Project context, constitution/memory, brief or file; existing discovery files for ID-only `--interview` | `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md`, `discovery.md` | Optional after constitution, before epic-prd |
 | epic-prd | `/tdk-epic-prd <epic-id> [--force] [--interview]` | `--force`, `--interview` | Existing `discovery.md`, `problem.md`, `personas.md`, `mvp-scope.md`; existing PRD files for ID-only `--interview` | `epic-prd.md`, `epic-prd/prd.md`, `epic-prd/slice-map.md`, `epic-prd/open-questions.md` | discovery |
-| specify | `/tdk-specify <id> [<desc>] [--interview]` | `--interview` | `.specify.env`; explicit feature description or `tasks-breakdown` seed; existing `spec.md` for ID-only `--interview` | `spec.md`, `checklists/requirements.md` | None, or child seed from task breakdown |
-| specify (fast) | `/tdk-specify <id> <desc> --fast [--interview]` | `--fast`, `--interview` | `.specify.env` | `spec.md`, `checklists/requirements.md` | None |
+| specify | `/tdk-specify <id> [<desc>] [--interview]` | `--interview` | `.specify.env`; explicit feature description or `tasks-breakdown` seed; existing `spec.md` for ID-only `--interview` | `spec.md` with embedded quality gate | None, or child seed from task breakdown |
+| specify (fast) | `/tdk-specify <id> <desc> --fast [--interview]` | `--fast`, `--interview` | `.specify.env` | `spec.md` with embedded quality gate | None |
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
 | high-level-design | `/tdk-epic-hld <epic-id>` | `--force` | `epic-prd.md`, `prd.md`, `slice-map.md`, `open-questions.md`; optional HLD routing | `high-level-design.md` + 5 design artifacts | epic-prd |
 | task-breakdown | `/tdk-task-breakdown <epic-id>` | `--force` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | `tasks-breakdown.md`, `tasks-breakdown/task-NNN-*.md` child spec seed files | high-level-design |
-| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate` | `spec.md` plus clarified requirements and optional context | `plan.md` (with ## Phases table), `research/`, `data-model.md`, `contracts/` | clarify |
+| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` plus clarified requirements and optional context | `plan.md`, `phases/*.md`; conditional indexed `research/`, `reports/`, machine `contracts/` | clarify |
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
 | analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report (no file created) | specify |
@@ -465,7 +472,6 @@ Syntax: `/tdk-plan-skill-routing <init|inspect|check|diff|register|verify|optimi
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
 | constitution | `/tdk-constitution [principles]` | `--init <brief\|file>` | `constitution.md`, templates | `constitution.md`, `product-context.md`, project docs | None (project-level) |
-| checklist | `/tdk-checklist <id> [focus]` | — | `spec.md`, `plan.md` (opt) | `checklists/{domain}.md` | specify |
 
 ### Primary Implementation Path
 
@@ -486,7 +492,7 @@ See [workflow-map.md](workflow-map.md) for full Mermaid flow diagrams showing in
 **Summary flow (Primary Path):**
 ```
 req → /specify → spec.md → /clarify → spec.md (clarified)
-  → /plan → plan.md (with ## Phases table), research/, data-model.md, contracts/, wireframes/
+  → /plan → plan.md + phases/*.md; optional indexed research/, reports/, machine contracts/
   → /implement → source code
 ```
 

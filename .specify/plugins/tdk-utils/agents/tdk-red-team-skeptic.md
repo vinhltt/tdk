@@ -8,7 +8,7 @@ color: red
 model: sonnet
 metadata:
   lens: skeptic
-  version: "1.10.6"
+  version: "3.0.1"
 ---
 
 ## Role
@@ -30,7 +30,9 @@ Caller passes inline:
 Look for, in order:
 
 1. **Unstated dependencies** — services, env vars, secrets, schema migrations, infra changes the plan assumes exist.
-2. **Integration gaps** — interfaces between phases or with `/tdk-implement` artifacts (`spec.md`, `data-model.md`, `contracts/`) that aren't actually wired up.
+2. **Integration gaps** — interfaces between phases or with `/tdk-implement`
+   inputs (`spec.md`, phase-owned design/runbook sections, and indexed machine
+   contracts) that are not actually wired up.
 3. **Phase-dep realism** — does the `Blocks/BlockedBy` graph match the real causal order, or is it wishful?
 4. **Missing error paths** — failure modes the plan handwaves ("we'll handle errors later"), retry/rollback ambiguity, half-defined timeouts.
 5. **Spec currency** — claims that conflict with `spec.md` or with `.specify/memory/` constraints.

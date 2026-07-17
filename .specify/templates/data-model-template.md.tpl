@@ -1,6 +1,9 @@
 # Data Model Template
 
-This file is a reference template for generating `data-model.md` for new features.
+Legacy migration reference only. New plans MUST NOT generate standalone
+`data-model.md`. Put the relevant content from this template in the owning
+implementation phase under `## Data Model`. Keep a standalone file only while
+migrating an existing feature folder.
 
 ## Database Design Rules
 
@@ -21,8 +24,7 @@ This file is a reference template for generating `data-model.md` for new feature
 - Multi-tenant tables include: `operator_id INT` (foreign key to business_operators)
 
 ### Mermaid Diagram Maintenance
-- **CRITICAL**: When any changes are made to this data-model.md file, the corresponding `data-model.mermaid` file MUST be updated
-- The mermaid file should reflect the current state of all tables, columns, relationships, and enums
+- Keep the Mermaid diagram in the owning phase's `## Data Model` section aligned with the described tables, columns, relationships, and enums
 - Updates must include:
   - New/modified table structures
   - Changed column definitions, types, and constraints
@@ -32,11 +34,11 @@ This file is a reference template for generating `data-model.md` for new feature
 - The mermaid diagram serves as a visual representation for documentation and development teams
 
 ### State Transition Maintenance
-- All entity state transitions should be documented in a separate `state-transitions.md` file
+- Document entity state transitions in the same owner phase under `## Interfaces & Contracts`
 - Each transition MUST include an explicit trigger and any preconditions (business/data constraints)
-- When adding/changing enum status values or behavior in this file, you MUST update `state-transitions.md` in the same PR
-- When statuses are represented by boolean flags (e.g., `is_published`), document the logical states and transitions in `state-transitions.md`
-- Application logic and API contracts MUST enforce only transitions allowed by `state-transitions.md`
+- When adding/changing enum status values or behavior, update the owner-phase transition contract in the same PR
+- When statuses are represented by boolean flags (e.g., `is_published`), document the logical states and transitions in that contract
+- Application logic and API contracts MUST enforce only transitions allowed by the owner-phase contract
 
 ## Enum Definitions
 
@@ -67,7 +69,7 @@ ENUM product_status ('draft', 'active', 'inactive', 'deleted')
 ENUM currency_code ('JPY', 'USD', 'EUR')
 ```
 
-**Status Enums** (require state-transitions.md):
+**Status Enums** (require an owner-phase transition contract):
 - Lifecycle statuses: `product_status`, `order_status`, `user_status`
 - Process statuses: `approval_status`, `verification_status`, `review_status`
 - Workflow statuses: `campaign_status`, `task_status`, `request_status`
@@ -129,7 +131,7 @@ erDiagram
 
 ## Usage Instructions
 
-When generating a new `data-model.md`:
+When migrating a legacy `data-model.md` into its owner phase:
 
 1. **Copy Structure**: Use this template as the base structure
 2. **Extract Enums**: Identify all enum-like fields from the feature spec
@@ -137,4 +139,4 @@ When generating a new `data-model.md`:
 4. **Define Tables**: Create table definitions based on entities in the spec
 5. **Document Relationships**: Add foreign keys and relationships
 6. **Create Diagram**: Generate Mermaid ER diagram
-7. **Check State Transitions**: If status enums exist, ensure `state-transitions.md` is also generated
+7. **Check State Transitions**: If status enums exist, document their transition contract in the same owner phase under `## Interfaces & Contracts`, unless a declared external consumer requires a separate machine-readable artifact
