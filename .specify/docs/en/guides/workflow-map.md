@@ -29,7 +29,10 @@ command names, sequence, and artifact paths in the maps below are unchanged.
 flowchart TD
     %% Phase 0: Specification
     REQ[Requirements<br/>Natural Language]
-    PRODUCT_CONTEXT[product-context.md<br/>Project Context]
+    CONSTITUTION[constitution.md<br/>Project Governance]
+    MEMORY_CONTROL[memory-index.md + memory.yaml<br/>Memory v3 Control Plane]
+    TYPED_MEMORY[Typed Memory v3 Routes<br/>binding: true Facts]
+    ARC42[arc42/<br/>binding: false Summaries]
     GREENFIELD_INCEPTION[project-inception.md<br/>Greenfield Intake]
     BROWNFIELD_ONBOARDING[brownfield-onboarding.md<br/>Brownfield Onboarding]
     ARCHITECTURE_REPORTS[architecture-options.md<br/>architecture-decision.md<br/>architecture-recovery.md]
@@ -62,10 +65,18 @@ flowchart TD
     TASK_BREAKDOWN -.->|child /tdk-specify<br/>seed| SPEC
     REQ -->|/tdk-specify| SPEC[spec.md<br/>Feature Specification]
     DISCOVERY -.->|context only| SPEC
-    PRODUCT_CONTEXT -.->|project authority| GREENFIELD_INCEPTION
-    PRODUCT_CONTEXT -.->|project authority| BROWNFIELD_ONBOARDING
-    PRODUCT_CONTEXT -.->|project authority| DISCOVERY
-    PRODUCT_CONTEXT -.->|project authority| SPEC
+    MEMORY_CONTROL -.->|routes typed facts| TYPED_MEMORY
+    TYPED_MEMORY -.->|summarized by| ARC42
+    CONSTITUTION -.->|project authority| GREENFIELD_INCEPTION
+    CONSTITUTION -.->|project authority| BROWNFIELD_ONBOARDING
+    CONSTITUTION -.->|project authority| DISCOVERY
+    CONSTITUTION -.->|project authority| SPEC
+    TYPED_MEMORY -.->|project authority| GREENFIELD_INCEPTION
+    TYPED_MEMORY -.->|project authority| BROWNFIELD_ONBOARDING
+    TYPED_MEMORY -.->|project authority| DISCOVERY
+    TYPED_MEMORY -.->|project authority| SPEC
+    ARC42 -.->|non-binding context| DISCOVERY
+    ARC42 -.->|non-binding context| SPEC
     SPEC -->|/tdk-clarify| SPEC_CLARIFIED[spec.md<br/>+ Clarifications<br/>+ Quality Gate]
 
     %% Phase 1: Architecture & Design
@@ -93,7 +104,7 @@ flowchart TD
 
     class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,HLD,TASK_BREAKDOWN,SPEC,SPEC_CLARIFIED phase0
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES phase1
-    class PRODUCT_CONTEXT,CONSTITUTION,UIUX,REF_DATAMODEL,REF_STATE reference
+    class CONSTITUTION,MEMORY_CONTROL,TYPED_MEMORY,ARC42,UIUX,REF_DATAMODEL,REF_STATE reference
     class CODE_BE,CODE_FE,TESTS code
 ```
 
@@ -318,7 +329,10 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 
 | File | Created By | Input From | Used By | Update Frequency |
 |----------|-----------|------------|---------|-----------------|
-| `product-context.md` | `/tdk-constitution --init/update` | constitution, memory, accepted project brief/update feedback | `/tdk-discovery`, `/tdk-specify`, `/tdk-plan` context | Project authority changes |
+| `.specify/memory/constitution.md` | `/tdk-constitution --init <brief\|file>` or `/tdk-constitution` | Existing constitution/memory plus accepted project brief or update delta | Project governance authority for inception, discovery, specification, and planning | Project governance changes |
+| `.specify/memory/memory-index.md` + `.specify/memory/memory.yaml` | `/tdk-memory-init`; bootstrapped by constitution init when absent | Memory route and template metadata | Memory v3 control plane; `memory-index.md` is the route/template source of truth | Memory routing changes |
+| `.specify/memory/{decisions,risks-and-debt,quality-requirements,integrations,operations,glossary}/*.md` | `/tdk-memory-update`; `/tdk-constitution` when accepted evidence exists | Accepted durable project facts | Typed Memory v3 authority for agents and Guardian (`binding: true`) | Binding project facts change |
+| `.specify/memory/arc42/*.md` | `/tdk-constitution --init <brief\|file>` or `/tdk-constitution` | Constitution and typed Memory v3 facts | Architecture context/read-models (`binding: false`) that link to typed binding facts | Project knowledge summaries change |
 | `.specify/configurations/inception/project-inception.md` | `/tdk-greenfield-start` | Project brief or workspace-local file plus project-inception questions | Readiness-aware recommended greenfield route | New-project intake |
 | `.specify/configurations/inception/brownfield-onboarding.md` | `/tdk-brownfield-start` | Existing repo evidence, optional scout output | Evidence/confidence-based brownfield onboarding route | Existing-repo intake |
 | `.specify/configurations/architecture/architecture-options.md` | `/tdk-architecture-advisor` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | Architecture decision review | Project architecture options |
@@ -359,15 +373,22 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 
 ---
 
-## Reference Files (Templates)
+## Project Knowledge and Reference Files
 
-These files are **read-only references** used by multiple commands but never modified:
+The constitution and Memory v3 files are managed project knowledge. Arc42 files
+are non-binding summaries; typed binding facts remain authoritative. The design
+and data-model templates are read-only references.
 
 ```mermaid
 flowchart LR
-    subgraph TEMPLATES[Reference Files]
+    subgraph PROJECT_KNOWLEDGE[Project Knowledge]
         CONST[.specify/memory/<br/>constitution.md]
-        PRODUCT[.specify/memory/<br/>product-context.md]
+        MEMORY_CONTROL[memory-index.md + memory.yaml<br/>Memory v3 Control Plane]
+        TYPED_MEMORY[Typed Memory v3 Routes<br/>binding: true]
+        ARC42[arc42/<br/>binding: false]
+    end
+
+    subgraph TEMPLATES[Read-Only Reference Files]
         UIUX[ui-ux-design.md<br/>Design System]
         REF_DM[.specify/templates/<br/>data-model-template.md.tpl]
         REF_ST[.specify/templates/<br/>state-transitions-template.md.tpl]
@@ -379,9 +400,17 @@ flowchart LR
         PLAN[tdk-plan]
     end
 
+    MEMORY_CONTROL -->|routes| TYPED_MEMORY
+    TYPED_MEMORY -.->|summarized by| ARC42
+    CONST -.->|governance| DISCOVERY_CMD
+    CONST -.->|governance| SPECIFY_CMD
     CONST -.->|principles| PLAN
-    PRODUCT -.->|product facts| DISCOVERY_CMD
-    PRODUCT -.->|product facts| SPECIFY_CMD
+    TYPED_MEMORY -.->|binding facts| DISCOVERY_CMD
+    TYPED_MEMORY -.->|binding facts| SPECIFY_CMD
+    TYPED_MEMORY -.->|binding facts| PLAN
+    ARC42 -.->|non-binding context| DISCOVERY_CMD
+    ARC42 -.->|non-binding context| SPECIFY_CMD
+    ARC42 -.->|non-binding context| PLAN
     UIUX -.->|design| PLAN
     REF_DM -.->|enum format| PLAN
     REF_ST -.->|state format| PLAN
@@ -389,7 +418,7 @@ flowchart LR
     classDef reference fill:#f5f5f5,stroke:#616161,stroke-width:2px,stroke-dasharray: 5 5,color:#0f172a
     classDef command fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px,color:#0f172a
 
-    class CONST,PRODUCT,UIUX,REF_DM,REF_ST reference
+    class CONST,MEMORY_CONTROL,TYPED_MEMORY,ARC42,UIUX,REF_DM,REF_ST reference
     class DISCOVERY_CMD,SPECIFY_CMD,PLAN command
 ```
 

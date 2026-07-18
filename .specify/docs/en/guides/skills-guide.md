@@ -145,7 +145,7 @@ Excluded:
 
 | Skill | Summary | Main modes/options | Use when |
 |-------|---------|--------------------|----------|
-| `/tdk-constitution` | Create or update constitution-owned project context. | `[--init brief|file]` | Project principles or durable product context need initialization/update. |
+| `/tdk-constitution` | Manage constitution authority, Arc42 summaries, and Typed Memory v3 routes. | `/tdk-constitution` (update), `/tdk-constitution --init <brief\|file>` | Project governance or binding durable facts need initialization/update. |
 | `/tdk-greenfield-start` | New-project intake and safe route recommendation. | `[brief|file]`, `--full`, `--quick`, `--unknown` | Starting a new project and not sure which TDK path to run first. |
 | `/tdk-brownfield-start` | Observe-first onboarding for an existing repository. | `[repo-root]`, `--full`, `--config-only`, `--unknown` | Onboarding an existing repo without mutating layout/config too early. |
 | `/tdk-architecture-advisor` | Write project-level architecture options, decision, or recovery report. | `[input|file]`, `--recover-existing`, `--unknown` | You need architecture guidance without changing runtime config or source code. |
@@ -250,7 +250,15 @@ Use `greenfield-start` or `brownfield-start` first when project shape is uncerta
 
 #### Memory And Retro
 
-Memory skills maintain durable domain knowledge. Retro skills collect what happened, propose changes, and apply only approved deltas. Keep these separate: retrospectives propose; memory updates store accepted domain knowledge.
+Memory skills maintain durable domain knowledge. Memory v3 uses `memory-index.md`
+as the route/template source of truth and `memory.yaml` with it as the control
+plane. `constitution.md` plus Typed Memory v3 routes under `decisions/`,
+`risks-and-debt/`, `quality-requirements/`, `integrations/`, `operations/`, and
+`glossary/` carry authoritative facts with `binding: true`. `arc42/` contains
+`binding: false` summaries that link to typed binding facts. Retro skills
+collect what happened, propose changes, and apply only approved deltas. Keep
+these separate: retrospectives propose; memory updates store accepted domain
+knowledge.
 
 #### API Test Generation
 
@@ -282,7 +290,7 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
 | 10 | `/tdk-analyze <id>` | Cross-artifact consistency and quality analysis |
 | 11 | `/tdk-status <id>` | Show workflow progress (read-only, any time) |
-| 13 | `/tdk-constitution [--init <brief\|file>]` | Create/update project architecture principles and initialize project memory artifacts |
+| 13 | `/tdk-constitution` (update) or `/tdk-constitution --init <brief\|file>` | Update project authority or initialize constitution and Memory v3 artifacts |
 | 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake and routing report |
 | 15 | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | Existing-repo onboarding and safe setup recommendations |
 | 16 | `/tdk-architecture-advisor [input\|file] [--recover-existing\|--unknown]` | Project architecture options, decision, or recovery reports |
@@ -493,7 +501,7 @@ Syntax: `/tdk-plan-skill-routing <init|inspect|check|diff|register|verify|optimi
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| constitution | `/tdk-constitution [principles]` | `--init <brief\|file>` | `constitution.md`, templates | `constitution.md`, `product-context.md`, project docs | None (project-level) |
+| constitution | `/tdk-constitution` (update) or `/tdk-constitution --init <brief\|file>` | `--init <brief\|file>` | Existing `constitution.md`, Memory v3 control plane, accepted brief/deltas, templates | `constitution.md`; `memory-index.md` and `memory.yaml` when init bootstraps missing memory; `arc42/` summaries; typed Memory v3 files when evidence exists | None (project-level) |
 
 ### Primary Implementation Path
 

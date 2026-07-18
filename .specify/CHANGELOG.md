@@ -6,6 +6,13 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.103.3] - 2026-07-18
+
+### Changed
+- **[Docs]** Recast the English and Vietnamese constitution and workflow guidance around constitution governance, the Memory v3 control plane, typed binding facts, non-binding Arc42 summaries, and conditional memory bootstrap outputs.
+- **[Scripts]** Extend constitution authority contract coverage to enforce current bilingual guide terminology, reject retired `product-context.md` and `--update` usage, and require Memory v3 bootstrap outputs.
+- **[General]** Refresh generated release metadata and checksums for the updated guides, authority-contract tests, and plugin manifest.
+
 ## [1.103.2] - 2026-07-18
 
 ### Added

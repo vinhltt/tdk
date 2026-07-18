@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-07-18T09:25:55.921Z",
+  "generatedAt": "2026-07-18T11:31:25.261Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -130,13 +130,13 @@
       "mode": "0644"
     },
     ".specify/docs/en/guides/skills-guide.md": {
-      "sha256": "4d1d15ae7eb3bfb05a3c7dea9cd5f4ed8b201b4cc8b3982b09ee443add3d223c",
-      "size": 50291,
+      "sha256": "b13e197b007b49f84b774f22bcfa1537776d04e5fd74adc54a33448fcd5ea9ac",
+      "size": 50983,
       "mode": "0664"
     },
     ".specify/docs/en/guides/workflow-map.md": {
-      "sha256": "66b339d16896b42fda1291d06fb9d72226d1c894dc041bd383ca6b82d4f89e10",
-      "size": 27002,
+      "sha256": "36040fd6d6ab203ad1a85462ca87354d70ae909496eec705902657b6f0ee3335",
+      "size": 29268,
       "mode": "0775"
     },
     ".specify/docs/vi/guides/concepts/glossary.md": {
@@ -190,17 +190,17 @@
       "mode": "0644"
     },
     ".specify/docs/vi/guides/skills-guide.md": {
-      "sha256": "d14867f4adf2dd36ec52dd49921e8f1349ce3ce09931f3def6ecd2c2f8295933",
-      "size": 49831,
+      "sha256": "c46f381aea1497d0394206cdab185385db448e20b1f7ef24366bc91413a0a13f",
+      "size": 50551,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/workflow-map.md": {
-      "sha256": "32bdd8fd5594fdb4aebafa874c30261141d72a323ac30ccac50256e4baf107f4",
-      "size": 27345,
+      "sha256": "e27227d48b20d75796e77a6eb0d4d577a8d9af87e85cfb68fd51a1ae760401cf",
+      "size": 29612,
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "e83b038eafb1e83b2e16a48bd4ca004c37124e29e768dfee5025ef006886eb69",
+      "sha256": "bdc45093a9f31c4030a288d58a2b7561f84e70c651d8e4b858d61596639c6441",
       "size": 42494,
       "mode": "0644"
     },
@@ -2715,8 +2715,8 @@
       "mode": "0664"
     },
     ".specify/scripts/ts/tests/tdk-constitution-product-context-contract.test.ts": {
-      "sha256": "5c41d037eb18e1d1f90063ede8e7a31a9f3f2edcea53e4f0603d879bd60bf1e6",
-      "size": 2717,
+      "sha256": "634e9c3693e067625378a2974b05110c93c8d67b89ac539d3f988a7c0e75c387",
+      "size": 4420,
       "mode": "0664"
     },
     ".specify/scripts/ts/tests/tdk-discovery-skill-contract.test.ts": {

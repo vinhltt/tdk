@@ -10,6 +10,25 @@ const ARC42_SUMMARY_TEMPLATE_PATH = resolve(
   import.meta.dir,
   '../../../templates/memory/arc42-summary-template.md.tpl',
 );
+const CURRENT_AUTHORITY_GUIDES = [
+  ['English workflow map', '../../../docs/en/guides/workflow-map.md'],
+  ['Vietnamese workflow map', '../../../docs/vi/guides/workflow-map.md'],
+  ['English skills guide', '../../../docs/en/guides/skills-guide.md'],
+  ['Vietnamese skills guide', '../../../docs/vi/guides/skills-guide.md'],
+] as const;
+const CONSTITUTION_SKILLS_GUIDES = [
+  ['English skills guide', '../../../docs/en/guides/skills-guide.md'],
+  ['Vietnamese skills guide', '../../../docs/vi/guides/skills-guide.md'],
+] as const;
+const CURRENT_AUTHORITY_TOKENS = [
+  'constitution.md',
+  'memory-index.md',
+  'memory.yaml',
+  'Typed Memory v3',
+  'binding: true',
+  'arc42/',
+  'binding: false',
+] as const;
 
 function readIfExists(path: string): string {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
@@ -56,4 +75,32 @@ describe('tdk-constitution arc42 project context contract', () => {
     expect(legacySection).toContain('do not recreate it as a canonical target');
     expect(skill).toContain('Delivery timelines and roadmap dates stay outside durable memory');
   });
+
+  it.each(CURRENT_AUTHORITY_GUIDES)(
+    'documents current constitution and Memory v3 authority in the %s',
+    (_label, relativePath) => {
+      const guidePath = resolve(import.meta.dir, relativePath);
+      const guide = readIfExists(guidePath);
+
+      expect(existsSync(guidePath)).toBe(true);
+      expect(guide).not.toContain('product-context.md');
+      expect(guide).not.toContain('/tdk-constitution --update');
+      for (const token of CURRENT_AUTHORITY_TOKENS) {
+        expect(guide).toContain(token);
+      }
+    },
+  );
+
+  it.each(CONSTITUTION_SKILLS_GUIDES)(
+    'documents conditional memory bootstrap outputs in the %s',
+    (_label, relativePath) => {
+      const guide = readIfExists(resolve(import.meta.dir, relativePath));
+      const constitutionRow = guide
+        .split('\n')
+        .find((line) => line.startsWith('| constitution |'));
+
+      expect(constitutionRow).toContain('memory-index.md');
+      expect(constitutionRow).toContain('memory.yaml');
+    },
+  );
 });

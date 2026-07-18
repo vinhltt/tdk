@@ -146,7 +146,7 @@ Excluded:
 
 | Skill | Summary | Main modes/options | Dùng khi |
 |-------|---------|--------------------|----------|
-| `/tdk-constitution` | Tạo hoặc update constitution-owned project context. | `[--init brief\|file]` | Project principles hoặc durable product context cần init/update. |
+| `/tdk-constitution` | Quản lý constitution authority, Arc42 summaries, và Typed Memory v3 routes. | `/tdk-constitution` (update), `/tdk-constitution --init <brief\|file>` | Project governance hoặc binding durable facts cần init/update. |
 | `/tdk-greenfield-start` | New-project intake và safe route recommendation. | `[brief\|file]`, `--full`, `--quick`, `--unknown` | Bắt đầu project mới và chưa chắc nên chạy TDK path nào trước. |
 | `/tdk-brownfield-start` | Observe-first onboarding cho existing repository. | `[repo-root]`, `--full`, `--config-only`, `--unknown` | Onboard repo có sẵn mà chưa muốn mutate layout/config quá sớm. |
 | `/tdk-architecture-advisor` | Ghi project-level architecture options, decision, hoặc recovery report. | `[input\|file]`, `--recover-existing`, `--unknown` | Cần architecture guidance mà không đổi runtime config hoặc source code. |
@@ -250,7 +250,15 @@ Dùng `greenfield-start` hoặc `brownfield-start` trước khi project shape ch
 
 #### Memory And Retro
 
-Memory skills maintain durable domain knowledge. Retro skills collect những gì đã xảy ra, propose changes, và chỉ apply approved deltas. Giữ hai nhóm này tách biệt: retrospectives propose; memory updates lưu accepted domain knowledge.
+Memory skills maintain durable domain knowledge. Memory v3 dùng
+`memory-index.md` làm source of truth cho route/template và dùng `memory.yaml`
+cùng file đó làm control plane. `constitution.md` cùng Typed Memory v3 routes
+dưới `decisions/`, `risks-and-debt/`, `quality-requirements/`, `integrations/`,
+`operations/`, và `glossary/` lưu authoritative facts với `binding: true`.
+`arc42/` chứa các summary `binding: false` link tới typed binding facts. Retro
+skills collect những gì đã xảy ra, propose changes, và chỉ apply approved
+deltas. Giữ hai nhóm này tách biệt: retrospectives propose; memory updates lưu
+accepted domain knowledge.
 
 #### API Test Generation
 
@@ -282,7 +290,7 @@ Các helper này tồn tại trong source nhưng không được catalog như di
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan với design artifacts |
 | 10 | `/tdk-analyze <id>` | Cross-artifact consistency và quality analysis |
 | 11 | `/tdk-status <id>` | Hiển thị workflow progress, read-only, bất cứ lúc nào |
-| 13 | `/tdk-constitution [--init <brief\|file>]` | Create/update project architecture principles và initialize project memory artifacts |
+| 13 | `/tdk-constitution` (update) hoặc `/tdk-constitution --init <brief\|file>` | Update project authority hoặc initialize constitution và Memory v3 artifacts |
 | 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake và routing report |
 | 15 | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | Existing-repo onboarding và safe setup recommendations |
 | 16 | `/tdk-architecture-advisor [input\|file] [--recover-existing\|--unknown]` | Project architecture options, decision, hoặc recovery reports |
@@ -441,7 +449,7 @@ Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [-
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
-| constitution | `/tdk-constitution [principles]` | `--init <brief\|file>` | `constitution.md`, templates | `constitution.md`, `product-context.md`, project docs | None, project-level |
+| constitution | `/tdk-constitution` (update) hoặc `/tdk-constitution --init <brief\|file>` | `--init <brief\|file>` | Existing `constitution.md`, Memory v3 control plane, accepted brief/deltas, templates | `constitution.md`; `memory-index.md` và `memory.yaml` khi init bootstrap memory còn thiếu; `arc42/` summaries; typed Memory v3 files khi có evidence | None, project-level |
 
 ### Primary Implementation Path
 
