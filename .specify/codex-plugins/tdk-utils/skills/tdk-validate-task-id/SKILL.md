@@ -7,7 +7,7 @@ description: "Validate and normalize task ID from $ARGUMENTS or conversation con
   NOT user-invocable."
 user-invocable: false
 metadata:
-  version: "1.10.6"
+  version: "3.0.1"
   category: "Validation"
   input_format: "$ARGUMENTS, host skill name, allow_infer_from_context flag"
   output_format: "TASK_ID (validated, lowercase), TASK_ID_SOURCE (arg|inferred|confirmed)"

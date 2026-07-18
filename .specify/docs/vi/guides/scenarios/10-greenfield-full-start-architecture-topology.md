@@ -35,6 +35,11 @@ ghi config. Với project mới, approve guarded apply trước
 ## Prerequisites
 
 - TDK đã được install trong consumer project dưới `.specify/`.
+- Quá trình cài harness đã phân giải thành bộ base gắn kết gồm `tdk-core`,
+  `tdk-inception`, `tdk-memory`, và `tdk-utils`. Các command nền tảng
+  project/workspace đến `/tdk-sub-workspace-docs` được đóng gói dưới
+  `tdk-inception`; command tiếp nối `/tdk-sub-workspace-automation-recommend`
+  thuộc `tdk-scaffold`. Tên command và đường dẫn artifact không đổi.
 - Project có JSON `.specify/.specify.json`; workflow config apply không tạo
   first-time config từ đầu.
 - Có `bun`.

@@ -2,7 +2,7 @@
 name: tdk-retro-collect
 description: "Create or update retrospective feedback after a TDK spec: reviews, phase drift, UT results, Langfuse traces when available, and user feedback. Writes retro-feedback.md and supports adding or removing user feedback entries across repeated collection runs."
 metadata:
-  version: "1.0.4"
+  version: "1.0.5"
   category: "TDK Retro"
   requires:
     - tdk-implement

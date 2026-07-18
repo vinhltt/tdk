@@ -1,8 +1,8 @@
 # TDK Skills Guide
 
-> **Last updated**: 2026-07-02
+> **Last updated**: 2026-07-18
 >
-> **Source baseline**: TDK `547655e v1.94.1`
+> **Source baseline**: TDK `60977e8 v1.103.1`
 >
 > **Where to run**: All `/tdk-*` commands are typed in the **Claude Code chat interface** (VSCode extension or Claude CLI prompt), NOT in a terminal or bash shell.
 
@@ -83,6 +83,28 @@ For feature-sized work, skip discovery, epic PRD, HLD, and task breakdown by def
 Each command reads the output of the previous one. For minimal feature work, the chain is `spec.md` -> `plan.md` (with `## Phases`) -> source code. For epic-sized work, optional `discovery.md` plus `discovery/` feeds `epic-prd.md` plus `epic-prd/`; epic PRD feeds parent HLD; parent HLD feeds task breakdown; task breakdown seeds child specs. Child specs do not run HLD by default.
 
 `/tdk-epic-hld` always uses built-in design lenses and may optionally read `{docs.path}/custom-workflow/high-level-design-skill-routing.md` for advisory consumer design skills. This HLD routing file is separate from `plan-skill-routing.md`, which remains implementation/test routing for planning and UT workflows.
+
+### Plugin Ownership And Coupled Base
+
+Plugin ownership defines source/generated packaging and maintenance; it does not
+rename `/tdk-*` commands or change their artifact paths.
+
+| Plugin | Ownership |
+|---|---|
+| `tdk-core` | Child feature delivery (`specify`, `clarify`, `plan`, `implement`, analysis/status) plus the shared hook/runtime gateway |
+| `tdk-inception` | Project/workspace foundation: greenfield/brownfield intake, constitution, architecture, layout/config, dependency policy, and sub-workspace docs |
+| `tdk-epic` | Parent epic discovery, PRD, HLD, and task breakdown |
+| `tdk-utils` | Generic scout, research, docs lookup, context, brainstorm, and problem-solving utilities |
+| `tdk-memory` | Domain memory commands and memory agent |
+| `tdk-test-api` | API test planning, testcase generation, and Playwright TypeScript generation |
+| `tdk-retro` | Retrospective collection, learning proposals, and approved learning application |
+| `tdk-scaffold` | Automation recommendations, skill/agent scaffolding, routing, and guarded recipes |
+
+Every harness install resolves the coupled base `tdk-core`, `tdk-inception`,
+`tdk-memory`, and `tdk-utils`. Optional plugin selection adds workflows to that
+base; it does not create a runtime-independent core-only or inception-only
+install. See the [Setup Guide](setup/setup-guide.md) for selectors and clean
+reinstall guidance.
 
 ---
 

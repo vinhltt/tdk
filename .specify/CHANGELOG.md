@@ -6,6 +6,15 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.103.2] - 2026-07-18
+
+### Added
+- **[Scripts]** Add bilingual ownership-contract tests covering coupled-base installation, plugin boundaries, persisted selection, safe reinstall guidance, and stable greenfield routes.
+
+### Changed
+- **[Guides]** Document coupled-base installation and plugin ownership across English and Vietnamese setup, skills, workflow, and greenfield guides.
+- **[General]** Refresh source, Codex, and release manifests while synchronizing generated `tdk-retro` and `tdk-utils` skill metadata.
+
 ## [1.103.1] - 2026-07-18
 
 ### Added

@@ -7,7 +7,7 @@ description: "Load project configuration and resolve feature directory from vali
   NOT user-invocable."
 user-invocable: false
 metadata:
-  version: "1.11.4"
+  version: "3.0.1"
   category: "Configuration"
   input_format: "Validated TASK_ID, require_feature_dir flag (default true), require_prefix_validation flag (default true)"
   output_format: "PROJECT_CONTEXT object, FEATURE_DIR path"

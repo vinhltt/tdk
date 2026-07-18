@@ -1,8 +1,8 @@
 # TDK Skills Guide
 
-> **Last updated**: 2026-07-02
+> **Last updated**: 2026-07-18
 >
-> **Source baseline**: TDK `547655e v1.94.1`
+> **Source baseline**: TDK `60977e8 v1.103.1`
 >
 > **Chạy ở đâu**: Tất cả command `/tdk-*` được gõ trong **Claude Code chat interface** như VSCode extension hoặc Claude CLI prompt, KHÔNG gõ trong terminal hoặc bash shell.
 
@@ -84,6 +84,28 @@ Với feature-sized work, mặc định bỏ qua discovery, epic PRD, HLD, và t
 Mỗi command đọc output của command trước đó. Với minimal feature work, chain là `spec.md` -> `plan.md` với `## Phases` -> source code. Với epic-sized work, optional `discovery.md` cộng với `discovery/` feed `epic-prd.md` cộng với `epic-prd/`; epic PRD feed parent HLD; parent HLD feed task breakdown; task breakdown seed child specs. Child specs không chạy HLD by default.
 
 `/tdk-epic-hld` luôn dùng built-in design lenses và có thể optional đọc `{docs.path}/custom-workflow/high-level-design-skill-routing.md` cho advisory consumer design skills. File HLD routing này tách biệt với `plan-skill-routing.md`, vốn vẫn là implementation/test routing cho planning và UT workflows.
+
+### Quyền Sở Hữu Plugin Và Bộ Base Gắn Kết
+
+Quyền sở hữu plugin xác định phạm vi đóng gói và bảo trì source cùng artifact đã
+tạo; nó không đổi tên command `/tdk-*` hoặc thay đổi đường dẫn artifact.
+
+| Plugin | Phạm vi sở hữu |
+|---|---|
+| `tdk-core` | Bàn giao child feature (`specify`, `clarify`, `plan`, `implement`, analysis/status) cùng cổng hook/runtime dùng chung |
+| `tdk-inception` | Nền tảng project/workspace: greenfield/brownfield intake, constitution, architecture, layout/config, dependency policy, và sub-workspace docs |
+| `tdk-epic` | Discovery, PRD, HLD, và task breakdown ở cấp parent epic |
+| `tdk-utils` | Các tiện ích dùng chung cho scout, research, tra cứu docs, context, brainstorm, và giải quyết vấn đề |
+| `tdk-memory` | Các command domain memory và memory agent |
+| `tdk-test-api` | Lập kế hoạch API test, tạo testcase, và sinh mã Playwright TypeScript |
+| `tdk-retro` | Thu thập retrospective, đề xuất bài học, và áp dụng bài học đã được duyệt |
+| `tdk-scaffold` | Đề xuất automation, scaffold skill/agent, routing, và các recipe có guard |
+
+Mỗi lần cài harness đều phân giải thành bộ base gắn kết gồm `tdk-core`,
+`tdk-inception`, `tdk-memory`, và `tdk-utils`. Chọn plugin tùy chọn chỉ bổ sung
+workflow vào base; nó không tạo bản cài core-only hoặc inception-only độc lập
+về runtime. Xem [Setup Guide](setup/setup-guide.md) để biết bộ chọn và hướng dẫn
+cài lại sạch.
 
 ---
 

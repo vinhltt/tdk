@@ -35,6 +35,11 @@ writes config. On a fresh project, approve the guarded apply before
 ## Prerequisites
 
 - TDK is installed in the consumer project under `.specify/`.
+- The harness install resolved the coupled base `tdk-core`, `tdk-inception`,
+  `tdk-memory`, and `tdk-utils`. The project/workspace foundation commands
+  through `/tdk-sub-workspace-docs` are packaged under `tdk-inception`; the
+  follow-on `/tdk-sub-workspace-automation-recommend` command belongs to
+  `tdk-scaffold`. Their names and artifact paths are unchanged.
 - The project has a JSON `.specify/.specify.json`; workflow config apply does not create
   first-time config from scratch.
 - `bun` is available.

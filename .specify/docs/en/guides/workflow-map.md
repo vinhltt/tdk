@@ -7,6 +7,22 @@
 
 ![TDK lifecycle workflow](../../assets/lifecycle-share-graph.png)
 
+## Plugin Ownership Boundary
+
+The workflow remains one command/artifact graph even though its maintainers are
+split across plugins:
+
+| Workflow lane | Owning plugin |
+|---|---|
+| Child spec, clarify, plan, implement, analyze, and status | `tdk-core` |
+| Project inception, constitution, architecture, workspace layout/config, dependency policy, and sub-workspace docs | `tdk-inception` |
+| Parent epic discovery, PRD, HLD, and task breakdown | `tdk-epic` |
+| Generic research/scout/context/problem-solving helpers | `tdk-utils` |
+
+Every install still resolves the coupled base `tdk-core`, `tdk-inception`,
+`tdk-memory`, and `tdk-utils`. This split changes packaging ownership only;
+command names, sequence, and artifact paths in the maps below are unchanged.
+
 ## Full Workflow Map
 
 ```mermaid

@@ -21,6 +21,43 @@ bash .specify/setup.sh --skip-venv
 bash .specify/setup.sh --skip-config
 ```
 
+## Install Harness Plugins
+
+After the `.specify/` payload exists, run the harness installer from the TDK
+source checkout under `packages/tdk-setup`:
+
+```bash
+cd /path/to/tdk/packages/tdk-setup
+CONSUMER_ROOT=/path/to/consumer-project
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --dry-run
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --yes
+```
+
+Use `--harness codex` for a separate Codex install after generated
+`.specify/codex-plugins/` packages are available in the consumer. A combined
+Claude+Codex install is unsupported.
+
+Every selection resolves the coupled base `tdk-core`, `tdk-inception`,
+`tdk-memory`, and `tdk-utils`. `--plugins` requests optional workflows;
+`--plugins tdk-core` remains accepted as base-only compatibility syntax. Use
+`--all-plugins` to request every optional plugin.
+
+In a TTY, omit both selectors to choose optional plugins interactively; an empty
+choice installs only the base. Non-TTY runs must pass
+`--plugins <name[,name]>` or `--all-plugins`. The preview reports
+`Requested optional plugins` separately from the complete `Resolved plugins`
+set.
+
+`.specify/install-settings.json` stores the latest requested optional set
+globally. Claude and Codex ownership manifests independently record the resolved
+plugins actually installed for each harness.
+
+For consumers installed before the `tdk-inception` ownership split, back up the
+consumer, refresh the distributed payload, then run `--all-plugins --dry-run`
+and `--all-plugins --yes` separately for each installed harness. There is no
+saved-selection migration; review conflicts instead of deleting or overwriting
+user-modified targets.
+
 ## After Setup
 
 Follow the manual steps printed by the script. At minimum:
@@ -30,9 +67,10 @@ Follow the manual steps printed by the script. At minimum:
 - Open Claude Code at the consumer project root.
 - Verify `/tdk-` commands are visible in Claude Code chat.
 
-For selective harness installs, choose the command set that matches the workflow
-you need: child feature, parent epic, or both. After install, verify the `/tdk-`
-commands for that workflow are visible in Claude Code chat.
+For selective harness installs, choose optional plugins matching the workflow
+you need: child feature, parent epic, or both. The coupled base is always
+installed. After install, verify the `/tdk-` commands for that workflow are
+visible in Claude Code chat.
 
 ## Troubleshooting
 

@@ -7,6 +7,22 @@
 
 ![TDK lifecycle workflow](../../assets/lifecycle-share-graph.png)
 
+## Ranh Giới Plugin Ownership
+
+Workflow vẫn là một đồ thị command/artifact thống nhất dù trách nhiệm bảo trì
+được tách giữa các plugin:
+
+| Workflow lane | Plugin sở hữu |
+|---|---|
+| Child spec, clarify, plan, implement, analyze, và status | `tdk-core` |
+| Project inception, constitution, architecture, workspace layout/config, dependency policy, và sub-workspace docs | `tdk-inception` |
+| Parent epic discovery, PRD, HLD, và task breakdown | `tdk-epic` |
+| Generic research/scout/context/problem-solving helpers | `tdk-utils` |
+
+Mỗi lần cài vẫn phân giải thành bộ base gắn kết gồm `tdk-core`, `tdk-inception`,
+`tdk-memory`, và `tdk-utils`. Việc tách này chỉ thay đổi quyền sở hữu đóng gói;
+tên command, trình tự, và đường dẫn artifact trong các map bên dưới không đổi.
+
 ## Full Workflow Map
 
 ```mermaid

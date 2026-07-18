@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-18T08:16:10Z",
+  "generated_at": "2026-07-18T10:17:17Z",
   "plugins": {
     "tdk-core": {
       "version": "11.0.0",
@@ -169,7 +169,7 @@
         "skills/tdk-retro-apply/references/apply-flow-memory.md": "13a66a5ee193c53232ea56cf9c42c0c914315f33ef3a2c11f6b156dba45b100a",
         "skills/tdk-retro-apply/references/apply-flow-technical.md": "b4d34fb99eee4982007ff3f0c758b069c28d7e871fe3bfacce9b01cc4136809e",
         "skills/tdk-retro-apply/references/memory-delegate-contract.md": "81e9da7995fd021b78262976a47cfed8fc41a9b75e49261582f13edd2f8bf1fa",
-        "skills/tdk-retro-collect/SKILL.md": "bb25b177fb38a0f8fea69b78ca5d5ba0a7037d1edf0d8958412a803ac5dcd83a",
+        "skills/tdk-retro-collect/SKILL.md": "f612bbe69070ed6c12f5a1dd9f62fff1fc94de9bac325fc13f230fb082c4320b",
         "skills/tdk-retro-collect/references/langfuse-trace-analysis.md": "4c72df23d5165b9b9d7ac91d3c93b45418bd1f59efab1b6f8ab7bcbfef25f1de",
         "skills/tdk-retro-collect/references/phase-drift-detection.md": "a70cea214d69689f5ae481ef81ae714ed94031b2a440c470f33cfa79c7546eab",
         "skills/tdk-retro-propose/SKILL.md": "6e4f5af1bb0c733053f55d0b8702d527423f9b3f1d2ca93f050a2f861900f504"
@@ -271,11 +271,11 @@
         "skills/shard-doc/scripts/shard_doc.py": "e53a901abdc383f8458245fce9fa739bb19dac07eb60455dd004d31be33f3b08",
         "skills/shard-doc/tests/sample-medium.md": "a6dd023eee4c7e5d2e3f13fca79429d6b85d10a8975ffc5f796511695b455504",
         "skills/shard-doc/tests/sample-small.md": "14c3a01e4f97046ecfbe58ea208d758387561b377a37aad69a71e411d2ea82c3",
-        "skills/tdk-load-project-context/SKILL.md": "5d6eda37ae49f09b1ea7ee5958029e2748bb592eeed4bd43801f5dd0845a8340",
+        "skills/tdk-load-project-context/SKILL.md": "8f9757daed0bbaf50f36eba0bd7adf18e001c12ea499b5c7c259be81a68fd15f",
         "skills/tdk-scout/SKILL.md": "3ae073d7c22872345c67d1d8bf69c98fd601d99a49b0c8f8efbe86ce0be8fbf3",
         "skills/tdk-setup-guide/SKILL.md": "18ff64ec1cf1cb4e223702f808a25373fe525e57323f678c48455c279e49063f",
         "skills/tdk-skill-guide/SKILL.md": "a2dd1cbffdb3882d6db1240454ff41a1b3d213e647fb69882690d2adc4f75d4d",
-        "skills/tdk-validate-task-id/SKILL.md": "53e9f24cf92e3495b6d7ca8497738dfff69b5c51f79c759d9a2095738aec0abf"
+        "skills/tdk-validate-task-id/SKILL.md": "e39fc8ada33588d7f2df214a988c95a6a177b17b1651ce1c4e1eb72e31575b48"
       }
     }
   }
