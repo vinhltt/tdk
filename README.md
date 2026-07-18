@@ -27,7 +27,7 @@ bash distribute.sh "$CONSUMER_ROOT" --dry-run
 bash distribute.sh "$CONSUMER_ROOT" --yes
 ```
 
-This copies the configured `.specify/` payload into the consumer project. The default payload includes the workflow plugins, templates, scripts, schemas, setup script, and release manifest.
+This copies the configured `.specify/` payload into the consumer project. The default payload includes the workflow plugins, dependency policy, guides, templates, scripts, schemas, setup script, and release manifest.
 
 ### 3. Bootstrap the Consumer Project
 
@@ -169,12 +169,12 @@ Current default shipped payload:
 - `.specify/templates/`
 - `.specify/setup.sh`
 - `.specify/schemas/`
+- `.specify/docs/`
 - `.specify/.specify.json.example`
 - `.specify/release-manifest.json`
 
 Current default omitted payload:
 
-- `.specify/docs/**`
 - `.specify/codex-plugins/**`
 - `.specify/CHANGELOG.md`
 
@@ -183,6 +183,12 @@ Regenerate the source release manifest before shipping when payload files or `di
 ```bash
 bun .claude/skills/tdk-bump/scripts/generate-release-manifest.ts --project-root . --write
 ```
+
+On an existing target, automatic updates and removals require a regular,
+non-symlink file whose SHA-256 still matches the prior target release manifest.
+`--yes`, `--force`, and `--yes-delete` approve operations but never bypass that
+proof. Payload changes are applied before the release manifest is replaced; a
+failed run rolls back its payload mutations and keeps the previous manifest.
 
 For branded consumer payload text, pass a prefix:
 
@@ -218,13 +224,16 @@ See [tdk-setup README](packages/tdk-setup/README.md) for the full setup CLI refe
 
 | Plugin | Purpose |
 |---|---|
-| **tdk-core** | Greenfield/brownfield start, constitution, specify, clarify, plan, implement, config, status, and test planning modes |
+| **tdk-core** | Child feature delivery: specify, clarify, plan, analyze, implement, status, and test-planning modes; also owns the shared hook/runtime gateway |
+| **tdk-inception** | Project/workspace foundation: greenfield/brownfield start, constitution, architecture, workspace layout/config, dependency policy, and sub-workspace documentation |
 | **tdk-epic** | Parent epic discovery, epic PRD, HLD, and task breakdown before child specs |
-| **tdk-utils** | Scout, research, workspace dependency policy, docs-seeker, context engineering, brainstorming, and problem solving |
+| **tdk-utils** | Generic scout, research, docs-seeker, context engineering, brainstorming, and problem-solving utilities |
 | **tdk-memory** | Domain memory init, update, query, changelog, checksum, and memory agent |
 | **tdk-test-api** | API test planning, testcase generation, and Playwright TypeScript code generation |
 | **tdk-retro** | Retrospective feedback collection, learning proposal, and approved learning application |
 | **tdk-scaffold** | Sub-workspace automation recommendations, skill/agent scaffolding, plan-skill-routing, and guarded golden-path recipes |
+
+Every install includes the coupled base `tdk-core`, `tdk-inception`, `tdk-memory`, and `tdk-utils`. Plugin selection adds optional workflows to that base; it does not create a runtime-independent core-only or inception-only install. `--plugins tdk-core` remains accepted as base-only compatibility syntax.
 
 ## Tech Stack
 

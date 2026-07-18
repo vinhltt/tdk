@@ -30,6 +30,7 @@ export type ManifestDiffAction = "new" | "updated" | "deleted" | "unchanged";
 export interface ManifestDiffEntry {
   action: ManifestDiffAction;
   path: string;
+  expectedTargetSha256?: string;
 }
 
 export class ReleaseManifestError extends Error {

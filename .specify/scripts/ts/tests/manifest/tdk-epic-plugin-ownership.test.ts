@@ -81,8 +81,10 @@ describe('tdk-epic plugin ownership', () => {
     expect(primaryWorkflowRouting).not.toContain('tdk-epic,tdk-utils');
     expect(primaryWorkflowRouting).not.toContain('tdk-core,tdk-utils');
     expect(primaryWorkflowRouting).not.toContain('--all-plugins');
-    expect(setupReadme).toContain('--plugins tdk-core,tdk-utils');
-    expect(setupReadme).toContain('--plugins tdk-epic,tdk-utils');
-    expect(setupReadme).toContain('--plugins tdk-core,tdk-epic,tdk-utils');
+    expect(setupReadme).toContain('--plugins tdk-core');
+    expect(setupReadme).toContain('--plugins tdk-epic');
+    expect(setupReadme).toContain('tdk-core`, `tdk-inception`');
+    expect(setupReadme).toContain('Requested optional plugins');
+    expect(setupReadme).toContain('Resolved plugins');
   });
 });

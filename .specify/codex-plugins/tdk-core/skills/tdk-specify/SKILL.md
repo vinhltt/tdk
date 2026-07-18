@@ -2,7 +2,7 @@
 name: tdk-specify
 description: "Create spec.md from a feature or child-slice description, or replay --interview against existing spec.md. Supports --fast, memory, and an embedded quality gate."
 argument-hint: "<id> [<desc>] [--fast] [--interview]"
-metadata: 
+metadata:
   version: "11.0.0"
 ---
 

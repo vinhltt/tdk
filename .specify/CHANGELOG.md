@@ -6,6 +6,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.103.1] - 2026-07-18
+
+### Added
+- **[Embedded Skills]** Add strict release-manifest path validation with traversal and symlink rejection coverage.
+- **[Scripts]** Add generated Codex ownership coverage for `tdk-inception` and its 15 skills.
+
+### Changed
+- **[Embedded Skills]** Include prior target checksums in manifest diffs and support validating/materializing manifests from rendered target bytes.
+- **[Configurations]** Route project foundations through required inception workflows while separating optional scaffolding.
+- **[Scripts]** Strengthen distribution contracts for compatibility proofs, drift protection, transactional rollback, rendered checksums, documentation shipping, and plugin dependency resolution.
+- **[General]** Refresh generated Codex manifest checksums and normalize `tdk-specify` frontmatter formatting.
+
 ## [1.103.0] - 2026-07-17
 
 ### Added

@@ -9,12 +9,15 @@ identifiers; activate the matching skill by name.
 
 Route only to workflow commands available in the current session:
 
-- Child feature commands cover specify, clarify, plan, analyze, implement, and
-  status.
+- `tdk-inception` owns project/workspace foundation commands. It remains coupled
+  to the required base with `tdk-core`, `tdk-memory`, and `tdk-utils`.
+- `tdk-core` owns child feature commands (specify, clarify, plan, analyze,
+  implement, and status) plus the shared hook/runtime gateway.
 - Parent epic commands cover discovery, epic PRD, epic HLD, and task breakdown.
-- Project setup commands cover greenfield/brownfield start, constitution,
+- Inception commands cover greenfield/brownfield start, constitution,
   architecture advisor, workspace layout, config apply, dependency policy, and
-  skeleton recipe workflows.
+  sub-workspace foundation workflows. The optional scaffold plugin owns golden
+  path and automation-recommendation workflows.
 - If a command in the recommended route is unavailable, say which command is
   unavailable and point the user to the setup guide.
 
@@ -192,9 +195,12 @@ Plan approved, time to build                   -> tdk-implement
 
 Invoke these on demand outside the main spec -> ship spine:
 
-- Config/docs: `tdk-config-index`, `tdk-config-diff`, `tdk-config-sync`.
-- Sub-workspaces: `tdk-sub-workspace-init`, `tdk-sub-workspace-list`,
-  `tdk-sub-workspace-docs`, `tdk-sub-workspace-automation-recommend`.
+- Inception config/docs: `tdk-config-index`, `tdk-config-diff`,
+  `tdk-config-sync`.
+- Inception sub-workspaces: `tdk-sub-workspace-init`,
+  `tdk-sub-workspace-list`, `tdk-sub-workspace-docs`.
+- Optional scaffold automation: `tdk-sub-workspace-automation-recommend` and
+  `tdk-golden-path-scaffold`.
 - Research/navigation: `tdk-scout`, `docs-seeker`, research/problem-solving
   utilities.
 - Memory/learning: `tdk-memory-*` and `tdk-retro-*` workflows.

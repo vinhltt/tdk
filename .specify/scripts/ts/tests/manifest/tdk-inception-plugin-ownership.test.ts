@@ -58,6 +58,10 @@ function readSourceManifest(): PluginManifest {
   return JSON.parse(readFileSync(SOURCE_MANIFEST_PATH, 'utf-8')) as PluginManifest;
 }
 
+function readComponentVersion(path: string): string | undefined {
+  return readFileSync(path, 'utf-8').match(/metadata:\s*\n\s+version:\s*["']([^"']+)["']/)?.[1];
+}
+
 function listPluginFiles(pluginDir: string, subtree: string): string[] {
   const subtreeRoot = join(pluginDir, subtree);
   if (!existsSync(subtreeRoot)) {
@@ -179,5 +183,12 @@ describe('tdk-inception source plugin ownership', () => {
       expect(utilsSkills[skill]).toBeUndefined();
       expect(utilsFiles[`skills/${skill}/SKILL.md`]).toBeUndefined();
     }
+  });
+
+  it('keeps every moved component at the inception 1.0.0 baseline', () => {
+    for (const skill of INCEPTION_SKILLS) {
+      expect(readComponentVersion(join(INCEPTION_SKILLS_DIR, skill, 'SKILL.md'))).toBe('1.0.0');
+    }
+    expect(readComponentVersion(join(INCEPTION_AGENTS_DIR, `${DOCS_WRITER_AGENT}.md`))).toBe('1.0.0');
   });
 });

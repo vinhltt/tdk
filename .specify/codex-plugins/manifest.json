@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-17T08:20:08Z",
+  "generated_at": "2026-07-18T08:16:10Z",
   "plugins": {
     "tdk-core": {
       "version": "11.0.0",
@@ -40,7 +40,7 @@
         "skills/tdk-plan/references/skill-routing.md": "500f9c1ee47669d853503e0dfa52674a2b42e4d0d275c857a66adeb45d27c635",
         "skills/tdk-plan/references/validate-question-framework.md": "78e4736f6462c4901c3ed30f0bc0226aa7cbf19ec4543fae8a50a94fddbfd897",
         "skills/tdk-plan/references/validate-workflow.md": "ff2764a5b83109c1eff7e5954ec38f4292603d1a55e55a287a54e1b47be824bb",
-        "skills/tdk-specify/SKILL.md": "e3981ea89e3a9627bb9e10c252cc33a8f33a2c46e4efd3905e7aa62429278e04",
+        "skills/tdk-specify/SKILL.md": "353930c247cfdc45b8c6b87cc325c9af2b482490729aade9f3e993d035ed3f56",
         "skills/tdk-specify/evals/evals.json": "10e31f202bb8e2b4f163feb500c3768f5ea6b436512a3d9511489d9b9489c908",
         "skills/tdk-specify/evals/fixtures/multi-sw/.specify.json": "b8b14e53eea16003f8dc13000c6f9b6c8bfe0dd439eac4e86e58ef8b6f6863b8",
         "skills/tdk-specify/references/input-routing-and-mode-workflow.md": "cf3166903ba448ecb1ef7d1d57854d2a58c1379073f51e51cdaba9a7b36d2c00",

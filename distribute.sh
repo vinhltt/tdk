@@ -5,8 +5,8 @@
 # Explicit harness mutation should use `bun src/index.ts install <target> --harness claude`
 # from the tdk-setup package (packages/tdk-setup).
 # Uses distribute.json include/exclude rules.
-# Compares files by release manifest when available, with MD5 fallback for
-# --prefix/--force modes.
+# Compares files by release manifest when available. Prefix/force modes use
+# rendered/full classification but retain manifest-backed ownership proof.
 # Always shows dry-run summary first, then asks for confirmation before writing.
 #
 # Usage:
@@ -18,7 +18,7 @@
 #   --dry-run         Show diff only, skip confirmation and writing
 #   --yes             Skip confirmation prompt (auto-approve)
 #   --prefix PREFIX   Brand safe .specify payload text (example: sample -> sample-/SAMPLE)
-#   --force           Overwrite all files (skip MD5 comparison)
+#   --force           Refresh checksum-proven managed files (skip MD5 comparison)
 #   --no-delete       Skip orphan removal (don't delete files missing from source)
 #   --yes-delete      Auto-approve file deletions (skip 'type delete' prompt)
 #   --log-file PATH   Tee all output to a file (ANSI colors stripped in file)
@@ -210,7 +210,7 @@ is_interactive() { [[ -t 0 ]]; }
 
 if is_interactive; then
     if ! $FORCE; then
-        read -r -p "$(echo -e "${WHITE}Force overwrite all files? [y/N]: ${NC}")" ans
+        read -r -p "$(echo -e "${WHITE}Force refresh checksum-proven managed files? [y/N]: ${NC}")" ans
         [[ "$ans" == [yY]* ]] && FORCE=true
     fi
 fi
@@ -237,7 +237,7 @@ if [[ -n "$BRAND_PREFIX" ]]; then
     echo -e "  ${WHITE}Brand:${NC}   safe .specify payload text tdk-/tdk/TDK -> $BRAND_PREFIX/$BRAND_WORD/$BRAND_WORD_UPPER"
     echo -e "  ${DIM}         plugins/, codex-plugins/, schemas/, tests, and filename/path refs stay source-identical${NC}"
 fi
-$FORCE && echo -e "  ${YELLOW}Mode:    --force (skip MD5 comparison)${NC}"
+$FORCE && echo -e "  ${YELLOW}Mode:    --force (refresh checksum-proven managed files)${NC}"
 $NO_DELETE && echo -e "  ${YELLOW}Mode:    --no-delete (skip orphan removal)${NC}"
 echo ""
 
@@ -368,6 +368,115 @@ file_md5() {
         }
     fi
     echo "$result"
+}
+
+file_sha256() {
+    local result
+    if command -v sha256sum &>/dev/null; then
+        result=$(sha256sum "$1" | cut -d' ' -f1)
+    elif command -v shasum &>/dev/null; then
+        result=$(shasum -a 256 "$1" | cut -d' ' -f1)
+    else
+        result=$(python3 -c 'import hashlib, sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())' "$1" 2>/dev/null) || \
+        result=$(python -c 'import hashlib, sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())' "$1" 2>/dev/null) || {
+            echo -e "${RED}Error: no SHA-256 tool available for: $1${NC}" >&2
+            return 1
+        }
+    fi
+    printf '%s\n' "$result"
+}
+
+assert_safe_target_path() {
+    local rel="$1" current="$TARGET_ROOT" segment
+    local -a path_segments=()
+    if [[ -z "$rel" || "$rel" == /* || "$rel" == *\\* || "$rel" == *//* ]]; then
+        echo -e "${RED}Error: invalid release manifest path: $rel${NC}" >&2
+        return 1
+    fi
+    IFS='/' read -r -a path_segments <<< "$rel"
+    for segment in "${path_segments[@]}"; do
+        if [[ -z "$segment" || "$segment" == "." || "$segment" == ".." ]]; then
+            echo -e "${RED}Error: invalid release manifest path: $rel${NC}" >&2
+            return 1
+        fi
+        current="$current/$segment"
+        if [[ -L "$current" ]]; then
+            echo -e "${RED}Error: release manifest path has symlink component: $rel${NC}" >&2
+            return 1
+        fi
+    done
+    case "$current" in
+        "$TARGET_ROOT"/*) return 0 ;;
+        *)
+            echo -e "${RED}Error: release manifest path escapes target root: $rel${NC}" >&2
+            return 1
+            ;;
+    esac
+}
+
+declare -A TARGET_MANIFEST_SHA=()
+MANIFEST_DIFF_DELETED=()
+MANIFEST_DIFF_OUTPUT=""
+TARGET_MANIFEST_SNAPSHOT_SHA=""
+
+verify_target_preimage() {
+    local rel="$1" expected_sha="$2" target_rel target actual_sha
+    target_rel="$(target_relative_path "$SOURCE_ROOT" "$rel")"
+    target="$TARGET_ROOT/$target_rel"
+    assert_safe_target_path "$target_rel" || return 1
+    if [[ -z "$expected_sha" || ! -f "$target" || -L "$target" ]]; then
+        echo -e "${RED}Error: checksum proof failed for managed target: $rel${NC}" >&2
+        return 1
+    fi
+    actual_sha="$(file_sha256 "$target")" || return 1
+    if [[ "$actual_sha" != "$expected_sha" ]]; then
+        echo -e "${RED}Error: checksum proof failed for managed target: $rel${NC}" >&2
+        return 1
+    fi
+}
+
+verify_new_target_absent() {
+    local rel="$1" target_rel target
+    target_rel="$(target_relative_path "$SOURCE_ROOT" "$rel")"
+    target="$TARGET_ROOT/$target_rel"
+    assert_safe_target_path "$target_rel" || return 1
+    if [[ -e "$target" || -L "$target" ]]; then
+        echo -e "${RED}Error: new managed target already exists without ownership proof: $rel${NC}" >&2
+        return 1
+    fi
+}
+
+preflight_distribution_mutations() {
+    local rel
+    for rel in "${SYNC_NEW[@]}"; do
+        [[ "$rel" == "$RELEASE_MANIFEST_REL" ]] && continue
+        if [[ -n "${TARGET_MANIFEST_SHA[$rel]:-}" ]]; then
+            verify_target_preimage "$rel" "${TARGET_MANIFEST_SHA[$rel]}" || return 1
+        else
+            verify_new_target_absent "$rel" || return 1
+        fi
+    done
+    for rel in "${SYNC_UPDATED[@]}"; do
+        [[ "$rel" == "$RELEASE_MANIFEST_REL" ]] && continue
+        verify_target_preimage "$rel" "${TARGET_MANIFEST_SHA[$rel]:-}" || return 1
+    done
+    for rel in "${SYNC_DELETED[@]}"; do
+        verify_target_preimage "$rel" "${TARGET_MANIFEST_SHA[$rel]:-}" || return 1
+    done
+    for rel in "${SYNC_UNCHANGED[@]}"; do
+        [[ "$rel" == "$RELEASE_MANIFEST_REL" ]] && continue
+        [[ -z "${TARGET_MANIFEST_SHA[$rel]:-}" ]] || \
+            verify_target_preimage "$rel" "${TARGET_MANIFEST_SHA[$rel]}" || return 1
+    done
+}
+
+snapshot_target_release_manifest() {
+    assert_safe_target_path "$RELEASE_MANIFEST_REL" || return 1
+    if [[ -L "$TARGET_RELEASE_MANIFEST" || ! -f "$TARGET_RELEASE_MANIFEST" ]]; then
+        echo -e "${RED}Error: target release manifest must be a regular non-symlink file${NC}" >&2
+        return 1
+    fi
+    TARGET_MANIFEST_SNAPSHOT_SHA="$(file_sha256 "$TARGET_RELEASE_MANIFEST")" || return 1
 }
 
 has_payload_text_extension() {
@@ -727,25 +836,24 @@ append_release_manifest_copy_state() {
     fi
 }
 
-classify_with_release_manifest_diff() {
+validate_release_manifest_root() {
+    local root="$1" label="$2" stderr_file
+    stderr_file="$(mktemp "${TMPDIR:-/tmp}/tdk-release-manifest-validate.XXXXXX")"
+    if ! bun "$DIFF_RELEASE_MANIFESTS_TS_SCRIPT" --validate-root "$root" 2>"$stderr_file"; then
+        cat "$stderr_file" >&2
+        rm -f "$stderr_file"
+        echo -e "${RED}Error: invalid $label release manifest${NC}" >&2
+        return 1
+    fi
+    rm -f "$stderr_file"
+}
+
+load_release_manifest_diff() {
     local source_dir="$1"
     local target_dir="$2"
-
-    G_NEW=()
-    G_UPDATED=()
-    G_UNCHANGED=()
-    G_DELETED=()
-
-    if ! command -v bun &>/dev/null; then
-        echo -e "${RED}Error: release manifest diff requires bun${NC}" >&2
-        exit 1
-    fi
-    if [[ ! -f "$DIFF_RELEASE_MANIFESTS_TS_SCRIPT" ]]; then
-        echo -e "${RED}Error: release manifest diff script not found: $DIFF_RELEASE_MANIFESTS_TS_SCRIPT${NC}" >&2
-        exit 1
-    fi
-
     local output stderr_file
+    TARGET_MANIFEST_SHA=()
+    MANIFEST_DIFF_DELETED=()
     stderr_file="$(mktemp "${TMPDIR:-/tmp}/tdk-release-manifest-diff.XXXXXX")"
     if ! output="$(bun "$DIFF_RELEASE_MANIFESTS_TS_SCRIPT" \
         --source-root "$source_dir" \
@@ -757,7 +865,29 @@ classify_with_release_manifest_diff() {
     fi
     rm -f "$stderr_file"
 
-    while IFS=$'\t' read -r action rel; do
+    MANIFEST_DIFF_OUTPUT="$output"
+    while IFS=$'\t' read -r action rel expected_sha; do
+        [[ -z "$action" || -z "$rel" ]] && continue
+        if [[ -n "$expected_sha" ]]; then
+            TARGET_MANIFEST_SHA["$rel"]="$expected_sha"
+        fi
+        if [[ "$action" == "deleted" ]]; then
+            MANIFEST_DIFF_DELETED+=("$rel")
+        fi
+    done <<< "$output"
+}
+
+classify_with_release_manifest_diff() {
+    local source_dir="$1"
+    local target_dir="$2"
+
+    G_NEW=()
+    G_UPDATED=()
+    G_UNCHANGED=()
+    G_DELETED=()
+
+    load_release_manifest_diff "$source_dir" "$target_dir"
+    while IFS=$'\t' read -r action rel expected_sha; do
         [[ -z "$action" || -z "$rel" ]] && continue
         case "$action" in
             new) G_NEW+=("$rel"); log_dim "  [MANIFEST] $rel → NEW" ;;
@@ -769,7 +899,7 @@ classify_with_release_manifest_diff() {
                 exit 1
                 ;;
         esac
-    done <<< "$output"
+    done <<< "$MANIFEST_DIFF_OUTPUT"
 
     if $NO_DELETE; then
         G_DELETED=()
@@ -782,12 +912,32 @@ classify_distribution_files() {
     local target_dir="$2"
     shift 2
 
+    if ! command -v bun &>/dev/null; then
+        echo -e "${RED}Error: release manifest validation requires bun${NC}" >&2
+        exit 1
+    fi
+    if [[ ! -f "$DIFF_RELEASE_MANIFESTS_TS_SCRIPT" ]]; then
+        echo -e "${RED}Error: release manifest diff script not found: $DIFF_RELEASE_MANIFESTS_TS_SCRIPT${NC}" >&2
+        exit 1
+    fi
+    validate_release_manifest_root "$source_dir" "source" || exit 1
+
+    if [[ -e "$TARGET_RELEASE_MANIFEST" || -L "$TARGET_RELEASE_MANIFEST" ]]; then
+        snapshot_target_release_manifest || exit 1
+    fi
+
     if [[ ! -f "$TARGET_RELEASE_MANIFEST" ]]; then
         log_dim "Target release manifest missing; first ship will not delete target orphans"
         classify_target_without_release_manifest "$source_dir" "$target_dir" "$@"
     elif [[ -n "$BRAND_PREFIX" || "$FORCE" == true ]]; then
-        log_dim "Release manifest fast path bypassed (--prefix or --force)"
+        load_release_manifest_diff "$source_dir" "$target_dir"
+        log_dim "Using rendered/full classification with release-manifest ownership proof"
         classify_files "$source_dir" "$target_dir" "$@"
+        if $NO_DELETE; then
+            G_DELETED=()
+        else
+            G_DELETED=("${MANIFEST_DIFF_DELETED[@]}")
+        fi
     else
         log_dim "Using release manifest fast path"
         classify_with_release_manifest_diff "$source_dir" "$target_dir"
@@ -891,6 +1041,11 @@ TOTAL_UNCHANGED=${#SYNC_UNCHANGED[@]}
 TOTAL_DELETED=${#SYNC_DELETED[@]}
 TOTAL_CHANGES=$(( TOTAL_NEW + TOTAL_UPDATED + TOTAL_DELETED ))
 
+if ! preflight_distribution_mutations; then
+    echo -e "${RED}Distribution preflight failed. No files were changed.${NC}" >&2
+    exit 1
+fi
+
 log "${BOLD}${CYAN}━━━ Summary ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "  ${GREEN}New:${NC}       $TOTAL_NEW files"
@@ -945,12 +1100,119 @@ ERROR_COUNT=0
 ERRORS=()
 COPIED_COUNT=0
 DELETED_COUNT=0
+ROLLBACK_ROOT=""
+TRANSACTION_NEW=()
+TRANSACTION_UPDATED=()
+TRANSACTION_DELETED=()
+declare -A TRANSACTION_OUTPUT_SHA=()
+
+prepare_distribution_rollback() {
+    local rel target_rel target backup
+    ROLLBACK_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/tdk-distribute-rollback.XXXXXX")" || return 1
+
+    for rel in "${SYNC_NEW[@]}"; do
+        [[ "$rel" == "$RELEASE_MANIFEST_REL" ]] && continue
+        verify_new_target_absent "$rel" || return 1
+    done
+    for rel in "${SYNC_UPDATED[@]}" "${SYNC_DELETED[@]}"; do
+        [[ -z "$rel" || "$rel" == "$RELEASE_MANIFEST_REL" ]] && continue
+        verify_target_preimage "$rel" "${TARGET_MANIFEST_SHA[$rel]:-}" || return 1
+        target_rel="$(target_relative_path "$SOURCE_ROOT" "$rel")"
+        target="$TARGET_ROOT/$target_rel"
+        backup="$ROLLBACK_ROOT/$rel"
+        mkdir -p "$(dirname "$backup")" || return 1
+        cp -p "$target" "$backup" || return 1
+    done
+}
+
+rollback_distribution_mutations() {
+    local rel target_rel target backup dst_dir tmp rollback_failed=false
+    for rel in "${TRANSACTION_NEW[@]}"; do
+        target_rel="$(target_relative_path "$SOURCE_ROOT" "$rel")"
+        target="$TARGET_ROOT/$target_rel"
+        if [[ ! -e "$target" && ! -L "$target" ]]; then
+            continue
+        fi
+        if ! verify_target_preimage "$rel" "${TRANSACTION_OUTPUT_SHA[$rel]:-}"; then
+            rollback_failed=true
+            continue
+        fi
+        rm -f "$target" || rollback_failed=true
+        dst_dir="$(dirname "$target")"
+        while [[ "$dst_dir" != "$TARGET_ROOT" ]] && rmdir "$dst_dir" 2>/dev/null; do
+            dst_dir="$(dirname "$dst_dir")"
+        done
+    done
+    for rel in "${TRANSACTION_UPDATED[@]}"; do
+        if ! verify_target_preimage "$rel" "${TRANSACTION_OUTPUT_SHA[$rel]:-}"; then
+            rollback_failed=true
+            continue
+        fi
+        target_rel="$(target_relative_path "$SOURCE_ROOT" "$rel")"
+        target="$TARGET_ROOT/$target_rel"
+        backup="$ROLLBACK_ROOT/$rel"
+        dst_dir="$(dirname "$target")"
+        if ! assert_safe_target_path "$target_rel" || ! mkdir -p "$dst_dir"; then
+            rollback_failed=true
+            continue
+        fi
+        if ! tmp="$(mktemp "$dst_dir/.distribute-rollback.XXXXXX")"; then
+            rollback_failed=true
+            continue
+        fi
+        if cp -p "$backup" "$tmp" && \
+            verify_target_preimage "$rel" "${TRANSACTION_OUTPUT_SHA[$rel]:-}" && \
+            mv -f "$tmp" "$target"; then
+            continue
+        fi
+        rm -f "$tmp"
+        rollback_failed=true
+    done
+    for rel in "${TRANSACTION_DELETED[@]}"; do
+        target_rel="$(target_relative_path "$SOURCE_ROOT" "$rel")"
+        target="$TARGET_ROOT/$target_rel"
+        backup="$ROLLBACK_ROOT/$rel"
+        dst_dir="$(dirname "$target")"
+        if ! assert_safe_target_path "$target_rel" || [[ -e "$target" || -L "$target" ]] || ! mkdir -p "$dst_dir"; then
+            rollback_failed=true
+            continue
+        fi
+        if ! tmp="$(mktemp "$dst_dir/.distribute-rollback.XXXXXX")"; then
+            rollback_failed=true
+            continue
+        fi
+        if cp -p "$backup" "$tmp" && ln "$tmp" "$target" && rm "$tmp"; then
+            continue
+        fi
+        rm -f "$tmp"
+        rollback_failed=true
+    done
+    rm -rf "$ROLLBACK_ROOT"
+    ROLLBACK_ROOT=""
+    if $rollback_failed; then
+        echo -e "${RED}Error: distribution rollback was incomplete; inspect the target before rerunning.${NC}" >&2
+        return 1
+    fi
+    echo -e "${YELLOW}Payload changes rolled back; the previous release manifest remains authoritative.${NC}"
+}
+
+finish_distribution_transaction() {
+    [[ -z "$ROLLBACK_ROOT" ]] || rm -rf "$ROLLBACK_ROOT"
+    ROLLBACK_ROOT=""
+}
 
 # Copy a single file with logging
 copy_one() {
-    local src="$1" dst="$2" rel="$3" label="$4"
-    local dst_dir
+    local src="$1" dst="$2" rel="$3" label="$4" action="$5" expected_sha="${6:-}"
+    local dst_dir tmp rendered_sha copied=false
     dst_dir=$(dirname "$dst")
+
+    if [[ "${TDK_DISTRIBUTE_FAIL_AT:-}" == "$rel" ]]; then
+        ERRORS+=("injected copy failure: $rel")
+        ((ERROR_COUNT+=1))
+        echo -e "  ${RED}✗ [$label] $rel (injected failure)${NC}"
+        return
+    fi
 
     if ! mkdir -p "$dst_dir" 2>/dev/null; then
         ERRORS+=("mkdir failed: $dst_dir")
@@ -959,20 +1221,51 @@ copy_one() {
         return
     fi
 
-    local copied=false
-    if should_rewrite_source_file "$SOURCE_ROOT" "$rel"; then
-        local tmp
-        tmp="$(mktemp "$dst_dir/.distribute.XXXXXX")"
-        if payload_text_rewrite "$src" > "$tmp" 2>/dev/null && copy_source_mode "$src" "$tmp" && mv -f "$tmp" "$dst" 2>/dev/null; then
-            copied=true
-        else
-            rm -f "$tmp" 2>/dev/null || true
+    if [[ "$action" == "new" ]]; then
+        if ! verify_new_target_absent "$rel"; then
+            ERRORS+=("new target proof failed: $rel")
+            ((ERROR_COUNT+=1))
+            return
         fi
-    elif cp -f "$src" "$dst" 2>/dev/null && copy_source_mode "$src" "$dst"; then
-        copied=true
+    elif ! verify_target_preimage "$rel" "$expected_sha"; then
+        ERRORS+=("update proof failed: $rel")
+        ((ERROR_COUNT+=1))
+        return
     fi
 
+    if ! tmp="$(mktemp "$dst_dir/.distribute.XXXXXX")"; then
+        ERRORS+=("temporary file creation failed: $rel")
+        ((ERROR_COUNT+=1))
+        return
+    fi
+    if render_source_to_path "$src" "$SOURCE_ROOT" "$rel" "$tmp" 2>/dev/null && \
+        copy_source_mode "$src" "$tmp" && rendered_sha="$(file_sha256 "$tmp")"; then
+        if [[ "$action" == "new" ]]; then
+            if ! verify_new_target_absent "$rel"; then
+                rm -f "$tmp"
+                ERRORS+=("new target changed before copy: $rel")
+                ((ERROR_COUNT+=1))
+                return
+            fi
+        else
+            if ! verify_target_preimage "$rel" "$expected_sha"; then
+                rm -f "$tmp"
+                ERRORS+=("managed target changed before copy: $rel")
+                ((ERROR_COUNT+=1))
+                return
+            fi
+        fi
+        mv -f "$tmp" "$dst" 2>/dev/null && copied=true
+    fi
+    $copied || rm -f "$tmp" 2>/dev/null || true
+
     if $copied; then
+        TRANSACTION_OUTPUT_SHA["$rel"]="$rendered_sha"
+        if [[ "$action" == "new" ]]; then
+            TRANSACTION_NEW+=("$rel")
+        else
+            TRANSACTION_UPDATED+=("$rel")
+        fi
         ((COPIED_COUNT+=1))
         echo -e "  ${GREEN}✓${NC} [$label] $rel"
     else
@@ -984,8 +1277,21 @@ copy_one() {
 
 # Delete a single file with logging
 delete_one() {
-    local dst="$1" rel="$2" label="$3"
+    local dst="$1" rel="$2" label="$3" expected_sha="$4"
+    if [[ "${TDK_DISTRIBUTE_FAIL_AT:-}" == "$rel" ]]; then
+        ERRORS+=("injected delete failure: $rel")
+        ((ERROR_COUNT+=1))
+        echo -e "  ${RED}✗ [$label] $rel (injected failure)${NC}"
+        return
+    fi
+    if ! verify_target_preimage "$rel" "$expected_sha"; then
+        ERRORS+=("delete proof failed: $rel")
+        ((ERROR_COUNT+=1))
+        echo -e "  ${RED}✗ [$label] $rel (delete proof failed)${NC}"
+        return
+    fi
     if rm -f "$dst" 2>/dev/null; then
+        TRANSACTION_DELETED+=("$rel")
         ((DELETED_COUNT+=1))
         echo -e "  ${RED}✗${NC} [$label] $rel (deleted)"
     else
@@ -995,25 +1301,110 @@ delete_one() {
     fi
 }
 
+publish_release_manifest() {
+    local dst_dir tmp current_sha
+    assert_safe_target_path "$RELEASE_MANIFEST_REL" || return 1
+    dst_dir="$(dirname "$TARGET_RELEASE_MANIFEST")"
+    mkdir -p "$dst_dir" || return 1
+
+    if [[ -n "$TARGET_MANIFEST_SNAPSHOT_SHA" ]]; then
+        if [[ ! -f "$TARGET_RELEASE_MANIFEST" || -L "$TARGET_RELEASE_MANIFEST" ]]; then
+            echo -e "${RED}Error: target release manifest changed before publish${NC}" >&2
+            return 1
+        fi
+        current_sha="$(file_sha256 "$TARGET_RELEASE_MANIFEST")" || return 1
+        [[ "$current_sha" == "$TARGET_MANIFEST_SNAPSHOT_SHA" ]] || {
+            echo -e "${RED}Error: target release manifest changed before publish${NC}" >&2
+            return 1
+        }
+    elif [[ -e "$TARGET_RELEASE_MANIFEST" || -L "$TARGET_RELEASE_MANIFEST" ]]; then
+        echo -e "${RED}Error: target release manifest appeared before publish${NC}" >&2
+        return 1
+    fi
+
+    tmp="$(mktemp "$dst_dir/.release-manifest.XXXXXX")" || return 1
+    if [[ -n "$BRAND_PREFIX" ]]; then
+        if ! bun "$DIFF_RELEASE_MANIFESTS_TS_SCRIPT" \
+            --source-root "$SOURCE_ROOT" \
+            --materialize-target-root "$TARGET_ROOT" > "$tmp"; then
+            rm -f "$tmp"
+            return 1
+        fi
+    elif ! cp -f "$SOURCE_RELEASE_MANIFEST" "$tmp"; then
+        rm -f "$tmp"
+        return 1
+    fi
+    copy_source_mode "$SOURCE_RELEASE_MANIFEST" "$tmp"
+
+    if [[ -n "$TARGET_MANIFEST_SNAPSHOT_SHA" ]]; then
+        current_sha="$(file_sha256 "$TARGET_RELEASE_MANIFEST")" || { rm -f "$tmp"; return 1; }
+        [[ "$current_sha" == "$TARGET_MANIFEST_SNAPSHOT_SHA" ]] || { rm -f "$tmp"; return 1; }
+    elif [[ -e "$TARGET_RELEASE_MANIFEST" || -L "$TARGET_RELEASE_MANIFEST" ]]; then
+        rm -f "$tmp"
+        return 1
+    fi
+    mv -f "$tmp" "$TARGET_RELEASE_MANIFEST"
+    ((COPIED_COUNT+=1))
+    echo -e "  ${GREEN}✓${NC} [root] $RELEASE_MANIFEST_REL"
+}
+
 MANIFEST_SHOULD_COPY=false
 
-# Sync new + updated files
-for rel in "${SYNC_NEW[@]}" "${SYNC_UPDATED[@]}"; do
+if ! prepare_distribution_rollback; then
+    finish_distribution_transaction
+    echo -e "${RED}Distribution rollback preparation failed. No files were changed.${NC}" >&2
+    exit 1
+fi
+
+# Sync new files
+for rel in "${SYNC_NEW[@]}"; do
     if [[ "$rel" == "$RELEASE_MANIFEST_REL" ]]; then
         MANIFEST_SHOULD_COPY=true
         continue
     fi
     target_rel="$(target_relative_path "$SOURCE_ROOT" "$rel")"
-    copy_one "$SOURCE_ROOT/$rel" "$TARGET_ROOT/$target_rel" "$rel" "root"
+        action="new"
+        [[ -z "${TARGET_MANIFEST_SHA[$rel]:-}" ]] || action="updated"
+        copy_one "$SOURCE_ROOT/$rel" "$TARGET_ROOT/$target_rel" "$rel" "root" "$action" "${TARGET_MANIFEST_SHA[$rel]:-}"
+    [[ $ERROR_COUNT -gt 0 ]] && break
 done
 
-# Delete orphans (copy first, delete after)
-for rel in "${SYNC_DELETED[@]}"; do
-    delete_one "$TARGET_ROOT/$rel" "$rel" "root"
-done
+# Sync updated files only while earlier copies remain successful.
+if [[ $ERROR_COUNT -eq 0 ]]; then
+    for rel in "${SYNC_UPDATED[@]}"; do
+        if [[ "$rel" == "$RELEASE_MANIFEST_REL" ]]; then
+            MANIFEST_SHOULD_COPY=true
+            continue
+        fi
+        target_rel="$(target_relative_path "$SOURCE_ROOT" "$rel")"
+        copy_one "$SOURCE_ROOT/$rel" "$TARGET_ROOT/$target_rel" "$rel" "root" "updated" "${TARGET_MANIFEST_SHA[$rel]:-}"
+        [[ $ERROR_COUNT -gt 0 ]] && break
+    done
+fi
 
-if $MANIFEST_SHOULD_COPY; then
-    copy_one "$SOURCE_RELEASE_MANIFEST" "$TARGET_RELEASE_MANIFEST" "$RELEASE_MANIFEST_REL" "root"
+# Delete managed orphans only after every copy succeeds.
+if [[ $ERROR_COUNT -eq 0 ]]; then
+    for rel in "${SYNC_DELETED[@]}"; do
+        delete_one "$TARGET_ROOT/$rel" "$rel" "root" "${TARGET_MANIFEST_SHA[$rel]:-}"
+        [[ $ERROR_COUNT -gt 0 ]] && break
+    done
+fi
+
+if [[ $ERROR_COUNT -eq 0 ]] && $MANIFEST_SHOULD_COPY; then
+    if ! publish_release_manifest; then
+        ERRORS+=("release manifest publish failed")
+        ((ERROR_COUNT+=1))
+        echo -e "  ${RED}✗ [root] $RELEASE_MANIFEST_REL${NC}"
+    fi
+fi
+
+if [[ $ERROR_COUNT -gt 0 ]]; then
+    if ! rollback_distribution_mutations; then
+        ERRORS+=("payload rollback incomplete")
+        ((ERROR_COUNT+=1))
+    fi
+else
+    finish_distribution_transaction
 fi
 
 # Clean up empty directories (scoped to include-pattern subtrees only)
