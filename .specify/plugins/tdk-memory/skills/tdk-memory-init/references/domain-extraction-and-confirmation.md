@@ -9,7 +9,7 @@ Shared by Fresh Init and Re-run flows. Covers file input, extraction, validation
 **AskUserQuestion** (multiline text input):
 - Question: context-specific (set by caller flow)
 - Header: context-specific
-- Placeholder: `docs/domain-overview.md\n.specify/memory/overview.md`
+- Placeholder: `docs/domain-overview.md\ndocs/architecture.md`
 - Note: "File format is free-style. Reads and extracts business domains. More detail = more accurate."
 
 **Multiline parsing:**

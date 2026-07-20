@@ -28,6 +28,27 @@ const UTILS_MOVED_SKILLS = [
   'tdk-module-boundary-policy',
 ];
 const INCEPTION_SKILLS = [...CORE_MOVED_SKILLS, ...UTILS_MOVED_SKILLS].sort();
+const INCEPTION_SKILL_VERSIONS: Record<string, string> = {
+  'tdk-architecture-advisor': '1.0.0',
+  'tdk-boundary-map': '1.0.0',
+  'tdk-brownfield-start': '1.0.0',
+  'tdk-config-diff': '1.0.0',
+  'tdk-config-index': '1.0.0',
+  'tdk-config-sync': '1.0.0',
+  'tdk-constitution': '1.0.1',
+  'tdk-greenfield-start': '1.0.0',
+  'tdk-module-boundary-policy': '1.0.0',
+  'tdk-sub-workspace-docs': '1.0.0',
+  'tdk-sub-workspace-init': '1.0.0',
+  'tdk-sub-workspace-list': '1.0.0',
+  'tdk-workflow-config-apply': '1.0.0',
+  'tdk-workspace-dependency-policy': '1.0.0',
+  'tdk-workspace-layout-propose': '1.0.0',
+};
+
+function readComponentVersion(path: string): string | undefined {
+  return readFileSync(path, 'utf-8').match(/metadata:\s*\n\s+version:\s*["']([^"']+)["']/)?.[1];
+}
 
 describe('tdk-inception generated Codex ownership', () => {
   it('owns exactly the 15 generated skill roots and no runtime or agent directory', () => {
@@ -38,9 +59,12 @@ describe('tdk-inception generated Codex ownership', () => {
     const files = CODEX_MANIFEST.plugins?.['tdk-inception']?.files ?? {};
 
     expect(generatedSkills).toEqual(INCEPTION_SKILLS);
-    expect(CODEX_MANIFEST.plugins?.['tdk-inception']?.version).toBe('1.0.0');
+    expect(CODEX_MANIFEST.plugins?.['tdk-inception']?.version).toBe('1.0.1');
     for (const skill of INCEPTION_SKILLS) {
       expect(files[`skills/${skill}/SKILL.md`]).toBeDefined();
+      expect(readComponentVersion(join(INCEPTION_ROOT, 'skills', skill, 'SKILL.md'))).toBe(
+        INCEPTION_SKILL_VERSIONS[skill],
+      );
     }
     for (const directory of ['agents', 'hooks', 'lib']) {
       expect(existsSync(join(INCEPTION_ROOT, directory))).toBe(false);
@@ -68,7 +92,7 @@ describe('tdk-inception generated Codex ownership', () => {
     ) as Record<string, unknown>;
 
     expect(plugin.name).toBe('tdk-inception');
-    expect(plugin.version).toBe('1.0.0');
+    expect(plugin.version).toBe('1.0.1');
     expect(plugin.skills).toBe('./skills/');
     expect(plugin.hooks).toBeUndefined();
   });

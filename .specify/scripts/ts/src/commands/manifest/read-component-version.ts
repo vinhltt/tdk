@@ -1,7 +1,7 @@
 // Read a component's version from its source-of-truth definition file.
 // plugin-bump writes versions into these locations on bump:
 //   - skills:   plugin/skills/<name>/SKILL.md       → frontmatter `metadata.version`
-//   - agents:   plugin/agents/<name>.md             → frontmatter top-level `version`
+//   - agents:   plugin/agents/<name>.md             → frontmatter `metadata.version` or top-level `version`
 //   - commands: plugin/commands/<name>.md OR
 //               plugin/commands/<name>/<name>.md    → frontmatter top-level `version`
 //   - hooks:    plugin/hooks/hooks.json             → top-level `version`
@@ -22,7 +22,7 @@ export function readComponentVersionFromSource(
 ): string | null {
   switch (type) {
     case 'skills':   return readSkillVersion(path.join(pluginDir, 'skills', name, 'SKILL.md'));
-    case 'agents':   return readMarkdownTopVersion(path.join(pluginDir, 'agents', `${name}.md`));
+    case 'agents':   return readAgentVersion(path.join(pluginDir, 'agents', `${name}.md`));
     case 'commands': return readCommandVersion(pluginDir, name);
     case 'hooks':    return readHookVersion(path.join(pluginDir, 'hooks', 'hooks.json'));
   }
@@ -50,7 +50,27 @@ function readSkillVersion(skillMdPath: string): string | null {
   }
 }
 
-/** Agents/commands use top-level `version:` (plugin-bump convention for these types). */
+/** Agents support metadata.version or top-level version; dual fields must agree. */
+function readAgentVersion(agentMdPath: string): string | null {
+  const fm = readFrontmatterText(agentMdPath);
+  if (fm === null) return null;
+  try {
+    const parsed = parseYaml(fm) as { version?: string; metadata?: { version?: string } } | null;
+    if (!parsed) return null;
+    const metadataVersion = parsed.metadata?.version;
+    if (parsed.version && metadataVersion && parsed.version !== metadataVersion) {
+      throw new Error(
+        `Conflicting agent versions in ${agentMdPath}: top-level version ${parsed.version} differs from metadata.version ${metadataVersion}`,
+      );
+    }
+    return metadataVersion ?? parsed.version ?? null;
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith('Conflicting agent versions')) throw error;
+    return null;
+  }
+}
+
+/** Commands use top-level version, falling back to metadata.version for legacy files. */
 function readMarkdownTopVersion(mdPath: string): string | null {
   const fm = readFrontmatterText(mdPath);
   if (fm === null) return null;

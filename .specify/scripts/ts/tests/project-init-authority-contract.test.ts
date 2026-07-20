@@ -166,4 +166,22 @@ describe('constitution-driven project init contract', () => {
     expect(template).toContain('arc42 summaries only as read-model context');
     expect(template).not.toContain('constitution/product-context.md');
   });
+
+  const CONSTITUTION_MODE_TRUTH_TABLE = [
+    '`--init`+missing initializes',
+    '`--init`+existing stops and points to `--update`',
+    '`--update`+existing updates',
+    '`--update`+missing stops and points to `--init`',
+    'no flag+existing follows compatible update',
+    'no flag+missing stops and points to `--init`',
+    'conflicting or unknown modes stop',
+  ] as const;
+
+  it.each(CONSTITUTION_MODE_TRUTH_TABLE)(
+    'documents the constitution init/update/no-flag truth-table row: %s',
+    (row) => {
+      const skill = readSpecify('plugins/tdk-inception/skills/tdk-constitution/SKILL.md');
+      expect(skill).toContain(row);
+    },
+  );
 });

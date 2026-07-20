@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.0.1] - 2026-07-20
+
+### Changed
+- tdk-memory-query: add deterministic, bounded data-model resolution across file and MCP transports with canonical result envelopes and reversible marker escaping
+- tdk-memory-agent: use one entity-result cache, preserve resolver outcomes, and require binding evidence before reporting conflicts
+- tdk-memory-init/tdk-memory-update/tdk-memory-changelog: align guidance with Memory v3 paths and binding frontmatter
+
 ## [3.0.0] - 2026-06-28
 
 ### Changed

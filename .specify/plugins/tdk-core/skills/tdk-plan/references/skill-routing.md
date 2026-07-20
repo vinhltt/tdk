@@ -4,7 +4,7 @@ Instructions for loading, parsing, and injecting per-project skill routing into 
 
 ## File Resolution
 
-1. Resolve exact path: `ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md` (where `docs.path` comes from `.specify.json`, default `.specify/configurations`). If `docs.path` is relative, resolve it from the project root; if it is absolute (including a Windows drive path), preserve it.
+1. Resolve exact path: `ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md` (where `docs.path` comes from `.specify/.specify.json`, default `.specify/configurations`). If `docs.path` is relative, resolve it from the project root; if it is absolute (including a Windows drive path), preserve it.
 2. Check existence by reading the exact resolved path. Use the Read tool on `ROUTING_FILE`, or a direct shell file test plus read such as `test -f "$ROUTING_FILE"` then `cat "$ROUTING_FILE"`.
 3. **Do not use Search, Grep, Glob, or a pattern like `custom-workflow/plan-skill-routing.md` to prove absence.** Those tools search file contents or patterns and can return 0 results even when `{docs.path}/custom-workflow/plan-skill-routing.md` exists.
 4. If exact-path read succeeds → parse (next section).

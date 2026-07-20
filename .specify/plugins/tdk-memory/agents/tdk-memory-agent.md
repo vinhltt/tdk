@@ -9,7 +9,7 @@ description: "Load relevant memory context (mode load) AND validate spec/plan fo
 color: red
 model: sonnet
 metadata:
-  version: "3.0.0"
+  version: "3.0.1"
 ---
 
 ## Mode
@@ -101,18 +101,30 @@ If still nothing: output `No relevant memory context found.` and exit gracefully
 
 - Use `vault(action="search", query="{feature description keywords}", searchStrategy="auto", ranked=true, includeSnippets=true)` to discover candidate files.
 - Post-filter candidates to paths under `memory/`.
-- Merge top candidate paths into RELEVANT_FILES list.
+- Exclude `memory/data-model/` candidates; data models always go through
+  `tdk-memory-query` in Step 4.
+- Merge remaining top candidate paths into RELEVANT_FILES list.
 
 This supplements (not replaces) domain resolution from Step 3 — captures cross-domain files that keyword matching would miss.
 
 ### Step 4: Load memory files
 
+Domain files (services, business rules, flows) load per transport below. Data
+models always route through `tdk-memory-query` — the sole data-model resolver —
+in both transports; the agent never rebuilds MCP reads or infers data-model
+paths itself. Entity and domain stay separate: the entity is the query term, not
+a `--domain` value.
+
 **If `MCP_AVAILABLE=true`:**
 1. Semantic results already collected in Step 3.5 (RELEVANT_FILES)
-2. `vault(action="read", path="{filename}", raw=true)` for each file in RELEVANT_FILES
-4. If RELEVANT_DOMAINS has explicit domains not yet covered by Step 3.5 results:
+2. `vault(action="read", path="{filename}", raw=true)` for each non-data-model file in RELEVANT_FILES
+3. If RELEVANT_DOMAINS has explicit domains not yet covered by Step 3.5 results:
    - `vault(action="list", directory="memory/domains/{domain}", pageSize=50)` for uncovered domains
    - `vault(action="read", path="{filename}", raw=true)` for additional files not in search results
+4. For matched entities, resolve data models through the query resolver (not a direct vault read):
+   ```
+   tdk-memory-query "{entity}" --type data-model --format summary --for-agent
+   ```
 
 **If `MCP_AVAILABLE=false`:**
 For each resolved domain, invoke `tdk-memory-query` with `--for-agent` and `--format summary`:
@@ -126,17 +138,28 @@ For `business-rules` content type specifically, use `--format full` to ensure al
 tdk-memory-query --domain {domain} --type business-rules --format full --for-agent
 ```
 
-**If any result has `status: warning_ambiguous`:** resolve best-effort — pick the most likely domain match and note the assumption in the Context Block. Do NOT use `AskUserQuestion` (this agent runs as a subagent).
-
-For matched entities, also load data models:
+For matched entities, resolve data models through the same query resolver. The entity is the query term, not a domain:
 ```
-tdk-memory-query --type data-model --domain {entity} --format summary --for-agent
+tdk-memory-query "{entity}" --type data-model --format summary --for-agent
 ```
 
 For related screens (if any listed in `memory-index.md` Screens table):
 ```
 tdk-memory-query --type screens --format summary --for-agent
 ```
+
+**Handle each query result by its `status:` field** (identical in both transports).
+Locate only exact unescaped outer `MEMORY_QUERY_RESULT_START` and
+`MEMORY_QUERY_RESULT_END` lines. For a resolved body, after extracting its outer
+envelope and `---` separator, remove exactly one leading `\` from every escaped
+body line; this reverses the producer escape for marker-only and pre-existing
+backslash lines. Preserve each complete marker-delimited data-model result with
+the Context Block so validate mode consumes the query result rather than
+rebuilding resolution:
+- `status: resolved` — use the returned `binding: true` content as evidence.
+- `status: warning_unverified` — record the candidate as context only; never treat it as binding evidence.
+- `status: warning_ambiguous` — note the tie in the Context Block and list the candidates; do not pick one. Do NOT use `AskUserQuestion` (this agent runs as a subagent).
+- `status: not_found` — record that no memory covers the term; load nothing for it.
 
 ### Step 5: Emit Context Block
 
@@ -207,15 +230,9 @@ You will receive in your context:
      Then return early. Caller will AskUserQuestion to decide fallback or fix MCP.
 4. Log: `"MCP status: {true/false}"`.
 
-### Phase 1: Load memory context
+### Phase 1: Extract validation claims and entities
 
-**Check if a Context Block is already provided in input** (passed from calling skill, e.g., tdk-plan):
-- If Context Block present → use it directly. Skip load.
-- If NOT present → run **Mode: load** logic INTERNALLY with the feature description (do NOT spawn a separate agent — execute the load steps above inline). If memory not initialized: skip to Phase 3 with note "Memory not initialized — skipping conflict check."
-
-### Phase 2: Extract claims from spec/plan
-
-From the spec/plan content, extract:
+Before planning any memory query, extract claims from the spec/plan content:
 - Data entities and their fields (names, types, relations)
 - API endpoints and their expected behavior
 - Business rules being applied or assumed
@@ -229,13 +246,48 @@ From the spec/plan content, extract:
 - Report, dashboard, export, and analytics output claims
 - Risk, technical debt, and assumption claims
 
+Build a stable, de-duplicated `EXTRACTED_ENTITIES` set from the data entity and
+entity-field claims. Entity and domain remain separate; never infer a data-model
+path or use an entity as a `--domain` value.
+
+### Phase 2: Build coherent memory snapshot and entity cache
+
+Create `ENTITY_RESULT_CACHE`, keyed by each entity in `EXTRACTED_ENTITIES`. All
+data-model resolver calls for this validation occur only in this cache-fill step.
+A reusable result is a complete marker-delimited block in the supplied or current
+Context Block whose metadata is exactly `status: resolved` and `binding: true`
+for that entity.
+
+- If a Context Block is supplied → use it for non-data-model context. For every
+  entity, place its complete reusable marker result in `ENTITY_RESULT_CACHE`.
+  Mark an entity without a reusable result, or with an unresolved, ambiguous,
+  not-found, or non-binding marker result, as missing or unusable.
+- If no Context Block is supplied → run **Mode: load** logic internally with the
+  feature description and `EXTRACTED_ENTITIES` (do not spawn an agent). Its
+  data-model queries run once, produce the current Context Block, and populate
+  the same `ENTITY_RESULT_CACHE` with their complete results. Set
+  `ENTITIES_TO_QUERY` to empty in this branch. Do not start a
+  second entity-query pass, including for a non-resolved outcome. If memory is not initialized, skip
+  to Phase 3 with note "Memory not initialized — skipping conflict check."
+
+When a Context Block is supplied, build `ENTITIES_TO_QUERY` from only missing or
+  unusable entities. For each entity in `ENTITIES_TO_QUERY`, exactly once, invoke
+  the query-owned resolver and store its complete marker-delimited result in
+`ENTITY_RESULT_CACHE`:
+```
+tdk-memory-query "{entity}" --type data-model --format summary --for-agent
+```
+`resolved` with `binding: true` is eligible evidence; `warning_unverified`,
+`warning_ambiguous`, and `not_found` remain `WARNINGS` or `NOT CHECKED`, never
+`CONFLICTS`. Do not invoke the data-model resolver outside this cache-fill step.
+
 ### Phase 3: Cross-reference against memory
 
 For each extracted claim, check against loaded memory:
 
 | Claim Type | Check Against | Conflict Signal |
 |------------|--------------|-----------------|
-| Entity field | `data-model/{entity}.md` | Wrong type, missing required field, renamed field |
+| Entity field | Complete marker result in `ENTITY_RESULT_CACHE` for the exact entity (filled only in Phase 2) | Wrong type, missing required field, renamed field |
 | Business rule | `domains/{domain}/business-rules.md` | Contradicts existing rule, bypasses constraint |
 | Service/API | `domains/{domain}/services.md` | Different signature, missing param, wrong return type |
 | User flow | `domains/{domain}/flows/` | Skips required step, wrong order, missing error case |
@@ -263,7 +315,7 @@ default. Deeper graph traversal requires an explicit caller/user request.
 | Claim Type | Preferred Tool | Notes |
 |------------|----------------|-------|
 | Business rule, flow, cross-domain assertion | `vault(action="search", query="{keywords}", searchStrategy="auto", ranked=true, includeSnippets=true)` | Candidate discovery; post-filter to `memory/`, then read evidence |
-| Exact entity → file mapping | `vault(action="read", path="memory/data-model/{entity}.md", raw=true)` | Surgical, when path known from table above |
+| Exact entity → data model | Complete marker result in `ENTITY_RESULT_CACHE["{entity}"]` | Consume the Phase 2 cached marker result; never invoke the resolver during Phase 3 |
 | Permission, role check | `vault(action="search", query="{role or permission keyword}", searchStrategy="content", ranked=true, includeSnippets=true)` | Candidate discovery; verify by read |
 | Integration contract | `vault(action="read", path="memory/integrations/{integration-name}.md", raw=true)` | Read exact contract when known; otherwise search `memory/integrations/` |
 | Security/privacy/compliance or quality claim | `vault(action="search", query="{policy or quality keyword}", searchStrategy="content", ranked=true, includeSnippets=true)` | Post-filter to `memory/quality-requirements/`, then read evidence |
@@ -276,12 +328,15 @@ default. Deeper graph traversal requires an explicit caller/user request.
 | Fallback (`MCP_AVAILABLE=false`) | `Read(.specify/memory/{path})` / `Glob` | Only when caller confirmed file-based mode |
 
 For each extracted claim:
-- Pick tool per tables above (path mapping + tool preference)
-- Capture evidence (file path + quote) for Guardian Report
+- For an entity-field claim, consume its complete cached marker result from
+  `ENTITY_RESULT_CACHE`; do not invoke `tdk-memory-query` in Phase 3.
+- For every other claim type, pick the tool per tables above (path mapping + tool
+  preference).
+- Capture evidence (file path + quote) for Guardian Report.
 - Confirm the evidence file is typed memory with `binding: true` before
   producing `CONFLICTS`. If only `binding: false` summary context exists, use
   `WARNINGS` or `NOT CHECKED`.
-- Aim ≤ 3 MCP calls total for typical plan; if > 5 calls needed, scope too wide — flag in report
+- Aim ≤ 3 MCP calls total for typical plan; if > 5 calls needed, scope too wide — flag in report.
 
 ### Phase 4: Render Guardian Report
 

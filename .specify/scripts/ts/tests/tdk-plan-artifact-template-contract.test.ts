@@ -44,4 +44,21 @@ describe('lean plan artifact templates', () => {
     expect(common).toContain('@deprecated Legacy standalone artifact. New data models live in owner phases.');
     expect(common).toContain('Conditional directory for declared machine-consumable contracts only.');
   });
+
+  const CONFIG_AUTHORITY_CONSUMERS = [
+    ['research phase', 'plugins/tdk-core/skills/tdk-plan/references/research-phase.md'],
+    ['design phase', 'plugins/tdk-core/skills/tdk-plan/references/design-phase.md'],
+    ['skill routing', 'plugins/tdk-core/skills/tdk-plan/references/skill-routing.md'],
+  ] as const;
+
+  it.each(CONFIG_AUTHORITY_CONSUMERS)(
+    'resolves docs.path from the runtime configuration authority `.specify/.specify.json` instead of root `.specify.json` in %s',
+    (_label, relativePath) => {
+      const content = read(relativePath);
+      const bareRootSpecifyJson = /(^|[^/])\.specify\.json/;
+
+      expect(content).toContain('.specify/.specify.json');
+      expect(bareRootSpecifyJson.test(content)).toBe(false);
+    },
+  );
 });

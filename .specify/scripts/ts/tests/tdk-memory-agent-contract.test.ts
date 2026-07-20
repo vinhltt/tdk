@@ -307,6 +307,51 @@ describe('tdk-memory-agent contract', () => {
     expect(memoryStep).not.toContain('AskUserQuestion');
   });
 
+  const BANNED_MEMORY_AGENT_PATTERNS = [
+    ['best-effort ambiguous domain selection', 'best-effort'],
+    ['entity/domain conflation via --domain {entity}', '--domain {entity}'],
+    ['direct inferred data-model path shortcut', 'data-model/{entity}.md'],
+  ] as const;
+
+  it.each(BANNED_MEMORY_AGENT_PATTERNS)(
+    'no longer relies on %s',
+    (_label, bannedPattern) => {
+      const content = read(AGENT);
+      expect(content).not.toContain(bannedPattern);
+    },
+  );
+
+  const REQUIRED_QUERY_OUTCOME_STATUSES = [
+    'status: resolved',
+    'status: warning_unverified',
+    'status: warning_ambiguous',
+    'status: not_found',
+  ] as const;
+
+  it.each(REQUIRED_QUERY_OUTCOME_STATUSES)(
+    'documents agent handling for the %s outcome status',
+    (status) => {
+      const content = read(AGENT);
+      expect(content).toContain(status);
+    },
+  );
+
+  it('routes Load-mode MCP branch data-model resolution through tdk-memory-query instead of rebuilding direct vault reads', () => {
+    const content = read(AGENT);
+    const mcpLoadBranch = between(content, '**If `MCP_AVAILABLE=true`:**', '**If `MCP_AVAILABLE=false`:**');
+
+    expect(mcpLoadBranch).toContain('tdk-memory-query');
+  });
+
+  it('requires binding: true confirmation before Guardian CONFLICTS and keeps non-resolved evidence non-blocking', () => {
+    const content = read(AGENT);
+    const crossReference = markdownSection(content, '### Phase 3: Cross-reference against memory');
+
+    expect(crossReference).toContain('Confirm the evidence file is typed memory with `binding: true` before');
+    expect(crossReference).toContain('If only `binding: false` summary context exists, use');
+    expect(crossReference).toContain('`WARNINGS` or `NOT CHECKED`');
+  });
+
   it('tdk-plan preserves memory preload and guardian gate behavior', () => {
     const planContent = read(TDK_PLAN);
     const topLevelPreloadStep = markdownSection(planContent, '### Step 0.memory');
@@ -331,5 +376,42 @@ describe('tdk-memory-agent contract', () => {
     expect(gatesGuardianStep).toContain('REVIEW');
     expect(gatesGuardianStep).toContain('CLEAR');
     expect(gatesGuardianStep).toContain('STATUS: MCP_UNAVAILABLE');
+  });
+
+  it('builds one coherent entity-result cache before validation and never re-queries it in Phase 3', () => {
+    const content = read(AGENT);
+    const validateFlow = content.slice(content.indexOf('## Mode: validate'));
+    const extraction = markdownSection(validateFlow, '### Phase 1: Extract validation claims and entities');
+    const cacheFill = markdownSection(validateFlow, '### Phase 2: Build coherent memory snapshot and entity cache');
+    const crossReference = markdownSection(validateFlow, '### Phase 3: Cross-reference against memory');
+
+    expect(validateFlow.indexOf('### Phase 1: Extract validation claims and entities'))
+      .toBeLessThan(validateFlow.indexOf('### Phase 2: Build coherent memory snapshot and entity cache'));
+    expect(extraction).toContain('`EXTRACTED_ENTITIES`');
+    expect(cacheFill).toContain('`ENTITY_RESULT_CACHE`');
+    expect(cacheFill).toContain('`status: resolved` and `binding: true`');
+    expect(cacheFill).toContain('`ENTITIES_TO_QUERY` to empty in this branch. Do not start a\n  second entity-query pass, including for a non-resolved outcome.');
+    expect(cacheFill).toContain('When a Context Block is supplied, build `ENTITIES_TO_QUERY` from only missing or\n  unusable entities.');
+    expect(cacheFill).toContain('For each entity in `ENTITIES_TO_QUERY`, exactly once');
+    expect((cacheFill.match(/tdk-memory-query/g) ?? [])).toHaveLength(1);
+    expect(cacheFill).toContain('Do not invoke the data-model resolver outside this cache-fill step.');
+    expect(cacheFill).toContain('populate\n  the same `ENTITY_RESULT_CACHE` with their complete results.');
+    expect(cacheFill).toContain('Do not start a\n  second entity-query pass, including for a non-resolved outcome.');
+
+    expect(crossReference).toContain('Complete marker result in `ENTITY_RESULT_CACHE` for the exact entity');
+    expect(crossReference).toContain('Complete marker result in `ENTITY_RESULT_CACHE["{entity}"]`');
+    expect(crossReference).toContain('never invoke the resolver during Phase 3');
+    expect(crossReference).toContain('do not invoke `tdk-memory-query` in Phase 3.');
+    expect(crossReference).not.toContain('`tdk-memory-query "{entity}" --type data-model');
+  });
+
+  it('unescapes resolved marker bodies only after extracting their outer envelope', () => {
+    const content = read(AGENT);
+    const loadStep = markdownSection(content, '### Step 4: Load memory files');
+
+    expect(loadStep).toContain('Locate only exact unescaped outer `MEMORY_QUERY_RESULT_START` and\n`MEMORY_QUERY_RESULT_END` lines.');
+    expect(loadStep).toContain('after extracting its outer\nenvelope and `---` separator');
+    expect(loadStep).toContain('remove exactly one leading');
+    expect(loadStep).toContain('marker-only and pre-existing\nbackslash lines');
   });
 });

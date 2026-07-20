@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "11.0.0"
+  version: "11.0.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling

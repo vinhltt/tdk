@@ -7,7 +7,7 @@ created: "{{CREATED_AT}}"
 
 # Persona Discovery
 
-> Altitude: Epic-level. Product-wide facts belong in product-context.md.
+> Altitude: Epic-level. Product-wide facts belong in the constitution plus typed memory routes, not this epic artifact.
 
 ## Primary Personas
 

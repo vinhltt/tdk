@@ -69,7 +69,7 @@ After writing each `domains/{domain}/domain-overview.md`:
 
 **Idempotency guard:** Check if `aliases:` already present in frontmatter → SKIP if yes.
 
-The template in `references/domain-overview-template.md` already includes full Obsidian frontmatter with `aliases:`, `type:`, `domain:`, `tags:`, `created_at:`, `updated_by:`. Ensure all `{domain-slug}` and `{YYYY-MM-DD}` placeholders are replaced with actual values during file write.
+The template in `references/domain-overview-template.md` already includes full Obsidian frontmatter with `aliases:`, `type:`, `id:`, `status:`, `authority:`, `binding:`, `related:`, `domain:`, `tags:`, `created_at:`, `updated_by:`. Ensure all `{domain}`, `{domain-slug}`, and `{YYYY-MM-DD}` placeholders are replaced with actual values during file write.
 
 **Add wikilinks** in the first readable section after frontmatter (only if sibling file EXISTS in `.specify/memory/`):
 - `[[services|Services]]` — if `domains/{domain}/services.md` exists

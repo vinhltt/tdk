@@ -7,7 +7,7 @@ created: "{{CREATED_AT}}"
 
 # Discovery Manifest
 
-> Altitude: Epic-level. Product-wide facts belong in product-context.md.
+> Altitude: Epic-level. Product-wide facts belong in the constitution plus typed memory routes, not this epic artifact.
 
 ## Artifact Manifest
 
@@ -23,8 +23,8 @@ created: "{{CREATED_AT}}"
 
 ## Product-level signals
 
-Candidate checklist only. Humans decide whether any item belongs in
-`product-context.md` through `/tdk-constitution --update`.
+Candidate checklist only. Humans decide whether any item belongs in the
+constitution or typed memory routes through `/tdk-constitution --update`.
 
 - [ ] Durable market context candidate:
 - [ ] Durable business model candidate:

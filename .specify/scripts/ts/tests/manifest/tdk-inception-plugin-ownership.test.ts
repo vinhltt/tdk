@@ -31,6 +31,24 @@ const UTILS_MOVED_SKILLS = [
   'tdk-module-boundary-policy',
 ];
 const INCEPTION_SKILLS = [...CORE_MOVED_SKILLS, ...UTILS_MOVED_SKILLS];
+const INCEPTION_SKILL_VERSIONS: Record<string, string> = {
+  'tdk-architecture-advisor': '1.0.0',
+  'tdk-boundary-map': '1.0.0',
+  'tdk-brownfield-start': '1.0.0',
+  'tdk-config-diff': '1.0.0',
+  'tdk-config-index': '1.0.0',
+  'tdk-config-sync': '1.0.0',
+  'tdk-constitution': '1.0.1',
+  'tdk-greenfield-start': '1.0.0',
+  'tdk-module-boundary-policy': '1.0.0',
+  'tdk-sub-workspace-docs': '1.0.0',
+  'tdk-sub-workspace-init': '1.0.0',
+  'tdk-sub-workspace-list': '1.0.0',
+  'tdk-workflow-config-apply': '1.0.0',
+  'tdk-workspace-dependency-policy': '1.0.0',
+  'tdk-workspace-layout-propose': '1.0.0',
+};
+const DOCS_WRITER_AGENT_VERSION = '1.0.0';
 const RETAINED_CORE_SKILLS = [
   'tdk-specify',
   'tdk-clarify',
@@ -45,6 +63,7 @@ type PluginManifest = {
   plugins?: Record<
     string,
     {
+      version?: string;
       components?: {
         skills?: Record<string, unknown>;
         agents?: Record<string, unknown>;
@@ -117,6 +136,7 @@ describe('tdk-inception source plugin ownership', () => {
     const utilsFiles = utils?.files ?? {};
 
     expect(inception).toBeDefined();
+    expect(inception?.version).toBe('1.0.1');
     expect(Object.keys(inceptionSkills).sort()).toEqual([...INCEPTION_SKILLS].sort());
     expect(Object.keys(inceptionAgents)).toEqual([DOCS_WRITER_AGENT]);
 
@@ -185,10 +205,14 @@ describe('tdk-inception source plugin ownership', () => {
     }
   });
 
-  it('keeps every moved component at the inception 1.0.0 baseline', () => {
+  it('keeps each moved component at its independently-versioned baseline', () => {
     for (const skill of INCEPTION_SKILLS) {
-      expect(readComponentVersion(join(INCEPTION_SKILLS_DIR, skill, 'SKILL.md'))).toBe('1.0.0');
+      expect(readComponentVersion(join(INCEPTION_SKILLS_DIR, skill, 'SKILL.md'))).toBe(
+        INCEPTION_SKILL_VERSIONS[skill],
+      );
     }
-    expect(readComponentVersion(join(INCEPTION_AGENTS_DIR, `${DOCS_WRITER_AGENT}.md`))).toBe('1.0.0');
+    expect(readComponentVersion(join(INCEPTION_AGENTS_DIR, `${DOCS_WRITER_AGENT}.md`))).toBe(
+      DOCS_WRITER_AGENT_VERSION,
+    );
   });
 });

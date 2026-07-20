@@ -100,7 +100,8 @@ Required sections:
 
 `Product-level signals` is a candidate checklist. It may capture durable signal
 candidates for human review, but it is not authority. Product-level facts live
-in `product-context.md` and are updated only through `tdk-constitution`.
+in the constitution plus typed memory routes and are updated only through
+`tdk-constitution`.
 
 ## Allowed In-Section Additions
 

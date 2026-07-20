@@ -8,6 +8,10 @@ const MEMORY_INDEX_TEMPLATE = resolve(
   SPECIFY_ROOT,
   'plugins/tdk-memory/skills/tdk-memory-init/references/memory-index-template.md',
 );
+const DOMAIN_OVERVIEW_TEMPLATE = resolve(
+  SPECIFY_ROOT,
+  'plugins/tdk-memory/skills/tdk-memory-init/references/domain-overview-template.md',
+);
 
 const REQUIRED_V3_TEMPLATES = [
   'memory-readme-template.md.tpl',
@@ -107,5 +111,14 @@ describe('tdk memory v3 routing contract', () => {
         expect(template, `${templateName} should contain ${field}`).toContain(field);
       }
     }
+  });
+
+  it('requires all v3 frontmatter fields and binding: true for the plugin-local domain overview template', () => {
+    const template = read(DOMAIN_OVERVIEW_TEMPLATE);
+
+    for (const field of ['id:', 'type:', 'status:', 'authority:', 'binding:', 'related:']) {
+      expect(template, `domain-overview-template.md should contain ${field}`).toContain(field);
+    }
+    expect(template).toContain('binding: true');
   });
 });

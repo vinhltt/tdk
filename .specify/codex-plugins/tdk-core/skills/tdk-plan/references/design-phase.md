@@ -14,7 +14,7 @@
 
 **MUST DO BEFORE filling `### Source Code` of plan.md:**
 
-1. Resolve `docs.path` from `.specify.json` (default: `.specify/configurations`).
+1. Resolve `docs.path` from `.specify/.specify.json` (default: `.specify/configurations`).
 2. Read `{docs.path}/source-code-structure.md`. If file exists, treat its layout as SOT.
 3. Replace plan-template Option 1/2/3 boilerplate with actual project layout from SOT.
 4. Note feature-specific additions (new files/modules) explicitly — don't duplicate baseline tree.

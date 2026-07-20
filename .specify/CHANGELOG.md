@@ -6,6 +6,20 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.103.4] - 2026-07-20
+
+### Changed
+- **[tdk-core]** Make `tdk-plan` resolve `docs.path` from `.specify/.specify.json` and replace legacy flat-memory reads with harness-neutral context plus typed-memory routing.
+- **[tdk-epic]** Route durable discovery facts to the constitution and typed memory instead of treating `product-context.md` as canonical authority.
+- **[tdk-inception]** Add an explicit constitution `--init`/`--update`/no-flag mode truth table with stop conditions for invalid combinations.
+- **[tdk-memory]**
+  - Add deterministic, bounded data-model resolution across file and MCP transports with canonical result envelopes and reversible marker escaping.
+  - Make the memory agent use one entity-result cache, preserve resolver outcomes, and require binding evidence before reporting conflicts.
+  - Align init, update, and changelog guidance with Memory v3 paths and binding frontmatter.
+- **[Scripts]** Expand contract coverage for configuration authority, product ownership, constitution modes, Memory v3 routing, resolver outcomes, and agent caching.
+- **[Docs]** Update the lifecycle diagram to show constitution governance, the Memory v3 control plane, and typed binding routes.
+- **[General]** Refresh plugin and release manifest checksums for the updated plugins, tests, and documentation assets.
+
 ## [1.103.3] - 2026-07-18
 
 ### Changed

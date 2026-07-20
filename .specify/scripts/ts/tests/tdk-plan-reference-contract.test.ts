@@ -267,4 +267,16 @@ describe('tdk-plan reference contract', () => {
     expect(gates).toContain('REVIEW');
     expect(gates).toContain('CLEAR');
   });
+
+  it('replaces flat v2 engineering-memory reads with harness-neutral instructions and route-aware memory guidance', () => {
+    const researchPhase = read(RESEARCH_PHASE_REFERENCE);
+
+    expect(researchPhase).not.toContain('.specify/memory/development-rules.md');
+    expect(researchPhase).not.toContain('.specify/memory/codebase-summary.md');
+    expect(researchPhase).not.toContain('.specify/memory/code-standards.md');
+    expect(researchPhase).toContain('harness');
+    expect(researchPhase).toContain('sub-workspace');
+    expect(researchPhase).toContain('tdk-memory-query');
+    expect(researchPhase).toContain('tdk-memory-agent');
+  });
 });

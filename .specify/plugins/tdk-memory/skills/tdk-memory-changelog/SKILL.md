@@ -2,7 +2,7 @@
 name: tdk-memory-changelog
 description: "Record staged .specify/memory/ changes in CHANGELOG.md via git diff --staged. Stage edits first with 'git add .specify/memory/', then run this skill before committing. Requires /tdk-memory-init first."
 metadata: 
-  version: 0.3.3
+  version: 3.0.1
   category: "Analysis & Review"
   requires:
     - tdk-memory-init
@@ -57,7 +57,7 @@ Optional: `--file [path]` to record a specific staged file only.
 git diff --staged --name-status -- .specify/memory/
 ```
 
-Returns tab-separated lines: `M\t.specify/memory/data-model.md`, `A\t...`, `D\t...`
+Returns tab-separated lines: `M\t.specify/memory/data-model/customer.md`, `A\t...`, `D\t...`
 
 Parse with bash — split on tab to extract status + path:
 - `M` → change type: `modified`

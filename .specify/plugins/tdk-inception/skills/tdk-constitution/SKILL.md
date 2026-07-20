@@ -2,7 +2,7 @@
 name: tdk-constitution
 description: "Create or update the project constitution and constitution-owned project knowledge artifacts from interactive or provided principle inputs"
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -63,6 +63,34 @@ below. In update mode, load the existing constitution and amend it. Your job is 
 approved amendments across dependent artifacts.
 
 **Note**: This is a PROJECT-LEVEL document that applies to ALL features. It does NOT require a task ID.
+
+### Mode Resolution
+
+`/tdk-constitution` runs in one of three modes, resolved from the passed flag and
+the current state of `.specify/memory/constitution.md`:
+
+- `/tdk-constitution --init <brief|file>` bootstraps a fresh constitution and
+  memory (see `### Project Init Contract`).
+- `/tdk-constitution --update` amends an existing constitution and propagates
+  approved deltas across dependent artifacts.
+- No flag resolves to a compatible update when a constitution already exists;
+  otherwise it stops and points the user to `--init`.
+
+Resolve the mode against this truth table before any other work. Stop with a
+clear message on every non-actionable combination instead of guessing:
+
+| Flag | Constitution state | Resolution |
+|------|--------------------|-----------|
+| `--init` | missing | `--init`+missing initializes |
+| `--init` | existing | `--init`+existing stops and points to `--update` |
+| `--update` | existing | `--update`+existing updates |
+| `--update` | missing | `--update`+missing stops and points to `--init` |
+| no flag | existing | no flag+existing follows compatible update |
+| no flag | missing | no flag+missing stops and points to `--init` |
+| conflicting/unknown | any | conflicting or unknown modes stop |
+
+After mode resolution, apply the migration and report-stub policy in the
+sections below.
 
 ### Project Init Contract
 

@@ -119,4 +119,17 @@ describe('tdk discovery/specify interview contract', () => {
     expect(combined).not.toMatch(/\bglab\s+issue\s+create\b/i);
     expect(combined).not.toMatch(/\bbacklog\s+(issue|ticket)\s+create\b/i);
   });
+
+  const OUTPUT_OWNERSHIP_INVARIANTS = [
+    ['discovery frames product signals as advisory, not authority', discoveryContract, 'but it is not authority'],
+    ['discovery never auto-invokes constitution for product signals', discoverySkill, 'are updated only through `tdk-constitution`'],
+    ['epic dashboard keeps spec.md as the sole requirement-minting artifact', discoverySkill, 'only child `spec.md` mints requirements'],
+  ] as const;
+
+  it.each(OUTPUT_OWNERSHIP_INVARIANTS)(
+    'guards that %s stays intact while product-authority wording changes',
+    (_label, content, token) => {
+      expect(content).toContain(token);
+    },
+  );
 });

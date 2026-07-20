@@ -64,7 +64,7 @@ searched when the feature area overlaps existing work.
 
 **MUST DO BEFORE filling `## Technical Context` of plan.md:**
 
-1. Resolve `docs.path` from `.specify.json` (default: `.specify/configurations`).
+1. Resolve `docs.path` from `.specify/.specify.json` (default: `.specify/configurations`).
 2. Read `{docs.path}/technical-context.md`. If file exists, treat its values as SOT.
 3. Override plan-template placeholder boilerplate with SOT values (Required Stack section first; copy Optional sections only if present in SOT).
 4. Mark feature-specific deviations explicitly (only deviations, not duplicates).
@@ -76,10 +76,20 @@ searched when the feature area overlaps existing work.
 **Skip if:** User provides scout reports or codebase docs that answer the
 required repository questions.
 
-**Essential docs to read first:**
-- `./.specify/memory/development-rules.md` — conventions, standards
-- `./.specify/memory/codebase-summary.md` — architecture overview
-- `./.specify/memory/code-standards.md` — coding patterns
+**Essential engineering context to read first:**
+- Active harness/project instructions already resolved by the running agent
+  (Claude or Codex harness) — conventions, standards, and workflow rules. Use
+  whichever instruction set the current harness loaded; do not assume one fixed
+  file path.
+- `{docs.path}/technical-context.md` — resolved technical baseline (see Project
+  Tech Baseline pre-load above).
+- Relevant sub-workspace `README`, architecture, interfaces, and engineering
+  docs for the feature area.
+- Code scout evidence for the touched modules (see Scout Delegation below).
+
+Route durable decisions, quality constraints, domain rules, and other typed
+facts through the memory route above (`tdk-memory-query` skill or
+`tdk-memory-agent` agent), not a flat engineering-memory file.
 
 Before phase design, identify the existing patterns the implementation must
 match: architecture boundaries, error handling, state management, API shape,

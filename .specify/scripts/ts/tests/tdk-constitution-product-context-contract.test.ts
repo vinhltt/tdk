@@ -103,4 +103,10 @@ describe('tdk-constitution arc42 project context contract', () => {
       expect(constitutionRow).toContain('memory.yaml');
     },
   );
+
+  it('documents an explicit --update mode instead of implicit-only updates, and stops on conflicting or unknown modes', () => {
+    expect(skill).toContain('/tdk-constitution --update');
+    expect(skill).toContain('`--update`+existing updates');
+    expect(skill).toContain('conflicting or unknown modes stop');
+  });
 });

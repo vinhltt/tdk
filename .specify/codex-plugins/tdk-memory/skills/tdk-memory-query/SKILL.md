@@ -8,7 +8,7 @@ description: "Query .specify/memory/ knowledge base by natural language. Returns
   'show data model for Z', or when other skills need memory context before implementing.
   Invocable by user (/tdk-memory-query) and by other skills/agents."
 metadata:
-  version: 3.0.0
+  version: 3.0.1
   category: "Context & Memory"
   requires:
     - tdk-memory-init
@@ -53,7 +53,7 @@ context. Never modifies files.
     `runbook` -> `operations-runbook`, `nfr`/`policy` -> `quality-requirement`,
     `adr` -> `decision-record`, `debt` -> `risk-debt`, `report` -> `report-spec`
   - `--format {summary|full|list}` — output verbosity (default: summary)
-  - `--for-agent` — machine-readable output (no markdown decoration, for inter-skill consumption)
+  - `--for-agent` — marker-delimited inter-skill output; data-model results use the deterministic full-Markdown contract below
 
 ## Execution
 
@@ -67,6 +67,32 @@ context. Never modifies files.
    - **OK** → `MCP_AVAILABLE = true` → read and follow `references/flow-available-mcp.md`
    - **FAIL** → `MCP_AVAILABLE = false` → read and follow `references/flow-query-normal.md`
 4. Log: `"MCP status: {true/false}"`
+
+### Data-model resolver ownership
+
+For `--type data-model` (including `schema`) this skill is the sole resolver
+for file transport, MCP transport, and `tdk-memory-agent` load or validate
+calls. Each transport parses the canonical `memory-index.md` **Data Model**
+inventory deterministically. Candidate resolution is bounded: a canonical known
+path is the highest-precedence identity and exact-reads only that path; an
+entity query uses exact index fields plus exact filename, `id`, title, or alias
+search nominations restricted to the inventory, then exact-reads only the
+highest-ranked nominations and ties. Exact reads, not snippets or ranks, verify
+identity and eligibility. Parse **Files by Domain** only to nominate proof files
+when `requested_domain` is non-empty; exact-read only those nominated proof
+files. No requested domain means no backlink reads. Both transports stable-sort
+canonical paths and apply the same outcomes.
+
+A data-model `--for-agent` result always emits one marker-delimited,
+full-Markdown envelope with canonical fields in this order: `status`, `query`,
+`content_type`, `requested_domain`, `candidate_paths`, `resolved_path`,
+`files_read`, `binding`, and `note`. Only an active, Memory-authoritative,
+`binding: true` data model can be `resolved`; all other outcomes have empty
+bodies and `binding: false`. Before embedding a resolved body, prefix `\` to
+any body line that is exactly either result marker or already starts with `\`.
+Consumers locate the unescaped outer marker lines, then remove exactly one
+leading `\` from every escaped resolved-body line. JSON serialization is
+intentionally out of scope.
 
 ## Security
 

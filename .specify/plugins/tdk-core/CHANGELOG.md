@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [11.0.1] - 2026-07-20
+
+### Changed
+- tdk-plan: resolve docs.path from .specify/.specify.json and replace legacy flat-memory reads with harness-neutral context plus typed-memory routing
+
 ## [11.0.0] - 2026-07-17
 
 ### Added

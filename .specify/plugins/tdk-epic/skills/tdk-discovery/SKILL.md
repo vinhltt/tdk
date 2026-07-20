@@ -3,7 +3,7 @@ name: tdk-discovery
 description: "EPIC-ONLY v1 discovery entry point that creates context-only problem, persona, MVP, and discovery manifest artifacts before tdk-epic-prd, or interviews existing discovery artifacts with --interview"
 argument-hint: "<epic-id> [<brief|file>] [--force] [--interview]"
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # tdk-discovery
@@ -189,8 +189,8 @@ Do not create requirement IDs, specification sections, task files, plans, code,
 tracker records, or a `discovery_ref`.
 
 `discovery.md` is the stage manifest. It includes "Product-level signals" as a
-candidate checklist only. Product-level facts live in `product-context.md` and
-are updated only through `tdk-constitution`.
+candidate checklist only. Product-level facts live in the constitution plus
+typed memory routes and are updated only through `tdk-constitution`.
 
 Update `{FEATURE_DIR}/index.md` as the epic dashboard. The dashboard must link
 `discovery.md` as the current stage manifest, summarize readiness, state the

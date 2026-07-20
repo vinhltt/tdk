@@ -1,5 +1,5 @@
 {
   "name": "tdk-inception",
   "description": "TDK project inception and workspace foundation workflows: intake, constitution, architecture, layout, configuration, dependency policy, and sub-workspace documentation",
-  "version": "1.0.0"
+  "version": "1.0.1"
 }

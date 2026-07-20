@@ -11,6 +11,11 @@ aliases:
   - "{Domain}"
   - "{domain-slug} overview"
 type: domain-overview
+id: "domain-overview.{domain}"
+status: active
+authority: memory
+binding: true
+related: []
 domain: {domain}
 tags:
   - memory/domain
@@ -39,8 +44,12 @@ _(fill in: main entities, terms, stakeholders)_
 
 **Substitution rules:**
 - `{Domain}` = title-case domain name
-- `{domain}` = kebab-case folder name
+- `{domain}` = kebab-case folder name (also fills `id: "domain-overview.{domain}"`)
 - `{domain-slug}` = kebab-case domain name (same as `{domain}`)
 - `{YYYY-MM-DD}` = creation date (ISO date)
 - `{source-file path}` = file path if file-based extraction, `"text description"` if fallback mode
 - `{evidence snippet}` = content from extraction phase, formatted as readable prose
+
+A confirmed domain overview is binding Memory authority (`authority: memory`,
+`binding: true`, `status: active`), unlike Arc42 summaries which stay
+`binding: false` read-models.

@@ -48,6 +48,39 @@ describe('readComponentVersionFromSource', () => {
     expect(readComponentVersionFromSource(pluginDir, 'agents', 'my-agent')).toBe('2.0.1');
   });
 
+  it('reads agent version from metadata.version only', () => {
+    const agentsDir = join(pluginDir, 'agents');
+    mkdirSync(agentsDir, { recursive: true });
+    writeFileSync(
+      join(agentsDir, 'metadata-agent.md'),
+      '---\nname: metadata-agent\nmetadata:\n  version: "3.0.0"\n---\n# agent body\n',
+    );
+    expect(readComponentVersionFromSource(pluginDir, 'agents', 'metadata-agent')).toBe('3.0.0');
+  });
+
+  it('reads agent version when top-level and metadata versions match', () => {
+    const agentsDir = join(pluginDir, 'agents');
+    mkdirSync(agentsDir, { recursive: true });
+    writeFileSync(
+      join(agentsDir, 'matching-agent.md'),
+      '---\nname: matching-agent\nversion: "3.0.1"\nmetadata:\n  version: "3.0.1"\n---\n# agent body\n',
+    );
+    expect(readComponentVersionFromSource(pluginDir, 'agents', 'matching-agent')).toBe('3.0.1');
+  });
+
+  it('throws when agent top-level and metadata versions conflict', () => {
+    const agentsDir = join(pluginDir, 'agents');
+    const agentPath = join(agentsDir, 'conflicting-agent.md');
+    mkdirSync(agentsDir, { recursive: true });
+    writeFileSync(
+      agentPath,
+      '---\nname: conflicting-agent\nversion: "3.0.1"\nmetadata:\n  version: "3.0.0"\n---\n# agent body\n',
+    );
+    expect(() => readComponentVersionFromSource(pluginDir, 'agents', 'conflicting-agent')).toThrow(
+      `Conflicting agent versions in ${agentPath}: top-level version 3.0.1 differs from metadata.version 3.0.0`,
+    );
+  });
+
   it('reads command version from flat .md file', () => {
     const cmdDir = join(pluginDir, 'commands');
     mkdirSync(cmdDir, { recursive: true });

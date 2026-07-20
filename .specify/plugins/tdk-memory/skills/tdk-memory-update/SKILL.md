@@ -2,7 +2,7 @@
 name: tdk-memory-update
 description: "This skill should be used when the user asks to 'update memory', 'add service to domain', 'update business rules', 'add data model', 'modify domain knowledge', 'deprecate memory file', 'tdk-memory-update', or needs to route natural language updates to .specify/memory/ files. Reads memory-index.md for routing rules, applies section anchor updates (additive or replacement), and regenerates checksums. Only explicit flag: --deprecate [path]."
 metadata:
-  version: 3.0.0
+  version: 3.0.1
   category: "Context & Memory"
   requires:
     - tdk-memory-query
@@ -12,8 +12,8 @@ metadata:
   examples:
     - input: "Add a new service to the authentication domain: AuthService with login(email, password) method. Update memory."
       output: "Memory updated successfully. Added AuthService to authentication domain. Updated memory-index.md and checksums."
-    - input: "Deprecate the old payment processing rules in .specify/memory/business-rules/payment.md. Run /tdk-memory-update --deprecate business-rules/payment.md"
-      output: "Memory file business-rules/payment.md marked as deprecated. Updated memory-index.md and checksums."
+    - input: "Deprecate the old payment processing rules in .specify/memory/domains/payment/business-rules.md. Run /tdk-memory-update --deprecate domains/payment/business-rules.md"
+      output: "Memory file domains/payment/business-rules.md marked as deprecated. Updated memory-index.md and checksums."
 ---
 
 ## Error Handling

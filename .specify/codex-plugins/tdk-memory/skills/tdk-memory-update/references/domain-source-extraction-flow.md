@@ -23,7 +23,7 @@ Step 1 MUST emit this variable before Step 1.5 reads it — never re-derive inde
 **AskUserQuestion** (multiline text input):
 - Question: "Point me to a domain description file OR a compact spec file from tdk-core (one path per line, leave blank to skip)"
 - Header: "Domain Source Files"
-- Placeholder: `docs/domain-overview.md\n.specify/memory/overview.md`
+- Placeholder: `docs/domain-overview.md\ndocs/architecture.md`
 - Note: "File format is free-style. AI will read and extract domain context."
 
 ---

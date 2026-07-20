@@ -9,6 +9,10 @@ const SKILL_PATH = resolve(
 const SKILL_DIR = dirname(SKILL_PATH);
 const REFERENCE_PATH = join(SKILL_DIR, 'references/discovery-output-contract.md');
 const TEMPLATE_DIR = join(SKILL_DIR, 'templates');
+const LIFECYCLE_SOURCE_PATH = resolve(
+  import.meta.dir,
+  '../../../docs/assets/lifecycle-share-graph-v4.excalidraw',
+);
 const DETAIL_FILES = ['problem.md', 'personas.md', 'mvp-scope.md'];
 
 function readIfExists(path: string): string {
@@ -95,5 +99,37 @@ describe('tdk-discovery skill contract', () => {
     expect(combined).not.toMatch(/\bgh\s+issue\s+create\b/);
     expect(combined).not.toMatch(/\bglab\s+issue\s+create\b/i);
     expect(combined).not.toMatch(/\bbacklog\s+(issue|ticket)\s+create\b/i);
+  });
+
+  const PRODUCT_AUTHORITY_SURFACES = [
+    ['SKILL.md', SKILL_PATH, false],
+    ['discovery-output-contract.md', REFERENCE_PATH, false],
+    ['discovery.md.tpl', join(TEMPLATE_DIR, 'discovery.md.tpl'), true],
+    ['problem.md.tpl', join(TEMPLATE_DIR, 'problem.md.tpl'), true],
+    ['personas.md.tpl', join(TEMPLATE_DIR, 'personas.md.tpl'), true],
+    ['mvp-scope.md.tpl', join(TEMPLATE_DIR, 'mvp-scope.md.tpl'), true],
+  ] as const;
+
+  it.each(PRODUCT_AUTHORITY_SURFACES)(
+    'routes durable product facts to constitution plus typed memory instead of a product-context.md canonical authority in %s',
+    (_label, filePath, requiresTypedMemoryToken) => {
+      const content = readIfExists(filePath);
+
+      expect(content).not.toContain('product-context.md');
+      expect(content).toContain('constitution');
+      if (requiresTypedMemoryToken) {
+        expect(content).toContain('typed memory');
+      }
+    },
+  );
+
+  it('shows constitution and typed Memory v3 control-plane authority in the lifecycle source', () => {
+    const lifecycleSource = readIfExists(LIFECYCLE_SOURCE_PATH);
+
+    expect(lifecycleSource).not.toContain('product-context.md');
+    expect(lifecycleSource).toContain('constitution.md = governance');
+    expect(lifecycleSource).toContain('memory-index.md + memory.yaml');
+    expect(lifecycleSource).toContain('Memory v3 control plane');
+    expect(lifecycleSource).toContain('typed routes: binding facts');
   });
 });
