@@ -33,6 +33,7 @@ describe("release manifest paths", () => {
     "/absolute",
     "C:/absolute",
     "a\\b",
+    "a\0b",
     "a//b",
     "a/./b",
     "a/../b",

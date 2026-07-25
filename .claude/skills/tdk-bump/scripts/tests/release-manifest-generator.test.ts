@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -53,6 +53,16 @@ describe("release manifest generator", () => {
     expect(manifest.files[".specify/setup.sh"]?.sha256).toHaveLength(64);
     expect(manifest.files[".specify/setup.sh"]?.size).toBe(20);
     expect(manifest.files[".specify/release-manifest.json"]).toBeUndefined();
+  });
+
+  test.each([0o644, 0o664, 0o755, 0o775])("canonicalizes physical mode %o", async (physicalMode) => {
+    writeConfig();
+    writeFile(".specify/setup.sh", "#!/usr/bin/env bash\n");
+    chmodSync(join(tmp, ".specify/setup.sh"), physicalMode);
+
+    const manifest = await buildReleaseManifest(tmp, { now: "2026-07-05T00:00:00.000Z" });
+
+    expect(manifest.files[".specify/setup.sh"]?.mode).toBe("0644");
   });
 
   test("preserves generatedAt when semantic manifest content is unchanged", async () => {

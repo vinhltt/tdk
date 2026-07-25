@@ -4,6 +4,8 @@ import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 
+import { canonicalReleaseFileMode } from "./canonical-release-file-mode.ts";
+import { readDistributeConfig, resolveShippableFiles } from "./release-manifest-resolver.ts";
 import {
   RELEASE_MANIFEST_ALGORITHM,
   RELEASE_MANIFEST_RELATIVE_PATH,
@@ -12,7 +14,6 @@ import {
   type ReleaseManifest,
   type ReleaseManifestFileEntry,
 } from "./release-manifest-types.ts";
-import { readDistributeConfig, resolveShippableFiles } from "./release-manifest-resolver.ts";
 
 interface BuildOptions {
   now?: string;
@@ -25,7 +26,7 @@ function fileEntry(projectRoot: string, relativePath: string): ReleaseManifestFi
   return {
     sha256: createHash("sha256").update(readFileSync(absolutePath)).digest("hex"),
     size: stat.size,
-    mode: (stat.mode & 0o777).toString(8).padStart(4, "0"),
+    mode: canonicalReleaseFileMode(stat.mode),
   };
 }
 

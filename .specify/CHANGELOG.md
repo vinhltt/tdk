@@ -6,6 +6,21 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.103.5] - 2026-07-25
+
+### Added
+- **[tdk-bump]** Added canonical release file mode resolution and validation modules
+  - Added `canonical-release-file-mode.ts` for file mode canonicalization
+  - Added `release-manifest-validation.ts` for release manifest validation
+  - Added test suites for canonical release file mode and distribution release manifest mode canonicalization
+
+### Changed
+- **[tdk-bump]** Updated release manifest generation, path handling, and diff scripts
+  - Updated `diff-release-manifests.ts`, `generate-release-manifest.ts`, and `release-manifest-paths.ts`
+  - Updated corresponding test suites for release manifest diffing, generation, and paths
+- **[Configurations]** Updated `.specify/release-manifest.json` with canonicalized file modes
+- **[Scripts]** Expanded `distribute-release-manifest-contract.test.ts` to test distribution contract and force migration behavior
+
 ## [1.103.4] - 2026-07-20
 
 ### Changed

@@ -9,6 +9,7 @@ export function assertReleaseManifestRelativePath(path: string): string {
   if (
     !path ||
     path === "." ||
+    path.includes("\0") ||
     path.includes("\\") ||
     isAbsolute(path) ||
     /^[A-Za-z]:\//.test(path) ||

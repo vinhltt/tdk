@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
 import { createHash } from "node:crypto";
-import { existsSync, lstatSync, readFileSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 
+import { canonicalReleaseFileMode } from "./canonical-release-file-mode.ts";
 import {
   RELEASE_MANIFEST_ALGORITHM,
   RELEASE_MANIFEST_RELATIVE_PATH,
@@ -17,6 +18,11 @@ import {
   assertReleaseManifestRelativePath,
   resolveReleaseManifestTarget,
 } from "./release-manifest-paths.ts";
+import {
+  assertReleaseManifest,
+  assertReleaseManifestSha256,
+  releaseManifestPathInventory,
+} from "./release-manifest-validation.ts";
 
 function sameFileEntry(source: ReleaseManifestFileEntry, target: ReleaseManifestFileEntry): boolean {
   return source.sha256 === target.sha256 && source.size === target.size && source.mode === target.mode;
@@ -65,10 +71,39 @@ export function diffReleaseManifests(
   return entries;
 }
 
+export function diffForceTargetInventory(
+  source: ReleaseManifest,
+  targetPaths: readonly string[],
+): ManifestDiffEntry[] {
+  assertCompatibleManifests(source, source);
+  for (const path of Object.keys(source.files)) assertReleaseManifestRelativePath(path);
+  for (const path of targetPaths) assertReleaseManifestRelativePath(path);
+
+  const sourcePaths = new Set(Object.keys(source.files));
+  const targetPathSet = new Set(targetPaths);
+  const paths = new Set([...sourcePaths, ...targetPathSet]);
+
+  return [...paths].sort().map((path) => {
+    if (!sourcePaths.has(path)) return { action: "deleted", path };
+    if (!targetPathSet.has(path)) return { action: "new", path };
+    return { action: "updated", path };
+  });
+}
+
 export function formatManifestDiffTsv(entries: readonly ManifestDiffEntry[]): string {
   return entries.map((entry) => [entry.action, entry.path, entry.expectedTargetSha256]
     .filter((value) => value !== undefined)
     .join("\t")).join("\n") + (entries.length ? "\n" : "");
+}
+
+export function formatManifestDiffNul(entries: readonly ManifestDiffEntry[]): string {
+  return entries.map((entry) => {
+    assertReleaseManifestRelativePath(entry.path);
+    if (entry.expectedTargetSha256 !== undefined) {
+      assertReleaseManifestSha256(entry.expectedTargetSha256, entry.path);
+    }
+    return [entry.action, entry.path, entry.expectedTargetSha256 ?? ""].join("\0");
+  }).join("\0") + (entries.length ? "\0" : "");
 }
 
 export function materializeTargetManifest(
@@ -79,27 +114,77 @@ export function materializeTargetManifest(
   const files: ReleaseManifest["files"] = {};
   for (const relativePath of Object.keys(source.files).sort()) {
     const target = resolveReleaseManifestTarget(targetRoot, relativePath);
-    if (!existsSync(target) || !lstatSync(target).isFile()) {
+    const stat = existsSync(target) ? lstatSync(target) : undefined;
+    if (!stat?.isFile()) {
       throw new ReleaseManifestError(`target payload is not a regular file: ${relativePath}`);
     }
-    const stat = statSync(target);
     files[relativePath] = {
       sha256: createHash("sha256").update(readFileSync(target)).digest("hex"),
       size: stat.size,
-      mode: (stat.mode & 0o777).toString(8).padStart(4, "0"),
+      mode: canonicalReleaseFileMode(stat.mode),
     };
   }
   return { ...source, files };
 }
 
-async function readManifest(root: string, label: string): Promise<ReleaseManifest> {
+function readManifestValue(path: string, label: string, expectedSha256?: string): unknown {
+  const bytes = readFileSync(path);
+  if (expectedSha256 !== undefined) {
+    assertReleaseManifestSha256(expectedSha256, `${label} release manifest snapshot`);
+    const actualSha256 = createHash("sha256").update(bytes).digest("hex");
+    if (actualSha256 !== expectedSha256) {
+      throw new ReleaseManifestError(`${label} release manifest changed after snapshot`);
+    }
+  }
+  try {
+    return JSON.parse(bytes.toString("utf8"));
+  } catch {
+    throw new ReleaseManifestError(`invalid ${label} release manifest JSON`);
+  }
+}
+
+async function readManifest(
+  root: string,
+  label: string,
+  expectedSha256?: string,
+): Promise<ReleaseManifest> {
   const path = join(root, RELEASE_MANIFEST_RELATIVE_PATH);
   if (!existsSync(path)) throw new ReleaseManifestError(`${label} release manifest not found: ${path}`);
-  const manifest = await Bun.file(path).json() as ReleaseManifest;
+  const manifest = readManifestValue(path, label, expectedSha256);
+  assertReleaseManifest(manifest, label);
   for (const relativePath of Object.keys(manifest.files)) {
     resolveReleaseManifestTarget(root, relativePath);
   }
   return manifest;
+}
+
+async function readSourceManifest(root: string): Promise<ReleaseManifest> {
+  return readManifest(root, "source");
+}
+
+async function readManifestPathInventory(
+  root: string,
+  label: string,
+  expectedSha256?: string,
+  expectAbsent = false,
+): Promise<string[]> {
+  const path = join(root, RELEASE_MANIFEST_RELATIVE_PATH);
+  if (expectAbsent) {
+    if (existsSync(path)) {
+      throw new ReleaseManifestError(`${label} release manifest appeared after snapshot`);
+    }
+    return [];
+  }
+  if (!existsSync(path)) {
+    if (expectedSha256 !== undefined) {
+      throw new ReleaseManifestError(`${label} release manifest changed after snapshot`);
+    }
+    return [];
+  }
+  const manifest = readManifestValue(path, label, expectedSha256);
+  const paths = releaseManifestPathInventory(manifest, label);
+  for (const relativePath of paths) resolveReleaseManifestTarget(root, relativePath);
+  return paths;
 }
 
 async function main(): Promise<number> {
@@ -109,6 +194,9 @@ async function main(): Promise<number> {
       "target-root": { type: "string" },
       "materialize-target-root": { type: "string" },
       "validate-root": { type: "string" },
+      "force-target-inventory": { type: "boolean" },
+      "expected-target-manifest-sha": { type: "string" },
+      "expect-target-manifest-absent": { type: "boolean" },
       output: { type: "string" },
     },
     allowPositionals: false,
@@ -116,23 +204,40 @@ async function main(): Promise<number> {
   });
 
   if (values["validate-root"]) {
-    await readManifest(values["validate-root"], "release");
+    const manifest = await readSourceManifest(values["validate-root"]);
+    assertCompatibleManifests(manifest, manifest);
     return 0;
   }
   if (!values["source-root"]) throw new ReleaseManifestError("--source-root is required");
   if (values["materialize-target-root"]) {
-    const source = await readManifest(values["source-root"], "source");
+    const source = await readSourceManifest(values["source-root"]);
     console.log(JSON.stringify(materializeTargetManifest(source, values["materialize-target-root"]), null, 2));
     return 0;
   }
   if (!values["target-root"]) throw new ReleaseManifestError("--target-root is required");
   const output = values.output ?? "tsv";
-  if (output !== "tsv" && output !== "json") throw new ReleaseManifestError(`Unsupported --output: ${output}`);
+  if (output !== "tsv" && output !== "json" && output !== "nul") {
+    throw new ReleaseManifestError(`Unsupported --output: ${output}`);
+  }
 
-  const source = await readManifest(values["source-root"], "source");
-  const target = await readManifest(values["target-root"], "target");
-  const entries = diffReleaseManifests(source, target);
-  console.log(output === "json" ? JSON.stringify(entries) : formatManifestDiffTsv(entries).trimEnd());
+  if (values["expected-target-manifest-sha"] && values["expect-target-manifest-absent"]) {
+    throw new ReleaseManifestError("target manifest cannot be both snapshotted and absent");
+  }
+  const source = await readSourceManifest(values["source-root"]);
+  const entries = values["force-target-inventory"]
+    ? diffForceTargetInventory(source, await readManifestPathInventory(
+      values["target-root"],
+      "target",
+      values["expected-target-manifest-sha"],
+      values["expect-target-manifest-absent"],
+    ))
+    : diffReleaseManifests(source, await readManifest(
+      values["target-root"],
+      "target",
+      values["expected-target-manifest-sha"],
+    ));
+  if (output === "nul") process.stdout.write(formatManifestDiffNul(entries));
+  else console.log(output === "json" ? JSON.stringify(entries) : formatManifestDiffTsv(entries).trimEnd());
   return 0;
 }
 

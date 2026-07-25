@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -53,6 +53,14 @@ function writeReleaseManifest(
   }, null, 2));
 }
 
+function writeRawReleaseManifest(root: string, manifest: unknown): void {
+  mkdirSync(join(root, ".specify"), { recursive: true });
+  writeFileSync(
+    join(root, ".specify", "release-manifest.json"),
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
+}
+
 function runDistribute(sourceRoot: string, targetRoot: string, args: string[], env: Record<string, string> = {}) {
   return Bun.spawnSync({
     cmd: ["bash", join(sourceRoot, "distribute.sh"), targetRoot, ...args],
@@ -61,6 +69,18 @@ function runDistribute(sourceRoot: string, targetRoot: string, args: string[], e
     stderr: "pipe",
     env: { ...process.env, ...env },
   });
+}
+
+function makeDisappearingDeleteWrapper(): string {
+  const wrapper = mkdtempSync(join(tmpdir(), "tdk-dist-cp-wrapper-"));
+  writeFileSync(join(wrapper, "cp"), `#!/usr/bin/env bash
+if ! /bin/cp "$@"; then exit $?; fi
+if [[ "\${2:-}" == "$TDK_TEST_BACKUP_TRIGGER" ]]; then
+  /bin/rm -f "$TDK_TEST_DISAPPEARING_DELETE"
+fi
+`);
+  chmodSync(join(wrapper, "cp"), 0o755);
+  return wrapper;
 }
 
 describe("distribute.sh release manifest contract", () => {
@@ -108,17 +128,242 @@ describe("distribute.sh release manifest contract", () => {
     expect(`${result.stdout}${result.stderr}`).toContain("schema/algorithm mismatch");
   });
 
-  test("--force never bypasses manifest compatibility proof", () => {
+  test("--force migrates a legacy target manifest and overwrites consumer drift", () => {
     const sourceRoot = makeSource("tdk-dist-force-source-");
     const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-force-target-"));
     mkdirSync(join(targetRoot, ".specify"), { recursive: true });
     writeReleaseManifest(sourceRoot);
-    writeReleaseManifest(targetRoot, "md5");
+    writeFileSync(join(targetRoot, ".specify", "setup.sh"), "consumer drift\n");
+    writeRawReleaseManifest(targetRoot, {
+      schemaVersion: 0,
+      algorithm: "md5",
+      files: {
+        ".specify/setup.sh": { checksum: "stale" },
+        ".specify/release-manifest.json": { checksum: "legacy-self-entry" },
+      },
+    });
 
-    const result = runDistribute(sourceRoot, targetRoot, ["--force", "--dry-run", "--no-delete"]);
+    const result = runDistribute(sourceRoot, targetRoot, ["--force", "--yes", "--no-delete"]);
+
+    expect(result.exitCode, `${result.stdout}${result.stderr}`).toBe(0);
+    expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8"))
+      .toBe("#!/usr/bin/env bash\necho setup\n");
+    expect(JSON.parse(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8")))
+      .toMatchObject({ schemaVersion: 1, algorithm: "sha256" });
+  });
+
+  test("--force --prefix publishes checksums for current rendered bytes over legacy ownership", () => {
+    const sourceRoot = makeSource("tdk-dist-force-prefix-source-");
+    writeFileSync(join(sourceRoot, ".specify", "setup.sh"), "echo TDK tdk-command\n");
+    writeReleaseManifest(sourceRoot);
+    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-force-prefix-target-"));
+    mkdirSync(join(targetRoot, ".specify"), { recursive: true });
+    writeFileSync(join(targetRoot, ".specify", "setup.sh"), "consumer legacy rendering\n");
+    writeRawReleaseManifest(targetRoot, {
+      schemaVersion: 0,
+      algorithm: "md5",
+      files: { ".specify/setup.sh": {} },
+    });
+
+    const result = runDistribute(
+      sourceRoot,
+      targetRoot,
+      ["--prefix", "sample", "--force", "--yes", "--no-delete"],
+    );
+
+    expect(result.exitCode, `${result.stdout}${result.stderr}`).toBe(0);
+    const rendered = readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8");
+    const manifest = JSON.parse(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8"));
+    expect(rendered).toBe("echo SAMPLE sample-command\n");
+    expect(manifest).toMatchObject({ schemaVersion: 1, algorithm: "sha256" });
+    expect(manifest.files[".specify/setup.sh"].sha256).toBe(entry(rendered).sha256);
+  });
+
+  test("--force overwrites an unowned existing path on a first ship", () => {
+    const sourceRoot = makeSource("tdk-dist-force-first-ship-source-");
+    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-force-first-ship-target-"));
+    mkdirSync(join(targetRoot, ".specify"), { recursive: true });
+    writeReleaseManifest(sourceRoot);
+    writeFileSync(join(targetRoot, ".specify", "setup.sh"), "unowned consumer file\n");
+
+    const result = runDistribute(sourceRoot, targetRoot, ["--force", "--yes"]);
+
+    expect(result.exitCode, `${result.stdout}${result.stderr}`).toBe(0);
+    expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8"))
+      .toBe("#!/usr/bin/env bash\necho setup\n");
+  });
+
+  test("--force leaves config-enumerated paths outside both release manifests untouched", () => {
+    for (const withTargetManifest of [false, true]) {
+      const sourceRoot = makeSource(`tdk-dist-force-unlisted-source-${withTargetManifest}-`);
+      writeFileSync(join(sourceRoot, "distribute.json"), JSON.stringify({
+        ship: [".specify/setup.sh", ".specify/unlisted.md", ".specify/release-manifest.json"],
+        doNotShip: [],
+      }, null, 2));
+      writeFileSync(join(sourceRoot, ".specify", "unlisted.md"), "source unlisted bytes\n");
+      writeReleaseManifest(sourceRoot, "sha256", {
+        ".specify/setup.sh": entry("#!/usr/bin/env bash\necho setup\n"),
+      });
+      const targetRoot = mkdtempSync(join(tmpdir(), `tdk-dist-force-unlisted-target-${withTargetManifest}-`));
+      mkdirSync(join(targetRoot, ".specify"), { recursive: true });
+      writeFileSync(join(targetRoot, ".specify", "setup.sh"), "consumer setup\n");
+      writeFileSync(join(targetRoot, ".specify", "unlisted.md"), "consumer unlisted bytes\n");
+      if (withTargetManifest) {
+        writeRawReleaseManifest(targetRoot, {
+          schemaVersion: 0,
+          algorithm: "md5",
+          files: { ".specify/setup.sh": {} },
+        });
+      }
+
+      const result = runDistribute(sourceRoot, targetRoot, ["--force", "--yes", "--no-delete"]);
+
+      expect(result.exitCode, `${result.stdout}${result.stderr}`).toBe(0);
+      expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8"))
+        .toBe("#!/usr/bin/env bash\necho setup\n");
+      expect(readFileSync(join(targetRoot, ".specify", "unlisted.md"), "utf8"))
+        .toBe("consumer unlisted bytes\n");
+      const manifest = JSON.parse(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8"));
+      expect(manifest.files[".specify/unlisted.md"]).toBeUndefined();
+    }
+  });
+
+  test("--force dry-run previews authoritative mutations without prompts or writes", () => {
+    const sourceRoot = makeSource("tdk-dist-force-dry-run-source-");
+    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-force-dry-run-target-"));
+    mkdirSync(join(targetRoot, ".specify"), { recursive: true });
+    writeReleaseManifest(sourceRoot);
+    writeFileSync(join(targetRoot, ".specify", "setup.sh"), "consumer drift\n");
+    writeRawReleaseManifest(targetRoot, {
+      schemaVersion: 0,
+      algorithm: "md5",
+      files: { ".specify/setup.sh": {} },
+    });
+    const manifestBefore = readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8");
+
+    const result = runDistribute(sourceRoot, targetRoot, ["--force", "--dry-run"]);
+    const resultOutput = `${result.stdout}${result.stderr}`;
+
+    expect(result.exitCode, resultOutput).toBe(0);
+    expect(resultOutput).toContain("[FORCE] .specify/setup.sh → UPDATED");
+    expect(resultOutput).toContain("--force (destructive consumer override)");
+    expect(resultOutput).toContain("FORCE OVERRIDE ENABLED");
+    expect(resultOutput).toContain("Target ownership, checksums, and legacy manifest compatibility are ignored.");
+    expect(resultOutput).toContain("Dry-run complete. No files were written.");
+    expect(resultOutput).not.toContain("Proceed with sync");
+    expect(resultOutput).not.toContain("Destructively overwrite consumer changes in");
+    expect(resultOutput).not.toContain("Type 'delete'");
+    expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("consumer drift\n");
+    expect(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8")).toBe(manifestBefore);
+  });
+
+  test("--force recreates a manifest-claimed missing path and rolls it back as new", () => {
+    const sourceRoot = makeSource("tdk-dist-force-missing-source-");
+    writeFileSync(join(sourceRoot, "distribute.json"), JSON.stringify({
+      ship: [".specify/another.md", ".specify/setup.sh", ".specify/release-manifest.json"],
+      doNotShip: [],
+    }, null, 2));
+    writeFileSync(join(sourceRoot, ".specify", "another.md"), "new file\n");
+    writeReleaseManifest(sourceRoot, "sha256", {
+      ".specify/another.md": entry("new file\n"),
+      ".specify/setup.sh": entry("#!/usr/bin/env bash\necho setup\n"),
+    });
+    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-force-missing-target-"));
+    mkdirSync(join(targetRoot, ".specify"), { recursive: true });
+    writeFileSync(join(targetRoot, ".specify", "setup.sh"), "consumer setup\n");
+    writeRawReleaseManifest(targetRoot, {
+      schemaVersion: 0,
+      algorithm: "md5",
+      files: { ".specify/another.md": {}, ".specify/setup.sh": {} },
+    });
+    const manifestBefore = readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8");
+
+    const result = runDistribute(sourceRoot, targetRoot, ["--force", "--yes", "--no-delete"], {
+      TDK_DISTRIBUTE_FAIL_AT: ".specify/setup.sh",
+    });
 
     expect(result.exitCode).not.toBe(0);
-    expect(`${result.stdout}${result.stderr}`).toContain("schema/algorithm mismatch");
+    expect(`${result.stdout}${result.stderr}`).toContain("injected copy failure");
+    expect(existsSync(join(targetRoot, ".specify", "another.md"))).toBe(false);
+    expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("consumer setup\n");
+    expect(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8")).toBe(manifestBefore);
+  });
+
+  test("--force deletes only present prior-manifest orphans and respects --no-delete", () => {
+    for (const noDelete of [false, true]) {
+      const sourceRoot = makeSource(`tdk-dist-force-delete-source-${noDelete}-`);
+      const targetRoot = mkdtempSync(join(tmpdir(), `tdk-dist-force-delete-target-${noDelete}-`));
+      mkdirSync(join(targetRoot, ".specify"), { recursive: true });
+      writeReleaseManifest(sourceRoot);
+      writeFileSync(join(targetRoot, ".specify", "setup.sh"), "consumer setup\n");
+      writeFileSync(join(targetRoot, ".specify", "old-managed.md"), "consumer-edited orphan\n");
+      writeRawReleaseManifest(targetRoot, {
+        schemaVersion: 0,
+        algorithm: "md5",
+        files: { ".specify/setup.sh": {}, ".specify/old-managed.md": {} },
+      });
+
+      const args = ["--force", "--yes", ...(noDelete ? ["--no-delete"] : ["--yes-delete"])];
+      const result = runDistribute(sourceRoot, targetRoot, args);
+
+      expect(result.exitCode, `${result.stdout}${result.stderr}`).toBe(0);
+      expect(existsSync(join(targetRoot, ".specify", "old-managed.md"))).toBe(noDelete);
+    }
+  });
+
+  test("--force --no-delete still rejects a prior-manifest-only nonregular node", () => {
+    const sourceRoot = makeSource("tdk-dist-force-no-delete-nonregular-source-");
+    writeReleaseManifest(sourceRoot);
+    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-force-no-delete-nonregular-target-"));
+    mkdirSync(join(targetRoot, ".specify", "old-managed"), { recursive: true });
+    writeFileSync(join(targetRoot, ".specify", "setup.sh"), "consumer setup\n");
+    writeRawReleaseManifest(targetRoot, {
+      schemaVersion: 0,
+      algorithm: "md5",
+      files: { ".specify/setup.sh": {}, ".specify/old-managed": {} },
+    });
+    const manifestBefore = readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8");
+
+    const result = runDistribute(sourceRoot, targetRoot, ["--force", "--yes", "--no-delete"]);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(`${result.stdout}${result.stderr}`).toContain("not a regular non-symlink file");
+    expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("consumer setup\n");
+    expect(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8")).toBe(manifestBefore);
+  });
+
+  test("--force treats a delete candidate absent at physical snapshot as a rollback-safe no-op", () => {
+    const sourceRoot = makeSource("tdk-dist-force-delete-race-source-");
+    writeFileSync(join(sourceRoot, ".specify", "setup.sh"), "new setup\n");
+    writeReleaseManifest(sourceRoot);
+    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-force-delete-race-target-"));
+    mkdirSync(join(targetRoot, ".specify"), { recursive: true });
+    writeFileSync(join(targetRoot, ".specify", "setup.sh"), "consumer setup\n");
+    writeFileSync(join(targetRoot, ".specify", "disappearing.md"), "external removal\n");
+    writeFileSync(join(targetRoot, ".specify", "failing.md"), "preserve me\n");
+    writeReleaseManifest(targetRoot, "sha256", {
+      ".specify/setup.sh": entry("consumer setup\n"),
+      ".specify/disappearing.md": entry("external removal\n"),
+      ".specify/failing.md": entry("preserve me\n"),
+    });
+    const manifestBefore = readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8");
+    const wrapper = makeDisappearingDeleteWrapper();
+
+    const result = runDistribute(sourceRoot, targetRoot, ["--force", "--yes", "--yes-delete"], {
+      PATH: `${wrapper}:${process.env.PATH}`,
+      TDK_DISTRIBUTE_FAIL_AT: ".specify/failing.md",
+      TDK_TEST_BACKUP_TRIGGER: join(targetRoot, ".specify", "setup.sh"),
+      TDK_TEST_DISAPPEARING_DELETE: join(targetRoot, ".specify", "disappearing.md"),
+    });
+    const resultOutput = `${result.stdout}${result.stderr}`;
+
+    expect(result.exitCode).not.toBe(0);
+    expect(resultOutput).toContain("injected delete failure");
+    expect(resultOutput).not.toContain("rollback was incomplete");
+    expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("consumer setup\n");
+    expect(existsSync(join(targetRoot, ".specify", "disappearing.md"))).toBe(false);
+    expect(readFileSync(join(targetRoot, ".specify", "failing.md"), "utf8")).toBe("preserve me\n");
+    expect(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8")).toBe(manifestBefore);
   });
 
   test("--no-delete removes manifest deleted entries from the execution set", () => {
@@ -129,11 +374,7 @@ describe("distribute.sh release manifest contract", () => {
     writeReleaseManifest(sourceRoot);
     writeReleaseManifest(targetRoot, "sha256", {
       ".specify/setup.sh": entry("#!/usr/bin/env bash\necho setup\n"),
-      ".specify/old-managed.md": {
-        sha256: "old",
-        size: 4,
-        mode: "0644",
-      },
+      ".specify/old-managed.md": entry("old\n"),
     });
 
     const result = runDistribute(sourceRoot, targetRoot, ["--dry-run", "--no-delete"]);
@@ -165,20 +406,38 @@ describe("distribute.sh release manifest contract", () => {
   );
 
   test("rejects unsafe target manifest paths before mutation", () => {
-    const sourceRoot = makeSource("tdk-dist-unsafe-target-source-");
+    for (const args of [["--yes"], ["--force", "--yes"]]) {
+      const sourceRoot = makeSource("tdk-dist-unsafe-target-source-");
+      writeReleaseManifest(sourceRoot);
+      const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-unsafe-target-"));
+      mkdirSync(join(targetRoot, ".specify"), { recursive: true });
+      writeFileSync(join(targetRoot, ".specify", "setup.sh"), "old payload\n");
+      writeReleaseManifest(targetRoot, "sha256", {
+        "../outside": entry("outside sentinel\n"),
+      });
+
+      const result = runDistribute(sourceRoot, targetRoot, args);
+
+      expect(result.exitCode).not.toBe(0);
+      expect(`${result.stdout}${result.stderr}`).toContain("release manifest path");
+      expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("old payload\n");
+    }
+  });
+
+  test("--force rejects malformed target manifest JSON before mutation", () => {
+    const sourceRoot = makeSource("tdk-dist-malformed-target-source-");
     writeReleaseManifest(sourceRoot);
-    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-unsafe-target-"));
+    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-malformed-target-"));
     mkdirSync(join(targetRoot, ".specify"), { recursive: true });
     writeFileSync(join(targetRoot, ".specify", "setup.sh"), "old payload\n");
-    writeReleaseManifest(targetRoot, "sha256", {
-      "../outside": entry("outside sentinel\n"),
-    });
+    writeFileSync(join(targetRoot, ".specify", "release-manifest.json"), "{invalid json\n");
 
-    const result = runDistribute(sourceRoot, targetRoot, ["--yes"]);
+    const result = runDistribute(sourceRoot, targetRoot, ["--force", "--yes"]);
 
     expect(result.exitCode).not.toBe(0);
-    expect(`${result.stdout}${result.stderr}`).toContain("release manifest path");
     expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("old payload\n");
+    expect(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8"))
+      .toBe("{invalid json\n");
   });
 
   test("rejects a missing target still claimed by the prior manifest", () => {
@@ -210,7 +469,7 @@ describe("distribute.sh release manifest contract", () => {
     const result = runDistribute(sourceRoot, targetRoot, ["--yes", "--force"]);
 
     expect(result.exitCode).not.toBe(0);
-    expect(`${result.stdout}${result.stderr}`).toContain("checksum proof failed");
+    expect(`${result.stdout}${result.stderr}`).toContain("not a regular non-symlink file");
     expect(existsSync(join(targetRoot, ".specify", "setup.sh"))).toBe(true);
   });
 
@@ -334,32 +593,35 @@ describe("distribute.sh release manifest contract", () => {
   });
 
   test("injected delete failure rolls back an earlier update and rerun repairs", () => {
-    const sourceRoot = makeSource("tdk-dist-delete-failure-source-");
-    writeFileSync(join(sourceRoot, ".specify", "setup.sh"), "new payload\n");
-    writeReleaseManifest(sourceRoot);
-    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-delete-failure-target-"));
-    mkdirSync(join(targetRoot, ".specify"), { recursive: true });
-    writeFileSync(join(targetRoot, ".specify", "setup.sh"), "old payload\n");
-    writeFileSync(join(targetRoot, ".specify", "old-managed.md"), "old managed\n");
-    writeReleaseManifest(targetRoot, "sha256", {
-      ".specify/setup.sh": entry("old payload\n"),
-      ".specify/old-managed.md": entry("old managed\n"),
-    });
-    const oldManifest = readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8");
+    for (const force of [false, true]) {
+      const sourceRoot = makeSource(`tdk-dist-delete-failure-source-${force}-`);
+      writeFileSync(join(sourceRoot, ".specify", "setup.sh"), "new payload\n");
+      writeReleaseManifest(sourceRoot);
+      const targetRoot = mkdtempSync(join(tmpdir(), `tdk-dist-delete-failure-target-${force}-`));
+      mkdirSync(join(targetRoot, ".specify"), { recursive: true });
+      writeFileSync(join(targetRoot, ".specify", "setup.sh"), "old payload\n");
+      writeFileSync(join(targetRoot, ".specify", "old-managed.md"), "old managed\n");
+      writeReleaseManifest(targetRoot, "sha256", {
+        ".specify/setup.sh": entry("old payload\n"),
+        ".specify/old-managed.md": entry("old managed\n"),
+      });
+      const oldManifest = readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8");
+      const args = [...(force ? ["--force"] : []), "--yes", "--yes-delete"];
 
-    const failed = runDistribute(sourceRoot, targetRoot, ["--yes", "--yes-delete"], {
-      TDK_DISTRIBUTE_FAIL_AT: ".specify/old-managed.md",
-    });
+      const failed = runDistribute(sourceRoot, targetRoot, args, {
+        TDK_DISTRIBUTE_FAIL_AT: ".specify/old-managed.md",
+      });
 
-    expect(failed.exitCode).not.toBe(0);
-    expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("old payload\n");
-    expect(readFileSync(join(targetRoot, ".specify", "old-managed.md"), "utf8")).toBe("old managed\n");
-    expect(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8")).toBe(oldManifest);
+      expect(failed.exitCode).not.toBe(0);
+      expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("old payload\n");
+      expect(readFileSync(join(targetRoot, ".specify", "old-managed.md"), "utf8")).toBe("old managed\n");
+      expect(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8")).toBe(oldManifest);
 
-    const repaired = runDistribute(sourceRoot, targetRoot, ["--yes", "--yes-delete"]);
-    expect(repaired.exitCode, `stdout:\n${repaired.stdout}\nstderr:\n${repaired.stderr}`).toBe(0);
-    expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("new payload\n");
-    expect(existsSync(join(targetRoot, ".specify", "old-managed.md"))).toBe(false);
+      const repaired = runDistribute(sourceRoot, targetRoot, args);
+      expect(repaired.exitCode, `stdout:\n${repaired.stdout}\nstderr:\n${repaired.stderr}`).toBe(0);
+      expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("new payload\n");
+      expect(existsSync(join(targetRoot, ".specify", "old-managed.md"))).toBe(false);
+    }
   });
 
   test("prefixed updates use checksums of the rendered target bytes", () => {
