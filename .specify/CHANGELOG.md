@@ -6,6 +6,19 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.104.0] - 2026-07-26
+
+### Added
+- **[tdk-core]** Add dependency-safe parallel phase orchestration
+  - `tdk-plan` emits validated parallel safety and access metadata with transactional rollback and the shared repo-wide mutation reservation.
+  - `tdk-implement` resolves bounded waves, retains fenced ownership across serial barriers, audits worker changes, and persists successful waves with durable atomic writes.
+- **[Scripts]** Add deterministic phase graph, ownership, filesystem capability, lease, write-ahead status, worker-result, and Git audit boundaries with focused integration coverage.
+- **[Setup]** Add conversion-time Codex specialization that rejects `tdk-implement --parallel` before task validation while preserving serial behavior and unrelated package bytes.
+
+### Changed
+- **[Scripts]** Extend phase validation and status renderers for strict parallel metadata, reciprocal dependencies, multi-phase transitions, and compact agent JSON commands.
+- **[Docs]** Document Claude parallel execution, legacy serial barriers, clean-Git and case-sensitive filesystem requirements, state-based cancel recovery, the shared mutation reservation, and the Codex support boundary.
+
 ## [1.103.5] - 2026-07-25
 
 ### Added

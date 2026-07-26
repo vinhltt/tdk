@@ -45,7 +45,14 @@ Use **AskUserQuestion** tool:
 **ONLY**. Do not touch conditional `research/`, `reports/`, `contracts/`, or any
 legacy standalone artifact. Use `--migrate-artifacts` for explicit migration.
 
-**On proceed:** re-run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/setup-plan.ts {task_id} --force --json)`, then continue to Step 2 with **REGENERATE mode** (fresh template).
+**On proceed:** the Step 0.2 owned mutation reservation and invocation snapshot
+must already exist. Re-run
+`(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/setup-plan.ts {task_id} --force --json)`,
+then continue to Step 2 with **REGENERATE mode**. Regenerate and classify every
+rewritten phase; no rewritten phase receives the untouched-legacy metadata
+exemption. Keep the snapshot through Step 3d. Any setup, write, or validation
+failure restores all prior phase and plan bytes and removes only invocation-new
+files.
 
 ## Option (b) Append Phase
 
@@ -68,38 +75,37 @@ legacy standalone artifact. Use `--migrate-artifacts` for explicit migration.
    - File path: `phases/phase-${NN}-${slug}.md` (all lowercase, no exceptions).
 5. **Collision check:** if `phases/phase-${NN}-${slug}.md` already exists → **error + abort** (do NOT overwrite).
    - Output: `Error: phases/phase-${NN}-${slug}.md already exists. Aborting to prevent data loss.`
-6. **Write phase file** using the phase-file-content template (below).
-7. **Append ONLY a table row** to `## Phases` in `plan.md` with defaults:
-   - **VALID_STATUSES (enforced):** `todo | in_progress | done | skipped | blocked | cancelled`. Default for new phases = `todo`. NEVER use `not-started`, `pending`, `planned`, `new`, or any other value — Step 8b validator WILL reject it.
-   - `Status = todo`, `Blocks = —`, `BlockedBy = —`.
+6. **Resolve dependency intent before mutation:** Ask which existing earlier
+   phases must complete before the appended phase. If intent is ambiguous, ask
+   again or abort; never invent an edge. Normalize the answer to the same sorted,
+   unique earlier-phase numbers for frontmatter `dependencies` and the new row's
+   `BlockedBy` cell.
+   - With no dependency, emit `dependencies: []` and `—` in both relation cells.
+   - With dependencies, add the new phase number to each blocker's `Blocks` cell,
+     keeping every cell sorted and unique. The appended row's `Blocks` is `—`.
+7. **Classify and render before writing:** Apply the exact C-C3 matrix from
+   `design-phase.md`. Populate one exact `## Related Code Files` section with
+   concrete `Read`/`Modify`/`Create`/`Delete` entries, then render the template's
+   dependency and parallel-safety placeholders. Uncertain eligibility emits
+   `parallel_safe: never` with the first factual reason; never write an
+   unclassified candidate.
+8. **Apply one transactional append:** The Step 0.95 transaction must already
+   contain the bytes of `plan.md` and the absence of the collision-checked phase
+   path. Write the phase file, append its row, and update only the reciprocal
+   `Blocks` cells in `plan.md`. Preserve every existing phase file byte-for-byte.
+   The table row uses:
+   - **VALID_STATUSES (enforced):** `todo | in_progress | done | skipped | blocked | cancelled`. Default for new phases = `todo`. NEVER use `not-started`, `pending`, `planned`, `new`, or any other value — the Step 3d status validator WILL reject it.
+   - `Status = todo` and the normalized `Blocks` / `BlockedBy` relations from Step 6.
    - File column: `[phase-${NN}-${slug}](phases/phase-${NN}-${slug}.md)` (lowercase path).
 
-   Before writing, snapshot current `plan.md` content into memory (`planMdBefore`) — Step 8 validator may roll back.
-
-   **PROHIBITED:** Do NOT add any prose, narrative, or description anywhere in `plan.md`. All phase context belongs exclusively in the phase file's `## Overview` section. Step 8 validator will reject violations and restore the snapshot.
-8. **Validate no prose injected** — run:
-   `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/plan-prose-validator.ts <plan-md-path> --json)`
-   Parse JSON output.
-   - If `ok === false`:
-     - Restore `plan.md` from the Step 7 snapshot (write `planMdBefore` back to disk).
-     - Keep `phases/phase-${NN}-${slug}.md` (no data loss on the phase file).
-     - Output violations to user (section, line, snippet for each).
-     - **ABORT** the append.
-   - If `ok === true`: continue to Step 8b.
-8b. **Validate status vocabulary** — run:
-   `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/plan-status-validator.ts <plan-md-path> --json)`
-   Parse JSON output.
-   - If `ok === false`:
-     - Report parser errors and invalid statuses to user (`phaseNumber`, line number, raw value, valid options).
-     - Use AskUserQuestion: "Status vocabulary violation detected. How to proceed?"
-       - "(a) Auto-fix — replace invalid status with `todo`" → Edit the table row in `plan.md`, replace invalid status with `todo`, continue to Step 9.
-       - "(b) Abort — rollback plan.md from snapshot" → Restore from `planMdBefore`, keep phase file, ABORT.
-   - If `ok === true`: continue to Step 9.
-9. **Validate dependency table** — run:
-   `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parse-phases-table.ts <plan-md-path> --json --validate-deps)`
-   Parse JSON output.
-   - If `errors.length > 0` → report to user and abort the append (row + file already written — user must manually clean up).
-   - Do not use `bun -e` / `bun --eval` snippets or direct imports for this check; Bun eval argv differs from script argv and can drop the plan path.
+   **PROHIBITED:** Do NOT add any prose, narrative, or description anywhere in `plan.md`. All phase context belongs exclusively in the phase file's `## Overview` section. The Step 3d prose validator will reject violations and restore the snapshot.
+9. **Run Step 3d:** Execute the four ordered post-write gates from
+   `plan-output-contract.md`. Gate 3 validates only the appended phase; gate 4
+   validates the complete resolver input and reciprocal graph. Accept warnings
+   for untouched legacy metadata only. Any invalid result, non-zero exit,
+   malformed JSON, or runtime/I/O error restores `plan.md`, must remove the appended phase file,
+   and STOPs with exact diagnostics. Leave no orphan phase or table row. Never
+   auto-fix, repair, or downgrade rejected output.
 
 ## Abort
 
@@ -116,6 +122,13 @@ Before writing, replace placeholders with concrete values:
 - `{NN}` -> zero-padded phase number for display (e.g., `03`).
 - `{Phase Title YAML}` -> YAML string literal for the phase title (e.g., `"Add \"OAuth2\" login"`).
 - `{Phase Name}` -> plain markdown phase title.
+- `{Dependencies YAML}` -> sorted unique YAML array of earlier phase numbers, or `[]`.
+- `{Parallel Safe}` -> `auto` or `never` after classification.
+- `{Parallel Reason Field}` -> empty for `auto`; for `never`, the complete YAML
+  line `parallel_reason: "<concise factual reason>"`.
+- `{Related Code File Entries}` -> one or more exact concrete
+  `- Read|Modify|Create|Delete: \`path\`` entries; include only actions the phase
+  actually needs.
 
 ```markdown
 ---
@@ -124,7 +137,9 @@ title: {Phase Title YAML}
 status: todo
 priority: P2
 effort: "1h"
-dependencies: []
+dependencies: {Dependencies YAML}
+parallel_safe: {Parallel Safe}
+{Parallel Reason Field}
 ---
 
 # Phase {NN}: {Phase Name}
@@ -156,9 +171,7 @@ dependencies: []
 
 ## Related Code Files
 
-- Modify: `[path/to/file]`
-- Create: `[path/to/file]`
-- Delete: `[path/to/file]`
+{Related Code File Entries}
 
 ## Implementation Steps
 

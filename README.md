@@ -129,6 +129,74 @@ Use this when the feature or fix is already clear enough to skip the parent epic
 
 Run `/tdk-clarify` until unresolved questions are gone or explicitly deferred. Treat `spec.md` as the requirement authority.
 
+### Implement a Plan
+
+`/tdk-implement` has three execution forms:
+
+```text
+/tdk-implement <task-id>
+/tdk-implement <task-id> --phase NN
+/tdk-implement <task-id> --parallel
+```
+
+The default serial form executes ready phases in plan-table order. `--phase NN`
+(also accepted as `--phase=NN`) runs one selected phase serially after its
+dependencies are satisfied. Both keep the existing routing, recovery, review,
+test, and status behavior. `--phase` and `--parallel` are mutually exclusive.
+
+Claude Code supports `--parallel` as a dynamic wave controller. Generated plans
+mark a phase `parallel_safe: auto` only when its complete access set is known;
+otherwise they emit `parallel_safe: never` with a factual reason. Untouched
+legacy phases with no parallel metadata are serial barriers. The default serial
+command or `--phase NN` remains the legacy serial escape hatch. During a
+parallel run, the controller executes a `never` or legacy barrier through the
+selected serial path under its retained lease, then ends so the next invocation
+can recompute the plan state.
+
+Parallel safety comes from the exact `## Related Code Files` entries in each
+phase. `Read` grants read access only; `Modify`, `Create`, and `Delete` grant
+exact write ownership. Read/read overlap is allowed. Write/write and either
+direction of read/write overlap, including ancestor/descendant paths, cannot
+share a wave. Generated, ignored, migration, lock, shared-global, broad, or
+otherwise unbounded effects force serial execution. Dependencies are resolved
+again after each successful wave, in numeric order, with a fixed cap of four
+workers.
+
+Worker admission requires a clean Git worktree with no staged, unstaged, or
+untracked changes. The project root and every selected access path must be on a
+proven case-sensitive POSIX filesystem. WSL paths are supported only with exact
+case; native Windows, DrvFS, case-insensitive or unknown roots, and an unsupported
+nested mount under an access path are rejected. Two read-only concurrency
+canaries must also prove concurrent spawn and join before the controller acquires
+its repo-wide fenced lease; there is no silent serial fallback.
+
+The controller snapshots the whole wave, dispatches one synchronous concurrent
+batch, audits every reported path against declared ownership, runs shared gates
+after all workers join, and only then publishes whole-wave completion. Status
+frontmatter and the `plan.md` table use a recovery journal for crash-atomic
+whole-wave persistence. Any worker, gate, malformed-result, or audit failure
+leaves every admitted sibling `in_progress`; explicit recovery reconciles an
+interrupted journal, ends that invocation, and requires a clean rerun. Leases
+have no automatic timeout or theft path.
+
+Parallel, serial `/tdk-implement`, and every mutating `/tdk-plan` flow use one
+atomic repo-wide mutation reservation under the Git common directory. A held
+reservation stops the later invocation; no path waits, steals, or ages it out.
+Pre-mutation cancellation releases immediately. Cancellation or interruption
+after mutation retains the reservation and recovery evidence until exact status
+reconciliation and stable verification complete. Clear is state-based, never
+TTL-, PID-, or mtime-based. Status/WAL files publish through durable atomic
+replacement. Wave admission keeps a mutation marker until its finalized audit
+and all-phase completion; planner writes keep a durable feature snapshot until
+validated finalization or verified rollback. Git-backed projects are required for mutating workflows. V1
+dispatch is synchronous, so there is no worker timeout or controller polling loop.
+
+Parallel implementation is Claude-first in V1. The generated Codex
+`tdk-implement` skill contains an early `--parallel` STOP before task validation,
+reference loading, or project mutation. On Codex, rerun `/tdk-implement <task-id>`
+without `--parallel` to use the default serial path; harness identity is fixed by
+conversion rather than runtime environment guessing.
+
 ### Review, Status, and Tests
 
 Use status and review commands after planning or implementation:

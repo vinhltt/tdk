@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-07-25T12:49:30.533Z",
+  "generatedAt": "2026-07-26T03:11:29.987Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -200,8 +200,8 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "e3e61f9b8ffd1856b5104fefda57463f6d8bf3dc49a719bd9585e8b2d951b08b",
-      "size": 42494,
+      "sha256": "5bd88922aca316680bb72fd69df866bb222797c0b2a8a4fe865792af346f8c0b",
+      "size": 42637,
       "mode": "0644"
     },
     ".specify/plugins/plugin-dependencies.json": {
@@ -215,17 +215,17 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "56d3c9b035b0f72e5fb099716a8a418266d629585c06b59a110fcffab969428c",
+      "sha256": "552332c67a02550b2e226a223fc1c9547a4bed58a5a974f6ec6f1e57859ada57",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "56d3c9b035b0f72e5fb099716a8a418266d629585c06b59a110fcffab969428c",
+      "sha256": "552332c67a02550b2e226a223fc1c9547a4bed58a5a974f6ec6f1e57859ada57",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "56d3c9b035b0f72e5fb099716a8a418266d629585c06b59a110fcffab969428c",
+      "sha256": "552332c67a02550b2e226a223fc1c9547a4bed58a5a974f6ec6f1e57859ada57",
       "size": 181,
       "mode": "0644"
     },
@@ -235,8 +235,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "c59cfbc9f8efd73565898b8f15f56492c54fd3494c539c0a0259006c991f4e18",
-      "size": 27655,
+      "sha256": "15c30e424d2ab9dfc2dfcbbd5e344d36ccf1f69258c0df7b1696b89abde43898",
+      "size": 28139,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/__tests__/context-builder.test.cjs": {
@@ -350,28 +350,33 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/SKILL.md": {
-      "sha256": "62704fcf8cebab4f2ad624eda6e5dd9ac9e250b345a445af222e963cd075a650",
-      "size": 6899,
+      "sha256": "5473932fb04168e7a5199dde8e8abd074a8f1b33a2ada7232eb690fad24f07f1",
+      "size": 7995,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-core/skills/tdk-implement/references/parallel-phase-orchestration.md": {
+      "sha256": "b5ea4cd8b8d5eabc2915a0097cb510ab2d777e2ef17223f4b380bff4043363ae",
+      "size": 12578,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/references/phase-execution.md": {
-      "sha256": "331dc29bfadec4dba272c6ab12ca7dd8a77627fda7980065c8fd154269374cfd",
-      "size": 14169,
+      "sha256": "97dd4b0cd9b890a2d442baa8565e11ebd1fcd9114f2317ec067f79731b9522f7",
+      "size": 14688,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/references/project-and-phase-contract.md": {
-      "sha256": "e628cdf43ff83a516967c84b261843474338fc3e98d0fb0d59a3b3fb48887258",
-      "size": 8299,
+      "sha256": "70f80e0e6a549437a351889a8c5b7adbee979d9316607d08b3b51bab14c797ef",
+      "size": 10341,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/references/routing-preflight.md": {
-      "sha256": "794db5940ab7f9f2b928c03dcef6fc8bb8474642ff8244acb544166f727e5de9",
-      "size": 4322,
+      "sha256": "a11c7115a3cc121f0d84b5182cb9f05bce7fb798a0c511425064c56633e0686c",
+      "size": 5050,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/SKILL.md": {
-      "sha256": "16cea610685d3defc9864018909882568e8a72bf6e93f31721532fb137e8c307",
-      "size": 14939,
+      "sha256": "82af84548e6a2beb132dd78049a4ad7663b1929c17b906d652eba0da67bc7a1f",
+      "size": 18088,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/cross-plan-deps.md": {
@@ -380,8 +385,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/design-phase.md": {
-      "sha256": "ca12651f7137e993334628036568678e4e52da5d3683791cba93b23f0b703509",
-      "size": 16357,
+      "sha256": "662064283a18f741305279e6ef2bea4f8278820162c307315532206e81bc8c65",
+      "size": 19820,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/gates.md": {
@@ -390,8 +395,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/handle-existing-plan.md": {
-      "sha256": "157b9c39893fff527275df97ddc95dec16798b8c3a11e3185945e78f1983dbfe",
-      "size": 7770,
+      "sha256": "f8a2f2cba7c58f22695f9ebeb419d6c72d877fe6b54568d1c21eea3e71566a5b",
+      "size": 8522,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/migrate-artifacts-workflow.md": {
@@ -405,8 +410,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/plan-output-contract.md": {
-      "sha256": "cd46d476ca0512dfe2773f44828ef28d540fcda6e0996d43e357e1dc2631ec0f",
-      "size": 12076,
+      "sha256": "bc6c211a43862b96647eeeebee9ecbefb3883ff53b756cf914384b6213d3d5b1",
+      "size": 19841,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/red-team-workflow.md": {
@@ -2019,6 +2024,16 @@
       "size": 3678,
       "mode": "0644"
     },
+    ".specify/scripts/ts/src/commands/util/durable-atomic-file.ts": {
+      "sha256": "e5e91e7362f8037cad1f650a9ca1c88069c342cde72f66c7e76885ebed9cbbde",
+      "size": 1447,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/inspect-controller-lease.ts": {
+      "sha256": "44f3f799e95277e8279552adebe6ca532000d2fc3b19bfa18942412b6cf84231",
+      "size": 1591,
+      "mode": "0644"
+    },
     ".specify/scripts/ts/src/commands/util/migrate-plan-artifacts.ts": {
       "sha256": "adac5f7dba6687a9c853dacfb3e9c2e24089c8456b80378b0e3995e51e2fed53",
       "size": 2419,
@@ -2027,6 +2042,126 @@
     ".specify/scripts/ts/src/commands/util/normalize-agent-version.ts": {
       "sha256": "62e9cca90788125c8e3f91e78fe33ce0565662b0e66e04d533b2542791473479",
       "size": 3566,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-controller-cli-support.ts": {
+      "sha256": "01192795912e669c245ba0ec5d72ce8fdaaba9d5aec40fe8a077c2620600daa8",
+      "size": 1439,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-controller-lease-read.ts": {
+      "sha256": "dc932756a9cb0b7c571a47f42f66518e0e3e49f005e1623cb599bd0b4da12e18",
+      "size": 3387,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-controller-lease.ts": {
+      "sha256": "cc6b5ff7870fec9b6182927822d017d823830dae5249404df735cb61ffd27589",
+      "size": 8280,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-controller-mutation-state.ts": {
+      "sha256": "d45c3993beee7f8c45471927f764c447e854545cecc01b11fd8460848cff4ee3",
+      "size": 2961,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-controller-recovery.ts": {
+      "sha256": "5935dca004c3a6a4b08ed208c6868fd895898d944229c8a8212f3c22d9d6ef40",
+      "size": 4607,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-controller-tombstone-paths.ts": {
+      "sha256": "085a8d1c6209d0f8400fbd939f063109521b420c0bc5d49431cccac2d66239b7",
+      "size": 525,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-controller-tombstone.ts": {
+      "sha256": "25f67d036f4103e270cc771e01ab31f5d4a3368dcaad5297ac0042fd97ca27fe",
+      "size": 1357,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-controller.ts": {
+      "sha256": "600f2c0ca45c6707a97d6da350cdb42699ee5d3addec355873fb94ea16e8e8b4",
+      "size": 13004,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-phase-access-grammar.ts": {
+      "sha256": "fc814dd82e7256bb75fda2938726de7a4d195e2570eb72cdbb5b4a5637849db5",
+      "size": 7234,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-phase-case-probe.ts": {
+      "sha256": "cea90e0ed0eeeda3b9ed9d1f957eb16306c92eae63f74cdb2d1e908346271f71",
+      "size": 2741,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-phase-graph-validator.ts": {
+      "sha256": "04c34b79151ac5c47fdec3dbbd2c32d24fbf9c3bd2de88c2adac6b80549166c1",
+      "size": 5651,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-phase-mount-capability.ts": {
+      "sha256": "ae45de5b4d5ff424a5000bb204f126310401d385a3c4b41e66890565ea043274",
+      "size": 6235,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-phase-ownership.ts": {
+      "sha256": "25232b59736e6f4b9fab5f2571f6c5a4f1c0bbe58f85e906f636ea83882e77f7",
+      "size": 6629,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-phase-path-policy.ts": {
+      "sha256": "b39ba7c28939c969fbc3deb848b82b28b3a7d0186356476f381c33511e7f7dd1",
+      "size": 5162,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-phase-status-reconciler.ts": {
+      "sha256": "4fbe5f079e8d5dada921f867eb0b2973856055649db71feae24f8d1e7b9c94ac",
+      "size": 13240,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-phase-wave-resolver.ts": {
+      "sha256": "5d123417776a7505f208772fbb6f4a2293f19fe6b5ca55070825b3bced644216",
+      "size": 6250,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-phase-write-deny-policy.ts": {
+      "sha256": "0b4a881e9c7a143c1916b800cb1562558e00a67ebef60cb600282cb81c75aa4a",
+      "size": 5895,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-planner-external-snapshot.ts": {
+      "sha256": "3d0172798389bf8666c526fa00ef5f099cc752179fdf8fcae2223ecc92e72659",
+      "size": 9728,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-planner-snapshot.ts": {
+      "sha256": "1b57b935d881be904eae6b3781e18cf761f3fc09e55e914b7b127029f8ca4b0d",
+      "size": 8112,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-planner-transaction.ts": {
+      "sha256": "0d711d1030803ff64903a99670e800e5eda71e7724e09434e0cf93f358372f2a",
+      "size": 3265,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-planner-validation.ts": {
+      "sha256": "a4a0c0bb6da41ad8e2d03ea488ef367c14fb28dc9f805b92918987cfbce63501",
+      "size": 4723,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-status-journal.ts": {
+      "sha256": "4ddbed89e32a8ffd560aab2ecc8588d2a1c133be5c2ad4da3b41ee774bdb0f30",
+      "size": 2891,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-wave-git-audit.ts": {
+      "sha256": "2c609c36d96d3bae3adce6adaf58c1aea0b6d8423939ea695a3f7ccd10153450",
+      "size": 12318,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/parallel-worker-result.ts": {
+      "sha256": "2e6e9df8afdbbe8d7ab38cb798a0d2f68864dca1073a5f02ad5dfcf900ee43d7",
+      "size": 5859,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/parse-phases-table.ts": {
@@ -2040,18 +2175,23 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/phase-file-validator.ts": {
-      "sha256": "a755452cf16ce3e67d65faa6aebfacc7e2e82f57f027996c65deddfb78004678",
-      "size": 6750,
+      "sha256": "228b92d67cca6a626a63dc3f00fae9686eaa18ccd0dd253efab1eca017d0492d",
+      "size": 7044,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/phase-frontmatter-reader.ts": {
+      "sha256": "3c3694d2d4a3e07cfccee6985b3b75a85940c1c8ff12100c20de9e8b840ba19a",
+      "size": 2801,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/phase-frontmatter.ts": {
-      "sha256": "0b27527bddcac838636d62920320e39032c38c46d92e438710a22bfe20aa27a0",
-      "size": 1431,
+      "sha256": "426048d40334231c10c9cb72c3c3e82c82c51204785b3080bf28eaaac50b871d",
+      "size": 2147,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/phases-table-parser.ts": {
-      "sha256": "210b17314e5a787e8b262cd65c6a63bf89f6c15c899d81a5072c57558eb1f843",
-      "size": 15922,
+      "sha256": "e92ee980cb38aa72211c6cc39207c1384f724bde8d06d3e6b3266db187a30b87",
+      "size": 16959,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/plan-prose-validator.ts": {
@@ -2062,6 +2202,16 @@
     ".specify/scripts/ts/src/commands/util/plan-status-validator.ts": {
       "sha256": "ecd29ed260182a2edb4d6ac0d5f0c6fa10a20c4efbb55674e0c3e2f40b9ffe1b",
       "size": 1659,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/resolve-parallel-phase-wave-input-builder.ts": {
+      "sha256": "413f4ce1cdc958d8dd1b0f8e10f0c4cc2a1e092e64917b12546a1e9cb264a505",
+      "size": 4564,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/util/resolve-parallel-phase-wave.ts": {
+      "sha256": "90a5be44a5a15dfeae272628bb4d6efe04f7bdf732aad72215addba8df81afb8",
+      "size": 5448,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/resolve-spike-decision.ts": {
@@ -2140,8 +2290,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/validate-phase-file.ts": {
-      "sha256": "65d7913cafe73a99b4d1379db71e38a0b8f6153b60e6052a27187fbc6ce1f7f4",
-      "size": 1190,
+      "sha256": "b2bb545bd6cc6ef387d9ccd8f9f62e3a2e3cbef51b1d347fe25c0454cbd2f8fc",
+      "size": 1666,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/validate-specification-quality-gate.ts": {
@@ -2289,6 +2439,66 @@
       "size": 896,
       "mode": "0644"
     },
+    ".specify/scripts/ts/tests/fixtures/parallel-controller/phase-01-a.md": {
+      "sha256": "cb1ce035f95bb0683d58cb3df9d2cb0ffaf47fc34e51e7132026c36ff7138492",
+      "size": 41,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/fixtures/parallel-controller/phase-02-b.md": {
+      "sha256": "d03a4a0fdbd1ec114df930527fa13e6e99ae734b76e3f9a82c9a8dd5bc13454d",
+      "size": 41,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/fixtures/parallel-controller/plan-two-phase.md": {
+      "sha256": "b4e0a5a7317575c4a20c53600822c6d071c9da5d68734f67f8b23dbca543f71b",
+      "size": 205,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-clean-diamond.md": {
+      "sha256": "37c18c1d874f7a2b672e2fb2bfc77b5c8a3f7f5fdf541a2cac3a77f874d07ad8",
+      "size": 346,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-dangling-ref.md": {
+      "sha256": "57398bc1fa1285856b636a03a9cafdad9ddbeb99b738e31bf901c96e1fa436c1",
+      "size": 291,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-dup-edge.md": {
+      "sha256": "a3ab19f3f125a06fe23ae3e0ba83ca7bfc168a0068117eeae7356b71704d6d46",
+      "size": 235,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-dup-number.md": {
+      "sha256": "d6ed8556e941ae307a6155988279e3da22ce6f905f6e9e797caf7fee80cbe03a",
+      "size": 241,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-nonnumeric-token.md": {
+      "sha256": "15805b03785bdda9cb8231755e0811f37448dd10715c973be9aca368fc39a601",
+      "size": 235,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-one-way-blockedby-without-blocks.md": {
+      "sha256": "613cfd1b351b9407f36f7162fe7f1d513a5c3617bc81818f6f48f3a0357c1360",
+      "size": 250,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-one-way-blocks-without-blockedby.md": {
+      "sha256": "27c88fbdc57b96739686b07ed51103c615a4a4b9c76a0590d487a67d10989b52",
+      "size": 250,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-partial-numeric-token.md": {
+      "sha256": "d6885299a4fb0568f477b1a6e6737e030c99795318da33b66819b12aaeea7049",
+      "size": 239,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-self-ref.md": {
+      "sha256": "883ca044612d1107b138abb4417b8a0b0016a5c91b11d02aeeda15b79b9a939a",
+      "size": 176,
+      "mode": "0644"
+    },
     ".specify/scripts/ts/tests/fixtures/phase-frontmatter-no-block.md": {
       "sha256": "eec329fca3e1573a1417644f3f1aa043c7c064d142be70abe1dc886be4191231",
       "size": 75,
@@ -2400,8 +2610,13 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/handle-existing-plan-paths.test.ts": {
-      "sha256": "157a89210f07ed8f0df73b4d06841f985d52d87700810c77b3f154253d8e0e9d",
-      "size": 3915,
+      "sha256": "1381c509a37c65671ab3d1796da703aea7d7a88dc8aff19dfdc3c881b303d032",
+      "size": 5557,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/inspect-controller-lease-cli.test.ts": {
+      "sha256": "41f9dca95f781713c4697958d46ceaa607b7fb9bd7a736384ce1d0aa2ec66be7",
+      "size": 2897,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/integration/sync-phase-status.integration.test.ts": {
@@ -2469,24 +2684,99 @@
       "size": 3864,
       "mode": "0644"
     },
+    ".specify/scripts/ts/tests/parallel-controller-cli.test.ts": {
+      "sha256": "130145e51058d02e159066f63ef4cb8e228f48850b8b28a952e5b8a75eaabb72",
+      "size": 29244,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-controller-lease-read.test.ts": {
+      "sha256": "8daaa208ed12dc9c6cc4f64da779f217ffd0ff81a2b3ee0e38add0ac7801b154",
+      "size": 5245,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-controller-lease.test.ts": {
+      "sha256": "ab902eb6357abf546e3ebeb4404f2b8a3d0c96a4a3150ba780bf7b388cfb4fd6",
+      "size": 4596,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-phase-access-grammar.test.ts": {
+      "sha256": "1887eadb5ddefe65e4fdd605c7f51899ad93d51de9340e4097c72b96e8f8fb2f",
+      "size": 6430,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-phase-case-probe.test.ts": {
+      "sha256": "58f9b92d1c9500b149bb648efbb036f09e23538feaee7144fc8ed8bf0bb21020",
+      "size": 1892,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-phase-graph-validator.test.ts": {
+      "sha256": "07849398b86f0ad30d44f96da36650fdbc1119b4554c093f2197a262a74f5ab6",
+      "size": 4129,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-phase-mount-capability.test.ts": {
+      "sha256": "f3506ec6f6c24c94935ed1a47e821f3a89dda405869ca1c4b1c7ef542b8765bf",
+      "size": 8190,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-phase-ownership.test.ts": {
+      "sha256": "c5970eb266566b20ed2d5b98a310313e09d4c169af8159c6a93cd761aba81ea3",
+      "size": 6872,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-phase-path-policy.test.ts": {
+      "sha256": "7530f2b1b08d215668479ed7945289959f61716115c3c638b61e9607079c0b65",
+      "size": 6311,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-phase-status-reconciler.test.ts": {
+      "sha256": "bce8468d4180ea47390183328d8e50d6040a0b5b8a5178862be62a1450ab971c",
+      "size": 9367,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-phase-wave-resolver.test.ts": {
+      "sha256": "1071dec0b5b8646467ec829f7d7e2844104428c351fac0d3dac41e49d04ee268",
+      "size": 7240,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-phase-write-deny-policy.test.ts": {
+      "sha256": "91d240e52b811f252508267b7092cc38be88d939c22efdac9a6deb7e835abeee",
+      "size": 5140,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-wave-git-audit.test.ts": {
+      "sha256": "42b4b8b146786139f4d16c011d011ebd32972da2c87098becfa2b89df2861916",
+      "size": 6706,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/parallel-worker-result.test.ts": {
+      "sha256": "9c9ab953cb07cf0297a2599fdc470e0d90722fa60709a4c41e2e6224d13d7a93",
+      "size": 2859,
+      "mode": "0644"
+    },
     ".specify/scripts/ts/tests/parse-phases-table-cli.test.ts": {
       "sha256": "e3e4a1b7c101011b52e707ad1d0a321cd5d0c789c9d8b06ecb4f878a041459ae",
       "size": 3248,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/phase-file-validator.test.ts": {
-      "sha256": "7f9f8e1a3f395cd091de823535a88b8a678dba6f5cfc8a0903689f57442593f2",
-      "size": 4206,
+      "sha256": "6f11d14ae9c0a443ae5eab64b4a025e6a5028fa3ed30f0a6e2856773ea111570",
+      "size": 5393,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/phase-frontmatter-reader.test.ts": {
+      "sha256": "51c94c74d3b5f9f2d70727187701d4455e5b5dac03361bf30952dc848cbd1f1a",
+      "size": 3531,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/phase-frontmatter.test.ts": {
-      "sha256": "95c6c2a1bd87959b808badcee8c951037b11257620aea512769d24cf6cced125",
-      "size": 3677,
+      "sha256": "91e8eacfa748fe83bde4d855f843e6807314b4dd38f122a3f2cf6f9a3a46ee59",
+      "size": 4528,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/phases-table-parser.test.ts": {
-      "sha256": "fc6a4847badad2e0675675f1f02cadba6a9c01f10a2a63eb6ee8009963e3401d",
-      "size": 24741,
+      "sha256": "fb27c2ef3959a474b86081b59f1d818e843b2dc3cf89b6cc2442d656a8b574ac",
+      "size": 25549,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/plan-artifact-migration.test.ts": {
@@ -2507,6 +2797,16 @@
     ".specify/scripts/ts/tests/project-init-authority-contract.test.ts": {
       "sha256": "16f44f31686e289a2e3e50eecd21c39f3dca12aacefe4bc2eec58ba17acf42d7",
       "size": 8410,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/resolve-parallel-phase-wave-cli.test.ts": {
+      "sha256": "02a2099e29e0129ff21d6977d7b0feef65d0fdd8ae6569e04cd70836976d09f8",
+      "size": 9812,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/resolve-parallel-phase-wave-input-builder.test.ts": {
+      "sha256": "de650f2368fc1f611b20de9a3dac2bd8a4af34e1574085e52bb0d73b1116735c",
+      "size": 3716,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/scout/args-validator.test.ts": {
@@ -2749,14 +3049,24 @@
       "size": 4002,
       "mode": "0644"
     },
+    ".specify/scripts/ts/tests/tdk-implement-parallel-integration.test.ts": {
+      "sha256": "15bbed96c99041a4ac366e77227168c8a99873c394b295bb3d32e5d2e36495d4",
+      "size": 8368,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/tdk-implement-parallel-orchestration-contract.test.ts": {
+      "sha256": "1920e57b5914987101536e450cf3f9788a2b2111bcb0c0291c95049aa252ecc0",
+      "size": 3114,
+      "mode": "0644"
+    },
     ".specify/scripts/ts/tests/tdk-implement-phase-selection-contract.test.ts": {
-      "sha256": "a6d355853c51493cdae578d19c54a63a067c304c317ea01363f9e688d9fb81d1",
-      "size": 4438,
+      "sha256": "814f5caaa5b46ad4f4d2349b5f38b1200286d18312ed50e465ce28beb85588ed",
+      "size": 4458,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-implement-skill-routing-contract.test.ts": {
-      "sha256": "1ab46f123464228dcf2d00d6da911fb1332a7bcadb875c05fdd497f6278f4efc",
-      "size": 9385,
+      "sha256": "3764836098986c7795335acb846fe3d81543e384fb46141bc630640fc84275a7",
+      "size": 9406,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-inception-guide-ownership-contract.test.ts": {
@@ -2799,14 +3109,24 @@
       "size": 3335,
       "mode": "0644"
     },
+    ".specify/scripts/ts/tests/tdk-plan-parallel-safety-contract.test.ts": {
+      "sha256": "698b2140e8e07a35f238f7e5239bb8c788240954ef35fe04b3f5587f187a7f36",
+      "size": 6743,
+      "mode": "0644"
+    },
     ".specify/scripts/ts/tests/tdk-plan-reference-contract.test.ts": {
-      "sha256": "5f2ad87b0ad46d3e7d28e9d682e6b69b1ae05018f4d60c556ffd3bc1a38e6da0",
-      "size": 13170,
+      "sha256": "f0beb04ae8571c271e1e4c0461dae023dadb1ab71120ae523c8d208544fa7ff4",
+      "size": 14209,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-plan-test-modes-contract.test.ts": {
       "sha256": "d576a209d901497a57669a54b6a3d91640a97971d94c5804a9d7e8cb33bc492e",
       "size": 15590,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/tests/tdk-readme-local-links-contract.test.ts": {
+      "sha256": "c013404b9f50c39a8e67a3e304884f9c84c93e013cafb6688bed5dd113ae8498",
+      "size": 1490,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-red-team-persistence-contract.test.ts": {

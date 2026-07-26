@@ -2,7 +2,11 @@ import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { readFileSync, writeFileSync, mkdtempSync, rmSync, cpSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { updatePhaseFrontmatterStatus } from '../src/commands/util/phase-frontmatter';
+import {
+  readPhaseFrontmatterStatus,
+  renderPhaseFrontmatterStatus,
+  updatePhaseFrontmatterStatus,
+} from '../src/commands/util/phase-frontmatter';
 import type { PhaseStatus } from '../src/commands/util/phases-table-parser';
 
 const FIXTURES = join(import.meta.dir, 'fixtures');
@@ -96,5 +100,23 @@ describe('updatePhaseFrontmatterStatus', () => {
       const result = readFileSync(path, 'utf-8');
       expect(result).toContain(`status: ${status}`);
     }
+  });
+});
+
+describe('phase frontmatter pure helpers', () => {
+  it('renders exact after bytes without writing', () => {
+    const path = tmpFixture('phase-frontmatter-valid.md');
+    const before = readFileSync(path, 'utf-8');
+    const after = renderPhaseFrontmatterStatus(before, 'done', path);
+
+    expect(readFileSync(path, 'utf-8')).toBe(before);
+    expect(readPhaseFrontmatterStatus(after, path)).toBe('done');
+  });
+
+  it('reports a missing status while the renderer can insert it', () => {
+    const path = tmpFixture('phase-frontmatter-no-status.md');
+    const before = readFileSync(path, 'utf-8');
+    expect(readPhaseFrontmatterStatus(before, path)).toBeNull();
+    expect(readPhaseFrontmatterStatus(renderPhaseFrontmatterStatus(before, 'todo', path), path)).toBe('todo');
   });
 });

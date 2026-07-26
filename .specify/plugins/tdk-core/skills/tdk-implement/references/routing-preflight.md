@@ -62,6 +62,14 @@ For a test-like phase where expected routing includes a `test` delegate, omit `R
 - Detect the section by scanning for `^## Delegate Skills$`; replace from that heading until the next `^## ` heading or EOF.
 - Re-read the phase file, then continue.
 
+In parallel mode, routing drift is resolved for the complete resolver candidate wave before the first
+status write. Snapshot the exact routing bytes/checksum, every candidate phase hash, expected and actual
+delegates, test-like restrictions, generic override decision, success criteria, declared reads, canonical
+ownership, and worker command boundary. A selected refresh is controller-only: apply and verify the refresh,
+then release and STOP so the user can review and clean the tree. Cancel writes nothing. Re-read every snapshot
+hash immediately before admission; any drift discards and rebuilds the complete candidate wave. Workers may
+not refresh routing, select replacement delegates, or broaden the immutable snapshot.
+
 ## Generic Override Behavior
 
 - Generic override is available only when the phase is not test-like.

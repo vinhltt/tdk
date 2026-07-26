@@ -111,4 +111,25 @@ describe('phase file validator', () => {
       remainBlocked: [],
     });
   });
+
+  it('serial-warning parity: an unknown parallel_safe value warns in serial mode and errors in parallel mode', () => {
+    const markdown = '---\nparallel_safe: maybe\n---\n\n## Implementation Steps\n\n1. Build it.';
+
+    const serial = validatePhaseFile(markdown);
+    expect(serial.valid).toBe(true);
+    expect(serial.warnings.some((w) => w.includes('Unknown parallel_safe'))).toBe(true);
+    expect(serial.errors.some((e) => e.includes('Unknown parallel_safe'))).toBe(false);
+
+    const parallel = validatePhaseFile(markdown, { validationMode: 'parallel', projectRoot: '/tmp/project' });
+    expect(parallel.valid).toBe(false);
+    expect(parallel.errors.some((e) => e.includes('Unknown parallel_safe'))).toBe(true);
+    expect(parallel.warnings.some((w) => w.includes('Unknown parallel_safe'))).toBe(false);
+  });
+
+  it('requires projectRoot when validationMode is parallel', () => {
+    const markdown = '# Normal phase\n\n## Implementation Steps\n\n1. Build it.';
+    const result = validatePhaseFile(markdown, { validationMode: 'parallel' });
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.toLowerCase().includes('projectroot'))).toBe(true);
+  });
 });

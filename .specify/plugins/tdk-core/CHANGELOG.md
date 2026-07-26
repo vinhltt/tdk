@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [11.1.0] - 2026-07-26
+
+### Added
+- tdk-implement: add the Claude-only `--parallel` orchestration contract and generated Codex unsupported-mode guard
+
+### Changed
+- tdk-plan: emit validated parallel safety/access metadata with durable snapshot rollback and the shared mutation reservation
+- tdk-implement: add dependency-safe bounded waves, fenced ownership, finalized two-stage audits, serial barriers, durable atomic status persistence, and crash-idempotent state-based recovery
+
 ## [11.0.1] - 2026-07-20
 
 ### Changed

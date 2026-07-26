@@ -125,7 +125,7 @@ describe('tdk-implement skill routing contract', () => {
 
   it('does not import ck:cook modes or generated Codex mirror scope', () => {
     expect(implementContract).not.toContain('--auto');
-    expect(implementContract).not.toContain('--parallel');
+    expect(implementContract).toContain('/tdk-implement <TASK_ID> --parallel');
     expect(implementContract).not.toContain('tester/code-reviewer/project-management');
     expect(implementContract).not.toContain('.specify/codex-plugins');
   });

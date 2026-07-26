@@ -236,13 +236,32 @@ describe('tdk-plan reference contract', () => {
     expect(redTeamWorkflow).toContain('Do not use Search/Grep/Glob');
   });
 
-  it('documents dependency validation through the CLI wrapper instead of Bun eval snippets', () => {
+  it('validates append dependencies through the complete resolver input', () => {
     const existingPlanWorkflow = read(resolve(REFERENCES_DIR, 'handle-existing-plan.md'));
+    const outputContract = read(resolve(REFERENCES_DIR, 'plan-output-contract.md'));
 
-    expect(existingPlanWorkflow).toContain(
-      '(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parse-phases-table.ts <plan-md-path> --json --validate-deps)',
+    expect(existingPlanWorkflow).toContain('validates the complete resolver input and reciprocal graph');
+    expect(outputContract).toContain(
+      'resolve-parallel-phase-wave.ts --project-root "$PROJECT_DIR" --plan "$FEATURE_DIR/plan.md"',
     );
-    expect(existingPlanWorkflow).toContain('Do not use `bun -e` / `bun --eval` snippets');
+  });
+
+  it('places transactional parallel validation before guardian and reporting', () => {
+    const validationStep = skill.indexOf('### Step 3d — Transactional Post-write Validation');
+    const guardian = skill.indexOf('### Phase 0.guardian');
+    const reporting = skill.indexOf('### Step 4 — Report Results');
+
+    expect(validationStep).toBeGreaterThanOrEqual(0);
+    expect(guardian).toBeGreaterThan(validationStep);
+    expect(reporting).toBeGreaterThan(validationStep);
+    expect(skill).toContain('roll back the complete invocation snapshot');
+  });
+
+  it('guards every mutating lifecycle with the shared mutation reservation', () => {
+    expect(skill).toContain('### Step 0.2 — Mutation Reservation and Transaction Snapshot');
+    expect(skill).toContain('parallel-controller.ts reserve --project-root "$PROJECT_DIR"');
+    expect(skill).toContain('Successful, red-team, validate, and migrate paths');
+    expect(skill).toContain('leave the reservation for explicit recovery');
   });
 
   it('uses current Obsidian action examples instead of retired project knowledge helpers', () => {

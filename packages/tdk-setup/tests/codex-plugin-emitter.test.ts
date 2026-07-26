@@ -323,4 +323,69 @@ describe('buildCodexPluginArtifacts - official layout', () => {
       expect(a.artifactRelativePath).not.toMatch(/^\.codex-plugin\//);
     }
   });
+
+  test('specializes only generated tdk-implement with an early deterministic Codex parallel stop', async () => {
+    const implementSource = [
+      '---',
+      'name: tdk-implement',
+      'description: Implement a plan',
+      '---',
+      '',
+      '## User Input',
+      '',
+      '$ARGUMENTS',
+      '',
+      '## Core Contract',
+      '',
+      'Load: `references/project-and-phase-contract.md`',
+      '',
+      '### Step 0.1 — Validate Task ID',
+      '',
+      'Validate before mutation.',
+      '',
+    ].join('\n');
+    const planSource = '---\nname: tdk-plan\n---\n\n# Plan\n';
+    const referenceSource = '# Parallel implementation reference\n';
+    const plugin = makePlugin({
+      name: 'tdk-core',
+      skills: [{
+        name: 'tdk-implement',
+        files: [{
+          sourcePath: '/fake/root/skills/tdk-implement/SKILL.md',
+          sourceRelativePath: 'skills/tdk-implement/SKILL.md',
+          content: buf(implementSource),
+          checksum: 'implement',
+        }, {
+          sourcePath: '/fake/root/skills/tdk-implement/references/parallel.md',
+          sourceRelativePath: 'skills/tdk-implement/references/parallel.md',
+          content: buf(referenceSource),
+          checksum: 'reference',
+        }],
+      }, {
+        name: 'tdk-plan',
+        files: [{
+          sourcePath: '/fake/root/skills/tdk-plan/SKILL.md',
+          sourceRelativePath: 'skills/tdk-plan/SKILL.md',
+          content: buf(planSource),
+          checksum: 'plan',
+        }],
+      }],
+    });
+
+    const first = await buildCodexPluginArtifacts(plugin);
+    const second = await buildCodexPluginArtifacts(plugin);
+    const emitted = first.artifacts.find((item) => item.artifactRelativePath === 'skills/tdk-implement/SKILL.md')!;
+    const text = emitted.content.toString('utf8');
+    const guard = '## ⛔ Codex: `--parallel` is unsupported';
+
+    expect(text).toStartWith('---\nname: tdk-implement\ndescription: Implement a plan\n---\n\n' + guard);
+    expect(text).toContain('If `$ARGUMENTS` contains `--parallel`, **STOP immediately**.');
+    expect(text).toContain('`/tdk-implement <task-id>` uses the default serial path');
+    expect(text.indexOf(guard)).toBeLessThan(text.indexOf('## Core Contract'));
+    expect(text.indexOf(guard)).toBeLessThan(text.indexOf('### Step 0.1 — Validate Task ID'));
+    expect(emitted.content).toEqual(second.artifacts.find((item) => item.artifactRelativePath === emitted.artifactRelativePath)!.content);
+    expect(first.artifacts.find((item) => item.artifactRelativePath === 'skills/tdk-plan/SKILL.md')!.content).toEqual(buf(planSource));
+    expect(first.artifacts.find((item) => item.artifactRelativePath === 'skills/tdk-implement/references/parallel.md')!.content)
+      .toEqual(buf(referenceSource));
+  });
 });

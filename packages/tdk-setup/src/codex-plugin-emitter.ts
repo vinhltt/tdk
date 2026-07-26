@@ -12,6 +12,7 @@ import { sha256Buffer } from './checksum';
 import { parseSafeHookGatewayCommand } from './codex-hook-command-parser';
 import { isCodexInternalSkillEntrypoint } from './codex-target-mapper';
 import type { CodexConvertPlugin, CodexPluginArtifact } from './codex-convert-ir';
+import { specializeCodexSkill } from './lib/harness-transform/codex-skill-specialization';
 
 function sortObject(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sortObject);
@@ -112,7 +113,8 @@ export async function buildCodexPluginArtifacts(plugin: CodexConvertPlugin): Pro
     for (const file of skill.files) {
       const skillRelativePath = file.sourceRelativePath.split('/').slice(2).join('/');
       if (isCodexInternalSkillEntrypoint(skill.name, skillRelativePath)) continue;
-      artifacts.push(artifact(file.sourcePath, file.sourceRelativePath, file.sourceRelativePath, file.content));
+      artifacts.push(artifact(file.sourcePath, file.sourceRelativePath, file.sourceRelativePath,
+        specializeCodexSkill(file.sourceRelativePath, file.content)));
     }
   }
 

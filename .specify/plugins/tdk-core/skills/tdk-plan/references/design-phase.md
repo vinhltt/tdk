@@ -66,10 +66,13 @@ Mode: **embedded — reasoning technique only.**
 3. Group into phases by dependency level (no circular deps).
 4. Order phases: foundational → core → integration → polish.
 5. For each phase, identify: prerequisites, deliverables, success criteria.
-6. Flag parallel opportunities between independent phases.
+6. Maximize real DAG width: split implementation units into independent phases
+   only when their dependencies and complete project-file access sets prove the
+   separation. Inter-phase access overlap does not change classification; the
+   runtime resolver defers conflicts between otherwise valid `auto` phases.
 6b. **Subworkspace-aware grouping**: If spec.md ## 5. User Requirements & Testing and ## 6. Functional Requirements contain `[sw/module]` tags:
    - Group implementation units by subworkspace first, then by dependency
-   - Consider creating per-subworkspace phases when modules are independent
+   - Prefer a separate phase when all writes stay in exactly one configured sub-workspace and the work is independent
    - Use tags as **soft hints** — may group multiple modules into one phase for efficiency
    - If no tags present (legacy spec): fall back to current behavior
 7. Reject research-only, investigate-only, and evaluate-only phases. Keep
@@ -77,6 +80,53 @@ Mode: **embedded — reasoning technique only.**
    only for an executable experiment/prototype with concrete deliverables and a
    decision gate; initialize every direct dependent as `blocked` until approval
    or replan.
+
+## Parallel Safety Classification
+
+Classify every new, appended, or rewritten phase before writing it. Missing
+parallel metadata is allowed only on untouched legacy phase files in append
+mode. Classification is phase-local: routing selects capability; it never
+decides schedulability, and a merged delegate list never proves safe parallel
+execution.
+
+The base `auto` predicate requires exactly one `## Related Code Files` section,
+at least one validated `Modify`/`Create`/`Delete` write, complete project-file
+reads outside the phase's own canonical write targets, complete write ownership,
+valid action/existence semantics, valid case-sensitive POSIX/WSL paths, and no
+fixed-deny, ignored, migration, lock, generated, or shared-global write. Every
+worker, delegate, and worker-side command stays within those exact access sets.
+Otherwise emit `parallel_safe: never` with the first concise factual reason.
+
+| Plan shape | V1 classification |
+|---|---|
+| Normal (`test_mode: none`) | `auto` only when the base predicate and universal command-effect rule pass; otherwise `never`. |
+| TDD | `auto` only when the base predicate passes, all production/test/fixture reads and writes are declared, and worker commands have no unknown/shared/generated output; otherwise `never`. Preserve tests-first and delegate order. |
+| UT backfill | `auto` only for finite concrete test access satisfying the base predicate and bounded worker commands. Open-ended directory, glob, broad-scan, or unresolved targets force `never`. Preserve delegate order. |
+| Spike | Always `never`; isolated files do not bypass the decision/status gate. |
+| Monolith | Apply the base predicate. Routing through `global` does not itself imply shared-global ownership. |
+| Multi-subworkspace | Independent single-subworkspace phases may be `auto` under the base predicate. A phase whose write set spans multiple configured sub-workspaces is `never` and remains one integration worker. |
+
+A downstream `Modify` or `Delete` target that is absent because a future planned
+phase will create it is `parallel_safe: never` in V1. Do not weaken the
+plan-time existence rule.
+
+### Command–Query Separation
+
+- Classify the read/write effects of every worker-side command for every plan
+  shape. A worker command may read only explicit `Read` paths or its own
+  canonical write targets and may write only exact phase ownership.
+- Unknown, broad, shared, generated, ignored, or undeclared worker-command
+  effects force `parallel_safe: never`; do not guess or silently narrow them.
+- Broad success, test-quality, build, and regression commands are controller
+  gates, run sequentially only after all workers join and the first audit passes.
+  Do not place them in worker instructions.
+- After controller gates, the final audit permits no new Git-visible or protected delta
+  beyond the already attested worker state. A gate requiring persistent
+  generated output forces `never` or a separately owned serial phase.
+
+Keep genuine integration work together. Never split a cross-subworkspace change
+merely to manufacture parallelism, and never add a scheduling domain or parallel
+metadata to `plan-skill-routing.md`.
 
 ## Skill Routing Injection
 

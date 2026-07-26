@@ -1,5 +1,6 @@
-import { parse as parseYaml } from 'yaml';
 import { parsePhasesTable } from './phases-table-parser';
+import { readPhaseFrontmatter, readParallelSafety } from './phase-frontmatter-reader';
+import { resolvePhaseAccess } from './parallel-phase-ownership';
 
 export type PhaseType = 'normal' | 'spike';
 
@@ -11,6 +12,16 @@ export interface PhaseValidationResult {
   dependentPhases: number[];
 }
 
+export interface PhaseValidationOptions {
+  planMarkdown?: string;
+  phaseNumber?: number;
+  requireResult?: boolean;
+  /** Default 'serial'. Parallel-only strictness (C-B1) errors in 'parallel', warns in 'serial'. */
+  validationMode?: 'serial' | 'parallel';
+  /** Mandatory only when validationMode is 'parallel'. */
+  projectRoot?: string;
+}
+
 const SPIKE_SECTIONS = [
   '## Spike Objective',
   '## Experiment',
@@ -18,22 +29,6 @@ const SPIKE_SECTIONS = [
   '## Decision Gate',
   '## Spike Result',
 ] as const;
-
-function frontmatter(markdown: string): { metadata: Record<string, unknown>; error?: string } {
-  const match = markdown.match(/^---\s*\n([\s\S]*?)\n---(?:\s*\n|$)/);
-  if (!match) return { metadata: {} };
-  try {
-    const value = parseYaml(match[1] ?? '');
-    if (value === null || value === undefined) return { metadata: {} };
-    if (typeof value !== 'object' || Array.isArray(value)) {
-      return { metadata: {}, error: 'Phase frontmatter must be a YAML mapping' };
-    }
-    return { metadata: value as Record<string, unknown> };
-  } catch (error) {
-    const message = error instanceof Error ? error.message.split('\n')[0] : String(error);
-    return { metadata: {}, error: `Malformed phase frontmatter: ${message}` };
-  }
-}
 
 function sectionBody(markdown: string, heading: string): string | null {
   const lines = markdown.split(/\r?\n/);
@@ -78,9 +73,10 @@ function validateSpikeSections(markdown: string, requireResult: boolean, errors:
 
 export function validatePhaseFile(
   markdown: string,
-  options: { planMarkdown?: string; phaseNumber?: number; requireResult?: boolean } = {},
+  options: PhaseValidationOptions = {},
 ): PhaseValidationResult {
-  const parsedFrontmatter = frontmatter(markdown);
+  const validationMode = options.validationMode ?? 'serial';
+  const parsedFrontmatter = readPhaseFrontmatter(markdown);
   const metadata = parsedFrontmatter.metadata;
   const rawType = metadata['phase_type'];
   const errors: string[] = [];
@@ -88,6 +84,18 @@ export function validatePhaseFile(
   const dependentPhases: number[] = [];
 
   if (parsedFrontmatter.error) errors.push(parsedFrontmatter.error);
+
+  if (validationMode === 'parallel' && !options.projectRoot) {
+    errors.push('projectRoot is required when validationMode is parallel');
+  }
+
+  const safety = readParallelSafety(metadata);
+  if (validationMode === 'parallel') errors.push(...safety.errors);
+  else warnings.push(...safety.errors);
+  if (validationMode === 'parallel' && options.projectRoot && safety.parallelSafe === 'auto') {
+    const access = resolvePhaseAccess(markdown, options.projectRoot);
+    errors.push(...access.errors.map(({ code, message }) => `${code}: ${message}`));
+  }
 
   if (rawType !== undefined && rawType !== 'normal' && rawType !== 'spike') {
     errors.push(`Unknown phase_type: ${String(rawType)}; expected spike or omit the field for normal phases`);

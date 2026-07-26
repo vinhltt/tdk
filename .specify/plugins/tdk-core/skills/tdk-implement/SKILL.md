@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "11.0.0"
+  version: "11.1.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -28,12 +28,13 @@ This skill reads plan.md and executes phases using the `## Phases` table as the 
 
 - **Primary implementation path**: executes all phases in row order, updating Status cells in the `## Phases` table
 - **Selected phase path**: optional `--phase NN` / `--phase=NN` executes one numeric phase only
+- **Parallel path**: `--parallel` executes resolver-selected `auto` waves under one fenced controller lease
 - **Status tracking**: reads/writes Status column via `updatePhaseStatus` - no HTML comment markers
 - **Dependency enforcement**: validates BlockedBy before each phase; aborts on unsatisfied deps
 - **Phase validation**: validates every phase contract before status mutation;
   spike phases require executable evidence and a user decision gate
 - **F3 crash recovery**: detects stale `in_progress` rows at startup and requires explicit recovery choice before any status mutation
-- **Future worker routing**: selected mode is serial per invocation; parallel phase workers need separate status/recovery design
+- **Serial reservation**: default and selected modes remain serial but hold the shared mutation reservation through verified completion
 
 ## Core Contract
 
@@ -45,6 +46,10 @@ Use this reference for `plan-skill-routing.md` loading and delegate drift handli
 
 Load: `references/phase-execution.md`
 Use this reference for row-order execution, delegate skill parsing/running, generic implementation, and completion reporting.
+
+Load: `references/parallel-phase-orchestration.md`
+Load this progressive reference only when `PARALLEL_MODE` is true. It owns canaries, lease/recovery,
+wave routing, synchronous dispatch, audit, barriers, and all parallel status persistence.
 
 ## Outline
 
@@ -65,6 +70,14 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 ### Step 0.3 — Load Skill Routing
 
 Load routing after project context and before any phase status mutation. Follow `references/routing-preflight.md`.
+
+### Step 0.4 — Serial Mutation Reservation
+
+For default or selected serial mode, acquire the shared reservation from
+`references/project-and-phase-contract.md` before phase/status recovery or any
+persistent write. Re-read status, routing, and phase inputs while holding it.
+Parallel mode does not reserve here; its controller reference acquires after
+confirmation and canary proof.
 
 ### Script Command Contract
 
@@ -97,7 +110,9 @@ Parse `## Phases` with `parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json`. T
 
 ### Step 4: F3 Recovery Gate
 
-Before resolving targets, scan all rows for stale `in_progress` status and use AskUserQuestion recovery. Any recovery write must update phase frontmatter first, then `plan.md`, then reparse.
+In serial mode, scan all rows for stale `in_progress` status and use AskUserQuestion recovery. Any recovery
+write must update phase frontmatter first, then `plan.md`, then reparse. In parallel mode, collect stale rows
+read-only and defer recovery to the fenced recovery-only controller branch.
 
 ### Step 5: Resolve Target Rows
 
@@ -106,6 +121,11 @@ Build `phaseByNumber` and `TARGET_ROWS` after global F3 recovery. Selected mode 
 ### Step 6: Confirm Before Executing
 
 Display compact status + phase list from parsed rows. Do not read phase files before this confirmation.
+
+### Step 6.1: Branch by Execution Mode
+
+When `PARALLEL_MODE` is true, load and execute `references/parallel-phase-orchestration.md`, then STOP;
+do not enter the serial Step 7 loop. Otherwise continue with existing default/selected serial execution.
 
 ### Step 7: Execute Phases — Row Order
 

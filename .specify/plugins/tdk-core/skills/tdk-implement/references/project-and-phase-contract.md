@@ -8,6 +8,7 @@ Accepted forms:
 - `/tdk-implement <TASK_ID>`
 - `/tdk-implement <TASK_ID> --phase NN`
 - `/tdk-implement <TASK_ID> --phase=NN`
+- `/tdk-implement <TASK_ID> --parallel`
 
 Contract:
 
@@ -16,6 +17,7 @@ INPUT_TOKENS = split $ARGUMENTS
 TASK_ID = first positional token
 PHASE_FILTER = optional numeric value from --phase NN or --phase=NN
 PHASE_FILTER_PRESENT = true when --phase is provided
+PARALLEL_MODE = true only when one --parallel token is provided
 ```
 
 Reject and STOP before task-id validation if any of these are present:
@@ -26,6 +28,12 @@ Reject and STOP before task-id validation if any of these are present:
 - non-numeric value
 - non-positive value
 - extra positional tokens
+- duplicate `--parallel`
+- any unknown value or positional after `--parallel`
+
+Also reject `--parallel` with either `--phase` form before task-id validation, prerequisite collection,
+capability probes, lease acquisition, or project mutation. Do not infer a harness from environment variables,
+installation metadata, paths, or canary output. Default and selected parsing otherwise stays unchanged.
 
 Normalize `PHASE_FILTER` to a positive number. Display may use padded or unpadded phase numbers, but comparisons MUST use the numeric value.
 
@@ -119,6 +127,28 @@ Next: {nextPhase || "none"}
 
 This preflight is read-only. The phase parser below remains the execution source of truth before writes.
 
+## Serial Mutation Reservation
+
+After project-root/feature resolution and before any serial recovery or mutation,
+default and selected modes run:
+
+```text
+bun src/commands/util/parallel-controller.ts reserve --project-root <absolute-project-root> --feature-dir <absolute-feature-dir> --task-id <task-id> --purpose serial-implement
+```
+
+Exit `2` / `lease-held` means STOP and show the lock path plus available owner
+metadata. Exit `0` stores `owner.controllerId`; non-Git, malformed output, and
+runtime failures STOP before mutation. Serial modes never wait, steal, or age out
+a reservation. Parallel mode skips this edge because its fenced lifecycle is
+controller-owned.
+
+After acquiring, re-read every status, phase, routing, and dependency input used
+for mutation. Before each persistent write, assert the same owner with the exact
+project and feature paths. Release only after phase/frontmatter/table status is
+verified stable, or immediately on a pre-mutation cancel. If cancellation/crash
+occurs after mutation begins and stable recovery cannot be verified, keep the
+reservation. PID absence, age, or timeout never clears it.
+
 ## Step 3 - Parse Phases Table
 
 Run:
@@ -187,6 +217,10 @@ follows the spike lifecycle in `phase-execution.md`.
 
 On phase-work failure during execution, emit: `"Phase NN left in_progress. Recover as described above."`
 
+Parallel mode does not perform these two legacy status writes. It reports stale/split rows read-only before
+confirmation, then uses the retained lease, exact `transition.json`, and recovery-only STOP flow defined in
+`parallel-phase-orchestration.md`.
+
 ## Step 5 - Resolve Target Rows
 
 After parsing rows and completing global F3 recovery, build:
@@ -209,4 +243,7 @@ Dependency checks must read blocker rows from `phaseByNumber.get(id)`. Missing b
 
 Display compact preflight summary plus phase list from parsed rows. Do not read phase files before this confirmation.
 
-If `PHASE_FILTER` exists, list only `TARGET_ROWS` and label selected phase execution. Otherwise list all rows and keep all-phase wording. Use AskUserQuestion with Yes execute all phases, Yes execute selected phase, and No cancel.
+If `PHASE_FILTER` exists, list only `TARGET_ROWS` and label selected phase execution. If `PARALLEL_MODE`,
+list the complete parsed graph and label parallel wave execution. Otherwise list all rows and keep all-phase
+wording. Use AskUserQuestion with Yes execute all phases, Yes execute selected phase, Yes execute parallel
+waves (as applicable), and No cancel. Confirmation is read-only.

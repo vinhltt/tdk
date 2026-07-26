@@ -48,7 +48,7 @@ describe('handle-existing-plan.md path conventions', () => {
   });
 
   it('phase file template includes required frontmatter fields', () => {
-    for (const field of ['phase', 'title', 'status', 'priority', 'effort', 'dependencies']) {
+    for (const field of ['phase', 'title', 'status', 'priority', 'effort', 'dependencies', 'parallel_safe']) {
       expect(phaseFileTemplate).toMatch(new RegExp(`^${field}:`, 'm'));
     }
   });
@@ -58,7 +58,11 @@ describe('handle-existing-plan.md path conventions', () => {
       .replaceAll('{N}', '3')
       .replaceAll('{NN}', '03')
       .replaceAll('{Phase Title YAML}', '"Append follow-up"')
-      .replaceAll('{Phase Name}', 'Append follow-up');
+      .replaceAll('{Phase Name}', 'Append follow-up')
+      .replaceAll('{Dependencies YAML}', '[]')
+      .replaceAll('{Parallel Safe}', 'auto')
+      .replaceAll('{Parallel Reason Field}', '')
+      .replaceAll('{Related Code File Entries}', '- Create: `src/new-file.ts`');
     const frontmatter = parseYaml(extractFrontmatter(renderedTemplate)) as {
       phase?: number;
       title?: string;
@@ -66,6 +70,7 @@ describe('handle-existing-plan.md path conventions', () => {
       priority?: string;
       effort?: string;
       dependencies?: unknown[];
+      parallel_safe?: string;
     };
 
     expect(frontmatter).toEqual({
@@ -75,6 +80,7 @@ describe('handle-existing-plan.md path conventions', () => {
       priority: 'P2',
       effort: '1h',
       dependencies: [],
+      parallel_safe: 'auto',
     });
   });
 
@@ -84,14 +90,40 @@ describe('handle-existing-plan.md path conventions', () => {
       .replaceAll('{N}', '3')
       .replaceAll('{NN}', '03')
       .replaceAll('{Phase Title YAML}', JSON.stringify(title))
-      .replaceAll('{Phase Name}', title);
+      .replaceAll('{Phase Name}', title)
+      .replaceAll('{Dependencies YAML}', '[1, 2]')
+      .replaceAll('{Parallel Safe}', 'never')
+      .replaceAll('{Parallel Reason Field}', 'parallel_reason: "reads cannot be bounded"')
+      .replaceAll('{Related Code File Entries}', '- Modify: `src/existing-file.ts`');
     const frontmatter = parseYaml(extractFrontmatter(renderedTemplate)) as {
       title?: string;
+      parallel_safe?: string;
+      parallel_reason?: string;
     };
 
     expect(frontmatter.title).toBe(title);
+    expect(frontmatter.parallel_safe).toBe('never');
+    expect(frontmatter.parallel_reason).toBe('reads cannot be bounded');
     expect(renderedTemplate).toContain('# Phase 03: Append "quoted" follow-up');
     expect(renderedTemplate).not.toContain('# Phase NN:');
+  });
+
+  it('places canonical parallel metadata immediately after dependencies', () => {
+    expect(phaseFileTemplate).toMatch(
+      /dependencies: \{Dependencies YAML\}\nparallel_safe: \{Parallel Safe\}\n\{Parallel Reason Field\}/,
+    );
+  });
+
+  it('requires exact Related Code Files entries before template emission', () => {
+    expect(content).toContain('`{Related Code File Entries}` -> one or more exact concrete');
+    expect(phaseFileTemplate).toContain('{Related Code File Entries}');
+  });
+
+  it('makes append dependencies reciprocal and rolls back the whole append on failure', () => {
+    expect(content).toMatch(/same sorted,\s+unique earlier-phase numbers/);
+    expect(content).toMatch(/each blocker's `Blocks` cell/);
+    expect(content).toMatch(/preserve every existing phase file byte-for-byte/i);
+    expect(content).toContain('remove the appended phase file');
   });
 
   it('phase file template includes required sections in order', () => {

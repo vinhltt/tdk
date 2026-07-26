@@ -95,7 +95,7 @@ describe('tdk-implement phase selection contract', () => {
 
   it('keeps targeted mode serial and preserves global stale in_progress recovery', () => {
     expect(implementContract).toContain('scan all rows');
-    expect(implementContract).toContain('serial per invocation');
-    expect(implementContract).toContain('parallel phase workers need separate status/recovery design');
+    expect(implementContract).toContain('default and selected modes remain serial');
+    expect(implementContract).toContain('defer recovery to the fenced recovery-only controller branch');
   });
 });

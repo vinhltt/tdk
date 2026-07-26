@@ -64,19 +64,33 @@ function isEmptyCell(cell: string): boolean {
   return /^[—–-]$/.test(cell);
 }
 
+/** A single Blocks/BlockedBy token that failed strict `^\d+$` validation (C-B2). */
+export interface DependencyCellIssue {
+  token: string;
+  reason: 'non-numeric-token' | 'partial-numeric-token';
+}
+
 /**
- * Parse a deps cell (Blocks or BlockedBy column) into an array of integers.
- * Returns [] for empty cells. Splits on ", " and parses each token as int.
- * F17: if the entire cell is one dash variant → empty array.
+ * Tokenize a deps cell (Blocks or BlockedBy column).
+ * `values` is byte-compatible with the legacy `parseDepsCell` behavior: a fully
+ * non-numeric token (e.g. "abc") is dropped, a partial-numeric token (e.g.
+ * "2abc") keeps its parsed leading integer. `issues` additively records any
+ * token that isn't a clean `^\d+$` integer — callers that don't care (the
+ * default parser) simply discard `.issues`.
  */
-function parseDepsCell(cell: string): number[] {
-  if (!cell || isEmptyCell(cell)) return [];
-  return cell
-    .split(',')
-    .map(s => s.trim())
-    .filter(s => s.length > 0)
-    .map(s => parseInt(s, 10))
-    .filter(n => !isNaN(n));
+export function tokenizeDependencyCell(cell: string): { values: number[]; issues: DependencyCellIssue[] } {
+  if (!cell || isEmptyCell(cell)) return { values: [], issues: [] };
+  const tokens = cell.split(',').map(s => s.trim()).filter(s => s.length > 0);
+  const values: number[] = [];
+  const issues: DependencyCellIssue[] = [];
+  for (const token of tokens) {
+    const parsed = parseInt(token, 10);
+    if (!isNaN(parsed)) values.push(parsed);
+    if (!/^\d+$/.test(token)) {
+      issues.push({ token, reason: isNaN(parsed) ? 'non-numeric-token' : 'partial-numeric-token' });
+    }
+  }
+  return { values, issues };
 }
 
 /**
@@ -248,11 +262,11 @@ export function parsePhasesTable(md: string): ParseResult {
 
     // Parse Blocks column (F17: lenient)
     const blocksRaw = (cells[3] ?? '').trim();
-    const blocks = parseDepsCell(blocksRaw);
+    const blocks = tokenizeDependencyCell(blocksRaw).values;
 
     // Parse BlockedBy column (F17: lenient)
     const blockedByRaw = (cells[4] ?? '').trim();
-    const blockedBy = parseDepsCell(blockedByRaw);
+    const blockedBy = tokenizeDependencyCell(blockedByRaw).values;
 
     phases.push({
       number: num,
@@ -278,7 +292,7 @@ export function parsePhasesTable(md: string): ParseResult {
  * Output: ['01', '[x](y.md)', 'todo', '—', '—']
  * Drops leading/trailing empty segments from outer pipes.
  */
-function splitRow(line: string): string[] {
+export function splitRow(line: string): string[] {
   const parts = line.split('|');
   // Drop first and last (empty from outer pipes)
   const inner = parts.slice(1, parts.length - 1);
@@ -323,7 +337,10 @@ function serializeTable(phases: PhaseRow[]): string {
  * Strategy: parse → mutate in-memory → serializeTable → splice back into markdown.
  * Preserves all content before and after the table (pre/post content, trailing newlines).
  */
-export function updatePhaseStatus(md: string, phaseNumber: number, status: PhaseStatus): string {
+export function renderPhaseStatuses(
+  md: string,
+  statusByPhase: ReadonlyMap<number, PhaseStatus>,
+): string {
   const { phases, errors } = parsePhasesTable(md);
 
   // Propagate parse errors as thrown Error (caller must ensure valid plan.md)
@@ -335,15 +352,16 @@ export function updatePhaseStatus(md: string, phaseNumber: number, status: Phase
     throw new Error(fatal.map(e => e.message).join('; '));
   }
 
-  // Find the target row
-  const targetIdx = phases.findIndex(p => p.number === phaseNumber);
-  if (targetIdx === -1) {
-    throw new Error(`phase ${phaseNumber} not found in ## Phases table`);
+  for (const phaseNumber of statusByPhase.keys()) {
+    if (!phases.some((phase) => phase.number === phaseNumber)) {
+      throw new Error(`phase ${phaseNumber} not found in ## Phases table`);
+    }
   }
 
-  // Mutate in-memory
-  const mutated: PhaseRow[] = phases.map((row, i) =>
-    i === targetIdx ? { ...row, status } : row
+  const mutated: PhaseRow[] = phases.map((row) =>
+    statusByPhase.has(row.number)
+      ? { ...row, status: statusByPhase.get(row.number)! }
+      : row
   );
 
   // Locate the table boundaries in original markdown
@@ -388,6 +406,10 @@ export function updatePhaseStatus(md: string, phaseNumber: number, status: Phase
   const newTable = serializeTable(mutated);
 
   return [...before, newTable, ...after].join('\n');
+}
+
+export function updatePhaseStatus(md: string, phaseNumber: number, status: PhaseStatus): string {
+  return renderPhaseStatuses(md, new Map([[phaseNumber, status]]));
 }
 
 // ---------------------------------------------------------------------------

@@ -26,6 +26,67 @@ Default output is `spec.md`, `plan.md`, and `phases/*.md`. Do not create empty
 optional directories. Human-readable data models, prose interface contracts,
 and runbooks belong in the phase that implements or verifies them.
 
+## Mutating Lifecycle Contract
+
+Every mutating invocation runs as one in-memory transaction:
+
+- **New:** acquire the mutation reservation, capture a transaction snapshot, then
+  classify and validate every generated phase.
+- **Append:** preserve untouched legacy phase files byte-for-byte. Classify and
+  validate only the appended phase, then validate the complete resolver input.
+- **Rewrite:** after explicit destructive confirmation, reclassify and validate
+  every rewritten phase. No rewritten phase receives the legacy exemption;
+  preserve the exclusion of `research/`, `reports/`, `contracts/`, and legacy
+  standalone artifacts.
+
+Immediately after Step 0.1 project-context loading, the transaction snapshot records the bytes or absence
+of the complete feature directory under `planner-snapshot.json` in the owned
+reservation. A later candidate absent from that pre-setup inventory is therefore
+recorded as absent before any mutation. This covers every feature artifact the
+invocation may replace or create with persistent recovery evidence.
+Any failed gate restores prior bytes and must remove only files newly created by
+this invocation. Never retain an orphan phase or table row.
+
+### Repo-wide mutation reservation
+
+Before the snapshot or any planner write, run:
+
+```bash
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parallel-controller.ts reserve --project-root "$PROJECT_DIR" --feature-dir "$FEATURE_DIR" --task-id "$TASK_ID" --purpose planner)
+```
+
+Exit `0` proceeds with the returned `controllerId`. Exit `2` means another
+mutation owns the reservation: STOP before snapshot or mutation and report its
+lock path plus available owner metadata. Unexpected failure or malformed JSON
+also STOPs. A Git worktree is required because the mutex lives under the Git
+common directory.
+
+Create a bounded JSON file under the lease:
+
+```json
+{"controllerId":"<id>","externalPaths":["sorted/project-relative/file"]}
+```
+
+List every planned write outside `FEATURE_DIR`, including routing and any
+cross-plan dependency file; use an empty array only when there are none. Then run
+`snapshot-plan --controller-id <id> --input-json <lease-input>` before the first write. All
+planner modes that persist counters, review logs, migration output, routing,
+scope, dependencies, plan, or phase files acquire this reservation. There is no
+check-then-write gap. Never wait, steal, or age it out. Release a pre-mutation
+cancel immediately. After mutation, `finalize-plan` independently checks the
+allowed feature layout, phase/table namespace, ordered validators, resolver, and
+declared Git delta before clearing evidence. Every declared external file must
+remain a symlink-free bounded regular file; pre-existing file and parent modes
+must remain unchanged, routing files must pass routing conflict validation, and
+cross-plan files must pass the plan gates. Successful validation calls it;
+failure or cancellation calls `recover-plan` and verifies rollback. A takeover
+uses `recover-plan --old-controller-id <old-id>` before it may create a new planner
+snapshot. Abrupt interruption retains the
+reservation and durable snapshot for explicit recovery. Any undeclared
+Git-visible mutation outside the feature blocks both finalize and recovery,
+leaving evidence for manual correction. Time, PID absence, and mtime never
+authorize clearing it.
+
 ## plan.md Structure
 
 Keep `plan.md` less than or equal to 80 lines, with these sections in order:
@@ -126,7 +187,8 @@ Update phase status with:
 
 Every normal `phases/phase-NN-*.md` must include, in order:
 
-- YAML frontmatter with `phase`, `title`, `status`, `priority`, `effort`, `dependencies`.
+- YAML frontmatter with `phase`, `title`, `status`, `priority`, `effort`,
+  `dependencies`, and canonical parallel safety fields.
 - `## Context Links`
 - `## Overview`
 - `## Key Insights`
@@ -148,6 +210,59 @@ Every normal `phases/phase-NN-*.md` must include, in order:
 - `## Unresolved Questions`
 
 File names use `phases/phase-NN-kebab-case-slug.md`: lowercase, hyphen-separated, descriptive.
+
+### Parallel safety frontmatter
+
+After the existing `dependencies` field, every generated phase emits exactly
+one of these canonical forms:
+
+```yaml
+dependencies: []
+parallel_safe: auto
+```
+
+```yaml
+dependencies: []
+parallel_safe: never
+parallel_reason: "<concise factual reason>"
+```
+
+A spike uses:
+
+```yaml
+dependencies: []
+phase_type: spike
+parallel_safe: never
+parallel_reason: "<concise factual reason>"
+```
+
+`auto` MUST omit `parallel_reason`; `never` MUST include one non-empty factual
+reason. A spike places `phase_type: spike` before the parallel fields, and a
+spike always emits `parallel_safe: never`. TDD/backfill section shape does not change
+this invariant. Missing metadata is valid only for untouched legacy phase files
+that append mode leaves byte-for-byte unchanged.
+
+### Related Code Files ownership
+
+Every generated phase has exactly one `## Related Code Files` section. Every
+non-empty entry uses the exact grammar:
+
+```text
+- (Read|Modify|Create|Delete): `<path>`
+```
+
+Use one action, one backticked concrete file path, and no qualifier or trailing
+prose. Globs, placeholders, directories, combined actions, duplicate canonical
+entries, and the same path under multiple actions are invalid.
+
+`Read` grants no write ownership. For `parallel_safe: auto`, enumerate the
+complete project-file read set used by every worker, delegate, and worker-side
+command outside the phase's own canonical write targets. Own `Modify`/`Delete`
+targets are readable; an own `Create` target becomes readable after creation.
+An `auto` phase needs at least one validated write and complete ownership. If a
+read or command effect cannot be bounded, emit `never`. A missing `Modify` or
+`Delete` target that a future planned phase will create also emits
+`parallel_safe: never` in V1.
 
 ### Spike phase exception
 
@@ -212,6 +327,8 @@ Backfill phase files must include this gate after `## Test Matrix`:
 When routing injects delegates, `## Delegate Skills` follows `## Test Quality
 Gate`.
 
+The TDD order remains `## Tests Before` → `## Refactor / Implementation` → `## Tests After` → `## Test Quality Gate` → optional `## Delegate Skills` → `## Regression Gate`. For UT backfill, `## Delegate Skills` remains after `## Test Quality Gate`. Parallel classification never reorders delegates or these sections.
+
 Backfill phases must satisfy traceability before write:
 - each public export / route / method in `## Code Summary` has at least one `## Test Matrix` row;
 - each non-trivial branch has a `Branch L<n>` row or `N/A: <reason>`;
@@ -235,11 +352,45 @@ Gate command and evidence rules:
 
 See `references/design-phase.md` Test Mode Phase Generation for section content rules.
 
+## Transactional Post-write Validation
+
+After candidate artifacts are written, run these gates in this exact order,
+before `Phase 0.guardian`, Step 4 reporting, red-team, or validation interview:
+
+Portable cwd-independent exemplars for the first two validators:
+
+- `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/plan-prose-validator.ts <plan-md-path> --json)`
+- `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/plan-status-validator.ts <plan-md-path> --json)`
+
+For the frozen Step 3d execution order, use the concrete generated plan path
+variables below:
+
+1. `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/plan-prose-validator.ts "$FEATURE_DIR/plan.md" --json)`
+2. `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/plan-status-validator.ts "$FEATURE_DIR/plan.md" --json)`
+3. In ascending phase number, for every new/touched phase, resolve and validate
+   its complete `auto` access set (including phases not currently ready):
+   `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-phase-file.ts "$PHASE_PATH" --phase-number "$PHASE_NUMBER" --plan "$FEATURE_DIR/plan.md" --mode parallel --project-root "$PROJECT_DIR" --json)`
+4. Validate the complete resolver input without using its wave for scheduling:
+   `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/resolve-parallel-phase-wave.ts --project-root "$PROJECT_DIR" --plan "$FEATURE_DIR/plan.md")`
+
+New and rewrite validate every generated phase. Append validates only the
+appended phase at gate 3, while gate 4 checks the complete plan. Accept
+legacy-metadata warnings for untouched append phases. Any invalid result,
+unexpected non-zero exit, malformed JSON, or runtime/I/O error restores the
+complete transaction snapshot and STOPs with exact diagnostics.
+
+No validator-triggered repair or downgrade is allowed. In particular, never
+change rejected `auto` metadata to `never`, auto-fix a status, or leave candidate
+artifacts for manual cleanup after a failed gate.
+
 ## Quality Checklist
 
 - [ ] All phases have success criteria.
 - [ ] File paths are specific and complete.
 - [ ] Dependencies are documented with `blockedBy` / `blocks` where applicable.
+- [ ] The five-column phases table is unchanged; no parallel column was added.
+- [ ] Every generated phase has canonical parallel metadata and exact access entries.
+- [ ] New/touched artifacts pass the ordered transactional validation gates.
 - [ ] Security concerns are addressed.
 - [ ] Test-mode phases apply the completeness rubric and record `N/A: <reason>` for non-applicable dimensions.
 - [ ] Backfill `Code Summary` public surfaces are traceable to `Test Matrix` rows.

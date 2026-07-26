@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   parsePhasesTable,
+  renderPhaseStatuses,
   updatePhaseStatus,
   validateDependencies,
   getPlanPath,
@@ -263,6 +264,23 @@ describe('getPlanPath', () => {
   it('throws for empty string featureDir', () => {
     // F12 AC: throws if implPlan missing — reachable via empty-string input guard
     expect(() => getPlanPath('')).toThrow('implPlan path missing');
+  });
+});
+
+describe('renderPhaseStatuses', () => {
+  it('renders several row statuses with one canonical table rewrite', () => {
+    const original = fixture('plan-mutation-roundtrip.md');
+    const rendered = renderPhaseStatuses(original, new Map([[1, 'done'], [2, 'in_progress']]));
+    const parsed = parsePhasesTable(rendered);
+
+    expect(parsed.phases.map((phase) => phase.status)).toEqual(['done', 'in_progress', 'todo']);
+    expect(original).toContain('| todo |');
+  });
+
+  it('rejects an unknown phase without changing the input bytes', () => {
+    const original = fixture('plan-mutation-roundtrip.md');
+    expect(() => renderPhaseStatuses(original, new Map([[99, 'done']]))).toThrow('phase 99 not found');
+    expect(fixture('plan-mutation-roundtrip.md')).toBe(original);
   });
 });
 
