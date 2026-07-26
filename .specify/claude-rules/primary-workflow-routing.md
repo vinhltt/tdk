@@ -9,15 +9,17 @@ identifiers; activate the matching skill by name.
 
 Route only to workflow commands available in the current session:
 
-- `tdk-inception` owns project/workspace foundation commands. It remains coupled
-  to the required base with `tdk-core`, `tdk-memory`, and `tdk-utils`.
-- `tdk-core` owns child feature commands (specify, clarify, plan, analyze,
-  implement, and status) plus the shared hook/runtime gateway.
-- Parent epic commands cover discovery, epic PRD, epic HLD, and task breakdown.
-- Inception commands cover greenfield/brownfield start, constitution,
+- Project/workspace foundation covers greenfield/brownfield start, constitution,
   architecture advisor, workspace layout, config apply, dependency policy, and
-  sub-workspace foundation workflows. The optional scaffold plugin owns golden
-  path and automation-recommendation workflows.
+  sub-workspace foundation workflows.
+- Child feature work covers specify, clarify, plan, analyze, implement, and
+  status, with the shared hook/runtime gateway supporting those workflows.
+- Parent epic work covers discovery, epic PRD, epic HLD, and task breakdown.
+- Optional scaffold work covers golden path and automation-recommendation
+  workflows.
+- Package identifiers are source/install ownership labels, not runtime skill
+  names. Route by the capability groups above and invoke concrete workflow
+  skills only.
 - If a command in the recommended route is unavailable, say which command is
   unavailable and point the user to the setup guide.
 

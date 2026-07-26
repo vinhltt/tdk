@@ -6,6 +6,13 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.104.1] - 2026-07-26
+
+### Changed
+- **[Configurations]** Refactored `primary-workflow-routing.md` to use capability-based grouping instead of package-coupled ownership language; removed explicit `tdk-inception`/`tdk-core` package references
+- **[Scripts]** Added plugin-ID and ownership-language assertions to `tdk-epic-plugin-ownership.test.ts` to enforce decoupled routing style
+- **[General]** Regenerated `release-manifest.json` hashes for updated files
+
 ## [1.104.0] - 2026-07-26
 
 ### Added

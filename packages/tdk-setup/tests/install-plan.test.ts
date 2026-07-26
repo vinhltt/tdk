@@ -7,6 +7,15 @@ import { buildClaudeInstallPlan } from '../src/install-plan';
 import { makeConsumer, sha256, writeBasicPlugin, writeHookOnlyPlugin, writeMultiPluginManifest, writePluginFile, writePrefixedSkillPlugin } from './fixtures';
 import { discoverPrefixRewritePlugins } from '../src/plugin-discovery';
 
+const TDK_ROOT = path.resolve(import.meta.dir, '../../..');
+const SOURCE_PLUGIN_MANIFEST_PATH = path.join(TDK_ROOT, '.specify', 'plugins', 'manifest.json');
+const SOURCE_ROUTING_RULE_PATH = path.join(
+  TDK_ROOT,
+  '.specify',
+  'claude-rules',
+  'primary-workflow-routing.md',
+);
+
 function buildPlan(root: string) {
   const inventory = discoverPluginInventory(root, ['tdk-core']);
   return buildClaudeInstallPlan({
@@ -42,7 +51,8 @@ describe('buildClaudeInstallPlan', () => {
   test('installs claude rule files into .claude/rules with prefix rewrite', () => {
     const consumer = makeConsumer();
     writeBasicPlugin(consumer);
-    const rule = '# TDK primary workflow\nRun `tdk-specify` before `tdk-plan`.\n';
+    const rule = fs.readFileSync(SOURCE_ROUTING_RULE_PATH, 'utf-8');
+    const sourceManifest = JSON.parse(fs.readFileSync(SOURCE_PLUGIN_MANIFEST_PATH, 'utf-8'));
     const rulesDir = path.join(consumer.root, '.specify', 'claude-rules');
     fs.mkdirSync(rulesDir, { recursive: true });
     fs.writeFileSync(path.join(rulesDir, 'primary-workflow-routing.md'), rule, 'utf-8');
@@ -62,7 +72,13 @@ describe('buildClaudeInstallPlan', () => {
     expect(write).toBeDefined();
     expect(write!.plugin).toBe('claude-rules');
     expect(write!.sourceRelativePath).toBe('.specify/claude-rules/primary-workflow-routing.md');
-    expect(write!.content.toString('utf-8')).toBe('# SAMPLE primary workflow\nRun `sample-specify` before `sample-plan`.\n');
+    const installedRule = write!.content.toString('utf-8');
+    expect(installedRule).toContain('`sample-specify`');
+    expect(installedRule).toContain('`sample-plan`');
+    for (const pluginId of Object.keys(sourceManifest.plugins ?? {})) {
+      const brandedPluginId = pluginId.replace(/^tdk-/, 'sample-');
+      expect(installedRule).not.toContain(`\`${brandedPluginId}\``);
+    }
     expect(plan.nextManifest.managedFiles.some((file) => file.targetRelativePath === '.claude/rules/primary-workflow-routing.md')).toBe(true);
   });
 

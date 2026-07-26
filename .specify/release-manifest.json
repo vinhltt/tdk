@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-07-26T03:11:29.987Z",
+  "generatedAt": "2026-07-26T07:19:40.651Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -45,8 +45,8 @@
       "mode": "0644"
     },
     ".specify/claude-rules/primary-workflow-routing.md": {
-      "sha256": "1eff658d0121d8e313d4b8f6cc31446bd58232be1d78ae10c0258b8bbd755cda",
-      "size": 10504,
+      "sha256": "37894b95e875183c0e5985444df1e016a37940107d339df84e8e941002367652",
+      "size": 10538,
       "mode": "0644"
     },
     ".specify/docs/README.md": {
@@ -2665,8 +2665,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/manifest/tdk-epic-plugin-ownership.test.ts": {
-      "sha256": "6dc944ef897da306b784355488a4644b7a62e5ef36842d98a2fba3f7d32a425a",
-      "size": 3966,
+      "sha256": "2f536845f468f965bc43c739031c6cdc6b04854dfbf7613593d881ecf6a38fa9",
+      "size": 4408,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/manifest/tdk-inception-codex-ownership.test.ts": {

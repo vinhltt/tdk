@@ -72,11 +72,18 @@ describe('tdk-epic plugin ownership', () => {
     const rootReadme = read(ROOT_README_PATH);
     const setupReadme = read(SETUP_README_PATH);
     const primaryWorkflowRouting = read(PRIMARY_WORKFLOW_ROUTING_PATH);
+    const sourceManifest = readJson(SOURCE_MANIFEST_PATH);
+    const routingIntro = primaryWorkflowRouting.split('## Canonical order')[0] ?? '';
 
     expect(rootReadme).toContain('**tdk-epic**');
     expect(rootReadme).toContain('For selective harness installs, make sure the parent epic commands are');
     expect(rootReadme).not.toContain('tdk-epic,tdk-utils');
     expect(primaryWorkflowRouting).toContain('Route only to workflow commands available in the current session');
+    for (const pluginId of Object.keys(sourceManifest.plugins ?? {})) {
+      expect(primaryWorkflowRouting).not.toContain(`\`${pluginId}\``);
+    }
+    expect(routingIntro).not.toMatch(/^\s*-\s+`[^`]+`\s+owns\b/m);
+    expect(routingIntro).not.toMatch(/\b(?:package|plugin)\b[^\n.]*\bowns?\b/i);
     expect(primaryWorkflowRouting).not.toContain('selective harness installs');
     expect(primaryWorkflowRouting).not.toContain('tdk-epic,tdk-utils');
     expect(primaryWorkflowRouting).not.toContain('tdk-core,tdk-utils');
