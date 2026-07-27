@@ -53,7 +53,7 @@ function writeFileAtomic(
   let payloadMode: number | undefined;
   try {
     validateTemporaryMutationTarget(plan, target, tmp, label);
-    fd = fs.openSync(tmp, fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_WRONLY, 0o600);
+    fd = fs.openSync(tmp, 'wx', 0o600);
     fs.writeFileSync(fd, payload);
     fs.fsyncSync(fd);
     payloadMode = fs.fstatSync(fd).mode & 0o7777;
@@ -131,6 +131,12 @@ function assertBackupAvailable(plan: InstallPlan, prompt: RequiredPrompt): strin
   return backup;
 }
 
+function pathsReferToSameLocation(left: string, right: string): boolean {
+  const normalizedLeft = path.toNamespacedPath(path.resolve(left));
+  const normalizedRight = path.toNamespacedPath(path.resolve(right));
+  return path.relative(normalizedLeft, normalizedRight) === '';
+}
+
 function recordCreatedDirectories(
   directory: string,
   firstCreatedDirectory: string | undefined,
@@ -142,7 +148,7 @@ function recordCreatedDirectories(
   const createdDirectories: string[] = [];
   while (true) {
     createdDirectories.push(current);
-    if (current === firstCreated) break;
+    if (pathsReferToSameLocation(current, firstCreated)) break;
     const parent = path.dirname(current);
     if (parent === current) throw new Error(`Directory creation escaped its target: ${directory}`);
     current = parent;

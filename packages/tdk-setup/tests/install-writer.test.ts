@@ -957,6 +957,22 @@ describe('applyInstallPlan', () => {
     expect(fs.existsSync(plan.manifestPath)).toBe(false);
   });
 
+  test('tracks nested directories created by recursive mkdir', async () => {
+    const consumer = makeConsumer();
+    const plan = singleWritePlan(consumer);
+    const target = path.join(consumer.root, '.claude', 'new', 'nested', 'managed.txt');
+    plan.writes = [{
+      ...plan.writes[0]!,
+      targetPath: target,
+      targetRelativePath: '.claude/new/nested/managed.txt',
+    }];
+
+    const result = await applyInstallPlan(plan, { yes: true, interactive: false });
+
+    expect(result.written).toEqual(['.claude/new/nested/managed.txt']);
+    expect(fs.existsSync(target)).toBe(true);
+  });
+
   test('removes only nested directories created by rolled-back writes', async () => {
     const consumer = makeConsumer();
     const plan = singleWritePlan(consumer);
