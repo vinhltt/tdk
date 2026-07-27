@@ -270,9 +270,11 @@ flowchart TD
 
 Dùng `/tdk-plan <id> --ut-backfill` (hoặc `--tdd` cho tests-first phases) để fold unit-test planning vào `plan.md` phases. Test-mode phases có các row `Test Quality Gate` trước khi implementation được mark done: TDK sở hữu baseline rubric, traceability, và gate row completion; consumer test skill trong `## Delegate Skills` sở hữu framework commands và numeric coverage policy. `--sub-workspace` target workspace cụ thể, ví dụ `backend`, `frontend`, `--module` narrow xuống một module, và `--standalone` trên `--ut-backfill` bỏ qua spec dependency cho existing code.
 
-Với Codex harness install, generated `.specify/codex-plugins/**` packages phải
-tồn tại qua setup CLI `convert` / Codex install path. Default distribution
-payload không chứa các generated packages này.
+Để cài Codex harness, hãy materialize `.specify/codex-plugins/**` trong
+consumer bằng setup CLI `convert --all-plugins`, rồi chạy manifest compute với
+`--write` và `--check` trước khi cài. `convert --check` yêu cầu output đã được
+materialize. Default distribution payload chủ ý không chứa các generated package
+này và manifest cục bộ của consumer.
 
 ### Config & Workspace Management
 

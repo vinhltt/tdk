@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [11.1.1] - 2026-07-27
+
+### Changed
+- tdk-plan — document content-addressed snapshot dedup and host-independent finalize-plan validation
+- tdk-plan reference plan-output-contract — planner gate 4 now passes --validate-only
+
 ## [11.1.0] - 2026-07-26
 
 ### Added

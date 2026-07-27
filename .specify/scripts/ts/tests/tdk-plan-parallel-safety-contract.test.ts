@@ -92,7 +92,7 @@ describe('tdk-plan parallel safety contract', () => {
       'plan-prose-validator.ts "$FEATURE_DIR/plan.md" --json',
       'plan-status-validator.ts "$FEATURE_DIR/plan.md" --json',
       'validate-phase-file.ts "$PHASE_PATH" --phase-number "$PHASE_NUMBER" --plan "$FEATURE_DIR/plan.md" --mode parallel --project-root "$PROJECT_DIR" --json',
-      'resolve-parallel-phase-wave.ts --project-root "$PROJECT_DIR" --plan "$FEATURE_DIR/plan.md"',
+      'resolve-parallel-phase-wave.ts --project-root "$PROJECT_DIR" --plan "$FEATURE_DIR/plan.md" --validate-only',
     ];
     let previous = -1;
     for (const command of commands) {

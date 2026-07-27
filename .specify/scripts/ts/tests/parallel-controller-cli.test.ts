@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test';
+import { createHash } from 'node:crypto';
 import {
   chmodSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync,
 } from 'node:fs';
@@ -7,6 +8,7 @@ import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 const CLI = join(import.meta.dir, '../src/commands/util/parallel-controller.ts');
+const RESOLVE_WAVE_CLI = join(import.meta.dir, '../src/commands/util/resolve-parallel-phase-wave.ts');
 const roots: string[] = [];
 function repository(): string {
   const root = mkdtempSync(join(tmpdir(), 'tdk-controller-cli-')); roots.push(root);
@@ -295,6 +297,147 @@ describe('parallel-controller CLI', () => {
     writeValidPlannerArtifacts(feature);
     const finalize = run(['finalize-plan', ...common, '--controller-id', 'c1']);
     if (finalize.status !== 0) throw new Error(`${finalize.stdout}${finalize.stderr}`);
+    expect(existsSync(join(acquired.lockPath, 'planner-snapshot.json'))).toBe(false);
+    expect(run(['release', ...common, '--controller-id', 'c1']).status).toBe(0);
+  });
+
+  it('completes a v2 lifecycle: reserve, snapshot, mutate, validate-only finalize, release', () => {
+    const root = repository(); const feature = join(root, 'feature'); mkdirSync(feature);
+    writeFileSync(join(feature, 'spec.md'), '# Spec\n');
+    const common = ['--project-root', root, '--feature-dir', feature];
+    const acquired = JSON.parse(run(['reserve', ...common, '--task-id', 'feat-1',
+      '--purpose', 'planner', '--controller-id', 'c1']).stdout);
+    const input = join(acquired.lockPath, 'snapshot-input.json');
+    writeFileSync(input, JSON.stringify({ controllerId: 'c1', externalPaths: [] }));
+    expect(run(['snapshot-plan', ...common, '--controller-id', 'c1', '--input-json', input]).status).toBe(0);
+
+    // Assert the on-disk snapshot is schema v2 (content-addressed blobs) with no inline
+    // per-entry payload, before finalize-plan consumes and removes it.
+    const snapshotPath = join(acquired.lockPath, 'planner-snapshot.json');
+    const onDisk = JSON.parse(readFileSync(snapshotPath, 'utf8')) as { schemaVersion: number; entries: unknown[] };
+    expect(onDisk.schemaVersion).toBe(2);
+    for (const entry of onDisk.entries) expect(entry).not.toHaveProperty('contentBase64');
+
+    writeValidPlannerArtifacts(feature); // the planner's mutation of feature content
+
+    // finalize-plan resolves the plan through the resolver's platform-independent
+    // `--validate-only` mode (see parallel-planner-validation.ts), not parallel scheduling.
+    const finalize = run(['finalize-plan', ...common, '--controller-id', 'c1']);
+    if (finalize.status !== 0) throw new Error(`${finalize.stdout}${finalize.stderr}`);
+    expect(existsSync(snapshotPath)).toBe(false);
+    expect(run(['release', ...common, '--controller-id', 'c1']).status).toBe(0);
+  });
+
+  it('recovers a manually constructed v1 planner snapshot through the CLI lifecycle', () => {
+    const root = repository(); const feature = join(root, 'feature'); mkdirSync(feature);
+    const content = Buffer.from('legacy recovery payload\n');
+    writeFileSync(join(feature, 'legacy.md'), content); chmodSync(join(feature, 'legacy.md'), 0o640);
+    const featureMode = lstatSync(feature).mode & 0o7777;
+    const common = ['--project-root', root, '--feature-dir', feature];
+    const acquired = JSON.parse(run(['reserve', ...common, '--task-id', 'feat-1',
+      '--purpose', 'planner', '--controller-id', 'c1']).stdout);
+
+    // Manually constructed v1 wire snapshot (schemaVersion 1, inline contentBase64 file entries, no
+    // blobs array) standing in for a snapshot written before schema v2 existed, proving the CLI
+    // recovery path still reads it. `gitEntries: []` is safe here: assertNoUndeclaredPlannerDelta only
+    // fails closed on changes OUTSIDE the feature directory, and every path used here is inside it.
+    const sha = createHash('sha256').update(content).digest('hex');
+    const v1Snapshot = {
+      schemaVersion: 1, controllerId: 'c1', featureMode,
+      entries: [{ kind: 'file', path: 'legacy.md', mode: 0o640, sha256: sha, contentBase64: content.toString('base64') }],
+      external: [], gitEntries: [],
+    };
+    writeFileSync(join(acquired.lockPath, 'planner-snapshot.json'), JSON.stringify(v1Snapshot));
+
+    // Simulate crash/corruption before recovery.
+    rmSync(join(feature, 'legacy.md'));
+    writeFileSync(join(feature, 'orphan.md'), 'orphan\n');
+
+    const recovery = run(['recover-plan', ...common, '--controller-id', 'c1']);
+    if (recovery.status !== 0) throw new Error(`${recovery.stdout}${recovery.stderr}`);
+    expect(readFileSync(join(feature, 'legacy.md')).equals(content)).toBe(true);
+    expect(lstatSync(join(feature, 'legacy.md')).mode & 0o777).toBe(0o640);
+    expect(lstatSync(feature).mode & 0o777).toBe(featureMode);
+    expect(existsSync(join(feature, 'orphan.md'))).toBe(false);
+    expect(existsSync(join(acquired.lockPath, 'planner-snapshot.json'))).toBe(false);
+    expect(run(['release', ...common, '--controller-id', 'c1']).status).toBe(0);
+  });
+
+  it('completes a dedup incident lifecycle: one shared buffer across three paths yields one blob and restores exactly', () => {
+    const root = repository(); const feature = join(root, 'feature'); mkdirSync(feature);
+    // ONE shared buffer reused for all three writes -- do not allocate three separate buffers.
+    // 2 MiB (well under the 32 MiB unique-bytes bound) keeps this subprocess-spawning CLI lifecycle
+    // test fast; the bound-proximity property (three 17 MiB copies deduping to fit under the same
+    // bound that three undeduped copies would exceed) is already covered at the module level by
+    // tests/parallel-planner-snapshot.test.ts. This test proves the CLI reserve/snapshot/recover/
+    // release lifecycle round-trips a deduplicated snapshot correctly end to end.
+    const shared = Buffer.alloc(2 * 1024 * 1024, 9);
+    mkdirSync(join(feature, 'nested'));
+    writeFileSync(join(feature, 'a.bin'), shared);
+    writeFileSync(join(feature, 'b.bin'), shared);
+    writeFileSync(join(feature, 'nested/c.bin'), shared);
+    const common = ['--project-root', root, '--feature-dir', feature];
+    const acquired = JSON.parse(run(['reserve', ...common, '--task-id', 'feat-1',
+      '--purpose', 'planner', '--controller-id', 'c1']).stdout);
+    const input = join(acquired.lockPath, 'snapshot-input.json');
+    writeFileSync(input, JSON.stringify({ controllerId: 'c1', externalPaths: [] }));
+    expect(run(['snapshot-plan', ...common, '--controller-id', 'c1', '--input-json', input]).status).toBe(0);
+
+    const snapshotPath = join(acquired.lockPath, 'planner-snapshot.json');
+    const onDisk = JSON.parse(readFileSync(snapshotPath, 'utf8')) as { schemaVersion: number; blobs: unknown[] };
+    expect(onDisk.schemaVersion).toBe(2);
+    expect(onDisk.blobs).toHaveLength(1); // three identical files, one stored blob
+
+    // Simulate crash/corruption before recovery: one file missing, one file corrupted.
+    rmSync(join(feature, 'a.bin')); writeFileSync(join(feature, 'b.bin'), 'corrupt\n');
+
+    const recovery = run(['recover-plan', ...common, '--controller-id', 'c1']);
+    if (recovery.status !== 0) throw new Error(`${recovery.stdout}${recovery.stderr}`);
+    expect(readFileSync(join(feature, 'a.bin')).equals(shared)).toBe(true);
+    expect(readFileSync(join(feature, 'b.bin')).equals(shared)).toBe(true);
+    expect(readFileSync(join(feature, 'nested/c.bin')).equals(shared)).toBe(true);
+    expect(existsSync(snapshotPath)).toBe(false);
+    expect(run(['release', ...common, '--controller-id', 'c1']).status).toBe(0);
+  });
+
+  it('finalizes the feature plan and an external plan.md via validate-only, bypassing the schedule-mode probe both accept', () => {
+    const root = repository(); const feature = join(root, 'feature'); mkdirSync(feature);
+    writeFileSync(join(feature, 'spec.md'), '# Spec\n');
+    const external = 'external-plan/plan.md';
+    mkdirSync(join(root, 'external-plan'), { recursive: true });
+    writeFileSync(join(root, external), [
+      '## Phases', '', '| # | File | Status | Blocks | BlockedBy |',
+      '|---|------|--------|--------|-----------|',
+      '| 01 | [A](phase-01-a.md) | done | — | — |', '',
+    ].join('\n'));
+    const common = ['--project-root', root, '--feature-dir', feature];
+    const acquired = JSON.parse(run(['reserve', ...common, '--task-id', 'feat-1',
+      '--purpose', 'planner', '--controller-id', 'c1']).stdout);
+    const input = join(acquired.lockPath, 'snapshot-input.json');
+    writeFileSync(input, JSON.stringify({ controllerId: 'c1', externalPaths: [external] }));
+    expect(run(['snapshot-plan', ...common, '--controller-id', 'c1', '--input-json', input]).status).toBe(0);
+    writeValidPlannerArtifacts(feature);
+
+    // Break only the schedule-mode case-sensitivity probe (it mkdirs directly
+    // under the project root); nested writes (e.g. under .git/tdk/) are
+    // unaffected, so this isolates the host-admission gate specifically.
+    chmodSync(root, 0o500);
+    try {
+      const finalize = run(['finalize-plan', ...common, '--controller-id', 'c1']);
+      if (finalize.status !== 0) throw new Error(`${finalize.stdout}${finalize.stderr}`);
+
+      // Proof this is not incidental: the default (schedule-mode) invocation of
+      // the very same feature plan under the very same root DOES fail the probe.
+      const scheduleModeCheck = spawnSync('bun', [
+        RESOLVE_WAVE_CLI, '--project-root', root, '--plan', join(feature, 'plan.md'),
+      ], { encoding: 'utf8' });
+      expect(scheduleModeCheck.status).toBe(2);
+      const codes = (JSON.parse(scheduleModeCheck.stdout) as { errors: { code: string }[] })
+        .errors.map((e) => e.code);
+      expect(codes).toContain('CASE_SENSITIVITY_PROBE_FAILED');
+    } finally {
+      chmodSync(root, 0o700);
+    }
     expect(existsSync(join(acquired.lockPath, 'planner-snapshot.json'))).toBe(false);
     expect(run(['release', ...common, '--controller-id', 'c1']).status).toBe(0);
   });

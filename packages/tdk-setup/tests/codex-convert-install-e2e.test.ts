@@ -57,6 +57,49 @@ describe('codex convert/install e2e', () => {
     });
     expect(convert.exitCode).toBe(0);
 
+    const freshCheck = Bun.spawnSync({
+      cmd: ['bun', cliPath, 'convert', '--plugins', plugin, '--check'],
+      cwd: consumer.scriptsDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+    expect(freshCheck.exitCode, freshCheck.stderr.toString()).toBe(0);
+
+    const generatedSkillRelativePath = 'skills/tdk-demo/SKILL.md';
+    const generatedSkillPath = path.join(
+      consumer.root,
+      '.specify',
+      'codex-plugins',
+      plugin,
+      ...generatedSkillRelativePath.split('/'),
+    );
+    fs.appendFileSync(generatedSkillPath, '\nDrifted generated artifact.\n', 'utf-8');
+
+    const driftCheck = Bun.spawnSync({
+      cmd: ['bun', cliPath, 'convert', '--plugins', plugin, '--check'],
+      cwd: consumer.scriptsDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+    expect(driftCheck.exitCode).toBe(1);
+    expect(driftCheck.stdout.toString()).toContain(`${plugin}: different ${generatedSkillRelativePath}`);
+
+    const restore = Bun.spawnSync({
+      cmd: ['bun', cliPath, 'convert', '--plugins', plugin],
+      cwd: consumer.scriptsDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+    expect(restore.exitCode, restore.stderr.toString()).toBe(0);
+
+    const restoredCheck = Bun.spawnSync({
+      cmd: ['bun', cliPath, 'convert', '--plugins', plugin, '--check'],
+      cwd: consumer.scriptsDir,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    });
+    expect(restoredCheck.exitCode, restoredCheck.stderr.toString()).toBe(0);
+
     const manifest = Bun.spawnSync({
       cmd: ['bun', manifestCliPath, '--project-root', consumer.root, '--write', '--output', 'table'],
       cwd: consumer.scriptsDir,

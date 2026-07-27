@@ -33,9 +33,12 @@ bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --yes
 ```
 
-Use `--harness codex` for a separate Codex install after generated
-`.specify/codex-plugins/` packages are available in the consumer. A combined
-Claude+Codex install is unsupported.
+Use `--harness codex` for a separate Codex install after materializing packages
+in the consumer. From the consumer root, run `convert --all-plugins`, then
+manifest compute with `--write` and `--check`; the consumer-local
+`.specify/codex-plugins/` packages and manifest must exist before installation.
+`convert --check` also requires that materialized output. A combined Claude+Codex
+install is unsupported.
 
 Every selection resolves the coupled base `tdk-core`, `tdk-inception`,
 `tdk-memory`, and `tdk-utils`. `--plugins` requests optional workflows;

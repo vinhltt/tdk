@@ -23,21 +23,25 @@ bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --dry-r
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --prefix sample --yes
 ```
 
-Install preconverted Codex artifacts:
+Materialize and install Codex artifacts in the consumer context:
 
 ```bash
-bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --dry-run
-bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --yes
-bun src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-epic --dry-run
-bun src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --dry-run
-```
+cd "$CONSUMER_ROOT"
 
-Regenerate generated Codex packages from TDK plugin source:
+# Generate ignored Codex packages from the consumer's distributed source plugins.
+bun /path/to/tdk/packages/tdk-setup/src/index.ts convert --all-plugins
 
-```bash
-bun src/index.ts convert --dry-run
-bun src/index.ts convert
-bun src/index.ts convert --check
+# Write and verify the consumer-local source and Codex package manifests.
+bun /path/to/tdk/.specify/scripts/ts/src/commands/manifest/compute.ts --project-root "$CONSUMER_ROOT" --write
+bun /path/to/tdk/.specify/scripts/ts/src/commands/manifest/compute.ts --project-root "$CONSUMER_ROOT" --check
+
+# This freshness check requires materialized output.
+bun /path/to/tdk/packages/tdk-setup/src/index.ts convert --all-plugins --check
+
+bun /path/to/tdk/packages/tdk-setup/src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --dry-run
+bun /path/to/tdk/packages/tdk-setup/src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-core --yes
+bun /path/to/tdk/packages/tdk-setup/src/index.ts install "$CONSUMER_ROOT" --harness codex --plugins tdk-epic --dry-run
+bun /path/to/tdk/packages/tdk-setup/src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --dry-run
 ```
 
 Migrate an existing flat `.claude/` tree to Codex artifacts:
@@ -64,13 +68,13 @@ If `.specify/` was distributed with `bash distribute.sh <consumer-root> --prefix
 
 | Command | Purpose |
 | --- | --- |
-| `install [root]` | Install selected TDK plugin artifacts into `.claude/` or preconverted `.codex/` + `.agents/skills/` targets. |
+| `install [root]` | Install selected TDK plugin artifacts into `.claude/` or materialized `.codex/` + `.agents/skills/` targets. |
 | `convert` | Maintainer-only command that emits generated Codex packages under `.specify/codex-plugins/<plugin>/`. |
 | `convert-flat [root]` | Convert an existing flat `.claude/` tree into additive `.codex/` and `.agents/skills/` artifacts. |
 
 ## Install Notes
 
-`install --harness codex` reads generated packages from the consumer project's `.specify/codex-plugins/` directory and verifies them against `.specify/codex-plugins/manifest.json`.
+`install --harness codex` reads materialized packages from the consumer project's `.specify/codex-plugins/` directory and verifies them against the consumer-local `.specify/codex-plugins/manifest.json`. Both must exist before installation.
 
 Codex install writes skills to `.agents/skills/`, hooks and lib files to `.codex/`, generates `.codex/agents/*.toml` and `.codex/config.toml` at install time from plugin source agents, merges `.codex/hooks.json`, and writes ownership state to `.specify/state/harness-install/codex.json`.
 
@@ -95,7 +99,7 @@ as a migration shortcut.
 
 ## Convert Notes
 
-`convert` is source-tree and maintainer-only. It emits generated Codex packages to `.specify/codex-plugins/<plugin>/` following the official Codex plugin layout:
+`convert` is source-tree and maintainer-only. Run it in the consumer context to materialize ignored Codex packages at `.specify/codex-plugins/<plugin>/` from distributed source plugins, following the official Codex plugin layout:
 
 ```text
 .codex-plugin/plugin.json
@@ -104,7 +108,7 @@ hooks/
 lib/
 ```
 
-Only `.codex-plugin/plugin.json` lives under `.codex-plugin/`; skills, hooks, and lib assets live at the package root. `convert --check` re-emits in memory and fails if committed packages drift from source.
+Only `.codex-plugin/plugin.json` lives under `.codex-plugin/`; skills, hooks, and lib assets live at the package root. `convert --check` re-emits in memory and fails if materialized packages drift from source, so it requires existing materialized output.
 
 Underscore-prefixed shared skill directories such as `_shared` are copied as reference assets, but their `SKILL.md` entrypoint is not installed as a loadable Codex skill.
 

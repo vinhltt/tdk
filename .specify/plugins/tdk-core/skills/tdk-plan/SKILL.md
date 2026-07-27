@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "11.1.0"
+  version: "11.1.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -153,6 +153,15 @@ Git-visible mutations outside the feature make finalize/recovery fail closed. A 
 must use `recover-plan --old-controller-id` before creating another snapshot;
 status reconciliation cannot clear a
 planner reservation. Time, PID absence, and file age never clear it.
+
+The feature-directory snapshot is content-addressed: duplicate file bytes anywhere under the
+feature directory are stored once by content hash, so its size bound tracks unique content, not
+naive total size. Declared external files stay inline per file under their own separate bound and
+are not part of that dedup pool. A feature snapshot written by an older binary remains readable by
+`recover-plan`/`finalize-plan`. `finalize-plan`'s internal plan/resolver validation always runs
+host-independent (see Transactional Post-write Validation gate 4 in `references/plan-output-contract.md`);
+it is not the parallel-implementation host-admission check `/tdk-implement --parallel` uses to
+actually schedule work.
 
 ### Step 0.migrate — Opt-in Legacy Artifact Migration
 

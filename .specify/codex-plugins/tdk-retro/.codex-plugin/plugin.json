@@ -1,7 +1,0 @@
-{
-  "description": "Retrospective learning loop: collect implementation feedback, propose learning deltas, and apply approved technical or memory updates",
-  "interface": {},
-  "name": "tdk-retro",
-  "skills": "./skills/",
-  "version": "1.0.5"
-}

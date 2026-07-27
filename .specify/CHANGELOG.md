@@ -6,6 +6,33 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.105.0] - 2026-07-27
+
+### Added
+- **[Scripts]** New parallel planner utilities
+  - `parallel-phase-wave-operation.ts` — functional core/imperative shell extraction with `schedule` vs `validate-only` modes; planner validation is now host-independent
+  - `parallel-planner-snapshot-schema.ts` — Zod schemas for v1/v2 wire snapshots with content-addressed dedup, path canonicalization, and size-bound enforcement
+  - `parent-directory-sync.ts` — shared `syncParentDirectory()` extracted from three modules that each had their own fsync-parent implementations
+- **[Tests]** New test suites
+  - `parallel-phase-wave-operation`, `parallel-planner-snapshot`, `parent-directory-sync`, `parallel-planner-windows-smoke`
+  - `codex-convert-install-e2e` — added drift detection/restore round-trip for `convert --check`
+
+### Changed
+- **[Embedded Skills]** `tdk-plan` — document content-addressed snapshot dedup and clarify that finalize-plan validation is host-independent (not the same as `/tdk-implement --parallel` scheduling)
+- **[Embedded Skills]** `tdk-plan` reference `plan-output-contract` — planner gate 4 now passes `--validate-only` to skip host filesystem capability/case-sensitivity admission
+- **[Agents]** `tdk-memory-agent` model upgraded from `sonnet` to `opus`
+- **[Guides]** Setup guide (en/vi) and workflow-map (en/vi) — updated Codex install instructions: packages are now materialized on-demand via `convert --all-plugins` instead of being pre-committed
+- **[Scripts]** Deduplicated `fsyncParentDir`/`fsyncDirectory`/`syncDirectory` across `guarded-writer`, `artifact-migration-atomic-file`, and `durable-atomic-file` into shared `parent-directory-sync`
+- **[Scripts]** `resolve-parallel-phase-wave` refactored to delegate orchestration to `parallel-phase-wave-operation`
+- **[Scripts]** `parallel-planner-snapshot` refactored to use extracted schema module
+- **[Scripts]** `parallel-planner-validation` updated for new schema imports
+- **[Packages]** `tdk-setup` — terminology updated: "committed" → "materialized" for Codex artifacts; `--check` help text clarified
+- **[Tests]** Updated ownership tests, contract tests, and CLI tests to align with new parallel planner architecture
+- **[Configurations]** `.gitignore` updated
+
+### Removed
+- **[General]** Deleted entire `.specify/codex-plugins/` tree (237 files across 8 plugins: tdk-core, tdk-epic, tdk-inception, tdk-memory, tdk-retro, tdk-scaffold, tdk-test-api, tdk-utils) — Codex packages are now generated on-demand at consumer side via `convert`, no longer committed to the TDK source repo
+
 ## [1.104.1] - 2026-07-26
 
 ### Changed

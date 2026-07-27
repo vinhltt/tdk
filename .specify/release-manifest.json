@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-07-26T07:19:40.651Z",
+  "generatedAt": "2026-07-26T08:53:55.638Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -125,8 +125,8 @@
       "mode": "0644"
     },
     ".specify/docs/en/guides/setup/setup-guide.md": {
-      "sha256": "376eaed3a09c38d3710e7e81f674dfeb9ecc904f619102ed03c0851fe14c1c8b",
-      "size": 3298,
+      "sha256": "0ea9e367ad1f5f57c8d3b18abc9c0dfb6c81e4b5cc57c6b17c8f1cf74e49f998",
+      "size": 3524,
       "mode": "0644"
     },
     ".specify/docs/en/guides/skills-guide.md": {
@@ -135,8 +135,8 @@
       "mode": "0644"
     },
     ".specify/docs/en/guides/workflow-map.md": {
-      "sha256": "36040fd6d6ab203ad1a85462ca87354d70ae909496eec705902657b6f0ee3335",
-      "size": 29268,
+      "sha256": "9c2d626557f48947aec58f46d55b32112f78fad6bd6904b26de1ade35adf7f8c",
+      "size": 29433,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/concepts/glossary.md": {
@@ -185,8 +185,8 @@
       "mode": "0644"
     },
     ".specify/docs/vi/guides/setup/setup-guide.md": {
-      "sha256": "18f3ae12b4402fe12be8b8b3686b3aea25c81e8841a7f3e490d33a19d4c0b9f0",
-      "size": 3673,
+      "sha256": "6dac2dc171a8a2187071a66424d965b4886dd1e1a91cb0510cf4a42fdfffeed3",
+      "size": 3929,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/skills-guide.md": {
@@ -195,12 +195,12 @@
       "mode": "0644"
     },
     ".specify/docs/vi/guides/workflow-map.md": {
-      "sha256": "e27227d48b20d75796e77a6eb0d4d577a8d9af87e85cfb68fd51a1ae760401cf",
-      "size": 29612,
+      "sha256": "b3098fa96339dc18a86e991594ec3c05e6407170af25891e551850f536df1ca8",
+      "size": 29788,
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "5bd88922aca316680bb72fd69df866bb222797c0b2a8a4fe865792af346f8c0b",
+      "sha256": "7c4dfe192f01621ab7da907ea5492cd11f851ebe01a1bbf833e51502f9eebace",
       "size": 42637,
       "mode": "0644"
     },
@@ -2665,13 +2665,13 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/manifest/tdk-epic-plugin-ownership.test.ts": {
-      "sha256": "2f536845f468f965bc43c739031c6cdc6b04854dfbf7613593d881ecf6a38fa9",
-      "size": 4408,
+      "sha256": "b97796a50b80aeb6a4c4aa3a79238aff0ace6aae6fe18e5d10ed37807de86112",
+      "size": 3812,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/manifest/tdk-inception-codex-ownership.test.ts": {
-      "sha256": "140ff54fbd656ba9b990a6b1acb19c85ad686bb5609a46cc9a9d038aa11dd92f",
-      "size": 3931,
+      "sha256": "828c52ff5e3a460005de2161caf896779d1d5141683530f371270d4f1351218f",
+      "size": 4104,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/manifest/tdk-inception-plugin-ownership.test.ts": {
@@ -3040,8 +3040,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-golden-path-scaffold-contract.test.ts": {
-      "sha256": "23ab12c786ac562dfb1f63efa049b731aa64639bfc89eb12be29fba28ae6edb6",
-      "size": 9430,
+      "sha256": "2d4bda13d51bc595a48b16721c0cf268cbd22e09ba6e866abc40c1198e2c5fde",
+      "size": 9149,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-hld-requirement-overview-reference-contract.test.ts": {
@@ -3080,8 +3080,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-memory-agent-contract.test.ts": {
-      "sha256": "c1034c48ba0b4b013c29b56df59f4e9bd287131617a41131646a932578777c88",
-      "size": 19316,
+      "sha256": "fb729ec6555f43f3a169db65dd80903b329f91779ba27ec79112212c27c2fdd3",
+      "size": 18637,
       "mode": "0644"
     },
     ".specify/scripts/ts/tests/tdk-memory-v3-flow-contract.test.ts": {

@@ -14,8 +14,12 @@ function parseSoleJsonLine(stdout: string): unknown {
   return JSON.parse(withoutTrailingNewline);
 }
 
-function run(projectRoot: string, planPath: string): { status: number | null; stdout: string; stderr: string } {
-  const result = spawnSync('bun', [CLI_PATH, '--project-root', projectRoot, '--plan', planPath], { encoding: 'utf-8' });
+function run(
+  projectRoot: string, planPath: string, options: { validateOnly?: boolean } = {},
+): { status: number | null; stdout: string; stderr: string } {
+  const args = [CLI_PATH, '--project-root', projectRoot, '--plan', planPath];
+  if (options.validateOnly) args.push('--validate-only');
+  const result = spawnSync('bun', args, { encoding: 'utf-8' });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
@@ -233,5 +237,45 @@ describe('resolve-parallel-phase-wave CLI', () => {
       chmodSync(root, 0o700);
       chmodSync(phaseFile, 0o600);
     }
+  });
+
+  it('--validate-only emits a non-executable valid payload with no wave or serialBarrier keys', () => {
+    writeFile(join(root, 'phases', 'phase-01-one.md'), autoPhaseMarkdown('Phase One', 'src/new-file-1.ts'));
+    writeFile(join(root, 'phases', 'phase-02-two.md'), autoPhaseMarkdown('Phase Two', 'src/new-file-2.ts'));
+    writeFile(planPath, [
+      '## Phases', '',
+      PHASES_HEADER,
+      '| 01 | [Phase One](phases/phase-01-one.md) | todo | — | — |',
+      '| 02 | [Phase Two](phases/phase-02-two.md) | todo | — | — |',
+      '',
+    ].join('\n'));
+
+    const { status, stdout } = run(root, planPath, { validateOnly: true });
+    expect(status).toBe(0);
+    const payload = parseSoleJsonLine(stdout) as Record<string, unknown>;
+    expect(payload.ok).toBe(true);
+    expect(payload.state).toBe('valid');
+    expect('wave' in payload).toBe(false);
+    expect('serialBarrier' in payload).toBe(false);
+  });
+
+  it('omitting --validate-only keeps the default scheduling contract and exit codes', () => {
+    writeFile(join(root, 'phases', 'phase-01-one.md'), autoPhaseMarkdown('Phase One', 'src/new-file-1.ts'));
+    writeFile(join(root, 'phases', 'phase-02-two.md'), autoPhaseMarkdown('Phase Two', 'src/new-file-2.ts'));
+    writeFile(planPath, [
+      '## Phases', '',
+      PHASES_HEADER,
+      '| 01 | [Phase One](phases/phase-01-one.md) | todo | — | — |',
+      '| 02 | [Phase Two](phases/phase-02-two.md) | todo | — | — |',
+      '',
+    ].join('\n'));
+
+    const { status, stdout } = run(root, planPath);
+    expect(status).toBe(0);
+    const payload = parseSoleJsonLine(stdout) as { ok: boolean; state: string; wave: number[]; serialBarrier: number | null };
+    expect(payload.ok).toBe(true);
+    expect(payload.state).toBe('wave');
+    expect(payload.wave).toEqual([1, 2]);
+    expect(payload.serialBarrier).toBe(null);
   });
 });

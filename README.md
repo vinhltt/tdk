@@ -55,21 +55,29 @@ bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --dry-r
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --yes
 ```
 
-For Codex:
+For Codex, materialize packages in the consumer project, then compute their manifest before installation:
 
 ```bash
-# Maintainers: generate Codex packages in the TDK source checkout when needed.
-bun src/index.ts convert --dry-run
-bun src/index.ts convert
+cd "$CONSUMER_ROOT"
 
-# After generated packages exist in the consumer project's .specify/codex-plugins/:
-bun src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --dry-run
-bun src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --yes
+# Generate the ignored Codex packages from the distributed source plugins.
+bun /path/to/tdk/packages/tdk-setup/src/index.ts convert --all-plugins
+
+# Write and verify the consumer-local source and Codex package manifests.
+bun /path/to/tdk/.specify/scripts/ts/src/commands/manifest/compute.ts --project-root "$CONSUMER_ROOT" --write
+bun /path/to/tdk/.specify/scripts/ts/src/commands/manifest/compute.ts --project-root "$CONSUMER_ROOT" --check
+
+# Optional freshness check; it requires materialized output.
+bun /path/to/tdk/packages/tdk-setup/src/index.ts convert --all-plugins --check
+
+# Install the consumer-local materialized packages.
+bun /path/to/tdk/packages/tdk-setup/src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --dry-run
+bun /path/to/tdk/packages/tdk-setup/src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --yes
 ```
 
 Claude and Codex installs are separate runs. A combined Claude+Codex install is unsupported.
 
-Important Codex caveat: `install --harness codex` reads generated packages from the consumer project's `.specify/codex-plugins/` directory. The default `distribute.json` payload currently does not copy `.specify/codex-plugins/**`, so make those generated packages available before running the Codex install.
+Important Codex caveat: `install --harness codex` reads consumer-local materialized packages and `.specify/codex-plugins/manifest.json`. The default `distribute.json` payload intentionally omits `.specify/codex-plugins/**`; both the packages and manifest must exist before Codex install.
 
 ## How You Use TDK
 
@@ -190,6 +198,27 @@ replacement. Wave admission keeps a mutation marker until its finalized audit
 and all-phase completion; planner writes keep a durable feature snapshot until
 validated finalization or verified rollback. Git-backed projects are required for mutating workflows. V1
 dispatch is synchronous, so there is no worker timeout or controller polling loop.
+
+Planner snapshots use a content-addressed schema (v2) for the feature directory: duplicate file
+bytes anywhere under the feature directory are stored once by SHA-256, bounded by unique content
+size (32 MiB) rather than naive total size, plus a 4,096-entry cap and a 48 MiB
+serialized-snapshot-file cap. Declared external files (routing and cross-plan `plan.md` files
+outside the feature) remain inline per file under their own separate 8 MiB aggregate bound; they
+are not part of the feature's content-addressed dedup pool. A v1 (inline-payload) feature snapshot
+written by an older binary remains readable by `recover-plan`/`finalize-plan`; restore fully
+validates every referenced blob before it clears any existing feature content. Do not downgrade to
+a pre-v2 binary while a planner reservation still holds an active snapshot: older binaries cannot
+read a v2 snapshot file. Snapshot capture,
+recovery, and finalization durably fsync-replace files and directories; on native Windows,
+directory-entry fsync is an unsupported OS capability rather than a failed mutation, so the atomic
+file rename itself still lands, but Windows cannot get the same POSIX parent-directory-entry
+power-loss durability guarantee that Linux/macOS get from this primitive. Planner finalization
+always validates plan/resolver artifacts through the resolver's platform-independent
+`--validate-only` mode: no filesystem capability check, no case-sensitivity probe, and no
+executable wave or serial barrier. This is structural correctness validation, not execution
+admission, and it is distinct from parallel scheduling itself, which still rejects native Windows
+and DrvFS exactly as before -- `--validate-only` succeeding on a host never implies
+`/tdk-implement --parallel` can schedule work there.
 
 Parallel implementation is Claude-first in V1. The generated Codex
 `tdk-implement` skill contains an early `--parallel` STOP before task validation,

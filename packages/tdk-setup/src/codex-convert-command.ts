@@ -34,7 +34,7 @@ export function createConvertCommand(): Command {
     .option('--plugins <names>', 'comma-separated plugin names')
     .option('--all-plugins', 'convert all plugins listed in .specify/plugins/manifest.json')
     .option('--dry-run', 'list planned Codex package artifacts without writing')
-    .option('--check', 're-emit in memory and fail if committed Codex packages differ')
+    .option('--check', 're-emit in memory and fail if materialized Codex packages differ')
     .action(async (opts: ConvertOptions) => {
       try {
         const root = resolveConsumerRoot(process.cwd());

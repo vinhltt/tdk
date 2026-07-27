@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.0.2] - 2026-07-27
+
+### Changed
+- tdk-memory-agent model upgraded from sonnet to opus
+
 ## [3.0.1] - 2026-07-20
 
 ### Changed

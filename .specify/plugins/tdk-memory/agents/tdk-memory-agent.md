@@ -7,9 +7,9 @@ description: "Load relevant memory context (mode load) AND validate spec/plan fo
   validating a plan for business conflicts, or when user asks 'check for business
   conflicts' / 'validate against memory'."
 color: red
-model: sonnet
+model: opus
 metadata:
-  version: "3.0.1"
+  version: "3.0.2"
 ---
 
 ## Mode

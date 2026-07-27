@@ -270,9 +270,11 @@ flowchart TD
 
 Use `/tdk-plan <id> --ut-backfill` (or `--tdd` for tests-first phases) to fold unit-test planning into `plan.md` phases. Test-mode phases include `Test Quality Gate` rows before implementation can mark the phase done: TDK owns baseline rubric, traceability, and gate row completion; the consumer test skill listed in `## Delegate Skills` owns framework commands and numeric coverage policy. `--sub-workspace` targets a specific workspace (e.g., `backend`, `frontend`), `--module` narrows to a module, and `--standalone` on `--ut-backfill` skips spec dependency for existing code.
 
-For Codex harness installs, generated `.specify/codex-plugins/**` packages must
-exist via the setup CLI `convert` / Codex install path. The default distribution
-payload omits those generated packages.
+For Codex harness installs, materialize `.specify/codex-plugins/**` in the
+consumer with setup CLI `convert --all-plugins`, then run manifest compute with
+`--write` and `--check` before installation. `convert --check` requires that
+materialized output. The default distribution payload intentionally omits these
+generated packages and their consumer-local manifest.
 
 ### Config & Workspace Management
 

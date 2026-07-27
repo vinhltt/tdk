@@ -2,11 +2,18 @@ import { describe, expect, it } from 'bun:test';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-const CODEX_PLUGINS_DIR = resolve(import.meta.dir, '../../../../codex-plugins');
-const CODEX_MANIFEST = JSON.parse(
-  readFileSync(join(CODEX_PLUGINS_DIR, 'manifest.json'), 'utf-8'),
-) as { plugins?: Record<string, { version?: string; files?: Record<string, string> }> };
-const INCEPTION_ROOT = join(CODEX_PLUGINS_DIR, 'tdk-inception');
+const SOURCE_MANIFEST_PATH = resolve(import.meta.dir, '../../../../plugins/manifest.json');
+const INCEPTION_ROOT = resolve(import.meta.dir, '../../../../plugins/tdk-inception');
+const INCEPTION_INTERFACE_PATH = join(INCEPTION_ROOT, '.claude-plugin', 'interface.json');
+const INCEPTION_PLUGIN_PATH = join(INCEPTION_ROOT, '.claude-plugin', 'plugin.json');
+
+type SourceManifest = {
+  plugins?: Record<string, {
+    version?: string;
+    components?: { skills?: Record<string, { version?: string }> };
+    files?: Record<string, string>;
+  }>;
+};
 
 const CORE_MOVED_SKILLS = [
   'tdk-greenfield-start',
@@ -46,54 +53,54 @@ const INCEPTION_SKILL_VERSIONS: Record<string, string> = {
   'tdk-workspace-layout-propose': '1.0.0',
 };
 
-function readComponentVersion(path: string): string | undefined {
-  return readFileSync(path, 'utf-8').match(/metadata:\s*\n\s+version:\s*["']([^"']+)["']/)?.[1];
+const SOURCE_MANIFEST = JSON.parse(readFileSync(SOURCE_MANIFEST_PATH, 'utf-8')) as SourceManifest;
+
+function readJson(path: string): Record<string, unknown> {
+  return JSON.parse(readFileSync(path, 'utf-8')) as Record<string, unknown>;
 }
 
-describe('tdk-inception generated Codex ownership', () => {
-  it('owns exactly the 15 generated skill roots and no runtime or agent directory', () => {
-    const generatedSkills = readdirSync(join(INCEPTION_ROOT, 'skills'), { withFileTypes: true })
+describe('tdk-inception source plugin ownership', () => {
+  it('owns exactly the 15 source skill roots', () => {
+    const sourceSkills = readdirSync(join(INCEPTION_ROOT, 'skills'), { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)
       .sort();
-    const files = CODEX_MANIFEST.plugins?.['tdk-inception']?.files ?? {};
+    const inception = SOURCE_MANIFEST.plugins?.['tdk-inception'];
+    const skills = inception?.components?.skills ?? {};
+    const files = inception?.files ?? {};
 
-    expect(generatedSkills).toEqual(INCEPTION_SKILLS);
-    expect(CODEX_MANIFEST.plugins?.['tdk-inception']?.version).toBe('1.0.1');
+    expect(sourceSkills).toEqual(INCEPTION_SKILLS);
+    expect(inception?.version).toBe('1.0.1');
     for (const skill of INCEPTION_SKILLS) {
+      expect(skills[skill]?.version).toBe(INCEPTION_SKILL_VERSIONS[skill]);
       expect(files[`skills/${skill}/SKILL.md`]).toBeDefined();
-      expect(readComponentVersion(join(INCEPTION_ROOT, 'skills', skill, 'SKILL.md'))).toBe(
-        INCEPTION_SKILL_VERSIONS[skill],
-      );
-    }
-    for (const directory of ['agents', 'hooks', 'lib']) {
-      expect(existsSync(join(INCEPTION_ROOT, directory))).toBe(false);
-      expect(Object.keys(files).some((file) => file.startsWith(`${directory}/`))).toBe(false);
+      expect(existsSync(join(INCEPTION_ROOT, 'skills', skill, 'SKILL.md'))).toBe(true);
     }
   });
 
-  it('removes every moved generated root from the old owners', () => {
-    const coreFiles = CODEX_MANIFEST.plugins?.['tdk-core']?.files ?? {};
-    const utilsFiles = CODEX_MANIFEST.plugins?.['tdk-utils']?.files ?? {};
+  it('removes every moved skill from the old source owners', () => {
+    const coreSkills = SOURCE_MANIFEST.plugins?.['tdk-core']?.components?.skills ?? {};
+    const coreFiles = SOURCE_MANIFEST.plugins?.['tdk-core']?.files ?? {};
+    const utilsSkills = SOURCE_MANIFEST.plugins?.['tdk-utils']?.components?.skills ?? {};
+    const utilsFiles = SOURCE_MANIFEST.plugins?.['tdk-utils']?.files ?? {};
 
     for (const skill of CORE_MOVED_SKILLS) {
-      expect(existsSync(join(CODEX_PLUGINS_DIR, 'tdk-core', 'skills', skill))).toBe(false);
+      expect(coreSkills[skill]).toBeUndefined();
       expect(coreFiles[`skills/${skill}/SKILL.md`]).toBeUndefined();
     }
     for (const skill of UTILS_MOVED_SKILLS) {
-      expect(existsSync(join(CODEX_PLUGINS_DIR, 'tdk-utils', 'skills', skill))).toBe(false);
+      expect(utilsSkills[skill]).toBeUndefined();
       expect(utilsFiles[`skills/${skill}/SKILL.md`]).toBeUndefined();
     }
   });
 
-  it('exposes the generated skills interface without a hooks contract', () => {
-    const plugin = JSON.parse(
-      readFileSync(join(INCEPTION_ROOT, '.codex-plugin', 'plugin.json'), 'utf-8'),
-    ) as Record<string, unknown>;
+  it('defines canonical source plugin and interface metadata', () => {
+    const plugin = readJson(INCEPTION_PLUGIN_PATH);
+    const sourceInterface = readJson(INCEPTION_INTERFACE_PATH);
 
     expect(plugin.name).toBe('tdk-inception');
     expect(plugin.version).toBe('1.0.1');
-    expect(plugin.skills).toBe('./skills/');
-    expect(plugin.hooks).toBeUndefined();
+    expect(sourceInterface.displayName).toBe('TDK Inception');
+    expect(sourceInterface.capabilities).toEqual(['Skills']);
   });
 });

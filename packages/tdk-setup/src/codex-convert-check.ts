@@ -37,7 +37,7 @@ export async function checkCodexPluginFreshness(consumerRoot: string, plugins: C
         mismatches.push({ plugin: plugin.name, path: relativePath, reason: 'different' });
       }
     }
-    // Walk the committed codex package root for "extra" files (not in expected set)
+    // Walk the materialized Codex package root for "extra" files (not in expected set)
     for (const filePath of walkFiles(pkgRoot)) {
       const relativePath = path.relative(pkgRoot, filePath).replace(/\\/g, '/');
       if (!expected.has(relativePath)) {

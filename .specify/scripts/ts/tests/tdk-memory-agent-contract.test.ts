@@ -5,7 +5,6 @@ import { join, relative, resolve } from 'node:path';
 const PROJECT_ROOT = resolve(import.meta.dir, '../../../..');
 const SPECIFY_DIR = resolve(PROJECT_ROOT, '.specify');
 const PLUGINS_DIR = resolve(import.meta.dir, '../../../plugins');
-const CODEX_PLUGINS_DIR = resolve(SPECIFY_DIR, 'codex-plugins');
 const SPECIFY_DOCS_DIR = resolve(SPECIFY_DIR, 'docs');
 const README = resolve(PROJECT_ROOT, 'README.md');
 const AGENT = resolve(PLUGINS_DIR, 'tdk-memory/agents/tdk-memory-agent.md');
@@ -27,22 +26,14 @@ const LEGACY_OBSIDIAN_TERMS = [
   'obsidian_batch_get_file_contents',
 ];
 const MEMORY_SOURCE_DIR = resolve(PLUGINS_DIR, 'tdk-memory');
-const MEMORY_CODEX_DIR = resolve(CODEX_PLUGINS_DIR, 'tdk-memory');
 const PLAN_SOURCE_DIR = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-plan');
-const PLAN_CODEX_DIR = resolve(CODEX_PLUGINS_DIR, 'tdk-core/skills/tdk-plan');
 const OBSIDIAN_CONTRACT = resolve(
   PLUGINS_DIR,
-  'tdk-memory/skills/_shared/obsidian-mcp-action-contract.md',
-);
-const CODEX_OBSIDIAN_CONTRACT = resolve(
-  CODEX_PLUGINS_DIR,
   'tdk-memory/skills/_shared/obsidian-mcp-action-contract.md',
 );
 const MEMORY_UPDATE_ENRICHMENT_FLOWS = [
   resolve(PLUGINS_DIR, 'tdk-memory/skills/tdk-memory-update/references/flow-update-mcp.md'),
   resolve(PLUGINS_DIR, 'tdk-memory/skills/tdk-memory-update/references/flow-update-normal.md'),
-  resolve(CODEX_PLUGINS_DIR, 'tdk-memory/skills/tdk-memory-update/references/flow-update-mcp.md'),
-  resolve(CODEX_PLUGINS_DIR, 'tdk-memory/skills/tdk-memory-update/references/flow-update-normal.md'),
 ];
 const ALLOWED_HISTORICAL_LINES = new Map([
   [
@@ -175,31 +166,29 @@ describe('tdk-memory-agent contract', () => {
     expect(validateSection).toContain('Context Block');
   });
 
-  it('active TDK artifacts do not reference stale memory agent names as current behavior', () => {
-    const activeSurfaces = [PLUGINS_DIR, CODEX_PLUGINS_DIR, SPECIFY_DOCS_DIR, README];
+  it('active TDK source artifacts do not reference stale memory agent names as current behavior', () => {
+    const activeSurfaces = [PLUGINS_DIR, SPECIFY_DOCS_DIR, README];
     const violations = findTermViolations(activeSurfaces, LEGACY_ACTIVE_TERMS);
 
     expect(violations).toEqual([]);
   });
 
-  it('active memory and plan surfaces use the Obsidian action contract, not legacy smart-obsidian tools', () => {
-    const activeSurfaces = [MEMORY_SOURCE_DIR, PLAN_SOURCE_DIR, MEMORY_CODEX_DIR, PLAN_CODEX_DIR];
+  it('active memory and plan source surfaces use the Obsidian action contract, not legacy smart-obsidian tools', () => {
+    const activeSurfaces = [MEMORY_SOURCE_DIR, PLAN_SOURCE_DIR];
     const violations = findTermViolations(activeSurfaces, LEGACY_OBSIDIAN_TERMS);
 
     expect(violations).toEqual([]);
   });
 
-  it('defines the shared Obsidian MCP action contract in source and generated Codex mirror', () => {
-    for (const contractPath of [OBSIDIAN_CONTRACT, CODEX_OBSIDIAN_CONTRACT]) {
-      expect(existsSync(contractPath), `${relative(PROJECT_ROOT, contractPath)} should exist`).toBe(true);
-      const content = read(contractPath);
+  it('defines the shared Obsidian MCP action contract in the source plugin', () => {
+    expect(existsSync(OBSIDIAN_CONTRACT), `${relative(PROJECT_ROOT, OBSIDIAN_CONTRACT)} should exist`).toBe(true);
+    const content = read(OBSIDIAN_CONTRACT);
 
-      expect(content).toContain('vault(action="list"');
-      expect(content).toContain('vault(action="read"');
-      expect(content).toContain('vault(action="search"');
-      expect(content).toContain('edit(action="patch"');
-      expect(content).toContain('STATUS: MCP_UNAVAILABLE');
-    }
+    expect(content).toContain('vault(action="list"');
+    expect(content).toContain('vault(action="read"');
+    expect(content).toContain('vault(action="search"');
+    expect(content).toContain('edit(action="patch"');
+    expect(content).toContain('STATUS: MCP_UNAVAILABLE');
   });
 
   it('keeps memory-update enrichment self-contained instead of loading legacy Obsidian helper skills', () => {

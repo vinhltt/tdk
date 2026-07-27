@@ -11,6 +11,7 @@ import {
 } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { dirname } from 'node:path';
+import { syncParentDirectory } from './parent-directory-sync';
 
 function hashFile(path: string): string | null {
   if (!existsSync(path)) return null;
@@ -19,15 +20,6 @@ function hashFile(path: string): string | null {
 
 function hashContent(content: string): string {
   return createHash('sha256').update(content).digest('hex');
-}
-
-function fsyncDirectory(path: string): void {
-  const fd = openSync(path, 'r');
-  try {
-    fsyncSync(fd);
-  } finally {
-    closeSync(fd);
-  }
 }
 
 export function atomicReplaceTextFile(
@@ -57,7 +49,7 @@ export function atomicReplaceTextFile(
   }
 
   renameSync(tempPath, targetPath);
-  fsyncDirectory(dirname(targetPath));
+  syncParentDirectory(targetPath);
   if (hashFile(targetPath) !== expectedNewHash) {
     throw new Error(`Published write verification failed: ${targetPath}`);
   }

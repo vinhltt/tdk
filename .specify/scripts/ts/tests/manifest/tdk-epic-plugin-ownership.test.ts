@@ -3,7 +3,6 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const SOURCE_MANIFEST_PATH = resolve(import.meta.dir, '../../../../plugins/manifest.json');
-const CODEX_MANIFEST_PATH = resolve(import.meta.dir, '../../../../codex-plugins/manifest.json');
 const SHARED_PROTOCOL_PATH = resolve(
   import.meta.dir,
   '../../../../_shared/skills/interview-alignment-protocol.md',
@@ -14,6 +13,13 @@ const PRIMARY_WORKFLOW_ROUTING_PATH = resolve(
   import.meta.dir,
   '../../../../claude-rules/primary-workflow-routing.md',
 );
+
+type SourceManifest = {
+  plugins?: Record<string, {
+    components?: { skills?: Record<string, { version?: string }> };
+    files?: Record<string, string>;
+  }>;
+};
 
 const EPIC_SKILLS = [
   'tdk-discovery',
@@ -26,53 +32,38 @@ function read(path: string): string {
   return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }
 
-function readJson(path: string): any {
-  const content = read(path);
-  return content ? JSON.parse(content) : { plugins: {} };
+function readManifest(): SourceManifest {
+  return JSON.parse(read(SOURCE_MANIFEST_PATH)) as SourceManifest;
 }
 
 describe('tdk-epic plugin ownership', () => {
   it('declares source plugin skill ownership in .specify/plugins/manifest.json', () => {
-    const manifest = readJson(SOURCE_MANIFEST_PATH);
+    const manifest = readManifest();
     const coreSkills = manifest.plugins?.['tdk-core']?.components?.skills ?? {};
     const epicSkills = manifest.plugins?.['tdk-epic']?.components?.skills ?? {};
-
-    expect(manifest.plugins?.['tdk-epic']).toBeDefined();
-    for (const skill of EPIC_SKILLS) {
-      expect(epicSkills[skill]).toBeDefined();
-      expect(coreSkills[skill]).toBeUndefined();
-    }
-  });
-
-  it('declares generated Codex package ownership by file path', () => {
-    const manifest = readJson(CODEX_MANIFEST_PATH);
-    const coreFiles = manifest.plugins?.['tdk-core']?.files ?? {};
     const epicFiles = manifest.plugins?.['tdk-epic']?.files ?? {};
 
     expect(manifest.plugins?.['tdk-epic']).toBeDefined();
     for (const skill of EPIC_SKILLS) {
+      expect(epicSkills[skill]).toBeDefined();
       expect(epicFiles[`skills/${skill}/SKILL.md`]).toBeDefined();
-      expect(coreFiles[`skills/${skill}/SKILL.md`]).toBeUndefined();
+      expect(coreSkills[skill]).toBeUndefined();
     }
   });
 
   it('ships the shared interview protocol as root shared payload', () => {
     expect(existsSync(SHARED_PROTOCOL_PATH)).toBe(true);
 
-    const sourceManifest = readJson(SOURCE_MANIFEST_PATH);
+    const sourceManifest = readManifest();
     const sourceFiles = sourceManifest.plugins?.['tdk-core']?.files ?? {};
     expect(sourceFiles['skills/_shared/interview-alignment-protocol.md']).toBeUndefined();
-
-    const codexManifest = readJson(CODEX_MANIFEST_PATH);
-    const codexCoreFiles = codexManifest.plugins?.['tdk-core']?.files ?? {};
-    expect(codexCoreFiles['skills/_shared/interview-alignment-protocol.md']).toBeUndefined();
   });
 
   it('documents workflow command availability in root README and CLI package selection in setup README', () => {
     const rootReadme = read(ROOT_README_PATH);
     const setupReadme = read(SETUP_README_PATH);
     const primaryWorkflowRouting = read(PRIMARY_WORKFLOW_ROUTING_PATH);
-    const sourceManifest = readJson(SOURCE_MANIFEST_PATH);
+    const sourceManifest = readManifest();
     const routingIntro = primaryWorkflowRouting.split('## Canonical order')[0] ?? '';
 
     expect(rootReadme).toContain('**tdk-epic**');

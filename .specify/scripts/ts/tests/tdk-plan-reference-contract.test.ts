@@ -242,8 +242,18 @@ describe('tdk-plan reference contract', () => {
 
     expect(existingPlanWorkflow).toContain('validates the complete resolver input and reciprocal graph');
     expect(outputContract).toContain(
-      'resolve-parallel-phase-wave.ts --project-root "$PROJECT_DIR" --plan "$FEATURE_DIR/plan.md"',
+      'resolve-parallel-phase-wave.ts --project-root "$PROJECT_DIR" --plan "$FEATURE_DIR/plan.md" --validate-only',
     );
+  });
+
+  it('requires the explicit --validate-only flag for planner validation and prohibits it in parallel-implementation scheduling examples', () => {
+    const outputContract = read(resolve(REFERENCES_DIR, 'plan-output-contract.md'));
+    const implementOrchestration = read(resolve(
+      PLUGINS_DIR, 'tdk-core/skills/tdk-implement/references/parallel-phase-orchestration.md',
+    ));
+
+    expect(outputContract).toContain('--validate-only');
+    expect(implementOrchestration).not.toContain('--validate-only');
   });
 
   it('places transactional parallel validation before guardian and reporting', () => {

@@ -20,8 +20,9 @@ import {
 } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { hostname } from 'node:os';
-import { basename, dirname, join, relative, sep } from 'node:path';
+import { basename, join, relative, sep } from 'node:path';
 import { CliExitError, EXIT_FAIL_CLOSED, EXIT_STALE_PLAN } from '../../../utils/exit-codes';
+import { syncParentDirectory } from '../../util/parent-directory-sync';
 import { hashBytes, type ApplyPlan } from './apply-plan';
 import { redactConfigForOutput, type SafeWriterPaths } from './apply-security';
 import { formatTopologyDiff } from './patch';
@@ -187,15 +188,6 @@ export function assessRecoverability(workspaceRootRealPath: string, targetRealPa
   return { kind: 'git-tracked-clean', repoRoot, relativeTarget, gitDiff };
 }
 
-function fsyncParentDir(path: string): void {
-  const fd = openSync(dirname(path), constants.O_RDONLY);
-  try {
-    fsyncSync(fd);
-  } finally {
-    closeSync(fd);
-  }
-}
-
 function atomicWriteJson(plan: ApplyPlan, paths: SafeWriterPaths): string {
   const serialized = `${JSON.stringify(plan.writeConfig, null, 2)}\n`;
   const afterHash = hashBytes(serialized);
@@ -234,7 +226,7 @@ function atomicWriteJson(plan: ApplyPlan, paths: SafeWriterPaths): string {
 
   renameSync(paths.tempPath, paths.configPath);
   chmodSync(paths.configPath, targetMode);
-  fsyncParentDir(paths.configPath);
+  syncParentDirectory(paths.configPath);
   return afterHash;
 }
 

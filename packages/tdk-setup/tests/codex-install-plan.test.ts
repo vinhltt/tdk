@@ -44,7 +44,7 @@ function writeCodexManifest(
 }
 
 /**
- * Write a preconverted plugin fixture using the NEW official layout:
+ * Write a materialized Codex plugin fixture using the official layout:
  * - Skills/hooks/lib at .specify/codex-plugins/<plugin>/ (no .codex-plugin/ prefix)
  * - Hook declaration at hooks/codex-hooks.json
  * - Source agents/*.md at .specify/plugins/<plugin>/agents/ (two-root model)
@@ -56,7 +56,7 @@ function writePreconvertedPlugin(consumer = makeConsumer('tdk-codex-install-')) 
   const plugin = 'tdk-core';
   const codexFiles: Record<string, string> = {};
 
-  // Package-root artifacts (official layout)
+  // Materialized package-root artifacts (official layout)
   codexFiles['skills/tdk-demo/SKILL.md'] = writeCodexPkgFile(root, plugin, 'skills/tdk-demo/SKILL.md', '# tdk-demo\nUse tdk-demo.\n');
   codexFiles['hooks/hook-gateway.cjs'] = writeCodexPkgFile(root, plugin, 'hooks/hook-gateway.cjs', 'require("../lib/demo.cjs");\n');
   codexFiles['hooks/wrappers/demo.cjs'] = writeCodexPkgFile(root, plugin, 'hooks/wrappers/demo.cjs', 'process.exit(0);\n');
@@ -211,7 +211,7 @@ describe('codex install plan', () => {
 
   test('rejects source artifacts whose bytes do not match codex manifest checksums', () => {
     const consumer = writePreconvertedPlugin(makeConsumer('tdk-codex-checksum-'));
-    // Tamper with a committed codex artifact
+    // Tamper with a materialized Codex artifact.
     fs.writeFileSync(
       path.join(consumer.root, '.specify', 'codex-plugins', 'tdk-core', 'hooks', 'hook-gateway.cjs'),
       'tampered\n', 'utf-8',
@@ -248,7 +248,7 @@ describe('codex install plan', () => {
     const payload = Buffer.from([0xff, 0xfe, 0xfd, 0x00, 0x61]);
     const checksum = writeCodexPkgBuffer(consumer.root, 'tdk-core', 'skills/tdk-demo/assets/data.bin', payload);
 
-    // Add to codex manifest
+    // Add to the materialized Codex manifest.
     const manifestPath = path.join(consumer.root, '.specify', 'codex-plugins', 'manifest.json');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
     manifest.plugins['tdk-core'].files['skills/tdk-demo/assets/data.bin'] = checksum;

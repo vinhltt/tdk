@@ -33,9 +33,12 @@ bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --plugins tdk-core --yes
 ```
 
-Dùng `--harness codex` để cài Codex riêng sau khi các gói đã tạo trong
-`.specify/codex-plugins/` có mặt tại consumer. Không hỗ trợ cài Claude và Codex
-trong cùng một lần chạy.
+Dùng `--harness codex` để cài Codex riêng sau khi materialize các gói trong
+consumer. Tại consumer root, chạy `convert --all-plugins`, rồi manifest compute
+với `--write` và `--check`; các gói cùng manifest tại
+`.specify/codex-plugins/` cục bộ của consumer phải tồn tại trước khi cài.
+`convert --check` cũng yêu cầu output đã được materialize. Không hỗ trợ cài
+Claude và Codex trong cùng một lần chạy.
 
 Mọi lựa chọn đều được phân giải thành bộ base gắn kết gồm `tdk-core`,
 `tdk-inception`, `tdk-memory`, và `tdk-utils`. `--plugins` dùng để yêu cầu các

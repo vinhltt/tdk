@@ -8,7 +8,6 @@ const UTILS_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-utils/sk
 const DOCS_DIR = resolve(import.meta.dir, '../../../docs/en/guides');
 const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json');
 const SCAFFOLD_INTERFACE_PATH = resolve(import.meta.dir, '../../../plugins/tdk-scaffold/.claude-plugin/interface.json');
-const CODEX_SCAFFOLD_PLUGIN_PATH = resolve(import.meta.dir, '../../../codex-plugins/tdk-scaffold/.codex-plugin/plugin.json');
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
 
 const SKILL_NAME = 'tdk-golden-path-scaffold';
@@ -194,7 +193,6 @@ describe('TDK golden-path scaffold contracts', () => {
     const skillsGuide = read(join(DOCS_DIR, 'skills-guide.md'));
     const workflowMap = read(join(DOCS_DIR, 'workflow-map.md'));
     const sourceInterface = read(SCAFFOLD_INTERFACE_PATH);
-    const codexPlugin = read(CODEX_SCAFFOLD_PLUGIN_PATH);
 
     expect(manifest).toContain('"tdk-golden-path-scaffold"');
     expect(readme).toContain('**tdk-scaffold**');
@@ -205,7 +203,5 @@ describe('TDK golden-path scaffold contracts', () => {
     expect(workflowMap).toContain('golden-path-scaffold-plan.md');
     expect(sourceInterface).toContain('golden-path');
     expect(sourceInterface).toContain('skeleton');
-    expect(codexPlugin).toContain('golden-path');
-    expect(codexPlugin).toContain('skeleton');
   });
 });

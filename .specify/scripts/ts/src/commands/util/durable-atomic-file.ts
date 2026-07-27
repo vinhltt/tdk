@@ -1,20 +1,14 @@
 import {
   closeSync, fchmodSync, fsyncSync, lstatSync, openSync, renameSync, rmdirSync, unlinkSync, writeFileSync,
 } from 'node:fs';
-import { dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
-
-function syncDirectory(path: string): void {
-  const descriptor = openSync(path, 'r');
-  try { fsyncSync(descriptor); } finally { closeSync(descriptor); }
-}
+import { syncParentDirectory } from './parent-directory-sync';
 
 export function durableAtomicWriteFileSync(
   path: string,
   bytes: string | NodeJS.ArrayBufferView,
   requestedMode?: number,
 ): void {
-  const directory = dirname(path);
   const temporary = `${path}.tmp-${randomUUID()}`;
   const mode = requestedMode ?? (lstatSync(path).mode & 0o7777);
   let descriptor: number | undefined;
@@ -27,7 +21,7 @@ export function durableAtomicWriteFileSync(
     closeSync(descriptor);
     descriptor = undefined;
     renameSync(temporary, path);
-    syncDirectory(directory);
+    syncParentDirectory(path);
   } catch (error) {
     if (descriptor !== undefined) closeSync(descriptor);
     try { unlinkSync(temporary); } catch { /* best-effort cleanup */ }
@@ -37,10 +31,10 @@ export function durableAtomicWriteFileSync(
 
 export function durableUnlinkSync(path: string): void {
   unlinkSync(path);
-  syncDirectory(dirname(path));
+  syncParentDirectory(path);
 }
 
 export function durableRmdirSync(path: string): void {
   rmdirSync(path);
-  syncDirectory(dirname(path));
+  syncParentDirectory(path);
 }

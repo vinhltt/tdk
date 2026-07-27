@@ -5,7 +5,8 @@ import { checkPlanSkillRouting, parsePlanSkillRouting } from '../../utils/plan-s
 import { parsePhasesTable } from './phases-table-parser';
 import { assertPlannerExternalFinalState } from './parallel-planner-external-snapshot';
 import {
-  assertNoUndeclaredPlannerDelta, capturePlannerFeature, plannerEntryFingerprint, type PlannerSnapshot,
+  assertNoUndeclaredPlannerDelta, capturePlannerFeature, plannerEntryFingerprint, type CanonicalPlannerEntry,
+  type CanonicalPlannerSnapshot,
 } from './parallel-planner-snapshot';
 
 function run(script: string, args: string[]): void {
@@ -17,14 +18,14 @@ function run(script: string, args: string[]): void {
   }
 }
 
-function changedFeaturePaths(snapshot: PlannerSnapshot, current: PlannerSnapshot['entries']): string[] {
+function changedFeaturePaths(snapshot: CanonicalPlannerSnapshot, current: CanonicalPlannerEntry[]): string[] {
   const before = new Map(snapshot.entries.map((entry) => [entry.path, plannerEntryFingerprint(entry)]));
   const after = new Map(current.map((entry) => [entry.path, plannerEntryFingerprint(entry)]));
   return [...new Set([...before.keys(), ...after.keys()])].filter((path) => before.get(path) !== after.get(path));
 }
 
 export function validatePlannerFinalState(input: {
-  projectRoot: string; featureDir: string; snapshot: PlannerSnapshot;
+  projectRoot: string; featureDir: string; snapshot: CanonicalPlannerSnapshot;
 }): void {
   assertNoUndeclaredPlannerDelta(input);
   const planPath = resolve(input.featureDir, 'plan.md');
@@ -64,13 +65,13 @@ export function validatePlannerFinalState(input: {
     run('validate-phase-file.ts', [resolve(input.featureDir, path), '--phase-number', String(row.number),
       '--plan', planPath, '--mode', 'parallel', '--project-root', input.projectRoot, '--json']);
   }
-  run('resolve-parallel-phase-wave.ts', ['--project-root', input.projectRoot, '--plan', planPath]);
+  run('resolve-parallel-phase-wave.ts', ['--project-root', input.projectRoot, '--plan', planPath, '--validate-only']);
   assertPlannerExternalFinalState({ ...input, entries: input.snapshot.external });
   for (const external of input.snapshot.external) {
     const path = resolve(input.projectRoot, external.path);
     if (external.path.endsWith('/plan.md')) {
       run('plan-prose-validator.ts', [path, '--json']); run('plan-status-validator.ts', [path, '--json']);
-      run('resolve-parallel-phase-wave.ts', ['--project-root', input.projectRoot, '--plan', path]);
+      run('resolve-parallel-phase-wave.ts', ['--project-root', input.projectRoot, '--plan', path, '--validate-only']);
     } else {
       const check = checkPlanSkillRouting(parsePlanSkillRouting(readFileSync(path, 'utf8')));
       if (check.errors.length) throw new Error(`external routing is invalid: ${check.errors.join('; ')}`);

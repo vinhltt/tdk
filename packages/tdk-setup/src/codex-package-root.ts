@@ -3,8 +3,8 @@ import { validateSafeSegment } from './install-settings-paths';
 
 /**
  * Derives the Codex package root for a given plugin in a consumer repo.
- * The package root is `.specify/codex-plugins/<plugin>/` — the generated
- * Codex artifact tree that is committed alongside the Claude source tree.
+ * The package root is `.specify/codex-plugins/<plugin>/` — a generated-on-demand
+ * Codex artifact tree materialized beside the Claude source tree.
  *
  * Reused by: emitter write-base, install reader source-base,
  * discovery mapping, tree-adapter freshness check.

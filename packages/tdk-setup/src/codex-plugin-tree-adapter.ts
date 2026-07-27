@@ -142,7 +142,7 @@ export function discoverCodexConvertPlugins(consumerRoot: string, selectedPlugin
       warnings: [
         ...inventory.warnings,
         ...(interfaceSource ? [] : [`${plugin.name}: missing .claude-plugin/interface.json; converter will seed one`]),
-        // tdk-test-api never has a committed codex package — suppress missing-plugin.json warning for it
+        // tdk-test-api never has a materialized Codex package — suppress the missing-plugin.json warning.
         ...(codexPlugin || plugin.name === 'tdk-test-api' ? [] : [`${plugin.name}: missing legacy .codex-plugin/plugin.json`]),
       ],
     };

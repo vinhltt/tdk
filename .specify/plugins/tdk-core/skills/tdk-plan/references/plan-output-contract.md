@@ -370,8 +370,12 @@ variables below:
 3. In ascending phase number, for every new/touched phase, resolve and validate
    its complete `auto` access set (including phases not currently ready):
    `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-phase-file.ts "$PHASE_PATH" --phase-number "$PHASE_NUMBER" --plan "$FEATURE_DIR/plan.md" --mode parallel --project-root "$PROJECT_DIR" --json)`
-4. Validate the complete resolver input without using its wave for scheduling:
-   `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/resolve-parallel-phase-wave.ts --project-root "$PROJECT_DIR" --plan "$FEATURE_DIR/plan.md")`
+4. Validate the complete resolver input without using its wave for scheduling.
+   Planner validation is platform-independent: it always passes `--validate-only`,
+   which never runs host filesystem capability or case-sensitivity admission and
+   never returns an executable wave or serial barrier — it is not the same
+   invocation `/tdk-implement --parallel` uses to actually schedule work:
+   `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/resolve-parallel-phase-wave.ts --project-root "$PROJECT_DIR" --plan "$FEATURE_DIR/plan.md" --validate-only)`
 
 New and rewrite validate every generated phase. Append validates only the
 appended phase at gate 3, while gate 4 checks the complete plan. Accept
