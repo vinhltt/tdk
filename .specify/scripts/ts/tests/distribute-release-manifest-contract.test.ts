@@ -75,11 +75,43 @@ function makeDisappearingDeleteWrapper(): string {
   const wrapper = mkdtempSync(join(tmpdir(), "tdk-dist-cp-wrapper-"));
   writeFileSync(join(wrapper, "cp"), `#!/usr/bin/env bash
 if ! /bin/cp "$@"; then exit $?; fi
-if [[ "\${2:-}" == "$TDK_TEST_BACKUP_TRIGGER" ]]; then
-  /bin/rm -f "$TDK_TEST_DISAPPEARING_DELETE"
+normalize_test_path() {
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -u "$1" 2>/dev/null || printf '%s\\n' "$1"
+  else
+    printf '%s\\n' "$1"
+  fi
+}
+if [[ "$(normalize_test_path "\${2:-}")" == "$(normalize_test_path "$TDK_TEST_BACKUP_TRIGGER")" ]]; then
+  /bin/rm -f "$(normalize_test_path "$TDK_TEST_DISAPPEARING_DELETE")"
 fi
 `);
   chmodSync(join(wrapper, "cp"), 0o755);
+  return wrapper;
+}
+
+function makeSha256sumWrapper(mode: "git-bash-stdin" | "malformed" | "multiline-malformed"): string {
+  const wrapper = mkdtempSync(join(tmpdir(), "tdk-dist-sha256-wrapper-"));
+  let body: string;
+  if (mode === "git-bash-stdin") {
+    body = `tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+cat > "$tmp"
+bun -e 'import { createHash } from "node:crypto"; import { readFileSync } from "node:fs"; const digest = createHash("sha256").update(readFileSync(process.argv[1])).digest("hex"); process.stdout.write(digest + " *-\\n");' "$tmp"
+`;
+  } else if (mode === "multiline-malformed") {
+    body = `cat > /dev/null
+printf '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\\n*-\\n'
+`;
+  } else {
+    body = `cat > /dev/null
+printf 'not-a-sha *-\\n'
+`;
+  }
+  writeFileSync(join(wrapper, "sha256sum"), `#!/usr/bin/env bash
+set -euo pipefail
+${body}`);
+  chmodSync(join(wrapper, "sha256sum"), 0o755);
   return wrapper;
 }
 
@@ -93,6 +125,48 @@ describe("distribute.sh release manifest contract", () => {
     expect(result.exitCode).not.toBe(0);
     expect(`${result.stdout}${result.stderr}`).toContain("source release manifest");
     expect(existsSync(join(targetRoot, ".specify", "setup.sh"))).toBe(false);
+  });
+
+  test("accepts Git Bash sha256sum binary-mode stdin output", () => {
+    const sourceRoot = makeSource("tdk-dist-git-bash-sha-source-");
+    writeReleaseManifest(sourceRoot);
+    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-git-bash-sha-target-"));
+    const wrapper = makeSha256sumWrapper("git-bash-stdin");
+
+    const result = runDistribute(sourceRoot, targetRoot, ["--yes", "--yes-delete"], {
+      PATH: `${wrapper}:${process.env.PATH}`,
+    });
+
+    expect(result.exitCode, `stdout:\n${result.stdout}\nstderr:\n${result.stderr}`).toBe(0);
+    expect(existsSync(join(targetRoot, ".specify", "setup.sh"))).toBe(true);
+  });
+
+  test("rejects malformed sha256sum stdout", () => {
+    const sourceRoot = makeSource("tdk-dist-malformed-sha-source-");
+    writeReleaseManifest(sourceRoot);
+    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-malformed-sha-target-"));
+    const wrapper = makeSha256sumWrapper("malformed");
+
+    const result = runDistribute(sourceRoot, targetRoot, ["--yes"], {
+      PATH: `${wrapper}:${process.env.PATH}`,
+    });
+
+    expect(result.exitCode).not.toBe(0);
+    expect(`${result.stdout}${result.stderr}`).toContain("invalid SHA-256 output");
+  });
+
+  test("rejects multiline sha256sum stdout", () => {
+    const sourceRoot = makeSource("tdk-dist-multiline-sha-source-");
+    writeReleaseManifest(sourceRoot);
+    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-multiline-sha-target-"));
+    const wrapper = makeSha256sumWrapper("multiline-malformed");
+
+    const result = runDistribute(sourceRoot, targetRoot, ["--yes"], {
+      PATH: `${wrapper}:${process.env.PATH}`,
+    });
+
+    expect(result.exitCode).not.toBe(0);
+    expect(`${result.stdout}${result.stderr}`).toContain("invalid SHA-256 output");
   });
 
   test("target missing release manifest ships payload without deleting target orphans", () => {
@@ -226,7 +300,7 @@ describe("distribute.sh release manifest contract", () => {
       const manifest = JSON.parse(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8"));
       expect(manifest.files[".specify/unlisted.md"]).toBeUndefined();
     }
-  });
+  }, 15000);
 
   test("--force dry-run previews authoritative mutations without prompts or writes", () => {
     const sourceRoot = makeSource("tdk-dist-force-dry-run-source-");
@@ -309,7 +383,7 @@ describe("distribute.sh release manifest contract", () => {
       expect(result.exitCode, `${result.stdout}${result.stderr}`).toBe(0);
       expect(existsSync(join(targetRoot, ".specify", "old-managed.md"))).toBe(noDelete);
     }
-  });
+  }, 15000);
 
   test("--force --no-delete still rejects a prior-manifest-only nonregular node", () => {
     const sourceRoot = makeSource("tdk-dist-force-no-delete-nonregular-source-");
@@ -330,7 +404,7 @@ describe("distribute.sh release manifest contract", () => {
     expect(`${result.stdout}${result.stderr}`).toContain("not a regular non-symlink file");
     expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("consumer setup\n");
     expect(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8")).toBe(manifestBefore);
-  });
+  }, 15000);
 
   test("--force treats a delete candidate absent at physical snapshot as a rollback-safe no-op", () => {
     const sourceRoot = makeSource("tdk-dist-force-delete-race-source-");
@@ -590,7 +664,7 @@ describe("distribute.sh release manifest contract", () => {
     expect(readFileSync(join(targetRoot, ".specify", "another.md"), "utf8")).toBe("new first payload\n");
     expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("new payload\n");
     expect(readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8")).not.toBe(oldManifest);
-  });
+  }, 15000);
 
   test("injected delete failure rolls back an earlier update and rerun repairs", () => {
     for (const force of [false, true]) {
@@ -622,7 +696,7 @@ describe("distribute.sh release manifest contract", () => {
       expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe("new payload\n");
       expect(existsSync(join(targetRoot, ".specify", "old-managed.md"))).toBe(false);
     }
-  });
+  }, 20000);
 
   test("prefixed updates use checksums of the rendered target bytes", () => {
     const sourceRoot = makeSource("tdk-dist-prefix-source-");
@@ -645,5 +719,5 @@ describe("distribute.sh release manifest contract", () => {
     expect(readFileSync(join(targetRoot, ".specify", "setup.sh"), "utf8")).toBe(
       "echo SAMPLE sample-command updated\n",
     );
-  });
+  }, 15000);
 });

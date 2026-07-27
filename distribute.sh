@@ -388,7 +388,7 @@ file_sha256() {
             echo -e "${RED}Error: failed to hash file: $path${NC}" >&2
             return 1
         }
-        [[ "$result" =~ ^([[:xdigit:]]{64})\ \ -$ ]] && digest="${BASH_REMATCH[1]}"
+        [[ "$result" =~ ^([[:xdigit:]]{64})[[:blank:]]+\*?-$ ]] && digest="${BASH_REMATCH[1]}"
     else
         digest="$("${hash_command[@]}" "$path")" || {
             echo -e "${RED}Error: failed to hash file: $path${NC}" >&2
@@ -617,7 +617,7 @@ source_file = pathlib.Path(sys.argv[3])
 source_brand = source_prefix[:-1] if source_prefix.endswith("-") else source_prefix
 target_brand = target_prefix[:-1] if target_prefix.endswith("-") else target_prefix
 
-text = source_file.read_text(encoding="utf-8")
+text = source_file.read_bytes().decode("utf-8")
 protected = []
 
 def protect(pattern):
@@ -669,7 +669,7 @@ if source_brand and target_brand:
 for index, value in enumerate(protected):
     text = text.replace(f"\ue000{index}\ue001", value)
 
-sys.stdout.write(text)
+sys.stdout.buffer.write(text.encode("utf-8"))
 PY
 }
 

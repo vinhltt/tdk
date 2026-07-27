@@ -6,6 +6,19 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.105.2] - 2026-07-27
+
+### Changed
+- **[Scripts]** Windows cross-platform compatibility for test suite
+  - Add platform-gated branches for filesystem features unsupported on Windows (case-sensitivity probing, file locking, drive-letter path canonicalization)
+  - Normalize path separators using `join()` / `resolve()` instead of hardcoded forward slashes in assertions
+  - Adjust file-permission checks to accept Windows default modes (`0o666` vs `0o600`)
+  - Add host-independent schedule helper for parallel-phase-wave CLI tests
+  - Add `cygpath` normalization and `sha256sum` validation wrappers in distribute contract tests
+  - Add `endsWithHostPath()` helper for parser-resolution path comparisons
+  - Increase test timeouts for slow integration tests (codex distribute, release-manifest contract)
+  - Normalize backslashes in sync-docs path comparison utility
+
 ## [1.105.1] - 2026-07-27
 
 ### Changed

@@ -43,6 +43,10 @@ function writeParserAt(root: string, relPath: string): void {
   writeFileSync(full, '#!/usr/bin/env python3\nprint("ok")\n', 'utf-8');
 }
 
+function endsWithHostPath(actual: string, relativePath: string): boolean {
+  return actual.endsWith(join(...relativePath.split('/')));
+}
+
 describe('plan-env parser-script layout resolution', () => {
   it('candidate 1 (monorepo source) is picked when only that exists', async () => {
     const root = makeRoot();
@@ -54,7 +58,7 @@ describe('plan-env parser-script layout resolution', () => {
     expect(exitCode).toBe(0);
     const json = JSON.parse(stdout) as Record<string, unknown>;
     expect(json.HAS_PARSER).toBe(true);
-    expect((json.PARSER_SCRIPT as string).endsWith(candidate1)).toBe(true);
+    expect(endsWithHostPath(json.PARSER_SCRIPT as string, candidate1)).toBe(true);
   });
 
   it('candidate 2 (installed consumer) is picked when only that exists', async () => {
@@ -67,7 +71,7 @@ describe('plan-env parser-script layout resolution', () => {
     expect(exitCode).toBe(0);
     const json = JSON.parse(stdout) as Record<string, unknown>;
     expect(json.HAS_PARSER).toBe(true);
-    expect((json.PARSER_SCRIPT as string).endsWith(candidate2)).toBe(true);
+    expect(endsWithHostPath(json.PARSER_SCRIPT as string, candidate2)).toBe(true);
   });
 
   it('installed custom-prefix parser is picked when only that exists', async () => {
@@ -80,7 +84,7 @@ describe('plan-env parser-script layout resolution', () => {
     expect(exitCode).toBe(0);
     const json = JSON.parse(stdout) as Record<string, unknown>;
     expect(json.HAS_PARSER).toBe(true);
-    expect((json.PARSER_SCRIPT as string).endsWith(customCandidate)).toBe(true);
+    expect(endsWithHostPath(json.PARSER_SCRIPT as string, customCandidate)).toBe(true);
   });
 
   it('multiple installed custom-prefix parsers are picked deterministically', async () => {
@@ -95,7 +99,7 @@ describe('plan-env parser-script layout resolution', () => {
     expect(exitCode).toBe(0);
     const json = JSON.parse(stdout) as Record<string, unknown>;
     expect(json.HAS_PARSER).toBe(true);
-    expect((json.PARSER_SCRIPT as string).endsWith(candidateA)).toBe(true);
+    expect(endsWithHostPath(json.PARSER_SCRIPT as string, candidateA)).toBe(true);
   });
 
   it('candidate 1 wins when both exist', async () => {
@@ -110,7 +114,7 @@ describe('plan-env parser-script layout resolution', () => {
     expect(exitCode).toBe(0);
     const json = JSON.parse(stdout) as Record<string, unknown>;
     expect(json.HAS_PARSER).toBe(true);
-    expect((json.PARSER_SCRIPT as string).endsWith(candidate1)).toBe(true);
+    expect(endsWithHostPath(json.PARSER_SCRIPT as string, candidate1)).toBe(true);
   });
 
   it('falls back to candidate 1 path and HAS_PARSER=false when neither exists', async () => {
@@ -122,7 +126,7 @@ describe('plan-env parser-script layout resolution', () => {
     expect(exitCode).toBe(0);
     const json = JSON.parse(stdout) as Record<string, unknown>;
     expect(json.HAS_PARSER).toBe(false);
-    expect((json.PARSER_SCRIPT as string).endsWith(candidate1)).toBe(true);
+    expect(endsWithHostPath(json.PARSER_SCRIPT as string, candidate1)).toBe(true);
   });
 
   it('writeAgentJson envelope fields are preserved', async () => {

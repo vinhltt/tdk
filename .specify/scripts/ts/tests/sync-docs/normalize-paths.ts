@@ -16,9 +16,10 @@ export function normalizePaths(obj: unknown, fixtureRoot: string): unknown {
   for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
     if (typeof value === 'string') {
       // Replace absolute fixture root with placeholder
-      result[key] = value.includes(fixtureRoot)
+      const normalized = value.includes(fixtureRoot)
         ? value.replaceAll(fixtureRoot, '<FIXTURE_ROOT>')
         : value;
+      result[key] = normalized.replaceAll('\\', '/');
     } else {
       result[key] = normalizePaths(value, fixtureRoot);
     }

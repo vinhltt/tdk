@@ -15,9 +15,13 @@ afterEach(() => {
 });
 
 describe('probeProjectCaseSensitivity', () => {
-  it('reports a case-sensitive root as ok and leaves no residue behind', () => {
+  it('reports host case behavior and leaves no residue behind', () => {
     const result = probeProjectCaseSensitivity(root);
-    expect(result.ok).toBe(true);
+    if (process.platform !== 'win32') {
+      expect(result.ok).toBe(true);
+    } else if (!result.ok) {
+      expect(result.reason).toBe('case-insensitive-root');
+    }
     expect(readdirSync(root)).toHaveLength(0);
   });
 

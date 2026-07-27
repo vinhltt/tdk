@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync, utimesSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { resolveCachePaths, isTier1CacheValid } from '../../src/commands/scout/cache-resolver';
 
 describe('cache-resolver', () => {
@@ -14,7 +14,7 @@ describe('cache-resolver', () => {
 
   it('creates cache root and returns paths', () => {
     const p = resolveCachePaths({ scopeKey: 'demo', cwd: tempDir });
-    expect(p.cacheRoot).toContain('.specify/cache/tdk-scout');
+    expect(p.cacheRoot).toContain(join('.specify', 'cache', 'tdk-scout'));
     expect(p.packPath).toContain('demo.md');
     expect(p.tier1JsonPath).toContain('demo-tier1.json');
   });
@@ -25,7 +25,7 @@ describe('cache-resolver', () => {
       cwd: tempDir,
       packPathOverride: '/tmp/abc.md',
     });
-    expect(p.packPath).toBe('/tmp/abc.md');
+    expect(p.packPath).toBe(resolve('/tmp/abc.md'));
   });
 
   it('isTier1CacheValid: returns false when JSON missing', () => {

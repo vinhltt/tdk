@@ -3,6 +3,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
+import { runParallelPhaseWaveOperation } from '../src/commands/util/parallel-phase-wave-operation';
 
 const CLI_PATH = resolve(__dirname, '../src/commands/util/resolve-parallel-phase-wave.ts');
 
@@ -21,6 +22,19 @@ function run(
   if (options.validateOnly) args.push('--validate-only');
   const result = spawnSync('bun', args, { encoding: 'utf-8' });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
+}
+
+function runHostIndependentSchedule(projectRoot: string, planPath: string): { status: number | null; stdout: string; stderr: string } {
+  if (process.platform !== 'win32') return run(projectRoot, planPath);
+  const { payload, exitCode } = runParallelPhaseWaveOperation(
+    { projectRoot, planPath, mode: 'schedule' },
+    {
+      platform: 'linux',
+      resolveCapability: () => ({ ok: true }),
+      probeCaseSensitivity: () => ({ ok: true }),
+    },
+  );
+  return { status: exitCode, stdout: `${JSON.stringify(payload)}\n`, stderr: '' };
 }
 
 function writeFile(absPath: string, contents: string): void {
@@ -91,7 +105,7 @@ describe('resolve-parallel-phase-wave CLI', () => {
       '',
     ].join('\n'));
 
-    const { status, stdout } = run(root, planPath);
+    const { status, stdout } = runHostIndependentSchedule(root, planPath);
     expect(status).toBe(0);
     const payload = parseSoleJsonLine(stdout) as { ok: boolean; state: string; wave: number[] };
     expect(payload.ok).toBe(true);
@@ -113,7 +127,7 @@ describe('resolve-parallel-phase-wave CLI', () => {
       '',
     ].join('\n'));
 
-    const { status, stdout } = run(root, planPath);
+    const { status, stdout } = runHostIndependentSchedule(root, planPath);
     expect(status).toBe(0);
     const payload = parseSoleJsonLine(stdout) as { ok: boolean; state: string; wave: number[] };
     expect(payload.ok).toBe(true);
@@ -134,7 +148,7 @@ describe('resolve-parallel-phase-wave CLI', () => {
       '',
     ].join('\n'));
 
-    const { status, stdout } = run(root, planPath);
+    const { status, stdout } = runHostIndependentSchedule(root, planPath);
     expect(status).toBe(0);
     const payload = parseSoleJsonLine(stdout) as { state: string; wave: number[] };
     expect(payload.state).toBe('wave');
@@ -149,7 +163,7 @@ describe('resolve-parallel-phase-wave CLI', () => {
       '',
     ].join('\n'));
 
-    const { status, stdout } = run(root, planPath);
+    const { status, stdout } = runHostIndependentSchedule(root, planPath);
     expect(status).toBe(0);
     expect(parseSoleJsonLine(stdout)).toMatchObject({ ok: true, state: 'complete', wave: [] });
   });
@@ -157,7 +171,7 @@ describe('resolve-parallel-phase-wave CLI', () => {
   it('exit 2 with an invalid payload when the plan.md graph fails to parse', () => {
     writeFile(planPath, '# Not a plan file at all\n');
 
-    const { status, stdout } = run(root, planPath);
+    const { status, stdout } = runHostIndependentSchedule(root, planPath);
     expect(status).toBe(2);
     const payload = parseSoleJsonLine(stdout) as { ok: boolean; state: string; errors: unknown[] };
     expect(payload.ok).toBe(false);
@@ -173,7 +187,7 @@ describe('resolve-parallel-phase-wave CLI', () => {
       '',
     ].join('\n'));
 
-    const { status, stdout } = run(root, planPath);
+    const { status, stdout } = runHostIndependentSchedule(root, planPath);
     expect(status).toBe(2);
     const payload = parseSoleJsonLine(stdout) as { errors: { code: string }[] };
     expect(payload.errors.map((e) => e.code)).toContain('NO_READY_PHASE');
@@ -199,7 +213,7 @@ describe('resolve-parallel-phase-wave CLI', () => {
       '',
     ].join('\n'));
 
-    const { status, stdout } = run(root, planPath);
+    const { status, stdout } = runHostIndependentSchedule(root, planPath);
     expect(status).toBe(0);
     const payload = parseSoleJsonLine(stdout) as { ok: boolean; state: string; serialBarrier: number | null; wave: number[] };
     expect(payload.ok).toBe(true);
@@ -227,6 +241,13 @@ describe('resolve-parallel-phase-wave CLI', () => {
     chmodSync(phaseFile, 0o000);
     chmodSync(root, 0o500);
     try {
+      if (process.platform === 'win32') {
+        const { status, stdout } = run(root, planPath);
+        expect(status).toBe(2);
+        const payload = parseSoleJsonLine(stdout) as { errors: { code: string }[] };
+        expect(payload.errors.map((e) => e.code)).toContain('FILESYSTEM_CAPABILITY_UNSUPPORTED');
+        return;
+      }
       const { status, stdout } = run(root, planPath);
       expect(status).toBe(2);
       const payload = parseSoleJsonLine(stdout) as { errors: { code: string }[] };

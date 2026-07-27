@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import { inspectControllerLease } from '../src/commands/util/parallel-controller-lease-read';
 
 let root: string;
@@ -90,7 +90,7 @@ describe('inspectControllerLease', () => {
   it('worktree resolves to the shared common dir of the main repo', () => {
     initGitRepo(root);
     execFileSync('git', ['commit', '--allow-empty', '-q', '-m', 'init'], { cwd: root });
-    const worktreeDir = join(root, '..', `${root.split('/').pop()}-worktree`);
+    const worktreeDir = join(root, '..', `${basename(root)}-worktree`);
     execFileSync('git', ['worktree', 'add', '-q', worktreeDir, '-b', 'lease-read-test-branch'], { cwd: root });
     try {
       const lockPath = lockDirPath(root);

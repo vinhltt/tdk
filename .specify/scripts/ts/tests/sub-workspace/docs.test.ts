@@ -184,8 +184,8 @@ describe('runDocs (integration)', () => {
       expect(t.mode).toBe('init');
       expect(t.tokenCount).toBe(1234);
       expect(t.existingFiles).toEqual([]);
-      expect(t.outputDir).toContain('sub-workspaces/frontend');
-      expect(env.cleanupCandidates[0]).toContain('.specify/cache/tdk-docs');
+      expect(t.outputDir).toContain(join('sub-workspaces', 'frontend'));
+      expect(env.cleanupCandidates[0]).toContain(join('.specify', 'cache', 'tdk-docs'));
     }
   });
 

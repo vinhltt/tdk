@@ -355,7 +355,8 @@ describe('config topology apply dry-run', () => {
     expect(written.architecture.type).toBe('modular-monolith');
     expect(written.subWorkspaces.map((entry: { name: string }) => entry.name)).toEqual(['app', 'legacy']);
     expect(written.subWorkspaces.find((entry: { name: string }) => entry.name === 'legacy').pluginField).toBe('keep-subfield');
-    expect((statSync(configPath()).mode & 0o777).toString(8)).toBe('600');
+    const mode = (statSync(configPath()).mode & 0o777).toString(8);
+    expect(mode).toBe(process.platform === 'win32' ? '666' : '600');
   });
 
   it('rejects stale --expect-hash after raw config changes', async () => {

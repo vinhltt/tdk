@@ -22,6 +22,15 @@ function run(args: string[]) {
   return spawnSync('bun', [CLI, ...args], { encoding: 'utf8' });
 }
 
+function expectNativeWindowsAcquireUnsupported(result: ReturnType<typeof run>): void {
+  expect(process.platform).toBe('win32');
+  expect(result.status).toBe(2);
+  const payload = JSON.parse(result.stdout) as { ok: boolean; reason: string; released: boolean };
+  expect(payload.ok).toBe(false);
+  expect(payload.reason).toBe('native-windows-unsupported');
+  expect(payload.released).toBe(true);
+}
+
 function writeValidPlannerArtifacts(feature: string): void {
   mkdirSync(join(feature, 'phases'), { recursive: true });
   writeFileSync(join(feature, 'phases/phase-01-a.md'), [
@@ -51,6 +60,10 @@ describe('parallel-controller CLI', () => {
     const root = repository();
     const base = ['--project-root', root, '--feature-dir', root, '--task-id'];
     const first = run(['acquire', ...base, 'feat-1', '--controller-id', 'c1']);
+    if (process.platform === 'win32') {
+      expectNativeWindowsAcquireUnsupported(first);
+      return;
+    }
     expect(first.status).toBe(0);
     expect(first.stdout.split('\n')).toHaveLength(2);
     expect(first.stdout).not.toContain('\n  ');
@@ -91,7 +104,12 @@ describe('parallel-controller CLI', () => {
     spawnSync('git', ['add', '.'], { cwd: root });
     spawnSync('git', ['-c', 'user.name=TDK', '-c', 'user.email=tdk@example.invalid', 'commit', '-qm', 'base'], { cwd: root });
     const common = ['--project-root', root, '--feature-dir', root];
-    const acquired = JSON.parse(run(['acquire', ...common, '--task-id', 'feat-1', '--controller-id', 'c1']).stdout);
+    const acquire = run(['acquire', ...common, '--task-id', 'feat-1', '--controller-id', 'c1']);
+    if (process.platform === 'win32') {
+      expectNativeWindowsAcquireUnsupported(acquire);
+      return;
+    }
+    const acquired = JSON.parse(acquire.stdout);
     const lock = acquired.lockPath as string;
     const transitionInput = join(lock, 'transition-input.json');
     writeFileSync(transitionInput, JSON.stringify({ controllerId: 'c1', transitions: [{ phase: 1, from: 'todo', to: 'in_progress' }] }));
@@ -130,6 +148,7 @@ describe('parallel-controller CLI', () => {
     writeFileSync(join(feature, 'note.md'), 'before\n');
     mkdirSync(join(feature, 'readonly')); writeFileSync(join(feature, 'readonly/value.md'), 'fixed\n');
     chmodSync(join(feature, 'readonly'), 0o555);
+    const readonlyMode = lstatSync(join(feature, 'readonly')).mode & 0o777;
     mkdirSync(join(root, '.specify/configurations/custom-workflow'), { recursive: true });
     const routingPath = '.specify/configurations/custom-workflow/plan-skill-routing.md';
     writeFileSync(join(root, routingPath), 'route-before\n');
@@ -149,7 +168,7 @@ describe('parallel-controller CLI', () => {
     if (recovery.status !== 0) throw new Error(`${recovery.stdout}${recovery.stderr}`);
     expect(readFileSync(join(feature, 'note.md'), 'utf8')).toBe('before\n');
     expect(readFileSync(join(root, routingPath), 'utf8')).toBe('route-before\n');
-    expect(lstatSync(join(feature, 'readonly')).mode & 0o777).toBe(0o555);
+    expect(lstatSync(join(feature, 'readonly')).mode & 0o777).toBe(readonlyMode);
     chmodSync(join(feature, 'readonly'), 0o755);
     expect(existsSync(join(feature, 'orphan.md'))).toBe(false);
     expect(existsSync(join(acquired.lockPath, 'planner-snapshot.json'))).toBe(false);
@@ -561,7 +580,12 @@ describe('parallel-controller CLI', () => {
     writeFileSync(join(root, 'a.ts'), 'a1\n'); spawnSync('git', ['add', '.'], { cwd: root });
     spawnSync('git', ['-c', 'user.name=TDK', '-c', 'user.email=tdk@example.invalid', 'commit', '-qm', 'files'], { cwd: root });
     const common = ['--project-root', root, '--feature-dir', root];
-    const acquired = JSON.parse(run(['acquire', ...common, '--task-id', 'feat-1', '--controller-id', 'c1']).stdout);
+    const acquire = run(['acquire', ...common, '--task-id', 'feat-1', '--controller-id', 'c1']);
+    if (process.platform === 'win32') {
+      expectNativeWindowsAcquireUnsupported(acquire);
+      return;
+    }
+    const acquired = JSON.parse(acquire.stdout);
     const input = join(acquired.lockPath, 'input.json');
     writeFileSync(input, JSON.stringify({ controllerId: 'c1', transitions: [{ phase: 1, from: 'todo', to: 'in_progress' }] }));
     expect(run(['transition-status', ...common, '--controller-id', 'c1', '--input-json', input]).status).toBe(0);

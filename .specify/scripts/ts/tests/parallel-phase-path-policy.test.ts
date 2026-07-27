@@ -29,6 +29,11 @@ describe('canonicalizeAccessPath', () => {
 
   it('accepts an in-root absolute path', () => {
     const result = canonicalizeAccessPath(root, join(root, 'src/foo.ts'));
+    if (process.platform === 'win32') {
+      expect(result.ok).toBe(false);
+      expect(result.reason).toBe('drive-letter-path');
+      return;
+    }
     expect(result.ok).toBe(true);
     expect(result.relativePath).toBe('src/foo.ts');
   });
@@ -40,6 +45,12 @@ describe('canonicalizeAccessPath', () => {
   });
 
   it('rejects an absolute path outside the project root', () => {
+    if (process.platform === 'win32') {
+      const result = canonicalizeAccessPath(root, 'C:/outside/passwd');
+      expect(result.ok).toBe(false);
+      expect(result.reason).toBe('drive-letter-path');
+      return;
+    }
     const result = canonicalizeAccessPath(root, '/etc/passwd');
     expect(result.ok).toBe(false);
     expect(result.reason).toBe('root-escape');
@@ -48,7 +59,7 @@ describe('canonicalizeAccessPath', () => {
   it('rejects the project root itself (empty relative path)', () => {
     const result = canonicalizeAccessPath(root, root);
     expect(result.ok).toBe(false);
-    expect(result.reason).toBe('root-escape');
+    expect(result.reason).toBe(process.platform === 'win32' ? 'drive-letter-path' : 'root-escape');
   });
 
   it('rejects an empty path', () => {
