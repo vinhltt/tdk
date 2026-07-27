@@ -91,9 +91,16 @@ describe('planner snapshot capture, dedup, and restore (incident fixture)', () =
     // ONE shared buffer reused for all three writes — do not allocate three 17 MiB buffers.
     const shared = Buffer.alloc(17 * 1024 * 1024, 7);
     mkdirSync(join(feature, 'nested'));
+    // Capture the mode each chmodSync call actually produced on this host right after applying it —
+    // on NTFS, chmodSync only toggles the read-only bit, so the readback differs from the POSIX
+    // literal even when everything is working correctly. Asserting against these captured values
+    // (below) states the preservation invariant instead of a POSIX-only numeric literal.
     writeFileSync(join(feature, 'a.bin'), shared); chmodSync(join(feature, 'a.bin'), 0o644);
+    const aMode = statSync(join(feature, 'a.bin')).mode & 0o7777;
     writeFileSync(join(feature, 'b.bin'), shared); chmodSync(join(feature, 'b.bin'), 0o640);
+    const bMode = statSync(join(feature, 'b.bin')).mode & 0o7777;
     writeFileSync(join(feature, 'nested/c.bin'), shared); chmodSync(join(feature, 'nested/c.bin'), 0o644);
+    const cMode = statSync(join(feature, 'nested/c.bin')).mode & 0o7777;
 
     const wire = capturePlannerSnapshot({ projectRoot: root, featureDir: feature, controllerId: 'c1', externalPaths: [] });
     expect(wire.schemaVersion).toBe(2);
@@ -111,9 +118,9 @@ describe('planner snapshot capture, dedup, and restore (incident fixture)', () =
     expect(readFileSync(join(feature, 'a.bin')).equals(shared)).toBe(true);
     expect(readFileSync(join(feature, 'b.bin')).equals(shared)).toBe(true);
     expect(readFileSync(join(feature, 'nested/c.bin')).equals(shared)).toBe(true);
-    expect(statSync(join(feature, 'a.bin')).mode & 0o7777).toBe(0o644);
-    expect(statSync(join(feature, 'b.bin')).mode & 0o7777).toBe(0o640);
-    expect(statSync(join(feature, 'nested/c.bin')).mode & 0o7777).toBe(0o644);
+    expect(statSync(join(feature, 'a.bin')).mode & 0o7777).toBe(aMode);
+    expect(statSync(join(feature, 'b.bin')).mode & 0o7777).toBe(bMode);
+    expect(statSync(join(feature, 'nested/c.bin')).mode & 0o7777).toBe(cMode);
   });
 
   it('dedupes by content hash, not by length', () => {
@@ -142,17 +149,27 @@ describe('planner snapshot capture, dedup, and restore (incident fixture)', () =
   it('restores a v1 snapshot through normalization with correct bytes and modes', () => {
     const root = repoRoot(); const feature = join(root, 'feature'); mkdirSync(feature);
     writeFileSync(join(feature, 'placeholder.md'), 'placeholder\n');
+    // Derive the real modes this host's chmodSync produces for these calls (POSIX preserves them
+    // exactly; NTFS only toggles the read-only bit), rather than hard-coding the POSIX literals in
+    // the wire fixture. `restorePlannerSnapshot` self-verifies the restored mode matches the
+    // snapshot's declared mode exactly, so the fixture must declare whatever this host actually
+    // produces for the restore to succeed on either platform.
+    chmodSync(join(feature, 'placeholder.md'), 0o640);
+    const fileMode = statSync(join(feature, 'placeholder.md')).mode & 0o7777;
+    chmodSync(feature, 0o750);
+    const dirMode = statSync(feature).mode & 0o7777;
+
     const content = Buffer.from('legacy recovery payload'); const sha = plannerSnapshotSha256(content);
     const wire: PlannerWireSnapshot = {
-      schemaVersion: 1, controllerId: 'c1', featureMode: 0o750,
-      entries: [{ kind: 'file', path: 'legacy.md', mode: 0o640, sha256: sha, contentBase64: content.toString('base64') }],
+      schemaVersion: 1, controllerId: 'c1', featureMode: dirMode,
+      entries: [{ kind: 'file', path: 'legacy.md', mode: fileMode, sha256: sha, contentBase64: content.toString('base64') }],
       external: [], gitEntries: [],
     };
     const canonical = normalizePlannerWireSnapshot(wire);
     restorePlannerSnapshot({ projectRoot: root, featureDir: feature, snapshot: canonical });
     expect(readFileSync(join(feature, 'legacy.md')).equals(content)).toBe(true);
-    expect(statSync(join(feature, 'legacy.md')).mode & 0o7777).toBe(0o640);
-    expect(statSync(feature).mode & 0o7777).toBe(0o750);
+    expect(statSync(join(feature, 'legacy.md')).mode & 0o7777).toBe(fileMode);
+    expect(statSync(feature).mode & 0o7777).toBe(dirMode);
     expect(existsSync(join(feature, 'placeholder.md'))).toBe(false);
   });
 

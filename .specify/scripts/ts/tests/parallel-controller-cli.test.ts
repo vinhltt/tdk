@@ -332,6 +332,10 @@ describe('parallel-controller CLI', () => {
     const root = repository(); const feature = join(root, 'feature'); mkdirSync(feature);
     const content = Buffer.from('legacy recovery payload\n');
     writeFileSync(join(feature, 'legacy.md'), content); chmodSync(join(feature, 'legacy.md'), 0o640);
+    // Capture the mode this host's chmodSync(0o640) actually produced (NTFS only toggles the
+    // read-only bit, so the readback differs from the POSIX literal) rather than hard-coding it, so
+    // the fixture and the post-restore assertion state the preservation invariant on either platform.
+    const legacyMode = lstatSync(join(feature, 'legacy.md')).mode & 0o7777;
     const featureMode = lstatSync(feature).mode & 0o7777;
     const common = ['--project-root', root, '--feature-dir', feature];
     const acquired = JSON.parse(run(['reserve', ...common, '--task-id', 'feat-1',
@@ -344,7 +348,7 @@ describe('parallel-controller CLI', () => {
     const sha = createHash('sha256').update(content).digest('hex');
     const v1Snapshot = {
       schemaVersion: 1, controllerId: 'c1', featureMode,
-      entries: [{ kind: 'file', path: 'legacy.md', mode: 0o640, sha256: sha, contentBase64: content.toString('base64') }],
+      entries: [{ kind: 'file', path: 'legacy.md', mode: legacyMode, sha256: sha, contentBase64: content.toString('base64') }],
       external: [], gitEntries: [],
     };
     writeFileSync(join(acquired.lockPath, 'planner-snapshot.json'), JSON.stringify(v1Snapshot));
@@ -356,7 +360,7 @@ describe('parallel-controller CLI', () => {
     const recovery = run(['recover-plan', ...common, '--controller-id', 'c1']);
     if (recovery.status !== 0) throw new Error(`${recovery.stdout}${recovery.stderr}`);
     expect(readFileSync(join(feature, 'legacy.md')).equals(content)).toBe(true);
-    expect(lstatSync(join(feature, 'legacy.md')).mode & 0o777).toBe(0o640);
+    expect(lstatSync(join(feature, 'legacy.md')).mode & 0o777).toBe(legacyMode);
     expect(lstatSync(feature).mode & 0o777).toBe(featureMode);
     expect(existsSync(join(feature, 'orphan.md'))).toBe(false);
     expect(existsSync(join(acquired.lockPath, 'planner-snapshot.json'))).toBe(false);
@@ -418,25 +422,32 @@ describe('parallel-controller CLI', () => {
     expect(run(['snapshot-plan', ...common, '--controller-id', 'c1', '--input-json', input]).status).toBe(0);
     writeValidPlannerArtifacts(feature);
 
-    // Break only the schedule-mode case-sensitivity probe (it mkdirs directly
-    // under the project root); nested writes (e.g. under .git/tdk/) are
-    // unaffected, so this isolates the host-admission gate specifically.
-    chmodSync(root, 0o500);
+    // On POSIX, break only the schedule-mode case-sensitivity probe (it mkdirs directly under the
+    // project root); nested writes (e.g. under .git/tdk/) are unaffected, so this isolates the
+    // host-admission gate specifically. On native Windows, chmodSync only toggles the read-only
+    // *file* attribute and has no such effect on a directory, so this chmod would prove nothing
+    // there — the schedule-mode rejection on Windows instead comes unconditionally from the
+    // native-Windows filesystem-capability gate (see parallel-phase-mount-capability.ts), asserted
+    // below on its own terms, so the chmod is skipped rather than performed vacuously.
+    if (process.platform !== 'win32') chmodSync(root, 0o500);
     try {
       const finalize = run(['finalize-plan', ...common, '--controller-id', 'c1']);
       if (finalize.status !== 0) throw new Error(`${finalize.stdout}${finalize.stderr}`);
 
-      // Proof this is not incidental: the default (schedule-mode) invocation of
-      // the very same feature plan under the very same root DOES fail the probe.
+      // Proof this is not incidental: the default (schedule-mode) invocation of the very same
+      // feature plan under the very same root DOES fail — on POSIX because the read-only root
+      // trips the case-sensitivity probe; on native Windows because the filesystem-capability gate
+      // rejects native Windows outright, before the probe ever runs.
       const scheduleModeCheck = spawnSync('bun', [
         RESOLVE_WAVE_CLI, '--project-root', root, '--plan', join(feature, 'plan.md'),
       ], { encoding: 'utf8' });
       expect(scheduleModeCheck.status).toBe(2);
       const codes = (JSON.parse(scheduleModeCheck.stdout) as { errors: { code: string }[] })
         .errors.map((e) => e.code);
-      expect(codes).toContain('CASE_SENSITIVITY_PROBE_FAILED');
+      if (process.platform === 'win32') expect(codes).toContain('FILESYSTEM_CAPABILITY_UNSUPPORTED');
+      else expect(codes).toContain('CASE_SENSITIVITY_PROBE_FAILED');
     } finally {
-      chmodSync(root, 0o700);
+      if (process.platform !== 'win32') chmodSync(root, 0o700);
     }
     expect(existsSync(join(acquired.lockPath, 'planner-snapshot.json'))).toBe(false);
     expect(run(['release', ...common, '--controller-id', 'c1']).status).toBe(0);

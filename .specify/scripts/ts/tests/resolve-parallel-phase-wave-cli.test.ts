@@ -271,11 +271,21 @@ describe('resolve-parallel-phase-wave CLI', () => {
     ].join('\n'));
 
     const { status, stdout } = run(root, planPath);
-    expect(status).toBe(0);
-    const payload = parseSoleJsonLine(stdout) as { ok: boolean; state: string; wave: number[]; serialBarrier: number | null };
-    expect(payload.ok).toBe(true);
-    expect(payload.state).toBe('wave');
-    expect(payload.wave).toEqual([1, 2]);
-    expect(payload.serialBarrier).toBe(null);
+    if (process.platform === 'win32') {
+      // Schedule mode's root-only filesystem-capability gate runs before phase resolution and
+      // rejects native Windows outright (parallel-phase-mount-capability.ts), independent of the
+      // plan content — the scheduling contract itself cannot be exercised on native Windows.
+      expect(status).toBe(2);
+      const payload = parseSoleJsonLine(stdout) as { ok: boolean; state: string; errors: { code: string }[] };
+      expect(payload.ok).toBe(false);
+      expect(payload.errors.map((e) => e.code)).toContain('FILESYSTEM_CAPABILITY_UNSUPPORTED');
+    } else {
+      expect(status).toBe(0);
+      const payload = parseSoleJsonLine(stdout) as { ok: boolean; state: string; wave: number[]; serialBarrier: number | null };
+      expect(payload.ok).toBe(true);
+      expect(payload.state).toBe('wave');
+      expect(payload.wave).toEqual([1, 2]);
+      expect(payload.serialBarrier).toBe(null);
+    }
   });
 });

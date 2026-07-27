@@ -6,6 +6,14 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.105.1] - 2026-07-27
+
+### Changed
+- **[Tests]** Cross-platform Windows/NTFS compatibility fixes for parallel planner tests
+  - `parallel-controller-cli` — branch schedule-mode failure assertion by platform: native Windows hits `FILESYSTEM_CAPABILITY_UNSUPPORTED` before case-sensitivity probe; guard POSIX-only `chmodSync` with platform check
+  - `parallel-planner-snapshot` — capture host-actual `chmod` readback instead of hard-coded POSIX mode literals; NTFS only toggles read-only bit so numeric modes differ
+  - `resolve-parallel-phase-wave-cli` — schedule-mode happy path branches on `win32` to expect capability rejection instead of wave resolution
+
 ## [1.105.0] - 2026-07-27
 
 ### Added
