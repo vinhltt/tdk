@@ -1,6 +1,6 @@
 import { parsePhasesTable } from './phases-table-parser';
 import { readPhaseFrontmatter, readParallelSafety } from './phase-frontmatter-reader';
-import { resolvePhaseAccess } from './parallel-phase-ownership';
+import { resolvePhaseAccess } from './check-phase-write-disjointness';
 
 export type PhaseType = 'normal' | 'spike';
 

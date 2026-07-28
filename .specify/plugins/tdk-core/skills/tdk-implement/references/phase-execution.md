@@ -32,11 +32,12 @@ Execution pseudo-code, ascending `row.number`:
       Spike phases follow `## Spike Phase Execution` instead.
 ```
 
-This is the default/selected serial path. A parallel resolver `serial-barrier` enters the same selected-phase
-behavior synchronously under the retained lease. It asserts controller ownership before every phase, plan,
-routing, or spike mutation, uses `parallel-controller transition-status` instead of the two legacy status CLIs,
-and does not re-enter the serial mutation reservation. It releases only after verified stable status or a
-pre-status STOP, then ends the parallel invocation without resolving another wave.
+This is the default/selected serial path. Parallel mode also lands here: every phase the checker reports in
+`conflicts` or `rejected`, plus every `parallel_safe: never`, legacy, or spike phase, runs through this same
+behavior synchronously, one phase at a time. The only difference is the status write — a phase deferred from
+a parallel wave writes both surfaces with a single `transition-phase-status` call per transition, as defined
+in `parallel-phase-orchestration.md`, instead of the two legacy status CLIs above. Nothing is retained
+between phases and no ownership is asserted; each phase runs, then writes its status, then the next begins.
 
 For each phase:
 

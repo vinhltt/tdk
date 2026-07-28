@@ -252,6 +252,104 @@ $FORCE && echo -e "  ${YELLOW}Mode:    --force (destructive consumer override)${
 $NO_DELETE && echo -e "  ${YELLOW}Mode:    --no-delete (skip orphan removal)${NC}"
 echo ""
 
+# ─── Orphaned parallel-controller lease cleanup ──────────────────────────────
+# TDK removed the repo-wide mutation lease. A target that updated .specify/ while
+# a lease was held keeps an orphaned state directory under its Git common dir and
+# no longer ships the CLI that could release it, so the installer clears it.
+#
+# The directory name follows the payload brand word, because the lease path was
+# built from a payload string that --prefix rewrites. Derive it the same way the
+# payload rewrite does rather than assuming the source word.
+LEASE_BRAND_WORD="${BRAND_WORD:-${SOURCE_PREFIX%-}}"
+# Every file the removed lease could write inside its lock directory.
+LEASE_ARTIFACT_NAMES=(owner.json planner-snapshot.json wave-baseline.json mutation-state.json transition.json)
+
+# True when a lock-directory entry is a lease artifact, including a temp file
+# left behind by an interrupted atomic write (`<name>.tmp-<uuid>`).
+is_known_lease_artifact() {
+    local name="$1" known
+    for known in "${LEASE_ARTIFACT_NAMES[@]}"; do
+        [[ "$name" == "$known" || "$name" == "$known".tmp-* ]] && return 0
+    done
+    return 1
+}
+
+# Remove only the exact lock directory, and only when it holds nothing but known
+# lease artifacts. Anything else is reported and left for the operator.
+remove_orphaned_parallel_lease() {
+    local git_common_dir lease_parent lock_path path name
+    local saved_nullglob saved_dotglob
+    local entries=() unexpected=() removed=() tombstones=()
+
+    git_common_dir="$(git -C "$TARGET_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || return 0
+    [[ -n "$git_common_dir" && -d "$git_common_dir" ]] || return 0
+
+    lease_parent="$git_common_dir/$LEASE_BRAND_WORD"
+    lock_path="$lease_parent/parallel-controller.lock"
+    [[ -d "$lock_path" && ! -L "$lock_path" ]] || return 0
+
+    echo -e "${YELLOW}Orphaned parallel-controller lease detected:${NC} $lock_path"
+    echo -e "  ${DIM}The lease was removed from TDK; this directory is leftover state.${NC}"
+    echo -e "  ${WHITE}To release it by hand instead, inspect and then remove:${NC}"
+    echo -e "    ${WHITE}rm -rf \"$lock_path\"${NC}"
+
+    # `shopt -p` exits non-zero when the option is unset, so guard it under set -e.
+    saved_nullglob="$(shopt -p nullglob || true)"
+    saved_dotglob="$(shopt -p dotglob || true)"
+    shopt -s nullglob dotglob
+    entries=("$lock_path"/*)
+    tombstones=("$lock_path".recovered-*)
+    eval "$saved_nullglob"
+    eval "$saved_dotglob"
+
+    for path in ${entries[@]+"${entries[@]}"}; do
+        name="${path##*/}"
+        if [[ -f "$path" && ! -L "$path" ]] && is_known_lease_artifact "$name"; then
+            continue
+        fi
+        unexpected+=("$name")
+    done
+
+    if [[ ${#unexpected[@]} -gt 0 ]]; then
+        echo -e "  ${YELLOW}Left in place — unexpected contents: ${unexpected[*]}${NC}"
+        echo ""
+        return 0
+    fi
+
+    if $DRY_RUN; then
+        echo -e "  ${WHITE}Dry-run: would remove ${#entries[@]} lease artifact(s) and the lock directory.${NC}"
+        echo ""
+        return 0
+    fi
+
+    for path in ${entries[@]+"${entries[@]}"}; do
+        if rm -f "$path"; then
+            removed+=("${path##*/}")
+        else
+            echo -e "  ${YELLOW}Could not remove ${path##*/}; lease left in place.${NC}"
+            echo ""
+            return 0
+        fi
+    done
+    if ! rmdir "$lock_path" 2>/dev/null; then
+        echo -e "  ${YELLOW}Could not remove $lock_path; remove it manually.${NC}"
+        echo ""
+        return 0
+    fi
+
+    [[ ${#removed[@]} -eq 0 ]] || echo -e "  ${GREEN}✓${NC} removed lease artifacts: ${removed[*]}"
+    echo -e "  ${GREEN}✓${NC} removed lease directory: $lock_path"
+    if [[ ${#tombstones[@]} -gt 0 ]]; then
+        echo -e "  ${YELLOW}Recovery tombstones left in place (remove manually if not needed):${NC}"
+        for path in "${tombstones[@]}"; do echo -e "    ${YELLOW}$path${NC}"; done
+    elif rmdir "$lease_parent" 2>/dev/null; then
+        echo -e "  ${GREEN}✓${NC} removed empty lease parent: $lease_parent"
+    fi
+    echo ""
+}
+
+remove_orphaned_parallel_lease
+
 DISTRIBUTE_INCLUDES=()
 DISTRIBUTE_EXCLUDES=()
 

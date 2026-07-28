@@ -1,129 +1,125 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { acquireParallelControllerLease } from '../src/commands/util/parallel-controller-lease';
-import { buildPhaseScheduleInputs } from '../src/commands/util/resolve-parallel-phase-wave-input-builder';
-import { resolveParallelPhaseWave } from '../src/commands/util/parallel-phase-wave-resolver';
+import { checkPhaseWriteDisjointness } from '../src/commands/util/check-phase-write-disjointness';
 import {
   inspectParallelPhaseStatuses,
-  recoverParallelPhaseStatuses,
   transitionParallelPhaseStatuses,
 } from '../src/commands/util/parallel-phase-status-reconciler';
 import { parsePhasesTable } from '../src/commands/util/phases-table-parser';
-import { parseParallelWorkerResult } from '../src/commands/util/parallel-worker-result';
-import {
-  auditParallelWaveFinal,
-  auditParallelWavePostWorker,
-  captureParallelWaveBaseline,
-} from '../src/commands/util/parallel-wave-git-audit';
 
-const fixtureRoot = join(import.meta.dir, 'fixtures/parallel-controller');
+// End-to-end of the prompt-driven contract in `parallel-phase-orchestration.md`:
+// candidate set -> one checker call -> workers -> status writes. No lease, no
+// resolver, no strict worker result schema — a worker "report" here is just the
+// file bytes it wrote plus the pass/fail decision the main agent makes from prose.
+
+const PLAN = `## Phases
+
+| # | File | Status | Blocks | BlockedBy |
+|---|------|--------|--------|-----------|
+| 01 | [A](phases/phase-01-a.md) | todo | — | — |
+| 02 | [B](phases/phase-02-b.md) | todo | — | — |
+`;
+
+const phaseFile = (phase: number, modify: string): string =>
+  `---\nphase: ${phase}\nstatus: todo\nparallel_safe: auto\nparallel_reason: "declared write sets are disjoint"\n---\n\n`
+  + `# Phase ${phase}\n\n## Related Code Files\n\n- Modify: \`${modify}\`\n`;
+
 const roots: string[] = [];
-function repository() {
-  const root = mkdtempSync(join(tmpdir(), 'tdk-parallel-integration-')); roots.push(root);
-  mkdirSync(join(root, 'phases')); mkdirSync(join(root, 'src'));
-  cpSync(join(fixtureRoot, 'plan-two-phase.md'), join(root, 'plan.md'));
-  writeFileSync(join(root, 'src/a.ts'), 'a1\n'); writeFileSync(join(root, 'src/b.ts'), 'b1\n');
-  writeFileSync(join(root, 'phases/phase-01-a.md'), '---\nphase: 1\nstatus: todo\nparallel_safe: auto\n---\n\n# Phase A\n\n## Related Code Files\n\n- Modify: `src/a.ts`\n');
-  writeFileSync(join(root, 'phases/phase-02-b.md'), '---\nphase: 2\nstatus: todo\nparallel_safe: auto\n---\n\n# Phase B\n\n## Related Code Files\n\n- Modify: `src/b.ts`\n');
-  spawnSync('git', ['init', '-q'], { cwd: root }); spawnSync('git', ['add', '.'], { cwd: root });
-  spawnSync('git', ['-c', 'user.name=TDK', '-c', 'user.email=tdk@example.invalid', 'commit', '-qm', 'base'], { cwd: root });
-  const lease = acquireParallelControllerLease({ projectRoot: root, featureDir: root, taskId: 'feat-1', controllerId: 'c1' });
-  if (!lease.ok) throw new Error('lease failed');
-  return { root, projectRoot: root, planPath: join(root, 'plan.md'), featureDir: root, lockPath: lease.lockPath, controllerId: 'c1' };
-}
 afterEach(() => roots.splice(0).forEach((root) => rmSync(root, { recursive: true, force: true })));
 
-function worker(phase: number, status: 'DONE' | 'BLOCKED') {
-  const path = `src/${phase === 1 ? 'a' : 'b'}.ts`;
-  const raw = JSON.stringify({ schemaVersion: 1, controllerId: 'c1', waveId: 'w1', workerId: `w${phase}`,
-    phase, status, changes: [{ operation: 'modify', path }], delegates: [], criteria: [], tests: [],
-    concerns: [], request: null, error: status === 'BLOCKED' ? 'failed criterion' : null });
-  return parseParallelWorkerResult(raw, { controllerId: 'c1', waveId: 'w1', workerId: `w${phase}`, phase, criteria: [] });
+function repository(modifyA = 'src/a.ts', modifyB = 'src/b.ts') {
+  const root = realpathSync.native(mkdtempSync(join(tmpdir(), 'tdk-parallel-integration-')));
+  roots.push(root);
+  mkdirSync(join(root, 'phases')); mkdirSync(join(root, 'src'));
+  writeFileSync(join(root, 'plan.md'), PLAN);
+  writeFileSync(join(root, 'src/a.ts'), 'a1\n'); writeFileSync(join(root, 'src/b.ts'), 'b1\n');
+  writeFileSync(join(root, 'phases/phase-01-a.md'), phaseFile(1, modifyA));
+  writeFileSync(join(root, 'phases/phase-02-b.md'), phaseFile(2, modifyB));
+  spawnSync('git', ['init', '-q'], { cwd: root }); spawnSync('git', ['add', '.'], { cwd: root });
+  spawnSync('git', ['-c', 'user.name=TDK', '-c', 'user.email=tdk@example.invalid', 'commit', '-qm', 'base'], { cwd: root });
+  return { projectRoot: root, planPath: join(root, 'plan.md'), featureDir: root };
 }
 
-describe('tdk-implement parallel helper integration', () => {
-  it('feeds planner-safe phase files through the resolver into one controller wave', () => {
+/** What the main agent builds from each candidate's `## Related Code Files` bullets. */
+const accessSets = (modifyA: string, modifyB: string) => [
+  { phase: 1, read: [], modify: [modifyA], create: [], delete: [] },
+  { phase: 2, read: [], modify: [modifyB], create: [], delete: [] },
+];
+
+const planStatuses = (input: ReturnType<typeof repository>): string[] =>
+  inspectParallelPhaseStatuses(input.projectRoot, input.planPath, input.featureDir).rows.map((row) => row.planStatus);
+
+describe('tdk-implement parallel orchestration integration', () => {
+  it('takes a disjoint candidate pair from the checker through workers to one completion batch', () => {
     const input = repository();
     const parsed = parsePhasesTable(readFileSync(input.planPath, 'utf8'));
     expect(parsed.errors).toEqual([]);
-    const schedule = buildPhaseScheduleInputs(parsed.phases, input.planPath, input.root);
-    expect(schedule.errors).toEqual([]);
-    expect(resolveParallelPhaseWave(schedule.inputs)).toMatchObject({ ok: true, state: 'wave', wave: [1, 2] });
-  });
+    expect(parsed.phases.map((row) => row.status)).toEqual(['todo', 'todo']);
+    expect(readFileSync(join(input.projectRoot, 'phases/phase-01-a.md'), 'utf8')).toContain('parallel_safe: auto');
 
-  it('rejects a full wave and keeps every sibling in_progress on one worker failure', () => {
-    const input = repository();
-    for (const phase of [1, 2]) transitionParallelPhaseStatuses({ ...input,
-      transitions: [{ phase, from: 'todo', to: 'in_progress' }] });
-    const phases = [
-      { phase: 1, reads: [], writes: [{ operation: 'modify' as const, path: 'src/a.ts' }] },
-      { phase: 2, reads: [], writes: [{ operation: 'modify' as const, path: 'src/b.ts' }] },
-    ];
-    const baseline = captureParallelWaveBaseline({ projectRoot: input.root,
-      protectedPaths: ['plan.md', 'phases/phase-01-a.md', 'phases/phase-02-b.md'], phases });
-    writeFileSync(join(input.root, 'src/a.ts'), 'a2\n'); writeFileSync(join(input.root, 'src/b.ts'), 'b2\n');
-    const audit = auditParallelWavePostWorker({ projectRoot: input.root, baseline,
-      results: [worker(1, 'DONE'), worker(2, 'BLOCKED')] });
-    expect(audit).toEqual({ ok: false, errors: ['phase 2 worker status is BLOCKED'] });
-    expect(inspectParallelPhaseStatuses(input.root, input.planPath, input.root).rows.map((row) => row.planStatus))
-      .toEqual(['in_progress', 'in_progress']);
-    expect(readFileSync(input.planPath, 'utf8')).not.toContain('| done |');
-  });
+    const decision = checkPhaseWriteDisjointness(accessSets('src/a.ts', 'src/b.ts'), input.projectRoot, 'schedule');
+    expect(decision).toEqual({ safe: [1, 2], conflicts: [], rejected: [] });
 
-  it('persists all sibling completion through one wave journal only after final audit', () => {
-    const input = repository();
-    for (const phase of [1, 2]) transitionParallelPhaseStatuses({ ...input,
-      transitions: [{ phase, from: 'todo', to: 'in_progress' }] });
-    transitionParallelPhaseStatuses({ ...input, waveId: 'w1', transitions: [
+    for (const phase of decision.safe) {
+      transitionParallelPhaseStatuses({ ...input, transitions: [{ phase, from: 'todo', to: 'in_progress' }] });
+    }
+    expect(planStatuses(input)).toEqual(['in_progress', 'in_progress']);
+
+    writeFileSync(join(input.projectRoot, 'src/a.ts'), 'a2\n');
+    writeFileSync(join(input.projectRoot, 'src/b.ts'), 'b2\n');
+
+    transitionParallelPhaseStatuses({ ...input, waveId: 'wave-1', transitions: [
       { phase: 1, from: 'in_progress', to: 'done' }, { phase: 2, from: 'in_progress', to: 'done' },
     ] });
-    expect(inspectParallelPhaseStatuses(input.root, input.planPath, input.root).rows.map((row) => row.planStatus)).toEqual(['done', 'done']);
+    const final = inspectParallelPhaseStatuses(input.projectRoot, input.planPath, input.featureDir);
+    expect(final.rows.map((row) => row.planStatus)).toEqual(['done', 'done']);
+    expect(final.rows.map((row) => row.frontmatterStatus)).toEqual(['done', 'done']);
+    expect(final.mismatches).toEqual([]);
   });
 
-  it('reaches byte-equivalent final artifacts through serial phases and one parallel wave', () => {
-    const serial = repository(); const parallel = repository();
+  it('keeps an overlapping candidate pair out of the wave and completes it one phase at a time', () => {
+    const input = repository('src/a.ts', 'src/a.ts');
+    const decision = checkPhaseWriteDisjointness(accessSets('src/a.ts', 'src/a.ts'), input.projectRoot, 'schedule');
+    expect(decision.safe).toEqual([]);
+    expect(decision.conflicts).toEqual([{ a: 1, b: 2, paths: ['src/a.ts'] }]);
+    expect(decision.rejected).toEqual([]);
+
     for (const phase of [1, 2]) {
-      transitionParallelPhaseStatuses({ ...serial, transitions: [{ phase, from: 'todo', to: 'in_progress' }] });
-      writeFileSync(join(serial.root, `src/${phase === 1 ? 'a' : 'b'}.ts`), `${phase === 1 ? 'a' : 'b'}2\n`);
-      transitionParallelPhaseStatuses({ ...serial, transitions: [{ phase, from: 'in_progress', to: 'done' }] });
+      transitionParallelPhaseStatuses({ ...input, transitions: [{ phase, from: 'todo', to: 'in_progress' }] });
+      writeFileSync(join(input.projectRoot, 'src/a.ts'), `a${phase + 1}\n`);
+      transitionParallelPhaseStatuses({ ...input, transitions: [{ phase, from: 'in_progress', to: 'done' }] });
     }
-    for (const phase of [1, 2]) transitionParallelPhaseStatuses({ ...parallel,
-      transitions: [{ phase, from: 'todo', to: 'in_progress' }] });
-    const phases = [
-      { phase: 1, reads: [], writes: [{ operation: 'modify' as const, path: 'src/a.ts' }] },
-      { phase: 2, reads: [], writes: [{ operation: 'modify' as const, path: 'src/b.ts' }] },
-    ];
-    const baseline = captureParallelWaveBaseline({ projectRoot: parallel.root,
-      protectedPaths: ['plan.md', 'phases/phase-01-a.md', 'phases/phase-02-b.md'], phases });
-    writeFileSync(join(parallel.root, 'src/a.ts'), 'a2\n'); writeFileSync(join(parallel.root, 'src/b.ts'), 'b2\n');
-    const audit = auditParallelWavePostWorker({ projectRoot: parallel.root, baseline,
-      results: [worker(1, 'DONE'), worker(2, 'DONE')] });
-    expect(audit.ok).toBe(true);
-    if (!audit.ok) return;
-    expect(auditParallelWaveFinal({ projectRoot: parallel.root, baseline: audit.baseline }).ok).toBe(true);
-    transitionParallelPhaseStatuses({ ...parallel, waveId: 'w1', transitions: [
-      { phase: 1, from: 'in_progress', to: 'done' }, { phase: 2, from: 'in_progress', to: 'done' },
-    ] });
-    for (const path of ['plan.md', 'phases/phase-01-a.md', 'phases/phase-02-b.md', 'src/a.ts', 'src/b.ts']) {
-      expect(readFileSync(join(parallel.root, path), 'utf8')).toBe(readFileSync(join(serial.root, path), 'utf8'));
-    }
+    expect(planStatuses(input)).toEqual(['done', 'done']);
   });
 
-  it('recovers a crash during whole-wave completion without persisting partial sibling success', () => {
+  it('marks no sibling done when one worker report is not a completion, and bounds the completion batch', () => {
     const input = repository();
-    for (const phase of [1, 2]) transitionParallelPhaseStatuses({ ...input,
-      transitions: [{ phase, from: 'todo', to: 'in_progress' }] });
-    expect(() => transitionParallelPhaseStatuses({ ...input, waveId: 'w1', crashAt: 'after-frontmatter-1', transitions: [
-      { phase: 1, from: 'in_progress', to: 'done' }, { phase: 2, from: 'in_progress', to: 'done' },
-    ] })).toThrow('injected crash');
-    expect(inspectParallelPhaseStatuses(input.root, input.planPath, input.root).mismatches).toEqual([1]);
-    expect(recoverParallelPhaseStatuses(input)).toEqual({ recovered: true });
-    expect(inspectParallelPhaseStatuses(input.root, input.planPath, input.root).rows).toEqual([
-      { phase: 1, planStatus: 'in_progress', frontmatterStatus: 'in_progress' },
-      { phase: 2, planStatus: 'in_progress', frontmatterStatus: 'in_progress' },
-    ]);
+    for (const phase of [1, 2]) {
+      transitionParallelPhaseStatuses({ ...input, transitions: [{ phase, from: 'todo', to: 'in_progress' }] });
+    }
+    expect(() => transitionParallelPhaseStatuses({ ...input, waveId: 'wave-1', transitions: [
+      { phase: 1, from: 'in_progress', to: 'done' }, { phase: 2, from: 'in_progress', to: 'blocked' },
+    ] })).toThrow('wave transition requires in_progress to done for every phase');
+    expect(planStatuses(input)).toEqual(['in_progress', 'in_progress']);
+    expect(readFileSync(input.planPath, 'utf8')).not.toContain('| done |');
+
+    expect(() => transitionParallelPhaseStatuses({ ...input, waveId: 'wave-1', transitions: [1, 2, 3, 4, 5]
+      .map((phase) => ({ phase, from: 'in_progress' as const, to: 'done' as const })) }))
+      .toThrow('wave transition requires one to four phases');
+  });
+
+  it('leaves a policy-rejected phase out of the wave while its sibling still runs', () => {
+    const input = repository();
+    writeFileSync(join(input.projectRoot, 'CLAUDE.md'), '# guidance\n');
+    const decision = checkPhaseWriteDisjointness(
+      [{ phase: 1, read: [], modify: ['CLAUDE.md'], create: [], delete: [] }, ...accessSets('src/a.ts', 'src/b.ts').slice(1)],
+      input.projectRoot, 'schedule',
+    );
+    expect(decision.safe).toEqual([2]);
+    expect(decision.conflicts).toEqual([]);
+    expect(decision.rejected.map((item) => item.code)).toContain('DENIED_WRITE_PATH');
   });
 });

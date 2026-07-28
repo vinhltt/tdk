@@ -28,64 +28,18 @@ and runbooks belong in the phase that implements or verifies them.
 
 ## Mutating Lifecycle Contract
 
-Every mutating invocation runs as one in-memory transaction:
+Every mutating invocation classifies and validates what it writes:
 
-- **New:** acquire the mutation reservation, capture a transaction snapshot, then
-  classify and validate every generated phase.
+- **New:** classify and validate every generated phase.
 - **Append:** preserve untouched legacy phase files byte-for-byte. Classify and
-  validate only the appended phase, then validate the complete resolver input.
+  validate only the appended phase, then validate the complete access-set input.
 - **Rewrite:** after explicit destructive confirmation, reclassify and validate
   every rewritten phase. No rewritten phase receives the legacy exemption;
   preserve the exclusion of `research/`, `reports/`, `contracts/`, and legacy
   standalone artifacts.
 
-Immediately after Step 0.1 project-context loading, the transaction snapshot records the bytes or absence
-of the complete feature directory under `planner-snapshot.json` in the owned
-reservation. A later candidate absent from that pre-setup inventory is therefore
-recorded as absent before any mutation. This covers every feature artifact the
-invocation may replace or create with persistent recovery evidence.
-Any failed gate restores prior bytes and must remove only files newly created by
-this invocation. Never retain an orphan phase or table row.
-
-### Repo-wide mutation reservation
-
-Before the snapshot or any planner write, run:
-
-```bash
-(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parallel-controller.ts reserve --project-root "$PROJECT_DIR" --feature-dir "$FEATURE_DIR" --task-id "$TASK_ID" --purpose planner)
-```
-
-Exit `0` proceeds with the returned `controllerId`. Exit `2` means another
-mutation owns the reservation: STOP before snapshot or mutation and report its
-lock path plus available owner metadata. Unexpected failure or malformed JSON
-also STOPs. A Git worktree is required because the mutex lives under the Git
-common directory.
-
-Create a bounded JSON file under the lease:
-
-```json
-{"controllerId":"<id>","externalPaths":["sorted/project-relative/file"]}
-```
-
-List every planned write outside `FEATURE_DIR`, including routing and any
-cross-plan dependency file; use an empty array only when there are none. Then run
-`snapshot-plan --controller-id <id> --input-json <lease-input>` before the first write. All
-planner modes that persist counters, review logs, migration output, routing,
-scope, dependencies, plan, or phase files acquire this reservation. There is no
-check-then-write gap. Never wait, steal, or age it out. Release a pre-mutation
-cancel immediately. After mutation, `finalize-plan` independently checks the
-allowed feature layout, phase/table namespace, ordered validators, resolver, and
-declared Git delta before clearing evidence. Every declared external file must
-remain a symlink-free bounded regular file; pre-existing file and parent modes
-must remain unchanged, routing files must pass routing conflict validation, and
-cross-plan files must pass the plan gates. Successful validation calls it;
-failure or cancellation calls `recover-plan` and verifies rollback. A takeover
-uses `recover-plan --old-controller-id <old-id>` before it may create a new planner
-snapshot. Abrupt interruption retains the
-reservation and durable snapshot for explicit recovery. Any undeclared
-Git-visible mutation outside the feature blocks both finalize and recovery,
-leaving evidence for manual correction. Time, PID absence, and mtime never
-authorize clearing it.
+Any failed gate must remove only files newly created by this invocation and STOP
+with exact diagnostics. Never retain an orphan phase or table row.
 
 ## plan.md Structure
 
@@ -370,18 +324,35 @@ variables below:
 3. In ascending phase number, for every new/touched phase, resolve and validate
    its complete `auto` access set (including phases not currently ready):
    `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-phase-file.ts "$PHASE_PATH" --phase-number "$PHASE_NUMBER" --plan "$FEATURE_DIR/plan.md" --mode parallel --project-root "$PROJECT_DIR" --json)`
-4. Validate the complete resolver input without using its wave for scheduling.
+4. Validate write disjointness across every `parallel_safe: auto` phase in the
+   plan, including phases no wave could start yet. Build `ACCESS_SETS_JSON`
+   yourself: for each `auto` phase, read its `## Related Code Files` section and
+   map the `Read:`, `Modify:`, `Create:`, and `Delete:` bullets to one JSON
+   element, then pass the complete array on stdin in exactly one call. Do not
+   shell out to a markdown parser.
+
+   ```json
+   [{ "phase": 3, "read": ["docs/sample-notes.md"], "modify": ["src/sample-service.ts"], "create": [], "delete": [] }]
+   ```
+
    Planner validation is platform-independent: it always passes `--validate-only`,
-   which never runs host filesystem capability or case-sensitivity admission and
-   never returns an executable wave or serial barrier — it is not the same
-   invocation `/tdk-implement --parallel` uses to actually schedule work:
-   `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/resolve-parallel-phase-wave.ts --project-root "$PROJECT_DIR" --plan "$FEATURE_DIR/plan.md" --validate-only)`
+   which never runs the host case-sensitivity probe or mount-capability check —
+   it is not the same invocation `/tdk-implement --parallel` uses to actually
+   schedule work. The deliberate consequence is that two paths differing only by
+   case are not flagged at plan time; that check belongs to the real execution
+   host:
+   `(cd "$PROJECT_DIR/.specify/scripts/ts" && printf '%s' "$ACCESS_SETS_JSON" | bun src/commands/util/check-phase-write-disjointness.ts --project-root "$PROJECT_DIR" --validate-only)`
+
+   Output is `{"safe":[...],"conflicts":[...],"rejected":[...]}`. Exit `0` passes
+   the gate with or without conflicts: a conflicting pair only keeps those phases
+   out of one wave and is not a plan defect. Exit `2` means at least one phase hit
+   a write-policy rejection and fails the gate; exit `1` is an unexpected failure.
 
 New and rewrite validate every generated phase. Append validates only the
-appended phase at gate 3, while gate 4 checks the complete plan. Accept
-legacy-metadata warnings for untouched append phases. Any invalid result,
-unexpected non-zero exit, malformed JSON, or runtime/I/O error restores the
-complete transaction snapshot and STOPs with exact diagnostics.
+appended phase at gate 3, while gate 4 checks every `auto` phase in the plan.
+Accept legacy-metadata warnings for untouched append phases. Any invalid result,
+unexpected non-zero exit, malformed JSON, or runtime/I/O error removes only
+invocation-new files and STOPs with exact diagnostics.
 
 No validator-triggered repair or downgrade is allowed. In particular, never
 change rejected `auto` metadata to `never`, auto-fix a status, or leave candidate

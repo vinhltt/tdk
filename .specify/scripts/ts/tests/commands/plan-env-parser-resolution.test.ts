@@ -76,7 +76,7 @@ describe('plan-env parser-script layout resolution', () => {
 
   it('installed custom-prefix parser is picked when only that exists', async () => {
     const root = makeRoot();
-    const customCandidate = '.claude/skills/erc-test-api-plan/scripts/parse_openapi_spec.py';
+    const customCandidate = '.claude/skills/sample-test-api-plan/scripts/parse_openapi_spec.py';
     writeParserAt(root, customCandidate);
 
     const { exitCode, stdout } = await runCli(root, ['feat/aa-001']);

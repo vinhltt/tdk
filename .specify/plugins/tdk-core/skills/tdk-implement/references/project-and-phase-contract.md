@@ -32,7 +32,7 @@ Reject and STOP before task-id validation if any of these are present:
 - any unknown value or positional after `--parallel`
 
 Also reject `--parallel` with either `--phase` form before task-id validation, prerequisite collection,
-capability probes, lease acquisition, or project mutation. Do not infer a harness from environment variables,
+capability probes, or project mutation. Do not infer a harness from environment variables,
 installation metadata, paths, or canary output. Default and selected parsing otherwise stays unchanged.
 
 Normalize `PHASE_FILTER` to a positive number. Display may use padded or unpadded phase numbers, but comparisons MUST use the numeric value.
@@ -127,27 +127,16 @@ Next: {nextPhase || "none"}
 
 This preflight is read-only. The phase parser below remains the execution source of truth before writes.
 
-## Serial Mutation Reservation
+## Mutation Preconditions
 
-After project-root/feature resolution and before any serial recovery or mutation,
-default and selected modes run:
+No invocation holds a repo-wide mutex. Nothing fences two concurrent runs, so do
+not run two TDK commands on the same `TASK_ID` at the same time.
 
-```text
-bun src/commands/util/parallel-controller.ts reserve --project-root <absolute-project-root> --feature-dir <absolute-feature-dir> --task-id <task-id> --purpose serial-implement
-```
-
-Exit `2` / `lease-held` means STOP and show the lock path plus available owner
-metadata. Exit `0` stores `owner.controllerId`; non-Git, malformed output, and
-runtime failures STOP before mutation. Serial modes never wait, steal, or age out
-a reservation. Parallel mode skips this edge because its fenced lifecycle is
-controller-owned.
-
-After acquiring, re-read every status, phase, routing, and dependency input used
-for mutation. Before each persistent write, assert the same owner with the exact
-project and feature paths. Release only after phase/frontmatter/table status is
-verified stable, or immediately on a pre-mutation cancel. If cancellation/crash
-occurs after mutation begins and stable recovery cannot be verified, keep the
-reservation. PID absence, age, or timeout never clears it.
+Immediately before the first persistent write, re-read every status, phase,
+routing, and dependency input used for that mutation, and stop on any drift. A
+cancel before the first write leaves the project untouched. A crash after writes
+begin leaves whatever was written; `plan.md` is the source of truth for what to
+recover, and the F3 gate below is the entry point.
 
 ## Step 3 - Parse Phases Table
 
@@ -218,7 +207,7 @@ follows the spike lifecycle in `phase-execution.md`.
 On phase-work failure during execution, emit: `"Phase NN left in_progress. Recover as described above."`
 
 Parallel mode does not perform these two legacy status writes. It reports stale/split rows read-only before
-confirmation, then uses the retained lease, exact `transition.json`, and recovery-only STOP flow defined in
+confirmation, then writes every status through the single `transition-phase-status` call defined in
 `parallel-phase-orchestration.md`.
 
 ## Step 5 - Resolve Target Rows

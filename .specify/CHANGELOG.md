@@ -6,6 +6,28 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.106.0] - 2026-07-28
+
+### Removed
+- **[BREAKING][Scripts]** `parallel-controller.ts` CLI and its entire lease subsystem
+  - Removed with it: `parallel-controller-lease.ts`, `parallel-controller-lease-read.ts`, `parallel-controller-cli-support.ts`, `parallel-controller-mutation-state.ts`, `parallel-controller-recovery.ts`, `parallel-controller-tombstone.ts`, `parallel-controller-tombstone-paths.ts`, `parallel-planner-snapshot-schema.ts`
+  - Removed with it: `resolve-parallel-phase-wave.ts`, `resolve-parallel-phase-wave-input-builder.ts`, `parallel-phase-wave-operation.ts`
+  - The repo-wide mutation lease, the planner snapshot/transaction, and the recovery tombstone lifecycle no longer exist. Phase status writes are serialized by write-disjointness at plan time instead of by a runtime lock
+- **[BREAKING][Tests]** Native-Windows planner smoke test retired. It was a release gate over the planner snapshot; the snapshot it guarded is gone, so the gate is retired deliberately rather than left silently missing. Windows durability of `durable-atomic-file.ts` remains covered by the surviving durability tests
+
+### Added
+- **[Scripts]** `transition-phase-status.ts` — lease-free phase status write path; validates the transition and writes plan/phase status atomically
+- **[Scripts]** `check-phase-write-disjointness.ts` — deterministic plan-time gate that proves declared phase write sets do not overlap before waves are scheduled
+- **[Installer]** `distribute.sh` clears an orphaned `<git-common-dir>/<brand>/parallel-controller.lock` on every run. A consumer that updated `.specify/` while holding a lease loses the CLI that could release it, so the installer is what recovers them. The directory is removed only when it contains nothing but known lease artifacts; unexpected contents are reported and left alone, as are recovery tombstones
+
+### Changed
+- **[Embedded Skills]** `tdk-implement` — wave orchestration is prompt-driven; the controller/lease acquire-release protocol is gone from the workflow contract
+- **[Embedded Skills]** `tdk-plan` — reservation lifecycle dropped; the parallel-safety gate moved to `check-phase-write-disjointness` at plan time
+- **[Docs]** `tdk-plan` reference `skill-routing` — replaced a real consumer project name in the routing example with a generic `sample_spec_kit` example
+
+### Migration
+Consumers holding a stuck lease at update time: the lease directory is cleared automatically by `distribute.sh`. To release one by hand, delete `<git-common-dir>/<brand>/parallel-controller.lock` (for example `.git/tdk/parallel-controller.lock`, or your `--prefix` brand word in place of `tdk`). Every lease artifact was transient, so nothing needs migrating. Scripts invoking `parallel-controller.ts` must move to `transition-phase-status.ts`; scripts invoking `resolve-parallel-phase-wave.ts` must move to `check-phase-write-disjointness.ts`.
+
 ## [1.105.2] - 2026-07-27
 
 ### Changed

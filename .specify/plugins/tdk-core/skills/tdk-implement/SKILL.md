@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "11.1.0"
+  version: "11.1.2"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -28,13 +28,13 @@ This skill reads plan.md and executes phases using the `## Phases` table as the 
 
 - **Primary implementation path**: executes all phases in row order, updating Status cells in the `## Phases` table
 - **Selected phase path**: optional `--phase NN` / `--phase=NN` executes one numeric phase only
-- **Parallel path**: `--parallel` executes resolver-selected `auto` waves under one fenced controller lease
+- **Parallel path**: `--parallel` executes agent-selected `auto` waves gated by the write-disjointness checker
 - **Status tracking**: reads/writes Status column via `updatePhaseStatus` - no HTML comment markers
 - **Dependency enforcement**: validates BlockedBy before each phase; aborts on unsatisfied deps
 - **Phase validation**: validates every phase contract before status mutation;
   spike phases require executable evidence and a user decision gate
 - **F3 crash recovery**: detects stale `in_progress` rows at startup and requires explicit recovery choice before any status mutation
-- **Serial reservation**: default and selected modes remain serial but hold the shared mutation reservation through verified completion
+- **Serial by default**: default and selected modes remain serial, and no invocation locks the repository — do not run two TDK commands on the same `TASK_ID` concurrently
 
 ## Core Contract
 
@@ -48,8 +48,8 @@ Load: `references/phase-execution.md`
 Use this reference for row-order execution, delegate skill parsing/running, generic implementation, and completion reporting.
 
 Load: `references/parallel-phase-orchestration.md`
-Load this progressive reference only when `PARALLEL_MODE` is true. It owns canaries, lease/recovery,
-wave routing, synchronous dispatch, audit, barriers, and all parallel status persistence.
+Load this progressive reference only when `PARALLEL_MODE` is true. It owns canaries, wave selection,
+the write-disjointness gate, synchronous dispatch, worker boundaries, and all parallel status persistence.
 
 ## Outline
 
@@ -71,13 +71,11 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
 Load routing after project context and before any phase status mutation. Follow `references/routing-preflight.md`.
 
-### Step 0.4 — Serial Mutation Reservation
+### Step 0.4 — Mutation Preconditions
 
-For default or selected serial mode, acquire the shared reservation from
-`references/project-and-phase-contract.md` before phase/status recovery or any
-persistent write. Re-read status, routing, and phase inputs while holding it.
-Parallel mode does not reserve here; its controller reference acquires after
-confirmation and canary proof.
+Follow the mutation preconditions in `references/project-and-phase-contract.md`.
+Re-read status, routing, and phase inputs immediately before the first
+persistent write in every mode, and stop on drift.
 
 ### Script Command Contract
 

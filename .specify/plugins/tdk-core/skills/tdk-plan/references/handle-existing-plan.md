@@ -45,14 +45,12 @@ Use **AskUserQuestion** tool:
 **ONLY**. Do not touch conditional `research/`, `reports/`, `contracts/`, or any
 legacy standalone artifact. Use `--migrate-artifacts` for explicit migration.
 
-**On proceed:** the Step 0.2 owned mutation reservation and invocation snapshot
-must already exist. Re-run
+**On proceed:** re-run
 `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/setup-plan.ts {task_id} --force --json)`,
 then continue to Step 2 with **REGENERATE mode**. Regenerate and classify every
 rewritten phase; no rewritten phase receives the untouched-legacy metadata
-exemption. Keep the snapshot through Step 3d. Any setup, write, or validation
-failure restores all prior phase and plan bytes and removes only invocation-new
-files.
+exemption. Any setup, write, or validation failure removes only invocation-new
+files and STOPs with exact diagnostics.
 
 ## Option (b) Append Phase
 
@@ -89,23 +87,23 @@ files.
    dependency and parallel-safety placeholders. Uncertain eligibility emits
    `parallel_safe: never` with the first factual reason; never write an
    unclassified candidate.
-8. **Apply one transactional append:** The Step 0.95 transaction must already
-   contain the bytes of `plan.md` and the absence of the collision-checked phase
-   path. Write the phase file, append its row, and update only the reciprocal
-   `Blocks` cells in `plan.md`. Preserve every existing phase file byte-for-byte.
+8. **Apply one append:** Write the phase file, append its row, and update only
+   the reciprocal `Blocks` cells in `plan.md`.
+   Preserve every existing phase file byte-for-byte.
    The table row uses:
    - **VALID_STATUSES (enforced):** `todo | in_progress | done | skipped | blocked | cancelled`. Default for new phases = `todo`. NEVER use `not-started`, `pending`, `planned`, `new`, or any other value — the Step 3d status validator WILL reject it.
    - `Status = todo` and the normalized `Blocks` / `BlockedBy` relations from Step 6.
    - File column: `[phase-${NN}-${slug}](phases/phase-${NN}-${slug}.md)` (lowercase path).
 
-   **PROHIBITED:** Do NOT add any prose, narrative, or description anywhere in `plan.md`. All phase context belongs exclusively in the phase file's `## Overview` section. The Step 3d prose validator will reject violations and restore the snapshot.
+   **PROHIBITED:** Do NOT add any prose, narrative, or description anywhere in `plan.md`. All phase context belongs exclusively in the phase file's `## Overview` section. The Step 3d prose validator will reject violations.
 9. **Run Step 3d:** Execute the four ordered post-write gates from
    `plan-output-contract.md`. Gate 3 validates only the appended phase; gate 4
-   validates the complete resolver input and reciprocal graph. Accept warnings
-   for untouched legacy metadata only. Any invalid result, non-zero exit,
-   malformed JSON, or runtime/I/O error restores `plan.md`, must remove the appended phase file,
-   and STOPs with exact diagnostics. Leave no orphan phase or table row. Never
-   auto-fix, repair, or downgrade rejected output.
+   validates write disjointness across every `parallel_safe: auto` phase in the
+   plan. Accept warnings for untouched legacy metadata only. Any invalid result,
+   non-zero exit, malformed JSON, or runtime/I/O error reverts the appended row
+   in `plan.md`, must remove the appended phase file, and STOPs with exact
+   diagnostics. Leave no orphan phase or table row. Never auto-fix, repair, or
+   downgrade rejected output.
 
 ## Abort
 

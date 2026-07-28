@@ -12,7 +12,7 @@ def test_json_config_prefix(tmp_path):
     """json-only workspace → reads prefixList correctly, no stderr error."""
     specify_dir = tmp_path / ".specify"
     specify_dir.mkdir()
-    (specify_dir / ".specify.json").write_text(json.dumps({"prefixList": "ERC"}))
+    (specify_dir / ".specify.json").write_text(json.dumps({"prefixList": "SAMPLE"}))
     result = subprocess.run(
         [sys.executable, str(SCRIPT), "--help"],
         cwd=str(tmp_path), capture_output=True, text=True
@@ -25,7 +25,7 @@ def test_yaml_only_error(tmp_path):
     """yaml-only workspace → hard error (exit 1) with migrate instruction."""
     specify_dir = tmp_path / ".specify"
     specify_dir.mkdir()
-    (specify_dir / ".specify.yaml").write_text("prefix-list: ERC")
+    (specify_dir / ".specify.yaml").write_text("prefix-list: SAMPLE")
     result = subprocess.run(
         [sys.executable, str(SCRIPT)],
         cwd=str(tmp_path), capture_output=True, text=True

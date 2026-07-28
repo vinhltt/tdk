@@ -1,4 +1,8 @@
-import { describe, expect, it } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import { validatePhaseFile } from '../src/commands/util/phase-file-validator';
 import { resolveSpikeDecisionTransitions } from '../src/commands/util/spike-decision-transitions';
 
@@ -131,5 +135,71 @@ describe('phase file validator', () => {
     const result = validatePhaseFile(markdown, { validationMode: 'parallel' });
     expect(result.valid).toBe(false);
     expect(result.errors.some((e) => e.toLowerCase().includes('projectroot'))).toBe(true);
+  });
+
+  // Regression: phase-file-validator.ts:3 was repointed from the deleted
+  // parallel-phase-ownership.ts to check-phase-write-disjointness.ts's
+  // resolvePhaseAccess. A markdown-only fixture can never exercise this path —
+  // resolvePhaseAccess only runs when `safety.parallelSafe === 'auto'` AND a
+  // real `projectRoot` is supplied — so these prove `--mode parallel` still
+  // reaches all 4 ownership-composition codes (AUTO_PHASE_REQUIRES_WRITE,
+  // DENIED_WRITE_PATH, GIT_IGNORED_WRITE_PATH, GIT_CHECK_IGNORE_FAILED)
+  // through the new import, not just the 6 grammar codes extractPhaseAccess
+  // alone can produce.
+  describe('--mode parallel access-set composition (post-repoint)', () => {
+    let projectRoot: string;
+
+    beforeEach(() => {
+      projectRoot = realpathSync.native(mkdtempSync(join(tmpdir(), 'tdk-phase-file-validator-')));
+    });
+
+    afterEach(() => {
+      rmSync(projectRoot, { recursive: true, force: true });
+    });
+
+    function file(relPath: string, contents = 'x'): void {
+      const abs = join(projectRoot, relPath);
+      mkdirSync(dirname(abs), { recursive: true });
+      writeFileSync(abs, contents);
+    }
+
+    function autoPhaseMarkdown(sectionBody: string): string {
+      return ['---', 'parallel_safe: auto', '---', '', '# Phase X', '', '## Related Code Files', '', sectionBody, ''].join('\n');
+    }
+
+    it('reports AUTO_PHASE_REQUIRES_WRITE when an auto phase declares only reads', () => {
+      file('docs/readme.md');
+      const result = validatePhaseFile(autoPhaseMarkdown('- Read: `docs/readme.md`'), { validationMode: 'parallel', projectRoot });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.startsWith('AUTO_PHASE_REQUIRES_WRITE:'))).toBe(true);
+    });
+
+    it('reports DENIED_WRITE_PATH for a fixed-deny write target', () => {
+      file('package.json', '{}');
+      execFileSync('git', ['init', '-q'], { cwd: projectRoot });
+      const result = validatePhaseFile(autoPhaseMarkdown('- Modify: `package.json`'), { validationMode: 'parallel', projectRoot });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.startsWith('DENIED_WRITE_PATH:'))).toBe(true);
+    });
+
+    it('reports GIT_IGNORED_WRITE_PATH for a git-ignored Create target', () => {
+      execFileSync('git', ['init', '-q'], { cwd: projectRoot });
+      file('.gitignore', 'dist/\n');
+      const result = validatePhaseFile(autoPhaseMarkdown('- Create: `dist/out.js`'), { validationMode: 'parallel', projectRoot });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.startsWith('GIT_IGNORED_WRITE_PATH:'))).toBe(true);
+    });
+
+    it('reports GIT_CHECK_IGNORE_FAILED when git check-ignore cannot run (not a repository)', () => {
+      const result = validatePhaseFile(autoPhaseMarkdown('- Create: `src/new.ts`'), { validationMode: 'parallel', projectRoot });
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.startsWith('GIT_CHECK_IGNORE_FAILED:'))).toBe(true);
+    });
+
+    it('is valid when the auto phase has a clean write in a real git repo', () => {
+      execFileSync('git', ['init', '-q'], { cwd: projectRoot });
+      const result = validatePhaseFile(autoPhaseMarkdown('- Create: `src/new.ts`'), { validationMode: 'parallel', projectRoot });
+      expect(result.valid).toBe(true);
+    });
   });
 });

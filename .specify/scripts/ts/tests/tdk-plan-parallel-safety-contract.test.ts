@@ -41,10 +41,8 @@ describe('tdk-plan parallel safety contract', () => {
     expect(existing).toMatch(/preserve every existing phase file byte-for-byte/i);
   });
 
-  it('C-C2 snapshots every affected path and restores all lifecycle failures', () => {
-    expect(output).toContain('transaction snapshot');
-    expect(output).toContain('bytes or absence');
-    expect(output).toMatch(/remove only files\s+newly created by\s+this invocation/);
+  it('C-C2 removes only invocation-new files on any lifecycle failure', () => {
+    expect(output).toMatch(/remove only files newly created by this invocation/);
     expect(existing).toContain('remove the appended phase file');
     expect(existing).toContain('no orphan phase or table row');
     expect(existing).not.toContain('Keep `phases/phase-${NN}-${slug}.md`');
@@ -92,7 +90,7 @@ describe('tdk-plan parallel safety contract', () => {
       'plan-prose-validator.ts "$FEATURE_DIR/plan.md" --json',
       'plan-status-validator.ts "$FEATURE_DIR/plan.md" --json',
       'validate-phase-file.ts "$PHASE_PATH" --phase-number "$PHASE_NUMBER" --plan "$FEATURE_DIR/plan.md" --mode parallel --project-root "$PROJECT_DIR" --json',
-      'resolve-parallel-phase-wave.ts --project-root "$PROJECT_DIR" --plan "$FEATURE_DIR/plan.md" --validate-only',
+      'check-phase-write-disjointness.ts --project-root "$PROJECT_DIR" --validate-only',
     ];
     let previous = -1;
     for (const command of commands) {
@@ -105,18 +103,13 @@ describe('tdk-plan parallel safety contract', () => {
     expect(output).toContain('malformed JSON');
   });
 
-  it('C-C5 acquires the shared mutation reservation before every planner write', () => {
-    expect(skill).toContain('parallel-controller.ts reserve --project-root "$PROJECT_DIR"');
-    expect(skill).toContain('Before skill-routing creation, scope/dependency fixes, migration, setup, red-team');
-    expect(output).toContain('Exit `0` proceeds');
+  it('C-C5 builds the plan-time gate input from Related Code Files bullets', () => {
+    expect(output).toContain('ACCESS_SETS_JSON');
+    expect(output).toContain('shell out to a markdown parser');
+    expect(output).toContain('Exit `0` passes');
     expect(output).toContain('Exit `2`');
-    expect(output).toContain('controllerId');
-    expect(output).toContain('Git worktree is required');
-    expect(output).toContain('Never wait, steal, or age it out');
-    expect(output).toContain('Release a pre-mutation');
-    expect(output).toContain('snapshot-plan');
-    expect(output).toContain('finalize-plan');
-    expect(output).toContain('recover-plan --old-controller-id');
+    expect(output).not.toContain('parallel-controller');
+    expect(output).not.toContain('controllerId');
   });
 
   it('preserves the five-column table and capability-only routing boundary', () => {

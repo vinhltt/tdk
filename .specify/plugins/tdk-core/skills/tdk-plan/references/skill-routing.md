@@ -96,7 +96,7 @@ Warning: Sub-workspace '{name}' has no skill routing section - using global defa
 
 Non-blocking — plan generation continues. Emitted once per plan (not per phase).
 
-Test reference: `erc_spec_kit` has 3 subWorkspaces (ErcWebPage, ErcWebApi, ErcWebSrv) — a mismatch warning should fire if any of these are missing from the routing file.
+Test reference: `sample_spec_kit` has 3 subWorkspaces (SampleWebPage, SampleWebApi, SampleWebSrv) — a mismatch warning should fire if any of these are missing from the routing file.
 
 ## Pre-injection Refresh
 

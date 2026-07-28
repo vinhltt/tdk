@@ -4,6 +4,19 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [11.1.2] - 2026-07-28
+
+### Changed
+- tdk-implement — wave orchestration rewritten to prompt-driven write-disjointness gating; removed controller/lease acquire-release protocol from workflow contract
+- tdk-plan — mutation reservation lifecycle dropped; parallel-safety gate moved to check-phase-write-disjointness at plan time
+- tdk-plan reference skill-routing — replaced real consumer project name with generic example
+- tdk-implement reference parallel-phase-orchestration — rewritten from controller-based lease flow to agent-driven wave selection with disjointness gate
+- tdk-implement reference phase-execution — removed lease/snapshot references
+- tdk-implement reference project-and-phase-contract — replaced Serial Mutation Reservation with Mutation Preconditions (no repo-wide mutex)
+- tdk-plan reference plan-output-contract — removed transaction snapshot, reservation, planner snapshot, and recover/finalize commands
+- tdk-plan reference handle-existing-plan — removed reservation/snapshot lifecycle references
+- speckit-config-reader test — trivial fixture update
+
 ## [11.1.1] - 2026-07-27
 
 ### Changed

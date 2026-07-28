@@ -67,7 +67,7 @@ test('loadSpeckitConfig returns defaults when neither json nor yaml exists', () 
 
 // Test 4: camelCase key access
 test('loadSpeckitConfig returns camelCase keys from json', () => {
-  const root = makeTempJsonRoot({ prefixList: 'ERC', mainBranch: 'master' });
+  const root = makeTempJsonRoot({ prefixList: 'SAMPLE', mainBranch: 'master' });
   const config = loadSpeckitConfig(root);
   // Top-level overrides via deepMerge
   assert.equal(config.git.mainBranch, 'main'); // nested key from fixture

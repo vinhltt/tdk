@@ -2,17 +2,15 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "11.1.1"
+  version: "11.1.2"
 ---
 
 ## ⛔ CRITICAL: Error Handling
 
 **If ANY script returns an error, you MUST:**
-1. **Restore first when transactional output exists** — Restore the complete
-   invocation snapshot before reporting a post-write gate failure.
-2. **STOP immediately** — Do NOT attempt workarounds or auto-fixes.
-3. **Report the error** — Show the exact error message to the user.
-4. **Wait for user** — Ask user how to proceed before taking any action.
+1. **STOP immediately** — Do NOT attempt workarounds or auto-fixes.
+2. **Report the error** — Show the exact error message to the user.
+3. **Wait for user** — Ask user how to proceed before taking any action.
 
 **DO NOT:**
 - Try alternative approaches when scripts fail.
@@ -60,8 +58,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 ```mermaid
 flowchart TD
     A[Step 0 Parse Args + Validate TASK_ID] --> B[Step 0.1 Load Project Context]
-    B --> TX[Step 0.2 Acquire Mutation Reservation + Snapshot]
-    TX --> BM{--migrate-artifacts?}
+    B --> BM{--migrate-artifacts?}
     BM -->|yes| MW[Step 0.migrate Dry-run + Confirm + Transaction]
     BM -->|no| B2[Step 0.1b Load Skill Routing]
     B2 --> C[Step 0.memory Memory Pre-load]
@@ -81,12 +78,9 @@ flowchart TD
     I --> J[Step 4 Report Results]
     J --> RT2[Step 4.5 Red Team Review]
     RT2 --> V[Step 4.7 Validation Interview]
-    V --> RL[Verify Stable State + Release Reservation]
 ```
 
 **This diagram is the authoritative workflow.** Prose sections below provide detail per node.
-Every path, including migrate, red-team, and validate, retains the reservation
-through its final verified mutation or rollback.
 
 ## Workflow
 
@@ -121,47 +115,6 @@ Replace `<agent-resolved-project-root>` with the actual absolute project root; d
 ### Step 0.1 — Load Project Context
 **Inline.** <!-- script invocation -->
 Invoke `tdk-load-project-context` with the validated `TASK_ID`. Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
-
-### Step 0.2 — Mutation Reservation and Transaction Snapshot
-
-Before skill-routing creation, scope/dependency fixes, migration, setup, red-team,
-validation, or any other persistent write, acquire the shared repo-wide mutation
-reservation:
-
-```bash
-(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/parallel-controller.ts reserve --project-root "$PROJECT_DIR" --feature-dir "$FEATURE_DIR" --task-id "$TASK_ID" --purpose planner)
-```
-
-Parse the sole compact JSON line and retain `owner.controllerId` plus `lockPath`.
-Exit `2` / `lease-held` STOPs with available owner metadata. Any malformed output,
-non-Git project, or runtime error STOPs before mutation. Never wait, steal, or age
-out a reservation.
-
-After acquisition, write one lease-local input JSON with the retained `controllerId`
-and sorted canonical `externalPaths` for every planned write outside `FEATURE_DIR`
-(including routing and cross-plan dependency files), then run `snapshot-plan
---input-json <lease-input>`. It durably snapshots the complete feature directory
-and every declared external file before the first project write. Re-read any inputs gathered
-before acquisition. A live pre-mutation cancel releases immediately. After any
-project mutation, use `recover-plan` to restore and verify the snapshot before release; if interruption
-prevents verified restoration, leave the reservation for explicit recovery.
-Successful, red-team, validate, and migrate paths release only after `finalize-plan`
-independently validates the artifact set, every declared external file, and its
-pre-existing parent modes before removing the snapshot. Routing files must remain
-bounded regular non-symlinks and pass routing conflict validation. Undeclared
-Git-visible mutations outside the feature make finalize/recovery fail closed. A takeover
-must use `recover-plan --old-controller-id` before creating another snapshot;
-status reconciliation cannot clear a
-planner reservation. Time, PID absence, and file age never clear it.
-
-The feature-directory snapshot is content-addressed: duplicate file bytes anywhere under the
-feature directory are stored once by content hash, so its size bound tracks unique content, not
-naive total size. Declared external files stay inline per file under their own separate bound and
-are not part of that dedup pool. A feature snapshot written by an older binary remains readable by
-`recover-plan`/`finalize-plan`. `finalize-plan`'s internal plan/resolver validation always runs
-host-independent (see Transactional Post-write Validation gate 4 in `references/plan-output-contract.md`);
-it is not the parallel-implementation host-admission check `/tdk-implement --parallel` uses to
-actually schedule work.
 
 ### Step 0.migrate — Opt-in Legacy Artifact Migration
 
@@ -247,14 +200,16 @@ or reconstruct the layout from memory.
 
 Using the already loaded `references/plan-output-contract.md`, run its four
 post-write gates in the frozen order. New/rewrite validate every generated phase;
-append validates the appended phase while the resolver gate validates the
-complete plan. This gate runs before `Phase 0.guardian` and Step 4 reporting.
+append validates the appended phase while the disjointness gate validates every
+`parallel_safe: auto` phase in the plan. Build that gate's `ACCESS_SETS_JSON`
+input yourself from each `auto` phase's `## Related Code Files` bullets, exactly
+as the contract's gate 4 specifies.
+This gate runs before `Phase 0.guardian` and Step 4 reporting.
 
 On invalid output, an unexpected non-zero exit, malformed JSON, or runtime/I/O
-failure, roll back the complete invocation snapshot, remove only invocation-new
-files, report exact diagnostics, and STOP. Do not repair, downgrade, retain an
-orphan phase/table row, or continue to guardian, reporting, red-team, or the
-validation interview.
+failure, remove only invocation-new files, report exact diagnostics, and STOP.
+Do not repair, downgrade, retain an orphan phase/table row, or continue to
+guardian, reporting, red-team, or the validation interview.
 
 ### Phase 0.guardian — Business Logic Validation
 Load: `references/gates.md` <!-- semantics in same file as Step 0.memory -->

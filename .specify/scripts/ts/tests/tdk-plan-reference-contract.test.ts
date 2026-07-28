@@ -236,14 +236,17 @@ describe('tdk-plan reference contract', () => {
     expect(redTeamWorkflow).toContain('Do not use Search/Grep/Glob');
   });
 
-  it('validates append dependencies through the complete resolver input', () => {
+  it('validates append write disjointness across every auto phase in the plan', () => {
     const existingPlanWorkflow = read(resolve(REFERENCES_DIR, 'handle-existing-plan.md'));
     const outputContract = read(resolve(REFERENCES_DIR, 'plan-output-contract.md'));
 
-    expect(existingPlanWorkflow).toContain('validates the complete resolver input and reciprocal graph');
-    expect(outputContract).toContain(
-      'resolve-parallel-phase-wave.ts --project-root "$PROJECT_DIR" --plan "$FEATURE_DIR/plan.md" --validate-only',
+    expect(existingPlanWorkflow).toContain(
+      'validates write disjointness across every `parallel_safe: auto` phase',
     );
+    expect(outputContract).toContain(
+      'printf \'%s\' "$ACCESS_SETS_JSON" | bun src/commands/util/check-phase-write-disjointness.ts --project-root "$PROJECT_DIR" --validate-only',
+    );
+    expect(outputContract).not.toContain('resolve-parallel-phase-wave.ts');
   });
 
   it('requires the explicit --validate-only flag for planner validation and prohibits it in parallel-implementation scheduling examples', () => {
@@ -264,14 +267,17 @@ describe('tdk-plan reference contract', () => {
     expect(validationStep).toBeGreaterThanOrEqual(0);
     expect(guardian).toBeGreaterThan(validationStep);
     expect(reporting).toBeGreaterThan(validationStep);
-    expect(skill).toContain('roll back the complete invocation snapshot');
+    expect(skill).toContain('remove only invocation-new files');
   });
 
-  it('guards every mutating lifecycle with the shared mutation reservation', () => {
-    expect(skill).toContain('### Step 0.2 — Mutation Reservation and Transaction Snapshot');
-    expect(skill).toContain('parallel-controller.ts reserve --project-root "$PROJECT_DIR"');
-    expect(skill).toContain('Successful, red-team, validate, and migrate paths');
-    expect(skill).toContain('leave the reservation for explicit recovery');
+  it('drives every mutating lifecycle without a mutation reservation or snapshot', () => {
+    expect(skill).not.toContain('parallel-controller.ts reserve');
+    expect(skill).not.toMatch(/\breserve\b/);
+    expect(skill).not.toMatch(/\breservations?\b/i);
+    expect(skill).not.toContain('Step 0.2');
+    expect(skill).not.toContain('snapshot-plan');
+    expect(skill).not.toContain('finalize-plan');
+    expect(skill).not.toContain('recover-plan');
   });
 
   it('uses current Obsidian action examples instead of retired project knowledge helpers', () => {
