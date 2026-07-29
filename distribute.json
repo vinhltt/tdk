@@ -16,6 +16,7 @@
     ".specify/memory/",
     ".specify/CHANGELOG.md",
     ".specify/scripts/ts/node\u005fmodules/",
+    ".specify/scripts/ts/tests/",
     ".specify/\u005f\u005fpycache\u005f\u005f/",
     ".claude/settings.local.json",
     ".claude/session-state/",

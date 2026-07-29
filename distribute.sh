@@ -9,6 +9,9 @@
 # output. Force mode is a destructive override of target ownership and checksums.
 # Always shows dry-run summary first, then asks for confirmation before writing.
 #
+# Requires bash >= 4.2: associative arrays (4.0) and printf's %(...)T strftime (4.2).
+# macOS ships bash 3.2 — use a Homebrew bash.
+#
 # Usage:
 #   bash distribute.sh [target-project-path] [OPTIONS]
 #
@@ -48,7 +51,7 @@ NC='\033[0m'
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
 LOG_FILE=""
-ts() { printf "[%s] " "$(date +%H:%M:%S)"; }
+ts() { printf '[%(%H:%M:%S)T] ' -1; }
 log() { ts; echo -e "$@"; }
 log_dim() { ts; echo -e "${DIM}$*${NC}"; }
 
@@ -246,7 +249,7 @@ else
 fi
 if [[ -n "$BRAND_PREFIX" ]]; then
     echo -e "  ${WHITE}Brand:${NC}   safe .specify payload text tdk-/tdk/TDK -> $BRAND_PREFIX/$BRAND_WORD/$BRAND_WORD_UPPER"
-    echo -e "  ${DIM}         plugins/, codex-plugins/, schemas/, tests, and filename/path refs stay source-identical${NC}"
+    echo -e "  ${DIM}         plugins/, codex-plugins/, schemas/, and filename/path refs stay source-identical${NC}"
 fi
 $FORCE && echo -e "  ${YELLOW}Mode:    --force (destructive consumer override)${NC}"
 $NO_DELETE && echo -e "  ${YELLOW}Mode:    --no-delete (skip orphan removal)${NC}"
@@ -671,7 +674,6 @@ has_scripts_ts_text_extension() {
 is_scripts_ts_rewrite_candidate() {
     local rel_path="$1"
     case "$rel_path" in
-        scripts/ts/tests/*) return 1 ;;
         scripts/ts/*) has_scripts_ts_text_extension "$rel_path"; return ;;
         *) return 1 ;;
     esac
@@ -822,16 +824,47 @@ is_excluded() {
     return 1
 }
 
+# Builds `find` predicates that skip excluded directories at descend time, so their
+# contents never reach the shell instead of being enumerated and rejected one file at a
+# time. The anchoring mirrors is_excluded exactly: root-anchored directories match one
+# absolute path, cache-style directories match a basename at any depth. Exact-file
+# excludes have no directory to prune, so is_excluded remains the authority on whatever
+# survives — pruning can only remove paths it would have rejected anyway.
+#
+# Assigns to EXCLUDE_PRUNE_ARGS in the caller's scope; callers declare it local.
+build_exclude_prune_args() {
+    local root="${1%/}"; shift
+    local pattern dir
+    EXCLUDE_PRUNE_ARGS=()
+    for pattern in "$@"; do
+        [[ "$pattern" == */ ]] || continue
+        dir="${pattern%/}"
+        if [[ ${#EXCLUDE_PRUNE_ARGS[@]} -eq 0 ]]; then
+            EXCLUDE_PRUNE_ARGS=( '(' )
+        else
+            EXCLUDE_PRUNE_ARGS+=( -o )
+        fi
+        if [[ "$dir" == _*_cache__ ]]; then
+            EXCLUDE_PRUNE_ARGS+=( -name "$dir" )
+        else
+            EXCLUDE_PRUNE_ARGS+=( -path "$root/$dir" )
+        fi
+    done
+    [[ ${#EXCLUDE_PRUNE_ARGS[@]} -gt 0 ]] && EXCLUDE_PRUNE_ARGS+=( ')' -prune -o )
+    return 0
+}
+
 # ─── Collect files by include/exclude rules ───────────────────────────────────
 # Outputs NUL-delimited relative paths from source_dir matching rules.
 collect_files() {
     local source_dir="$1"; shift
-    local -a includes=() excludes=()
+    local -a includes=() excludes=() EXCLUDE_PRUNE_ARGS=()
     local pattern target paths_file file rel
 
     while [[ $# -gt 0 && "$1" != "--" ]]; do includes+=("$1"); shift; done
     [[ "${1:-}" == "--" ]] && shift
     excludes=("$@")
+    build_exclude_prune_args "$source_dir" ${excludes[@]+"${excludes[@]}"}
 
     for pattern in "${includes[@]}"; do
         target="$source_dir/${pattern%/}"
@@ -845,7 +878,8 @@ collect_files() {
         elif [[ -d "$target" ]]; then
             log_dim "  [include] $pattern/ (directory)" >&2
             paths_file="$(mktemp "${TMPDIR:-/tmp}/tdk-distribute-files.XXXXXX")" || return 1
-            if ! find "$target" -type f -print0 2>/dev/null | sort -z > "$paths_file"; then
+            if ! find "$target" ${EXCLUDE_PRUNE_ARGS[@]+"${EXCLUDE_PRUNE_ARGS[@]}"} \
+                -type f -print0 2>/dev/null | sort -z > "$paths_file"; then
                 rm -f "$paths_file"
                 return 1
             fi
@@ -867,7 +901,7 @@ collect_files() {
 # ─── Collect orphan files in target not present in source ────────────────────
 collect_target_orphans() {
     local source_dir="$1" target_dir="$2"; shift 2
-    local -a includes=() excludes=()
+    local -a includes=() excludes=() EXCLUDE_PRUNE_ARGS=()
     local -A mapped_targets=()
     local pattern target source_files_file target_files_file source_rel file rel
 
@@ -885,11 +919,15 @@ collect_target_orphans() {
     done < "$source_files_file"
     rm -f "$source_files_file"
 
+    # Rooted at the target, not the source: root-anchored prunes are absolute paths.
+    build_exclude_prune_args "$target_dir" ${excludes[@]+"${excludes[@]}"}
+
     for pattern in "${includes[@]}"; do
         target="$target_dir/${pattern%/}"
         if [[ -d "$target" ]]; then
             target_files_file="$(mktemp "${TMPDIR:-/tmp}/tdk-distribute-target-files.XXXXXX")" || return 1
-            if ! find "$target" -type f -print0 2>/dev/null | sort -z > "$target_files_file"; then
+            if ! find "$target" ${EXCLUDE_PRUNE_ARGS[@]+"${EXCLUDE_PRUNE_ARGS[@]}"} \
+                -type f -print0 2>/dev/null | sort -z > "$target_files_file"; then
                 rm -f "$target_files_file"
                 return 1
             fi
@@ -1368,6 +1406,9 @@ SYNC_NEW=("${G_NEW[@]}")
 SYNC_UPDATED=("${G_UPDATED[@]}")
 SYNC_UNCHANGED=("${G_UNCHANGED[@]}")
 SYNC_DELETED=("${G_DELETED[@]}")
+# Orphans whose deletion the operator declines; kept in the published target manifest so the
+# next run re-offers them instead of silently stranding the files as unmanaged.
+DECLINED_DELETIONS=()
 print_section "Distributed files" SYNC_NEW SYNC_UPDATED SYNC_UNCHANGED SYNC_DELETED
 
 # Show skill-level diffs
@@ -1438,6 +1479,8 @@ if [[ $TOTAL_DELETED -gt 0 ]] && ! $AUTO_YES_DELETE; then
     read -r delete_confirm
     if [[ "$delete_confirm" != "delete" ]]; then
         echo -e "${YELLOW}Deletions skipped. Only new/updated files will be synced.${NC}"
+        echo -e "${DIM}These files stay recorded as managed, so the next run offers the deletion again.${NC}"
+        DECLINED_DELETIONS=("${SYNC_DELETED[@]}")
         SYNC_DELETED=()
         TOTAL_DELETED=0
     fi
@@ -1886,13 +1929,31 @@ publish_release_manifest() {
 
     tmp="$(mktemp "$dst_dir/.release-manifest.XXXXXX")" || return 1
     ACTIVE_TRANSACTION_TEMP="$tmp"
-    if [[ -n "$BRAND_PREFIX" ]] || $FORCE; then
+    # Declined deletions must be carried into the published manifest, which a verbatim copy of the
+    # source manifest cannot express — so they force the materialize path regardless of mode.
+    if [[ -n "$BRAND_PREFIX" ]] || $FORCE || [[ ${#DECLINED_DELETIONS[@]} -gt 0 ]]; then
+        local retain_file="" retain_args=()
+        if [[ ${#DECLINED_DELETIONS[@]} -gt 0 ]]; then
+            retain_file="$(mktemp "${TMPDIR:-/tmp}/tdk-retain-paths.XXXXXX")" || {
+                discard_active_transaction_temp
+                return 1
+            }
+            printf '%s\n' "${DECLINED_DELETIONS[@]}" > "$retain_file" || {
+                rm -f "$retain_file"
+                discard_active_transaction_temp
+                return 1
+            }
+            retain_args=(--retain-target-paths-file "$retain_file")
+        fi
         if ! bun "$DIFF_RELEASE_MANIFESTS_TS_SCRIPT" \
             --source-root "$SOURCE_ROOT" \
-            --materialize-target-root "$TARGET_ROOT" > "$tmp"; then
+            --materialize-target-root "$TARGET_ROOT" \
+            "${retain_args[@]}" > "$tmp"; then
+            [[ -n "$retain_file" ]] && rm -f "$retain_file"
             discard_active_transaction_temp
             return 1
         fi
+        [[ -n "$retain_file" ]] && rm -f "$retain_file"
     elif ! cp -f "$SOURCE_RELEASE_MANIFEST" "$tmp"; then
         discard_active_transaction_temp
         return 1

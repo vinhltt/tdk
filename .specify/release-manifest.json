@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-07-28T11:46:56.660Z",
+  "generatedAt": "2026-07-29T06:46:04.754Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -21,6 +21,7 @@
       ".specify/memory/",
       ".specify/CHANGELOG.md",
       ".specify/scripts/ts/node_modules/",
+      ".specify/scripts/ts/tests/",
       ".specify/__pycache__/",
       ".claude/settings.local.json",
       ".claude/session-state/",
@@ -200,7 +201,7 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "3a6e12c973383ba144f00e4038fd2645d570dd80dfc74378a47dfee4a7e69081",
+      "sha256": "a3b112c1d493c0447c3d34a9e6533559c17e4d27fab055e2304e5610e2d91fd2",
       "size": 42637,
       "mode": "0644"
     },
@@ -215,17 +216,17 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "f2250c2279d93ada63c10c78a67f1ad4b4a795fb43e393961bed80201ab27021",
+      "sha256": "6ea0be27aad70e4b5cdfbece042195506027217790d3eb4a8169ddf939a238f8",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "f2250c2279d93ada63c10c78a67f1ad4b4a795fb43e393961bed80201ab27021",
+      "sha256": "6ea0be27aad70e4b5cdfbece042195506027217790d3eb4a8169ddf939a238f8",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "f2250c2279d93ada63c10c78a67f1ad4b4a795fb43e393961bed80201ab27021",
+      "sha256": "6ea0be27aad70e4b5cdfbece042195506027217790d3eb4a8169ddf939a238f8",
       "size": 181,
       "mode": "0644"
     },
@@ -235,8 +236,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "2aa195d17e73fb18fb51877ac1e65717ff507b12005a9c722d985c58d5dfe4f6",
-      "size": 28369,
+      "sha256": "0c8e27adb3cf30e62f195ea0daf0414bd6808ad4f96bc1a26041f438abef3a39",
+      "size": 29467,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/__tests__/context-builder.test.cjs": {
@@ -350,7 +351,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/SKILL.md": {
-      "sha256": "1e1ae347ad6584668dff432232c06ff000d5a7914c20b0ea794ccb2ffc89847c",
+      "sha256": "9ed82ed63d11d73d68ad99fd982f8c2841393cc2bdc336640fb7214e45886360",
       "size": 7912,
       "mode": "0644"
     },
@@ -375,7 +376,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/SKILL.md": {
-      "sha256": "52d01730560ee4c3682f55f90410f13496875abc1f0f5297752ca578bc624c68",
+      "sha256": "cd54994775f6c39656a8be899225bac79a0d72c364acaa8a8191710ae46d14df",
       "size": 15842,
       "mode": "0644"
     },
@@ -1315,23 +1316,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.claude-plugin/plugin.json": {
-      "sha256": "0220f51637f2c5806182e62d19bfd649c938f828260bab1fddeeb3bb4cbd8a40",
+      "sha256": "90b1a69e22ece27feb3d695f8888355e2da6acdabb9acda2fcdef5e2ee05df55",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.codex-plugin/plugin.json": {
-      "sha256": "0220f51637f2c5806182e62d19bfd649c938f828260bab1fddeeb3bb4cbd8a40",
+      "sha256": "90b1a69e22ece27feb3d695f8888355e2da6acdabb9acda2fcdef5e2ee05df55",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.cursor-plugin/plugin.json": {
-      "sha256": "0220f51637f2c5806182e62d19bfd649c938f828260bab1fddeeb3bb4cbd8a40",
+      "sha256": "90b1a69e22ece27feb3d695f8888355e2da6acdabb9acda2fcdef5e2ee05df55",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/CHANGELOG.md": {
-      "sha256": "7838e12cee519c06d42c7fc5872e65f78888e471f1e6fb90f0b954076629e488",
-      "size": 6180,
+      "sha256": "256fa27f6b9b5afac0a0ec4c93c75d30d10ae704238d1270ea8820a5adb5f9d5",
+      "size": 6310,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/researcher.md": {
@@ -1360,7 +1361,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/brainstorming/SKILL.md": {
-      "sha256": "51bc4fd4199fa7636350071c41e9adcab5f0c2c2bf036cb4bd86a8e162dbcdab",
+      "sha256": "0b7df94153742b98602f3f97c5661aa25c35bfa2ae77266f0337c93d52ddf5fe",
       "size": 5596,
       "mode": "0644"
     },
@@ -2257,776 +2258,6 @@
     ".specify/scripts/ts/src/utils/types.ts": {
       "sha256": "fa8877a1c45d6e0c23de24b9fd5640af17a0d71dad92d8c8a24aec79b8491c68",
       "size": 5475,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/architecture-workflow-contract.test.ts": {
-      "sha256": "58dbc74c7da96138dad33ff781d1f36935a163997f0c5563e599cedd0caabb6f",
-      "size": 7247,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/artifact-consolidation-compatibility-contract.test.ts": {
-      "sha256": "cde7eef645e113b963082e6462de3022cf342d949eaab4b55f7f66fc028090e7",
-      "size": 2745,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/check-phase-write-disjointness.test.ts": {
-      "sha256": "f39afa7b718ab5967d9835ac85e44312d6224a529690b11790ffaef50f0ec46e",
-      "size": 37498,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/cli/detect-config.test.ts": {
-      "sha256": "827a76c84549faafd7ae55320bfd19ab3cc5e23371b5f71f208e55c42d787f0e",
-      "size": 6229,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/cli/ut-scripts.test.ts": {
-      "sha256": "dc51c1f89368a567b6bd4e3f419f20716f59cc69621ad5d85f312fd39cc82104",
-      "size": 13168,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/codex-distribute-e2e.test.ts": {
-      "sha256": "c8f8a84bc5db5109674c9c8c26980890dde5a73a7674e76b33cdd872635d9d78",
-      "size": 24128,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/commands/changelog/fixture-builder.ts": {
-      "sha256": "86fef37654571490dd3e6129d82cd1e4689f0d951e3f0d5db44561b609155112",
-      "size": 5106,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/commands/changelog/verify.test.ts": {
-      "sha256": "b8775b5f61d0cca4c885e3d4d3366f20d8e5a2b1889960b06d707551ced9388f",
-      "size": 7215,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/commands/plan-env-parser-resolution.test.ts": {
-      "sha256": "da61218adb48fcd3ee928366360944ec87a7706f0f682b6c8e38960f15c2f071",
-      "size": 5977,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/commands/routing/plan-skill-routing.test.ts": {
-      "sha256": "c9c68517e5e547dd36df971b1f868fa9eba688dbf8b6d4f1927f357d2ad07d1f",
-      "size": 8383,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/common-env-parity.test.ts": {
-      "sha256": "f1dea5d8eeca8e4d6dcd55cc597b517786e7606c89d8f250f362dbc9bc18b3b6",
-      "size": 1108,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/config/topology-apply.test.ts": {
-      "sha256": "6ede9c1ab6ca144652f37cda1d2fe6f7593c4d61633fc98fd7b714d13ab537a6",
-      "size": 18131,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/cwd-independent-skill-contract.test.ts": {
-      "sha256": "44a4694aba78b83e2ac956974af9ac235bda0bd532e9d5613baf32766e0420d3",
-      "size": 10466,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/distribute-release-manifest-contract.test.ts": {
-      "sha256": "8290d3224b14d0b3f34c35e313934cb8a37abe6d914dea2c46ff2fe30b1dbd7c",
-      "size": 35787,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/artifact-consolidation-compatibility-matrix.json": {
-      "sha256": "dfc0145379aaeaf3730a6b075acf6fdb098c7661136a9e8a62239805ffdb541b",
-      "size": 896,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-clean-diamond.md": {
-      "sha256": "37c18c1d874f7a2b672e2fb2bfc77b5c8a3f7f5fdf541a2cac3a77f874d07ad8",
-      "size": 346,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-dangling-ref.md": {
-      "sha256": "57398bc1fa1285856b636a03a9cafdad9ddbeb99b738e31bf901c96e1fa436c1",
-      "size": 291,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-dup-edge.md": {
-      "sha256": "a3ab19f3f125a06fe23ae3e0ba83ca7bfc168a0068117eeae7356b71704d6d46",
-      "size": 235,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-dup-number.md": {
-      "sha256": "d6ed8556e941ae307a6155988279e3da22ce6f905f6e9e797caf7fee80cbe03a",
-      "size": 241,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-nonnumeric-token.md": {
-      "sha256": "15805b03785bdda9cb8231755e0811f37448dd10715c973be9aca368fc39a601",
-      "size": 235,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-one-way-blockedby-without-blocks.md": {
-      "sha256": "613cfd1b351b9407f36f7162fe7f1d513a5c3617bc81818f6f48f3a0357c1360",
-      "size": 250,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-one-way-blocks-without-blockedby.md": {
-      "sha256": "27c88fbdc57b96739686b07ed51103c615a4a4b9c76a0590d487a67d10989b52",
-      "size": 250,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-partial-numeric-token.md": {
-      "sha256": "d6885299a4fb0568f477b1a6e6737e030c99795318da33b66819b12aaeea7049",
-      "size": 239,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/parallel-phase-graph-self-ref.md": {
-      "sha256": "883ca044612d1107b138abb4417b8a0b0016a5c91b11d02aeeda15b79b9a939a",
-      "size": 176,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/phase-frontmatter-no-block.md": {
-      "sha256": "eec329fca3e1573a1417644f3f1aa043c7c064d142be70abe1dc886be4191231",
-      "size": 75,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/phase-frontmatter-no-status.md": {
-      "sha256": "9973cea5106dc0d48e504b3c80a4649f6bdf25053342096d5d6dbd1c6256e441",
-      "size": 150,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/phase-frontmatter-valid.md": {
-      "sha256": "396c8242b3cbf7ecbd379f9e52ccd16d2e7327f79bfc9e5f93b1fa4fe8037a11",
-      "size": 134,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-all-todo.md": {
-      "sha256": "20e5f6373f24beaf54fbafee4e9d861e8f22fa42bf7555d29da27e9f6e422b4a",
-      "size": 305,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-ambiguous-multiple-phases.md": {
-      "sha256": "950eb85fcf6dba7cbce28b409247fdfefb19dae7d618f37fb2fe0de9655e10db",
-      "size": 432,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-canonical.md": {
-      "sha256": "fc4deba22e991b41a385f5f9c8df3d38ec7f6355af36b3228b3b147930544bb1",
-      "size": 446,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-custom-label.md": {
-      "sha256": "4c9acc8f2a559f01cb58057f2c4838ec9a3262f1a2b91f1418d1f232fc410544",
-      "size": 342,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-dash-variants.md": {
-      "sha256": "f39c07fdb54c0afb6ae3fb4233bb96633b1385017a6254cd3fb3edab3abdb4e1",
-      "size": 323,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-em-dash-deps.md": {
-      "sha256": "f9203ab95dce41635e07e38de55957e90bf9cddda5c19a466a80d58c28b5aaa0",
-      "size": 326,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-empty-table.md": {
-      "sha256": "f226854c4d8c934778baa13cae5bf48ab6df78a7e2990c641c37123d24ac023c",
-      "size": 164,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-forward-ref-blockedby.md": {
-      "sha256": "27fa0eec82b2ab2547786835f80a41f33a803d43d9a070a98009eb44333be47d",
-      "size": 326,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-invalid-status-vocab.md": {
-      "sha256": "6e0f055f37373e38b994208c034db2086537c97cfb367ad2e8b0e7719441b17a",
-      "size": 322,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-missing-phases-section.md": {
-      "sha256": "2847951fd1b14b42a42976b8350c74b0c5391c5db02675d01428e314b668a5a4",
-      "size": 133,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-mutation-roundtrip.md": {
-      "sha256": "5e872cb17da4011c67a0bc48f1fc635f0c499317bcdd6f27e2f4830296a6ce58",
-      "size": 453,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-not-started-status.md": {
-      "sha256": "964e81bf22bb513f2dec00b1f2e7d5bfc91e89c4cb77573620fc4084bc4a57ee",
-      "size": 203,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-numbering-gap.md": {
-      "sha256": "71303ceefd2aeabb6ddf0d575948b1839bf27a4c931828c613215b75161b341b",
-      "size": 325,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-pending-status.md": {
-      "sha256": "8a6fd69b7ec1a55a3e3e281a124c381e4b40a926fdf893a02248affb43706df3",
-      "size": 195,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/plan-uppercase-path.md": {
-      "sha256": "2c8bb424d9f41dc5afbff986a71e0ebab31abcba829cf477c66b8110fc5ac594",
-      "size": 245,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/sync-test/phase-01-foo.md": {
-      "sha256": "c97d619c9fa071c5e430642bb6d103960b6b1ccebb719038df76ad76511c3bce",
-      "size": 122,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/sync-test/phase-02-bar.md": {
-      "sha256": "bc240d5563a34659846f72fb1d125faffb5318f01789c08ecbcd26ed46f9383b",
-      "size": 117,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/sync-test/phase-03-baz.md": {
-      "sha256": "928154cb7541362acf0145ca98892c1d71bec02210e4958a1dcf17a0806d53a2",
-      "size": 120,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/fixtures/sync-test/plan.md": {
-      "sha256": "8155bca527d62c06b1e6dcccd7cb73d087a4897be2f14c4521574ad0ffda93c3",
-      "size": 357,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/handle-existing-plan-paths.test.ts": {
-      "sha256": "1381c509a37c65671ab3d1796da703aea7d7a88dc8aff19dfdc3c881b303d032",
-      "size": 5557,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/integration/sync-phase-status.integration.test.ts": {
-      "sha256": "928e81c3f7764b5364cc6a7199e76e9f37e99893df9dd78f9d327242b1074328",
-      "size": 4042,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/lib/auto-gen-markers-cli.test.ts": {
-      "sha256": "daf531901adbddf00d913943f4767f46f862a44b3668ac44049dc4cc0e85ce56",
-      "size": 2510,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/lib/auto-gen-markers.test.ts": {
-      "sha256": "ad75e3372cf605024dd510c8b9fd799d57d5551e97aa4dbd766fa703691f92fc",
-      "size": 6293,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/lib/templates-roundtrip.test.ts": {
-      "sha256": "a7dbdb1b7232e5d014f6fbc02d9e28cdcf5ca377fd77470f2f28de0d7285f05b",
-      "size": 3106,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/manifest/codex-plugins-root.test.ts": {
-      "sha256": "ad404901296d0440a1ba55217d347f51f3bd36e148f4d752894d2705149adbe1",
-      "size": 7933,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/manifest/compare.test.ts": {
-      "sha256": "58a186b00474326186beb9687b51dff964e2803426ac327749da39843bd07342",
-      "size": 7646,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/manifest/identify-components.test.ts": {
-      "sha256": "10ed120774e407117c25c7481878aae7cae34de78d305f1a58369a3098c64d93",
-      "size": 3851,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/manifest/plugin-dependencies.test.ts": {
-      "sha256": "003c80334ef398a7631f2810d99540f69c360f689bc779e0453b3f3517de4c3f",
-      "size": 6499,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/manifest/read-component-version.test.ts": {
-      "sha256": "d01f805c63c50e86b6c9ef46c5c6d7a4943d48e03e0653ee031bb20e744a5ee6",
-      "size": 5671,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/manifest/tdk-epic-plugin-ownership.test.ts": {
-      "sha256": "b97796a50b80aeb6a4c4aa3a79238aff0ace6aae6fe18e5d10ed37807de86112",
-      "size": 3812,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/manifest/tdk-inception-codex-ownership.test.ts": {
-      "sha256": "828c52ff5e3a460005de2161caf896779d1d5141683530f371270d4f1351218f",
-      "size": 4104,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/manifest/tdk-inception-plugin-ownership.test.ts": {
-      "sha256": "b9fee9911972281e7f82901a1f9cd45bd8b32b95e54ccd167fc96f4953aeb9fc",
-      "size": 8310,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/no-lease-artifact-guard.test.ts": {
-      "sha256": "9d9a493c16c8e9ffddcd3629dc8cb214ecf2471708504deffb143ff007ccb375",
-      "size": 3843,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/normalize-agent-version.test.ts": {
-      "sha256": "67d3c0dbd10ca67c8b2836eb842bff5d6151919ab786d29d6eec51273f11f781",
-      "size": 3864,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/parallel-phase-status-reconciler.test.ts": {
-      "sha256": "826b58a47b0467a3f5d27b47945eb72d81d6401382cd85261fd15428afd177ab",
-      "size": 4331,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/parent-directory-sync.test.ts": {
-      "sha256": "e01f40415e04efb757c437b37b7c52c53849cb4ad841806e203b4bf50dd56bb7",
-      "size": 3766,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/parse-phases-table-cli.test.ts": {
-      "sha256": "e3e4a1b7c101011b52e707ad1d0a321cd5d0c789c9d8b06ecb4f878a041459ae",
-      "size": 3248,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/phase-file-validator.test.ts": {
-      "sha256": "630bd5449dd0f2c6cda34c299d2e21345a6604e356604b279bda20c2ac87331b",
-      "size": 8997,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/phase-frontmatter-reader.test.ts": {
-      "sha256": "51c94c74d3b5f9f2d70727187701d4455e5b5dac03361bf30952dc848cbd1f1a",
-      "size": 3531,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/phase-frontmatter.test.ts": {
-      "sha256": "91e8eacfa748fe83bde4d855f843e6807314b4dd38f122a3f2cf6f9a3a46ee59",
-      "size": 4528,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/phases-table-parser.test.ts": {
-      "sha256": "fb27c2ef3959a474b86081b59f1d818e843b2dc3cf89b6cc2442d656a8b574ac",
-      "size": 25549,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/plan-artifact-migration.test.ts": {
-      "sha256": "6764598c9bb46f94945e29bab761540c2e9e69cc79f02425c92f362bcfbe660a",
-      "size": 6946,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/plan-prose-validator.test.ts": {
-      "sha256": "3e935d6ccb0f267ed2a7f2c08ea29581a22df8038da80be6b0c3308688440055",
-      "size": 9016,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/plan-status-validator.test.ts": {
-      "sha256": "dc3a8a89c78c24b52ec0d67085e81bba44e2e20e998f658358089b8aaebaf812",
-      "size": 2373,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/project-init-authority-contract.test.ts": {
-      "sha256": "16f44f31686e289a2e3e50eecd21c39f3dca12aacefe4bc2eec58ba17acf42d7",
-      "size": 8410,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/scout/args-validator.test.ts": {
-      "sha256": "366f572c776a507e316a3592a8eca25250e53d9daa98283cddb8fd749eaf4b18",
-      "size": 2087,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/scout/cache-resolver.test.ts": {
-      "sha256": "8a43f47d86a631019e9790db530dab0a39fcfb1c213c6e6a10a29f9c9de08543",
-      "size": 2084,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/scout/extract.integration.test.ts": {
-      "sha256": "a5424406e8b1449f4bac619e7ae6ad0677ff19515886a298a3f9c01a336b5f42",
-      "size": 2660,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/scout/fixtures/sample-pack-mixed.md": {
-      "sha256": "1c5085d19f10154fc41c08c9554b67111625d3837cdd170ea57202fed8406ce6",
-      "size": 814,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/scout/fixtures/sample-pack-ts.md": {
-      "sha256": "a09ffa4f5e6c17ea2ade5cd319da7a7b0ab7f0891c3414da26aec96d38136b1f",
-      "size": 981,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/scout/language-parsers/go.test.ts": {
-      "sha256": "1c14719cefa6088017b781c625c869b69dc853c7cac11a632bdc3d52c5711293",
-      "size": 1116,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/scout/language-parsers/python.test.ts": {
-      "sha256": "fe0dcf7281b89d368e9639d3c6479770b4846e9513856f716cc87a142dad496c",
-      "size": 1224,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/scout/language-parsers/ts-js.test.ts": {
-      "sha256": "26ca126d02ff3e1536ddc9f31a5812f1fb20b683d945246bd0e2b4a5c59e588e",
-      "size": 1630,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/scout/pack-splitter.test.ts": {
-      "sha256": "197ca025f5c16f72f03aaf0612b29a937faefa59604f4a7b186c8384a56f1103",
-      "size": 2186,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/scout/run-scout.integration.test.ts": {
-      "sha256": "1e6f52ba157c87c2ce2e65734e461dacedca61e7838dc359159d27a4318b4954",
-      "size": 3323,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/scout/tree-builder.test.ts": {
-      "sha256": "2064f36f33143686e550f61d7212d4b66bc4839c68d2ed6a1f5528a8756e3c31",
-      "size": 1062,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/security.test.ts": {
-      "sha256": "3a325951da88109925b742aa0d7348a03923baf11e5b6c6066fa6afa4ad9a6e1",
-      "size": 6611,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/setup-plan-parent-spec-link.test.ts": {
-      "sha256": "fa18b5015fb07e3f630476999a3f2345455e898f708fee3a526bb69b771fb348",
-      "size": 4597,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/setup/config-detect.test.ts": {
-      "sha256": "44b1dc2a6b0bd88562349098689276daff017dae7a36e3970e600a1adf8bae82",
-      "size": 3391,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/setup/config-migrate.test.ts": {
-      "sha256": "bc2788b74b846778429ff5455907772643a409c4fb8f9cd2b23f2a3d2a70677f",
-      "size": 2652,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/setup/plugin-register.test.ts": {
-      "sha256": "461f1b90aa7cda409d9bf7e8f90ee4d5b4fea0e84a5c34374ba891e8909db89f",
-      "size": 1986,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/setup/python-imports.test.ts": {
-      "sha256": "3f5909b9dac54ac09b70cb008e639d6fe285c70d95c5c60878d3c371b0d2a2f0",
-      "size": 2355,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/setup/python-venv.test.ts": {
-      "sha256": "3eba5422c8230975e7119b9b28ee59c3639c3b6e7cc97399fe9c7824893e9557",
-      "size": 3418,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/setup/setup-bootstrap.test.ts": {
-      "sha256": "440fa5cc15e35f7874af711ec729afb8e07171b4a7a77b9f172322c7e6cf131c",
-      "size": 1907,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/setup/setup-cli.test.ts": {
-      "sha256": "1815709c0ea9a7e4a05a1d64e3aaefed7fe66a2c87aff046f9bd5b5267047bad",
-      "size": 3679,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/setup/setup-integration.test.ts": {
-      "sha256": "15bc78bcf15e38ac63adda63dda4c29223f502af6092d397b2719adfc1aadbf8",
-      "size": 3517,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/setup/ts-deps.test.ts": {
-      "sha256": "0e7564bfe266a1d58b7e389dd01f7ed57ab1cadce5364dc82c05893c7797706d",
-      "size": 2644,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/skill-body-portability.test.ts": {
-      "sha256": "c81b4915542d9a5937348fcb9949df7e050481e0a973abc958048fc05da928b6",
-      "size": 4667,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/spec-plan-drift.test.ts": {
-      "sha256": "dcacdcfe6371e98a644b8715bfe3f343833a1e4ce31667987cbcfab1728ec468",
-      "size": 6110,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/spec-template-frontmatter-contract.test.ts": {
-      "sha256": "8e16ca2310e962052c95b833a5b0ab00f6a34c2757b24ceddf279a266dd0bcb5",
-      "size": 3284,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/specification-quality-gate.test.ts": {
-      "sha256": "42f841f88b4ea7f0979e366594fbef27228a54644a58b78f9668652fcfac18f4",
-      "size": 1952,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/status-preflight-skill-contract.test.ts": {
-      "sha256": "1ffbfb4b7cf86a5924b1052475b1b8fc328ecc4e22dbf70c55274866cddb0b26",
-      "size": 3251,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sub-workspace/docs.test.ts": {
-      "sha256": "e405972f7bfbf7629171f59c3c3b52c91e939293ab92248770615a1157f474ed",
-      "size": 8904,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sync-docs/README.md": {
-      "sha256": "0531eda4b7be8686324e26fe487f54f9b6462324379e55df1cdc74f05d27ce97",
-      "size": 4418,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sync-docs/capture-snapshots.ts": {
-      "sha256": "fd9c3b1537e450af54d75be9142d884dafbc90b22aae91900890aaacac75ec4b",
-      "size": 4486,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sync-docs/fixture-setup.ts": {
-      "sha256": "265248b68a0da9844f16fe6560e04a1cc764d0a94c123d9637ee1d0b401c5dca",
-      "size": 3228,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sync-docs/normalize-paths.ts": {
-      "sha256": "36080b5e8230368b0e90566a3354fe4363f326fee908586b010df108337ede01",
-      "size": 934,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sync-docs/snapshot.test.ts": {
-      "sha256": "4f4d941de9f6d9e56c954f0bc685eccf8842b1e7ea9157d3eadb602a6cd5067f",
-      "size": 3504,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sync-docs/snapshots/all-dryrun.snapshot.json": {
-      "sha256": "9286ea58b4728e63a950ecffd7475a6f916dc99bd5c2a28c8ebf28ac724c56e3",
-      "size": 93,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sync-docs/snapshots/all-real.snapshot.json": {
-      "sha256": "5d2b385170b07e37c01ddaa56b7ce8af39733972867a7df392e959fc09ab845a",
-      "size": 94,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sync-docs/snapshots/from-sub-dryrun.snapshot.json": {
-      "sha256": "71b1c991bdeea767fcc3581b860e37f4d937c8189229f20bb8af4da3fb7331bc",
-      "size": 229,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sync-docs/snapshots/from-sub-real.snapshot.json": {
-      "sha256": "1a00e35d053e2987ee6b7a5fd2bba207b8e618ec1c42e34db310dc27bfecc884",
-      "size": 230,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sync-docs/snapshots/to-sub-dryrun.snapshot.json": {
-      "sha256": "479fa05efdd52c0adc982a4e67ff54aa87bcdb8c6f27b58a06e5bb1748072f52",
-      "size": 264,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/sync-docs/snapshots/to-sub-real.snapshot.json": {
-      "sha256": "b1f9ca560de9835c4db2733c1a079408ae763ee4b8651da38d937ea3507133b8",
-      "size": 265,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-architecture-advisor-contract.test.ts": {
-      "sha256": "8d2e66bc428e5dd707df70f1d21d8f056efefcffbd43e38778e7428b356cf44e",
-      "size": 9201,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-boundary-map-contract.test.ts": {
-      "sha256": "840764243098a0fb38f7b1b0f22cf66d36b38fd8ae0d444e3930eccbafed8af1",
-      "size": 10879,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-constitution-product-context-contract.test.ts": {
-      "sha256": "b1e7b8df9d7ecd1491d10314e78dc391b81a8906cd265b11522f6b19064f12c9",
-      "size": 4740,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-discovery-skill-contract.test.ts": {
-      "sha256": "8dfaa0988a592a5a83342e74f58a26119759662d7b971f59263073c3934493ec",
-      "size": 6213,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-discovery-specify-interview-contract.test.ts": {
-      "sha256": "37d0f05fa93f88af514cf57696f3588841fbcd01a8aa128f0a78680355693d22",
-      "size": 7375,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-epic-hld-routing-contract.test.ts": {
-      "sha256": "6fa862e7ccd53730b3b22a429f0ec10c8c24b82b8a756cc790352ba007c941a0",
-      "size": 3784,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-epic-prd-skill-contract.test.ts": {
-      "sha256": "abea363b14ea60d2aa0cb390ce4085c12b2ff65aea73e89c28d1a35bddcc886e",
-      "size": 7244,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-golden-path-scaffold-contract.test.ts": {
-      "sha256": "2d4bda13d51bc595a48b16721c0cf268cbd22e09ba6e866abc40c1198e2c5fde",
-      "size": 9149,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-hld-requirement-overview-reference-contract.test.ts": {
-      "sha256": "83a81f3bdedd8cbb14631586b971fab9cc8b26e4963615afb1c8acb38953f9d1",
-      "size": 4002,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-implement-parallel-integration.test.ts": {
-      "sha256": "83e0e6846c76c79c4c762c738f12a744038ae14495d549350c582f231b45a6d9",
-      "size": 6886,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-implement-parallel-orchestration-contract.test.ts": {
-      "sha256": "226cea1ba42bc483c1047bc26bc6e5650afb574bf2f7d8a874da853c298933df",
-      "size": 5892,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-implement-phase-selection-contract.test.ts": {
-      "sha256": "814f5caaa5b46ad4f4d2349b5f38b1200286d18312ed50e465ce28beb85588ed",
-      "size": 4458,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-implement-skill-routing-contract.test.ts": {
-      "sha256": "3764836098986c7795335acb846fe3d81543e384fb46141bc630640fc84275a7",
-      "size": 9406,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-inception-guide-ownership-contract.test.ts": {
-      "sha256": "0aed1c0be56f94173cc4e93c72a0684c5b52b77ef48297628a94ada30ae4a4f7",
-      "size": 2802,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-inception-workflow-depth-contract.test.ts": {
-      "sha256": "e7f154ef01fb4184732356a12970c9fe9f3231c9032bd5de7a4807a5b7374f9a",
-      "size": 3795,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-memory-agent-contract.test.ts": {
-      "sha256": "fb729ec6555f43f3a169db65dd80903b329f91779ba27ec79112212c27c2fdd3",
-      "size": 18637,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-memory-v3-flow-contract.test.ts": {
-      "sha256": "36a04a9403912b1ba74262e9776a37161d93da2804d3620272896103e889b409",
-      "size": 14323,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-memory-v3-routing-contract.test.ts": {
-      "sha256": "bd810bde121f0958f04338e19ce714c7d770ebceaced0ff5586b51b085d3333e",
-      "size": 4485,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-module-boundary-policy-contract.test.ts": {
-      "sha256": "d15b24cbb1b241bfee2fd2e5929c76b2d64b972f8b5b511566b972c144e07434",
-      "size": 8368,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-plan-artifact-migration-contract.test.ts": {
-      "sha256": "fee4530a8519067b00fa1bdfdf37714016e015b4499176da214249bafbc3901f",
-      "size": 2532,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-plan-artifact-template-contract.test.ts": {
-      "sha256": "bdd6b8db0d9e9417d188c7642c7225d774ef3524af1903afc186b14d9bacd1f9",
-      "size": 3335,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-plan-parallel-safety-contract.test.ts": {
-      "sha256": "050e6c2291d4bc1475cdba6442f2a92cedcd41c95781c0c045fc1794ec9c2551",
-      "size": 6239,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-plan-reference-contract.test.ts": {
-      "sha256": "ecd03b313373308e37a63b07d885a4b75b833fac0a1cc32e050b4e63020709d4",
-      "size": 14889,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-plan-test-modes-contract.test.ts": {
-      "sha256": "d576a209d901497a57669a54b6a3d91640a97971d94c5804a9d7e8cb33bc492e",
-      "size": 15590,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-readme-local-links-contract.test.ts": {
-      "sha256": "c013404b9f50c39a8e67a3e304884f9c84c93e013cafb6688bed5dd113ae8498",
-      "size": 1490,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-red-team-persistence-contract.test.ts": {
-      "sha256": "8b3d3f2ea3773301933260eb79c652a053f0431ccfb2c62b0e47764521aede29",
-      "size": 2241,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-scaffold-from-recommendation-contract.test.ts": {
-      "sha256": "835d60a48693a39b55eab05175e53b1897659fdd532676f68665b825a4692d8c",
-      "size": 3272,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-specification-quality-gate-contract.test.ts": {
-      "sha256": "afa37253e45ac39ae0b15630375d1d1876ef572508346614a5e5162e1b474fa7",
-      "size": 2836,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-specify-discovery-cleanup-contract.test.ts": {
-      "sha256": "3879934ce9f2694c065d4cdbcbe08abfb94706c336ff038304027a4700f19ac6",
-      "size": 4318,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-specify-discovery-first-contract.test.ts": {
-      "sha256": "107d72ea78b76050ec440cedb64c383f618ab5e55181001cc9966cec6bfe30a7",
-      "size": 1883,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-spike-lifecycle-contract.test.ts": {
-      "sha256": "4422593afcc8e79453355f10b845785214f860c9e227cb3989066032f9097f28",
-      "size": 2300,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-sub-workspace-automation-recommend-contract.test.ts": {
-      "sha256": "2a7e963cd65320c1882e9ed1bb1ea8b6e8d314cba5fb12caef200046202a53f8",
-      "size": 3533,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-sub-workspace-docs-contract.test.ts": {
-      "sha256": "c408b6fe9ee6586922386b6b66746f96f9a5bef8c772d2244b3d78d268550dd0",
-      "size": 3600,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-task-breakdown-skill-contract.test.ts": {
-      "sha256": "31f60173b152401d2b82384193e790375da0688be39f78d981c34078ff3d9214",
-      "size": 3789,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/tdk-ut-backfill-policy-routing-contract.test.ts": {
-      "sha256": "bc4869f4d2aba4829c2da9cc7e3a0ba58b83ec39d6236c15036180e7308c6bc0",
-      "size": 2025,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/transition-phase-status-cli.test.ts": {
-      "sha256": "f410b73627893ca0a80a34181f2f86c4cf6da307bc7a731aa1c509dc40b322ca",
-      "size": 3823,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/update-phase-status-cli.test.ts": {
-      "sha256": "56d65efc77f48d11f2c417124060e7bee9916da185d7d5f0d02ce48754044eab",
-      "size": 4210,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/utils/agent-output.test.ts": {
-      "sha256": "0915904bdbc1c1de9b07f54bc1b4ecf56d1bd681d7edc09782496cfebc1b1f71",
-      "size": 562,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/utils/common.test.ts": {
-      "sha256": "880ee2d3736c6b9979af10499722771137099915806a2e4a0eb64fc978874444",
-      "size": 6293,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/utils/config-json-schema.test.ts": {
-      "sha256": "d4b14983d3bfc3f33db5107e1a3c44b2d31bc9032993a7a0cd3367d44c634cb1",
-      "size": 3262,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/utils/config.test.ts": {
-      "sha256": "196968f946c5096869d245ddf7ee6f6f17d9dcc6d7c232ff8375cc425be44fa8",
-      "size": 12138,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/utils/feature.test.ts": {
-      "sha256": "01df845408aa0e0a876310df7651e0dc460b1018848b2423a11243ee9655a6f4",
-      "size": 3693,
-      "mode": "0644"
-    },
-    ".specify/scripts/ts/tests/utils/plan-skill-routing.test.ts": {
-      "sha256": "675352623dce85ce07dec628843c4f194c90562fbe19568e3646a014fe0f5302",
-      "size": 6584,
       "mode": "0644"
     },
     ".specify/scripts/ts/tsconfig.json": {

@@ -720,4 +720,47 @@ describe("distribute.sh release manifest contract", () => {
       "echo SAMPLE sample-command updated\n",
     );
   }, 15000);
+
+  test("declining the delete prompt keeps orphans recorded so the next run re-offers them", () => {
+    const sourceRoot = makeSource("tdk-dist-decline-delete-source-");
+    const setupContent = "#!/usr/bin/env bash\necho setup\n";
+    const orphanContent = "orphaned managed file\n";
+    writeReleaseManifest(sourceRoot);
+
+    const targetRoot = mkdtempSync(join(tmpdir(), "tdk-dist-decline-delete-target-"));
+    mkdirSync(join(targetRoot, ".specify"), { recursive: true });
+    writeFileSync(join(targetRoot, ".specify", "setup.sh"), setupContent);
+    writeFileSync(join(targetRoot, ".specify", "orphan.md"), orphanContent);
+    writeReleaseManifest(targetRoot, "sha256", {
+      ".specify/setup.sh": entry(setupContent),
+      ".specify/orphan.md": entry(orphanContent),
+    });
+
+    // No --yes-delete: answer the delete prompt with anything but "delete".
+    const declined = Bun.spawnSync({
+      cmd: ["bash", join(sourceRoot, "distribute.sh"), targetRoot, "--yes"],
+      cwd: sourceRoot,
+      stdin: new TextEncoder().encode("no\n"),
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+
+    expect(declined.exitCode, `${declined.stdout}${declined.stderr}`).toBe(0);
+    expect(existsSync(join(targetRoot, ".specify", "orphan.md"))).toBe(true);
+
+    const afterDecline = JSON.parse(
+      readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8"),
+    );
+    expect(Object.keys(afterDecline.files)).toContain(".specify/orphan.md");
+    expect(afterDecline.files[".specify/orphan.md"].sha256).toBe(entry(orphanContent).sha256);
+
+    const reoffered = runDistribute(sourceRoot, targetRoot, ["--yes", "--yes-delete"]);
+
+    expect(reoffered.exitCode, `${reoffered.stdout}${reoffered.stderr}`).toBe(0);
+    expect(existsSync(join(targetRoot, ".specify", "orphan.md"))).toBe(false);
+    const afterDelete = JSON.parse(
+      readFileSync(join(targetRoot, ".specify", "release-manifest.json"), "utf8"),
+    );
+    expect(Object.keys(afterDelete.files)).not.toContain(".specify/orphan.md");
+  }, 20000);
 });

@@ -109,10 +109,15 @@ export function formatManifestDiffNul(entries: readonly ManifestDiffEntry[]): st
 export function materializeTargetManifest(
   source: ReleaseManifest,
   targetRoot: string,
+  retainPaths: readonly string[] = [],
 ): ReleaseManifest {
   assertCompatibleManifests(source, source);
   const files: ReleaseManifest["files"] = {};
-  for (const relativePath of Object.keys(source.files).sort()) {
+  // Retained paths are files the target still holds but source no longer ships — orphans whose
+  // deletion the operator declined. Recording them keeps the next run able to re-offer the
+  // deletion; dropping them would strand the files as unmanaged, permanently and silently.
+  for (const relativePath of [...new Set([...Object.keys(source.files), ...retainPaths])].sort()) {
+    assertReleaseManifestRelativePath(relativePath);
     const target = resolveReleaseManifestTarget(targetRoot, relativePath);
     const stat = existsSync(target) ? lstatSync(target) : undefined;
     if (!stat?.isFile()) {
@@ -193,6 +198,7 @@ async function main(): Promise<number> {
       "source-root": { type: "string" },
       "target-root": { type: "string" },
       "materialize-target-root": { type: "string" },
+      "retain-target-paths-file": { type: "string" },
       "validate-root": { type: "string" },
       "force-target-inventory": { type: "boolean" },
       "expected-target-manifest-sha": { type: "string" },
@@ -211,8 +217,19 @@ async function main(): Promise<number> {
   if (!values["source-root"]) throw new ReleaseManifestError("--source-root is required");
   if (values["materialize-target-root"]) {
     const source = await readSourceManifest(values["source-root"]);
-    console.log(JSON.stringify(materializeTargetManifest(source, values["materialize-target-root"]), null, 2));
+    const retainPaths = values["retain-target-paths-file"]
+      ? readFileSync(values["retain-target-paths-file"], "utf8").split("\n")
+        .map((line) => line.trim()).filter((line) => line.length > 0)
+      : [];
+    console.log(JSON.stringify(
+      materializeTargetManifest(source, values["materialize-target-root"], retainPaths),
+      null,
+      2,
+    ));
     return 0;
+  }
+  if (values["retain-target-paths-file"]) {
+    throw new ReleaseManifestError("--retain-target-paths-file requires --materialize-target-root");
   }
   if (!values["target-root"]) throw new ReleaseManifestError("--target-root is required");
   const output = values.output ?? "tsv";

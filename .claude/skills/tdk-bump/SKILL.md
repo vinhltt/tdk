@@ -2,7 +2,7 @@
 name: tdk-bump
 description: "Generate Keep-a-Changelog entries for .specify/, .claude/, .github/ config changes. Use when updating commands, scripts, templates, or governance files."
 metadata:
-  version: "1.4.0"
+  version: "1.4.1"
 ---
 
 # tdk-bump

@@ -6,6 +6,29 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.106.1] - 2026-07-29
+
+### Removed
+- **[Scripts]** `.specify/scripts/ts/tests/` no longer ships to consumers. The tree is now listed under `distribute.json` → `doNotShip`, and the corresponding entries are dropped from `.specify/release-manifest.json`. Tests are source-only material; shipping them put maintainer fixtures into every consumer payload
+
+### Added
+- **[Scripts]** `release-manifest-sync-guard.test.ts` — guards that the committed `.specify/release-manifest.json` stays in sync with the source tree
+  - `rules.ship` / `rules.doNotShip` mirror `distribute.json`
+  - Every recorded `sha256` and `size` matches the file on disk
+  - No entry falls under a `doNotShip` prefix
+- **[Installer]** `distribute.sh` records orphans whose deletion the operator declined into the published target release manifest, so the next run re-offers the deletion instead of stranding the files as permanently unmanaged
+- **[Claude Skills]** `tdk-bump` 1.4.0 → 1.4.1 — `diff-release-manifests.ts` gains `--retain-target-paths-file`, which merges declined-deletion paths into a materialized target manifest. Requires `--materialize-target-root`; declined deletions force the materialize path even outside `--prefix` / `--force` mode, since a verbatim copy of the source manifest cannot express them
+
+### Changed
+- **[Installer]** `distribute.sh` documents its bash >= 4.2 requirement (associative arrays, `printf %(...)T` strftime) and replaces the per-log-line `date` subprocess with `printf` strftime
+- **[Installer]** `distribute.sh` drops the `scripts/ts/tests/*` carve-out from brand-prefix rewrite candidates — the whole tree is excluded from the payload, so the exemption was dead
+- **[Scripts]** Distribution tests assert the test tree never reaches consumers
+  - `codex-distribute-e2e.test.ts` expects `.specify/scripts/ts/tests/sample.test.ts` absent for both plain and branded consumers
+  - `distribute-release-manifest-contract.test.ts` covers the decline-then-re-offer deletion cycle end to end
+
+### Migration
+Consumers on 1.106.0 hold a distributed `.specify/scripts/ts/tests/` tree. The next `distribute.sh` run reports it as orphaned and offers deletion; accepting is the intended path. Declining keeps the files recorded as managed in the target release manifest, so the offer repeats on subsequent runs rather than disappearing silently.
+
 ## [1.106.0] - 2026-07-28
 
 ### Removed

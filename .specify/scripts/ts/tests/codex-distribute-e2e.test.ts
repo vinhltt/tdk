@@ -82,6 +82,7 @@ const defaultDistributeConfig = {
     '.specify/configurations/',
     '.specify/memory/',
     '.specify/CHANGELOG.md',
+    '.specify/scripts/ts/tests/',
     '.claude/settings.local.json',
     '.claude/session-state/',
     '.claude/worktrees/',
@@ -353,7 +354,8 @@ describe('codex distribute payload', () => {
       '// CLI users run tdk config detect.',
       '',
     ].join('\n');
-    const testScriptText = 'test("TDK test fixture keeps /tdk-plan and @tdk/tdk source text", () => {});\n';
+    // Present in source, excluded by distribute.json — both consumers must come back without it.
+    const testScriptText = 'test("TDK test tree stays in source and never ships", () => {});\n';
 
     const files: Record<string, string> = {
       'setup.sh': setupText,
@@ -389,7 +391,7 @@ describe('codex distribute payload', () => {
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'setup.sh'), 'utf-8')).toBe(setupText);
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'claude-rules', 'primary-workflow-routing.md'), 'utf-8')).toBe(claudeRuleText);
     expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'scripts', 'ts', 'package.json'), 'utf-8')).toBe(scriptsPackageText);
-    expect(fs.readFileSync(path.join(plainConsumerRoot, '.specify', 'scripts', 'ts', 'tests', 'sample.test.ts'), 'utf-8')).toBe(testScriptText);
+    expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'scripts', 'ts', 'tests', 'sample.test.ts'))).toBe(false);
     expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'docs', 'en', 'index.md'))).toBe(true);
     expect(fs.existsSync(path.join(plainConsumerRoot, '.specify', 'release-manifest.json'))).toBe(true);
     expectFileModeWhenSupported(path.join(plainConsumerRoot, '.specify', 'setup.sh'), 0o755);
@@ -448,7 +450,7 @@ describe('codex distribute payload', () => {
     expect(brandedScoutScript).toContain('.specify/cache/tdk-scout');
     expect(brandedScoutScript).toContain('.claude/skills/tdk-test-api-plan/scripts/parse_openapi_spec.py');
     expect(brandedScoutScript).toContain("'tdk-core': { version: '1.0.0' }");
-    expect(fs.readFileSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'tests', 'sample.test.ts'), 'utf-8')).toBe(testScriptText);
+    expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'scripts', 'ts', 'tests', 'sample.test.ts'))).toBe(false);
     expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'release-manifest.json'))).toBe(true);
     expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'guides', 'skills-guide.md'))).toBe(true);
     expect(fs.existsSync(path.join(brandedConsumerRoot, '.specify', 'docs', 'en', 'guides', 'tdk-skills-guide.md'))).toBe(false);
