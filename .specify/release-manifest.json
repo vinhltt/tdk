@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-07-29T06:46:04.754Z",
+  "generatedAt": "2026-07-29T15:41:43.697Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -201,8 +201,8 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "a3b112c1d493c0447c3d34a9e6533559c17e4d27fab055e2304e5610e2d91fd2",
-      "size": 42637,
+      "sha256": "12ff6fe9e85b2ef8129fd9100b139e2c80832f7aa263eb07881b9dec88d8037a",
+      "size": 42636,
       "mode": "0644"
     },
     ".specify/plugins/plugin-dependencies.json": {
@@ -591,28 +591,28 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-inception/.claude-plugin/plugin.json": {
-      "sha256": "7783c6712065c1a566f6c1ccd40b773771105b373d9cd461153e828e7529a235",
+      "sha256": "894d700434e057ef143f3f06dc60086387a5b0b5943b19b925ff497699778025",
       "size": 240,
       "mode": "0644"
     },
     ".specify/plugins/tdk-inception/.codex-plugin/plugin.json": {
-      "sha256": "7783c6712065c1a566f6c1ccd40b773771105b373d9cd461153e828e7529a235",
+      "sha256": "894d700434e057ef143f3f06dc60086387a5b0b5943b19b925ff497699778025",
       "size": 240,
       "mode": "0644"
     },
     ".specify/plugins/tdk-inception/.cursor-plugin/plugin.json": {
-      "sha256": "7783c6712065c1a566f6c1ccd40b773771105b373d9cd461153e828e7529a235",
+      "sha256": "894d700434e057ef143f3f06dc60086387a5b0b5943b19b925ff497699778025",
       "size": 240,
       "mode": "0644"
     },
     ".specify/plugins/tdk-inception/CHANGELOG.md": {
-      "sha256": "9f46f9cfd64881ad8a993c74bc7a71289ec0c9b854b3ae03b08f69cb5262a9bc",
-      "size": 635,
+      "sha256": "eae77798c0887e163f713389775b9e88fba6d0f91a5c874c19f15425b3e618b7",
+      "size": 1056,
       "mode": "0644"
     },
     ".specify/plugins/tdk-inception/agents/tdk-docs-writer.md": {
-      "sha256": "32a2c30636b3b9da0ea9dd20e3799d158748dd3ee542769ffa6c761238831413",
-      "size": 4316,
+      "sha256": "ee50516d5fb24495c0ac4276219bd2a626cd995f8ad3b83029dccd55ac12af14",
+      "size": 5342,
       "mode": "0644"
     },
     ".specify/plugins/tdk-inception/skills/tdk-architecture-advisor/SKILL.md": {
@@ -766,8 +766,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-inception/skills/tdk-sub-workspace-docs/SKILL.md": {
-      "sha256": "70d80546677edbcc6d2073f9aecc2c58fde778fbf248fbbc1998bf30926ce5b1",
-      "size": 4324,
+      "sha256": "83e22d1f9daa865322eb51baf9997c24001fde6c3c0ed3f431abe0f3c9aa70b2",
+      "size": 4963,
       "mode": "0644"
     },
     ".specify/plugins/tdk-inception/skills/tdk-sub-workspace-init/SKILL.md": {
@@ -1316,23 +1316,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.claude-plugin/plugin.json": {
-      "sha256": "90b1a69e22ece27feb3d695f8888355e2da6acdabb9acda2fcdef5e2ee05df55",
+      "sha256": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.codex-plugin/plugin.json": {
-      "sha256": "90b1a69e22ece27feb3d695f8888355e2da6acdabb9acda2fcdef5e2ee05df55",
+      "sha256": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.cursor-plugin/plugin.json": {
-      "sha256": "90b1a69e22ece27feb3d695f8888355e2da6acdabb9acda2fcdef5e2ee05df55",
+      "sha256": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/CHANGELOG.md": {
-      "sha256": "256fa27f6b9b5afac0a0ec4c93c75d30d10ae704238d1270ea8820a5adb5f9d5",
-      "size": 6310,
+      "sha256": "677ce1ebd6e7eaaeac9ab4c9bdc4e9a8d5b35c3d75fa64712d6ce1bad026af02",
+      "size": 6458,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/researcher.md": {
@@ -1621,8 +1621,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-scout/SKILL.md": {
-      "sha256": "3ae073d7c22872345c67d1d8bf69c98fd601d99a49b0c8f8efbe86ce0be8fbf3",
-      "size": 4876,
+      "sha256": "b682727e3b42de84b99ae063b79879afa4b5ed53d6697585400237503c99d3bc",
+      "size": 6686,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-setup-guide/SKILL.md": {
@@ -1811,13 +1811,13 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/scout/args-validator.ts": {
-      "sha256": "e3e81d8a71cac134f89e775be80a06824fe375d25478b73814f411c47659db56",
-      "size": 2483,
+      "sha256": "3018a8629e0bc8e4439e1df7890429ca87109ff808a901c4193b6134333059d5",
+      "size": 3530,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/scout/cache-resolver.ts": {
-      "sha256": "08e9c0e0860d9e17ed72439d871d8815b2d7b286aa2e8a53e44bdf7f70fc93cc",
-      "size": 1617,
+      "sha256": "4561802860d2884bf88cdcc82554186d635676f576ce503f0c7c33b135832b23",
+      "size": 2179,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/scout/extract.ts": {
@@ -1826,8 +1826,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/scout/index.ts": {
-      "sha256": "538f3f2f953208041c66973b39b6152a43b77fcac742dc4e34e4d3d9baaa599b",
-      "size": 3475,
+      "sha256": "b7c1a999bf6b54c5d3149f3aeea500fa5b41558dcca3234399fdad338637fbb8",
+      "size": 7088,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/scout/language-parsers/go.ts": {
@@ -1856,8 +1856,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/scout/repomix-runner.ts": {
-      "sha256": "5ce765880daa2d504d9cfccdb6caff6710d9601bbe9f5ae781588512172d5876",
-      "size": 1305,
+      "sha256": "e701965ed4c0ee28b58640e50f81b8e28fab4dba100ed63c8f6224fd9eb702aa",
+      "size": 1914,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/scout/tokens.ts": {
@@ -1931,8 +1931,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/sub-workspace/docs.ts": {
-      "sha256": "385e610b7aa9da4784007d59a21ab9acd8c3d0787c4ce100c52ed11d446c065c",
-      "size": 6194,
+      "sha256": "0681154b7a97444835e1989a119213eeecd7fc09c971d8f7b151f0cc93a65272",
+      "size": 6280,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/sub-workspace/repomix-pack.ts": {

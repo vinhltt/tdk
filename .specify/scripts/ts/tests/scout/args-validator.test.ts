@@ -51,6 +51,43 @@ describe('args-validator', () => {
       .toThrow(/must be a number/);
   });
 
+  it('splits and trims --include / --ignore patterns', () => {
+    const r = validateArgs({ scope: tempDir, include: 'src/**/*.ts, *.md', ignore: '**/*.test.ts' });
+    expect(r.include).toEqual(['src/**/*.ts', '*.md']);
+    expect(r.ignore).toEqual(['**/*.test.ts']);
+  });
+
+  it('drops empty pattern entries', () => {
+    const r = validateArgs({ scope: tempDir, include: 'src/**,,  ,docs/**' });
+    expect(r.include).toEqual(['src/**', 'docs/**']);
+  });
+
+  it('leaves patterns undefined when nothing usable remains', () => {
+    const r = validateArgs({ scope: tempDir, include: ' , ', ignore: '' });
+    expect(r.include).toBeUndefined();
+    expect(r.ignore).toBeUndefined();
+  });
+
+  it('leaves patterns undefined when flags absent', () => {
+    const r = validateArgs({ scope: tempDir });
+    expect(r.include).toBeUndefined();
+    expect(r.ignore).toBeUndefined();
+  });
+
+  it('rejects --include combined with --from-pack', () => {
+    const f = join(tempDir, 'pack.md');
+    writeFileSync(f, '# pack');
+    expect(() => validateArgs({ fromPack: f, include: 'src/**' }))
+      .toThrow(/already built/);
+  });
+
+  it('rejects --ignore combined with --from-pack, even when it normalizes away', () => {
+    const f = join(tempDir, 'pack.md');
+    writeFileSync(f, '# pack');
+    expect(() => validateArgs({ fromPack: f, ignore: ' , ' }))
+      .toThrow(/--scope/);
+  });
+
   it('honours custom task-hint and forceRefresh', () => {
     const r = validateArgs({ scope: tempDir, taskHint: 'find auth', forceRefresh: true });
     expect(r.taskHint).toBe('find auth');

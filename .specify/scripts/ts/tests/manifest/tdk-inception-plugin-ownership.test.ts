@@ -41,14 +41,14 @@ const INCEPTION_SKILL_VERSIONS: Record<string, string> = {
   'tdk-constitution': '1.0.1',
   'tdk-greenfield-start': '1.0.0',
   'tdk-module-boundary-policy': '1.0.0',
-  'tdk-sub-workspace-docs': '1.0.0',
+  'tdk-sub-workspace-docs': '1.0.2',
   'tdk-sub-workspace-init': '1.0.0',
   'tdk-sub-workspace-list': '1.0.0',
   'tdk-workflow-config-apply': '1.0.0',
   'tdk-workspace-dependency-policy': '1.0.0',
   'tdk-workspace-layout-propose': '1.0.0',
 };
-const DOCS_WRITER_AGENT_VERSION = '1.0.0';
+const DOCS_WRITER_AGENT_VERSION = '1.0.2';
 const RETAINED_CORE_SKILLS = [
   'tdk-specify',
   'tdk-clarify',
@@ -136,7 +136,7 @@ describe('tdk-inception source plugin ownership', () => {
     const utilsFiles = utils?.files ?? {};
 
     expect(inception).toBeDefined();
-    expect(inception?.version).toBe('1.0.1');
+    expect(inception?.version).toBe('1.0.2');
     expect(Object.keys(inceptionSkills).sort()).toEqual([...INCEPTION_SKILLS].sort());
     expect(Object.keys(inceptionAgents)).toEqual([DOCS_WRITER_AGENT]);
 

@@ -148,7 +148,7 @@ export function runDocs(args: DocsArgs, deps: RunDocsDeps = {}, cwd?: string): D
       throw e;
     }
     if (tokenCount > 100_000) {
-      warnings.push(`${t.name}: pack >${100_000} tokens (${tokenCount}); consider --include filter`);
+      warnings.push(`${t.name}: pack >${100_000} tokens (${tokenCount}); consider narrowing the sub-workspace root, or pack a subset with 'tdk scout --scope <dir> --include <patterns>'`);
     }
     const existingFiles = scanExistingDocs(t.outputDir);
     targets.push({

@@ -6,6 +6,25 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.107.0] - 2026-07-29
+
+### Added
+- **[Scripts]** `tdk-scout` gains `--include` / `--ignore`, comma-separated glob patterns forwarded to repomix as array-form argv
+  - Rejected alongside `--from-pack`, where the pack is already built and filtering it would have no effect
+  - No cache-key change accompanies them: scope runs always re-pack, so two runs with different patterns cannot reuse each other's results. `isTier1CacheValid` now records that mechanism so it is not "fixed" later with a redundant pattern hash
+- **[Scripts]** `tdk-scout` size gate. `runScout` previously discarded `extract()`'s return value, so a scope whose Tier 1 JSON was too large for the tier 2 agent still exited 0 and still wrote a report the agent could not use
+  - Exact ceiling on `totalFiles`, applied to both the fresh-extract and the cache-hit path through one shared helper. The cache-hit path carries the weight: repomix rewrites the pack on every scope run, so the mtime check only reports a hit in from-pack mode
+  - Advisory pack-byte warning ahead of extraction. Tier 1 JSON measured between 0.03x and 0.20x pack size across repos, so it warns and never exits
+  - Failure exits non-zero on stderr naming the measured count, the ceiling, and a `--scope <subdir>` remedy; stdout stays empty
+- **[Scripts]** `size-gate.test.ts` and `repomix-runner.test.ts`
+
+### Changed
+- **[Scripts]** A cached Tier 1 JSON carrying no usable `totalFiles` is now refused rather than read as zero, which would have let it skip the ceiling check entirely
+- **[Scripts]** `sub-workspace docs` pack-size warning now names `tdk scout --scope <dir> --include <patterns>` as where filtering is available, instead of implying the docs command accepts the flag
+- **[Agents]** `tdk-docs-writer` treats a missing or unreadable `scoutReport` as a degradation rather than a hard stop — it generates from the pack alone and reports that it did, so a degraded run stays distinguishable from a full one
+- **[Skills]** `tdk-sub-workspace-docs` checks scout's exit status, warns and continues to the next target on failure, and surfaces per-target scout availability in the run summary
+- **[Skills]** `tdk-scout` documents the file ceiling, the failure mode, and both narrowing flags
+
 ## [1.106.1] - 2026-07-29
 
 ### Removed

@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-29T06:46:04Z",
+  "generated_at": "2026-07-29T15:31:45Z",
   "plugins": {
     "tdk-core": {
       "version": "11.1.2",
@@ -135,7 +135,7 @@
       }
     },
     "tdk-inception": {
-      "version": "1.0.1",
+      "version": "1.0.2",
       "components": {
         "skills": {
           "tdk-architecture-advisor": {
@@ -166,7 +166,7 @@
             "version": "1.0.0"
           },
           "tdk-sub-workspace-docs": {
-            "version": "1.0.0"
+            "version": "1.0.2"
           },
           "tdk-sub-workspace-init": {
             "version": "1.0.0"
@@ -186,7 +186,7 @@
         },
         "agents": {
           "tdk-docs-writer": {
-            "version": "1.0.0"
+            "version": "1.0.2"
           }
         },
         "hooks": {},
@@ -194,11 +194,11 @@
       },
       "files": {
         ".claude-plugin/interface.json": "95e780662b7ca1aea2f3687fa8908bec3374a51ac61739a0f0144b929d6bda80",
-        ".claude-plugin/plugin.json": "7783c6712065c1a566f6c1ccd40b773771105b373d9cd461153e828e7529a235",
-        ".codex-plugin/plugin.json": "7783c6712065c1a566f6c1ccd40b773771105b373d9cd461153e828e7529a235",
-        ".cursor-plugin/plugin.json": "7783c6712065c1a566f6c1ccd40b773771105b373d9cd461153e828e7529a235",
-        "CHANGELOG.md": "9f46f9cfd64881ad8a993c74bc7a71289ec0c9b854b3ae03b08f69cb5262a9bc",
-        "agents/tdk-docs-writer.md": "32a2c30636b3b9da0ea9dd20e3799d158748dd3ee542769ffa6c761238831413",
+        ".claude-plugin/plugin.json": "894d700434e057ef143f3f06dc60086387a5b0b5943b19b925ff497699778025",
+        ".codex-plugin/plugin.json": "894d700434e057ef143f3f06dc60086387a5b0b5943b19b925ff497699778025",
+        ".cursor-plugin/plugin.json": "894d700434e057ef143f3f06dc60086387a5b0b5943b19b925ff497699778025",
+        "CHANGELOG.md": "eae77798c0887e163f713389775b9e88fba6d0f91a5c874c19f15425b3e618b7",
+        "agents/tdk-docs-writer.md": "bc378941145c9e121694fe56ae5cf4fdb259f28511b73a2b6eda34df42d70a85",
         "skills/tdk-architecture-advisor/SKILL.md": "d345175f56c0f4fc139eef44f526e4e32c011fad89879bd5d22fd4e9ff13d164",
         "skills/tdk-architecture-advisor/references/architecture-advisor-output-contract.md": "eb81b0b19e5c3c3d3958f29c91e78d39fe83043b5003fd7b27c2a0ef9792da13",
         "skills/tdk-architecture-advisor/references/architecture-evaluation-framework.md": "e8f1deb595da407976e6cd4cd776f9070680fe05ae254a62c915b933c73fe174",
@@ -229,7 +229,7 @@
         "skills/tdk-greenfield-start/references/workflow-unknown.md": "09843c29cb8b3f2a8ce7c86d38bbc03f4e45d33329a0ea49fe4668340208f2ff",
         "skills/tdk-greenfield-start/templates/project-inception.md.tpl": "499d59ff03a33d8fe23c7c51243eecf0838b97ed66181a62d35240f7e1c8707e",
         "skills/tdk-module-boundary-policy/SKILL.md": "8b50cb567f7efd772c853228664f1dc95532d7b4ebaf413f4851993bb8ad2a3a",
-        "skills/tdk-sub-workspace-docs/SKILL.md": "70d80546677edbcc6d2073f9aecc2c58fde778fbf248fbbc1998bf30926ce5b1",
+        "skills/tdk-sub-workspace-docs/SKILL.md": "83e22d1f9daa865322eb51baf9997c24001fde6c3c0ed3f431abe0f3c9aa70b2",
         "skills/tdk-sub-workspace-init/SKILL.md": "fc34aed49385eb1308d1bddc3e4b9f51978f925646d3cf36f7788ca47d7f7d8a",
         "skills/tdk-sub-workspace-list/SKILL.md": "951ce6bc3a86e1774ecde5664c69c1f9b9659cf0cb87f0a2e372e929c6a980b8",
         "skills/tdk-workflow-config-apply/SKILL.md": "79bb6be4e9e9ff7c9408ddb281683fe2258254b640623bc8accc673dd39bf901",
@@ -444,7 +444,7 @@
       }
     },
     "tdk-utils": {
-      "version": "3.0.2",
+      "version": "3.0.3",
       "components": {
         "skills": {
           "brainstorming": {
@@ -478,7 +478,7 @@
             "version": "3.0.1"
           },
           "tdk-scout": {
-            "version": "1.11.4"
+            "version": "3.0.3"
           },
           "tdk-setup-guide": {
             "version": "2.2.6"
@@ -512,10 +512,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e68f07c43a122d63dbd44fafbd978b0adb4f5f18bb95537f80014e859846f8b4",
-        ".claude-plugin/plugin.json": "90b1a69e22ece27feb3d695f8888355e2da6acdabb9acda2fcdef5e2ee05df55",
-        ".codex-plugin/plugin.json": "90b1a69e22ece27feb3d695f8888355e2da6acdabb9acda2fcdef5e2ee05df55",
-        ".cursor-plugin/plugin.json": "90b1a69e22ece27feb3d695f8888355e2da6acdabb9acda2fcdef5e2ee05df55",
-        "CHANGELOG.md": "256fa27f6b9b5afac0a0ec4c93c75d30d10ae704238d1270ea8820a5adb5f9d5",
+        ".claude-plugin/plugin.json": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
+        ".codex-plugin/plugin.json": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
+        ".cursor-plugin/plugin.json": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
+        "CHANGELOG.md": "677ce1ebd6e7eaaeac9ab4c9bdc4e9a8d5b35c3d75fa64712d6ce1bad026af02",
         "agents/researcher.md": "239051264f41b129ef5c59adb573b7e762a528bb58d0ff8dd1e32eee243baaaf",
         "agents/tdk-red-team-reliability.md": "8585ee27a9d1f6b79b9988fc6020317baa3be7e37f80be9086708bfc35c74ea8",
         "agents/tdk-red-team-security.md": "8e808e7330b21e83e830f70bf6221150ba0e91d235061ba0c6b2a32060ea7a33",
@@ -573,7 +573,7 @@
         "skills/shard-doc/tests/sample-medium.md": "a6dd023eee4c7e5d2e3f13fca79429d6b85d10a8975ffc5f796511695b455504",
         "skills/shard-doc/tests/sample-small.md": "14c3a01e4f97046ecfbe58ea208d758387561b377a37aad69a71e411d2ea82c3",
         "skills/tdk-load-project-context/SKILL.md": "8f9757daed0bbaf50f36eba0bd7adf18e001c12ea499b5c7c259be81a68fd15f",
-        "skills/tdk-scout/SKILL.md": "3ae073d7c22872345c67d1d8bf69c98fd601d99a49b0c8f8efbe86ce0be8fbf3",
+        "skills/tdk-scout/SKILL.md": "b682727e3b42de84b99ae063b79879afa4b5ed53d6697585400237503c99d3bc",
         "skills/tdk-setup-guide/SKILL.md": "18ff64ec1cf1cb4e223702f808a25373fe525e57323f678c48455c279e49063f",
         "skills/tdk-skill-guide/SKILL.md": "a2dd1cbffdb3882d6db1240454ff41a1b3d213e647fb69882690d2adc4f75d4d",
         "skills/tdk-validate-task-id/SKILL.md": "e39fc8ada33588d7f2df214a988c95a6a177b17b1651ce1c4e1eb72e31575b48"

@@ -4,7 +4,7 @@ description: "Generates 4 arc42-lite sub-workspace doc files (README, architectu
 tools: Read, Write, Edit, Bash, Glob
 model: haiku
 metadata:
-  version: "1.0.0"
+  version: "1.0.2"
   author: "VinhLTT"
 ---
 
@@ -31,7 +31,7 @@ The caller must provide:
 
 Optional:
 
-- `scoutReport` - absolute path to a tdk-scout navigation report. Treat it as advisory and never cite paths absent from `packedFile`.
+- `scoutReport` - absolute path to a tdk-scout navigation report. Treat it as advisory and never cite paths absent from `packedFile`. If the path is absent from the payload, missing on disk, or unreadable, generate from `packedFile` alone instead of blocking, and report the degradation per Rule 10.
 - `userFeedback` - free-text update feedback from the user.
 - `existingFiles` - array of filenames already present in `outputDir`.
 
@@ -39,7 +39,7 @@ If any mandatory input is missing or unreadable, emit `BLOCKED` and stop.
 
 ## Rules
 
-1. Read `packedFile` and `scoutReport` before any write.
+1. Read `packedFile` before any write. Read `scoutReport` too when it is provided and readable; when it is not, proceed from `packedFile` alone. `packedFile` is the only source of truth, so its absence blocks and scout's absence does not.
 2. Every cited file path must appear in `packedFile`.
 3. Generated bodies must not contain `TODO`, `FIXME`, or `{placeholder}`.
 4. If source evidence is absent for a section, the body is exactly `_(no relevant sources found)_`.
@@ -48,6 +48,7 @@ If any mandatory input is missing or unreadable, emit `BLOCKED` and stop.
 7. `update` splices AUTO-GEN bodies and preserves all bytes outside markers.
 8. Apply `userFeedback` to semantically affected sections.
 9. Write only to `outputDir`.
+10. Whenever you generate without scout evidence — `scoutReport` absent from the payload, or present but unreadable — add the warning `scout evidence unavailable - generated from pack alone` to the final output. Callers omit the field precisely when scout failed, so an omitted `scoutReport` is a degraded run, not a normal one. A run without scout evidence must be distinguishable from a full one; docs generated this way have weaker cross-file navigation and the caller needs to know which targets are affected.
 
 ## Per-Mode Flow
 
@@ -115,6 +116,7 @@ reason: <one-line reason>
 | `packedFile` missing or empty | `BLOCKED` - `reason: packedFile unreadable or empty` |
 | `templatesDir` missing or has fewer than 4 templates | `BLOCKED` - list what was found |
 | Splicer CLI exits non-zero | `DONE_WITH_CONCERNS` - record the affected file and retain the old body |
+| `scoutReport` omitted, missing, or unreadable | Continue from `packedFile` alone; emit `DONE` with the Rule 10 warning. Never `BLOCKED` - scout is advisory |
 | `outputDir` not writable | `BLOCKED` - surface OS error |
 | Self-check still fails after retry | `DONE_WITH_CONCERNS` - list violations |
 

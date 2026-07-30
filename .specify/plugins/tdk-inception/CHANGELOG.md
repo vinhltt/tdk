@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.0.2] - 2026-07-29
+
+### Changed
+- tdk-docs-writer treats a missing or unreadable scoutReport as a degradation rather than a hard stop — generates from the pack alone and reports that it did, so a degraded run stays distinguishable from a full one
+- tdk-sub-workspace-docs checks scout's exit status, warns and continues to the next target on failure, and surfaces per-target scout availability in the run summary
+
 ## [1.0.1] - 2026-07-20
 
 ### Changed

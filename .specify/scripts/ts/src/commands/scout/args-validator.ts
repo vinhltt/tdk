@@ -11,6 +11,8 @@ export interface RawOpts {
   sampleBudget?: string | number;
   output?: string;
   forceRefresh?: boolean;
+  include?: string;
+  ignore?: string;
 }
 
 export interface ResolvedArgs {
@@ -22,6 +24,8 @@ export interface ResolvedArgs {
   output?: string;
   forceRefresh: boolean;
   scopeKey: string;
+  include?: string[];
+  ignore?: string[];
 }
 
 const DEFAULT_TASK_HINT = 'general codebase navigation';
@@ -39,6 +43,15 @@ export function validateArgs(opts: RawOpts): ResolvedArgs {
   if (!hasScope && !hasFromPack) {
     throw new Error('exactly one of --scope or --from-pack is required');
   }
+  // Patterns only steer the repomix run; a pack passed to --from-pack is already built,
+  // so filtering it would do nothing. Rejected on raw presence, before normalization.
+  if (hasFromPack && (opts.include !== undefined || opts.ignore !== undefined)) {
+    throw new Error(
+      '--include/--ignore cannot be combined with --from-pack: the pack is already built, ' +
+      'so filtering it has no effect. Re-pack with --scope <dir> --include/--ignore, ' +
+      'or narrow the existing pack via --scope instead.',
+    );
+  }
 
   const sampleBudget = parseSampleBudget(opts.sampleBudget);
   const taskHint = opts.taskHint?.trim() || DEFAULT_TASK_HINT;
@@ -54,6 +67,8 @@ export function validateArgs(opts: RawOpts): ResolvedArgs {
       output: opts.output,
       forceRefresh,
       scopeKey: deriveScopeKey(scope),
+      include: parsePatterns(opts.include),
+      ignore: parsePatterns(opts.ignore),
     };
   }
 
@@ -84,6 +99,13 @@ function parseSampleBudget(raw: string | number | undefined): number {
     );
   }
   return n;
+}
+
+/** Comma-separated glob list → trimmed entries; undefined when nothing usable remains. */
+function parsePatterns(raw: string | undefined): string[] | undefined {
+  if (raw === undefined) return undefined;
+  const patterns = raw.split(',').map((p) => p.trim()).filter((p) => p.length > 0);
+  return patterns.length > 0 ? patterns : undefined;
 }
 
 function deriveScopeKey(scopePath: string): string {

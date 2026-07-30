@@ -7,6 +7,20 @@ import { dirname } from 'node:path';
 export interface RunRepomixOpts {
   scope: string;
   outputPath: string;
+  include?: string[];
+  ignore?: string[];
+}
+
+/**
+ * Builds the repomix argv. Patterns are passed as a single comma-separated value per flag,
+ * which is what repomix expects; array form keeps them out of any shell.
+ * Omitting both pattern fields yields the same argv as before the flags existed.
+ */
+export function buildRepomixArgs(opts: RunRepomixOpts): string[] {
+  const args = [opts.scope, '--style', 'markdown', '-o', opts.outputPath];
+  if (opts.include && opts.include.length > 0) args.push('--include', opts.include.join(','));
+  if (opts.ignore && opts.ignore.length > 0) args.push('--ignore', opts.ignore.join(','));
+  return args;
 }
 
 export function ensureRepomixOnPath(): void {
@@ -28,7 +42,7 @@ export function runRepomix(opts: RunRepomixOpts): string {
 
   const result = spawnSync(
     'repomix',
-    [opts.scope, '--style', 'markdown', '-o', opts.outputPath],
+    buildRepomixArgs(opts),
     { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf-8' },
   );
 

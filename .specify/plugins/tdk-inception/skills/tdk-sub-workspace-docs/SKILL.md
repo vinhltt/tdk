@@ -4,7 +4,7 @@ description: "Init or update arc42-lite documentation for one or all configured 
 user-invocable: true
 argument-hint: "[--sub-workspace NAME | --all] [--force]"
 metadata:
-  version: "1.0.0"
+  version: "1.0.2"
   author: "VinhLTT"
   category: docs
 ---
@@ -70,7 +70,12 @@ The skill reads code evidence, scout output, and `workspace-dependency-policy.md
      bun .specify/scripts/ts/src/index.ts scout --from-pack "<target.packedFile>" --task-hint "arc42-lite sub-workspace docs" --output ".specify/cache/tdk-scout/<target.name>.md"
      ```
 
-   - Spawn `tdk-docs-writer` with:
+     Check the exit status. Scout is advisory here, so a non-zero exit degrades this
+     target instead of failing it: record a warning carrying scout's stderr, omit
+     `scoutReport` from the payload below, and continue to the next target. Never abort
+     the run — one sub-workspace that scout cannot navigate must not stop the others.
+
+   - Spawn `tdk-docs-writer` with (omit the `scoutReport` line entirely when scout failed):
 
      ```json
      {
@@ -94,7 +99,12 @@ The skill reads code evidence, scout output, and `workspace-dependency-policy.md
      written: <n> file(s)
      warnings: <n>
      concerns: <n>
+     scout: ok | unavailable (<reason>)
    ```
+
+   The `scout` line makes a degraded target visible at a glance. Without it a
+   pack-only run reads as a full one, and the user cannot tell which docs were
+   written without navigation evidence.
 
 ## Error UX
 

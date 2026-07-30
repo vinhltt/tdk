@@ -42,7 +42,17 @@ export function resolveCachePaths(opts: ResolveCacheOpts): CachePaths {
   return { cacheRoot, packPath, tier1JsonPath, outputPath };
 }
 
-/** Tier 1 cache valid iff JSON exists AND newer than pack. */
+/**
+ * Tier 1 cache valid iff JSON exists AND newer than pack.
+ *
+ * The cache key deliberately ignores repomix --include/--ignore patterns, and adding a
+ * pattern hash would be dead weight. Those patterns only apply in scope mode, and scope
+ * mode always re-runs repomix, which rewrites the pack; the pack is then newer than any
+ * previously written Tier 1 JSON, so this mtime comparison always reports stale and the
+ * extract always re-runs. Two scope runs with different patterns therefore cannot reuse
+ * each other's results. Cache hits are reachable only in from-pack mode, which rejects
+ * both pattern flags.
+ */
 export function isTier1CacheValid(tier1JsonPath: string, packPath: string): boolean {
   if (!existsSync(tier1JsonPath) || !existsSync(packPath)) return false;
   const jsonStat = statSync(tier1JsonPath);

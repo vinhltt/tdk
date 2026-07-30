@@ -2,9 +2,9 @@
 name: tdk-scout
 description: "Codebase navigation skill (S4 hierarchical 2-tier). Pre-process a repomix pack via deterministic TS Tier 1 parser, then dispatch the tdk-scout-runner agent (Tier 2) to produce a markdown navigation report (file list + descriptions + unresolved questions). Use for understanding unfamiliar codebases, locating task-relevant files, or pre-processing for downstream skills like tdk-sub-workspace-docs."
 user-invocable: true
-argument-hint: "[--scope DIR | --from-pack FILE] [--task-hint STR] [--sample-budget N] [--output PATH] [--force-refresh]"
+argument-hint: "[--scope DIR | --from-pack FILE] [--task-hint STR] [--sample-budget N] [--output PATH] [--force-refresh] [--include GLOBS] [--ignore GLOBS]"
 metadata:
-  version: "1.11.4"
+  version: "3.0.3"
   author: "VinhLTT"
   category: utility
 ---
@@ -34,6 +34,16 @@ Self-contained codebase navigation skill. Trade-off: regex-based Tier 1 (no LLM)
 | `--sample-budget <N>` | Optional. Max files for Tier 2 to read. Default: `10`. Range: `1-50`. |
 | `--output <PATH>` | Optional. Default: `.specify/cache/tdk-scout/<scope>.md`. |
 | `--force-refresh` | Optional. Re-run Tier 1 even if cache fresh. |
+| `--include <GLOBS>` | Optional, `--scope` mode only. Comma-separated globs; only matching files enter the pack. |
+| `--ignore <GLOBS>` | Optional, `--scope` mode only. Comma-separated globs excluded from the pack. |
+
+`--include`/`--ignore` are repomix glob patterns, passed through verbatim — TDK does not interpret or rewrite them, so repomix's glob semantics apply. Both are rejected with `--from-pack`: that pack is already built, so filtering it would change nothing; narrow with `--scope` instead.
+
+## Size ceiling
+
+One scout run covers at most **800 files**. The Tier 2 agent reads the whole Tier 1 JSON before it opens any file, so a bigger scope produces a report it cannot use. Past the ceiling the TS CLI exits non-zero and writes nothing — it does not degrade to a partial report. Split the work with `--scope <subdir>`, or narrow the pack with `--include`/`--ignore`.
+
+The ceiling is a backstop against runaway repos, not a promise: reports well under 800 files can still be large, so keep the scope as tight as the task allows. A separate stderr warning fires for packs above ~1 MB; it is approximate and never stops the run on its own.
 
 ## Steps
 
@@ -89,6 +99,12 @@ Self-contained codebase navigation skill. Trade-off: regex-based Tier 1 (no LLM)
 
 # Whole repo with default budget
 /tdk-scout --scope .
+
+# Narrow a large repo to server-side TS, excluding tests and build output
+/tdk-scout --scope . \
+           --include "src/**/*.ts,*.md" \
+           --ignore "**/*.test.ts,dist/**" \
+           --task-hint "request pipeline"
 ```
 
 ## Output
@@ -103,6 +119,9 @@ Self-contained codebase navigation skill. Trade-off: regex-based Tier 1 (no LLM)
 | `repomix` not installed (scope mode) | TS CLI exits non-zero with install hint; surface to user. |
 | Pack file missing (from-pack mode) | TS CLI exits non-zero. |
 | Both `--scope` and `--from-pack` set | TS CLI exits non-zero (`mutually exclusive`). |
+| `--include`/`--ignore` used with `--from-pack` | TS CLI exits non-zero; re-pack with `--scope` instead. |
+| Scope larger than 800 files | TS CLI exits non-zero before dispatching Tier 2; no report is written. Re-run with `--scope <subdir>`, or with `--include`/`--ignore` to pack a subset. |
+| Pack larger than ~1 MB | Stderr warning only; the run continues to the exact file-count check. |
 | Tier 2 agent malformed output | The runner agent self-writes a 3-line error report at `outputPath`; surface that to the user. |
 
 ## Notes
