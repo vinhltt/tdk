@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-07-29T15:31:45Z",
+  "generated_at": "2026-07-31T14:17:55Z",
   "plugins": {
     "tdk-core": {
       "version": "11.1.2",
@@ -198,7 +198,7 @@
         ".codex-plugin/plugin.json": "894d700434e057ef143f3f06dc60086387a5b0b5943b19b925ff497699778025",
         ".cursor-plugin/plugin.json": "894d700434e057ef143f3f06dc60086387a5b0b5943b19b925ff497699778025",
         "CHANGELOG.md": "eae77798c0887e163f713389775b9e88fba6d0f91a5c874c19f15425b3e618b7",
-        "agents/tdk-docs-writer.md": "bc378941145c9e121694fe56ae5cf4fdb259f28511b73a2b6eda34df42d70a85",
+        "agents/tdk-docs-writer.md": "ee50516d5fb24495c0ac4276219bd2a626cd995f8ad3b83029dccd55ac12af14",
         "skills/tdk-architecture-advisor/SKILL.md": "d345175f56c0f4fc139eef44f526e4e32c011fad89879bd5d22fd4e9ff13d164",
         "skills/tdk-architecture-advisor/references/architecture-advisor-output-contract.md": "eb81b0b19e5c3c3d3958f29c91e78d39fe83043b5003fd7b27c2a0ef9792da13",
         "skills/tdk-architecture-advisor/references/architecture-evaluation-framework.md": "e8f1deb595da407976e6cd4cd776f9070680fe05ae254a62c915b933c73fe174",
@@ -444,7 +444,7 @@
       }
     },
     "tdk-utils": {
-      "version": "3.0.3",
+      "version": "4.0.0",
       "components": {
         "skills": {
           "brainstorming": {
@@ -463,9 +463,6 @@
             "version": "2.2.3"
           },
           "problem-solving": {
-            "version": "0.1.0"
-          },
-          "repomix": {
             "version": "0.1.0"
           },
           "research": {
@@ -512,10 +509,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e68f07c43a122d63dbd44fafbd978b0adb4f5f18bb95537f80014e859846f8b4",
-        ".claude-plugin/plugin.json": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
-        ".codex-plugin/plugin.json": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
-        ".cursor-plugin/plugin.json": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
-        "CHANGELOG.md": "677ce1ebd6e7eaaeac9ab4c9bdc4e9a8d5b35c3d75fa64712d6ce1bad026af02",
+        ".claude-plugin/plugin.json": "98e1b1958d24a892000bcc5a0a95f29f7237d91e656c6dea49268a5eeffc5f30",
+        ".codex-plugin/plugin.json": "98e1b1958d24a892000bcc5a0a95f29f7237d91e656c6dea49268a5eeffc5f30",
+        ".cursor-plugin/plugin.json": "98e1b1958d24a892000bcc5a0a95f29f7237d91e656c6dea49268a5eeffc5f30",
+        "CHANGELOG.md": "36b393119fcd6207356dfe89c5642c9807c51b9db760392d0c3722a54331b87a",
         "agents/researcher.md": "239051264f41b129ef5c59adb573b7e762a528bb58d0ff8dd1e32eee243baaaf",
         "agents/tdk-red-team-reliability.md": "8585ee27a9d1f6b79b9988fc6020317baa3be7e37f80be9086708bfc35c74ea8",
         "agents/tdk-red-team-security.md": "8e808e7330b21e83e830f70bf6221150ba0e91d235061ba0c6b2a32060ea7a33",
@@ -556,14 +553,6 @@
         "skills/problem-solving/references/scale-game.md": "6201d459b1f7956d6bb94320ddfb5c6c11bcecac837dfcef44b079a6ee42f32e",
         "skills/problem-solving/references/simplification-cascades.md": "7183cb578e0a3eec635067b3848c7069c89eae093afdd8278cd81ca740b30756",
         "skills/problem-solving/references/when-stuck.md": "ad5e721ef86f2d19c628bdbf5d7de2e76dfc02388ccdbb595dfa0e68a3f02d48",
-        "skills/repomix/SKILL.md": "e878ca2826fabf35208f603cced56f7f77c670202de70bcc1e3c5d3f96b7a471",
-        "skills/repomix/references/configuration.md": "a40386b0ca68061d03ba2ae6d1a8109306895b13699e1e05bd4b8b4c4fa7912d",
-        "skills/repomix/references/usage-patterns.md": "26713b03fa0de3c0bfbd994d100d8a3df289eb5fb7ef6b7e0fff14524ca7e252",
-        "skills/repomix/scripts/README.md": "b46bf55fbf0ebaf58e099a97135862652edb5da83dedec344a0ce931d2be94af",
-        "skills/repomix/scripts/repomix_batch.py": "3b46726af95b84e0a37035f754107d2739ce1a1c95083305e166f34ab0975449",
-        "skills/repomix/scripts/repos.example.json": "5086bf887ccc032abd23715c7ed278bf9844b035068b25469ed4c00435e079fd",
-        "skills/repomix/scripts/requirements.txt": "abb821f8ee3248ea5c82c2d4b3c103ff411f1f44b484398186844487cf4bd9a6",
-        "skills/repomix/scripts/tests/test_repomix_batch.py": "4f15a013b4f1a92cc73e9fc8d1029ebb05fb8c68ac6c6a9c82d56cefd462db18",
         "skills/research/SKILL.md": "3c58106feab4f1e7f94fd90fff39e9831c423b332c80bde221cb7d0f10c4b91f",
         "skills/shard-doc/SKILL.md": "a2145b832952328ee8ab8d97efa7e6dc6f432facbaa854fb64ba7ab650de704d",
         "skills/shard-doc/references/wikilink-sharding-patterns.md": "f6c3df6e9333abc5327654e1188f846aec4869243a660e067c5edfbd7a11cf57",

@@ -47,4 +47,15 @@ describe('plugin-register step', () => {
     expect(result.status).toBe('fail');
     expect(result.message).toContain('exit code 1');
   });
+
+  it('repomix add fails while context7 succeeds → still pass, message names the failure', async () => {
+    const runner = mockRunner({
+      'yamadashy/repomix': { stdout: '', exitCode: 1 },
+      'context7': { stdout: 'registered', exitCode: 0 },
+    });
+    const result = await runPluginRegister(makeOpts(), runner, { claudeAvailable: true });
+    expect(result.status).toBe('pass');
+    expect(result.message).toContain('repomix');
+    expect(result.message).toContain('failed');
+  });
 });

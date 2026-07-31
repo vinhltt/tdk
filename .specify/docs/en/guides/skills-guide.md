@@ -272,7 +272,7 @@ Use unit-test backfill separately when the goal is project/module unit testing i
 
 ### Internal Helpers Not Listed As User Commands
 
-These exist in source but are not cataloged as direct user commands: `_shared`, `tdk-memory-checksum`, `tdk-load-project-context`, `tdk-validate-task-id`, `brainstorming`, `common`, `context-engineering`, `obsidian-brain`, `problem-solving`, `repomix`, `research`, and other `user-invocable: false` helpers.
+These exist in source but are not cataloged as direct user commands: `_shared`, `tdk-memory-checksum`, `tdk-load-project-context`, `tdk-validate-task-id`, `brainstorming`, `common`, `context-engineering`, `obsidian-brain`, `problem-solving`, `research`, and other `user-invocable: false` helpers.
 
 ---
 

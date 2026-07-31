@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-07-29T15:41:43.697Z",
+  "generatedAt": "2026-07-31T14:18:05.832Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -116,8 +116,8 @@
       "mode": "0644"
     },
     ".specify/docs/en/guides/scenarios/10-greenfield-full-start-architecture-topology.md": {
-      "sha256": "df6483f5155cc68ceb0db02d7e66a9fd9fff284c6b26f1387290f25a6d7f9c59",
-      "size": 12790,
+      "sha256": "e5f2eba0e48e400b76105e86fbdf7bfb47e4592155352744809a1621512dd324",
+      "size": 12845,
       "mode": "0644"
     },
     ".specify/docs/en/guides/scenarios/scenario-catalog.md": {
@@ -126,13 +126,13 @@
       "mode": "0644"
     },
     ".specify/docs/en/guides/setup/setup-guide.md": {
-      "sha256": "0ea9e367ad1f5f57c8d3b18abc9c0dfb6c81e4b5cc57c6b17c8f1cf74e49f998",
-      "size": 3524,
+      "sha256": "a9f1bb427cac99929323ecdbbfe73b0beff6f4634598da97b6febde1d6a91b2e",
+      "size": 4222,
       "mode": "0644"
     },
     ".specify/docs/en/guides/skills-guide.md": {
-      "sha256": "b13e197b007b49f84b774f22bcfa1537776d04e5fd74adc54a33448fcd5ea9ac",
-      "size": 50983,
+      "sha256": "dc81934d66bd75329b1721de8bf86c563320717e9afc8ed226a41e0853b639e0",
+      "size": 50972,
       "mode": "0644"
     },
     ".specify/docs/en/guides/workflow-map.md": {
@@ -176,8 +176,8 @@
       "mode": "0644"
     },
     ".specify/docs/vi/guides/scenarios/10-greenfield-full-start-architecture-topology.md": {
-      "sha256": "d5aa321715c76e877c1b6f8a64174440230f0a58f849e8eb9cbbc6acbc154b89",
-      "size": 13208,
+      "sha256": "85bacee54e2ade85a102401eb2dad35a1b7835f89348c001a687c1b4e36c9817",
+      "size": 13260,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/scenarios/scenario-catalog.md": {
@@ -186,13 +186,13 @@
       "mode": "0644"
     },
     ".specify/docs/vi/guides/setup/setup-guide.md": {
-      "sha256": "6dac2dc171a8a2187071a66424d965b4886dd1e1a91cb0510cf4a42fdfffeed3",
-      "size": 3929,
+      "sha256": "d0e0d9b64a54e21dcc4a1bcb696c61d808173a3bbcb2398b436af44e9588a58c",
+      "size": 4652,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/skills-guide.md": {
-      "sha256": "c46f381aea1497d0394206cdab185385db448e20b1f7ef24366bc91413a0a13f",
-      "size": 50551,
+      "sha256": "20101d8c36d076d4863c4f2019a704cce1b94fe59609cd4c35abe4edae832ff2",
+      "size": 50540,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/workflow-map.md": {
@@ -201,8 +201,8 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "12ff6fe9e85b2ef8129fd9100b139e2c80832f7aa263eb07881b9dec88d8037a",
-      "size": 42636,
+      "sha256": "b9d9d95deef571e3f9efffd3a4e42fcd9b60cf55db2f7e03fb1db31e95a4614d",
+      "size": 41620,
       "mode": "0644"
     },
     ".specify/plugins/plugin-dependencies.json": {
@@ -1316,23 +1316,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.claude-plugin/plugin.json": {
-      "sha256": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
+      "sha256": "98e1b1958d24a892000bcc5a0a95f29f7237d91e656c6dea49268a5eeffc5f30",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.codex-plugin/plugin.json": {
-      "sha256": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
+      "sha256": "98e1b1958d24a892000bcc5a0a95f29f7237d91e656c6dea49268a5eeffc5f30",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.cursor-plugin/plugin.json": {
-      "sha256": "787ae3d4b477c8d212a8e5829994306479ce0a2cb27771338eb336f9825ad1ce",
+      "sha256": "98e1b1958d24a892000bcc5a0a95f29f7237d91e656c6dea49268a5eeffc5f30",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/CHANGELOG.md": {
-      "sha256": "677ce1ebd6e7eaaeac9ab4c9bdc4e9a8d5b35c3d75fa64712d6ce1bad026af02",
-      "size": 6458,
+      "sha256": "36b393119fcd6207356dfe89c5642c9807c51b9db760392d0c3722a54331b87a",
+      "size": 6663,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/researcher.md": {
@@ -1533,46 +1533,6 @@
     ".specify/plugins/tdk-utils/skills/problem-solving/references/when-stuck.md": {
       "sha256": "ad5e721ef86f2d19c628bdbf5d7de2e76dfc02388ccdbb595dfa0e68a3f02d48",
       "size": 2811,
-      "mode": "0644"
-    },
-    ".specify/plugins/tdk-utils/skills/repomix/SKILL.md": {
-      "sha256": "e878ca2826fabf35208f603cced56f7f77c670202de70bcc1e3c5d3f96b7a471",
-      "size": 6316,
-      "mode": "0644"
-    },
-    ".specify/plugins/tdk-utils/skills/repomix/references/configuration.md": {
-      "sha256": "a40386b0ca68061d03ba2ae6d1a8109306895b13699e1e05bd4b8b4c4fa7912d",
-      "size": 4415,
-      "mode": "0644"
-    },
-    ".specify/plugins/tdk-utils/skills/repomix/references/usage-patterns.md": {
-      "sha256": "26713b03fa0de3c0bfbd994d100d8a3df289eb5fb7ef6b7e0fff14524ca7e252",
-      "size": 7046,
-      "mode": "0644"
-    },
-    ".specify/plugins/tdk-utils/skills/repomix/scripts/README.md": {
-      "sha256": "b46bf55fbf0ebaf58e099a97135862652edb5da83dedec344a0ce931d2be94af",
-      "size": 3794,
-      "mode": "0644"
-    },
-    ".specify/plugins/tdk-utils/skills/repomix/scripts/repomix_batch.py": {
-      "sha256": "3b46726af95b84e0a37035f754107d2739ce1a1c95083305e166f34ab0975449",
-      "size": 13324,
-      "mode": "0644"
-    },
-    ".specify/plugins/tdk-utils/skills/repomix/scripts/repos.example.json": {
-      "sha256": "5086bf887ccc032abd23715c7ed278bf9844b035068b25469ed4c00435e079fd",
-      "size": 252,
-      "mode": "0644"
-    },
-    ".specify/plugins/tdk-utils/skills/repomix/scripts/requirements.txt": {
-      "sha256": "abb821f8ee3248ea5c82c2d4b3c103ff411f1f44b484398186844487cf4bd9a6",
-      "size": 356,
-      "mode": "0644"
-    },
-    ".specify/plugins/tdk-utils/skills/repomix/scripts/tests/test_repomix_batch.py": {
-      "sha256": "4f15a013b4f1a92cc73e9fc8d1029ebb05fb8c68ac6c6a9c82d56cefd462db18",
-      "size": 18939,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/research/SKILL.md": {
@@ -1881,8 +1841,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/setup/setup.ts": {
-      "sha256": "41531366e13111b68b0f1ec6d77f9f7886abbb0190e1ef74ec7957413a54e731",
-      "size": 3048,
+      "sha256": "7e193de97bf8937f9665a397e63b5453053685856576990314ac87624cacacfb",
+      "size": 3351,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/setup/steps/config-detect.ts": {
@@ -1896,8 +1856,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/setup/steps/plugin-register.ts": {
-      "sha256": "13283dc1590e2b802f3d0d5841d146dcca8af0ddbc5787c84525d5af9426831f",
-      "size": 832,
+      "sha256": "6a2852400600d12a45b21d25eac195976f4f99c32d70660431bf0f3fa8ed4163",
+      "size": 1208,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/setup/steps/python-imports.ts": {
@@ -1926,8 +1886,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/setup/utils/output-helpers.ts": {
-      "sha256": "e92d4657b87a4b7dad6b8efca1a885a8bef6de3047d946a2590c6efa7e7d598c",
-      "size": 3842,
+      "sha256": "8f05cea9ee227c75bd6c9f630adea43def05f6a36c8ee1ac0671533c2df6b8ef",
+      "size": 5305,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/sub-workspace/docs.ts": {

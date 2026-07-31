@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.0.0] - 2026-07-31
+
+### Removed
+- `repomix` skill (was 0.1.0) — vendored skill dropped in favor of the official repomix marketplace plugins (`repomix-explorer@repomix`, `repomix-commands@repomix`)
+
 ## [3.0.3] - 2026-07-29
 
 ### Changed

@@ -63,32 +63,56 @@ export function summaryTable(steps: StepEntry[]): string {
   return lines.join('\n');
 }
 
-export function manualSteps(claudeFound: boolean): string {
+export function manualSteps(claudeFound: boolean, repomixFound: boolean): string {
   const lines = [
     `${BOLD}${CYAN}━━━ Manual Setup Steps ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}`,
     '',
   ];
 
+  let step = 0;
+  const nextStep = () => { step += 1; return step; };
+
   if (!claudeFound) {
-    lines.push(`${BOLD}1. Install Claude Code${NC}`);
+    lines.push(`${BOLD}${nextStep()}. Install Claude Code${NC}`);
     lines.push('   Follow: https://docs.anthropic.com/en/docs/claude-code/getting-started');
     lines.push('');
-    lines.push(`${BOLD}2. Register Context7 Marketplace (after installing Claude Code)${NC}`);
+    lines.push(`${BOLD}${nextStep()}. Register Context7 Marketplace (after installing Claude Code)${NC}`);
     lines.push(`   ${WHITE}claude plugin marketplace add https://github.com/upstash/context7${NC}`);
     lines.push('   Local marketplace (.claude-plugin/) is auto-detected at git root.');
     lines.push('   Guide: .specify/docs/en/guides/setup/setup-guide.md');
     lines.push('');
   }
 
-  lines.push(`${BOLD}Enable Context7 MCP Plugin in settings${NC}`);
+  if (!repomixFound) {
+    lines.push(`${BOLD}${nextStep()}. Install repomix${NC}`);
+    lines.push(`   ${WHITE}npm install -g repomix${NC}`);
+    lines.push('   Required for tdk-scout --scope and tdk-sub-workspace-docs.');
+    lines.push('   Guide: .specify/docs/en/guides/setup/setup-guide.md');
+    lines.push('');
+  }
+
+  lines.push(`${BOLD}${nextStep()}. Enable Context7 MCP Plugin in settings${NC}`);
   lines.push('   Add to .claude/settings.json → enabledPlugins:');
   lines.push(`   ${WHITE}"context7-plugin@context7-marketplace": true${NC}`);
   lines.push('   Guide: .specify/docs/en/guides/setup/setup-guide.md');
   lines.push('');
-  lines.push(`${BOLD}GitHub MCP Plugin (optional — repo browsing)${NC}`);
+  lines.push(`${BOLD}${nextStep()}. Install Repomix Explorer & Commands Plugins${NC}`);
+  // The marketplace add is printed unconditionally: setup registers it automatically
+  // only when the claude CLI is present, --skip-plugins was not passed, and the add
+  // itself succeeded. Every other path reaches this block with @repomix unresolvable.
+  lines.push('   Register the marketplace first (skip if setup already did):');
+  lines.push(`   ${WHITE}claude plugin marketplace add https://github.com/yamadashy/repomix${NC}`);
+  lines.push(`   ${WHITE}claude plugin install repomix-explorer@repomix${NC}`);
+  lines.push(`   ${WHITE}claude plugin install repomix-commands@repomix${NC}`);
+  lines.push('   Add to .claude/settings.json → enabledPlugins:');
+  lines.push(`   ${WHITE}"repomix-explorer@repomix": true${NC}`);
+  lines.push(`   ${WHITE}"repomix-commands@repomix": true${NC}`);
   lines.push('   Guide: .specify/docs/en/guides/setup/setup-guide.md');
   lines.push('');
-  lines.push(`${BOLD}Obsidian Plugin Setup (optional)${NC}`);
+  lines.push(`${BOLD}${nextStep()}. GitHub MCP Plugin (optional — repo browsing)${NC}`);
+  lines.push('   Guide: .specify/docs/en/guides/setup/setup-guide.md');
+  lines.push('');
+  lines.push(`${BOLD}${nextStep()}. Obsidian Plugin Setup (optional)${NC}`);
   lines.push('   Guide: .specify/docs/en/guides/setup/setup-guide.md');
   lines.push('');
 

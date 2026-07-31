@@ -17,6 +17,16 @@ export async function runPluginRegister(
 
   const { exitCode } = await runner.run('claude', ['plugin', 'marketplace', 'add', 'https://github.com/upstash/context7']);
 
-  if (exitCode === 0) return { status: 'pass', message: 'Context7 marketplace registered' };
+  const { exitCode: repomixExitCode } = await runner.run('claude', ['plugin', 'marketplace', 'add', 'https://github.com/yamadashy/repomix']);
+
+  if (exitCode === 0) {
+    if (repomixExitCode !== 0) {
+      return {
+        status: 'pass',
+        message: `Context7 marketplace registered; repomix marketplace add failed (exit code ${repomixExitCode}) — see manual steps`,
+      };
+    }
+    return { status: 'pass', message: 'Context7 marketplace registered' };
+  }
   return { status: 'fail', message: `Plugin registration failed (exit code ${exitCode})` };
 }

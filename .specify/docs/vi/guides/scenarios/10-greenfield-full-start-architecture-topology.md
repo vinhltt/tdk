@@ -43,8 +43,8 @@ ghi config. Với project mới, approve guarded apply trước
 - Project có JSON `.specify/.specify.json`; workflow config apply không tạo
   first-time config từ đầu.
 - Có `bun`.
-- `repomix` được install trước `/tdk-sub-workspace-docs --all`:
-  `npm install -g repomix`.
+- `repomix` được install trước `/tdk-sub-workspace-docs --all`. Xem mục
+  Prerequisites trong `.specify/docs/vi/guides/setup/setup-guide.md`.
 
 ## Chuỗi Command Đề Xuất
 

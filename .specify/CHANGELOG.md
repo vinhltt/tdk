@@ -6,6 +6,25 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.108.0] - 2026-07-31
+
+### Added
+- **[Scripts]** repomix detection and marketplace registration in setup
+  - `repomixAvailable()` probe gates an `npm install -g repomix` manual step when the binary is absent
+  - `plugin-register` also registers `https://github.com/yamadashy/repomix`; a failed repomix add is now named in the step message instead of being masked by context7 success
+  - Manual steps print install and enable commands for `repomix-explorer@repomix` and `repomix-commands@repomix`
+  - `tests/setup/output-helpers.test.ts` covers ordinal sequencing and block gating across all claude/repomix combinations
+
+### Changed
+- **[Scripts]** `manualSteps()` takes `repomixFound` and auto-numbers step ordinals so gated blocks leave no gaps or duplicates
+- **[Docs]** repomix prerequisites documented and stale references cleaned (en + vi)
+  - setup-guide: new Prerequisites section — repomix is required by `/tdk-scout --scope` and `/tdk-sub-workspace-docs`, not by `/tdk-scout --from-pack`; setup reports the gap as a manual step instead of failing
+  - scenario 10 (greenfield full start): repomix install instruction now points at the setup-guide Prerequisites section
+  - skills-guide: dropped `repomix` from the internal-helpers list
+
+### Removed
+- **[Skills]** `repomix` (was 0.1.0) — vendored skill dropped from `tdk-utils` in favor of the official repomix marketplace plugins
+
 ## [1.107.0] - 2026-07-29
 
 ### Added

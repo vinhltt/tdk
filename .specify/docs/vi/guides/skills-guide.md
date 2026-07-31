@@ -272,7 +272,7 @@ Dùng unit-test backfill riêng khi mục tiêu là project/module unit testing 
 
 ### Internal Helpers Not Listed As User Commands
 
-Các helper này tồn tại trong source nhưng không được catalog như direct user commands: `_shared`, `tdk-memory-checksum`, `tdk-load-project-context`, `tdk-validate-task-id`, `brainstorming`, `common`, `context-engineering`, `obsidian-brain`, `problem-solving`, `repomix`, `research`, và các helper `user-invocable: false` khác.
+Các helper này tồn tại trong source nhưng không được catalog như direct user commands: `_shared`, `tdk-memory-checksum`, `tdk-load-project-context`, `tdk-validate-task-id`, `brainstorming`, `common`, `context-engineering`, `obsidian-brain`, `problem-solving`, `research`, và các helper `user-invocable: false` khác.
 
 ---
 

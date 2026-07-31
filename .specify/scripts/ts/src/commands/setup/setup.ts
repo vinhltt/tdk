@@ -40,6 +40,16 @@ async function claudeAvailable(): Promise<boolean> {
   }
 }
 
+async function repomixAvailable(): Promise<boolean> {
+  try {
+    const proc = Bun.spawn(['repomix', '--version'], { stdout: 'pipe', stderr: 'pipe' });
+    await proc.exited;
+    return proc.exitCode === 0;
+  } catch {
+    return false;
+  }
+}
+
 async function main() {
   const argv = Bun.argv.slice(2);
 
@@ -70,6 +80,7 @@ OPTIONS:
   process.stdout.write(banner(projectRoot, opts.force));
 
   const hasClaude = opts.skipPlugins ? false : await claudeAvailable();
+  const hasRepomix = await repomixAvailable();
   const results = await runSetupSteps(opts, ctx, defaultRunner, { claudeAvailable: hasClaude });
 
   for (const entry of results) {
@@ -83,7 +94,7 @@ OPTIONS:
     process.stdout.write('\n');
   }
 
-  process.stdout.write(manualSteps(hasClaude));
+  process.stdout.write(manualSteps(hasClaude, hasRepomix));
   process.stdout.write(summaryTable(results));
 
   const hasFails = results.some(r => r.result.status === 'fail');

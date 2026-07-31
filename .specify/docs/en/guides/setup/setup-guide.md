@@ -2,6 +2,29 @@
 
 Use this when TDK commands are not visible yet, dependencies are missing, or a newly cloned consumer project needs local setup.
 
+## Prerequisites
+
+`repomix` is required by two workflows:
+
+- `/tdk-scout --scope`
+- `/tdk-sub-workspace-docs`
+
+It is **not** required for `/tdk-scout --from-pack`, which reads an existing pack.
+
+Install it globally:
+
+```bash
+npm install -g repomix
+```
+
+Setup does not fail when `repomix` is missing. It reports the gap as a manual
+step and continues, so the rest of the install still completes.
+
+Setup also registers the official repomix marketplace when the `claude` CLI is
+available and `--skip-plugins` was not passed. The matching `claude plugin
+install` commands and `.claude/settings.json` entries are printed in the manual
+steps at the end of the run — see the After Setup section below.
+
 ## Fast Path
 
 Run from the consumer project root:

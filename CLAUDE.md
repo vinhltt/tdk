@@ -82,6 +82,14 @@ Workflow/distribution assets that ship to consumers belong under `.specify/`.
 
 Standalone setup CLI source belongs under `packages/tdk-setup/`. Keep harness install, Codex package convert, and convert-flat migration code there when that package exists. Do not put setup CLI source under `.specify/`, because `.specify/` is copied to consumer projects.
 
+## Language Conventions
+
+English is the default for every file in this repo. Vietnamese belongs only under a `vi/` path segment such as `.specify/docs/vi/`. Never mix Vietnamese into `.specify/docs/en/` or any non-`vi/` path.
+
+Code, identifiers, paths, commands, file names, and frontmatter keys/values stay English everywhere, including under `vi/`.
+
+Applies to newly created files. Do not retro-translate existing docs.
+
 ## Hook Response Protocol
 
 ### Privacy Block Hook (`@@PRIVACY_PROMPT@@`)

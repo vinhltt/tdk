@@ -2,6 +2,29 @@
 
 Dùng guide này khi command TDK chưa hiển thị, dependency bị thiếu, hoặc consumer project vừa clone cần setup local.
 
+## Prerequisites
+
+`repomix` là bắt buộc với hai workflow:
+
+- `/tdk-scout --scope`
+- `/tdk-sub-workspace-docs`
+
+**Không** cần `repomix` cho `/tdk-scout --from-pack`, vì lệnh này đọc pack có sẵn.
+
+Cài global:
+
+```bash
+npm install -g repomix
+```
+
+Setup không fail khi thiếu `repomix`. Script báo đây là manual step rồi chạy
+tiếp, nên phần cài đặt còn lại vẫn hoàn tất.
+
+Setup cũng đăng ký marketplace repomix chính thức khi có `claude` CLI và không
+truyền `--skip-plugins`. Các lệnh `claude plugin install` tương ứng và entry
+trong `.claude/settings.json` được in ra ở phần manual step cuối lần chạy — xem
+mục Sau Khi Setup bên dưới.
+
 ## Fast Path
 
 Chạy từ consumer project root:

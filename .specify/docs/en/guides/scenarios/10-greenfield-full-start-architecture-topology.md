@@ -43,8 +43,8 @@ writes config. On a fresh project, approve the guarded apply before
 - The project has a JSON `.specify/.specify.json`; workflow config apply does not create
   first-time config from scratch.
 - `bun` is available.
-- `repomix` is installed before `/tdk-sub-workspace-docs --all`:
-  `npm install -g repomix`.
+- `repomix` is installed before `/tdk-sub-workspace-docs --all`. See the
+  Prerequisites section of `.specify/docs/en/guides/setup/setup-guide.md`.
 
 ## Recommended Command Sequence
 
