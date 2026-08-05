@@ -137,7 +137,7 @@ Excluded:
 | `/tdk-epic-hld` | Create parent epic high-level design context. | `<epic-id>`, `--force` | Epic PRD exists and needs design lenses before child breakdown. |
 | `/tdk-task-breakdown` | Generate child spec seed Markdown from epic PRD plus HLD. | `<epic-id>`, `--force` | An epic needs independently specifiable child slices. |
 | `/tdk-plan` | Generate implementation plan and conditional supporting artifacts. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` is ready to become implementation phases; use migration only for an existing legacy feature folder. |
-| `/tdk-implement` | Execute runnable rows from `plan.md ## Phases`. | `<id>`, `--phase NN` | A plan exists and one or more implementation phases are ready. |
+| `/tdk-implement` | Execute runnable rows from `plan.md ## Phases`. | `<id>`, `--phase NN`, `--no-branch` | A plan exists and one or more implementation phases are ready. |
 | `/tdk-analyze` | Cross-artifact consistency and quality analysis. | `<id>` | You need read-only verification across spec, plan, and phases. |
 | `/tdk-status` | Show workflow progress. | `<id>` | You need a read-only status snapshot. |
 
@@ -169,6 +169,7 @@ Excluded:
 | `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents for one sub-workspace. | `--sub-workspace <name>`, `--no-community-search` | Existing sub-workspace docs should drive automation recommendations. |
 | `/tdk-scaffold-from-recommendation` | Scaffold approved skill/agent recommendation stubs. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only` | A reviewed automation recommendation is approved for scaffolding. |
 | `/tdk-plan-skill-routing` | Manage reviewable plan-skill-routing init, diff, register, verify, and cleanup. | `init`, `inspect`, `check`, `diff`, `register --yes`, `verify`, `optimize` | Scaffold routing suggestions or custom skill routes need explicit review and registration. |
+| `/tdk-repo-worktree` | Manage Git worktrees for sub-workspace repositories of a polyrepo project. | `create <id> [--repo <sub-name>]`, `list [<id>]`, `cleanup <id>` | A sub-workspace repository is busy on another feature branch, or task worktrees need listing or cleanup. |
 
 ### Testing And API
 
@@ -272,7 +273,7 @@ Use unit-test backfill separately when the goal is project/module unit testing i
 
 ### Internal Helpers Not Listed As User Commands
 
-These exist in source but are not cataloged as direct user commands: `_shared`, `tdk-memory-checksum`, `tdk-load-project-context`, `tdk-validate-task-id`, `brainstorming`, `common`, `context-engineering`, `obsidian-brain`, `problem-solving`, `research`, and other `user-invocable: false` helpers.
+These exist in source but are not cataloged as direct user commands: `_shared`, `tdk-memory-checksum`, `tdk-load-project-context`, `tdk-validate-task-id`, `tdk-branch-preflight`, `brainstorming`, `common`, `context-engineering`, `obsidian-brain`, `problem-solving`, `research`, and other `user-invocable: false` helpers.
 
 ---
 

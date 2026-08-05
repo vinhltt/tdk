@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.1.0] - 2026-08-05
+
+### Added
+- `tdk-branch-preflight` — internal skill (`user-invocable: false`) invoked by `/tdk-implement` Step 6A. Maps each phase's `## Related Code Files` paths to sub-workspace repositories, confirms base ref and branch name in one batched prompt, validates every repository before creating any branch, and records the outcome in `git-map.md` so a crashed run resumes or adopts instead of force-recreating
+- `tdk-repo-worktree` — `create` / `list` / `cleanup` worktrees for a sub-workspace repository already busy on another feature branch. Operates on sub-workspaces only, never the root workspace repository
+
 ## [4.0.0] - 2026-07-31
 
 ### Removed

@@ -4,6 +4,18 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [11.1.3] - 2026-08-05
+
+### Added
+- `/tdk-implement` Step 6A branch preflight plus `--no-branch`. Scoped to `TARGET_ROWS` so `--phase NN` never branches repositories it does not touch; skipped when `subWorkspaces` is empty or when no target row is runnable after recovery
+- `/tdk-plan` Step 3e seeds `{FEATURE_DIR}/git-map.md` from the validated `## Related Code Files` paths, with each base ref seeded from `featureEnv.mainBranch`. Seed rows omit `feature_branch` from frontmatter, which is what marks a seed from a realized run. Listed under `## Supporting Artifacts`
+
+### Changed
+- `/tdk-specify` emits `feature_branch` and `milestone_branch` in place of `branch`. `milestone_branch` is seeded from `git -C "$PROJECT_DIR" branch --show-current` and confirmed with one `AskUserQuestion` on polyrepo projects, skipped when `subWorkspaces` is empty or absent. Observational only — no branch is created or switched
+- `/tdk-implement` parallel workers receive the `GIT_MAP` repository-to-branch/worktree mapping plus one named read-only Git exception (`rev-parse --abbrev-ref HEAD`) to confirm the branch record before writing
+- `/tdk-implement` phase execution gains `## Sub-Workspace Branch Context`: a recorded worktree path becomes the replacement working root while phase files keep declaring workspace-logical paths. No-op when `GIT_MAP` is absent
+- `/tdk-implement` contract documents `--no-branch` parsing and rejection rules, and names Step 6A as the one exception to "a cancel before the first write leaves the project untouched"
+
 ## [11.1.2] - 2026-07-28
 
 ### Changed

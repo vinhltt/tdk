@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "11.1.2"
+  version: "11.1.3"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -34,7 +34,8 @@ This skill reads plan.md and executes phases using the `## Phases` table as the 
 - **Phase validation**: validates every phase contract before status mutation;
   spike phases require executable evidence and a user decision gate
 - **F3 crash recovery**: detects stale `in_progress` rows at startup and requires explicit recovery choice before any status mutation
-- **Serial by default**: default and selected modes remain serial, and no invocation locks the repository — do not run two TDK commands on the same `TASK_ID` concurrently
+- **Branch preflight**: on polyrepo projects, `tdk-branch-preflight` places every affected sub-workspace repository on the agreed feature branch at Step 6A; `--no-branch` skips every Git step
+- **Serial by default**: default and selected modes remain serial, and no invocation locks the repository — do not run two TDK commands on the same `TASK_ID` concurrently, and two different `TASK_ID`s touching the same sub-workspace repository are equally unsupported as a concurrent run
 
 ## Core Contract
 
@@ -119,6 +120,25 @@ Build `phaseByNumber` and `TARGET_ROWS` after global F3 recovery. Selected mode 
 ### Step 6: Confirm Before Executing
 
 Display compact status + phase list from parsed rows. Do not read phase files before this confirmation.
+
+### Step 6A: Branch Preflight
+
+Skip when `--no-branch` was passed, when `PROJECT_CONTEXT.subWorkspaces` is empty
+or absent, or when no target row is runnable after Step 5.
+Invoke `tdk-branch-preflight` with `PROJECT_DIR`, `TASK_ID`, `FEATURE_DIR`,
+`PROJECT_CONTEXT`, `TARGET_ROWS`.
+Passing `TARGET_ROWS` keeps preflight scoped to the phases this run executes, so `--phase NN` does not create
+branches in repositories it never touches.
+If STOP -> halt execution before any status mutation.
+Store: `GIT_MAP`.
+
+`PROJECT_DIR` is the agent-resolved project root already used for every script call in this skill; pass it
+down rather than letting the invoked skill guess a working directory.
+
+The "no runnable target row" condition matters because Step 2 is not the only way a finished task reaches
+this point: an `in_progress` task can pass Step 4 recovery with the last phase marked done, and recovery
+re-runs the phase scan without returning to Step 2. Without this condition, Step 6A would fetch, prompt, and
+create branches for a task that then executes nothing.
 
 ### Step 6.1: Branch by Execution Mode
 

@@ -105,12 +105,19 @@ After a fully successful wave, reparse `plan.md` and restart at step 1. Stop whe
 ## Worker Boundary
 
 Each worker receives its phase file path, work context, declared reads, its own `Modify`/`Create`/`Delete`
-targets, delegates, and success criteria. Workers may read only declared reads plus their own write targets,
+targets, delegates, and success criteria. When `GIT_MAP` exists, the worker also receives the mapping from
+sub-workspace repository to branch and worktree path. A repository whose record carries a worktree path uses
+that path as its working root, while the phase file keeps declaring workspace-logical paths — see
+`## Sub-Workspace Branch Context` in `phase-execution.md`. When no `GIT_MAP` exists, no mapping is injected
+and nothing below about branch records applies. Workers may read only declared reads plus their own write targets,
 and may read back a `Create` target after creating it. Before touching any undeclared path, delegate, or
 command, a worker reports `NEEDS_CONTEXT` instead of widening its own scope.
 
 Workers never write `plan.md`, phase frontmatter, routing or configuration authorities, or another phase's
-targets; never run Git index/ref commands, commit, stash, reset, checkout, or clean; and never spawn agents
+targets; never run Git index/ref commands, commit, stash, reset, checkout, or clean, with a single named
+exception — a worker may run exactly one read-only Git command,
+`git -C "$PROJECT_DIR/$SUB_PATH" rev-parse --abbrev-ref HEAD`, to confirm its sub-workspace repository still
+matches the injected branch record before it writes, and STOPs on a mismatch; and never spawn agents
 of their own. This is cooperative policy plus your review of each report, not a filesystem sandbox: ignored
 writes, undeclared reads, and external side effects stay residual risks — review them with `git diff`.
 

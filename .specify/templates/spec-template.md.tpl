@@ -1,7 +1,13 @@
 ---
 title: "[FEATURE NAME]"
 status: Draft
-branch: "[FEATURE NAME]"
+feature_branch: "[FEATURE BRANCH]"    # branch created FOR this task; on a polyrepo project the same
+                                      # name is created in every affected sub-workspace repo.
+                                      # NOT the branch it is created FROM — that base ref is decided
+                                      # per repo at /tdk-implement and recorded in git-map.md.
+milestone_branch: "[MILESTONE BRANCH]"  # milestone/epic branch this task belongs to. /tdk-implement
+                                        # compares the root workspace repo against it to catch a task
+                                        # being implemented under the wrong milestone.
 created: "[DATE]"
 input: 'User description: "$ARGUMENTS"'
 memory_context_loaded: [true/false]

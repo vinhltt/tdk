@@ -3,7 +3,7 @@ name: tdk-specify
 description: "Create spec.md from a feature or child-slice description, or replay --interview against existing spec.md. Supports --fast, memory, and an embedded quality gate."
 argument-hint: "<id> [<desc>] [--fast] [--interview]"
 metadata:
-  version: "11.0.0"
+  version: "11.1.3"
 ---
 
 # tdk-specify
@@ -152,8 +152,17 @@ Follow `references/spec-generation-and-validation-workflow.md` Step 2.
 Normal creation writes the 9-section spec plus `## Clarifications` using
 `.specify/templates/spec-template.md.tpl`. Replay skips spec generation, reads
 current `spec.md`, then continues to Step 2.5. Emit frontmatter with `title`,
-`status`, `branch`, `created`, `input`, `memory_context_loaded`, and
+`status`, `feature_branch`, `milestone_branch`, `created`, `input`, `memory_context_loaded`, and
 `schema_version: 1`; keep the H1 directly below closing `---`.
+
+Set `feature_branch` to the starting value `<defaultFolder>/<TICKET_ID>`, and seed `milestone_branch` from
+`git -C "$PROJECT_DIR" branch --show-current`. Both are recorded only — this skill creates no branch and
+switches to none.
+
+`feature_branch` is the branch created FOR this task; the base ref it is created FROM is settled per
+repository at `/tdk-implement`. `milestone_branch` is the milestone/epic the task belongs to, used at
+implement time to catch work landing under the wrong milestone. Confirm `milestone_branch` with one
+`AskUserQuestion` when `PROJECT_CONTEXT.subWorkspaces` is non-empty; skip it when empty or absent.
 
 ### Step 2.5: Optional Interview Alignment Gate
 

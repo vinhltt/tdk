@@ -39,7 +39,8 @@ describe('spec-template YAML frontmatter migration contract', () => {
     it('contains all required frontmatter keys', () => {
       expect(template).toContain('title:');
       expect(template).toContain('status:');
-      expect(template).toContain('branch:');
+      expect(template).toContain('feature_branch:');
+      expect(template).toContain('milestone_branch:');
       expect(template).toContain('created:');
       expect(template).toContain('input:');
       expect(template).toContain('memory_context_loaded:');
@@ -83,9 +84,27 @@ describe('spec-template YAML frontmatter migration contract', () => {
 
     it('describes frontmatter emission in Step 2 specification section', () => {
       expect(contract).toContain(
-        'Emit the YAML frontmatter block at the top with `title`, `status`, `branch`, `created`, `input`, `memory_context_loaded`',
+        'Emit the YAML frontmatter block at the top with `title`, `status`, `feature_branch`, `milestone_branch`, `created`, `input`, `memory_context_loaded`',
       );
       expect(contract).toContain('schema_version: 1');
+    });
+
+    it('instructs agent to record the root branch without switching branches', () => {
+      expect(contract).toContain('milestone_branch');
+      expect(contract).toContain('git -C "$PROJECT_DIR" branch --show-current');
+    });
+
+    it('confirms milestone_branch on polyrepo projects and skips it on single-repo', () => {
+      expect(contract).toContain('AskUserQuestion');
+      expect(contract).toContain('PROJECT_CONTEXT.subWorkspaces` is non-empty');
+      expect(contract).toContain('empty or absent');
+    });
+
+    it('separates the branch created FOR a task from the branch created FROM', () => {
+      // Base refs are per-repository and settled at implement time, never in spec.md.
+      expect(template).toContain('branch created FOR this task');
+      expect(template).toContain('NOT the branch it is created FROM');
+      expect(template).toContain('milestone/epic branch this task belongs to');
     });
   });
 });

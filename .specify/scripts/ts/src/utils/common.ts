@@ -276,27 +276,3 @@ export function getChangesDir(featureDir: string): string {
 export function getBugsDir(featureDir: string): string {
   return join(featureDir, 'test-specifications');
 }
-
-export function createOrSwitchBranch(branchName: string, mainBranch: string): boolean {
-  try {
-    execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8', stdio: 'pipe' });
-  } catch {
-    process.stderr.write('Warning: Git repository not detected; skipped branch validation\n');
-    return true;
-  }
-
-  let currentBranch: string;
-  try {
-    currentBranch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { encoding: 'utf-8', stdio: 'pipe' }).trim();
-  } catch {
-    currentBranch = mainBranch;
-  }
-
-  if (/^(feature|test|hotfix)\//.test(currentBranch)) {
-    return true; // Already on feature branch
-  }
-
-  process.stderr.write(`Warning: Not on feature branch. Current: ${currentBranch}\n`);
-  process.stderr.write(`Create branch manually: git checkout -b ${branchName}\n`);
-  return false;
-}

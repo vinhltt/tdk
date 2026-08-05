@@ -9,6 +9,10 @@ Accepted forms:
 - `/tdk-implement <TASK_ID> --phase NN`
 - `/tdk-implement <TASK_ID> --phase=NN`
 - `/tdk-implement <TASK_ID> --parallel`
+- `/tdk-implement <TASK_ID> --no-branch`
+- `/tdk-implement <TASK_ID> --phase NN --no-branch`
+- `/tdk-implement <TASK_ID> --phase=NN --no-branch`
+- `/tdk-implement <TASK_ID> --parallel --no-branch`
 
 Contract:
 
@@ -18,7 +22,11 @@ TASK_ID = first positional token
 PHASE_FILTER = optional numeric value from --phase NN or --phase=NN
 PHASE_FILTER_PRESENT = true when --phase is provided
 PARALLEL_MODE = true only when one --parallel token is provided
+NO_BRANCH = true only when one --no-branch token is provided
 ```
+
+`--no-branch` takes no value. It is valid on its own and in combination with either `--phase` form or with
+`--parallel`, in any token order — `--no-branch --parallel` and `--parallel --no-branch` parse identically.
 
 Reject and STOP before task-id validation if any of these are present:
 - missing `TASK_ID`
@@ -29,7 +37,10 @@ Reject and STOP before task-id validation if any of these are present:
 - non-positive value
 - extra positional tokens
 - duplicate `--parallel`
-- any unknown value or positional after `--parallel`
+- duplicate `--no-branch`
+- a value attached to `--no-branch`
+- any unknown value or positional after `--parallel`, where `--no-branch` is a known flag rather than an
+  unknown token and is therefore accepted in that position
 
 Also reject `--parallel` with either `--phase` form before task-id validation, prerequisite collection,
 capability probes, or project mutation. Do not infer a harness from environment variables,
@@ -137,6 +148,13 @@ routing, and dependency input used for that mutation, and stop on any drift. A
 cancel before the first write leaves the project untouched. A crash after writes
 begin leaves whatever was written; `plan.md` is the source of truth for what to
 recover, and the F3 gate below is the entry point.
+
+Step 6A is the one exception to the sentence above. Its Git side effects — a branch in each affected
+sub-workspace repository plus `git-map.md` — happen before the remaining cancel points, so a later cancel
+does not leave the project untouched. Those side effects are reclaimed by the resume and adopt paths of
+`tdk-branch-preflight` on the next run, never by rolling back or deleting a branch. Do not delete a branch to
+restore the untouched state. Step 6A re-reads the Mutation Precondition inputs above before it writes
+`git-map.md`.
 
 ## Step 3 - Parse Phases Table
 

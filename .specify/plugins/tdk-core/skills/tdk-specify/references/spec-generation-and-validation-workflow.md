@@ -58,8 +58,56 @@ Generate all 9 sections in order:
 Append `## Clarifications` at the end, reserved for `/tdk-clarify`.
 
 Write `SPEC_FILE` using `.specify/templates/spec-template.md.tpl`, preserving section order and headings.
-Emit the YAML frontmatter block at the top with `title`, `status`, `branch`, `created`, `input`, `memory_context_loaded`, and `schema_version: 1`.
+Emit the YAML frontmatter block at the top with `title`, `status`, `feature_branch`, `milestone_branch`, `created`, `input`, `memory_context_loaded`, and `schema_version: 1`.
 Keep `# Feature Specification: <title>` directly below closing `---`.
+
+Set `feature_branch` to the starting value `<defaultFolder>/<TICKET_ID>` — the same form the branch warning
+computes. It is a starting value only: `/tdk-implement` presents it as an editable suggestion and enforces no
+format on what the user types. Never leave the title placeholder in `feature_branch`.
+
+`feature_branch` names the branch created *for* this task. The branch it is created *from* is a separate
+per-repository base ref, settled at `/tdk-implement` and recorded in `git-map.md`; it never appears here.
+
+Seed `milestone_branch` from the root workspace repo's current branch with
+`git -C "$PROJECT_DIR" branch --show-current`, anchored at the project root so a session opened inside a
+sub-workspace does not record that sub-repository's branch instead. This read is observational —
+`/tdk-specify` still creates and switches no branch. When the result is empty, as on a detached HEAD, write
+the placeholder instead; branch preflight then treats it as missing and asks.
+
+### Confirming `milestone_branch`
+
+`milestone_branch` records the milestone or epic this task belongs to. `/tdk-implement` compares the root
+workspace repo's live branch against it to catch a task being implemented under the wrong milestone. It is
+neither the branch created for the task (`feature_branch`) nor the base ref each sub-workspace branches from
+(per repository, settled at Step 6A, stored in `git-map.md`).
+
+The seed is observed from the root repo, but the value is a **declaration of intent** — a user who is
+deliberately specifying work for a milestone other than the one currently checked out corrects it here.
+
+**When `PROJECT_CONTEXT.subWorkspaces` is non-empty, confirm the detected value with one `AskUserQuestion`
+before writing the frontmatter.** State plainly what is being recorded and what is not, so the distinction is
+settled at the moment the value is captured rather than discovered later:
+
+```json
+{
+  "questions": [{
+    "question": "Record 'epic-1' as milestone_branch — the milestone/epic this task belongs to? Seeded from the root workspace repo's current branch. /tdk-implement compares the root repo against it to catch work landing under the wrong milestone. It is NOT the branch created for the task (feature_branch), and NOT the base branch sub-workspaces (api, web) branch from — that is confirmed per repo at /tdk-implement.",
+    "header": "Root branch",
+    "options": [
+      {"label": "Yes, record epic-1", "description": "This task belongs to the milestone the root repo is on"},
+      {"label": "Let me enter another", "description": "This task belongs to a different milestone — enter it via Other"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+**Skip the confirmation when `subWorkspaces` is empty or absent.** The cross-epic guard it feeds is itself a
+no-op on single-repository projects, so asking there adds a prompt that can change nothing. Phrase the check
+as "empty or absent": config loading always sets `subWorkspaces` to `[]` when unset, so a missing-key test
+never fires.
+
+Replay (`SPEC_REPLAY_INTERVIEW=true`) writes no frontmatter and therefore never asks.
 
 Promote case:
 

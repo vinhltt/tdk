@@ -6,6 +6,28 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.109.0] - 2026-08-05
+
+### Added
+- **[Skills]** `tdk-utils` gains polyrepo Git branch management
+  - `tdk-branch-preflight` — internal skill (`user-invocable: false`) invoked by `/tdk-implement` Step 6A. Maps each phase's `## Related Code Files` paths to sub-workspace repositories, confirms base ref and branch name in one batched prompt, validates every repository before creating any branch, and records the outcome in `git-map.md` so a crashed run resumes or adopts instead of force-recreating
+  - `tdk-repo-worktree` — `create` / `list` / `cleanup` worktrees for a sub-workspace repository already busy on another feature branch. Operates on sub-workspaces only, never the root workspace repository
+- **[Skills]** `/tdk-implement` Step 6A branch preflight plus `--no-branch`. Scoped to `TARGET_ROWS` so `--phase NN` never branches repositories it does not touch; skipped when `subWorkspaces` is empty or when no target row is runnable after recovery
+- **[Skills]** `/tdk-plan` Step 3e seeds `{FEATURE_DIR}/git-map.md` from the validated `## Related Code Files` paths, with each base ref seeded from `featureEnv.mainBranch`. Seed rows carry no branch and omit `feature_branch` from frontmatter — that absence is what marks a seed from a realized run. Listed under `## Supporting Artifacts`; `plan.md` structure and frontmatter schema stay closed
+- **[Scripts]** `branch-preflight-git-map-contract.test.ts` — guards the git-map seed lifecycle
+
+### Changed
+- **[Templates]** `spec-template.md.tpl` replaces `branch` with `feature_branch` and `milestone_branch`, with inline comments separating the branch created FOR a task from the base ref it is created FROM (per-repository, settled at implement time)
+- **[Skills]** `/tdk-specify` emits the two new frontmatter keys. `feature_branch` starts at `<defaultFolder>/<TICKET_ID>`; `milestone_branch` is seeded from `git -C "$PROJECT_DIR" branch --show-current` and confirmed with one `AskUserQuestion` on polyrepo projects, skipped when `subWorkspaces` is empty or absent. Observational only — no branch is created or switched
+- **[Skills]** `/tdk-implement` parallel workers receive the `GIT_MAP` repository-to-branch/worktree mapping plus one named read-only Git exception (`rev-parse --abbrev-ref HEAD`) to confirm the branch record before writing
+- **[Skills]** `/tdk-implement` phase execution gains `## Sub-Workspace Branch Context`: a recorded worktree path becomes the replacement working root while phase files keep declaring workspace-logical paths. No-op when `GIT_MAP` is absent
+- **[Skills]** `/tdk-implement` contract documents `--no-branch` parsing and rejection rules, and names Step 6A as the one exception to "a cancel before the first write leaves the project untouched" — its branches are reclaimed by resume/adopt, never rolled back
+- **[Scripts]** `spec-template-frontmatter-contract.test.ts` covers the renamed keys, the milestone confirmation gate, and the FOR/FROM distinction
+- **[Docs]** skills-guide: `--no-branch` on `/tdk-implement`, `/tdk-repo-worktree` in the sub-workspace catalog, `tdk-branch-preflight` in internal helpers
+
+### Removed
+- **[Scripts]** `createOrSwitchBranch()` from `.specify/scripts/ts/src/utils/common.ts` — no callers remained; branch handling is now owned by `tdk-branch-preflight`
+
 ## [1.108.0] - 2026-07-31
 
 ### Added

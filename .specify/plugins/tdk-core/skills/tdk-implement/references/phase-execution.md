@@ -23,6 +23,7 @@ Execution pseudo-code, ascending `row.number`:
       skipped blocker satisfies dependency
    d1. Run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-phase-file.ts "{phasePath}" --plan "{FEATURE_DIR}/plan.md" --phase-number {row.number} --json)`.
       Validation failure STOPs before status mutation.
+   d2. Apply `## Sub-Workspace Branch Context` below when `GIT_MAP` exists.
    e0. Run routing preflight from 7A. If it cancels, STOP before status mutation.
    e. Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" in_progress)` -> phase file FIRST
       Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} in_progress)` -> plan.md SECOND
@@ -48,6 +49,47 @@ For each phase:
 5. If validation returns `phaseType: spike`, follow `## Spike Phase Execution`.
 6. Otherwise execute as a generic implementation phase.
 7. Log: `"✓ Phase {N}: {name} — complete"`
+
+## Sub-Workspace Branch Context
+
+**When no `GIT_MAP` exists — preflight skipped, single-repository project, or `--no-branch` — skip this
+section entirely.** This reference loads on every run, so an unconditional check here would compare against a
+record that was never created and stop a perfectly valid run.
+
+When `GIT_MAP` does exist, inject its content into the execution context for each phase that touches a
+sub-workspace repository: the root branch, and the mapping from repository to branch and worktree path.
+
+Before the phase writes anything, re-verify that the repository still stands where the record says:
+
+```bash
+git -C "$PROJECT_DIR/$SUB_PATH" rev-parse --abbrev-ref HEAD
+```
+
+A mismatch STOPs with the F3-style recovery reminder — another task may have moved `HEAD` in the meantime.
+Paths in `GIT_MAP` are workspace-relative, so join `PROJECT_DIR` at execution time.
+
+### Working-Root Override
+
+When a repository's `Worktree path` column holds a value, that path is the **replacement working root** for
+that sub-workspace — not a second declared path. Take the value verbatim from the column; do not derive it
+from the branch name, because deriving is owned by the preflight and worktree skills and the branch name is
+editable.
+
+Paths declared under `## Related Code Files` stay workspace-logical. A phase declaring `apps/web/src/foo.ts`
+against a worktree at `_worktrees/web/feature-sample-001` reads and writes
+`_worktrees/web/feature-sample-001/src/foo.ts`.
+
+Phase files never declare `_worktrees/...` themselves: `/tdk-plan` runs the write-disjointness check in
+validate-only mode, that mode includes the gitignore step, and `_worktrees/` must be gitignored — so such a
+path is rejected as an ignored write path. A phase file is also written at plan time, while whether a
+repository is busy is implementation-time state.
+
+Both the re-verify command above and the final `git diff` review point at the **translated** root, not at the
+declared one.
+
+The write-disjointness checker validates declared paths, not the paths actually written. It is a cooperative
+policy backed by report review rather than a filesystem sandbox, so this override depends on agent
+compliance.
 
 ## Spike Phase Execution
 
