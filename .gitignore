@@ -19,3 +19,6 @@ experiments/
 
 # Generated on demand from .specify/plugins/ for Codex harness installs
 .specify/codex-plugins/
+
+# Repo-local Bun runtime installed by bootstrap.sh
+.tdk/
