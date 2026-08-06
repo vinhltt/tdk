@@ -1,6 +1,6 @@
 {
-  "version": "3.2.0",
-  "description": "Inject speckit development context and path-based rules",
+  "version": "11.2.0",
+  "description": "Inject speckit development context and path-based rules, and block destructive shell commands",
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -20,6 +20,15 @@
           {
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/hook-gateway.cjs\" path-rule-injector"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/hook-gateway.cjs\" destructive-command-block"
           }
         ]
       }

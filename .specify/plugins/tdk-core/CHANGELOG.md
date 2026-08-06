@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [11.2.0] - 2026-08-06
+
+### Added
+- destructive-command-block PreToolUse safety hook — blocks unrecoverable shell deletes and destructive git operations; ordinary cleanup runs freely
+- Integration test suite for destructive-command-block covering target classification, shell-separator splitting, and git-pattern matching
+
+### Changed
+- hooks.json registers new Bash matcher for destructive-command-block via hook-gateway.cjs; description updated; version bumped to 3.3.0
+
 ## [11.1.3] - 2026-08-05
 
 ### Added

@@ -6,6 +6,16 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.110.0] - 2026-08-06
+
+### Added
+- **[Hooks]** `destructive-command-block` PreToolUse safety hook — blocks unrecoverable shell deletes (filesystem roots, home dirs, `.git`, paths escaping workspace) and destructive git operations (`reset --hard`, `push --force`, `clean -f`, `checkout -- .`); ordinary cleanup (build output, caches, temp files) runs freely
+- **[General]** Integration test suite for `destructive-command-block` covering target classification, shell-separator splitting, and git-pattern matching
+
+### Changed
+- **[Hooks]** `hooks.json` registers new `Bash` matcher for `destructive-command-block` via `hook-gateway.cjs`; description updated; version bumped to 3.3.0
+- **[Claude Hooks]** Workspace-level `destructive-command-block.cjs` refactored: flat regex pattern list replaced with target-aware `isDangerousTarget`/`inspectDeletion` functions that distinguish unrecoverable targets from ordinary cleanup
+
 ## [1.109.0] - 2026-08-05
 
 ### Added
