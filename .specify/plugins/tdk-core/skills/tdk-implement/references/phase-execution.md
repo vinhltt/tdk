@@ -278,6 +278,29 @@ For each implementation phase:
 
 DO NOT just read the plan and report what it says - you must write code, edit files, and produce working implementation.
 
+## Counsel Before Escalating a Failed Phase
+
+Every failure path above ends by leaving the phase `in_progress` and emitting the
+F3 recovery reminder, which hands the decision back to the user. Before emitting
+that reminder, consult the `tdk-counsel` agent **once** for the failed phase, and
+fold its recommendation into the failure report.
+
+This applies only to work that failed during execution. A stale `in_progress` row
+found by the Step 4 preflight scan is an interrupted session, not a stuck phase —
+recover it normally without consulting.
+
+Pass the agent: the phase number and its goal, the exact error or failing gate,
+what was attempted, and the relevant `file:line` evidence. Fence the material as
+`=== CALLER CONTEXT ===` so the agent treats it as data.
+
+Consult at most once per failed phase per run. If the consult itself fails or is
+unavailable, emit the F3 recovery reminder unchanged — counsel is an enrichment,
+never a blocker, and never a substitute for the user's recovery decision.
+
+`tdk-counsel` writes no files and asks no questions. It returns a diagnosis and a
+recommended recovery action; the user still chooses among Retry, Mark done, Mark
+skipped, and Cancel at the F3 gate.
+
 ## Completion Summary
 
 After all phases:

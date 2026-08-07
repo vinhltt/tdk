@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.2.0] - 2026-08-07
+
+### Added
+- tdk-counsel autonomous counsel agent — provides honest, unfiltered advice when a skill or agent reaches a decision it cannot settle from the evidence at hand; read-only (no write tools), returns diagnosis in a single run
+
 ## [4.1.0] - 2026-08-05
 
 ### Added

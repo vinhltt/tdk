@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "11.1.3"
+  version: "11.2.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -34,6 +34,7 @@ This skill reads plan.md and executes phases using the `## Phases` table as the 
 - **Phase validation**: validates every phase contract before status mutation;
   spike phases require executable evidence and a user decision gate
 - **F3 crash recovery**: detects stale `in_progress` rows at startup and requires explicit recovery choice before any status mutation
+- **Counsel on failure**: when a phase fails during execution, consults the `tdk-counsel` agent once and folds its diagnosis into the failure report before handing the recovery decision back to the user; never blocks recovery when the consult is unavailable
 - **Branch preflight**: on polyrepo projects, `tdk-branch-preflight` places every affected sub-workspace repository on the agreed feature branch at Step 6A; `--no-branch` skips every Git step
 - **Serial by default**: default and selected modes remain serial, and no invocation locks the repository — do not run two TDK commands on the same `TASK_ID` concurrently, and two different `TASK_ID`s touching the same sub-workspace repository are equally unsupported as a concurrent run
 
@@ -46,7 +47,7 @@ Load: `references/routing-preflight.md`
 Use this reference for `plan-skill-routing.md` loading and delegate drift handling before status mutation.
 
 Load: `references/phase-execution.md`
-Use this reference for row-order execution, delegate skill parsing/running, generic implementation, and completion reporting.
+Use this reference for row-order execution, delegate skill parsing/running, generic implementation, failure escalation via `tdk-counsel`, and completion reporting.
 
 Load: `references/parallel-phase-orchestration.md`
 Load this progressive reference only when `PARALLEL_MODE` is true. It owns canaries, wave selection,

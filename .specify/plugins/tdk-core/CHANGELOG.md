@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [11.2.1] - 2026-08-07
+
+### Changed
+- tdk-implement integrates counsel-on-failure: consults tdk-counsel once when a phase fails during execution and folds its diagnosis into the failure report before the F3 recovery gate; never blocks recovery when the consult is unavailable
+
 ## [11.2.0] - 2026-08-06
 
 ### Added

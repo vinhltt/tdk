@@ -6,6 +6,14 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.111.0] - 2026-08-07
+
+### Added
+- **[Agents]** `tdk-counsel` autonomous counsel agent — provides honest, unfiltered advice when a skill or agent reaches a decision it cannot settle from the evidence at hand; read-only (no write tools), returns diagnosis in a single run; typical triggers: design forks with no clear winner, repeated failures, irreversible moves, ambiguous requirements
+
+### Changed
+- **[Skills]** `tdk-implement` integrates counsel-on-failure: consults `tdk-counsel` once when a phase fails during execution and folds its diagnosis into the failure report before the F3 recovery gate; never blocks recovery when the consult is unavailable
+
 ## [1.110.0] - 2026-08-06
 
 ### Added
