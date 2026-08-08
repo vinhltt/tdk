@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "11.2.1"
+  version: "12.0.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -44,10 +44,10 @@ Load: `references/project-and-phase-contract.md`
 Use this reference for argument parsing, portable script invocation, status preflight, phase-table parsing, F3 recovery, target resolution, and confirmation.
 
 Load: `references/routing-preflight.md`
-Use this reference for `plan-skill-routing.md` loading and delegate drift handling before status mutation.
+Use this reference for `delegate-routing.md` loading and delegate drift handling before status mutation.
 
 Load: `references/phase-execution.md`
-Use this reference for row-order execution, delegate skill parsing/running, generic implementation, failure escalation via `tdk-counsel`, and completion reporting.
+Use this reference for row-order execution, delegate skill and delegate agent parsing/running, generic implementation, failure escalation via `tdk-counsel`, and completion reporting.
 
 Load: `references/parallel-phase-orchestration.md`
 Load this progressive reference only when `PARALLEL_MODE` is true. It owns canaries, wave selection,
@@ -158,9 +158,9 @@ Before routing preflight, run `validate-phase-file.ts` for the current phase as
 defined in `references/phase-execution.md`. Validation failure stops before
 status mutation.
 
-#### 7B. Delegate Skills Phase — Auto-continue
+#### 7B. Delegate Phase — Auto-continue
 
-If the phase contains usable `## Delegate Skills`, run listed delegates in order. Delegate failures leave the phase `in_progress` and emit the F3 recovery reminder.
+If the phase contains `## Delegate Agents`, the routed agent is the executor for that phase: dispatch it and treat its `## Delegate Skills` as the toolset it may call. If the phase has only `## Delegate Skills`, run the listed delegates in order as before. Either way, delegate failure leaves the phase `in_progress` and emits the F3 recovery reminder. See `references/phase-execution.md` for the agent execution contract, including the required `Status:` protocol.
 
 #### 7C. Implementation Phase — Auto-continue (no confirmation gate)
 

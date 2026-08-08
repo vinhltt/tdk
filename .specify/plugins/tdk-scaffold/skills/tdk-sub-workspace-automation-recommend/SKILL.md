@@ -4,7 +4,7 @@ description: "Recommend skills and agents for one selected sub-workspace from ar
 user-invocable: true
 argument-hint: "--sub-workspace <name> [--no-community-search]"
 metadata:
-  version: "2.1.0"
+  version: "3.0.0"
   author: "VinhLTT"
   category: scaffold
 ---
@@ -86,7 +86,7 @@ Do not use `ck:find-skills`. Use direct CLI/site lookup only, and summarize resu
    - Create the output directory.
    - If the output file exists, ask whether to overwrite or keep it.
    - Write the markdown file with YAML frontmatter and the sections below.
-   - Include routing suggestions only as reviewable proposals. Do not mutate `plan-skill-routing.md`.
+   - Include routing suggestions only as reviewable proposals. Do not mutate `delegate-routing.md`.
 
 ## Output Format
 
@@ -140,10 +140,10 @@ skill_search_queries:
 ### 1. <domain> -> <skill-name> [<priority>]
 - **Sub-workspace**:
 - **Domain**:
-- **Skills**:
+- **Delegates**:
 - **Why**:
 - **Proposal notes**:
-- **Register with**: `/tdk-plan-skill-routing diff --proposal plan-skill-routing-proposal.json`, then `/tdk-plan-skill-routing register --proposal plan-skill-routing-proposal.json --yes` after review.
+- **Register with**: `/tdk-delegate-routing diff --proposal delegate-routing-proposal.json`, then `/tdk-delegate-routing register --proposal delegate-routing-proposal.json --yes` after review.
 
 ## Rejected Recommendations
 
@@ -171,4 +171,5 @@ skill_search_queries:
 
 - Recommendations are not scaffold instructions until the user reviews them and changes frontmatter to `status: approved`.
 - Skills + agents only. Do not recommend hooks, MCP servers, or plugin packaging unless the selected sub-workspace evidence makes that explicitly necessary.
-- Routing suggestions are optional handoff notes for scaffold. Route mutation is a separate reviewed `/tdk-plan-skill-routing` workflow.
+- Routing suggestions are optional handoff notes for scaffold. Route mutation is a separate reviewed `/tdk-delegate-routing` workflow.
+- Leaving `## Routing Suggestions` empty is supported: scaffold then infers the domain from each skill's or agent's Purpose/Trigger and marks the entry `reason` as derived, which needs closer review at `diff`.

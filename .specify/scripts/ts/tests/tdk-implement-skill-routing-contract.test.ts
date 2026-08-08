@@ -12,7 +12,7 @@ const IMPLEMENT_PHASE_REFERENCE = resolve(IMPLEMENT_REFERENCES_DIR, 'phase-execu
 const IMPLEMENT_PROJECT_REFERENCE = resolve(IMPLEMENT_REFERENCES_DIR, 'project-and-phase-contract.md');
 const PLAN_SKILL_ROUTING = resolve(
   import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-plan/references/skill-routing.md',
+  '../../../plugins/tdk-core/skills/tdk-plan/references/delegate-routing-injection.md',
 );
 const PLAN_DESIGN_PHASE = resolve(
   import.meta.dir,
@@ -48,12 +48,92 @@ describe('tdk-implement skill routing contract', () => {
     expect(implementSkill).toContain('Load: `references/routing-preflight.md`');
     expect(implementContract).toContain('PROJECT_CONTEXT.docsPath');
     expect(implementContract).toContain('raw project config `docs.path`');
-    expect(implementContract).toContain('ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md');
+    expect(implementContract).toContain('ROUTING_FILE = {docs.path}/custom-workflow/delegate-routing.md');
     expect(implementContract).toContain('read the exact resolved path');
     expect(implementContract).toContain('Do not use Search, Grep, Glob');
     expect(implementContract).toContain('set `SKILL_ROUTING = empty` and continue');
     expect(implementContract).toContain('Never auto-create the routing file');
-    expect(planRouting).toContain('ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md');
+    expect(planRouting).toContain('ROUTING_FILE = {docs.path}/custom-workflow/delegate-routing.md');
+  });
+
+  it('warns instead of silently dropping a legacy routing file', () => {
+    // Assembled from halves so a repo-wide grep for the verbatim message counts
+    // only the places that actually emit it, not this assertion.
+    const legacyWarning = [
+      'Legacy routing file detected',
+      'rename to delegate-routing.md and migrate @agent syntax',
+    ].join('; ');
+    expect(implementRouting).toContain(legacyWarning);
+    expect(planRouting).toContain(legacyWarning);
+
+    const warning = implementRouting.indexOf(legacyWarning);
+    const emptyRouting = implementRouting.indexOf('set `SKILL_ROUTING = empty` and continue');
+    expect(warning).toBeGreaterThanOrEqual(0);
+    expect(emptyRouting).toBeGreaterThan(warning);
+  });
+
+  it('injects and diffs `## Delegate Agents` alongside `## Delegate Skills`', () => {
+    for (const term of [
+      '## Delegate Agents',
+      '`/`-prefixed → a **skill** (toolset)',
+      '`@`-prefixed → an **agent** (executor)',
+      '^## Delegate Agents$',
+    ]) {
+      expect(planRouting).toContain(term);
+    }
+
+    const injection = planRouting.indexOf('## Injection Format');
+    const skillsHeading = planRouting.indexOf('## Delegate Skills', injection);
+    const agentsHeading = planRouting.indexOf('## Delegate Agents', injection);
+    expect(injection).toBeGreaterThanOrEqual(0);
+    expect(skillsHeading).toBeGreaterThan(injection);
+    expect(agentsHeading).toBeGreaterThan(skillsHeading);
+
+    for (const term of [
+      'Parse actual `## Delegate Skills` and `## Delegate Agents`',
+      'Insert or replace `## Delegate Skills` after `## Key Insights`, then insert or replace `## Delegate Agents`',
+      '^## Delegate Agents$',
+    ]) {
+      expect(implementRouting).toContain(term);
+    }
+  });
+
+  it('contracts routed agents as executors with a literal status protocol', () => {
+    for (const term of [
+      '## Delegate Agents Phase',
+      'A routed agent is the **executor** of its domain; routed skills are the **toolset**',
+      'its definition does not list the `Skill` tool',
+      'Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT',
+      'literal string comparison',
+      'Any value other than the literal `DONE`',
+      'context-dependent',
+      'the main session does **not** invoke them itself',
+    ]) {
+      expect(implementPhase).toContain(term);
+    }
+
+    for (const status of ['DONE_WITH_CONCERNS', 'BLOCKED', 'NEEDS_CONTEXT']) {
+      expect(implementPhase).toContain(
+        `| \`${status}\` | STOP; leave the phase \`in_progress\`; emit the F3 recovery reminder |`,
+      );
+    }
+  });
+
+  it('gates unit-test phases on any routed delegate, not only on routed skills', () => {
+    for (const term of [
+      'has **neither** a usable `## Delegate Skills` entry **nor** a routed `## Delegate Agents` entry',
+      'Unit-test phase has no usable delegate.',
+      'The guard is delegate-aware, not skill-aware: a routed `@agent` alone satisfies it',
+    ]) {
+      expect(implementPhase).toContain(term);
+    }
+
+    // Agent-only `test:` routes are legal and produce a phase with no
+    // `## Delegate Skills` section at all; the old skill-only guard STOPped on them
+    // after the routed agent had already written the tests.
+    expect(implementPhase).not.toContain('Unit-test phase has no delegate skill.');
+    expect(implementPhase).not.toContain('but has no usable `## Delegate Skills`');
+    expect(planRouting).toContain('a test-like phase has no usable delegate');
   });
 
   it('runs read-only routing preflight before the first in_progress status write', () => {
@@ -66,7 +146,7 @@ describe('tdk-implement skill routing contract', () => {
     expect(implementContract).toContain('Actual status writes still keep phase frontmatter first, then `plan.md`');
     expect(implementContract).toContain('Read `phasePath`');
     expect(implementContract).toContain('Compute expected delegates');
-    expect(implementContract).toContain('Parse actual `## Delegate Skills`');
+    expect(implementContract).toContain('Parse actual `## Delegate Skills` and `## Delegate Agents`');
   });
 
   it('keeps the minimal routing subset aligned with tdk-plan behavior', () => {
@@ -90,10 +170,11 @@ describe('tdk-implement skill routing contract', () => {
     for (const term of [
       'expected delegates',
       'actual phase delegates',
-      'Refresh `## Delegate Skills`',
+      'Refresh delegate sections',
+      'Insert current expected skills and agents',
       'Run generic override',
       'Cancel',
-      'Insert or replace `## Delegate Skills` after `## Key Insights`',
+      'Insert or replace `## Delegate Skills` after `## Key Insights`, then insert or replace `## Delegate Agents` directly after',
       'Re-read the phase file',
       'stops without status mutation',
       'User chose generic implementation despite routing delegates',

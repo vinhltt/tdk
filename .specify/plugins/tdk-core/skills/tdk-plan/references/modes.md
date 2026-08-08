@@ -31,7 +31,7 @@ Single source of truth for `/tdk-plan` flag dispatch. SKILL.md only routes; this
 
 TDD phases order `## Tests Before`, `## Refactor / Implementation`, `## Tests After`, `## Test Quality Gate`, `## Regression Gate`.
 
-UT backfill phases order `## Code Summary`, `## Mocks & Fixtures Required`, `## Test Matrix`, `## Test Quality Gate`, then `## Delegate Skills` when routing injects delegates.
+UT backfill phases order `## Code Summary`, `## Mocks & Fixtures Required`, `## Test Matrix`, `## Test Quality Gate`, then `## Delegate Skills` and `## Delegate Agents` when routing injects delegates. Each delegate section is omitted when its group is empty.
 
 `--fast` is incompatible with `--tdd` and `--ut-backfill`. `--hard` and the default speed mode both compose with either test flag. Future rigor modes such as `--deep` or `--parallel`, if added to `/tdk-plan`, should compose with test modes the same way `--hard` does.
 

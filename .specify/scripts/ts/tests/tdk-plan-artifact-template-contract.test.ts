@@ -48,7 +48,7 @@ describe('lean plan artifact templates', () => {
   const CONFIG_AUTHORITY_CONSUMERS = [
     ['research phase', 'plugins/tdk-core/skills/tdk-plan/references/research-phase.md'],
     ['design phase', 'plugins/tdk-core/skills/tdk-plan/references/design-phase.md'],
-    ['skill routing', 'plugins/tdk-core/skills/tdk-plan/references/skill-routing.md'],
+    ['skill routing', 'plugins/tdk-core/skills/tdk-plan/references/delegate-routing-injection.md'],
   ] as const;
 
   it.each(CONFIG_AUTHORITY_CONSUMERS)(

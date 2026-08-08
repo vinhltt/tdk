@@ -25,7 +25,7 @@ const HLD_ROUTING_TEMPLATE_PATH = resolve(
 );
 const PLAN_ROUTING_TEMPLATE_PATH = resolve(
   import.meta.dir,
-  '../../../templates/plan/plan-skill-routing-template.tpl',
+  '../../../templates/plan/delegate-routing-template.tpl',
 );
 
 function readIfExists(path: string): string {
@@ -54,12 +54,12 @@ describe('tdk-epic-hld routing contract', () => {
     expect(lenses).toContain('Operability');
   });
 
-  it('keeps HLD routing separate from plan skill routing', () => {
+  it('keeps HLD routing separate from delegate routing', () => {
     expect(skill).toContain('high-level-design-skill-routing.md');
-    expect(skill).not.toContain('plan-skill-routing.md');
-    expect(contract).not.toContain('plan-skill-routing.md');
+    expect(skill).not.toContain('delegate-routing.md');
+    expect(contract).not.toContain('delegate-routing.md');
     expect(planRoutingTemplate).toContain(
-      'Per-project skill mappings for `/tdk-plan` phase generation.',
+      'Per-project delegate mappings for `/tdk-plan` phase generation.',
     );
   });
 

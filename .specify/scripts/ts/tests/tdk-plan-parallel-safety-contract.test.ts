@@ -13,7 +13,7 @@ describe('tdk-plan parallel safety contract', () => {
   const design = read('references/design-phase.md');
   const output = read('references/plan-output-contract.md');
   const existing = read('references/handle-existing-plan.md');
-  const routing = read('references/skill-routing.md');
+  const routing = read('references/delegate-routing-injection.md');
 
   it('C-C1 emits canonical safety frontmatter for every generated phase', () => {
     expect(output).toContain('dependencies: []');
@@ -65,7 +65,9 @@ describe('tdk-plan parallel safety contract', () => {
     expect(design).toContain('Preserve tests-first and delegate order');
     expect(design).toContain('Preserve delegate order');
     expect(output).toContain('## Tests Before` → `## Refactor / Implementation` → `## Tests After`');
-    expect(output).toContain('`## Delegate Skills` remains after `## Test Quality Gate`');
+    expect(output).toContain(
+      '`## Delegate Skills` then `## Delegate Agents` remain after `## Test Quality Gate`',
+    );
   });
 
   it('C-C3 separates bounded worker commands from broad controller gates', () => {

@@ -82,7 +82,7 @@ For feature-sized work, skip discovery, epic PRD, HLD, and task breakdown by def
 
 Each command reads the output of the previous one. For minimal feature work, the chain is `spec.md` -> `plan.md` (with `## Phases`) -> source code. For epic-sized work, optional `discovery.md` plus `discovery/` feeds `epic-prd.md` plus `epic-prd/`; epic PRD feeds parent HLD; parent HLD feeds task breakdown; task breakdown seeds child specs. Child specs do not run HLD by default.
 
-`/tdk-epic-hld` always uses built-in design lenses and may optionally read `{docs.path}/custom-workflow/high-level-design-skill-routing.md` for advisory consumer design skills. This HLD routing file is separate from `plan-skill-routing.md`, which remains implementation/test routing for planning and UT workflows.
+`/tdk-epic-hld` always uses built-in design lenses and may optionally read `{docs.path}/custom-workflow/high-level-design-skill-routing.md` for advisory consumer design skills. This HLD routing file is separate from `delegate-routing.md`, which remains implementation/test routing for planning and UT workflows.
 
 ### Plugin Ownership And Coupled Base
 
@@ -168,7 +168,7 @@ Excluded:
 | `/tdk-sub-workspace-docs` | Generate arc42-lite docs for one or all sub-workspaces. | `--sub-workspace NAME`, `--all`, `--force` | Sub-workspace docs need README, architecture, interfaces, and engineering pages. |
 | `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents for one sub-workspace. | `--sub-workspace <name>`, `--no-community-search` | Existing sub-workspace docs should drive automation recommendations. |
 | `/tdk-scaffold-from-recommendation` | Scaffold approved skill/agent recommendation stubs. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only` | A reviewed automation recommendation is approved for scaffolding. |
-| `/tdk-plan-skill-routing` | Manage reviewable plan-skill-routing init, diff, register, verify, and cleanup. | `init`, `inspect`, `check`, `diff`, `register --yes`, `verify`, `optimize` | Scaffold routing suggestions or custom skill routes need explicit review and registration. |
+| `/tdk-delegate-routing` | Manage reviewable delegate-routing diff, register, and verify. | `diff`, `register --yes`, `verify` | Scaffold routing suggestions or custom `/skill` and `@agent` routes need explicit review and registration. |
 | `/tdk-repo-worktree` | Manage Git worktrees for sub-workspace repositories of a polyrepo project. | `create <id> [--repo <sub-name>]`, `list [<id>]`, `cleanup <id>` | A sub-workspace repository is busy on another feature branch, or task worktrees need listing or cleanup. |
 
 ### Testing And API
@@ -312,7 +312,7 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 27 | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | Generate arc42-lite docs under `<docsPath>/sub-workspaces/<name>/` |
 | 28 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | Recommend skills/agents for one selected sub-workspace |
 | 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | Scaffold reviewed skills/agents from an approved recommendation |
-| 30 | `/tdk-plan-skill-routing <init\|inspect\|check\|diff\|register\|verify\|optimize> [--proposal <path>] [--yes]` | Review and register plan-skill-routing proposals explicitly |
+| 30 | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--yes]` | Review and register delegate-routing proposals explicitly |
 | — | **Primary Implementation** | |
 | 33 | `/tdk-implement <id> [--phase NN]` | Execute implementation directly from plan.md ## Phases (recommended) |
 
@@ -371,7 +371,7 @@ For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalo
 | sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `engineering.md` per sub-workspace | After config apply |
 | sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | `--sub-workspace`, `--no-community-search` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` or skills.sh lookup | `automation-recommendation.md` | After sub-workspace docs |
 | scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | `--dry-run`, `--skills-only`, `--agents-only` | approved `automation-recommendation.md` or legacy recommendation file | Scaffolded skill/agent starter files | After recommendation approval |
-| plan-skill:routing | `/tdk-plan-skill-routing <init\|inspect\|check\|diff\|register\|verify\|optimize> [--proposal <path>] [--yes]` | `--proposal`, `--yes` | `plan-skill-routing.md`, optional `plan-skill-routing-proposal.json` | JSON route inspection, diff, registration, verification, or optimization result | After scaffold routing proposal or custom routing opt-in |
+| delegate:routing | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--yes]` | `--proposal`, `--yes` | `delegate-routing.md`, optional `delegate-routing-proposal.json` | JSON diff, registration, or verification result | After scaffold routing proposal or custom routing opt-in |
 
 Greenfield and brownfield start commands are report/routing entrypoints. They do not create specs, plans, tracker issues, source code, or `.specify/.specify.json`. Greenfield full mode runs a project-inception interview before strong routing. Quick mode records unanswered critical gaps. Unknown mode classifies only unless minimum facts are present. Brownfield full mode uses bounded repo evidence, config-only mode focuses on `.specify` state, and unknown mode recommends one evidence-backed next route.
 
@@ -463,16 +463,54 @@ Syntax: `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-co
 `/tdk-scaffold-from-recommendation` reads an approved recommendation and creates
 starter skill/agent files. It prefers
 `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md`
-and keeps legacy recommendation file fallbacks.
+and keeps legacy recommendation file fallbacks. Whenever it scaffolds at least
+one skill it also writes a reviewable routing proposal and prints the next step
+for getting that skill into the route file, deriving the entry from the skill's
+purpose for any skill the recommendation's `## Routing Suggestions` does not
+cover, including when that section is absent entirely.
 
 Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]`.
 
-`/tdk-plan-skill-routing` manages the explicit route file used by planning and
-UT workflows. Use it to initialize the route file, inspect/check current routes,
-diff scaffolded `plan-skill-routing-proposal.json`, register approved entries
-with `--yes`, verify proposals, or dry-run optimize repeated entries.
+`/tdk-delegate-routing` manages the explicit route file used by planning and
+UT workflows. Use it to diff a scaffolded `delegate-routing-proposal.json`,
+register approved entries with `--yes`, and verify proposals. Creating the route
+file for the first time is a prompt step, not a command — copy
+`.specify/templates/plan/delegate-routing-template.tpl` to
+`{docs.path}/custom-workflow/delegate-routing.md`.
 
-Syntax: `/tdk-plan-skill-routing <init|inspect|check|diff|register|verify|optimize> [--proposal <path>] [--yes]`.
+A delegate is either a `/skill` or an `@agent`, and both kinds may share one
+route line.
+
+Syntax: `/tdk-delegate-routing <diff|register|verify> [--proposal <path>] [--yes]`.
+
+#### Migrating From The Old Route File
+
+The route file was renamed. Existing projects need two steps, one required and
+one optional:
+
+1. **Required — rename the route file:**
+
+   ```bash
+   mv {docs.path}/custom-workflow/plan-skill-routing.md {docs.path}/custom-workflow/delegate-routing.md
+   ```
+
+   `/tdk-plan`, `/tdk-implement`, and `routing delegate` all read the new name
+   only. They never read routes out of the old file; they only detect it and
+   warn `Legacy routing file detected; rename to delegate-routing.md and migrate
+   @agent syntax`.
+
+2. **Optional — add `@agent` tokens.** A skill-only route file keeps working
+   unchanged after the rename. Add `@agent` tokens to a route line only when you
+   want `/tdk-implement` to execute that phase through an agent:
+
+   ```markdown
+   ## backend
+   - implement: /your-backend-skill, @your-backend-agent
+   ```
+
+The command is now `/tdk-delegate-routing` with three actions — `diff`,
+`register`, and `verify`. The old `init`, `inspect`, `check`, and `optimize`
+actions were removed.
 
 ### UT Commands
 

@@ -47,7 +47,7 @@ Runtime-backed fields intended for `workspace-layout-proposal.json`:
 - `subWorkspaces[].docs`
 - `subWorkspaces[].modules`
 
-Test skill routing is configured through `plan-skill-routing.md` and injected
+Test skill routing is configured through `delegate-routing.md` and injected
 into phases as `## Delegate Skills`.
 
 Parser safety checks:

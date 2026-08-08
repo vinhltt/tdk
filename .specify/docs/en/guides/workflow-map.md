@@ -247,7 +247,7 @@ flowchart TD
         TEST_FILES["*.test.ts / test_*.py<br/>*Test.php + fixtures"]
     end
 
-    ROUTING["plan-skill-routing.md<br/>test domain"]
+    ROUTING["delegate-routing.md<br/>test domain"]
 
     ROUTING -->|selects test skill| UT_PLAN_CMD
     UT_SKILL -->|conventions| UT_PLAN_CMD
@@ -368,7 +368,7 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
 | `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), consumer test skill routing | `/tdk-implement` with `Test Quality Gate` before done | Feature UT |
-| `phases/phase-NN-{module}.md` (backfill sections) | `/tdk-plan --ut-backfill` | `spec.md` (opt), `plan-skill-routing.md` | consumer test skill via `## Delegate Skills`, then gate validation | Feature UT |
+| `phases/phase-NN-{module}.md` (backfill sections) | `/tdk-plan --ut-backfill` | `spec.md` (opt), `delegate-routing.md` | consumer test skill via `## Delegate Skills`, then gate validation | Feature UT |
 | `*.test.ts` / `test_*.py` etc. | consumer test skill | `phases/phase-NN-{module}.md` | Test runner | Feature UT |
 | `.specify/.specify.json` | `/tdk-sub-workspace-init` | Project config | `config:*`, unit-test routing, sub-workspace docs | Project setup |
 | `document-manager.md` | `/tdk-config-index` | All docs files | Manual reference, LLM tools | On demand |

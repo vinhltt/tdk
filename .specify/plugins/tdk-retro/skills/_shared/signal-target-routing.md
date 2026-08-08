@@ -10,7 +10,7 @@ Use this table to classify feedback signals into update targets.
 | T2 | `.claude/rules/*.md` | Workspace rule needs refinement. |
 | T3 | `.specify/configurations/**/*.md` | TDK configuration or hook guidance is stale. |
 | T4 | Consumer `.claude/skills/*-ut/SKILL.md` or `*-test/SKILL.md` | Test convention or implementation rule belongs to the consumer project. |
-| T5 | `plan-skill-routing.md` or routing template | Skill routing selected the wrong specialist. |
+| T5 | `delegate-routing.md` or routing template | Skill routing selected the wrong specialist. |
 | T6 | User skill `SKILL.md` | A reusable user-facing skill needs behavior guidance. |
 
 ## Knowledge Targets

@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.0.6] - 2026-08-08
+
+### Changed
+- signal-target-routing.md (T5) updated to reference delegate-routing.md
+
 ## [1.0.5] - 2026-07-17
 
 ### Changed

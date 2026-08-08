@@ -355,7 +355,7 @@ See [tdk-setup README](packages/tdk-setup/README.md) for the full setup CLI refe
 | **tdk-memory** | Domain memory init, update, query, changelog, checksum, and memory agent |
 | **tdk-test-api** | API test planning, testcase generation, and Playwright TypeScript code generation |
 | **tdk-retro** | Retrospective feedback collection, learning proposal, and approved learning application |
-| **tdk-scaffold** | Sub-workspace automation recommendations, skill/agent scaffolding, plan-skill-routing, and guarded golden-path recipes |
+| **tdk-scaffold** | Sub-workspace automation recommendations, skill/agent scaffolding, delegate-routing, and guarded golden-path recipes |
 
 Every install includes the coupled base `tdk-core`, `tdk-inception`, `tdk-memory`, and `tdk-utils`. Plugin selection adds optional workflows to that base; it does not create a runtime-independent core-only or inception-only install. `--plugins tdk-core` remains accepted as base-only compatibility syntax.
 

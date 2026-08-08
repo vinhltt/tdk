@@ -34,7 +34,7 @@ program.addCommand(createUtCommandGroup());
 // Scout command: tdk scout --scope <dir> | --from-pack <file>
 program.addCommand(createScoutCommand());
 
-// Routing command group: tdk routing plan-skill <init|inspect|check|diff|register|verify|optimize>
+// Routing command group: tdk routing delegate <diff|register|verify>
 program.addCommand(createRoutingCommandGroup());
 
 // Sub-workspace command group: tdk sub-workspace <docs|...>

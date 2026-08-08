@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "11.1.3"
+  version: "12.0.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -125,8 +125,8 @@ and end the command; skip skill routing, memory, scope, dependency scan, setup,
 existing-plan handling, design, red-team, and validation.
 
 ### Step 0.1b — Load Skill Routing
-Load: `references/skill-routing.md`
-Resolve skill-routing file per reference. Parse sub-workspace sections. Store: `SKILL_ROUTING` map. Missing file → AskUserQuestion per reference (opt-in create or skip with empty map).
+Load: `references/delegate-routing-injection.md`
+Resolve delegate routing file per reference. Parse sub-workspace sections. Store: `SKILL_ROUTING` map. Missing file → AskUserQuestion per reference (opt-in create or skip with empty map).
 
 When `FLAGS` contains `--red-team` or `--validate`, do not run the interactive missing-file AskUserQuestion/create flow from this step. Those action flags still MUST always perform exact-path inline routing reads inside their own workflows.
 
@@ -262,7 +262,7 @@ For every internal `Load: references/X.md` directive, resolve the target from `S
 
 On missing, unreadable, or stubbed internal references, STOP and report the expected absolute path and current step. Do not try alternate paths, fallback layouts, or partial reconstruction from memory.
 
-This contract applies only to internal `references/*.md` loads. Project-specific files governed by `references/skill-routing.md` keep their documented AskUserQuestion / skip behavior.
+This contract applies only to internal `references/*.md` loads. Project-specific files governed by `references/delegate-routing-injection.md` keep their documented AskUserQuestion / skip behavior.
 
 ## Subcommands
 

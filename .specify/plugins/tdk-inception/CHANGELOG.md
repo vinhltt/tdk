@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.0.3] - 2026-08-08
+
+### Changed
+- tdk-workspace-dependency-policy output contract updated to reference delegate-routing.md
+- tdk-workspace-layout-propose output contract, taxonomy, and template updated to reference delegate-routing.md
+
 ## [1.0.2] - 2026-07-29
 
 ### Changed

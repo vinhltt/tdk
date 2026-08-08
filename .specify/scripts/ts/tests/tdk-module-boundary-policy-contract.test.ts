@@ -50,7 +50,7 @@ const FORBIDDEN_POLICY_PROMISES = [
   'moves source folders',
   'scaffolds source',
   'creates source modules',
-  'updates plan-skill-routing.md',
+  'updates delegate-routing.md',
   'writes ADR files',
   'enforcement is active',
 ];

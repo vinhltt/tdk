@@ -78,7 +78,7 @@ Runtime-backed fields:
 - `subWorkspaces[].modules`
 
 Test skill routing is not part of workspace layout JSON. It is configured in
-`plan-skill-routing.md` and injected into implementation phases as
+`delegate-routing.md` and injected into implementation phases as
 `## Delegate Skills`.
 
 Report-only fields may appear in proposal artifacts and are ignored by runtime

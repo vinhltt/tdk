@@ -78,6 +78,6 @@ evidence exists.
 - Do not edit config files.
 - Do not move, rename, scaffold, or create source modules.
 - Do not change package dependencies.
-- Do not write `plan-skill-routing.md`.
+- Do not write `delegate-routing.md`.
 - Do not write ADR files by default.
 - Do not claim enforcement has been enabled until a human applies and validates it.

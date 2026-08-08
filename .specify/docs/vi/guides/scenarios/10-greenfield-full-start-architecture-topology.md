@@ -216,7 +216,7 @@ Output:
 
 JSON là authoring proposal, không phải runtime config. Runtime-backed fields
 giới hạn ở `architecture.type`, `subWorkspaces[]`, docs, và `modules[]`. Test
-skill routing dùng `plan-skill-routing.md` và `## Delegate Skills`. Các field như `boundaryType`, `owner`, `contracts`,
+skill routing dùng `delegate-routing.md` và `## Delegate Skills`. Các field như `boundaryType`, `owner`, `contracts`,
 `allowedDependencies`, và `routing` chỉ report-only trừ khi future schema
 expansion promote chúng.
 

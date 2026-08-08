@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import { createPlanSkillRoutingCommand } from './plan-skill';
+import { createDelegateRoutingCommand } from './delegate';
 
 export function createRoutingCommandGroup(): Command {
   const command = new Command('routing')
     .description('Routing file management commands');
-  command.addCommand(createPlanSkillRoutingCommand());
+  command.addCommand(createDelegateRoutingCommand());
   return command;
 }

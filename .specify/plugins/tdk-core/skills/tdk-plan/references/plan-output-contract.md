@@ -146,7 +146,10 @@ Every normal `phases/phase-NN-*.md` must include, in order:
 - `## Context Links`
 - `## Overview`
 - `## Key Insights`
-- `## Delegate Skills` when skill routing injects one.
+- `## Delegate Skills` when delegate routing injects at least one `/skill`.
+- `## Delegate Agents` when delegate routing injects at least one `@agent`;
+  always directly after `## Delegate Skills`. Each section is omitted entirely
+  when its group is empty.
 - `## Requirements`
 - `## Architecture`
 - `## Data Model` when this phase owns schema/entity design.
@@ -279,9 +282,9 @@ Backfill phase files must include this gate after `## Test Matrix`:
 ```
 
 When routing injects delegates, `## Delegate Skills` follows `## Test Quality
-Gate`.
+Gate`, and `## Delegate Agents` follows `## Delegate Skills`.
 
-The TDD order remains `## Tests Before` → `## Refactor / Implementation` → `## Tests After` → `## Test Quality Gate` → optional `## Delegate Skills` → `## Regression Gate`. For UT backfill, `## Delegate Skills` remains after `## Test Quality Gate`. Parallel classification never reorders delegates or these sections.
+The TDD order remains `## Tests Before` → `## Refactor / Implementation` → `## Tests After` → `## Test Quality Gate` → optional `## Delegate Skills` → optional `## Delegate Agents` → `## Regression Gate`. For UT backfill, `## Delegate Skills` then `## Delegate Agents` remain after `## Test Quality Gate`. A delegate section is omitted entirely when its group is empty, so a skill-only routing produces the same phase body it produced before agent routing existed. Parallel classification never reorders delegates or these sections.
 
 Backfill phases must satisfy traceability before write:
 - each public export / route / method in `## Code Summary` has at least one `## Test Matrix` row;

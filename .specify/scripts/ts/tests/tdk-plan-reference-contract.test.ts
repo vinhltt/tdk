@@ -11,7 +11,7 @@ const MODES_REFERENCE = resolve(REFERENCES_DIR, 'modes.md');
 const RED_TEAM_WORKFLOW = resolve(REFERENCES_DIR, 'red-team-workflow.md');
 const GATES_REFERENCE = resolve(REFERENCES_DIR, 'gates.md');
 const RESEARCH_PHASE_REFERENCE = resolve(REFERENCES_DIR, 'research-phase.md');
-const SKILL_ROUTING_REFERENCE = resolve(REFERENCES_DIR, 'skill-routing.md');
+const SKILL_ROUTING_REFERENCE = resolve(REFERENCES_DIR, 'delegate-routing-injection.md');
 const VALIDATE_WORKFLOW = resolve(REFERENCES_DIR, 'validate-workflow.md');
 const VALIDATE_QUESTION_FRAMEWORK = resolve(REFERENCES_DIR, 'validate-question-framework.md');
 const PLUGINS_DIR = resolve(import.meta.dir, '../../../plugins');
@@ -217,23 +217,58 @@ describe('tdk-plan reference contract', () => {
     expect(validateWorkflow).toContain('validation focus');
   });
 
-  it('requires exact-path reads for plan-skill-routing.md instead of search-based absence checks', () => {
+  it('requires exact-path reads for delegate-routing.md instead of search-based absence checks', () => {
     const routing = read(SKILL_ROUTING_REFERENCE);
     const redTeamWorkflow = read(RED_TEAM_WORKFLOW);
     const validateWorkflow = read(VALIDATE_WORKFLOW);
 
     expect(skill).toContain('do not run the interactive missing-file AskUserQuestion/create flow');
     expect(skill).toContain('always perform exact-path inline routing reads');
-    expect(routing).toContain('ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md');
+    expect(routing).toContain('ROUTING_FILE = {docs.path}/custom-workflow/delegate-routing.md');
     expect(routing).toContain('reading the exact resolved path');
     expect(routing).toContain('Do not use Search, Grep, Glob');
-    expect(routing).toContain('can return 0 results even when `{docs.path}/custom-workflow/plan-skill-routing.md` exists');
-    expect(validateWorkflow).toContain('always resolve exact `ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md`');
+    expect(routing).toContain('can return 0 results even when `{docs.path}/custom-workflow/delegate-routing.md` exists');
+    expect(validateWorkflow).toContain('always resolve exact `ROUTING_FILE = {docs.path}/custom-workflow/delegate-routing.md`');
     expect(validateWorkflow).toContain('assess whether plan phases have correct skill assignments');
     expect(validateWorkflow).toContain('Do not use Search/Grep/Glob');
-    expect(redTeamWorkflow).toContain('always resolve exact `ROUTING_FILE = {docs.path}/custom-workflow/plan-skill-routing.md`');
+    expect(redTeamWorkflow).toContain('always resolve exact `ROUTING_FILE = {docs.path}/custom-workflow/delegate-routing.md`');
     expect(redTeamWorkflow).toContain('including missing or stale `## Delegate Skills`');
     expect(redTeamWorkflow).toContain('Do not use Search/Grep/Glob');
+  });
+
+  it('emits both delegate sections in the references that actually generate phase files', () => {
+    const designPhase = read(resolve(REFERENCES_DIR, 'design-phase.md'));
+    const outputContract = read(resolve(REFERENCES_DIR, 'plan-output-contract.md'));
+    const modes = read(MODES_REFERENCE);
+    const existingPlanWorkflow = read(resolve(REFERENCES_DIR, 'handle-existing-plan.md'));
+
+    // The injection algorithm the planner executes from — not only delegate-routing-injection.md's
+    // description of it — must emit `## Delegate Agents`, or every generated phase
+    // drifts against Step 7A on the first `/tdk-implement` run.
+    expect(designPhase).toContain('**Inject `## Delegate Skills` and `## Delegate Agents`**');
+    expect(designPhase).toContain('`@{agent-name}`');
+    expect(designPhase).toContain('Omit a section entirely when its group is empty');
+    expect(designPhase).toContain('^## Delegate Agents$');
+
+    const skillBullet = designPhase.indexOf('Skill bullet:');
+    const agentBullet = designPhase.indexOf('Agent bullet:');
+    expect(skillBullet).toBeGreaterThanOrEqual(0);
+    expect(agentBullet).toBeGreaterThan(skillBullet);
+
+    const contractSkills = outputContract.indexOf('- `## Delegate Skills`');
+    const contractAgents = outputContract.indexOf('- `## Delegate Agents`');
+    const contractRequirements = outputContract.indexOf('- `## Requirements`');
+    expect(contractSkills).toBeGreaterThanOrEqual(0);
+    expect(contractAgents).toBeGreaterThan(contractSkills);
+    expect(contractRequirements).toBeGreaterThan(contractAgents);
+    expect(outputContract).toContain(
+      'optional `## Delegate Skills` → optional `## Delegate Agents` → `## Regression Gate`',
+    );
+
+    expect(modes).toContain('`## Delegate Skills` and `## Delegate Agents` when routing injects delegates');
+    expect(existingPlanWorkflow).toContain(
+      'Insert ## Delegate Skills here, then ## Delegate Agents directly after it',
+    );
   });
 
   it('validates append write disjointness across every auto phase in the plan', () => {

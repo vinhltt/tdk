@@ -191,7 +191,7 @@ describe('TDK workspace layout proposal contracts', () => {
     ]);
     const module = (subWorkspace.modules as Array<Record<string, unknown>> | undefined)?.[0];
     expect(module ? Object.keys(module).sort() : []).toEqual(['name', 'path']);
-    expect(combined).toContain('plan-skill-routing.md');
+    expect(combined).toContain('delegate-routing.md');
     expect(combined).toContain('## Delegate Skills');
   });
 

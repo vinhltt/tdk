@@ -13,7 +13,7 @@ const REFERENCES_DIR = resolve(
 const MODES_REFERENCE = resolve(REFERENCES_DIR, 'modes.md');
 const OUTPUT_CONTRACT = resolve(REFERENCES_DIR, 'plan-output-contract.md');
 const DESIGN_PHASE_REFERENCE = resolve(REFERENCES_DIR, 'design-phase.md');
-const SKILL_ROUTING_REFERENCE = resolve(REFERENCES_DIR, 'skill-routing.md');
+const SKILL_ROUTING_REFERENCE = resolve(REFERENCES_DIR, 'delegate-routing-injection.md');
 const VALIDATE_QUESTION_FRAMEWORK = resolve(REFERENCES_DIR, 'validate-question-framework.md');
 
 function read(path: string): string {
@@ -314,8 +314,9 @@ describe('tdk-plan test mode grammar contract', () => {
       'TDD phases order `## Tests Before`, `## Refactor / Implementation`, `## Tests After`, `## Test Quality Gate`, `## Regression Gate`.',
     );
     expect(modes).toContain(
-      'UT backfill phases order `## Code Summary`, `## Mocks & Fixtures Required`, `## Test Matrix`, `## Test Quality Gate`, then `## Delegate Skills` when routing injects delegates.',
+      'UT backfill phases order `## Code Summary`, `## Mocks & Fixtures Required`, `## Test Matrix`, `## Test Quality Gate`, then `## Delegate Skills` and `## Delegate Agents` when routing injects delegates.',
     );
+    expect(modes).toContain('Each delegate section is omitted when its group is empty.');
   });
 
   it('special-cases test-mode delegate placement after Test Quality Gate', () => {

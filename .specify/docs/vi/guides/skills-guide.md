@@ -83,7 +83,7 @@ Với feature-sized work, mặc định bỏ qua discovery, epic PRD, HLD, và t
 
 Mỗi command đọc output của command trước đó. Với minimal feature work, chain là `spec.md` -> `plan.md` với `## Phases` -> source code. Với epic-sized work, optional `discovery.md` cộng với `discovery/` feed `epic-prd.md` cộng với `epic-prd/`; epic PRD feed parent HLD; parent HLD feed task breakdown; task breakdown seed child specs. Child specs không chạy HLD by default.
 
-`/tdk-epic-hld` luôn dùng built-in design lenses và có thể optional đọc `{docs.path}/custom-workflow/high-level-design-skill-routing.md` cho advisory consumer design skills. File HLD routing này tách biệt với `plan-skill-routing.md`, vốn vẫn là implementation/test routing cho planning và UT workflows.
+`/tdk-epic-hld` luôn dùng built-in design lenses và có thể optional đọc `{docs.path}/custom-workflow/high-level-design-skill-routing.md` cho advisory consumer design skills. File HLD routing này tách biệt với `delegate-routing.md`, vốn vẫn là implementation/test routing cho planning và UT workflows.
 
 ### Quyền Sở Hữu Plugin Và Bộ Base Gắn Kết
 
@@ -420,6 +420,43 @@ Syntax: `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-co
 `/tdk-scaffold-from-recommendation` đọc approved recommendation và tạo starter skill/agent files. Nó ưu tiên `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` và giữ legacy recommendation file fallbacks.
 
 Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]`.
+
+`/tdk-delegate-routing` quản lý route file tường minh mà planning và UT workflows
+dùng. Dùng nó để diff `delegate-routing-proposal.json` do scaffold sinh ra,
+register các entry đã duyệt với `--yes`, và verify proposal. Tạo route file lần
+đầu là bước prompt, không phải command — copy
+`.specify/templates/plan/delegate-routing-template.tpl` sang
+`{docs.path}/custom-workflow/delegate-routing.md`.
+
+Một delegate là `/skill` hoặc `@agent`; cả hai loại có thể nằm chung một dòng route.
+
+Syntax: `/tdk-delegate-routing <diff|register|verify> [--proposal <path>] [--yes]`.
+
+#### Migration Từ Route File Cũ
+
+Route file đã đổi tên. Project đang chạy cần hai bước, một bắt buộc và một tuỳ chọn:
+
+1. **Bắt buộc — đổi tên route file:**
+
+   ```bash
+   mv {docs.path}/custom-workflow/plan-skill-routing.md {docs.path}/custom-workflow/delegate-routing.md
+   ```
+
+   `/tdk-plan`, `/tdk-implement`, và `routing delegate` chỉ đọc tên mới. Chúng
+   không bao giờ đọc route từ file cũ; chỉ phát hiện và cảnh báo `Legacy routing
+   file detected; rename to delegate-routing.md and migrate @agent syntax`.
+
+2. **Tuỳ chọn — thêm token `@agent`.** Route file chỉ có skill vẫn chạy nguyên
+   như cũ sau khi đổi tên. Chỉ thêm `@agent` vào dòng route khi muốn
+   `/tdk-implement` chạy phase đó qua agent:
+
+   ```markdown
+   ## backend
+   - implement: /your-backend-skill, @your-backend-agent
+   ```
+
+Command giờ là `/tdk-delegate-routing` với ba action — `diff`, `register`, và
+`verify`. Các action cũ `init`, `inspect`, `check`, `optimize` đã bị gỡ.
 
 ### UT Commands
 

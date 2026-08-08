@@ -126,7 +126,7 @@ plan-time existence rule.
 
 Keep genuine integration work together. Never split a cross-subworkspace change
 merely to manufacture parallelism, and never add a scheduling domain or parallel
-metadata to `plan-skill-routing.md`.
+metadata to `delegate-routing.md`.
 
 ## Skill Routing Injection
 
@@ -134,11 +134,11 @@ metadata to `plan-skill-routing.md`.
 
 **Skip if:** `SKILL_ROUTING` is empty (file missing or parse failure).
 
-**Pre-injection refresh:** Re-read `{docs.path}/custom-workflow/plan-skill-routing.md` to refresh `SKILL_ROUTING` before injection. Prevents context drift from intermediate steps (memory, research, cross-plan deps loaded between Step 0.1b and 3b).
+**Pre-injection refresh:** Re-read `{docs.path}/custom-workflow/delegate-routing.md` to refresh `SKILL_ROUTING` before injection. Prevents context drift from intermediate steps (memory, research, cross-plan deps loaded between Step 0.1b and 3b).
 
 **Timing:** Inline — inject while creating each phase, NOT as a post-processing pass. Phase N's assignment informs Phase N+1's choices.
 
-**Exclusion:** None. TDD/backfill phases (`test_mode != none`) receive `## Delegate Skills` injection the same as any other phase — see Test Mode Phase Generation below for ordering when both a test skill and an implementation delegate apply.
+**Exclusion:** None. TDD/backfill phases (`test_mode != none`) receive `## Delegate Skills` and `## Delegate Agents` injection the same as any other phase — see Test Mode Phase Generation below for ordering when both a test skill and an implementation delegate apply.
 
 For each phase being created:
 
@@ -156,21 +156,25 @@ For each phase being created:
    - research/exploration → "research"
    - fallback → "implement"
 
-3. **Lookup skills:** `SKILL_ROUTING[subWorkspace][domain]`
+3. **Lookup delegates:** `SKILL_ROUTING[subWorkspace][domain]`
    - Primary: matched sub-workspace + matched domain
    - Fallback: `SKILL_ROUTING["global"][domain]`
    - If no match at all → skip injection for this phase
+   - Split the resolved delegates by token prefix into two groups: `/`-prefixed **skills** (toolset) and `@`-prefixed **agents** (executor). Each group keeps routing order.
 
-4. **Inject `## Delegate Skills`** into phase body:
+4. **Inject `## Delegate Skills` and `## Delegate Agents`** into phase body — `## Delegate Skills` first, `## Delegate Agents` immediately after it:
    - Non-test phases inject `## Delegate Skills` after `## Key Insights` and before `## Requirements`.
    - TDD phases inject `## Delegate Skills` after `## Test Quality Gate` and before `## Regression Gate`.
    - UT backfill phases inject `## Delegate Skills` immediately after `## Test Quality Gate`.
-   - `/{skill-name}` — {brief purpose from routing file context}
-   - One bullet per skill, ordered as listed in routing file.
-   - For `test_mode: tdd` phases, list the routed `test` skill first, then the routed implementation delegate (if any) for the phase's domain.
-   - **Idempotency:** if `## Delegate Skills` already exists → replace section content, don't append
+   - `## Delegate Agents` always goes directly after the `## Delegate Skills` section, at whichever of those positions applies. When the skills group is empty, `## Delegate Agents` takes that position itself.
+   - Skill bullet: `` `/{skill-name}` `` — {brief purpose from routing file context}
+   - Agent bullet: `` `@{agent-name}` `` — {brief purpose from routing file context}
+   - One bullet per delegate, ordered as listed in routing file.
+   - **Omit a section entirely when its group is empty.** A domain routed to skills only produces exactly the phase body it produced before agent routing existed — no empty `## Delegate Agents` heading. A domain routed to agents only emits no `## Delegate Skills` heading.
+   - For `test_mode: tdd` phases, list the routed `test` skill first, then the routed implementation delegate (if any) for the phase's domain; the same routing order applies inside `## Delegate Agents`.
+   - **Idempotency — both sections, same rule:** detect `^## Delegate Skills$` and `^## Delegate Agents$` and replace everything from that heading until the next `^## ` heading (or EOF); never append a duplicate. When a section exists but its group is now empty, delete the heading and its body. When only one of the two exists, keep it in place and insert the missing one so the file ends with `## Delegate Skills` before `## Delegate Agents`.
 
-5. **EC-11 advisory** (once per plan, not per phase): if any `PROJECT_CONTEXT.subWorkspaces[].name` has no corresponding `##` section in skill-routing file → warn: "Sub-workspace '{name}' has no skill routing — using global defaults."
+5. **EC-11 advisory** (once per plan, not per phase): if any `PROJECT_CONTEXT.subWorkspaces[].name` has no corresponding `##` section in delegate routing file → warn: "Sub-workspace '{name}' has no skill routing — using global defaults."
 
 ## Test Mode Phase Generation
 
@@ -238,7 +242,8 @@ Generate backfill-focused canonical phases describing existing code behavior and
 ```
 
 When routing injects delegates, `## Delegate Skills` follows `## Test Quality
-Gate`.
+Gate`, and `## Delegate Agents` follows `## Delegate Skills`. Either section is
+omitted when its group is empty.
 
 **Semantic test ID format** (`Test Matrix` ID column):
 
@@ -321,4 +326,4 @@ Apply this rubric to both `tdd` and `ut_backfill` phases. Do not silently omit a
 
 **Module ownership guard:** `/tdk-plan --ut-backfill` never creates sub-workspaces, modules, or source directories and does not edit `.specify/.specify.json`. If the target sub-workspace has no modules configured, or has modules configured but none defined, ask the user whether to `Proceed at sub-workspace level` or pause; on pause, route durable module ownership through `/tdk-workspace-layout-propose`, `/tdk-workflow-config-apply`, and optionally `/tdk-workspace-dependency-policy` before re-running `/tdk-plan --ut-backfill`.
 
-Both `tdd` and `ut_backfill` phases receive `## Delegate Skills` injection from the routed `test` skill (see Skill Routing Injection above); TDD phases also receive the routed implementation delegate for the phase's domain, listed after the `test` skill.
+Both `tdd` and `ut_backfill` phases receive delegate injection from the routed `test` entry (see Skill Routing Injection above): `## Delegate Skills` for its routed skills, `## Delegate Agents` for its routed agents, each omitted when empty. TDD phases also receive the routed implementation delegate for the phase's domain, listed after the `test` delegate inside its own section.

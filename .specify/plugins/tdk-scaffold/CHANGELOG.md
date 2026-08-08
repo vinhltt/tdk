@@ -4,6 +4,46 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.0.0] - 2026-08-08
+
+### Added
+- tdk-delegate-routing skill with 3-action surface (diff, register --yes, verify) supporting /skill and @agent delegates
+- delegate-routing-proposal-format.md reference for tdk-scaffold-from-recommendation
+
+### Changed
+- tdk-scaffold-from-recommendation routes scaffolded agents into delegate-routing-proposal.json
+- tdk-sub-workspace-automation-recommend references updated to delegate routing terminology
+- interface.json updated for tdk-scaffold
+
+### Removed
+- tdk-plan-skill-routing skill replaced by tdk-delegate-routing
+- plan-skill-routing-proposal-format.md reference from tdk-scaffold-from-recommendation
+
+## [2.2.0] - 2026-08-08
+
+### BREAKING
+- Route file renamed: `{docs.path}/custom-workflow/plan-skill-routing.md` is now `{docs.path}/custom-workflow/delegate-routing.md`. Nothing reads the old name — `/tdk-plan`, `/tdk-implement`, and `routing delegate` only detect it and warn `Legacy routing file detected; rename to delegate-routing.md and migrate @agent syntax`.
+- Skill renamed: `/tdk-plan-skill-routing` is now `/tdk-delegate-routing`. The `init`, `inspect`, `check`, and `optimize` actions were removed; the surface is `diff`, `register --yes`, and `verify`. Creating the route file for the first time is a prompt step, not a command.
+- CLI renamed: `bun src/index.ts routing plan-skill <action>` is now `bun src/index.ts routing delegate <diff|register|verify>`.
+- Proposal artifact renamed and its field changed: `plan-skill-routing-proposal.json` is now `delegate-routing-proposal.json`, and `entries[].skills` is now `entries[].delegates`. Existing proposals must be renamed and the field key updated before `diff` accepts them.
+- Route template renamed: `.specify/templates/plan/plan-skill-routing-template.tpl` is now `.specify/templates/plan/delegate-routing-template.tpl`, and its placeholder is `(default - no delegate)`. The pre-rename `(default - no special skill)` text is still accepted when parsing an existing route file.
+
+### Migration
+1. Required — rename the route file:
+
+   ```bash
+   mv {docs.path}/custom-workflow/plan-skill-routing.md {docs.path}/custom-workflow/delegate-routing.md
+   ```
+
+2. Optional — add `@agent` tokens to route lines. A skill-only route file keeps working unchanged after the rename. Add an agent only when `/tdk-implement` should execute that phase through an agent, for example `- implement: /your-backend-skill, @your-backend-agent`.
+
+### Added
+- `tdk-delegate-routing`: routes accept `@agent` delegates alongside `/skill` delegates, and both kinds may share one route line.
+- `tdk-scaffold-from-recommendation`: scaffolded agents now enter `delegate-routing-proposal.json` as `@<agent-name>` and travel the same `diff` → `register --yes` path as skills.
+
+### Removed
+- `tdk-scaffold-from-recommendation`: dropped the warning `Scaffolded agent <name> has no routing destination yet - the routing file is skill-only until delegate-routing lands.` Agents now have a routing destination.
+
 ## [2.1.1] - 2026-07-06
 
 ### Changed

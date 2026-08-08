@@ -69,6 +69,19 @@ batch. When `safe` holds more than four phases, take the four lowest phase numbe
 next wave. Every phase named in `conflicts` or `rejected` runs serially per `phase-execution.md`; never widen
 a wave to admit one.
 
+Pick each worker's `subagent_type` per phase, from that phase's own delegate sections:
+
+- **Phase has `## Delegate Agents`** — dispatch its worker with the routed agent as `subagent_type`, and treat
+  that phase's `## Delegate Skills` as the agent's toolset rather than as work for the controller. The agent
+  tool requirement and the literal `Status:` protocol in `## Delegate Agents Phase` of `phase-execution.md`
+  apply unchanged; a phase whose routed agent fails the tool requirement is not dispatched at all.
+- **Phase has no `## Delegate Agents`** — dispatch the current generic worker exactly as before, carrying the
+  phase's `## Delegate Skills` as delegates in the worker's boundary.
+
+`subagent_type` is a per-phase dispatch parameter, so phases in one wave may use different workers. It is
+part of the immutable wave snapshot in `routing-preflight.md`: if a phase's routed agent changed between
+admission and dispatch, discard and rebuild the wave.
+
 Mark each dispatched phase `in_progress` with one status call per phase before spawning it, then dispatch the
 wave as one synchronous concurrent batch in a single message, one invocation per phase, and join every
 started worker before continuing. A failed dispatch returns its own error result while siblings still return.

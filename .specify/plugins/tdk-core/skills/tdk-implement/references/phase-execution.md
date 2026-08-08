@@ -43,8 +43,8 @@ between phases and no ownership is asserted; each phase runs, then writes its st
 For each phase:
 
 1. Read the phase file referenced in `row.file` relative to `FEATURE_DIR`.
-2. If the phase file contains `## Delegate Skills`, execute those delegates first.
-3. If the phase appears to be a unit-test phase but has no usable `## Delegate Skills`, STOP with the unit-test guard message below.
+2. If the phase file contains `## Delegate Agents`, run `## Delegate Agents Phase` first — the routed agent executes the phase and the `## Delegate Skills` list is that agent's toolset. Otherwise, if the phase file contains `## Delegate Skills`, execute those delegates first.
+3. If the phase appears to be a unit-test phase and has **neither** a usable `## Delegate Skills` entry **nor** a routed `## Delegate Agents` entry, STOP with the unit-test guard message below. A test-like phase routed to an `@agent` and no skills is valid — step 2 already dispatched that executor, so never STOP on the missing `## Delegate Skills` section alone.
 4. If the phase is TDD/backfill-shaped, validate `## Test Quality Gate` after delegates and before any phase `done` write.
 5. If validation returns `phaseType: spike`, follow `## Spike Phase Execution`.
 6. Otherwise execute as a generic implementation phase.
@@ -135,7 +135,12 @@ unblock or replace dependents only by rewriting and revalidating the phase graph
 
 ## Delegate Skills Phase - Auto-continue
 
-If the phase file contains a `## Delegate Skills` section, execute it before generic implementation.
+`## Delegate Skills` is **context-dependent**. When the phase also has `## Delegate Agents`, those skills
+are the routed agent's toolset and the main session does **not** invoke them itself — `## Delegate Agents
+Phase` owns execution. When no agent is routed, the main session runs the skills exactly as described in
+this section. Read the phase for `## Delegate Agents` before applying anything below.
+
+If the phase file contains a `## Delegate Skills` section and no `## Delegate Agents` section, execute it before generic implementation.
 
 Parsing rules:
 
@@ -167,18 +172,108 @@ Required behavior:
 
 ```text
 Delegate skill not found: /{skill-name}
-Phase NN left in_progress. Add/fix the skill in plan-skill-routing.md or edit this phase's ## Delegate Skills, then rerun /tdk-implement {TASK_ID}.
+Phase NN left in_progress. Add/fix the skill in delegate-routing.md or edit this phase's ## Delegate Skills, then rerun /tdk-implement {TASK_ID}.
 ```
 
 - If a delegate fails, STOP and report the delegate's error. Leave the phase `in_progress` and emit the F3 recovery reminder.
 - If every delegate completes for a non-test-mode phase, validate the phase success criteria if present, then mark the phase done.
 - Delegate completion alone cannot mark a TDD or backfill phase done. Test-mode phases must continue through `## Test Quality Gate` enforcement first.
 
-Unit-test guard: if the phase appears to be a unit-test phase but has no usable `## Delegate Skills`, do not write tests inline. STOP with:
+Unit-test guard: if the phase appears to be a unit-test phase and has **neither** a usable `## Delegate Skills` entry **nor** a routed `## Delegate Agents` entry, do not write tests inline. STOP with:
 
 ```text
-Unit-test phase has no delegate skill. Add a test entry to plan-skill-routing.md, then rerun /tdk-plan <TASK_ID> --ut-backfill or edit ## Delegate Skills manually.
+Unit-test phase has no usable delegate. Add a test entry to delegate-routing.md — either a /skill or an @agent — then rerun /tdk-plan <TASK_ID> --ut-backfill or edit this phase's ## Delegate Skills / ## Delegate Agents manually.
 ```
+
+The guard is delegate-aware, not skill-aware: a routed `@agent` alone satisfies it. A test-like phase whose `## Delegate Agents` names an executor and whose `## Delegate Skills` is absent — the shape `delegate-routing-injection.md` produces for an agent-only `test` route — is valid, runs through `## Delegate Agents Phase`, and must never hit this STOP.
+
+## Delegate Agents Phase
+
+A routed agent is the **executor** of its domain; routed skills are the **toolset** that agent may call.
+This section runs instead of `## Delegate Skills Phase - Auto-continue` whenever the phase file contains a
+`## Delegate Agents` section.
+
+Restating the boundary, because it is the one thing that changes for existing consumers: `## Delegate
+Skills` is context-dependent. With `## Delegate Agents` present, the skills are the agent's toolset and the
+main session does not invoke them itself. With no agent routed, the main session runs the skills exactly as
+it does today. A phase with only `/skill` delegates therefore behaves identically to before this section
+existed.
+
+Parsing rules:
+
+1. Find heading `^## Delegate Agents$`.
+2. Read bullet lines until the next `^## ` heading or EOF.
+3. For each bullet, extract the first backticked at-prefixed token, e.g. `` `@my-backend-agent` ``.
+4. If no backticked token exists, extract the first raw at-prefixed token, e.g. `@my-backend-agent`.
+5. Ignore placeholder bullets containing `{`, `}`, `your-`, or `(default`.
+6. Preserve bullet order and deduplicate exact agent names.
+
+### Agent Tool Requirement
+
+Before dispatching, read the routed agent's definition and check its tool list.
+
+If the phase has a non-empty `## Delegate Skills` section and the routed agent's definition does not include
+the `Skill` tool, STOP — do not dispatch, leave the phase `in_progress`, and emit the F3 recovery reminder
+with:
+
+```text
+Routed agent @{agent-name} cannot call the phase's delegate skills: its definition does not list the `Skill` tool.
+Phase NN left in_progress. Add `Skill` to @{agent-name}'s tool list, or remove @{agent-name} from delegate-routing.md so the main session runs ## Delegate Skills itself, then rerun /tdk-implement {TASK_ID}.
+```
+
+Without the `Skill` tool the phase's `## Delegate Skills` list is decorative — the agent silently cannot use
+its own toolset. Name that exact cause; never fall back to running the skills in the main session instead.
+
+### Execution Context
+
+Dispatch one agent at a time, in listed order, using the agent name as `subagent_type`:
+
+```text
+subagent_type: {agent-name}
+
+Context:
+- FEATURE_DIR: {FEATURE_DIR}
+- phasePath: {phasePath}
+- phaseNumber: {row.number}
+- phaseFile: {row.file}
+- phaseTitle: {row.fileLabel}
+- subWorkspace: {detected from PROJECT_CONTEXT if unambiguous, otherwise empty}
+- Toolset: the skills listed in this phase's `## Delegate Skills`, in listed order
+- Write targets: this phase's `## Related Code Files` Modify/Create/Delete bullets
+- Success criteria: this phase's `## Success Criteria`
+
+End your report with exactly one line:
+Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
+```
+
+### Status Protocol
+
+An agent returns a **report**; it does not throw. The report's final `Status:` line is what decides the
+phase, and it is decided by literal string comparison — never by judging the prose:
+
+| Status value | Main session behavior |
+|---|---|
+| `DONE` | Treat as delegate success; continue the normal completion path |
+| `DONE_WITH_CONCERNS` | STOP; leave the phase `in_progress`; emit the F3 recovery reminder |
+| `BLOCKED` | STOP; leave the phase `in_progress`; emit the F3 recovery reminder |
+| `NEEDS_CONTEXT` | STOP; leave the phase `in_progress`; emit the F3 recovery reminder |
+
+Any value other than the literal `DONE` — including a missing, malformed, or duplicated `Status:` line —
+STOPs, leaves the phase `in_progress`, and emits the F3 recovery reminder with the agent's report attached.
+Do not infer success from a confident-sounding report, and do not downgrade a non-`DONE` status because the
+report reads complete.
+
+Required behavior:
+- Run agents in listed order; do not invent, auto-discover, or replace a missing routed agent.
+- If a listed agent is unavailable, STOP with:
+
+```text
+Delegate agent not found: @{agent-name}
+Phase NN left in_progress. Add/fix the agent in delegate-routing.md or edit this phase's ## Delegate Agents, then rerun /tdk-implement {TASK_ID}.
+```
+
+- After every agent reports `DONE` for a non-test-mode phase, validate the phase success criteria if present, then mark the phase done.
+- Agent completion alone cannot mark a TDD or backfill phase done. Test-mode phases must continue through `## Test Quality Gate` enforcement first.
 
 ## Test Quality Gate Enforcement
 
@@ -231,8 +326,8 @@ Structural evidence checks:
 
 For a TDD-shaped phase:
 
-1. Run the routed `test` delegate from `## Delegate Skills` first, covering the `## Tests Before` step (tests capturing current behavior).
-2. If no usable `test` delegate exists, STOP with the unit-test guard message above — do not write tests inline.
+1. Run the routed `test` delegate first, covering the `## Tests Before` step (tests capturing current behavior) — the routed executor from `## Delegate Agents` when one is present (see `## Delegate Agents Phase`), otherwise the routed skill from `## Delegate Skills`.
+2. If no usable `test` delegate exists in either section, STOP with the unit-test guard message above — do not write tests inline.
 3. After the test delegate completes, continue to the routed implementation delegate (if listed after the `test` skill in `## Delegate Skills`) or generic implementation, covering `## Refactor / Implementation`.
 4. Re-run the `## Tests After` step (re-run `## Tests Before` tests, plus any new tests for new behavior).
 5. Run and validate `## Test Quality Gate`.
@@ -247,7 +342,7 @@ If the implementation step or regression gate fails, leave the phase `in_progres
 
 For a backfill-shaped phase:
 
-1. Run the routed `test` delegate from `## Delegate Skills` first. If no usable `test` delegate exists, STOP with the unit-test guard message above — do not write tests inline.
+1. Run the routed `test` delegate first — the routed executor from `## Delegate Agents` when one is present (see `## Delegate Agents Phase`), otherwise the routed skill from `## Delegate Skills`. If no usable `test` delegate exists in either section, STOP with the unit-test guard message above — do not write tests inline.
 2. The test delegate must implement each non-N/A `## Test Matrix` row or explicitly defer it with `N/A: <reason>` in the row.
 3. Before marking the phase done, verify every non-N/A `## Test Matrix` row has the `Impl` column filled with a test file path, test name, or stable test identifier.
 4. Run and validate `## Test Quality Gate`.

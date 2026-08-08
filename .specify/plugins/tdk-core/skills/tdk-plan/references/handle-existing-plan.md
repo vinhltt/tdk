@@ -155,7 +155,7 @@ parallel_safe: {Parallel Safe}
 
 - [Important finding or constraint.]
 
-<!-- Insert ## Delegate Skills here only when skill routing applies. -->
+<!-- Insert ## Delegate Skills here, then ## Delegate Agents directly after it, only when delegate routing applies. Omit either section when its group is empty. -->
 
 ## Requirements
 

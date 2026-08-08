@@ -12,6 +12,7 @@
     ".specify/release-manifest.json"
   ],
   "doNotShip": [
+    ".specify/plugins/tdk-core/.logs/",
     ".specify/configurations/",
     ".specify/memory/",
     ".specify/CHANGELOG.md",

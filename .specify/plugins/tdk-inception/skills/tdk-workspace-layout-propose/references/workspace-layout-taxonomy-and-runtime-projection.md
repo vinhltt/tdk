@@ -25,7 +25,7 @@ the existing topology parser:
 - `subWorkspaces[].modules[].name`
 - `subWorkspaces[].modules[].path`
 
-Test skill routing is configured separately in `plan-skill-routing.md` and
+Test skill routing is configured separately in `delegate-routing.md` and
 executed from `## Delegate Skills`; it is not projected from workspace layout.
 
 Supported `architecture.type` values are whatever the current parser accepts.

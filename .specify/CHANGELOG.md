@@ -6,6 +6,49 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.112.0] - 2026-08-08
+
+### BREAKING
+- **[Routing]** Skill routing became delegate routing. A route now maps a section/domain pair to one or more delegates, where a delegate is a `/skill` or an `@agent`.
+- **[Routing]** Route file renamed: `{docs.path}/custom-workflow/plan-skill-routing.md` → `{docs.path}/custom-workflow/delegate-routing.md`. Consumers on the old name get a warning from `/tdk-plan`, `/tdk-implement`, and `routing delegate`; routes are never read out of the old file.
+- **[Skills]** `/tdk-plan-skill-routing` → `/tdk-delegate-routing`, with the action surface cut from seven to three: `diff`, `register --yes`, `verify`. `init`, `inspect`, `check`, and `optimize` were removed.
+- **[Scripts]** `routing plan-skill <action>` → `routing delegate <diff|register|verify>`.
+- **[Templates]** `.specify/templates/plan/plan-skill-routing-template.tpl` → `.specify/templates/plan/delegate-routing-template.tpl`; placeholder text is now `(default - no delegate)`.
+- **[Contracts]** Proposal artifact `plan-skill-routing-proposal.json` → `delegate-routing-proposal.json`, and `entries[].skills` → `entries[].delegates`.
+
+### Migration
+1. Required — rename the route file:
+
+   ```bash
+   mv {docs.path}/custom-workflow/plan-skill-routing.md {docs.path}/custom-workflow/delegate-routing.md
+   ```
+
+2. Optional — add `@agent` tokens to route lines. A skill-only route file keeps working unchanged after the rename. Add an agent only when `/tdk-implement` should execute that phase through an agent, for example `- implement: /your-backend-skill, @your-backend-agent`.
+
+### Added
+- **[Skills]** `tdk-delegate-routing` — generates, diffs, registers, and verifies delegate routing files mapping section/domain pairs to `/skill` and `@agent` delegates; replaces `tdk-plan-skill-routing` with a streamlined 3-action surface (`diff`, `register --yes`, `verify`)
+- **[Skills]** `tdk-plan` gains pre-injection context refresh: re-reads `delegate-routing.md` right before phase delegate injection (Step 3b) to prevent context drift from intermediate planning steps
+- **[Scripts]** `routing delegate <diff|register|verify>` command — replaces `routing plan-skill` with dual delegate support
+- **[Scripts]** `delegate-routing-legacy-reference-contract.test.ts` — guards backward-compatibility warnings when the old route file name is detected
+- **[Scripts]** `delegate-routing.test.ts` unit tests for the renamed routing command
+- **[Scripts]** `delegate-routing.test.ts` utility tests for the renamed routing utilities
+
+### Changed
+- **[Skills]** `tdk-plan` and `tdk-implement` read `delegate-routing.md` as the canonical routing file; preflight and phase execution validate both skill and agent delegates; legacy `plan-skill-routing.md` triggers a migration warning
+- **[Skills]** `tdk-scaffold-from-recommendation` routes scaffolded agents into `delegate-routing-proposal.json` as `@<agent-name>` entries
+- **[Skills]** `tdk-sub-workspace-automation-recommend` references updated to delegate routing terminology
+- **[Skills]** `tdk-inception` output contracts and templates updated to reference `delegate-routing.md` as the canonical routing config
+- **[Skills]** `tdk-retro` signal target routing (`T5`) updated to reference `delegate-routing.md`
+- **[Scripts]** Contract tests updated across 8 test files to align with delegate routing rename
+- **[Docs]** skills-guide, workflow-map, and scenario guides updated with delegate routing terminology (en + vi)
+- **[General]** `release-manifest.json` updated with renamed file paths and checksums
+
+### Removed
+- **[Skills]** `tdk-plan-skill-routing` (was in tdk-scaffold) — replaced by `tdk-delegate-routing`
+- **[Skills]** `tdk-plan` reference `skill-routing.md` — superseded by `delegate-routing-injection.md`
+- **[Scripts]** `routing plan-skill` command and `plan-skill-routing.ts` / `plan-skill-routing-proposal.ts` utilities
+- **[Scripts]** `plan-skill-routing.test.ts` command and utility tests
+
 ## [1.111.0] - 2026-08-07
 
 ### Added

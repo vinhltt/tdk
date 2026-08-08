@@ -4,6 +4,35 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [12.0.0] - 2026-08-08
+
+### Added
+- tdk-plan gains pre-injection context refresh for delegate-routing.md
+- delegate-routing-injection.md reference for tdk-plan
+
+### Changed
+- tdk-plan and tdk-implement read delegate-routing.md as canonical routing file
+- tdk-plan design-phase, modes, plan-output-contract, red-team-workflow, validate-workflow, handle-existing-plan references updated
+- tdk-implement routing-preflight, phase-execution, parallel-phase-orchestration references updated
+
+### Removed
+- tdk-plan reference skill-routing.md superseded by delegate-routing-injection.md
+
+## [Unreleased]
+
+### BREAKING
+- `/tdk-plan` and `/tdk-implement` read `{docs.path}/custom-workflow/delegate-routing.md`. The old `plan-skill-routing.md` is never read for routes — it is only detected, and triggers `Legacy routing file detected; rename to delegate-routing.md and migrate @agent syntax`.
+- Phase bodies gained `## Delegate Agents` beside `## Delegate Skills`. `/tdk-plan` injects both when a route holds `@agent` delegates; `/tdk-implement` preflights both. A phase whose route is skill-only produces exactly the body it produced before — no empty `## Delegate Agents` heading.
+
+### Migration
+1. Required — rename the route file:
+
+   ```bash
+   mv {docs.path}/custom-workflow/plan-skill-routing.md {docs.path}/custom-workflow/delegate-routing.md
+   ```
+
+2. Optional — add `@agent` tokens to route lines. A skill-only route file keeps working unchanged after the rename. Add an agent only when `/tdk-implement` should execute that phase through an agent, for example `- implement: /your-backend-skill, @your-backend-agent`.
+
 ## [11.2.1] - 2026-08-07
 
 ### Changed
