@@ -4,7 +4,7 @@ description: "Recommend skills and agents for one selected sub-workspace from ar
 user-invocable: true
 argument-hint: "--sub-workspace <name> [--no-community-search]"
 metadata:
-  version: "3.0.0"
+  version: "3.0.1"
   author: "VinhLTT"
   category: scaffold
 ---
@@ -40,6 +40,7 @@ Read only evidence for the selected sub-workspace unless a project-level artifac
 - `<docsPath>/sub-workspaces/<name>/README.md`
 - `<docsPath>/sub-workspaces/<name>/architecture.md`
 - `<docsPath>/sub-workspaces/<name>/interfaces.md`
+- `<docsPath>/sub-workspaces/<name>/data-flow.md` (optional — present only on docs generated after the five-file docs set)
 - `<docsPath>/sub-workspaces/<name>/engineering.md`
 - `.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md`
 - Existing local installed skill catalog from the current session and `.specify/plugins/**/skills/*/SKILL.md`.
@@ -57,9 +58,9 @@ Do not use `ck:find-skills`. Use direct CLI/site lookup only, and summarize resu
    - Resolve the selected sub-workspace from `.specify/.specify.json`.
 
 2. Read scoped docs.
-   - Read `README.md`, `architecture.md`, `interfaces.md`, and `engineering.md` from the selected sub-workspace docs folder.
+   - Read `README.md`, `architecture.md`, `interfaces.md`, and `engineering.md` from the selected sub-workspace docs folder. Also read `data-flow.md` when present — it is optional and its absence never blocks the run.
    - Read `workspace-dependency-policy.md` when present.
-   - If the docs are missing, stop with: `Run /tdk-sub-workspace-docs --sub-workspace <name> first.`
+   - If any of the four required docs (`README.md`, `architecture.md`, `interfaces.md`, `engineering.md`) are missing, stop with: `Run /tdk-sub-workspace-docs --sub-workspace <name> first.`
 
 3. Research official docs and primary sources.
    - Derive search terms from the detected language, framework, runtime, build tool, test stack, auth/data/integration libraries, and deployment surface.

@@ -166,7 +166,7 @@ Excluded:
 | `/tdk-config-index` | Generate/update document manager index. | `--sub-workspace`, `--full` | Docs cần dễ discover hơn cho LLM tools. |
 | `/tdk-sub-workspace-init` | Initialize sub-workspace config entry. | `[name]` | Monorepo/service boundary cần docs/rules context riêng. |
 | `/tdk-sub-workspace-list` | List configured sub-workspaces. | no flags | Bạn cần inventory sub-workspace config. |
-| `/tdk-sub-workspace-docs` | Generate arc42-lite docs cho một hoặc tất cả sub-workspaces. | `--sub-workspace NAME`, `--all`, `--force` | Sub-workspace docs cần README, architecture, interfaces, và engineering pages. |
+| `/tdk-sub-workspace-docs` | Generate arc42-lite docs cho một hoặc tất cả sub-workspaces. | `--sub-workspace NAME`, `--all`, `--force` | Sub-workspace docs cần README, architecture, interfaces, data-flow, và engineering pages. |
 | `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents cho một sub-workspace. | `--sub-workspace <name>`, `--no-community-search` | Existing sub-workspace docs nên drive automation recommendations. |
 | `/tdk-scaffold-from-recommendation` | Scaffold approved skill/agent recommendation stubs. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only` | Reviewed automation recommendation được approve để scaffold. |
 
@@ -366,7 +366,7 @@ Dùng file này để tra cứu command. Nếu cần workflow từng bước đ�
 | workspace-dependency:policy | `/tdk-workspace-dependency-policy [layout\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | `workspace-layout-proposal.json`, `workspace-layout-proposal.md`, legacy topology artifacts, `.specify/.specify.json`, repo stack evidence | `workspace-dependency-policy.md`, optional `enforcement-snippets.md` | Optional sau layout review/apply |
 | module-boundary:policy | `/tdk-module-boundary-policy [topology\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | Compatibility route cho dependency policy | legacy `module-boundary-policy.md`, optional `enforcement-snippets.md` | Compatibility only |
 | golden-path:scaffold | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional sau layout/policy review |
-| sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `engineering.md` theo sub-workspace | Sau config apply |
+| sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, `engineering.md` theo sub-workspace | Sau config apply |
 | sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | `--sub-workspace`, `--no-community-search` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` hoặc skills.sh lookup | `automation-recommendation.md` | Sau sub-workspace docs |
 | scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | `--dry-run`, `--skills-only`, `--agents-only` | approved `automation-recommendation.md` hoặc legacy recommendation file | Scaffolded skill/agent starter files | Sau recommendation approval |
 
@@ -409,7 +409,7 @@ Compatibility syntax: `/tdk-module-boundary-policy [topology|file] [--audit|--su
 
 Syntax: `/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <name>]`.
 
-`/tdk-sub-workspace-docs` generate arc42-lite docs set gồm bốn file cho một configured sub-workspace hoặc tất cả configured sub-workspaces: `README.md`, `architecture.md`, `interfaces.md`, và `engineering.md` dưới `<docsPath>/sub-workspaces/<name>/`. Nó update managed AUTO-GEN sections và không delete old generated docs.
+`/tdk-sub-workspace-docs` generate arc42-lite docs set gồm năm file cho một configured sub-workspace hoặc tất cả configured sub-workspaces: `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, và `engineering.md` dưới `<docsPath>/sub-workspaces/<name>/`. Nó update managed AUTO-GEN sections và không delete old generated docs.
 
 Syntax: `/tdk-sub-workspace-docs [--sub-workspace NAME|--all] [--force]`.
 

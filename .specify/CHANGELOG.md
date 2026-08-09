@@ -6,6 +6,26 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.113.0] - 2026-08-09
+
+### Added
+- **[Templates]** `sub-workspace-docs/data-flow.md.tpl` — fifth sub-workspace doc covering data movement between modules, with AUTO-GEN sections for data-flow edges and state/persistence
+- **[tdk-inception]** Eval suite (`tdk-sub-workspace-docs/evals/evals.json`) for the sub-workspace docs skill
+
+### Changed
+- **[Scripts]** `EXPECTED_DOC_FILES` now lists five sub-workspace docs, adding `data-flow.md` between `interfaces.md` and `engineering.md`
+- **[tdk-inception]** Sub-workspace docs generation covers the new data-flow doc
+  - `tdk-sub-workspace-docs` skill generates and validates `data-flow.md`
+  - `tdk-docs-writer` agent renders data-flow edge tables and their mermaid projection
+- **[tdk-scaffold]** `tdk-sub-workspace-automation-recommend` reads the data-flow doc when recommending automations
+- **[Guides]** Skills guide, workflow map, and greenfield topology scenario document the five-doc sub-workspace set (en + vi)
+- **[Tests]** Plan artifact contract now asserts docs.path resolution only for references that still resolve it, while keeping the "never point at root `.specify.json`" rule on every plan reference
+- **[Tests]** Inception ownership suites assert plugin/component ownership without pinning version literals, which went stale on every release bump
+
+### Removed
+- **[Templates]** `templates/docs/source-code-structure-template.md.tpl` and `templates/docs/technical-context-template.md.tpl` — orphan scaffolds with no producer; nothing generated them and no workspace consumed their output
+- **[tdk-core]** `tdk-plan` SOT pre-load blocks for those two docs in `design-phase.md` and `research-phase.md`; both already declared the missing-file path as current behavior, so planning is unchanged
+
 ## [1.112.1] - 2026-08-09
 
 ### Changed

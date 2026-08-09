@@ -1,0 +1,50 @@
+{
+  "skill_name": "tdk-sub-workspace-docs",
+  "description": "Evaluates whether tdk-sub-workspace-docs generates the five-file arc42-lite docs set (README, architecture, interfaces, data-flow, engineering) in init mode, creates only the missing data-flow.md in update mode while preserving bytes outside AUTO-GEN markers, and keeps the data-flow mermaid diagram a faithful subset of the edge table. No automated runner exists; score by hand or with an LLM judge.",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "--sub-workspace api on a configured sub-workspace whose docs folder <docsPath>/sub-workspaces/api/ does not exist yet.",
+      "expected_output": "Resolver reports mode init. Writer creates all 5 files: README.md, architecture.md, interfaces.md, data-flow.md, engineering.md. data-flow.md has one 'Data Flow Edges' AUTO-GEN section containing the edge table followed by one fenced mermaid block, and a separate 'State and Persistence' AUTO-GEN section.",
+      "files": [],
+      "assertions": [
+        "All 5 files exist in the output dir: README.md, architecture.md, interfaces.md, data-flow.md, engineering.md",
+        "Every generated file keeps its AUTO-GEN-START/AUTO-GEN-END marker pairs intact around generated bodies",
+        "data-flow.md section 'Data Flow Edges' contains a markdown table with columns From | To | Payload | Sync/Async | Evidence, followed by exactly one fenced mermaid block inside the same AUTO-GEN section",
+        "The mermaid block uses 'flowchart LR', nodes as id[label], edges as -->|payload| for sync and -.->|payload| for async",
+        "The mermaid block contains no 'subgraph', 'style', or 'class' keyword",
+        "Every edge drawn in the mermaid diagram has a corresponding row in the edge table (the diagram is a subset of the table; the table is the source of truth)",
+        "The edge table has at most 15 rows",
+        "No value in the Payload column contains an unescaped '|' character that breaks the table structure",
+        "data-flow.md section 'State and Persistence' contains a markdown table with columns Store | Owner module | Data held | Read by | Evidence",
+        "Generated bodies contain no TODO, FIXME, or {placeholder} text"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "--sub-workspace api on a sub-workspace whose docs folder already holds exactly the four legacy files README.md, architecture.md, interfaces.md, engineering.md with AUTO-GEN markers.",
+      "expected_output": "Resolver reports mode update with existingFiles listing exactly the 4 present files (not a hard-coded list). Writer creates data-flow.md fresh from its template, splices AUTO-GEN bodies of the 4 existing files, and leaves every byte outside AUTO-GEN markers unchanged in those 4 files.",
+      "files": [],
+      "assertions": [
+        "The resolver envelope existingFiles field lists exactly the 4 files present on disk, proving the writer payload reflects real state rather than a hard-coded array",
+        "data-flow.md is created and did not exist before the run",
+        "The 4 pre-existing files keep every byte outside their AUTO-GEN marker pairs identical to the pre-run state (verifiable with git diff on a baseline commit)",
+        "The writer does not emit BLOCKED or DONE_WITH_CONCERNS caused by attempting to read a data-flow.md that does not exist yet",
+        "data-flow.md satisfies the same structural assertions as eval 1 (table plus mermaid in one section, mermaid subset of table, cap 15 rows)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Inspect the data-flow.md produced by either mode for node vocabulary discipline.",
+      "expected_output": "Node names in both the edge table and the mermaid diagram reuse component names from architecture.md 'Building Blocks'; nodes are modules or packages, never single files; every node id used in an edge is declared.",
+      "files": [],
+      "assertions": [
+        "Every node name appearing in the mermaid diagram matches a component listed in architecture.md 'Building Blocks'",
+        "No node refers to a single file (for example a lone composable, class, or script filename)",
+        "Every node id referenced by an edge is declared in the diagram",
+        "Every mermaid edge has a matching row in the edge table and no mermaid edge exists without one (subset contract; dropped table rows are tolerated, invented edges are not)",
+        "The diagram has at most 15 edges"
+      ]
+    }
+  ]
+}

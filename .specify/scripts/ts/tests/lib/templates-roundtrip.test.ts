@@ -16,6 +16,7 @@ const TEMPLATE_SUITES = [
     files: [
       'README.md.tpl',
       'architecture.md.tpl',
+      'data-flow.md.tpl',
       'engineering.md.tpl',
       'interfaces.md.tpl',
     ],

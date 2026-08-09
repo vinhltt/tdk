@@ -45,20 +45,31 @@ describe('lean plan artifact templates', () => {
     expect(common).toContain('Conditional directory for declared machine-consumable contracts only.');
   });
 
-  const CONFIG_AUTHORITY_CONSUMERS = [
-    ['research phase', 'plugins/tdk-core/skills/tdk-plan/references/research-phase.md'],
+  // References that instruct the agent to resolve `docs.path` themselves.
+  const DOCS_PATH_RESOLVERS = [
     ['design phase', 'plugins/tdk-core/skills/tdk-plan/references/design-phase.md'],
     ['skill routing', 'plugins/tdk-core/skills/tdk-plan/references/delegate-routing-injection.md'],
   ] as const;
 
-  it.each(CONFIG_AUTHORITY_CONSUMERS)(
-    'resolves docs.path from the runtime configuration authority `.specify/.specify.json` instead of root `.specify.json` in %s',
-    (_label, relativePath) => {
-      const content = read(relativePath);
-      const bareRootSpecifyJson = /(^|[^/])\.specify\.json/;
+  // Every plan reference, including ones that no longer resolve `docs.path`.
+  const ALL_PLAN_REFERENCES = [
+    ['research phase', 'plugins/tdk-core/skills/tdk-plan/references/research-phase.md'],
+    ...DOCS_PATH_RESOLVERS,
+  ] as const;
 
-      expect(content).toContain('.specify/.specify.json');
-      expect(bareRootSpecifyJson.test(content)).toBe(false);
+  const bareRootSpecifyJson = /(^|[^/])\.specify\.json/;
+
+  it.each(DOCS_PATH_RESOLVERS)(
+    'resolves docs.path from the runtime configuration authority `.specify/.specify.json` in %s',
+    (_label, relativePath) => {
+      expect(read(relativePath)).toContain('.specify/.specify.json');
+    },
+  );
+
+  it.each(ALL_PLAN_REFERENCES)(
+    'never points at root `.specify.json` in %s',
+    (_label, relativePath) => {
+      expect(bareRootSpecifyJson.test(read(relativePath))).toBe(false);
     },
   );
 });

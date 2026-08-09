@@ -10,17 +10,6 @@
 
 ## Steps
 
-### Project Source Layout (SOT Pre-load)
-
-**MUST DO BEFORE filling `### Source Code` of plan.md:**
-
-1. Resolve `docs.path` from `.specify/.specify.json` (default: `.specify/configurations`).
-2. Read `{docs.path}/source-code-structure.md`. If file exists, treat its layout as SOT.
-3. Replace plan-template Option 1/2/3 boilerplate with actual project layout from SOT.
-4. Note feature-specific additions (new files/modules) explicitly — don't duplicate baseline tree.
-
-**Fallback:** if file missing → use template Option 1/2/3 boilerplate (current behavior).
-
 1. Assign entity/schema design to the first phase that implements it and write
    a concise `## Data Model` section in that phase.
 2. Assign interface design to the implementing phase. Keep prose in

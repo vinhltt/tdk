@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [12.0.2] - 2026-08-09
+
+### Changed
+- TODO: describe
+
+### Removed
+- tdk-plan: SOT pre-load blocks for source-code-structure.md and technical-context.md in design-phase.md and research-phase.md; both already declared the missing-file path as current behavior, so planning output is unchanged
+
 ## [12.0.1] - 2026-08-09
 
 ### Changed

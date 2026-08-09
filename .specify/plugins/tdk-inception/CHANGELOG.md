@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.1.0] - 2026-08-09
+
+### Added
+- tdk-sub-workspace-docs: eval suite (evals/evals.json)
+
+### Changed
+- tdk-sub-workspace-docs: generates and validates the new data-flow.md sub-workspace doc
+- tdk-docs-writer: renders data-flow edge tables and their mermaid projection
+
 ## [1.0.3] - 2026-08-08
 
 ### Changed

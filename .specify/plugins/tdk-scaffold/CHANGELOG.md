@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.0.1] - 2026-08-09
+
+### Changed
+- tdk-sub-workspace-automation-recommend: reads the data-flow doc when recommending automations
+
 ## [3.0.0] - 2026-08-08
 
 ### Added

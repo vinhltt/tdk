@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { parseAutoGenSections } from '../src/lib/auto-gen-markers';
 
 const INCEPTION_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-inception/skills');
 const INCEPTION_AGENTS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-inception/agents');
@@ -9,7 +10,7 @@ const MANIFEST_PATH = resolve(import.meta.dir, '../../../plugins/manifest.json')
 const README_PATH = resolve(import.meta.dir, '../../../../README.md');
 
 const SKILL_NAME = 'tdk-sub-workspace-docs';
-const EXPECTED_DOCS = ['README.md', 'architecture.md', 'interfaces.md', 'engineering.md'];
+const EXPECTED_DOCS = ['README.md', 'architecture.md', 'interfaces.md', 'data-flow.md', 'engineering.md'];
 const OLD_DOCS = ['codebase-summary.md', 'code-standards.md', 'system-architecture.md'];
 
 function read(path: string): string {
@@ -41,7 +42,7 @@ describe('TDK sub-workspace docs contracts', () => {
     expect(skill).not.toContain('transition window');
   });
 
-  it('defines the new four-file docs set in templates and writer contract', () => {
+  it('defines the sub-workspace docs set in templates and writer contract', () => {
     for (const filename of EXPECTED_DOCS) {
       expect(existsSync(join(TEMPLATES_DIR, `${filename}.tpl`))).toBe(true);
       expect(skill).toContain(filename);
@@ -67,6 +68,16 @@ describe('TDK sub-workspace docs contracts', () => {
     expect(read(join(TEMPLATES_DIR, 'interfaces.md.tpl'))).toContain('Allowed Dependency Edges');
     expect(read(join(TEMPLATES_DIR, 'interfaces.md.tpl'))).toContain('Forbidden Dependency Edges');
     expect(read(join(TEMPLATES_DIR, 'engineering.md.tpl'))).toContain('Quality Gates');
+  });
+
+  it('keeps table and mermaid wording in the single data-flow-edges instruction', () => {
+    const dataFlowTemplate = read(join(TEMPLATES_DIR, 'data-flow.md.tpl'));
+    const sections = parseAutoGenSections(dataFlowTemplate);
+    const edges = sections.find((s) => s.id === 'data-flow-edges');
+
+    expect(edges).toBeDefined();
+    expect(edges?.instruction).toContain('From | To');
+    expect(edges?.instruction).toContain('mermaid');
   });
 
   it('registers docs command in manifest and README', () => {

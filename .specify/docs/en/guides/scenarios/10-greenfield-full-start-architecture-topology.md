@@ -282,6 +282,7 @@ paths on disk. For each target, it writes or refreshes:
 - `<docsPath>/sub-workspaces/<name>/README.md`
 - `<docsPath>/sub-workspaces/<name>/architecture.md`
 - `<docsPath>/sub-workspaces/<name>/interfaces.md`
+- `<docsPath>/sub-workspaces/<name>/data-flow.md`
 - `<docsPath>/sub-workspaces/<name>/engineering.md`
 
 The skill runs the resolver, packs code with repomix, runs scout, then delegates

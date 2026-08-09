@@ -60,17 +60,6 @@ Before completing project-knowledge research, verify relevant `.specify/memory/`
 files were read, terminology conflicts were checked, and prior feature plans were
 searched when the feature area overlaps existing work.
 
-### Project Tech Baseline (SOT Pre-load)
-
-**MUST DO BEFORE filling `## Technical Context` of plan.md:**
-
-1. Resolve `docs.path` from `.specify/.specify.json` (default: `.specify/configurations`).
-2. Read `{docs.path}/technical-context.md`. If file exists, treat its values as SOT.
-3. Override plan-template placeholder boilerplate with SOT values (Required Stack section first; copy Optional sections only if present in SOT).
-4. Mark feature-specific deviations explicitly (only deviations, not duplicates).
-
-**Fallback:** if file missing → infer from spec.md + codebase scan (current behavior).
-
 ## Codebase Understanding
 
 **Skip if:** User provides scout reports or codebase docs that answer the
@@ -81,8 +70,6 @@ required repository questions.
   (Claude or Codex harness) — conventions, standards, and workflow rules. Use
   whichever instruction set the current harness loaded; do not assume one fixed
   file path.
-- `{docs.path}/technical-context.md` — resolved technical baseline (see Project
-  Tech Baseline pre-load above).
 - Relevant sub-workspace `README`, architecture, interfaces, and engineering
   docs for the feature area.
 - Code scout evidence for the touched modules (see Scout Delegation below).

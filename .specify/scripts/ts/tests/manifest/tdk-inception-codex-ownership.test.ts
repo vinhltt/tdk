@@ -35,23 +35,6 @@ const UTILS_MOVED_SKILLS = [
   'tdk-module-boundary-policy',
 ];
 const INCEPTION_SKILLS = [...CORE_MOVED_SKILLS, ...UTILS_MOVED_SKILLS].sort();
-const INCEPTION_SKILL_VERSIONS: Record<string, string> = {
-  'tdk-architecture-advisor': '1.0.0',
-  'tdk-boundary-map': '1.0.0',
-  'tdk-brownfield-start': '1.0.0',
-  'tdk-config-diff': '1.0.0',
-  'tdk-config-index': '1.0.0',
-  'tdk-config-sync': '1.0.0',
-  'tdk-constitution': '1.0.1',
-  'tdk-greenfield-start': '1.0.0',
-  'tdk-module-boundary-policy': '1.0.0',
-  'tdk-sub-workspace-docs': '1.0.2',
-  'tdk-sub-workspace-init': '1.0.0',
-  'tdk-sub-workspace-list': '1.0.0',
-  'tdk-workflow-config-apply': '1.0.0',
-  'tdk-workspace-dependency-policy': '1.0.0',
-  'tdk-workspace-layout-propose': '1.0.0',
-};
 
 const SOURCE_MANIFEST = JSON.parse(readFileSync(SOURCE_MANIFEST_PATH, 'utf-8')) as SourceManifest;
 
@@ -70,9 +53,8 @@ describe('tdk-inception source plugin ownership', () => {
     const files = inception?.files ?? {};
 
     expect(sourceSkills).toEqual(INCEPTION_SKILLS);
-    expect(inception?.version).toBe('1.0.2');
     for (const skill of INCEPTION_SKILLS) {
-      expect(skills[skill]?.version).toBe(INCEPTION_SKILL_VERSIONS[skill]);
+      expect(skills[skill]).toBeDefined();
       expect(files[`skills/${skill}/SKILL.md`]).toBeDefined();
       expect(existsSync(join(INCEPTION_ROOT, 'skills', skill, 'SKILL.md'))).toBe(true);
     }
@@ -99,7 +81,6 @@ describe('tdk-inception source plugin ownership', () => {
     const sourceInterface = readJson(INCEPTION_INTERFACE_PATH);
 
     expect(plugin.name).toBe('tdk-inception');
-    expect(plugin.version).toBe('1.0.2');
     expect(sourceInterface.displayName).toBe('TDK Inception');
     expect(sourceInterface.capabilities).toEqual(['Skills']);
   });

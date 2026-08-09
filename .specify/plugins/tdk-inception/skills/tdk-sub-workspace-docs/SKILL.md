@@ -1,10 +1,10 @@
 ---
 name: tdk-sub-workspace-docs
-description: "Init or update arc42-lite documentation for one or all configured sub-workspaces. Writes README, architecture, interfaces, and engineering docs under <docsPath>/sub-workspaces/<name>/."
+description: "Init or update arc42-lite documentation for one or all configured sub-workspaces. Writes README, architecture, interfaces, data-flow, and engineering docs under <docsPath>/sub-workspaces/<name>/."
 user-invocable: true
 argument-hint: "[--sub-workspace NAME | --all] [--force]"
 metadata:
-  version: "1.0.2"
+  version: "1.1.0"
   author: "VinhLTT"
   category: docs
 ---
@@ -22,6 +22,7 @@ Expected files:
 - `README.md`
 - `architecture.md`
 - `interfaces.md`
+- `data-flow.md`
 - `engineering.md`
 
 The skill reads code evidence, scout output, and `workspace-dependency-policy.md` when available. It updates only the managed AUTO-GEN sections and does not delete old generated docs.
@@ -86,9 +87,14 @@ The skill reads code evidence, scout output, and `workspace-dependency-policy.md
        "outputDir": "<target.outputDir>",
        "splicerCli": "bun .specify/scripts/ts/src/lib/auto-gen-markers-cli.ts",
        "userFeedback": "<optional user feedback>",
-       "existingFiles": ["README.md", "architecture.md", "interfaces.md", "engineering.md"]
+       "existingFiles": <target.existingFiles>
      }
      ```
+
+     `existingFiles` is an array taken whole from the resolver envelope for this
+     target — it reflects which managed files actually exist in `outputDir`. Do
+     not replace it with a hard-coded list: the writer uses it to decide which
+     files get `update` splicing versus fresh `init` rendering.
 
 4. After all targets finish, ask whether to keep or delete `.specify/cache/tdk-docs/`. Default to keep.
 
@@ -116,7 +122,7 @@ The skill reads code evidence, scout output, and `workspace-dependency-policy.md
 | `UNKNOWN_SW` | Show the resolver message with available names. |
 | `MISSING_PATH` | Config points to a missing sub-workspace path. Fix config or create the folder. |
 | `MISSING_BIN` | Install repomix with `npm install -g repomix`. |
-| Scout failed | Stop and show the scout report path/error. |
+| Scout failed | Degrade that target: record a warning with scout's stderr, omit `scoutReport` from the writer payload, and continue with the remaining targets. |
 | Writer blocked | Stop and show the writer reason. |
 
 ## Notes

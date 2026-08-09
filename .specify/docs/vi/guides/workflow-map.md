@@ -40,7 +40,7 @@ flowchart TD
     CONFIG_PATCH[config topology apply<br/>Dry-run / Guarded Apply]
     POLICY[workspace-dependency-policy.md<br/>enforcement-snippets.md]
     GOLDEN_PATH[golden-path-scaffold-plan.md<br/>golden-path-recipe.json]
-    SUB_WORKSPACE_DOCS[sub-workspaces/name/<br/>README architecture interfaces engineering]
+    SUB_WORKSPACE_DOCS[sub-workspaces/name/<br/>README architecture interfaces data-flow engineering]
     AUTOMATION_RECOMMEND[automation-recommendation.md]
     DISCOVERY[discovery.md + discovery/<br/>Epic Context]
     EPIC_PRD[epic-prd.md + epic-prd/<br/>PRD + Slice Map]
@@ -351,7 +351,7 @@ Luôn chạy `config:diff` trước `config:sync` để preview changes. Dùng `
 | `.specify/configurations/golden-path/golden-path-scaffold-plan.md` | `/tdk-golden-path-scaffold --dry-run` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | Human review trước recipe approval | Optional skeleton plan |
 | `.specify/configurations/golden-path/golden-path-recipe.json` | `/tdk-golden-path-scaffold --dry-run` | scaffold plan và approved layout/config evidence | Set `status: approved` trước guarded apply | Optional skeleton recipe |
 | `.specify/configurations/golden-path/generated-files-report.md` | `/tdk-golden-path-scaffold --dry-run` hoặc `--yes` | recipe và safety gates | Review created/skipped/existing/refused paths | Scaffold report |
-| `<docsPath>/sub-workspaces/<name>/{README,architecture,interfaces,engineering}.md` | `/tdk-sub-workspace-docs` | configured sub-workspace path, repomix pack, scout output, optional dependency policy | `/tdk-sub-workspace-automation-recommend` | Refresh docs theo sub-workspace |
+| `<docsPath>/sub-workspaces/<name>/{README,architecture,interfaces,data-flow,engineering}.md` | `/tdk-sub-workspace-docs` | configured sub-workspace path, repomix pack, scout output, optional dependency policy | `/tdk-sub-workspace-automation-recommend` | Refresh docs theo sub-workspace |
 | `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | `/tdk-sub-workspace-automation-recommend` | selected sub-workspace docs, dependency policy, official docs, local skill catalog, optional direct skill search | `/tdk-scaffold-from-recommendation` sau approval | Automation review theo sub-workspace |
 | `discovery.md` + `discovery/` | `/tdk-discovery` | Epic brief hoặc file, project context, memory, constitution; existing discovery files cho ID-only `--interview` | Optional context cho `/tdk-epic-prd` | Optional trước epic PRD |
 | `epic-prd.md` + `epic-prd/` | `/tdk-epic-prd` | Existing `discovery.md`, `problem.md`, `personas.md`, và `mvp-scope.md`; existing PRD files cho ID-only `--interview` | Feed `/tdk-epic-hld`, rồi `/tdk-task-breakdown` child spec seeds | Optional sau discovery |

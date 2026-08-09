@@ -278,6 +278,7 @@ real paths trên disk. Với mỗi target, nó ghi hoặc refresh:
 - `<docsPath>/sub-workspaces/<name>/README.md`
 - `<docsPath>/sub-workspaces/<name>/architecture.md`
 - `<docsPath>/sub-workspaces/<name>/interfaces.md`
+- `<docsPath>/sub-workspaces/<name>/data-flow.md`
 - `<docsPath>/sub-workspaces/<name>/engineering.md`
 
 Skill chạy resolver, pack code bằng repomix, chạy scout, rồi delegate writing

@@ -17,8 +17,8 @@ _(rendered by sub-workspace docs writer)_
 <!-- AUTO-GEN-END -->
 
 <!-- AUTO-GEN-START: docs-index
-SOURCES: architecture.md, interfaces.md, engineering.md, workspace-dependency-policy.md, generated docs path
-INSTRUCTION: Markdown table: Doc | Use when | Key questions answered. Include architecture.md, interfaces.md, engineering.md.
+SOURCES: architecture.md, interfaces.md, engineering.md, data-flow.md, workspace-dependency-policy.md, generated docs path
+INSTRUCTION: Markdown table: Doc | Use when | Key questions answered. Include architecture.md, interfaces.md, engineering.md, data-flow.md.
 -->
 _(rendered by sub-workspace docs writer)_
 <!-- AUTO-GEN-END -->

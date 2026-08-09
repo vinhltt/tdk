@@ -165,7 +165,7 @@ Excluded:
 | `/tdk-config-index` | Generate/update document manager index. | `--sub-workspace`, `--full` | Docs should be easier for LLM tools to discover. |
 | `/tdk-sub-workspace-init` | Initialize a sub-workspace config entry. | `[name]` | A monorepo/service boundary needs its own docs/rules context. |
 | `/tdk-sub-workspace-list` | List configured sub-workspaces. | no flags | You need inventory of sub-workspace config. |
-| `/tdk-sub-workspace-docs` | Generate arc42-lite docs for one or all sub-workspaces. | `--sub-workspace NAME`, `--all`, `--force` | Sub-workspace docs need README, architecture, interfaces, and engineering pages. |
+| `/tdk-sub-workspace-docs` | Generate arc42-lite docs for one or all sub-workspaces. | `--sub-workspace NAME`, `--all`, `--force` | Sub-workspace docs need README, architecture, interfaces, data-flow, and engineering pages. |
 | `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents for one sub-workspace. | `--sub-workspace <name>`, `--no-community-search` | Existing sub-workspace docs should drive automation recommendations. |
 | `/tdk-scaffold-from-recommendation` | Scaffold approved skill/agent recommendation stubs. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only` | A reviewed automation recommendation is approved for scaffolding. |
 | `/tdk-delegate-routing` | Manage reviewable delegate-routing diff, register, and verify. | `diff`, `register --yes`, `verify` | Scaffold routing suggestions or custom `/skill` and `@agent` routes need explicit review and registration. |
@@ -368,7 +368,7 @@ For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalo
 | workspace-dependency:policy | `/tdk-workspace-dependency-policy [layout\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | `workspace-layout-proposal.json`, `workspace-layout-proposal.md`, legacy topology artifacts, `.specify/.specify.json`, repo stack evidence | `workspace-dependency-policy.md`, optional `enforcement-snippets.md` | Optional after layout review/apply |
 | module-boundary:policy | `/tdk-module-boundary-policy [topology\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | Compatibility route for dependency policy | legacy `module-boundary-policy.md`, optional `enforcement-snippets.md` | Compatibility only |
 | golden-path:scaffold | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional after layout/policy review |
-| sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `engineering.md` per sub-workspace | After config apply |
+| sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, `engineering.md` per sub-workspace | After config apply |
 | sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | `--sub-workspace`, `--no-community-search` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` or skills.sh lookup | `automation-recommendation.md` | After sub-workspace docs |
 | scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | `--dry-run`, `--skills-only`, `--agents-only` | approved `automation-recommendation.md` or legacy recommendation file | Scaffolded skill/agent starter files | After recommendation approval |
 | delegate:routing | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--yes]` | `--proposal`, `--yes` | `delegate-routing.md`, optional `delegate-routing-proposal.json` | JSON diff, registration, or verification result | After scaffold routing proposal or custom routing opt-in |
@@ -444,9 +444,9 @@ creates only allowlisted skeleton artifacts such as empty directories,
 
 Syntax: `/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <name>]`.
 
-`/tdk-sub-workspace-docs` generates an arc42-lite four-file docs set
+`/tdk-sub-workspace-docs` generates an arc42-lite five-file docs set
 for one configured sub-workspace or all configured sub-workspaces:
-`README.md`, `architecture.md`, `interfaces.md`, and `engineering.md` under
+`README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, and `engineering.md` under
 `<docsPath>/sub-workspaces/<name>/`. It updates managed AUTO-GEN sections and
 does not delete old generated docs.
 

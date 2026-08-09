@@ -39,6 +39,7 @@ export const EXPECTED_DOC_FILES = [
   'README.md',
   'architecture.md',
   'interfaces.md',
+  'data-flow.md',
   'engineering.md',
 ] as const;
 
