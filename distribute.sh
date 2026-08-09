@@ -2139,5 +2139,6 @@ if [[ $ERROR_COUNT -gt 0 ]]; then
 else
     echo -e "${GREEN}Distribution complete! $COPIED_COUNT files synced, $DELETED_COUNT files removed from $TARGET_ROOT${NC}"
     echo ""
-    echo -e "  ${WHITE}Re-run:${NC}  bash distribute.sh \"$TARGET_ROOT\"${BRAND_PREFIX:+ --prefix $BRAND_WORD}"
+    echo -e "  ${WHITE}Re-run:${NC}   bash distribute.sh \"$TARGET_ROOT\"${BRAND_PREFIX:+ --prefix $BRAND_WORD}"
+    echo -e "  ${WHITE}Install:${NC}  bun packages/tdk-setup/src/index.ts install \"$TARGET_ROOT\" --harness claude --all-plugins${BRAND_PREFIX:+ --prefix $BRAND_WORD} --yes"
 fi
