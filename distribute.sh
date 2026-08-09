@@ -2138,4 +2138,6 @@ if [[ $ERROR_COUNT -gt 0 ]]; then
     exit 1
 else
     echo -e "${GREEN}Distribution complete! $COPIED_COUNT files synced, $DELETED_COUNT files removed from $TARGET_ROOT${NC}"
+    echo ""
+    echo -e "  ${WHITE}Re-run:${NC}  bash distribute.sh \"$TARGET_ROOT\"${BRAND_PREFIX:+ --prefix $BRAND_WORD}"
 fi
