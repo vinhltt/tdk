@@ -16,9 +16,6 @@ const TopologySubWorkspaceSchema = z.object({
   contracts: z.unknown().optional(),
   allowedDependencies: z.unknown().optional(),
   routing: z.unknown().optional(),
-  docs: z.object({
-    path: z.string().optional(),
-  }).optional(),
   modules: z.array(TopologyModuleSchema).optional(),
 });
 
@@ -140,10 +137,6 @@ function validateTopologyPathsAndNames(topology: WorkspaceTopology): void {
   for (const subWorkspace of topology.subWorkspaces) {
     validateUniqueName(subWorkspaceNames, 'sub-workspace name', subWorkspace.name);
     validateRelativePath(`subWorkspaces.${subWorkspace.name}.path`, subWorkspace.path);
-
-    if (subWorkspace.docs?.path !== undefined) {
-      validateRelativePath(`subWorkspaces.${subWorkspace.name}.docs.path`, subWorkspace.docs.path);
-    }
 
     const moduleNames = new Set<string>();
     for (const module of subWorkspace.modules ?? []) {

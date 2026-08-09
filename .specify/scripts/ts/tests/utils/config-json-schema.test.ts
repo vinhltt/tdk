@@ -63,14 +63,13 @@ describe('config-json-schema.test.ts', () => {
     const moduleItem = modules.items as JsonObject;
     const moduleProperties = moduleItem.properties as Record<string, JsonObject>;
 
-    expect(Object.keys(properties).sort()).toEqual(['docs', 'hasModules', 'modules', 'name', 'path']);
+    expect(Object.keys(properties).sort()).toEqual(['hasModules', 'modules', 'name', 'path']);
     expect(Object.keys(moduleProperties).sort()).toEqual(['name', 'path']);
     expect(readFileSync(SCHEMA_PATH, 'utf-8')).toBe(getSpecifyConfigJsonSchemaText());
 
     const exampleConfig = JSON.parse(readFileSync(EXAMPLE_CONFIG_PATH, 'utf-8')) as JsonObject;
     const exampleSubWorkspace = (exampleConfig.subWorkspaces as JsonObject[] | undefined)?.[0];
     expect(exampleSubWorkspace ? Object.keys(exampleSubWorkspace).sort() : []).toEqual([
-      'docs',
       'modules',
       'name',
       'path',

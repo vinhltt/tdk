@@ -118,12 +118,14 @@ test('path helpers resolve expected speckit paths', () => {
   assert.equal(getMemoryPath(config, cwd).replace(/\\/g, '/'), '/project/.specify/memory');
 });
 
-test('getSubWorkspaceRulesPath resolves workspace-specific rules directory', () => {
+// Nested path with name !== path: the directory is keyed by name, so a nested
+// sub-workspace still gets a flat docs directory.
+test('getSubWorkspaceRulesPath keys the rules directory by name, not path', () => {
   const cwd = '/project';
   const config = { docs: { path: '.specify/configurations' } };
-  const ws = { name: 'backend', path: 'backend' };
+  const ws = { name: 'web', path: 'apps/web' };
   const rulesPath = getSubWorkspaceRulesPath(config, ws, cwd).replace(/\\/g, '/');
-  assert.equal(rulesPath, '/project/.specify/configurations/sub-workspaces/backend/rules');
+  assert.equal(rulesPath, '/project/.specify/configurations/sub-workspaces/web/rules');
 });
 
 // Test 10: deepMerge preserves nested defaults

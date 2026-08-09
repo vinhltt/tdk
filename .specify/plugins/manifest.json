@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-08-08T09:54:14Z",
+  "generated_at": "2026-08-09T02:54:24Z",
   "plugins": {
     "tdk-core": {
-      "version": "12.0.0",
+      "version": "12.0.1",
       "components": {
         "skills": {
           "tdk-analyze": {
@@ -35,10 +35,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e94fd7a0f43ccf93767b3eb6c87adec554f4846b89f5e62f6caa22f700a68c31",
-        ".claude-plugin/plugin.json": "847aafe4e2b9aeba60806d742a9d6a805126918e0cea83959100e0c7f6b316d0",
-        ".codex-plugin/plugin.json": "847aafe4e2b9aeba60806d742a9d6a805126918e0cea83959100e0c7f6b316d0",
-        ".cursor-plugin/plugin.json": "847aafe4e2b9aeba60806d742a9d6a805126918e0cea83959100e0c7f6b316d0",
-        "CHANGELOG.md": "36aaa8be3ddd81763c701dab929a04590740257120b39affe6571927b4b17733",
+        ".claude-plugin/plugin.json": "9b22f1bd52bdf633ffbfa4a36c569f4294ba44759ccadb2df6e95b289ea4ac6d",
+        ".codex-plugin/plugin.json": "9b22f1bd52bdf633ffbfa4a36c569f4294ba44759ccadb2df6e95b289ea4ac6d",
+        ".cursor-plugin/plugin.json": "9b22f1bd52bdf633ffbfa4a36c569f4294ba44759ccadb2df6e95b289ea4ac6d",
+        "CHANGELOG.md": "5c23e60940f7307a06c5b075bd36facfdbff0f1f21075ff6538cd5ae1a29bf54",
         "__tests__/context-builder.test.cjs": "704c828646af0d26cab0be3b82b37d150114faf8406899d0f6bbc020b10f0d60",
         "__tests__/destructive-command-block.integration.test.cjs": "b075e672b42716ebe4cbcd52f1de22fc1831e9107bf5b5d2a24a3311b922839e",
         "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
@@ -47,7 +47,7 @@
         "__tests__/rule-loader.test.cjs": "bf51158d948ccc2abb20d45b3191dc432cecb4ecea8ebbad5a3562f2fff8d116",
         "__tests__/rule-matcher.test.cjs": "99bb7c60b0cbc4894733ea99a26723a44c7a37f389003c6df818bfc5b6cbb281",
         "__tests__/session-tracker.test.cjs": "0e47cc6a28f9c47c1b4d445855a171953206c5fb029f59881a14a82f30298ea7",
-        "__tests__/speckit-config-reader.test.cjs": "3c993d9eec9bafffd91d8c948d83725bcb19eb4018577ccf1a68f6e84f488666",
+        "__tests__/speckit-config-reader.test.cjs": "86a8f6c9fada8a018779f1b3454670890a9587139c44f08e863f0d0ac30064a7",
         "hooks/destructive-command-block.cjs": "2dc0a9442fb0451b35cb2d3fba5e63848ac06a97f088b915f1877c3663a1db7b",
         "hooks/dev-context-injector.cjs": "95ec8603b65686b85c2fe02e73addce8c753361ad920dbeec8a35bd8b85e3671",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
@@ -58,7 +58,7 @@
         "lib/rule-loader.cjs": "7658c99484fe3c55995f27fb409e5af11c3ee498b693159b602f3b0a8e9547dd",
         "lib/rule-matcher.cjs": "a8dbd4a51c337a2936fbf8fdb7ab021a9d8c7de447725ac2de00ba420d31119b",
         "lib/session-tracker.cjs": "c3c472e24d58df14e7abecd67acaf513e02b8dda59631c7adc4f022a822db471",
-        "lib/speckit-config-reader.cjs": "fbd5e095551ca79659cbc2b3b39bdc19d1fbf8d4d3a8800303de406f9172c520",
+        "lib/speckit-config-reader.cjs": "45b49b55cb59c703fefa342e86a0fa18ba66fd5cc614af330fbdc65be22a9b13",
         "lib/vendored/minimatch.cjs": "2021ee14763ba8ab9c769902703f5952cf005892657b4af8b98a67e1af2a1c01",
         "lib/vendored/yaml.cjs": "6c24d3c958711e289bfad621a8fb95a5ff6cf9d0b043a02cba2eb1b77f5d5e23",
         "skills/tdk-analyze/SKILL.md": "f87c7d07a5d3101905feb29f5a57b84fc965654627a2fc63864292acc38c64db",
@@ -387,7 +387,7 @@
         ".claude-plugin/plugin.json": "c17bd05fecbde12e5b9860c1ad5587866af2141f3b6a370f8f47158f1abfc3f7",
         ".codex-plugin/plugin.json": "c17bd05fecbde12e5b9860c1ad5587866af2141f3b6a370f8f47158f1abfc3f7",
         ".cursor-plugin/plugin.json": "c17bd05fecbde12e5b9860c1ad5587866af2141f3b6a370f8f47158f1abfc3f7",
-        "CHANGELOG.md": "a576108f330e080823f09ed8f0b9be138a1002a1f100dffcc725790bd70f5fb5",
+        "CHANGELOG.md": "75fff44141e371c35550f4b4abab384e0dae7cc6fb18c8bc08ca8ec1a3398f32",
         "skills/tdk-delegate-routing/SKILL.md": "4b7ac76e45b2dcd25ae05dfd6102b1be5abeec3086f6fad8eef9e7089d522a30",
         "skills/tdk-delegate-routing/references/delegate-routing-file-contract.md": "e4d6c661f7130a40b8de9bf207b3931ffc9b776f818f2547d75308002c5e81bd",
         "skills/tdk-delegate-routing/references/delegate-routing-proposal-format.md": "536ca868600ac5cadcecf96bca0e4b2159c87c833ade832f71993953d0be58c2",

@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [12.0.1] - 2026-08-09
+
+### Changed
+- Synced speckit-config-reader.cjs hook runtime with CLI sub-workspace docs-dir derivation (keyed by name, not path)
+- Updated speckit-config-reader test to cover new derivation logic
+
 ## [12.0.0] - 2026-08-08
 
 ### Added

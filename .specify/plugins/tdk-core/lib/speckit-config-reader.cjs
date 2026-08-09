@@ -143,15 +143,21 @@ function getMemoryPath(config, cwd = process.cwd()) {
 
 /**
  * Returns the absolute path to a sub-workspace's rules directory.
+ *
+ * Keyed by sub-workspace name, not path, so a sub-workspace at apps/web keeps a
+ * flat docs directory named web. This mirrors subWorkspaceDocsDir() in
+ * .specify/scripts/ts/src/utils/config.ts, which the hook runtime cannot import;
+ * the two are pinned together by tests/utils/sub-workspace-docs-dir-parity.test.ts.
+ *
  * @param {object} config - Speckit config object.
- * @param {{ path: string }} workspace - Sub-workspace definition.
+ * @param {{ name: string }} workspace - Sub-workspace definition.
  * @param {string} [cwd] - Fallback directory. Defaults to cwd.
- * @returns {string|null} Rules directory path or null if workspace has no path.
+ * @returns {string|null} Rules directory path or null if workspace has no name.
  */
 function getSubWorkspaceRulesPath(config, workspace, cwd = process.cwd()) {
-  if (!workspace?.path) return null;
+  if (!workspace?.name) return null;
   const root = getWorkspaceRoot(config, cwd);
-  return path.join(root, config.docs.path, 'sub-workspaces', workspace.path, 'rules');
+  return path.join(root, config.docs.path, 'sub-workspaces', workspace.name, 'rules');
 }
 
 module.exports = {

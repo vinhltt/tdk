@@ -19,7 +19,7 @@ export interface SubWorkspaceInfo {
   name: string;
   path: string;        // relative to workspace
   root: string;        // absolute path
-  docsPath: string;
+  docsPath: string;    // absolute path to this sub-workspace's docs directory
   modules?: ModuleInfo[]; // V2-4: full Module type
   hasModules: boolean;    // RT#3: smart default from config or modules[]
 }
@@ -101,6 +101,19 @@ export function parseConfigRaw(configPath: string): { raw: Record<string, unknow
 
 export function findSubWorkspace(config: SpecifyConfig, name: string): SubWorkspace | undefined {
   return config.subWorkspaces?.find(sw => sw.name === name);
+}
+
+// Single source of truth for where a sub-workspace's docs live. Keyed by name, not
+// path, so a sub-workspace at apps/web keeps a flat docs directory named web.
+// The hook runtime has no access to this module and keeps its own copy in
+// .specify/plugins/tdk-core/lib/speckit-config-reader.cjs; the two are pinned
+// together by tests/utils/sub-workspace-docs-dir-parity.test.ts.
+export function subWorkspaceDocsDir(
+  workspaceRoot: string,
+  docsPath: string,
+  subWorkspaceName: string,
+): string {
+  return resolve(workspaceRoot, docsPath, 'sub-workspaces', subWorkspaceName);
 }
 
 export function autoDetectSubWorkspace(config: SpecifyConfig, workspaceRoot: string, cwd?: string): string | null {
@@ -243,7 +256,7 @@ export function detectConfig(opts: DetectConfigOptions = {}): ConfigResult {
       return result;
     }
     const swRoot = resolve(workspaceRoot, sw.path);
-    const swDocsPath = sw.docs?.path ?? result.docsPath;
+    const swDocsPath = subWorkspaceDocsDir(workspaceRoot, result.docsPath, sw.name);
     result.targetSubWorkspace = {
       name: sw.name, path: sw.path, root: swRoot, docsPath: swDocsPath,
       modules: (sw.modules ?? []).map<ModuleInfo>(m => ({ name: m.name, path: m.path, root: resolve(swRoot, m.path) })),

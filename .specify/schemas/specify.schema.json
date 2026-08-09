@@ -213,16 +213,6 @@
           "path"
         ],
         "properties": {
-          "docs": {
-            "description": "Sub-workspace documentation settings.",
-            "type": "object",
-            "properties": {
-              "path": {
-                "description": "Documentation path override for this sub-workspace.",
-                "type": "string"
-              }
-            }
-          },
           "hasModules": {
             "description": "Whether this sub-workspace should be treated as modular.",
             "type": "boolean"

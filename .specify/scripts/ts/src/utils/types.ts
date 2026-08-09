@@ -15,9 +15,6 @@ export const SubWorkspaceSchema = z.object({
   path: z.string().min(1).describe('Sub-workspace path relative to the workspace root.'),
   modules: z.array(ModuleSchema).optional().describe('Optional modules inside this sub-workspace.'),
   hasModules: z.boolean().optional().describe('Whether this sub-workspace should be treated as modular.'),
-  docs: z.object({
-    path: z.string().optional().describe('Documentation path override for this sub-workspace.'),
-  }).optional().describe('Sub-workspace documentation settings.'),
 });
 
 export const ArchitectureSchema = z.object({

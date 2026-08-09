@@ -75,7 +75,6 @@ describe('config topology apply dry-run', () => {
           contracts: ['public-api'],
           allowedDependencies: ['shared'],
           routing: { next: 'tdk-plan' },
-          docs: { path: 'docs/app' },
           modules: [{ name: 'api', path: 'src/api' }],
         },
       ],
@@ -91,12 +90,10 @@ describe('config topology apply dry-run', () => {
     expect(result.config.subWorkspaces?.[0]).toEqual({
       name: 'app',
       path: 'apps/app',
-      docs: { path: 'docs/app' },
       modules: [{ name: 'api', path: 'src/api' }],
       hasModules: true,
     });
     expect(Object.keys(result.config.subWorkspaces?.[0] ?? {}).sort()).toEqual([
-      'docs',
       'hasModules',
       'modules',
       'name',
@@ -122,7 +119,6 @@ describe('config topology apply dry-run', () => {
         {
           name: 'api',
           path: 'services/api-v2',
-          docs: { path: 'docs/api-v2' },
           modules: [{ name: 'http', path: 'src/http' }],
         },
       ],
@@ -132,7 +128,7 @@ describe('config topology apply dry-run', () => {
       {
         name: 'brownfield',
         subWorkspaces: [
-          { name: 'api', path: 'services/api', docs: { path: 'docs/api' } },
+          { name: 'api', path: 'services/api' },
           { name: 'admin', path: 'apps/admin' },
         ],
       },
@@ -144,7 +140,7 @@ describe('config topology apply dry-run', () => {
     expect(result.config.subWorkspaces?.find((entry) => entry.name === 'admin')?.path).toBe('apps/admin');
     expect(result.requiresConfirmation).toBe(true);
     expect(result.confirmationFindings).toEqual([
-      { name: 'api', fields: ['path', 'docs', 'modules'] },
+      { name: 'api', fields: ['path', 'modules'] },
     ]);
   });
 

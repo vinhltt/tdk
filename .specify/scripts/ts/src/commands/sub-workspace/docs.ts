@@ -5,7 +5,7 @@
 import { Command } from 'commander';
 import { existsSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { detectConfig, writeAgentJson } from '../../utils/index';
+import { detectConfig, subWorkspaceDocsDir, writeAgentJson } from '../../utils/index';
 import {
   DocsError,
   EXPECTED_DOC_FILES,
@@ -81,8 +81,7 @@ export function resolveTargets(
         `Sub-workspace "${sw.name}" path "${sw.path}" does not exist on disk`,
       );
     }
-    const baseDocs = sw.docs?.path ?? cfg.docsPath;
-    const outputDir = resolve(cfg.workspaceRoot, baseDocs, 'sub-workspaces', sw.name);
+    const outputDir = subWorkspaceDocsDir(cfg.workspaceRoot, cfg.docsPath, sw.name);
     return { name: sw.name, wsPath: sw.path, absRoot, outputDir };
   });
 

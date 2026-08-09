@@ -6,6 +6,22 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.112.1] - 2026-08-09
+
+### Changed
+- **[Scripts]** Sub-workspace docs directory derivation
+  - Replaced per-sub-workspace `docs.path` override with a centralized `subWorkspaceDocsDir()` function keyed by sub-workspace name
+  - `SubWorkspaceInfo.docsPath` is now an absolute path instead of relative
+  - Removed `docs` field from `SubWorkspaceSchema`, topology schema, and JSON schema
+  - Updated `config diff`, `config index`, and `topology patch` commands to use the new derivation
+- **[tdk-core]** Synced `speckit-config-reader.cjs` hook runtime with CLI docs-dir derivation
+
+### Added
+- **[Scripts]** Parity test (`sub-workspace-docs-dir-parity.test.ts`) ensuring CLI and hook runtime docs-dir derivation stay in sync
+
+### Removed
+- **[Configurations]** `docs.path` override field from sub-workspace config schema and example
+
 ## [1.112.0] - 2026-08-08
 
 ### BREAKING

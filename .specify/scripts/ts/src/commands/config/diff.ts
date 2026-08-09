@@ -57,7 +57,7 @@ export function createConfigDiffCommand(): Command {
     }
 
     const workspaceDocs = join(config.workspaceRoot, config.docsPath);
-    const swDocs = join(config.targetSubWorkspace.root, config.targetSubWorkspace.docsPath);
+    const swDocs = config.targetSubWorkspace.docsPath;
 
     if (!existsSync(swDocs)) {
       process.stderr.write(`Error: Sub-workspace docs not found: ${swDocs}\n`);

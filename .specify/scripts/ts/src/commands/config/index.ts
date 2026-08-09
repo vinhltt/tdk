@@ -39,8 +39,7 @@ export function createConfigIndexCommand(): Command {
       }
 
       const outputRoot = config.targetSubWorkspace?.root ?? config.workspaceRoot;
-      const outputDocsPath = config.targetSubWorkspace?.docsPath ?? config.docsPath;
-      const docsDir = join(outputRoot, outputDocsPath);
+      const docsDir = config.targetSubWorkspace?.docsPath ?? join(config.workspaceRoot, config.docsPath);
       const managerFile = join(docsDir, 'document-manager.md');
 
       if (!existsSync(docsDir)) {
