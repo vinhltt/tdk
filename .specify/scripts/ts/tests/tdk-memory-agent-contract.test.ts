@@ -14,7 +14,7 @@ const TDK_SPECIFY_INPUT_ROUTING = resolve(
   'tdk-core/skills/tdk-specify/references/input-routing-and-mode-workflow.md',
 );
 const TDK_CLARIFY = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-clarify/SKILL.md');
-const TDK_ANALYZE = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-analyze/SKILL.md');
+const TDK_CONSISTENCY_CHECK = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-consistency-check/SKILL.md');
 const TDK_PLAN = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-plan/SKILL.md');
 const TDK_PLAN_GATES = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-plan/references/gates.md');
 const LEGACY_ACTIVE_TERMS = ['memory-guardian', 'tdk-memory-preload'];
@@ -281,8 +281,8 @@ describe('tdk-memory-agent contract', () => {
     expect(content).not.toContain('CONSTRAINTS & WARNINGS from Context Block');
   });
 
-  it('tdk-analyze writes Guardian Report findings into analysis output', () => {
-    const content = read(TDK_ANALYZE);
+  it('tdk-consistency-check writes Guardian Report findings into analysis output', () => {
+    const content = read(TDK_CONSISTENCY_CHECK);
     const memoryStep = markdownSection(content, '### Step 0.memory');
     expect(memoryStep).toContain('--mode validate');
     expect(memoryStep).not.toContain('--mode load');

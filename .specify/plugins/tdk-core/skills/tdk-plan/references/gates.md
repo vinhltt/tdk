@@ -37,7 +37,7 @@ Step 1.5 selects the mode. Step 2 honors it.
 2. For each section:
    - Value is a placeholder (`[FEATURE]`, `NEEDS CLARIFICATION`, empty brackets `[]`) → fill / refine.
    - Value already populated with real content → **PRESERVE as-is**.
-3. **Never overwrite** sections filled by previous commands (e.g. `/tdk-analyze`) or human edits.
+3. **Never overwrite** sections filled by previous commands (e.g. `/tdk-consistency-check`) or human edits.
 
 **REGENERATE mode** (Step 1.5 picked Rewrite — `setup-plan.ts --force` already overwrote `plan.md` with the fresh template):
 

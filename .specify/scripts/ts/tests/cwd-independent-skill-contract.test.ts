@@ -60,7 +60,7 @@ const INCEPTION_SCRIPT_SKILLS = [
 ].map((path) => resolve(import.meta.dir, path));
 
 const RETAINED_CORE_SCRIPT_SKILLS = [
-  '../../../plugins/tdk-core/skills/tdk-analyze/SKILL.md',
+  '../../../plugins/tdk-core/skills/tdk-consistency-check/SKILL.md',
   '../../../plugins/tdk-core/skills/tdk-clarify/SKILL.md',
 ].map((path) => resolve(import.meta.dir, path));
 

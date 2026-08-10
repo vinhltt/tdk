@@ -1,21 +1,23 @@
 ---
-name: tdk-analyze
-description: "Perform a non-destructive cross-artifact consistency and quality analysis across spec.md and plan.md. Reads the ## Phases table from plan.md as the single source of truth for phase definitions."
-argument-hint: "[task-id] (optional if context allows inference)"
+name: tdk-consistency-check
+description: "Perform a non-destructive cross-artifact consistency check across spec.md, plan.md, and constitution. Read-only and advisory; does not scout source code in default mode. `--deep` verifies plan claims against source with bounded, targeted checks."
+argument-hint: "[task-id] [--deep]"
 compatibility: "Requires successful completion of /tdk-plan with a valid plan.md. Should be run before /tdk-implement."
 user-invocable: true
 license: MIT
 metadata:
-  version: "5.0.1"
+  version: "13.0.0"
   category: "Analysis & Review"
   requires:
     - tdk-plan (for prerequisite plan.md with ## Phases table)
     - Optional: tdk-memory-agent (for enhanced context during analysis)
-  input_format: "[task-id]"
+  input_format: "[task-id] [--deep]"
   output_format: "Markdown report with findings table, coverage summary, and next actions."
   examples:
-    - input: "/tdk-analyze pref-001"
-      output: "Specification Analysis Report with findings and next steps"
+    - input: "/tdk-consistency-check pref-001"
+      output: "Consistency Check Report (default mode) with findings and next steps"
+    - input: "/tdk-consistency-check pref-001 --deep"
+      output: "Consistency Check Report including bounded source claim verification"
 
 ---
 
@@ -58,11 +60,13 @@ You **MUST** consider the user input before proceeding (if not empty).
 6. If finding count >50, prioritize by severity and aggregate remainder
 
 **Explicit pass ordering:**
-- Run passes A-I in order (each pass may inform the next)
+- Run passes A-J in order (each pass may inform the next); run Pass K last and only in `--deep` mode
 - Duplication detection (A) informs Inconsistency detection (F)
 - Coverage gaps (E) cross-references with Underspecification (C)
 - Phase artifact consistency (G) cross-references with Coverage gaps (E) and Inconsistency (F)
 - Scope Boundary (H) and Impact Surface (I) run after G; skip both if legacy format detected
+- Plan path existence (J) runs after I on the phase files globbed in G; it runs in both modes
+- Source claim verification (K) runs after J and consumes the Impact Surface inventory from I
 
 ## Goal
 
@@ -72,17 +76,30 @@ Identify inconsistencies, duplications, ambiguities, and underspecified items ac
 
 **STRICTLY READ-ONLY**: Do **not** modify any files during analysis. Output a structured analysis report. Offer an optional remediation plan (user must explicitly approve before any follow-up editing commands would be invoked manually).
 
-**Constitution Authority**: The project constitution (`.specify/memory/constitution.md`) is **non-negotiable** within this analysis scope. Constitution conflicts are automatically CRITICAL and require adjustment of the spec or plan—not dilution, reinterpretation, or silent ignoring of the principle. If a principle itself needs to change, that must occur in a separate, explicit constitution update outside `/tdk-analyze`.
+**Constitution Authority**: The project constitution (`.specify/memory/constitution.md`) is **non-negotiable** within this analysis scope. Constitution conflicts are automatically CRITICAL and require adjustment of the spec or plan—not dilution, reinterpretation, or silent ignoring of the principle. If a principle itself needs to change, that must occur in a separate, explicit constitution update outside `/tdk-consistency-check`.
 
 ## Execution Steps
 ### Step 0 — Validate Task ID
-Invoke `tdk-validate-task-id` with `$ARGUMENTS` and host skill name `/tdk-analyze`.
+Invoke `tdk-validate-task-id` with `$ARGUMENTS` and host skill name `/tdk-consistency-check`.
 If STOP → halt execution.
 Store: `TASK_ID`, `TASK_ID_SOURCE`.
 
 ### Step 0.1 — Load Project Context
 Invoke `tdk-load-project-context` with validated `TASK_ID`.
 Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
+
+### Step 0.2 — Parse Flags
+
+Scan `$ARGUMENTS` for tokens starting with `--`. The only accepted flag is `--deep`.
+
+- Any other `--` token → STOP per the ⛔ CRITICAL Error Handling block above. Report:
+  ```text
+  Unknown flag: <flag>. Usage: /tdk-consistency-check {task-id} [--deep]
+  ```
+  Do not guess the intent, do not continue with partial analysis.
+- Store `MODE = deep` when `--deep` is present, otherwise `MODE = default`.
+
+`MODE` gates Pass K only. Every other pass runs identically in both modes.
 
 ### Step 0.memory: Memory Validation
 
@@ -133,7 +150,7 @@ Load only the minimal necessary context from each artifact:
 
 **From spec.md:**
 
-**Legacy format detection**: Check for ALL THREE headings: `## 1. Problem Statement`, `## 2. Scope Boundary`, `## 3. Impact Surface`. If ANY of the three is missing: skip Passes H and I (new passes depend on new sections), emit single advisory finding "Legacy spec format. Re-run /tdk-specify to upgrade.", continue with Passes A-G using best-effort semantic reading.
+**Legacy format detection**: Check for ALL THREE headings: `## 1. Problem Statement`, `## 2. Scope Boundary`, `## 3. Impact Surface`. If ANY of the three is missing: skip Passes H and I (new passes depend on new sections), emit single advisory finding "Legacy spec format. Re-run /tdk-specify to upgrade.", continue with Passes A-G and J using best-effort semantic reading. Pass K, when requested, degrades to its no-Impact-Surface fallback.
 
 - ## 1. Problem Statement
 - ## 2. Scope Boundary (in-scope / out-of-scope items)
@@ -265,20 +282,75 @@ Parse the `## Phases` table from plan.md using the CLI wrapper:
 - Impact Surface row with [TBD] impact type → MEDIUM (unresolved detection)
 - Impact Surface empty but project has subWorkspaces → HIGH (multi-SW project with no impact analysis)
 
+#### J. Plan Path Existence
+
+**Runs in both modes.** Mechanical existence check — stat/glob only. Never read the content of a
+referenced path; that is Pass K's job and only in `--deep` mode.
+
+For each phase file globbed in Pass G, read its `## Related Code Files` section and resolve every
+bullet path against `PROJECT_CONTEXT.workspaceRoot`:
+
+- `Modify` / `Delete` bullet whose path does **not** exist on disk → **HIGH** (plan targets a file that
+  is not there).
+- `Create` bullet whose path **already** exists on disk → **MEDIUM** (plan will overwrite an existing
+  file, or the phase is already partly done).
+- Everything else → OK.
+
+Store `PATH_CHECKS` = `{ok: N, missing: M}` for the report metrics.
+
+A phase file with no `## Related Code Files` section contributes nothing to Pass J — do not flag it
+here; Pass G already covers phase artifact presence.
+
+#### K. Source Claim Verification (`--deep` only)
+
+**Skip entirely when `MODE == default`.** This pass verifies named claims against source. It is
+**not** exploration: no open scouting, no reading a module to "understand" it.
+
+**Structure resolution chain** — resolve targets from declarations already loaded; do not add a new
+discovery step:
+
+1. `PROJECT_CONTEXT` (loaded at Step 0.1): `workspaceRoot`, `subWorkspaces[] {name, path, modules[] {name, path}}`.
+2. An Impact Surface row's `Subworkspace` + `Module` cells (the `[sw/module]` pair) resolve to the
+   bounded directory `<workspaceRoot>/<sw.path>/<module.path>`. Every `ls`/`grep` for that row **must**
+   stay inside this directory.
+3. Paths from the phase files' `## Related Code Files` are the file-level anchor.
+4. Search terms come from the row's Description column plus interface/entity names the plan states
+   (Data Model, Interfaces & Contracts).
+
+**Checks:**
+
+a. For each row in spec `## 3. Impact Surface` whose `Impact Type` is `modify` or `extend` (skip
+   `create` rows — their target is not supposed to exist yet): resolve its path via the chain above.
+   - Path does not exist → **HIGH**. The finding must state both possible causes: the spec claims an
+     impact area that is not there, **or** `.specify.json` has drifted from the source tree.
+   - Path exists → run one directed grep derived from the row's description to confirm real code
+     backs the claim.
+b. For each interface/entity named in plan.md: one targeted symbol grep inside the already-bounded
+   directory. Not found → **MEDIUM**, worded as a note: the plan may be naming something new rather
+   than describing something existing.
+
+**No-Impact-Surface fallback** — monolith projects (`subWorkspaces` empty, Impact Surface
+`N/A — monolith project`) and legacy specs alike: drop chain layer 2, run check (b) only, and anchor
+on the `dirname` of the `## Related Code Files` paths. If there is no anchor either, skip Pass K and
+say so in the report.
+
+**Cap (do not reinterpret):** at most 1 grep and 1 read of ≤50 lines per claim. No broad globs, no
+reading a whole module.
+
 ### 5. Severity Assignment
 
 Use this heuristic to prioritize findings:
 
 - **CRITICAL**: Violates constitution MUST, missing core spec artifact, requirement with zero coverage that blocks baseline functionality, scope boundary contradicted by FR (Pass H), ## 2. Scope Boundary missing entirely (Pass H)
-- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion, plan phase file missing from disk, Impact Surface row with no FR coverage (Pass I), in-scope item with no FR (Pass H)
-- **MEDIUM**: Terminology drift, missing success criteria coverage in plan phases, underspecified edge case, missing out-of-scope declaration (Pass H), undeclared impact area (Pass I), [TBD] impact type (Pass I)
+- **HIGH**: Duplicate or conflicting requirement, ambiguous security/performance attribute, untestable acceptance criterion, plan phase file missing from disk, Impact Surface row with no FR coverage (Pass I), in-scope item with no FR (Pass H), `Modify`/`Delete` path absent from disk (Pass J), Impact Surface path unresolvable in source (Pass K)
+- **MEDIUM**: Terminology drift, missing success criteria coverage in plan phases, underspecified edge case, missing out-of-scope declaration (Pass H), undeclared impact area (Pass I), [TBD] impact type (Pass I), `Create` path already present on disk (Pass J), plan-named symbol not found in the bounded directory (Pass K)
 - **LOW**: Style/wording improvements, minor redundancy not affecting execution order
 
 ### 6. Produce Compact Analysis Report
 
 Output a Markdown report (no file writes) with the following structure:
 
-## Specification Analysis Report
+## Consistency Check Report
 
 | ID | Category | Severity | Location(s) | Summary | Recommendation |
 |----|----------|----------|-------------|---------|----------------|
@@ -306,6 +378,8 @@ Output a Markdown report (no file writes) with the following structure:
 
 **Metrics:**
 
+- Mode: `default` | `deep`
+- Path checks: N ok / M missing (from Pass J)
 - Total Requirements
 - Total Plan Phases
 - Coverage % (requirements with >=1 associated phase)
@@ -325,6 +399,8 @@ At end of report, output a concise Next Actions block:
 - If only LOW/MEDIUM: User may proceed, but provide improvement suggestions
 - Provide explicit command suggestions: e.g., "Run /tdk-specify with refinement", "Run /tdk-plan to adjust architecture", "Manually create missing phase file phase-NN-*.md"
 - If Pass G found missing phase files: suggest running `/tdk-plan` to regenerate missing phase file stubs
+- If `MODE == default` and `## 3. Impact Surface` contains at least one `modify` or `extend` row:
+  suggest re-running as `/tdk-consistency-check {task-id} --deep` to verify those claims against source
 
 ### 8. Offer Remediation
 
@@ -337,7 +413,7 @@ Ask the user: "Would you like me to suggest concrete remediation edits for the t
 - **Minimal high-signal tokens**: Focus on actionable findings, not exhaustive documentation
 - **Progressive disclosure**: Load artifacts incrementally; don't dump all content into analysis
 - **Token-efficient output**: Limit findings table to 50 rows; summarize overflow
-- **Deterministic results**: Rerunning without changes should produce consistent IDs and counts
+- **Deterministic results**: In default mode, rerunning without changes produces consistent IDs and counts. `--deep` adds Pass K, which is best-effort verification against source and may vary with how a claim is worded.
 
 ### Analysis Guidelines
 

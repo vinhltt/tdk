@@ -6,6 +6,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.113.1] - 2026-08-10
+
+### Changed
+- **[tdk-core]** `tdk-analyze` renamed to `tdk-consistency-check`, with two modes
+  - Default mode keeps the artifact-only profile (passes A–I, memory validation) and adds Pass J, a mechanical existence check over every `Modify`/`Delete`/`Create` path declared in phase files
+  - `--deep` adds Pass K, which verifies Impact Surface rows and plan-named symbols against source through a bounded resolution chain, capped at one grep and one ≤50-line read per claim
+  - Unknown flags stop before any artifact is read
+- **[tdk-core]** `tdk-plan` gate example points at the new skill name
+- **[tdk-utils]** `tdk-validate-task-id` and `tdk-load-project-context` list the new caller name
+- **[General]** `primary-workflow-routing.md` routes to `tdk-consistency-check` across the pipeline diagram, routing table, and anti-confusion notes
+- **[Docs]** Skills guide (en + vi) documents the new name, `--deep`, and carries a rename note pointing from the old command
+
 ## [1.113.0] - 2026-08-09
 
 ### Added

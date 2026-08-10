@@ -139,8 +139,10 @@ Excluded:
 | `/tdk-task-breakdown` | Generate child spec seed Markdown từ epic PRD cộng HLD. | `<epic-id>`, `--force` | Một epic cần các child slices có thể spec độc lập. |
 | `/tdk-plan` | Generate implementation plan và conditional supporting artifacts. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` đã sẵn sàng thành implementation phases; chỉ dùng migration cho legacy feature folder. |
 | `/tdk-implement` | Execute runnable rows từ `plan.md ## Phases`. | `<id>`, `--phase NN` | Plan đã tồn tại và một hoặc nhiều implementation phases đã ready. |
-| `/tdk-analyze` | Cross-artifact consistency và quality analysis. | `<id>` | Bạn cần read-only verification trên spec, plan, và phases. |
+| `/tdk-consistency-check` | Cross-artifact consistency check trên spec, plan, và constitution. | `<id>`, `--deep` | Bạn cần read-only verification trên spec, plan, và phases; thêm `--deep` để verify claim của plan so với source. |
 | `/tdk-status` | Hiển thị workflow progress. | `<id>` | Bạn cần read-only status snapshot. |
+
+> **Đã đổi tên:** `/tdk-analyze` trở thành `/tdk-consistency-check` từ tdk-core v13.0.0. Tên cũ không còn resolve — tên mới nói đúng thứ skill kiểm tra (artifact consistency), và `--deep` thêm bước verify có giới hạn các claim của plan so với source.
 
 ### Project And Architecture
 
@@ -288,7 +290,7 @@ Các helper này tồn tại trong source nhưng không được catalog như di
 | 4 | `/tdk-epic-hld <epic-id> [--force]` | Generate parent epic high-level design artifacts từ epic PRD |
 | 5 | `/tdk-task-breakdown <epic-id> [--force]` | Generate child spec seed Markdown từ epic PRD + HLD |
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan với design artifacts |
-| 10 | `/tdk-analyze <id>` | Cross-artifact consistency và quality analysis |
+| 10 | `/tdk-consistency-check <id> [--deep]` | Cross-artifact consistency check; `--deep` verify claim của plan so với source |
 | 11 | `/tdk-status <id>` | Hiển thị workflow progress, read-only, bất cứ lúc nào |
 | 13 | `/tdk-constitution` (update) hoặc `/tdk-constitution --init <brief\|file>` | Update project authority hoặc initialize constitution và Memory v3 artifacts |
 | 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake và routing report |
@@ -348,7 +350,7 @@ Dùng file này để tra cứu command. Nếu cần workflow từng bước đ�
 | task-breakdown | `/tdk-task-breakdown <epic-id>` | `--force` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | `tasks-breakdown.md`, `tasks-breakdown/task-NNN-*.md` child spec seed files | high-level-design |
 | plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` cộng clarified requirements và optional context | `plan.md`, `phases/*.md`; conditional indexed `research/`, `reports/`, machine `contracts/` | clarify |
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
-| analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report, không tạo file | plan |
+| consistency-check | `/tdk-consistency-check <id>` | `--deep` | `spec.md`, `plan.md ## Phases` | Report, không tạo file | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report, không tạo file | specify |
 
 `/tdk-plan` nhận freeform content sau `<id>` trong mọi mode. Default, `--fast`, và `--hard` xem content là planning instruction; `--red-team` xem là review focus; `--validate` xem là validation focus. Mode flags có thể đứng sau `<id>` trước hoặc sau content.

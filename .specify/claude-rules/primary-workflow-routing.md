@@ -56,13 +56,13 @@ PARENT EPIC LANE, optional for broad work
         ↓
 child tdk-specify -> child tdk-clarify -> child tdk-plan
         ↓                                      ↓
-child tdk-analyze                       tdk-plan --ut-backfill when UT coverage needs a routed plan
+child tdk-consistency-check             tdk-plan --ut-backfill when UT coverage needs a routed plan
         ↓
 child tdk-implement
 
 FEATURE-SIZED LANE, default for small/clear work
 
-tdk-specify -> tdk-clarify -> tdk-plan -> [tdk-analyze] -> tdk-implement
+tdk-specify -> tdk-clarify -> tdk-plan -> [tdk-consistency-check] -> tdk-implement
 
 tdk-status                               track progress at any point
 ```
@@ -84,8 +84,9 @@ tdk-status                               track progress at any point
 - `tdk-task-breakdown` turns epic PRD + HLD into portable child spec seed files.
 - Child specs then run specify -> clarify -> plan -> implement. They do not run
   HLD by default.
-- `tdk-analyze` is read-only spec/plan consistency checking. Use it before build
-  for non-trivial plans.
+- `tdk-consistency-check` is read-only spec/plan consistency checking. Use it
+  before build for non-trivial plans; add `--deep` to verify plan claims against
+  source.
 - `tdk-plan --tdd` / `tdk-plan --ut-backfill` fold tests-first or unit-test
   backfill planning into the same plan. They are not the implementation plan
   for product behavior.
@@ -137,9 +138,9 @@ legacy-layout guidance instead of auto-migrating them.
 | Produce parent epic design before breakdown | `tdk-epic-hld` | `tdk-plan` |
 | Split an epic into child spec seeds | `tdk-task-breakdown` | `tdk-plan` |
 | Turn an idea or seed into a feature/child spec | `tdk-specify` | `tdk-plan` |
-| Resolve ambiguity / fill gaps in a spec | `tdk-clarify` | `tdk-analyze` |
+| Resolve ambiguity / fill gaps in a spec | `tdk-clarify` | `tdk-consistency-check` |
 | Design a phased implementation plan | `tdk-plan` | `tdk-task-breakdown`, `tdk-specify` |
-| Check spec <-> plan consistency | `tdk-analyze` | `tdk-clarify` |
+| Check spec <-> plan consistency | `tdk-consistency-check` | `tdk-clarify` |
 | Build / execute plan phases | `tdk-implement` | `tdk-plan` |
 | Plan & route unit-test coverage | `tdk-plan --tdd` / `tdk-plan --ut-backfill` | `tdk-plan` (without test mode) |
 | Track workflow progress/status | `tdk-status` | — |
@@ -161,7 +162,7 @@ Epic HLD ready, need child spec seeds          -> tdk-task-breakdown
 Have an idea/seed but no spec                  -> tdk-specify
 Spec exists but is vague/ambiguous             -> tdk-clarify
 Ready to design the build                      -> tdk-plan
-Plan + spec exist, verify they agree           -> tdk-analyze
+Plan + spec exist, verify they agree           -> tdk-consistency-check
 Need unit-test coverage planned                -> tdk-plan --tdd or tdk-plan --ut-backfill
 Plan approved, time to build                   -> tdk-implement
 "Where are we?" / progress                     -> tdk-status
@@ -188,8 +189,8 @@ Plan approved, time to build                   -> tdk-implement
 - **`tdk-workspace-dependency-policy` vs `tdk-golden-path-scaffold`** —
   dependency policy gives guidance/snippets; golden path scaffolds approved
   structure/recipes.
-- **`tdk-clarify` vs `tdk-analyze`** — clarify asks questions and edits `spec.md`;
-  analyze is read-only cross-artifact consistency checking.
+- **`tdk-clarify` vs `tdk-consistency-check`** — clarify asks questions and edits
+  `spec.md`; consistency-check is read-only cross-artifact checking.
 - **`tdk-implement` vs `tdk-plan`** — plan designs phases; implement executes
   them.
 

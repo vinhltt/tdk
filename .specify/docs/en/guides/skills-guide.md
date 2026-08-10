@@ -138,8 +138,10 @@ Excluded:
 | `/tdk-task-breakdown` | Generate child spec seed Markdown from epic PRD plus HLD. | `<epic-id>`, `--force` | An epic needs independently specifiable child slices. |
 | `/tdk-plan` | Generate implementation plan and conditional supporting artifacts. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` is ready to become implementation phases; use migration only for an existing legacy feature folder. |
 | `/tdk-implement` | Execute runnable rows from `plan.md ## Phases`. | `<id>`, `--phase NN`, `--no-branch` | A plan exists and one or more implementation phases are ready. |
-| `/tdk-analyze` | Cross-artifact consistency and quality analysis. | `<id>` | You need read-only verification across spec, plan, and phases. |
+| `/tdk-consistency-check` | Cross-artifact consistency check across spec, plan, and constitution. | `<id>`, `--deep` | You need read-only verification across spec, plan, and phases; add `--deep` to verify plan claims against source. |
 | `/tdk-status` | Show workflow progress. | `<id>` | You need a read-only status snapshot. |
+
+> **Renamed:** `/tdk-analyze` became `/tdk-consistency-check` in tdk-core v13.0.0. The old name no longer resolves — the new name states what the skill actually checks (artifact consistency), and `--deep` adds bounded verification of plan claims against source.
 
 ### Project And Architecture
 
@@ -289,7 +291,7 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 4 | `/tdk-epic-hld <epic-id> [--force]` | Generate parent epic high-level design artifacts from epic PRD |
 | 5 | `/tdk-task-breakdown <epic-id> [--force]` | Generate child spec seed Markdown from epic PRD + HLD |
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
-| 10 | `/tdk-analyze <id>` | Cross-artifact consistency and quality analysis |
+| 10 | `/tdk-consistency-check <id> [--deep]` | Cross-artifact consistency check; `--deep` verifies plan claims against source |
 | 11 | `/tdk-status <id>` | Show workflow progress (read-only, any time) |
 | 13 | `/tdk-constitution` (update) or `/tdk-constitution --init <brief\|file>` | Update project authority or initialize constitution and Memory v3 artifacts |
 | 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake and routing report |
@@ -350,7 +352,7 @@ For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalo
 | task-breakdown | `/tdk-task-breakdown <epic-id>` | `--force` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | `tasks-breakdown.md`, `tasks-breakdown/task-NNN-*.md` child spec seed files | high-level-design |
 | plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` plus clarified requirements and optional context | `plan.md`, `phases/*.md`; conditional indexed `research/`, `reports/`, machine `contracts/` | clarify |
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
-| analyze | `/tdk-analyze <id>` | — | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
+| consistency-check | `/tdk-consistency-check <id>` | `--deep` | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report (no file created) | specify |
 
 `/tdk-plan` accepts freeform content after `<id>` in every mode. Default, `--fast`, and `--hard` treat content as planning instruction; `--red-team` treats it as review focus; `--validate` treats it as validation focus. Known mode flags can appear after `<id>` before or after the content. `--tdd` and `--ut-backfill` are independent test-mode flags: they select whether generated phases include tests-first or backfill sections with `Test Quality Gate` rows, and compose with the default or `--hard` speed mode (not `--fast`).

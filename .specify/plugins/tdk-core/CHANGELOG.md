@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [13.0.0] - 2026-08-10
+
+### Changed
+- Renamed `tdk-analyze` to `tdk-consistency-check`; the old command no longer resolves
+- Added Pass J, a mechanical existence check over `Modify`/`Delete`/`Create` paths declared in phase files, running in both modes
+- Added `--deep` mode with Pass K, bounded verification of Impact Surface rows and plan-named symbols against source
+- Unknown flags now stop before any artifact is read
+- `tdk-plan` gate example points at the new skill name
+
 ## [12.0.2] - 2026-08-09
 
 ### Changed

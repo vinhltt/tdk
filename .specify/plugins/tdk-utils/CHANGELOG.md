@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.2.1] - 2026-08-10
+
+### Changed
+- `tdk-validate-task-id` and `tdk-load-project-context` list `tdk-consistency-check` as caller instead of `tdk-analyze`
+
 ## [4.2.0] - 2026-08-07
 
 ### Added
