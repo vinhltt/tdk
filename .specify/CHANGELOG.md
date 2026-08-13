@@ -6,6 +6,11 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.113.2] - 2026-08-13
+
+### Fixed
+- **[Scripts]** `checkGitIgnoredWrite` (check-phase-write-disjointness) now runs `git check-ignore` from the path's deepest existing ancestor directory instead of the project root, so paths inside git submodules resolve against the submodule's own ignore rules instead of exiting 128 and failing closed. Added test coverage for submodule paths (tracked files, submodule-local ignores, outer-repo ignores not leaking in, non-existent parent dirs, uninitialized submodules).
+
 ## [1.113.1] - 2026-08-10
 
 ### Changed

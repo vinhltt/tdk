@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-08-10T13:19:11.001Z",
+  "generatedAt": "2026-08-13T14:14:19.613Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -202,7 +202,7 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "ed7c45ff73724019eea3fa5dc410dfb380341297d42beb46d3d26a8434683cab",
+      "sha256": "11e4acfc0bab43bd1532519473ff5495078288bbfe62fb1480dbc80b736d74ff",
       "size": 42573,
       "mode": "0644"
     },
@@ -2007,8 +2007,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/check-phase-write-disjointness.ts": {
-      "sha256": "bfceae88a133ddf1af8dcdc39f61308e479405eb51961a1abd8c2ecdc2822f61",
-      "size": 26867,
+      "sha256": "a26ecafb5ef66fa05f3cbb5ede64977229b8a819a1bc62970a92165b37d01938",
+      "size": 27347,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/check-prerequisites.ts": {

@@ -367,6 +367,63 @@ describe('checkGitIgnoredWrite', () => {
     writeFileSync(join(root, 'file.ts'), 'x');
     expect(checkGitIgnoredWrite(root, 'file.ts')).toBe('error');
   });
+
+  // A path inside a submodule is owned by the submodule's repository, so its
+  // ignore rules — not the outer repository's — decide the answer. Asking the
+  // outer repository makes git exit 128 instead of 0/1.
+  describe('submodule paths', () => {
+    /** Build `root` as a git repo with an initialized submodule at `sub/`, ignoring `skipme/` inside it. */
+    function initRepoWithSubmodule(): void {
+      const upstream = mkdtempSync(join(tmpdir(), 'disjoint-upstream-'));
+      const commit = (cwd: string, message: string): void => {
+        execFileSync('git', ['add', '-A'], { cwd });
+        execFileSync('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', message], { cwd });
+      };
+
+      execFileSync('git', ['init', '-q'], { cwd: upstream });
+      writeFileSync(join(upstream, '.gitignore'), 'skipme/\n');
+      writeFileSync(join(upstream, 'source.ts'), 'x');
+      commit(upstream, 'init');
+
+      execFileSync('git', ['init', '-q'], { cwd: root });
+      writeFileSync(join(root, '.gitignore'), 'outeronly.txt\n');
+      writeFileSync(join(root, 'r.txt'), 'x');
+      commit(root, 'init');
+      // Git refuses file:// submodules unless explicitly allowed.
+      execFileSync('git', ['-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', upstream, 'sub'], { cwd: root });
+      commit(root, 'add submodule');
+    }
+
+    it('allows a tracked file inside a submodule', () => {
+      initRepoWithSubmodule();
+      expect(checkGitIgnoredWrite(root, 'sub/source.ts')).toBe('not-ignored');
+    });
+
+    it("denies a path ignored by the submodule's own .gitignore", () => {
+      initRepoWithSubmodule();
+      mkdirSync(join(root, 'sub/skipme'), { recursive: true });
+      writeFileSync(join(root, 'sub/skipme/out.js'), 'x');
+      expect(checkGitIgnoredWrite(root, 'sub/skipme/out.js')).toBe('ignored');
+    });
+
+    it("does not apply the outer repository's ignore rules inside a submodule", () => {
+      initRepoWithSubmodule();
+      writeFileSync(join(root, 'sub/outeronly.txt'), 'x');
+      expect(checkGitIgnoredWrite(root, 'outeronly.txt')).toBe('ignored');
+      expect(checkGitIgnoredWrite(root, 'sub/outeronly.txt')).toBe('not-ignored');
+    });
+
+    it('allows a Create target whose parent directories do not exist yet', () => {
+      initRepoWithSubmodule();
+      expect(checkGitIgnoredWrite(root, 'sub/newdir/nested/new.ts')).toBe('not-ignored');
+    });
+
+    it('fails closed when the submodule is not initialized', () => {
+      initRepoWithSubmodule();
+      execFileSync('git', ['submodule', 'deinit', '-f', 'sub'], { cwd: root, stdio: 'ignore' });
+      expect(checkGitIgnoredWrite(root, 'sub/source.ts')).toBe('error');
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

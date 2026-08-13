@@ -29,7 +29,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { lstatSync, readFileSync, realpathSync } from 'node:fs';
-import { join, relative as pathRelative } from 'node:path';
+import { dirname, join, relative as pathRelative } from 'node:path';
 import { Command } from 'commander';
 import { formatAgentJson, writeAgentJson } from '../../utils';
 import { readParallelSafety, readPhaseFrontmatter } from './phase-frontmatter-reader';
@@ -139,9 +139,19 @@ export function findNearestExistingAncestor(projectRoot: string, relativePath: s
 
 export type GitIgnoreCheckResult = 'ignored' | 'not-ignored' | 'error';
 
-/** `git check-ignore -q --` via argv spawn (never shell interpolation); any non-0/1 exit fails closed as `'error'`. */
+/**
+ * `git check-ignore -q --` via argv spawn (never shell interpolation); any
+ * non-0/1 exit fails closed as `'error'`.
+ *
+ * Runs from the path's deepest existing directory, not `projectRoot`: Git
+ * resolves the owning repository from cwd, so a path inside a submodule is
+ * matched against that submodule's ignore rules instead of exiting 128
+ * (`Pathspec ... is in submodule`). Nesting needs no extra handling.
+ */
 export function checkGitIgnoredWrite(projectRoot: string, gitRelativePath: string): GitIgnoreCheckResult {
-  const result = spawnSync('git', ['check-ignore', '-q', '--', gitRelativePath], { cwd: projectRoot, stdio: 'pipe' });
+  const absolutePath = join(projectRoot, gitRelativePath);
+  const cwd = findNearestExistingAncestor(projectRoot, pathRelative(projectRoot, dirname(absolutePath)));
+  const result = spawnSync('git', ['check-ignore', '-q', '--', pathRelative(cwd, absolutePath)], { cwd, stdio: 'pipe' });
   if (result.error) return 'error';
   if (result.status === 0) return 'ignored';
   if (result.status === 1) return 'not-ignored';
