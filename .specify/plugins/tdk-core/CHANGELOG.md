@@ -4,6 +4,17 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [13.0.1] - 2026-08-17
+
+### Added
+- memory-validation gating across the spec→plan flow: /tdk-specify Step 1.6 scope gate asks once per task (default from `## 3. Impact Surface`: 1 subworkspace / monolith → skip, >=2 → validate), and /tdk-clarify, /tdk-plan, /tdk-consistency-check honor the decision without re-asking
+- binding-coverage precondition on every memory-validation step — skip when `memory-index.md` reports no `binding: true` coverage, since the guardian cannot produce an admissible conflict without it
+
+### Changed
+- `--fast` now skips Phase 0.guardian while keeping Step 0.memory; mode banner lists `guardian` among skipped steps
+- Phase 0.guardian `MCP_UNAVAILABLE` no longer prompts or stops — it reuses `MCP_STATE` from Step 0.memory, spawns with `--no-mcp` directly, and logs a lower-recall warning
+- memory-load outcome is recorded in the plan.md `## Memory Constraints` section instead of the `memory_context_loaded` frontmatter key; plan.md frontmatter schema stays closed
+
 ## [13.0.0] - 2026-08-10
 
 ### Changed

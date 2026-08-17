@@ -58,7 +58,7 @@ Generate all 9 sections in order:
 Append `## Clarifications` at the end, reserved for `/tdk-clarify`.
 
 Write `SPEC_FILE` using `.specify/templates/spec-template.md.tpl`, preserving section order and headings.
-Emit the YAML frontmatter block at the top with `title`, `status`, `feature_branch`, `milestone_branch`, `created`, `input`, `memory_context_loaded`, and `schema_version: 1`.
+Emit the YAML frontmatter block at the top with `title`, `status`, `feature_branch`, `milestone_branch`, `created`, `input`, `memory_context_loaded`, `memory_validation` (only when the memory-validation gate produced a decision — see the gate in `SKILL.md`; omit the key otherwise), and `schema_version: 1`.
 Keep `# Feature Specification: <title>` directly below closing `---`.
 
 Set `feature_branch` to the starting value `<defaultFolder>/<TICKET_ID>` — the same form the branch warning

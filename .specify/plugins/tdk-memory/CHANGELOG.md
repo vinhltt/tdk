@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.0.3] - 2026-08-17
+
+### Added
+- `Binding coverage: {n} of {N} typed files` summary line plus a per-file `Binding` column in the `memory-index.md` template
+
+### Changed
+- guardian `CONFLICT` now requires a resolvable `Evidence: <memory-path>#<anchor>` citation to a typed `binding: true` file, and the agent must not read application source to raise one — source-only claims become `NOT CHECKED` and defer to `/tdk-consistency-check --deep` Pass K
+- index regeneration writes the `Binding` column and recomputes `Binding coverage:` without inferring a default; fresh init computes both counts from the files it actually wrote
+
 ## [3.0.2] - 2026-07-27
 
 ### Changed

@@ -2,7 +2,7 @@
 name: tdk-memory-init
 description: "This skill should be used when the user asks to 'initialize memory', 'set up project memory', 'create domain structure', 'init speckit memory', 'scaffold memory folders', 'tdk-memory-init', or needs to create .specify/memory/. Sets up root memory control files, creates domain-overview files only for confirmed domains, generates memory-index.md with routing rules, and writes SHA256 memory.yaml manifest. Idempotent: detects existing domains and presents update vs force-reinit options."
 metadata: 
-  version: 3.0.1
+  version: 3.0.3
   category: "Context & Memory"
   requires: []
   input_format: "Natural language command with optional flags"

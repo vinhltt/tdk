@@ -6,6 +6,25 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.114.0] - 2026-08-17
+
+### Added
+- **[tdk-core]** memory-validation gating across the spec→plan flow
+  - `/tdk-specify` Step 1.6 memory-validation scope gate — asks once per task, default from `## 3. Impact Surface` (1 subworkspace / monolith → skip, >=2 → validate); `/tdk-clarify`, `/tdk-plan`, and `/tdk-consistency-check` honor the decision and never re-ask
+  - Binding-coverage precondition on every memory-validation step — skip when `memory-index.md` reports no `binding: true` coverage, because the guardian cannot produce an admissible conflict without it
+- **[Templates]** `memory_validation` conditional frontmatter key in `spec-template.md.tpl`; the key is omitted entirely when no decision was made, and any unrecognized value is treated as absent
+- **[tdk-memory]** `Binding coverage: {n} of {N} typed files` summary line plus a per-file `Binding` column in the `memory-index.md` template
+- **[Scripts]** `memory-validation-gate-contract.test.ts` contract tests covering both gate mechanisms
+
+### Changed
+- **[tdk-core]** `/tdk-plan` guardian gate reshaped
+  - `--fast` now skips Phase 0.guardian; Step 0.memory stays. Mode banner updated to list `guardian` among skipped steps
+  - `MCP_UNAVAILABLE` no longer prompts or stops — Phase 0.guardian reuses `MCP_STATE` from Step 0.memory, spawns with `--no-mcp` directly, and logs a lower-recall warning
+  - memory-load outcome is recorded in the plan.md `## Memory Constraints` section instead of the `memory_context_loaded` frontmatter key; plan.md frontmatter schema stays closed
+- **[tdk-memory]** guardian `CONFLICT` now requires a resolvable `Evidence: <memory-path>#<anchor>` citation to a typed `binding: true` file, and the agent must not read application source to raise one — source-only claims become `NOT CHECKED` and defer to `/tdk-consistency-check --deep` Pass K
+- **[tdk-memory]** index regeneration writes the `Binding` column and recomputes `Binding coverage:` without inferring a default; fresh init computes both counts from the files it actually wrote
+- **[Scripts]** `tdk-memory-agent-contract.test.ts` asserts the evidence-citation requirement
+
 ## [1.113.2] - 2026-08-13
 
 ### Fixed

@@ -93,10 +93,17 @@ Replace `{per-domain-sections}` with per-domain subsections:
 ```markdown
 ### {Domain}
 
-| File | Title | Updated |
-|------|-------|---------|
-| domains/{domain}/domain-overview.md | {Domain} — Overview | {init datetime} |
+| File | Title | Updated | Binding |
+|------|-------|---------|---------|
+| domains/{domain}/domain-overview.md | {Domain} — Overview | {init datetime} | true |
 ```
+
+Replace `{binding-true-count}` and `{typed-file-count}` in the `Binding coverage:`
+line with counts computed from the files actually written during this init. Count
+a file toward `{binding-true-count}` only when its frontmatter says `binding: true`;
+`arc42/` read-models and files with no `binding:` field do not count. Do not
+hard-code the line — a fresh init that writes `domain-overview.md` files already
+has binding coverage, because `domain-overview-template.md` emits `binding: true`.
 
 ---
 

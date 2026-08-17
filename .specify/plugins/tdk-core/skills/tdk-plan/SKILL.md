@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "13.0.0"
+  version: "13.0.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -237,12 +237,14 @@ This is a plan artifact like any other: list it in `## Supporting Artifacts` rat
 
 ### Phase 0.guardian — Business Logic Validation
 Load: `references/gates.md` <!-- semantics in same file as Step 0.memory -->
-Spawn `tdk-memory-agent` agent with `--mode validate`. Read Guardian Report; act per `BLOCK_IMPL` / `REVIEW` / `CLEAR` outcome.
+Skip this gate when the binding-coverage precondition in `references/gates.md` resolves to
+`none` or `unknown`; record the reason in `## Memory Constraints`, not in frontmatter.
+Otherwise spawn `tdk-memory-agent` agent with `--mode validate`. Read Guardian Report; act per `BLOCK_IMPL` / `REVIEW` / `CLEAR` outcome.
 If the report returns `STATUS: MCP_UNAVAILABLE`, preserve the guardian fallback behavior from `references/gates.md`; do not weaken the plan blocking gate.
 
 ### Step 4 — Report Results
 **Inline.** <!-- terminal output, <10 lines -->
-Command ends after Phase 1 design. Report: branch, `implPlan` path, generated artifacts, `## Decisions Made` summary. When `MODE != default`, print the one-line banner from `references/modes.md` (e.g. `Mode: fast — research / scope / deps / red-team / validate / UT skipped.`).
+Command ends after Phase 1 design. Report: branch, `implPlan` path, generated artifacts, `## Decisions Made` summary. When `MODE != default`, print the one-line banner from `references/modes.md` (e.g. `Mode: fast — research / scope / deps / guardian / red-team / validate / UT skipped.`).
 
 ### Step 4.5 — Red Team Review
 Load: `references/red-team-workflow.md`

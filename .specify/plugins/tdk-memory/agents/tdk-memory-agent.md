@@ -9,7 +9,7 @@ description: "Load relevant memory context (mode load) AND validate spec/plan fo
 color: red
 model: opus
 metadata:
-  version: "3.0.2"
+  version: "3.0.3"
 ---
 
 ## Mode
@@ -336,6 +336,13 @@ For each extracted claim:
 - Confirm the evidence file is typed memory with `binding: true` before
   producing `CONFLICTS`. If only `binding: false` summary context exists, use
   `WARNINGS` or `NOT CHECKED`.
+- Do not read, open, or reason about application source code to produce a
+  `CONFLICT`. This agent validates against `.specify/memory/` only. A claim that
+  can only be checked against source code is `NOT CHECKED`; source-claim
+  verification belongs to `/tdk-consistency-check --deep` Pass K.
+- Every `CONFLICT` must cite `Evidence: <memory-path>#<anchor>` resolvable to a
+  typed `binding: true` file. A candidate conflict without such a citation is
+  not a `CONFLICT` — record it under `WARNINGS` or `NOT CHECKED`.
 - Aim ≤ 3 MCP calls total for typical plan; if > 5 calls needed, scope too wide — flag in report.
 
 ### Phase 4: Render Guardian Report
@@ -353,6 +360,7 @@ Date: {ISO datetime}
 ### CONFLICT-001
 Location in spec: {section or description}
 Memory file: {path}
+Evidence: {memory-path}#{heading-anchor-or-block-id}
 Issue: {clear description of what contradicts what}
 Memory says: "{exact quote or paraphrase}"
 Spec says: "{exact quote or paraphrase}"
@@ -380,6 +388,10 @@ CONFLICTS: {N} | WARNINGS: {N} | OK: {N} | NOT CHECKED: {N}
 Action required: {BLOCK_IMPL if CONFLICTS > 0 | REVIEW if WARNINGS > 0 and no CONFLICTS | CLEAR}
 === END GUARDIAN REPORT ===
 ```
+
+A `CONFLICT` block without a resolvable `Evidence:` citation is invalid output.
+Downgrade it to `WARNINGS` or `NOT CHECKED` per Phase 3 before rendering; do not
+count it in `CONFLICTS: {N}`.
 
 ### Phase 5: Post-report action signal
 

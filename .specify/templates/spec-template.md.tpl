@@ -11,6 +11,13 @@ milestone_branch: "[MILESTONE BRANCH]"  # milestone/epic branch this task belong
 created: "[DATE]"
 input: 'User description: "$ARGUMENTS"'
 memory_context_loaded: [true/false]
+# CONDITIONAL KEY — delete this whole block when /tdk-specify Step 1.6 produced no decision
+# (memory-index reports no binding: true coverage). An absent key means "never decided" and makes
+# downstream skills re-check coverage; `disabled` means the user said no. Never ship the literal
+# placeholder — consumers treat any unrecognized value as absent.
+# One decision for the whole task lifecycle: /tdk-clarify, /tdk-plan, and /tdk-consistency-check
+# honor it and must not ask again.
+memory_validation: [enabled/disabled]
 schema_version: 1
 # Optional promote-link fields — omit entirely for a root spec. Set only when this
 # spec was promoted from a parent work-item (see .specify/docs/en/promote-convention.md):

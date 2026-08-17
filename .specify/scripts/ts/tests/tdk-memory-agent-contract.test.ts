@@ -341,6 +341,28 @@ describe('tdk-memory-agent contract', () => {
     expect(crossReference).toContain('`WARNINGS` or `NOT CHECKED`');
   });
 
+  it('requires a resolvable evidence citation for every guardian CONFLICT', () => {
+    const content = read(AGENT);
+    const reportTemplate = between(
+      content,
+      '### Phase 4: Render Guardian Report',
+      '### Phase 5: Post-report action signal',
+    );
+    expect(reportTemplate).toContain('Evidence: {memory-path}#{heading-anchor-or-block-id}');
+    expect(reportTemplate).toContain('without a resolvable `Evidence:` citation is invalid output');
+
+    const conflictBlock = between(content, '### CONFLICT-001', '## WARNINGS (should review)');
+    expect(conflictBlock).toContain('Evidence: {memory-path}#{heading-anchor-or-block-id}');
+  });
+
+  it('fences guardian off application source code as conflict evidence', () => {
+    const content = read(AGENT);
+    const crossReference = markdownSection(content, '### Phase 3: Cross-reference against memory');
+    expect(crossReference).toContain('Do not read, open, or reason about application source code');
+    expect(crossReference).toContain('`NOT CHECKED`; source-claim');
+    expect(crossReference).toContain('/tdk-consistency-check --deep` Pass K');
+  });
+
   it('tdk-plan preserves memory preload and guardian gate behavior', () => {
     const planContent = read(TDK_PLAN);
     const topLevelPreloadStep = markdownSection(planContent, '### Step 0.memory');

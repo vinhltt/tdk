@@ -3,7 +3,7 @@ name: tdk-specify
 description: "Create spec.md from a feature or child-slice description, or replay --interview against existing spec.md. Supports --fast, memory, and an embedded quality gate."
 argument-hint: "<id> [<desc>] [--fast] [--interview]"
 metadata:
-  version: "11.1.3"
+  version: "13.0.1"
 ---
 
 # tdk-specify
@@ -127,7 +127,9 @@ Store: `SPEC_MODE`, `SPEC_INTERVIEW`, `MODE_SOURCE`, `PRELIMINARY_MODE` (only se
 
 Follow `references/input-routing-and-mode-workflow.md` Step 0.memory.
 
-Only validate when `.specify/memory/memory-index.md` exists. Use
+Only validate when `.specify/memory/memory-index.md` exists **and** its
+`Binding coverage:` line reports a non-zero count; resolve that line into
+`BINDING_COVERAGE` here and skip the step when it is `none` or `unknown`. Use
 `tdk-memory-agent --mode validate`, store `MEMORY_VALIDATE_REPORT`, persist
 accepted `MEMORY_RESOLUTIONS`, and set `memory_context_loaded` in Step 2. This
 step MUST NOT block or error.
@@ -145,6 +147,22 @@ modules, `## 3. Impact Surface` is "N/A — monolith project" and UR/FR
 `[sw/module]` tags are skipped. Auto-detected fast mode upgrades to full only
 when impact spans >=2 subworkspaces; explicit `--fast` is not upgraded.
 
+### Step 1.6 — Memory Validation Scope Gate
+
+Follow `references/input-routing-and-mode-workflow.md` Step 1.6.
+
+Asks once whether this task is validated against project memory — only when
+`BINDING_COVERAGE` is non-zero. Default comes from `IMPACT_SURFACE`
+(1 subworkspace or monolith → skip; >=2 → validate). Store `MEMORY_VALIDATION`.
+
+Scope: this gate governs `/tdk-clarify`, `/tdk-plan`, and
+`/tdk-consistency-check`, which honor it and must not ask again. It does **not**
+govern this skill's own Step 0.memory validation — that runs earlier, gated on
+`BINDING_COVERAGE` alone, because Step 1.6 needs `IMPACT_SURFACE` from Step 1.5
+to compute its default and Step 0.memory must finish before spec generation.
+
+Non-interactive uses the default; never blocks.
+
 ### Step 2: Specification Generation (9-Section Format)
 
 Follow `references/spec-generation-and-validation-workflow.md` Step 2.
@@ -152,7 +170,8 @@ Follow `references/spec-generation-and-validation-workflow.md` Step 2.
 Normal creation writes the 9-section spec plus `## Clarifications` using
 `.specify/templates/spec-template.md.tpl`. Replay skips spec generation, reads
 current `spec.md`, then continues to Step 2.5. Emit frontmatter with `title`,
-`status`, `feature_branch`, `milestone_branch`, `created`, `input`, `memory_context_loaded`, and
+`status`, `feature_branch`, `milestone_branch`, `created`, `input`, `memory_context_loaded`,
+`memory_validation` (emit only when Step 1.6 produced a decision; omit the key otherwise), and
 `schema_version: 1`; keep the H1 directly below closing `---`.
 
 Set `feature_branch` to the starting value `<defaultFolder>/<TICKET_ID>`, and seed `milestone_branch` from

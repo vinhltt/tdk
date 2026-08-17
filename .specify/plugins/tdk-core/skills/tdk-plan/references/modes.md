@@ -82,13 +82,20 @@ Natural-language sub-workspace/module mentions and CWD auto-detection remain acc
 | Step 2 Load context | yes | yes | yes |
 | Step 3 Research | 1 researcher | skip | 2 parallel |
 | Step 3 Design | yes | minimal | full |
-| Step 3 Phase 0.guardian | yes | **yes** | yes |
+| Step 3 Phase 0.guardian | yes | **skip** | yes |
 | Step 3 Test-mode phase generation | when `test_mode != none` | unavailable (`--fast` conflicts) | when `test_mode != none` |
 | Step 4 Report | yes | yes | yes |
 | Step 4.5 Red team (Phase 06) | no | skip | yes |
 | Step 4.7 Validate (Phase 07) | prompt | skip | prompt |
 
-`--fast` keeps Step 0.memory **and** Phase 0.guardian per Key Constraint #2 — tdk-memory-agent `--mode validate` is binding-invariant cheap and the regression risk of bypassing it dwarfs the ~500-token cost. See `references/gates.md` Phase 0.guardian for spawn details and MCP_UNAVAILABLE handling. Only research / scope / deps / red-team / validate are skipped in `--fast`; test modes are rejected before dispatch.
+`--fast` keeps Step 0.memory and skips Phase 0.guardian. `--mode load` returns
+content the plan is actually written from, so it stays; guardian spawns a second
+full subagent pass over the drafted plan, making it the most expensive step in
+the flow. Guardian is additionally skipped in every mode when the
+binding-coverage precondition resolves to `none` or `unknown`; see
+`references/gates.md` Phase 0.guardian for that precondition, spawn details, and
+MCP_UNAVAILABLE handling. Only research / scope / deps / guardian / red-team /
+validate are skipped in `--fast`; test modes are rejected before dispatch.
 
 `--red-team` and `--validate` are subcommand-equivalent action flags. They short-circuit straight into Phase 06 / 07 over an existing plan; they do NOT run Steps 0–4 again. `--migrate-artifacts` short-circuits immediately after project context and follows `migrate-artifacts-workflow.md`.
 
@@ -146,6 +153,6 @@ Natural-language sub-workspace/module mentions and CWD auto-detection remain acc
 When mode is non-default, print one line at the start of Step 4 Report:
 
 ```
-Mode: fast — research / scope / deps / red-team / validate skipped; test modes unavailable.
+Mode: fast — research / scope / deps / guardian / red-team / validate skipped; test modes unavailable.
 Mode: hard — full research, scope challenge, cross-plan deps, red-team review.
 ```

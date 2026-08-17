@@ -6,7 +6,7 @@ compatibility: "Requires successful completion of /tdk-plan with a valid plan.md
 user-invocable: true
 license: MIT
 metadata:
-  version: "13.0.0"
+  version: "13.0.1"
   category: "Analysis & Review"
   requires:
     - tdk-plan (for prerequisite plan.md with ## Phases table)
@@ -108,6 +108,18 @@ Scan `$ARGUMENTS` for tokens starting with `--`. The only accepted flag is `--de
 1. Gather the available artifact text for validation:
    - Prefer spec + plan when both `spec.md` and `plan.md` exist.
    - Use spec-only when `plan.md` is absent, and record that fallback in the analysis report.
+1.5. Read `memory_validation` from the current feature's `spec.md` frontmatter.
+   - `disabled` → skip this step and log one line:
+     `Memory validation skipped — disabled for this task at /tdk-specify.`
+   - `enabled` → continue to step 2.
+   - Field absent, no `spec.md`, or the field holds any other value including an
+     unreplaced `[enabled/disabled]` placeholder → treat as absent and fall back
+     to the `Binding coverage:` line in `.specify/memory/memory-index.md`; when
+     that line is absent or reports `0`, skip with:
+     `Memory validation skipped — memory-index reports no binding: true coverage. Run /tdk-memory-update if memory was recently updated.`
+
+   Never ask the user here; `/tdk-specify` Step 1.6 owns that decision. Continue
+   the normal analysis flow either way — this is never blocking.
 2. Spawn `tdk-memory-agent` agent with `--mode validate` and the gathered artifact text.
 3. Map the Guardian Report into a `Memory Validation` section in the analysis output:
    - conflicts -> high-priority findings.

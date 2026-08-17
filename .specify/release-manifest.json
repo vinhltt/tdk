@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-08-13T14:14:19.613Z",
+  "generatedAt": "2026-08-17T07:14:00.291Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -202,7 +202,7 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "11e4acfc0bab43bd1532519473ff5495078288bbfe62fb1480dbc80b736d74ff",
+      "sha256": "d4793cbf79410b64ac745fda77e8ffdba5346805bfd8300815d50e3b33386d83",
       "size": 42573,
       "mode": "0644"
     },
@@ -217,23 +217,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "cdf89552f23ad6bc001aa5969300af94087f2b4ff992786d23da1d3602e0d1d3",
+      "sha256": "bfac875aa0074b566ad0ec03c0dd8f689215c351f361e6f4bfef460d2d73e078",
       "size": 191,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "ccf6ea4d2057a8053aa54bad0aa1d653e26d846a550e176b58248ed40a3cf69c",
+      "sha256": "23ebbaba6736865020f1f721f2c95210c647012811f2341bba43a7c8fb877710",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "ccf6ea4d2057a8053aa54bad0aa1d653e26d846a550e176b58248ed40a3cf69c",
+      "sha256": "23ebbaba6736865020f1f721f2c95210c647012811f2341bba43a7c8fb877710",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "7f8b78c526c17f45040bc6397da435095a65fa1f5b4c0870ed0a59e8fbf61e91",
-      "size": 34394,
+      "sha256": "e2138759301a95a04edc1d1cba24f3b9008f5a6e61c95e233d472a8767021274",
+      "size": 35403,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/__tests__/context-builder.test.cjs": {
@@ -347,13 +347,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-clarify/SKILL.md": {
-      "sha256": "49974bdca29d942779e7a87f66e4de673ce2ac5f519b604dc1408e465ed114bd",
-      "size": 18758,
+      "sha256": "9f5b4e468d9afdb2cf7294754c972d391c23502f354d2e3dc5845d28eaa5f1fd",
+      "size": 19563,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-consistency-check/SKILL.md": {
-      "sha256": "20ad0f6890a55e9ade7aabf66f2689b76777edff412b950b77b3d01ac0103f5c",
-      "size": 21847,
+      "sha256": "fab447910391de6d1ea116d18fe9d40aa460c5c6d27d16059b588d33dcd8b2ac",
+      "size": 22681,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/SKILL.md": {
@@ -382,8 +382,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/SKILL.md": {
-      "sha256": "7981358f1765165650a62d72aea402618fa62cde10de52615e4c7a721c4b775e",
-      "size": 17428,
+      "sha256": "0966fad6fd56c3aba7198f9bd8f7ad185eab7ad0482c19205583fa79c2007f59",
+      "size": 17627,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/cross-plan-deps.md": {
@@ -402,8 +402,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/gates.md": {
-      "sha256": "61cac4585fa4c7e7c98186704b9692eaf9c0bf7a1fc03430bc9a2bde7068b35e",
-      "size": 4614,
+      "sha256": "263e0ac34c7af12393152aae0ccd45efa57f3776a8db73d13f21f46ee067f14b",
+      "size": 8602,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/handle-existing-plan.md": {
@@ -417,8 +417,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/modes.md": {
-      "sha256": "a5bc83e1fd01bc3309921fe99b1a580e2b1d2433f7093fdf6f59e57ea651b6c1",
-      "size": 10285,
+      "sha256": "5e09f5b3fbb75113f163c3a13851933501ca468611d654d3fff0b4f64660e13e",
+      "size": 10486,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/plan-output-contract.md": {
@@ -452,8 +452,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-specify/SKILL.md": {
-      "sha256": "910b1b01bc8d0b739ddf442038aa046d9a30c6feca004ae11283424c76a00a53",
-      "size": 8012,
+      "sha256": "d694b2b6520a9ae1ea9a6b500b250a696ff3f2be9f931ce37de87c8c1b3c5c19",
+      "size": 9033,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-specify/evals/evals.json": {
@@ -467,13 +467,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-specify/references/input-routing-and-mode-workflow.md": {
-      "sha256": "cf3166903ba448ecb1ef7d1d57854d2a58c1379073f51e51cdaba9a7b36d2c00",
-      "size": 8718,
+      "sha256": "af161e553443a6a65207af0c988d3eae9ee7302fb6dd4012f22bbd96ffe2c351",
+      "size": 11066,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-specify/references/spec-generation-and-validation-workflow.md": {
-      "sha256": "4ab05ad86f2c68e99c057a7900c0c981afa166af372bfe907968a52c94de3eed",
-      "size": 10444,
+      "sha256": "89bc4495b17450ca47d75dd54bfe2ee7e46682923f687ad7f68f71e95142305b",
+      "size": 10579,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-specify/references/spec-quality-guidelines.md": {
@@ -892,28 +892,28 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/.claude-plugin/plugin.json": {
-      "sha256": "8f7b4974775708391d61957a19657564ef102bb3a43dbf4cad5b3e6985c287cf",
+      "sha256": "1c92e8df9e78dacbf63ccbde69bb6188f21026af2a1a5883f890654a15937f5a",
       "size": 253,
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/.codex-plugin/plugin.json": {
-      "sha256": "8f7b4974775708391d61957a19657564ef102bb3a43dbf4cad5b3e6985c287cf",
+      "sha256": "1c92e8df9e78dacbf63ccbde69bb6188f21026af2a1a5883f890654a15937f5a",
       "size": 253,
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/.cursor-plugin/plugin.json": {
-      "sha256": "8f7b4974775708391d61957a19657564ef102bb3a43dbf4cad5b3e6985c287cf",
+      "sha256": "1c92e8df9e78dacbf63ccbde69bb6188f21026af2a1a5883f890654a15937f5a",
       "size": 253,
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/CHANGELOG.md": {
-      "sha256": "58e5e05b12ff4e3884f7fc7591dacb743a220ca78d2f08f3facae139edfb0aed",
-      "size": 2757,
+      "sha256": "6a15b622042956043c0474abec15d005803db7ef99e6c72616e2012853846027",
+      "size": 3390,
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/agents/tdk-memory-agent.md": {
-      "sha256": "d5dbc7d64c09c809ff62c114bbe12dbb4f578e3ffc30b8a91a8fdde4bd2020e8",
-      "size": 19048,
+      "sha256": "f8d9e95c6a1305b0f8a4534b7341d02a2cd3cbb004b0e4bb5ed6b43d4de4400b",
+      "size": 19813,
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/scripts/compute-sha256-hashes.py": {
@@ -947,7 +947,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/skills/tdk-memory-init/SKILL.md": {
-      "sha256": "cb31b197225de83a04411ea27d5548fcc997c8616f88e614898c5aa61b29f109",
+      "sha256": "a33717a4f69981307039a69c10c4089592204b9e552fccf3de957156ff1458a8",
       "size": 5513,
       "mode": "0644"
     },
@@ -962,13 +962,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/skills/tdk-memory-init/references/fresh-init-flow.md": {
-      "sha256": "1323e851572c0556abb6d30a34c31ed01eefa170b4d434c91964270eda2ac802",
-      "size": 7695,
+      "sha256": "07b9e087066753a8c2dda758056b3fc1464af1140e0daed85ccb7b329e259f96",
+      "size": 8216,
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/skills/tdk-memory-init/references/memory-index-template.md": {
-      "sha256": "99c7dc724f7aa5c9aea9da2b3aed7bbb425f41619ae205a3135df9b449301a90",
-      "size": 7630,
+      "sha256": "071d80c44e8f983fc328b37bef7198f97efe708109e711d44c14c42f8f673f4d",
+      "size": 8056,
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/skills/tdk-memory-init/references/re-run-flow.md": {
@@ -992,7 +992,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/skills/tdk-memory-update/SKILL.md": {
-      "sha256": "78aa2754b90de637f982bfee5381cc019c5e7848daf90bfe35c536c4bd562cca",
+      "sha256": "3ee66bbb570cb0ff7a097d466e6242ec4c66a9674f6f5a409f1ea85be32cf115",
       "size": 4365,
       "mode": "0644"
     },
@@ -1022,8 +1022,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/skills/tdk-memory-update/references/regenerate-memory-index-flow.md": {
-      "sha256": "21f8636790c73ebb232fb2794d35c2d459b38ca0ca28c6b9bbf460d9c119ead4",
-      "size": 2030,
+      "sha256": "0beacfdc86cfdfe9e32cfaa6026f97b851b37263ec92a631251a745ed5f63536",
+      "size": 2601,
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/.claude-plugin/interface.json": {
@@ -2492,8 +2492,8 @@
       "mode": "0644"
     },
     ".specify/templates/spec-template.md.tpl": {
-      "sha256": "006e79dfe4e3c4f6a9b0dad11ee01467411d8bc8c1aa5bff6f1d934b2e658c62",
-      "size": 6089,
+      "sha256": "86cacd200e07963cda06e0ae1325392b99bb7f7429965c2831ba91d99fc8bb87",
+      "size": 6616,
       "mode": "0644"
     },
     ".specify/templates/state-transitions-template.md.tpl": {

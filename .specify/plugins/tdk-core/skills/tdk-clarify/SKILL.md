@@ -2,7 +2,7 @@
 name: tdk-clarify
 description: "Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec."
 metadata:
-  version: "11.0.0"
+  version: "13.0.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -74,6 +74,18 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 **Only if `.specify/memory/memory-index.md` exists** (check silently, non-blocking):
 
 1. Load the draft `spec.md`, including existing `## Clarifications`.
+1.5. Read `memory_validation` from the `spec.md` frontmatter just loaded.
+   - `disabled` → skip this step and log one line:
+     `Memory validation skipped — disabled for this task at /tdk-specify.`
+   - `enabled` → continue to step 2.
+   - Field absent, or holding any other value including an unreplaced
+     `[enabled/disabled]` placeholder → treat as absent and fall back to the
+     `Binding coverage:` line in `.specify/memory/memory-index.md`; when that
+     line is absent or reports `0`, skip with:
+     `Memory validation skipped — memory-index reports no binding: true coverage. Run /tdk-memory-update if memory was recently updated.`
+
+   Never ask the user here; `/tdk-specify` Step 1.6 owns that decision. Continue
+   the normal clarify flow either way — this is never blocking.
 2. Spawn `tdk-memory-agent` agent with `--mode validate` and the draft spec content.
 3. Parse the Guardian Report into candidate clarification questions:
    - conflicts -> clarification questions for missing, ambiguous, or contradictory requirements.

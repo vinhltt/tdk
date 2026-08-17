@@ -38,8 +38,15 @@ Shared logic for rebuilding `memory-index.md` from filesystem state.
    - `_deprecated/` → `## Deprecated` table
 4. Extract `title`, `updated_at`, and `binding` from YAML frontmatter per file;
    fallback to filename stem. `arc42/` files must remain non-binding summaries
-   unless linked typed files say `binding: true`.
+   unless linked typed files say `binding: true`. Write the extracted `binding`
+   value into the `Binding` column of the file's table row. When the frontmatter
+   has no `binding:` field, write `—` — do not infer a default. `## Deprecated`
+   keeps its `| File | Deprecated At |` shape and gains no `Binding` column.
 5. Rebuild `## Domain Map` from actual `domains/` subdirectories
 6. Preserve `## Routing Rules` table (static — do not regenerate from FS)
 7. Preserve `## Templates` section (static)
-8. Write full `memory-index.md` (atomic overwrite)
+8. Recompute the `Binding coverage:` line: count files whose extracted `binding`
+   is exactly `true`, over the total number of typed files indexed. `arc42/`
+   read-models and files with a missing `binding:` field do not count toward the
+   numerator. `## Deprecated` entries count toward neither.
+9. Write full `memory-index.md` (atomic overwrite)

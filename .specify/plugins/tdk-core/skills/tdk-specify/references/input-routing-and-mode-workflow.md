@@ -143,6 +143,22 @@ Store: `SPEC_MODE`, `SPEC_INTERVIEW`, `MODE_SOURCE`, `PRELIMINARY_MODE`.
 
 Only if `.specify/memory/memory-index.md` exists, check silently and non-blocking:
 
+0. **Binding-coverage precondition.** Read the `Binding coverage:` line from
+   `.specify/memory/memory-index.md` and keep the result as `BINDING_COVERAGE`
+   for the rest of this skill:
+   - line absent, or the index tables have no `Binding` column → `unknown`
+   - `Binding coverage: 0 of N typed files` → `none`
+   - otherwise → the reported count
+
+   When `BINDING_COVERAGE` is `unknown` or `none`, skip this whole step and log
+   one line. Do not ask the user — with no `binding: true` evidence the guardian
+   cannot produce an admissible conflict, so the question has no meaningful
+   answer:
+   `Memory validation skipped — memory-index reports no binding: true coverage. Run /tdk-memory-update if memory was recently updated.`
+
+   This step runs before Step 1.5, so it is gated on coverage only. The
+   task-lifecycle `memory_validation` decision is made later, in
+   Step 1.6, once `IMPACT_SURFACE` exists to supply its default.
 1. Spawn `tdk-memory-agent` agent with `--mode validate` and the raw feature description.
    Ask it to detect only high-signal business contradictions; ambiguity and completion checks stay for `/tdk-clarify`.
 2. Parse the Guardian Report and store it as `MEMORY_VALIDATE_REPORT`.
@@ -187,3 +203,25 @@ Mode upgrade check:
 - If `PRELIMINARY_MODE = fast` AND `MODE_SOURCE = "auto-detected"` AND Impact Surface has >=2 subworkspaces, upgrade `SPEC_MODE` to `full`.
 - Print: "Mode upgraded: fast -> full (Impact Surface spans 2+ subworkspaces)".
 - User flag override (`--fast`) is NOT upgraded.
+
+## Step 1.6: Memory Validation Scope Gate
+
+Decides memory validation **once for the whole task lifecycle**. `/tdk-clarify`,
+`/tdk-plan`, and `/tdk-consistency-check` read the result and must not ask again.
+Runs here because it needs `IMPACT_SURFACE` from Step 1.5 to compute its default.
+
+1. When `BINDING_COVERAGE` from Step 0.memory is `unknown` or `none`: skip this
+   gate, do not ask, and do not emit `memory_validation` at all. An absent key
+   means "never decided", which downstream skills treat differently from
+   `disabled`. Log:
+   `Memory validation skipped — memory-index reports no binding: true coverage. Run /tdk-memory-update if memory was recently updated.`
+2. Otherwise ask exactly once with `AskUserQuestion`, header `"Memory Validation"`,
+   question `"Validate this task against project memory?"`. Preselect the default
+   from `IMPACT_SURFACE`: one distinct subworkspace, or empty (`N/A — monolith`),
+   defaults to the skip option; two or more distinct subworkspaces defaults to the
+   validate option. This reuses the existing `>=2 subworkspaces` threshold from the
+   Step 1.5 mode-upgrade check rather than inventing a second rule.
+3. Store the answer as `MEMORY_VALIDATION` (`enabled` or `disabled`) and emit it to
+   `spec.md` frontmatter in Step 2.
+4. Non-interactive context, or `--fast`: use the computed default without
+   prompting. Never block on this gate.
