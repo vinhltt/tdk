@@ -14,6 +14,7 @@ try {
   const { loadRules } = require('../lib/rule-loader.cjs');
   const { matchFileAgainstGlobs } = require('../lib/rule-matcher.cjs');
   const { loadSpeckitConfig } = require('../lib/speckit-config-reader.cjs');
+  const { loadPayloadHarness } = require('../lib/harness-payload.cjs');
 
   const LOCK_RETRIES = 5;
   const LOCK_BACKOFF_MS = 20;
@@ -22,8 +23,8 @@ try {
   function syncSleep(ms) { Atomics.wait(SLEEP_BUF, 0, 0, ms); }
 
   /**
-   * Extracts file_path from Claude tool_input payload.
-   * @param {object} toolInput - The tool_input object from stdin JSON.
+   * Extracts file_path from the canonical tool input.
+   * @param {object} toolInput - Canonical tool input from the selected harness adapter.
    * @returns {string|null} Absolute file path or null if not present.
    */
   function extractFilePath(toolInput) {
@@ -107,10 +108,16 @@ try {
       const stdin = (stdinData ?? fs.readFileSync(0, 'utf-8')).trim();
       if (!stdin) { timer.end({ status: 'skip', note: 'empty-input' }); return 0; }
 
-      let data;
-      try { data = JSON.parse(stdin); } catch { timer.end({ status: 'skip', note: 'json-parse-failed' }); return 0; }
+      let payload;
+      try {
+        payload = loadPayloadHarness(stdin);
+      } catch (error) {
+        timer.end({ status: 'skip', note: 'payload-normalization-failed' });
+        logHookCrash('path-rule-injector', error, { event: 'PreToolUse' });
+        return 0;
+      }
 
-      const toolInput = data.tool_input;
+      const toolInput = payload.toolInput;
       if (!toolInput || typeof toolInput !== 'object') {
         timer.end({ status: 'skip', note: 'no-tool-input' });
         return 0;
@@ -127,7 +134,7 @@ try {
 
       const absFilePath = extractFilePath(toolInput);
       const relFilePath = absFilePath ? makeRelative(absFilePath, config.__workspaceRoot) : null;
-      const sessionId = data.session_id || data.sessionId || '';
+      const sessionId = payload.sessionId ?? '';
 
       const parts = [];
       let matchCount = 0;

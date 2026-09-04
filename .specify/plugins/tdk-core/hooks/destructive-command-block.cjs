@@ -12,6 +12,7 @@
 
 try {
   const fs = require('fs');
+  const { loadPayloadHarness } = require('../lib/harness-payload.cjs');
   const { createHookTimer, logHookCrash } = require('../lib/hook-logger.cjs');
 
   // Deletion commands are judged by what they target, not by the verb alone.
@@ -137,8 +138,8 @@ try {
         return 0;
       }
 
-      const payload = JSON.parse(stdin);
-      const cmd = payload.tool_name === 'Bash' ? payload.tool_input?.command?.trim() : '';
+      const payload = loadPayloadHarness(stdin);
+      const cmd = payload.toolName === 'bash' ? payload.toolInput?.command?.trim() : '';
       if (!cmd) {
         timer.end({ status: 'skip', note: 'not-bash-command', message: 'Skipped: no Bash command in payload' });
         return 0;

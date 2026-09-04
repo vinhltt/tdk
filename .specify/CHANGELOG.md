@@ -6,6 +6,17 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.114.1] - 2026-09-04
+
+### Added
+- **[tdk-core]** Canonical harness payload normalization
+  - Added `lib/harness-payload.cjs` supporting Claude Code and OMP payload shapes with session metadata and tool name normalization
+  - Added `__tests__/harness-payload.test.cjs` covering Claude Code, OMP native/bridge events, and error cases
+
+### Changed
+- **[tdk-core]** Hook integration with harness payload loader
+  - Migrated `destructive-command-block.cjs`, `dev-context-injector.cjs`, and `path-rule-injector.cjs` to use `loadPayloadHarness`
+
 ## [1.114.0] - 2026-08-17
 
 ### Added

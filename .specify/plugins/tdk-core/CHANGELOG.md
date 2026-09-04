@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [13.1.0] - 2026-09-04
+
+### Added
+- Canonical harness payload normalization: added lib/harness-payload.cjs supporting Claude Code and OMP payload shapes with session metadata and tool name normalization
+- Unit tests for harness payload normalization (__tests__/harness-payload.test.cjs) covering Claude Code, OMP native/bridge events, and error cases
+
+### Changed
+- Migrated destructive-command-block.cjs, dev-context-injector.cjs, and path-rule-injector.cjs hooks to use loadPayloadHarness
+
 ## [13.0.1] - 2026-08-17
 
 ### Added

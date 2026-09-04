@@ -8,6 +8,7 @@
 
 try {
   const fs = require('fs');
+  const { loadPayloadHarness } = require('../lib/harness-payload.cjs');
   const { createHookTimer, logHookCrash } = require('../lib/hook-logger.cjs');
   const { buildSpeckitContext, wasRecentlyInjected } = require('../lib/context-builder.cjs');
 
@@ -25,8 +26,8 @@ try {
         return 0;
       }
 
-      const payload = JSON.parse(stdin);
-      if (wasRecentlyInjected(payload.transcript_path)) {
+      const payload = loadPayloadHarness(stdin);
+      if (wasRecentlyInjected(payload.transcriptPath)) {
         timer.end({ status: 'skip', note: 'recently-injected', message: 'Skipped: context already injected in recent session' });
         return 0;
       }
@@ -49,7 +50,7 @@ try {
           config.git.prefixList
         );
 
-        const sessionId = payload.sessionId || payload.session_id;
+        const sessionId = payload.sessionId;
         if (!ticketId) {
           console.log('[session-tracker] ⚠️ Branch không có ticket-id, sessions không track');
         } else if (sessionId) {
