@@ -4,6 +4,20 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [13.2.0] - 2026-09-04
+
+### Added
+- Session ticket association module `lib/session-ticket-resolver.cjs` — `resolveSessionTickets()` returns every ticket the current prompt associates with the session, per-candidate skips, and a whole-resolution reason; mentions must fully match the configured ticket syntax **or** a literal prefix (prefixes-only supported), canonicalize to lowercase, and have an existing spec folder
+- CWD-scoped branch fallback — runs only when the prompt has no syntactically valid ticket, reads the branch of the repository containing `payload.cwd` when its canonical top level is the workspace root or one configured sub-workspace, and reports a branch naming two distinct tickets as ambiguous instead of guessing
+- Unit tests `__tests__/session-ticket-resolver.test.cjs` (token boundaries, config alternatives, partial success, branch scoping, path-safety) and `__tests__/session-ticket-resolver.git-isolation.test.cjs` (branch fallback issues at most two git calls, both against the CWD repository)
+
+### Changed
+- `hooks/dev-context-injector.cjs` — records the session once per resolved association with each write isolated, so a failing target never suppresses the remaining tickets or the injected context; tracking still runs ahead of the recently-injected early return; configuration and the specs root resolve from the trusted project root (`CLAUDE_PROJECT_DIR`, else the launching project root) while `payload.cwd` stays the activity location
+- `lib/speckit-config-reader.cjs` — opt-in `{ strict: true }` load rethrows instead of returning defaults so tracking fails closed on a missing or malformed config; non-strict callers unchanged
+- `lib/hook-logger.cjs` — preserves `ticketId`, `source`, and `recorded` so per-target outcomes stay attributable
+- `lib/context-builder.cjs` — `getGitBranch(cwd)` accepts an optional working directory and uses `execFileSync`; `extractTicketFromBranch()` accepts a `{ caseInsensitive }` option
+- `__tests__/dev-context-injector.integration.test.cjs` — multi-ticket recording, additive associations across prompts, partial success, trusted-root precedence, per-target write failure, and Claude/OMP parity
+
 ## [13.1.0] - 2026-09-04
 
 ### Added

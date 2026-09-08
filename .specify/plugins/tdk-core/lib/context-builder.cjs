@@ -113,10 +113,13 @@ function buildUserPromptContextSection(config, cwd = process.cwd()) {
 }
 
 /** Get current git branch name, or null if detached/unavailable */
-function getGitBranch() {
+function getGitBranch(cwd = process.cwd()) {
   try {
     return require('child_process')
-      .execSync('git branch --show-current', { encoding: 'utf-8', timeout: 3000 })
+      .execFileSync('git', ['-C', cwd, 'branch', '--show-current'], {
+        encoding: 'utf-8',
+        timeout: 3000
+      })
       .trim() || null;
   } catch (_) {
     return null;
@@ -124,10 +127,15 @@ function getGitBranch() {
 }
 
 /** Extract ticket ID from branch name using ticket format regex and prefix list */
-function extractTicketFromBranch(branch, ticketFormat, prefixList) {
+function extractTicketFromBranch(
+  branch,
+  ticketFormat,
+  prefixList,
+  { caseInsensitive = false } = {}
+) {
   if (!branch || !ticketFormat) return null;
   try {
-    const regex = new RegExp(ticketFormat);
+    const regex = new RegExp(ticketFormat, caseInsensitive ? 'i' : undefined);
     const parts = branch.split('/');
     for (const part of parts) {
       const match = part.match(regex);

@@ -87,6 +87,10 @@ function logHook(hookName, data) {
       status: data.status || 'ok',
       exit: data.exit !== undefined ? data.exit : 0,
       error: data.error || '',
+      // Identity of the affected target, so per-ticket outcomes stay attributable.
+      ...(data.ticketId ? { ticketId: data.ticketId } : {}),
+      ...(data.source ? { source: data.source } : {}),
+      ...(data.recorded !== undefined ? { recorded: data.recorded === true } : {}),
       ...(data.content && shouldLogContent() ? { content: data.content } : {})
     };
 

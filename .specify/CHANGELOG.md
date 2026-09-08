@@ -6,6 +6,30 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.114.2] - 2026-09-04
+
+### Added
+- **[tdk-core]** Session ticket association module
+  - Added `lib/session-ticket-resolver.cjs` exporting `resolveSessionTickets()`, which returns every ticket the current prompt associates with the session plus per-candidate skips and a whole-resolution reason
+  - Associates each distinct full-token ticket mention in the canonical prompt, validated case-insensitively against the configured ticket syntax **or** literal prefixes (a prefixes-only configuration is supported), canonicalized to lowercase, and required to have an existing spec folder
+  - Falls back to git branch inference only when the prompt contains no syntactically valid ticket, and only for the repository containing `payload.cwd` — accepted when its canonical top level is the workspace root or one configured sub-workspace; a branch naming two distinct tickets is reported as ambiguous instead of guessed
+  - Reports distinct outcomes for missing session id, unusable config, invalid prompt or CWD, CWD outside the workspace, unapproved repository, git failure, detached HEAD, ambiguous branch, and no ticket
+  - Added `__tests__/session-ticket-resolver.test.cjs` covering token boundaries, config alternatives, partial success, branch scoping, and path-safety guards, plus `__tests__/session-ticket-resolver.git-isolation.test.cjs` asserting the branch fallback issues at most two git calls, both against the CWD repository
+
+### Changed
+- **[tdk-core]** `dev-context-injector` session tracking
+  - Extracted inline tracking into `trackSession()` and moved it ahead of the recently-injected early return, so associations are recorded on every prompt instead of only on the injecting prompt
+  - Records the session once per resolved association, each write isolated so a failing target never suppresses the remaining tickets or the injected context; a repeated mention stays a no-op through the existing writer idempotency
+  - Replaced the ad-hoc `console.log` warning with structured `logHook('session-tracker', …)` records carrying status, resolution source, and the affected ticket
+  - Resolves configuration and the specs root from the trusted project root (`CLAUDE_PROJECT_DIR`, else the launching project root) and passes `payload.cwd` separately as the activity location; accepts injectable `resolveSessionTickets`/`recordSession`/`loadSpeckitConfig` dependencies for testing
+- **[tdk-core]** `lib/speckit-config-reader.cjs` accepts an opt-in `{ strict: true }` load that rethrows instead of returning defaults, so session tracking fails closed on a missing or malformed config; non-strict callers are unchanged
+- **[tdk-core]** `lib/hook-logger.cjs` preserves `ticketId`, `source`, and `recorded` in log entries so per-target outcomes stay attributable
+- **[tdk-core]** `lib/context-builder.cjs` git helpers
+  - `getGitBranch(cwd)` now takes an optional working directory and shells out via `execFileSync` instead of `execSync`
+  - `extractTicketFromBranch()` accepts a `{ caseInsensitive }` option for matching ticket IDs typed in mixed case
+- **[tdk-core]** Extended `__tests__/dev-context-injector.integration.test.cjs` with multi-ticket recording, additive associations across prompts, partial success, trusted-root precedence, per-target write failure, and Claude/OMP parity
+- **[tdk-setup]** `tests/claude-hook-install-e2e.test.ts` now proves installed-hook behavior instead of resolver source text: a root session on `main` no longer inherits a child repository branch, the branded install associates tickets regardless of command prefix, and missing spec folders are skipped without blocking valid ones
+
 ## [1.114.1] - 2026-09-04
 
 ### Added

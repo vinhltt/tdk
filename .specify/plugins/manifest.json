@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-09-04T07:24:11Z",
+  "generated_at": "2026-09-06T07:17:58Z",
   "plugins": {
     "tdk-core": {
-      "version": "13.1.0",
+      "version": "13.2.0",
       "components": {
         "skills": {
           "tdk-clarify": {
@@ -28,39 +28,42 @@
         "agents": {},
         "hooks": {
           "tdk-core": {
-            "version": "11.2.0"
+            "version": "11.3.0"
           }
         },
         "commands": {}
       },
       "files": {
         ".claude-plugin/interface.json": "e94fd7a0f43ccf93767b3eb6c87adec554f4846b89f5e62f6caa22f700a68c31",
-        ".claude-plugin/plugin.json": "6b1cc72784469bbb15d9060a8ecbc12afd7fb65bbee6d2c9307f15219545d743",
-        ".codex-plugin/plugin.json": "311d9c5c7d6242919b41783bd39a527212ba461595947d016520bb057620afef",
-        ".cursor-plugin/plugin.json": "311d9c5c7d6242919b41783bd39a527212ba461595947d016520bb057620afef",
-        "CHANGELOG.md": "dc3999b25582e9a0c5746f25215db63050cabe85225dde2e4a15008f48d5aa8c",
+        ".claude-plugin/plugin.json": "9b60be1a62c2be5b49c5698ef5a68c3262e0ecadca1d383439fa92050662406d",
+        ".codex-plugin/plugin.json": "72c43ca3a45b083c46158ebef27ffa6e443dc5c4bbbc8a3a7f62b4af29b6e203",
+        ".cursor-plugin/plugin.json": "72c43ca3a45b083c46158ebef27ffa6e443dc5c4bbbc8a3a7f62b4af29b6e203",
+        "CHANGELOG.md": "bddb159dd1f591704bb35bbd9cfa0d8acd074f136b898545801765b7d1fcdb82",
         "__tests__/context-builder.test.cjs": "704c828646af0d26cab0be3b82b37d150114faf8406899d0f6bbc020b10f0d60",
         "__tests__/destructive-command-block.integration.test.cjs": "b075e672b42716ebe4cbcd52f1de22fc1831e9107bf5b5d2a24a3311b922839e",
-        "__tests__/dev-context-injector.integration.test.cjs": "558b22d402f607d48ed32daddbcffce414f2f21d99adcfaf7540d19d81ff135c",
+        "__tests__/dev-context-injector.integration.test.cjs": "5f751b347b9d7a0bfbd63b1e2c623fbb1a77bd4c516d9601cb25806884dbc0a2",
         "__tests__/harness-payload.test.cjs": "cb4ad98e1214c0e8cae5200e66a2c324a750a618a5dc85c38cdfb0f6a5ebc3bc",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
         "__tests__/path-rule-injector.integration.test.cjs": "43f91aa0e45f06c59ea7ca27d2ed775ad167ec29866084faea3f64a884682f27",
         "__tests__/rule-loader.test.cjs": "bf51158d948ccc2abb20d45b3191dc432cecb4ecea8ebbad5a3562f2fff8d116",
         "__tests__/rule-matcher.test.cjs": "99bb7c60b0cbc4894733ea99a26723a44c7a37f389003c6df818bfc5b6cbb281",
+        "__tests__/session-ticket-resolver.git-isolation.test.cjs": "59ea30a20f669ee90cc422fdb514748e1c994e3893e79dca5fc187b421130c67",
+        "__tests__/session-ticket-resolver.test.cjs": "218e05c136b4901fa26913f60c0098b6df87335d7749f9a95af89c77eb6b37d2",
         "__tests__/session-tracker.test.cjs": "0e47cc6a28f9c47c1b4d445855a171953206c5fb029f59881a14a82f30298ea7",
         "__tests__/speckit-config-reader.test.cjs": "86a8f6c9fada8a018779f1b3454670890a9587139c44f08e863f0d0ac30064a7",
         "hooks/destructive-command-block.cjs": "8973b014c2f2eb59a481c1747b5395572dcc630029b4434f151843bea6b4cb8a",
-        "hooks/dev-context-injector.cjs": "dfd3116af00b4871cf9738ad111a8282c74aab73ffb0d526e3f81a5286a5603d",
+        "hooks/dev-context-injector.cjs": "f96ac18f909aac9d1ed6daebcd1c95510a7599954d7cd01e9924e9c2b369e473",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
-        "hooks/hooks.json": "6552d73c2f219adf170fa0fba7b83e48ef40148a7a1d8e7ea5d244f40d728990",
+        "hooks/hooks.json": "ef649b325180c3876ad2123add47abb8cb57dbe8a8ecc755b6cf929ae0a41481",
         "hooks/path-rule-injector.cjs": "3ddc004c23ff44759218f668defa86641c6cc1f7a946e948a199857096d1b33f",
-        "lib/context-builder.cjs": "642fe66b33fb94fbac34c5f077ef6993a7dc1a1461ee5cf4d502ff2d777291f5",
+        "lib/context-builder.cjs": "17e57421eff9840a6b192859e0bb3dec51ed14eece84e46ebcdf7b6bb5404353",
         "lib/harness-payload.cjs": "c94e6b1b83b242e81ab7fc0d0f32e06a950d3c14b295a627e4d88accf9d92c27",
-        "lib/hook-logger.cjs": "e91ecde96f3508b312ed0e58bee5010e166734388d58c24ad9a28f2ee77b3c73",
+        "lib/hook-logger.cjs": "75791d51062176a1cead41210991c89c0930d598f7f1a13be15360153b70a639",
         "lib/rule-loader.cjs": "7658c99484fe3c55995f27fb409e5af11c3ee498b693159b602f3b0a8e9547dd",
         "lib/rule-matcher.cjs": "a8dbd4a51c337a2936fbf8fdb7ab021a9d8c7de447725ac2de00ba420d31119b",
+        "lib/session-ticket-resolver.cjs": "ac5a2b6653ed7a65d0aefcd40e3a7b477dc591c7426e9e8ad951affe42fd07b4",
         "lib/session-tracker.cjs": "c3c472e24d58df14e7abecd67acaf513e02b8dda59631c7adc4f022a822db471",
-        "lib/speckit-config-reader.cjs": "45b49b55cb59c703fefa342e86a0fa18ba66fd5cc614af330fbdc65be22a9b13",
+        "lib/speckit-config-reader.cjs": "d2ca20ed0151485c5d161696b2f6d8cc289f76cf9cbf17bd5c736d5af57ac0c3",
         "lib/vendored/minimatch.cjs": "2021ee14763ba8ab9c769902703f5952cf005892657b4af8b98a67e1af2a1c01",
         "lib/vendored/yaml.cjs": "6c24d3c958711e289bfad621a8fb95a5ff6cf9d0b043a02cba2eb1b77f5d5e23",
         "skills/tdk-clarify/SKILL.md": "9f5b4e468d9afdb2cf7294754c972d391c23502f354d2e3dc5845d28eaa5f1fd",

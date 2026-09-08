@@ -61,16 +61,23 @@ function findSpecifyConfig(startDir) {
 /**
  * Loads and merges .specify.json with defaults. Returns config with __workspaceRoot.
  * @param {string} [startDir] - Directory to search from. Defaults to cwd.
+ * @param {{ strict?: boolean }} [options] - `strict: true` rethrows instead of
+ *   returning defaults, so a caller that must not track against a wrong config
+ *   can fail closed. Non-strict behavior is unchanged.
  * @returns {object} Merged config object with __workspaceRoot property.
  */
-function loadSpeckitConfig(startDir = process.cwd()) {
+function loadSpeckitConfig(startDir = process.cwd(), { strict = false } = {}) {
   try {
     const root = findSpecifyConfig(startDir);
     const jsonPath = path.join(root, '.specify', '.specify.json');
     const content = fs.readFileSync(jsonPath, 'utf8');
     const parsed = JSON.parse(content);
+    if (strict && !isPlainObj(parsed)) {
+      throw new Error('speckit: .specify/.specify.json must contain a JSON object.');
+    }
     return { ...deepMerge(deepCloneDefaults(root), parsed), __workspaceRoot: root };
   } catch (err) {
+    if (strict) throw err;
     process.stderr.write(err.message + '\n');
     return { ...deepCloneDefaults(startDir), __workspaceRoot: path.resolve(startDir) };
   }
