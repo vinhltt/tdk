@@ -74,4 +74,44 @@ describe('ownership manifest migration', () => {
 
     expect(() => loadHarnessManifest(consumer.root)).toThrow(/Unsafe managed target path/);
   });
+
+  test('keeps legacy targetless OMP manifests readable and rejects a present invalid hook target', () => {
+    const consumer = makeConsumer();
+    const manifestPath = manifestPathFor(consumer.root, 'omp');
+    fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
+    const legacyManifest = emptyHarnessManifest('omp');
+    fs.writeFileSync(manifestPath, JSON.stringify(legacyManifest, null, 2));
+
+    expect(loadHarnessManifest(consumer.root, 'omp').hookTargetPlatform).toBeUndefined();
+
+    fs.writeFileSync(manifestPath, JSON.stringify({
+      ...legacyManifest,
+      hookTargetPlatform: 'windows',
+    }, null, 2));
+    expect(() => loadHarnessManifest(consumer.root, 'omp')).toThrow(/unexpected manifest shape/);
+  });
+
+  test('rejects invalid OMP part and managed-region checksum fields', () => {
+    const consumer = makeConsumer();
+    const manifestPath = manifestPathFor(consumer.root, 'omp');
+    fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
+    const base = {
+      ...emptyHarnessManifest('omp'),
+      managedFiles: [{
+        plugin: 'convert-flat',
+        sourceRelativePath: '.claude/settings.json',
+        targetRelativePath: '.omp/config.yml',
+        sourceChecksum: 'source',
+        installedChecksum: 'installed',
+        part: 'commands',
+      }],
+    };
+    fs.writeFileSync(manifestPath, JSON.stringify(base, null, 2));
+    expect(() => loadHarnessManifest(consumer.root, 'omp')).toThrow(/unexpected manifest shape/);
+
+    base.managedFiles[0]!.part = 'settings';
+    Object.assign(base.managedFiles[0]!, { managedRegionChecksum: 'not-a-sha256' });
+    fs.writeFileSync(manifestPath, JSON.stringify(base, null, 2));
+    expect(() => loadHarnessManifest(consumer.root, 'omp')).toThrow(/unexpected manifest shape/);
+  });
 });

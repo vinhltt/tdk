@@ -52,9 +52,14 @@ export function validateHarnessTargetPath(input: {
 export function harnessAllowedRoots(consumerRoot: string, harness: InstallPlan['harness']): string[] {
   const stateRoot = path.join(consumerRoot, '.specify', 'state', 'harness-install');
   const installSettingsPath = path.join(consumerRoot, '.specify', 'install-settings.json');
-  return harness === 'claude'
-    ? [path.join(consumerRoot, '.claude'), stateRoot, installSettingsPath]
-    : [path.join(consumerRoot, '.agents'), path.join(consumerRoot, '.codex'), stateRoot, installSettingsPath];
+  switch (harness) {
+    case 'claude':
+      return [path.join(consumerRoot, '.claude'), stateRoot, installSettingsPath];
+    case 'codex':
+      return [path.join(consumerRoot, '.agents'), path.join(consumerRoot, '.codex'), stateRoot, installSettingsPath];
+    case 'omp':
+      return [path.join(consumerRoot, '.omp'), stateRoot, installSettingsPath];
+  }
 }
 
 export function ensureInstallPlanOperationStamp(plan: InstallPlan): string {
@@ -67,10 +72,19 @@ export function backupTargetPath(plan: InstallPlan, prompt: RequiredPrompt): str
   return path.join(plan.consumerRoot, '.specify', 'state', 'harness-install', 'backups', stamp, prompt.targetRelativePath);
 }
 
+export function durableBackupTargetPath(plan: InstallPlan, relativeRoot: string): string {
+  const normalized = relativeRoot.replace(/\\/g, '/');
+  if (path.posix.isAbsolute(normalized) || normalized.split('/').includes('..') || normalized === '') {
+    throw new Error(`Unsafe durable backup root: ${relativeRoot}`);
+  }
+  const stamp = ensureInstallPlanOperationStamp(plan);
+  return path.join(plan.consumerRoot, '.specify', 'state', 'harness-install', 'backups', stamp, ...normalized.split('/'));
+}
+
 export function migrationJournalTargetPath(plan: InstallPlan): string | undefined {
   if (!plan.migration) return undefined;
   const stamp = ensureInstallPlanOperationStamp(plan);
-  return path.join(plan.consumerRoot, '.specify', 'state', 'harness-install', 'migrations', `claude-prefix-${stamp}.json`);
+  return path.join(plan.consumerRoot, '.specify', 'state', 'harness-install', 'migrations', `${plan.harness}-prefix-${stamp}.json`);
 }
 
 export function validateInstallPlanTargets(plan: InstallPlan): void {
@@ -93,6 +107,9 @@ export function validateInstallPlanTargets(plan: InstallPlan): void {
   for (const prompt of plan.prompts) {
     validate(prompt.path, `Managed prompt target ${prompt.targetRelativePath}`);
     validateMutation(backupTargetPath(plan, prompt), `Managed backup ${prompt.targetRelativePath}`);
+  }
+  for (const relativeRoot of plan.durableBackupRoots ?? []) {
+    validateMutation(durableBackupTargetPath(plan, relativeRoot), `Durable backup ${relativeRoot}`);
   }
   if (plan.nextSettings !== undefined && plan.settingsChanged) {
     validateMutation(path.join(plan.consumerRoot, plan.claudeSettingsPath), 'Harness settings');

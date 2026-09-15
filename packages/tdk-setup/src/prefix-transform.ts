@@ -71,7 +71,11 @@ export function transformTargetRelativePath(targetRelativePath: string, settings
   if (familyIndex !== -1 && normalized[familyIndex + 1]) {
     normalized[familyIndex + 1] = rewriteName(normalized[familyIndex + 1]!, settings);
   }
-  if ((normalized[0] === '.claude' || normalized[0] === '.codex') && (normalized[1] === 'scripts' || normalized[1] === 'hooks') && normalized[2]) {
+  if (
+    (normalized[0] === '.claude' || normalized[0] === '.codex' || normalized[0] === '.omp') &&
+    (normalized[1] === 'scripts' || normalized[1] === 'hooks') &&
+    normalized[2]
+  ) {
     normalized[2] = rewriteName(normalized[2], settings);
   }
   return posixTargetPath(...normalized);
@@ -166,8 +170,9 @@ function claudeFamilyRoot(plugin: string, family: string, settings: PrefixTransf
     case 'skills':
     case 'agents':
     case 'commands':
-    case 'lib':
       return posixTargetPath('.claude', family);
+    case 'lib':
+      return brandRewrite(blanketRewrite(claudeTargetMapper.libRoot(plugin), settings), settings);
     case 'scripts':
       return brandRewrite(blanketRewrite(claudeTargetMapper.scriptRoot(plugin), settings), settings);
     case 'hooks':

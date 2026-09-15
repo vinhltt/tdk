@@ -7,7 +7,7 @@ description: "Ensure every affected sub-workspace repository stands on the agree
   NOT user-invocable."
 user-invocable: false
 metadata:
-  version: "4.1.0"
+  version: "4.2.2"
   category: "Git"
   input_format: "PROJECT_DIR (agent-resolved absolute project root), TASK_ID (validated), FEATURE_DIR, PROJECT_CONTEXT, TARGET_ROWS, host skill name"
   output_format: "GIT_MAP (sub-workspace to branch/worktree records) or STOP with a per-repository status report"
@@ -21,9 +21,13 @@ Resolve that state here, confirm it with the user in a single batched prompt, th
 the host skill.
 
 ### Scope
-
-- **Never create, checkout, or switch a branch in the root workspace repository.** The root repository holds
-  spec, plan, and feature artifacts; it stays on whatever branch the user placed it on.
+- **Never create, checkout, or switch a branch in the builder root or in the artifact host.** The builder
+  root is whatever outer directory the session was launched from; the artifact host is the directory
+  holding `.specify/.specify.json`, where spec, plan and feature artifacts live. Both stay on whatever
+  branch the user placed them on. Read-only probes are allowed. Branch mutation happens only in a **code
+  repository** — a `subWorkspaces[].path`, or the artifact host itself on a single-repository project.
+  The three roles are defined in `references/git-map-contract.md`; the identity gate that enforces this
+  is in step 3, and a path that fails it is a STOP, not a warning.
 - Confirm before every branch or worktree creation. Never create silently.
 - Prompt-driven only. Do not add scripts under `.specify/scripts/`.
 - Use generic prefixes such as `sample` in all examples.
@@ -93,7 +97,7 @@ per machine. Use full-refname mode, never `--branch`.
 
 Place the `--` separator according to what the command expects on each side, and never by reflex. For
 commands whose positional arguments are refs — `git branch`, `git worktree add` — the separator precedes
-them: `git branch -- "$BRANCH" "$BASE_REF"`. For `git checkout` and `git switch`, everything *after* `--`
+them: `git branch -- "$BRANCH" "$BASE_COMMIT"`. For `git checkout` and `git switch`, everything *after* `--`
 is a pathspec, so the ref goes first and the separator follows it: `git checkout "$BRANCH" --`. Writing
 `git checkout -- "$BRANCH"` does not switch branches; it asks Git to restore a *file* named like the branch,
 which fails outright in the usual case and silently discards uncommitted changes when a path of that name
@@ -114,24 +118,51 @@ record that disagrees with reality leads to a question, never to a destructive a
 
 If the file exists:
 
-- **Root branch.** Read the live root branch with `git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD` — the
-  same command used wherever this document says "live root branch" — and compare it against the recorded
-  `milestone_branch`. On a mismatch (the task belongs to milestone `epic-1`, the root sits on `epic-2`), raise
-  the **same options offered in step 6**:
-  STOP so the user switches the root themselves / update the record to the current root branch as a
-  deliberate act / continue and keep the existing record. Preflight never switches the root itself. Do not
-  hard-STOP here: the same divergence has an escape hatch in step 6, and the existing convention for branch
-  mismatch elsewhere in TDK is warn-only. The durable source of truth for the milestone check is the spec's
-  `milestone_branch`; git-map is only a hint.
-- **Each recorded sub-repository.** Verify with `git -C "$PROJECT_DIR/<path>" rev-parse --abbrev-ref HEAD`,
-  or confirm the worktree path exists and sits on the recorded branch. If every record matches, reuse it,
-  ask nothing, and return.
+- **Artifact host branch.** Informational only. Report it, never compare it against a milestone: a
+  milestone belongs to a code repository, and the artifact host is not one of them.
+- **Each recorded sub-repository.** Classify its row using the six row states in
+  `references/git-map-contract.md`, and evaluate in this order — the order matters, and it is the same
+  precedence `status` uses for `milestoneState`:
+
+  | Order | Row | Check | On divergence |
+  |---|---|---|---|
+  | 0 | `base_commit_by_repo[<sub>]` present but invalid | none — this is a blocking validation error | **STOP and reconfirm.** No mutation. Do not degrade to comparing `Branch`, do not coerce the value away; leave it in the file for the user to see |
+  | 1 | intent differs from the row's `Milestone` (`realized`, `realized-unverified`) | reconcile the new intent against the record | One confirmation, three outcomes — see below. Never fast-return past a changed intent |
+  | 2 | `realized` | `git -C "$PROJECT_DIR/<path>" merge-base --is-ancestor "$BASE_COMMIT" "$BRANCH"`, and the repository sits on `$BRANCH` at its working root | the three recovery paths below |
+  | 3 | `realized-unverified` (base key absent) | compare `Branch` only, and **warn** that the base cannot be verified | Do not recreate, and do not backfill the base from the milestone's current tip — the tip is now, the base is then |
+  | 4 | `cleaning` | read `cleaned_by_repo` to see how far the previous cleanup got | Continue from there using the original `worktree_path`, or cancel explicitly. Never fast-resume, never treat it as realized, and do not demand `reset` — an unfinished cleanup has nothing to reset yet |
+  | 5 | `cleaned` | re-verify live before honouring the marker | Live really gone: require `reset`. Live still there, on `$BRANCH`, containing `$BASE_COMMIT`: ask once to reconcile. Never lock unconditionally |
+  | 6 | `pending` (`Branch` unusable) | nothing to resume | Continue through steps 4 to 7, with the branch name read-only |
+
+  Ancestry is checked against the recorded **base commit**, never against the milestone's current ref. A
+  milestone that gained a commit after the branch was cut is normal, and comparing against its tip
+  reports every such branch as broken.
+
+  Branch metadata, ancestry and `worktree list` are read at the **repository root**; HEAD and dirty state
+  are read at the **working root** — the recorded worktree when it still exists, otherwise the repository.
+  A recorded worktree that has been deleted is a recoverable state, not a dead end.
+
+  If every record matches and no intent has changed, reuse it, ask nothing, and return.
+
+  **Reconciling a changed intent** has exactly three outcomes, and each one writes something, so the
+  question is asked once rather than on every resume:
+
+  | Choice | Written |
+  |---|---|
+  | Update the record to the spec | the row's `Milestone` becomes the new intent; `base_commit_by_repo` is left alone, because the base that was actually used is history |
+  | Bring the spec back to the record | `spec.milestone_branch[<sub>]` becomes the row's `Milestone` |
+  | STOP | nothing — and it is asked again next time, correctly, because nothing was decided |
+
+  There is no "accept the difference and write nothing": that leaves a state the file cannot express
+  and asks the same question forever.
 
 **A partial record locks the branch name.** When git-map carries `feature_branch` in its frontmatter — the
 mid-run crash case — repositories without a row continue through steps 4 to 7, but the branch name is no
 longer an editable suggestion. Key this on the frontmatter field, never on row count: a plan seed has rows
 too, and locking on those would freeze the name before the user ever saw it. Take it verbatim from the git-map frontmatter and display it **read-only** in the
-batched prompt. Renaming requires `tdk-repo-worktree --cleanup` followed by a fresh run. Without this lock, a
+batched prompt. Renaming requires `tdk-repo-worktree cleanup` followed by `tdk-repo-worktree reset`,
+which returns the rows to `pending` and releases the task-level `feature_branch` once no realized row
+remains. Without this lock, a
 rename on the second run splits the task in two: one repository on the recorded branch, another on the new
 name, while the frontmatter holds only a single `branch:` field. The adopt path dies with it, because adopt
 keys on "matches the expected name" and the branch left by the crash no longer matches.
@@ -141,7 +172,7 @@ keys on "matches the expected name" and the branch left by the crash no longer m
 | Situation | Action |
 |---|---|
 | Branch exists, repository sits elsewhere | Check the branch out again. Do not create. |
-| Branch is genuinely gone | Offer to recreate it from the base ref, warning that any history it held is lost. |
+| Branch is genuinely gone | Offer to recreate it from the recorded **base commit**, warning that any history it held is lost. Never from the milestone's current ref. |
 | Worktree gone, branch still present | Re-attach with `git -C "$PROJECT_DIR/<path>" worktree add "$PROJECT_DIR/<worktree-path>" "$BRANCH"` — **without** `-b`. |
 
 When the re-attach fails with "already checked out", run `git -C "$PROJECT_DIR/<path>" worktree list` to
@@ -181,6 +212,17 @@ directory.
   only constrains the parsing layer in code — it does not apply to a prompt-driven skill, and projects can
   relax it.
 
+**Verify repository identity before anything may be mutated or dispatched.** Rejecting `..` and absolute
+paths filters *strings*; it does not establish that a path is the repository it claims to be. A clean
+relative path such as `apps/api` can be a symlink to the builder root, and a `Worktree path` can be an
+independent clone that shares the branch name and the whole history. Both pass every check above, and
+both end with commands running against the wrong repository.
+
+Apply the identity gate from `references/git-map-contract.md` — containment in the workspace, the
+repository root being neither the builder root nor the artifact host, a shared `--git-common-dir`
+between working root and repository root, and registered membership in `worktree list --porcelain`.
+A failure here is a **STOP**, not a warning, and nothing is mutated.
+
 Show the derived repository set in the batched prompt so the user can correct it.
 
 #### 4. Resolve the branch name
@@ -195,97 +237,53 @@ format on what the user types** — no `<folder>/<ticket>` shape, no required pr
 layers above are the only constraint. The exception is a partial git-map record, which locks the name
 (step 1). Whatever is agreed applies to every repository in the set and goes into git-map.
 
-#### 5. Suggest a base ref
+#### 5. Prepare per-repository intent candidates
 
-Per repository, take the suggestion from the git-map seed's `Base ref` column when one exists, falling back
-to `PROJECT_CONTEXT.featureEnv.mainBranch`. Verify it exists on the remote after fetching — a seeded ref is a
-plan-time intention that may have been deleted since, so it is confirmed here, never trusted blindly. When it does not, fall back to the remote default via
-`git -C "$PROJECT_DIR/<path>" symbolic-ref refs/remotes/origin/HEAD`. When `origin/HEAD` is unset — common
-for a remote added by hand — do not guess: leave the suggestion blank and ask the user to supply it.
+Treat a plan seed's `Base ref` as a prompt hint, not as a verified base. Resolve each repository's
+milestone by the precedence in `references/git-map-contract.md`, then prepare the source choices that the
+single prompt must confirm:
 
-A base ref edited by the user goes through the same three validation layers as the branch name. Where a
-repository has more than one remote, show the full `<remote>/<branch>` form in the suggestion.
+- For a confirmed milestone with an upstream, retain the upstream's full ref verbatim. Never rebuild it
+  from the local branch name, and never assume the remote is `origin`.
+- For a confirmed milestone without an upstream, offer its fully qualified local branch. This is a
+  local-only candidate and needs no network operation.
+- With no confirmed milestone, identify the candidate remote explicitly. A seed may suggest it; otherwise
+  use the sole configured remote, or ask when several exist. With no remote, offer
+  `refs/heads/{featureEnv.mainBranch}` only when it resolves locally; otherwise mark the base unresolved.
 
-**Carry one variable, `BASE_REF`, holding the fully qualified `<remote>/<branch>`** — `origin/main`, never a
-bare `main`. That is also what the git-map `Base ref` column stores. Every later comparison uses it: a bare
-local name would let `cleanup` compare against a stale or absent local branch and conclude that a branch
-holding unpushed commits is empty.
+Do not carry a mutable `BASE_REF` through later steps. Do not fetch merely to make a prompt suggestion, and
+never call `fetch` or `symbolic-ref refs/remotes/...` with an empty remote. Every candidate is rendered with
+its full namespace so a local branch, an upstream, and a remote default cannot be confused.
 
-Fetch once per repository, here, before the batched prompt. Step 7 verifies rather than re-fetches.
+#### 6. Confirm intent, resolve the canonical triples, and publish it atomically
 
-#### 6. One batched prompt
+Ask **one** `AskUserQuestion` covering:
 
-Resolve the expected milestone first, from the spec's `milestone_branch` frontmatter field, and compare it
-against the root workspace repo's live branch:
+1. The artifact host's branch, labelled plainly as the artifact host and marked informational. Preflight
+   never checks it out and never treats it as a child repository's milestone.
+2. The branch name suggestion — freely editable, with no format enforcement beyond the three validation
+   layers. Keep it read-only when an existing git-map record locks it.
+3. Every affected repository, named by sub-workspace and path, with its milestone and its source choice
+   (upstream, local-only branch, selected remote, or no-remote local `mainBranch`). Include a correction
+   path for the derived repository set and an exit path for the whole batch.
 
-| Spec state | Behavior |
-|---|---|
-| Missing, empty, or still a placeholder | Treat as missing — the milestone line becomes a confirmation question |
-| Present and matching the live root | The root line is informational only |
-| Present and diverging | Raise the wrong-milestone warning with a remediation option |
+Do not ask per repository. Do not create anything silently. A no-remote repository whose local `mainBranch`
+does not resolve has no selectable canonical base: require the user to resolve it in this batch or STOP.
 
-The options are: STOP so the user switches the root themselves, or update the spec's `milestone_branch` to the
-current branch as a deliberate act. That second option is a real scenario — a spec written before its
-milestone branch existed, or a milestone that has since been merged. Never present a hard STOP with no way
-forward.
+After the user confirms the final intent, discard all earlier candidates and resolve the canonical
+`(Base ref, Base commit, kind)` triple for **every** repository using the Base resolution table. For a
+`remote` triple, fetch the explicitly selected non-empty remote exactly once with
+`GIT_TERMINAL_PROMPT=0`, then resolve the fully qualified ref and its commit. For a `local` triple, resolve
+the local ref without fetching. A confirmed upstream remains verbatim, including a non-`origin` remote.
+Any ref or commit that fails to resolve is a STOP for user resolution; do not write a `-` base commit and do
+not substitute a different ref.
 
-Then ask **one** `AskUserQuestion` covering:
-
-1. The root branch line, per the table above. Preflight never checks the root out.
-2. The branch name suggestion — freely editable, no format enforcement, validated by the three layers.
-   Read-only when a git-map record already locks it.
-3. Each affected repository with its suggested base ref, confirmed or corrected line by line.
-
-Do not ask per repository. Do not create anything silently.
-
-Shape of the batched prompt for a two-repository project:
-
-```json
-{
-  "questions": [
-    {
-      "question": "Root repository is on 'epic-1', matching the spec. Branch name for this task (edit freely):",
-      "header": "Branch",
-      "options": [
-        {"label": "feature/sample-001", "description": "Suggested from spec frontmatter; edit via Other"},
-        {"label": "Cancel", "description": "Stop before any branch is created"}
-      ],
-      "multiSelect": false
-    },
-    {
-      "question": "Base ref for 'api' (apps/api)?",
-      "header": "api base",
-      "options": [
-        {"label": "origin/main", "description": "featureEnv.mainBranch, verified on remote"},
-        {"label": "origin/develop", "description": "Other branch present on remote"}
-      ],
-      "multiSelect": false
-    },
-    {
-      "question": "Base ref for 'web' (apps/web)?",
-      "header": "web base",
-      "options": [
-        {"label": "origin/develop", "description": "Remote default from origin/HEAD"},
-        {"label": "origin/main", "description": "featureEnv.mainBranch"}
-      ],
-      "multiSelect": false
-    }
-  ]
-}
-```
-
-When a git-map record locks the name, state that in the branch question text and drop the editable framing.
-
-List the derived repository set in the prompt text and add an option to correct it, so a repository wrongly
-included or missed by the path mapping in step 3 can be fixed before anything is created. Every question
-carries a way out; cancelling any of them stops the run before the first branch exists.
-
-**Write the git-map frontmatter immediately after this confirmation and before the first git command.** Write
-`task_id`, the agreed `feature_branch`, the confirmed `milestone_branch`, and `created`, with an empty table. Deferring
-`milestone_branch` to the end is unsafe: a crash after creating branches in some repositories leaves a file with
-rows but no `milestone_branch`, so the resume check in step 1 has nothing to compare and the cross-epic guard is
-skipped in silence. Should resume ever meet a git-map without `milestone_branch`, treat it as missing — confirm
-and record it again. Do not skip the guard, and do not hard-STOP.
+**Before the first git command that mutates anything, atomically publish the complete intent.** Publish
+`task_id`, the agreed `feature_branch`, the milestone map for the **whole** confirmed repository set,
+`base_commit_by_repo` containing every resolved commit, and `created`, with an empty table. Use the atomic
+publication rule in `references/git-map-contract.md`: build and validate the complete content, write a
+same-filesystem temporary file, `fsync`, then rename. A missing commit is an omitted map key only while the
+run is stopped awaiting resolution; it is never serialized as `-`.
 
 #### 7. Validate every repository, then create
 
@@ -298,19 +296,39 @@ Check all four conditions across the whole set before creating anything anywhere
    hatch when a crash lost the record. A branch matching git-map is a resume, handled in step 1.
 
    **Verify the base before recording an adoption.** Run
-   `git -C "$PROJECT_DIR/<path>" merge-base --is-ancestor "$BASE_REF" "$BRANCH"` and show
-   `git -C "$PROJECT_DIR/<path>" log --oneline "$BASE_REF".."$BRANCH"` so the user sees what the branch actually
+   `git -C "$PROJECT_DIR/<path>" merge-base --is-ancestor "$BASE_COMMIT" "$BRANCH"` and show
+   `git -C "$PROJECT_DIR/<path>" log --oneline "$BASE_COMMIT".."$BRANCH"` so the user sees what the branch actually
    contains. Skipping this accepts a stale same-named branch — left by an abandoned task or created by
    another tool at a different base — and runs the implementation on unexpected history.
-3. **The fetch from step 5 succeeded** — `git -C "$PROJECT_DIR/<path>" fetch "$REMOTE"`. Verify here; do not fetch a second time.
-4. **Busy repository** — the repository's current branch is neither `mainBranch` nor the target branch,
-   meaning it sits on some other feature branch. Route it to step 8 *before* any create or checkout command.
+3. **The canonical base is usable**, as established from the triple published in step 6:
+
+   | `kind` | Condition |
+   |---|---|
+   | `local` | The published Base commit still resolves in the repository. **No fetch is required** |
+   | `remote` | The single step 6 fetch of the selected non-empty remote succeeded and the published Base commit still resolves from its published Base ref |
+
+   Verify here; do not fetch a second time. Demanding a successful fetch for every repository is what
+   stopped a repository whose milestone is a perfectly valid local branch — never pushed, or with an
+   unreachable remote — from proceeding at all.
+
+   The Base commit must be a commit of the Base ref resolved from the **current** intent. Step 6 already
+   discarded every pre-prompt candidate, re-resolved the triple after confirmation, and atomically published
+   it before this check. A missing base is a STOP, not a fallback or a `-` value.
+4. **Busy repository** — the repository's current branch is none of `mainBranch`, the target branch, or
+   **its own confirmed milestone**. A repository sitting on the milestone this task branches from is in
+   the expected state, not a busy one; classifying it as busy stops the normal case. Anything else means
+   it sits on some other feature branch: route it to step 8 *before* any create or checkout command.
    Never force a switch.
 
-Once all four pass, create per repository:
+   This narrows the **branch** condition only. The dirty-working-tree condition in 1 is unchanged and
+   still blocks — a repository on the right milestone with uncommitted changes is still not safe to
+   branch from.
+
+Once all four pass, create per repository. The start point is the **base commit**, never the ref name: a
+ref can move, and a bare name can resolve to a tag.
 
 ```bash
-git -C "$PROJECT_DIR/$SUB_PATH" branch -- "$BRANCH" "$BASE_REF"
+git -C "$PROJECT_DIR/$SUB_PATH" branch -- "$BRANCH" "$BASE_COMMIT"
 git -C "$PROJECT_DIR/$SUB_PATH" checkout "$BRANCH" --
 ```
 

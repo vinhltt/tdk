@@ -7,6 +7,7 @@ import type {
   FlatClaudeHookCommand,
   FlatClaudeHooksRecord,
   FlatClaudeInventory,
+  FlatClaudeRuleRecord,
   FlatClaudeRecord,
   FlatClaudeSkillFile,
   FlatClaudeSkillRecord,
@@ -17,38 +18,100 @@ function posixRelative(root: string, filePath: string): string {
   return path.relative(root, filePath).replace(/\\/g, '/');
 }
 
-function walkFiles(root: string): string[] {
-  if (!fs.existsSync(root)) return [];
+function walkFiles(root: string, excludedRoot?: string): string[] {
+  if (!fs.existsSync(root) || root === excludedRoot) return [];
   const files: string[] = [];
   for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     const full = path.join(root, entry.name);
-    if (entry.isDirectory()) files.push(...walkFiles(full));
+    if (entry.isDirectory()) files.push(...walkFiles(full, excludedRoot));
     else if (entry.isFile()) files.push(full);
   }
   return files.sort();
 }
 
-function parseFrontmatter(content: string): { frontmatter: Record<string, unknown>; body: string } {
+function walkSymlinks(root: string): string[] {
+  let rootStat: fs.Stats;
+  try {
+    rootStat = fs.lstatSync(root);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+    throw error;
+  }
+  if (rootStat.isSymbolicLink()) return [root];
+  if (!rootStat.isDirectory()) return [];
+  const symlinks: string[] = [];
+  for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+    const full = path.join(root, entry.name);
+    if (entry.isSymbolicLink()) symlinks.push(full);
+    else if (entry.isDirectory()) symlinks.push(...walkSymlinks(full));
+  }
+  return symlinks.sort();
+}
+
+export function parseFlatClaudeFrontmatter(content: string): {
+  frontmatter: Record<string, unknown>;
+  body: string;
+  frontmatterParseError?: string;
+} {
   if (!content.startsWith('---\n') && !content.startsWith('---\r\n')) {
     return { frontmatter: {}, body: content };
   }
   const newline = content.startsWith('---\r\n') ? '\r\n' : '\n';
   const end = content.indexOf(`${newline}---${newline}`, 4);
-  if (end === -1) return { frontmatter: {}, body: content };
+  if (end === -1) {
+    return { frontmatter: {}, body: content, frontmatterParseError: 'Unterminated YAML frontmatter.' };
+  }
   const raw = content.slice(4, end);
   const parsed = parseFrontmatterYaml(raw);
+  const body = content.slice(end + newline.length + 3 + newline.length);
+  if (!parsed.value || typeof parsed.value !== 'object' || Array.isArray(parsed.value)) {
+    return {
+      frontmatter: {},
+      body,
+      frontmatterParseError: parsed.error ?? 'YAML frontmatter must be a mapping.',
+    };
+  }
   return {
-    frontmatter: parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {},
-    body: content.slice(end + newline.length + 3 + newline.length),
+    frontmatter: parsed.value as Record<string, unknown>,
+    body,
+    frontmatterParseError: parsed.error,
   };
 }
 
-function parseFrontmatterYaml(raw: string): unknown {
+function parseFrontmatterYaml(raw: string): { value: unknown; error?: string } {
   try {
-    return parse(raw);
-  } catch {
-    return parseLooseScalarFrontmatter(raw);
+    return { value: parse(raw) };
+  } catch (error) {
+    const compatible = quoteLooseClaudeDescription(raw);
+    if (compatible !== raw) {
+      try {
+        return { value: parse(compatible) };
+      } catch {
+        // Preserve the original diagnostic below; compatibility only covers description scalars.
+      }
+    }
+    return {
+      value: parseLooseScalarFrontmatter(raw),
+      error: `Invalid YAML frontmatter: ${(error as Error).message}`,
+    };
   }
+}
+
+function quoteLooseClaudeDescription(raw: string): string {
+  const newline = raw.includes('\r\n') ? '\r\n' : '\n';
+  return raw.split(/\r?\n/).map((line) => {
+    const match = line.match(/^description:\s*(.*)$/);
+    if (!match) return line;
+    const value = match[1]!.trim();
+    if (
+      !value
+      || !value.includes(': ')
+      || value.startsWith('"')
+      || value.startsWith("'")
+      || /^[\[\]{},&*!|>'"%@`]/.test(value)
+    ) return line;
+    return `description: ${JSON.stringify(value)}`;
+  }).join(newline);
 }
 
 function parseLooseScalarFrontmatter(raw: string): Record<string, unknown> {
@@ -122,21 +185,24 @@ function parseHookSettings(settingsPath: string): { hooksByEvent: Record<string,
           warnings.push(`Skipped hook in ${event}: expected an object`);
           continue;
         }
-        const hookType = stringField((hook as { type?: unknown }).type);
+        const rawHook = hook as Record<string, unknown>;
+        const hookType = stringField(rawHook.type);
         if (hookType && hookType !== 'command') {
           warnings.push(`Skipped hook in ${event}: unsupported hook type ${hookType}`);
           continue;
         }
-        const command = stringField((hook as { command?: unknown }).command);
+        const command = stringField(rawHook.command);
         if (!command) {
           warnings.push(`Skipped hook in ${event}: missing command`);
           continue;
         }
-        const timeout = (hook as { timeout?: unknown }).timeout;
+        const timeout = rawHook.timeout;
         (result[event] ??= []).push({
           command,
           ...(typeof timeout === 'number' ? { timeout } : {}),
           ...(matcher ? { matcher } : {}),
+          ...(Object.prototype.hasOwnProperty.call(rawHook, 'args') ? { args: rawHook.args } : {}),
+          ...(Object.prototype.hasOwnProperty.call(rawHook, 'shell') ? { shell: rawHook.shell } : {}),
           sourceRelativePath: hookSourceFromCommand(command),
         });
       }
@@ -154,7 +220,7 @@ function buildSkill(root: string, mainPath: string, files: string[]): FlatClaude
   const relative = posixRelative(root, mainPath);
   const skillName = relative.split('/')[2] ?? path.basename(path.dirname(mainPath));
   const content = fs.readFileSync(mainPath, 'utf-8');
-  const parsed = parseFrontmatter(content);
+  const parsed = parseFlatClaudeFrontmatter(content);
   const skillRoot = `.claude/skills/${skillName}`;
   return {
     kind: 'skill',
@@ -165,6 +231,7 @@ function buildSkill(root: string, mainPath: string, files: string[]): FlatClaude
     name: stringField(parsed.frontmatter.name) ?? skillName,
     description: stringField(parsed.frontmatter.description),
     frontmatter: parsed.frontmatter,
+    frontmatterParseError: parsed.frontmatterParseError,
     body: parsed.body,
     files: files
       .filter((file) => posixRelative(root, file).startsWith(`${skillRoot}/`))
@@ -178,7 +245,7 @@ function buildSkill(root: string, mainPath: string, files: string[]): FlatClaude
 
 function buildAgent(root: string, sourcePath: string): FlatClaudeAgentRecord {
   const content = fs.readFileSync(sourcePath, 'utf-8');
-  const parsed = parseFrontmatter(content);
+  const parsed = parseFlatClaudeFrontmatter(content);
   const basename = path.basename(sourcePath, '.md');
   return {
     kind: 'agent',
@@ -187,13 +254,30 @@ function buildAgent(root: string, sourcePath: string): FlatClaudeAgentRecord {
     name: stringField(parsed.frontmatter.name) ?? basename,
     description: stringField(parsed.frontmatter.description),
     frontmatter: parsed.frontmatter,
+    frontmatterParseError: parsed.frontmatterParseError,
+    body: parsed.body,
+  };
+}
+
+function buildRule(root: string, sourcePath: string): FlatClaudeRuleRecord {
+  const content = fs.readFileSync(sourcePath, 'utf-8');
+  const parsed = parseFlatClaudeFrontmatter(content);
+  const basename = path.basename(sourcePath, path.extname(sourcePath));
+  return {
+    kind: 'rule',
+    sourcePath,
+    sourceRelativePath: posixRelative(root, sourcePath),
+    name: basename,
+    description: stringField(parsed.frontmatter.description),
+    frontmatter: parsed.frontmatter,
+    frontmatterParseError: parsed.frontmatterParseError,
     body: parsed.body,
   };
 }
 
 function buildCommand(root: string, sourcePath: string): FlatClaudeCommandRecord {
   const content = fs.readFileSync(sourcePath, 'utf-8');
-  const parsed = parseFrontmatter(content);
+  const parsed = parseFlatClaudeFrontmatter(content);
   const relative = posixRelative(root, sourcePath);
   const segments = commandSegments(relative);
   return {
@@ -203,6 +287,7 @@ function buildCommand(root: string, sourcePath: string): FlatClaudeCommandRecord
     name: stringField(parsed.frontmatter.name) ?? segments.join('/'),
     description: stringField(parsed.frontmatter.description),
     frontmatter: parsed.frontmatter,
+    frontmatterParseError: parsed.frontmatterParseError,
     body: parsed.body,
     segments,
   };
@@ -211,10 +296,13 @@ function buildCommand(root: string, sourcePath: string): FlatClaudeCommandRecord
 export function discoverFlatClaudeInventory(consumerRoot: string): FlatClaudeInventory {
   const claudeRoot = path.join(consumerRoot, '.claude');
   if (!fs.existsSync(claudeRoot)) throw new Error(`No .claude directory found at ${claudeRoot}`);
-  const allFiles = walkFiles(claudeRoot);
+  const allFiles = walkFiles(claudeRoot, path.join(claudeRoot, 'worktrees'));
+  const skillSymlinks = walkSymlinks(path.join(claudeRoot, 'skills'))
+    .map((file) => posixRelative(consumerRoot, file));
   const claimed = new Set<string>();
   const records: FlatClaudeRecord[] = [];
   const warnings: string[] = [];
+  let settingsParseError: FlatClaudeInventory['settingsParseError'];
 
   for (const file of allFiles.filter((item) => /\/\.claude\/skills\/[^/]+\/SKILL\.md$/.test(item.replace(/\\/g, '/')))) {
     try {
@@ -227,6 +315,10 @@ export function discoverFlatClaudeInventory(consumerRoot: string): FlatClaudeInv
   }
   for (const file of allFiles.filter((item) => /\/\.claude\/agents\/[^/]+\.md$/.test(item.replace(/\\/g, '/')))) {
     records.push(buildAgent(consumerRoot, file));
+    claimed.add(posixRelative(consumerRoot, file));
+  }
+  for (const file of allFiles.filter((item) => /\/\.claude\/rules\/[^/]+\.(?:md|mdc)$/.test(item.replace(/\\/g, '/')))) {
+    records.push(buildRule(consumerRoot, file));
     claimed.add(posixRelative(consumerRoot, file));
   }
   for (const file of allFiles.filter((item) => item.replace(/\\/g, '/').includes('/.claude/commands/') && item.endsWith('.md'))) {
@@ -264,7 +356,14 @@ export function discoverFlatClaudeInventory(consumerRoot: string): FlatClaudeInv
         for (const hookFile of hookFiles) claimed.add(hookFile.sourceRelativePath);
       }
     } catch (err) {
-      warnings.push(`Invalid .claude/settings.json: ${(err as Error).message}`);
+      const message = (err as Error).message;
+      warnings.push(`Invalid .claude/settings.json: ${message}`);
+      settingsParseError = {
+        sourcePath: settingsPath,
+        sourceRelativePath: '.claude/settings.json',
+        message,
+      };
+      claimed.add('.claude/settings.json');
     }
   }
 
@@ -279,5 +378,12 @@ export function discoverFlatClaudeInventory(consumerRoot: string): FlatClaudeInv
     .filter((relative) => !claimed.has(relative))
     .map((relative) => ({ path: relative, reason: 'No convert-flat matcher recognized this .claude entry' }));
 
-  return { consumerRoot, records, unrecognized, warnings };
+  return {
+    consumerRoot,
+    records,
+    unrecognized,
+    warnings,
+    ...(settingsParseError ? { settingsParseError } : {}),
+    skillSymlinks,
+  };
 }

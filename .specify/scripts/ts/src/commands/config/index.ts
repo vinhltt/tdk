@@ -4,7 +4,7 @@
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { Command } from 'commander';
-import { detectConfig, writeAgentJson } from '../../utils/index';
+import { detectConfig, writeAgentJson, getRepoRoot } from '../../utils/index';
 
 /** Recursively find all .md files with metadata */
 function scanMdFiles(dir: string, base: string = dir): { path: string; size: number; modified: number }[] {
@@ -31,7 +31,7 @@ export function createConfigIndexCommand(): Command {
     .option('--sub-workspace <name>', 'Target sub-workspace')
     .option('--full', 'Full rebuild mode', false)
     .action((opts) => {
-      const config = detectConfig({ subWorkspace: opts.subWorkspace });
+      const config = detectConfig({ configAnchor: getRepoRoot(), cwd: process.cwd(), subWorkspace: opts.subWorkspace });
 
       if (config.error === 'sub_workspace_not_found') {
         process.stderr.write(`Error: Sub-workspace '${config.requestedSubWorkspace}' not found\n`);

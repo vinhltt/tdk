@@ -25,13 +25,15 @@ function read(path: string): string {
 
 describe('git-map seed lifecycle contract', () => {
   it('distinguishes a plan seed from a realized run by frontmatter, not row count', () => {
-    const contract = read(GIT_MAP_CONTRACT);
     const preflight = read(PREFLIGHT_SKILL);
 
     // Keying the branch-name lock on row count would freeze the name before the
     // user ever saw it, because a plan seed already has rows.
-    expect(contract).toContain('never the row count');
-    expect(contract).toContain('Row count cannot carry this signal');
+    //
+    // The contract side of this invariant is asserted behaviourally in
+    // git-map-contract-milestone.test.ts (`classifyRow` returns `seed` whenever `feature_branch`
+    // is absent, whatever the rows contain). Pinning the contract's English sentences here as
+    // well only made the rule expensive to restate.
     expect(preflight).toContain('Key this on the frontmatter field, never on row count');
   });
 
@@ -41,20 +43,20 @@ describe('git-map seed lifecycle contract', () => {
     expect(contract).toMatch(/Seed, written by `\/tdk-plan`/);
   });
 
-  it('treats seeded base refs as suggestions that are re-verified at implement time', () => {
-    const preflight = read(PREFLIGHT_SKILL);
-    expect(preflight).toContain('never trusted blindly');
-    expect(preflight).toContain("git-map seed's `Base ref` column");
-  });
-
   it('plans seed the git map only for polyrepo projects', () => {
     const plan = read(PLAN_SKILL);
     expect(plan).toContain('### Step 3e — Seed Git Map');
     // config always sets subWorkspaces to [], so a missing-key test never fires
     expect(plan).toContain('empty or absent');
     expect(plan).toContain('not a missing key');
-    // Plan time records intent only — no branch, no fetch.
-    expect(plan).toContain('creates no branch and runs no fetch');
+    // Plan time records intent only: it creates nothing, but it does fetch — read-only — so each
+    // repository's base ref is seeded from its real default branch.
+    expect(plan).toContain('creates nothing, and fetches read-only to seed base refs');
+    // A hung remote must not hang the plan, and a remote wanting credentials must not open a
+    // prompt inside a step that is documented as never blocking.
+    expect(plan).toContain('TIMEOUT_BIN');
+    expect(plan).toContain('GIT_TERMINAL_PROMPT=0');
+    expect(plan).toContain('seeded from mainBranch');
   });
 
   it('keeps plan.md structure and frontmatter schema closed', () => {

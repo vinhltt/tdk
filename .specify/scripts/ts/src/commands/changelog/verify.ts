@@ -3,7 +3,7 @@
 // 5 checks: CHANGELOG header, marketplace.json, plugin.json, SKILL.md, cross-consistency.
 // No writes, no mutation — pure read + report.
 
-import { execFileSync } from 'node:child_process';
+import { runGit } from '../../utils/git-env';
 import { existsSync } from 'node:fs';
 import { Command } from 'commander';
 import type { CheckOpts, CheckResult } from './checks/types';
@@ -21,10 +21,7 @@ export interface RunDeps {
 /** Default git runner: array-form execFile (no shell interpolation). */
 function defaultGitDiff(root: string): string[] {
   try {
-    const out = execFileSync('git', ['-C', root, 'diff', '--name-only', 'HEAD'], {
-      encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    return out.split('\n').filter(Boolean);
+    return runGit(['-C', root, 'diff', '--name-only', 'HEAD']).split('\n').filter(Boolean);
   } catch {
     return [];
   }

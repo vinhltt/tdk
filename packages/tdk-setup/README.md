@@ -44,11 +44,13 @@ bun /path/to/tdk/packages/tdk-setup/src/index.ts install "$CONSUMER_ROOT" --harn
 bun /path/to/tdk/packages/tdk-setup/src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --dry-run
 ```
 
-Migrate an existing flat `.claude/` tree to Codex artifacts:
+Migrate an existing flat `.claude/` tree to an explicit target harness:
 
 ```bash
-bun src/index.ts convert-flat "$CONSUMER_ROOT" --dry-run
-bun src/index.ts convert-flat "$CONSUMER_ROOT" --yes
+bun src/index.ts convert-flat "$CONSUMER_ROOT" --harness codex --dry-run
+bun src/index.ts convert-flat "$CONSUMER_ROOT" --harness codex --yes
+bun src/index.ts convert-flat "$CONSUMER_ROOT" --harness omp --parts agents,rules,settings,hooks,skills,context --dry-run
+bun src/index.ts convert-flat "$CONSUMER_ROOT" --harness omp --parts agents,rules,settings,hooks,skills,context --yes
 ```
 
 Every selection resolves the coupled base `tdk-core`, `tdk-inception`,
@@ -70,7 +72,7 @@ If `.specify/` was distributed with `bash distribute.sh <consumer-root> --prefix
 | --- | --- |
 | `install [root]` | Install selected TDK plugin artifacts into `.claude/` or materialized `.codex/` + `.agents/skills/` targets. |
 | `convert` | Maintainer-only command that emits generated Codex packages under `.specify/codex-plugins/<plugin>/`. |
-| `convert-flat [root]` | Convert an existing flat `.claude/` tree into additive `.codex/` and `.agents/skills/` artifacts. |
+| `convert-flat [root] --harness <codex|omp>` | Convert an existing flat `.claude/` tree into harness-native artifacts. Codex is all-at-once; OMP supports additive/explicit-removal conversion for `agents`, `rules`, `settings`, `hooks`, `skills`, and `context`. |
 
 ## Install Notes
 
@@ -114,6 +116,56 @@ Underscore-prefixed shared skill directories such as `_shared` are copied as ref
 
 ## Convert-Flat Notes
 
-`convert-flat` leaves the source `.claude/` tree untouched, reports unknown entries as skipped, and writes Codex ownership state to `.specify/state/harness-install/codex.json`.
+`convert-flat` requires `--harness codex` or `--harness omp` and leaves the source `.claude/` tree
+untouched. Codex writes ownership state to `.specify/state/harness-install/codex.json`. OMP writes
+state to `.specify/state/harness-install/omp.json`; its first non-TTY run requires `--parts`
+with one or more available parts (`agents,rules,settings,hooks,skills,context`), later runs reuse active
+manifest parts, and removal is explicit through `--remove-parts`.
 
-Use `--force` to overwrite conflicts on unowned or user-edited `.codex/` targets.
+`convert-flat` prints progress by default while it resolves parts, scans `.claude/`, validates and
+renders targets, builds the reconcile plan, and applies changes. The final report lists every planned
+install, update, skip, deletion, and conflict; `--dry-run` ends with an explicit no-mutation message.
+Transient `.claude/worktrees/**` snapshots are excluded from the source inventory. Claude-generated
+single-line `description` scalars containing unquoted colons are recovered without weakening
+validation for other malformed YAML frontmatter.
+
+OMP agent conversion requires explicit source `name` and `description`, maps
+tool/model names to OMP frontmatter, and emits a minimal string `output` schema so delegated `yield`
+calls return valid data. OMP rule conversion translates `paths`/`inject` to native rule buckets,
+regenerates Claude-managed rules from manifest-owned `.specify/claude-rules/` sources, and rejects
+reserved or duplicate logical names before writing. Mechanically extracted descriptions are reported
+as placeholders. OMP settings conversion adopts a regular handwritten `.omp/config.yml` through a
+byte-preserving sentinel merge, records a managed-region checksum, and creates a durable pre-write
+backup of the existing `.omp/` tree. Unsupported or local-only settings are reported without copying
+their values; scoped permissions are never broadened into global approvals.
+
+### OMP hooks
+
+OMP hook conversion preserves the eight supported event mappings and their existing matcher, session, and output-control contract in the [generated bridge](src/lib/harness-transform/claude-hook-bridge.ts). `Stop` runs only for terminal main-session `agent_end` events; `SubagentStart` and `SubagentStop` run only for detected child sessions. When topology metadata is unavailable, the conservative fallback runs `Stop` and skips `Subagent*`. `SessionStart` and `PreCompact` matchers degrade to match-all when OMP does not expose matcher data.
+
+The [command classifier](src/lib/harness-transform/hook-command.ts) translates its bounded portable subset—a literal `node` invocation with a safe relative hook script, literal/project-root arguments, and optionally the exact `cd "$CLAUDE_PROJECT_DIR" &&` prefix—into a shell-free Node descriptor. The OMP runtime must have the `node` CLI on `PATH`. Other parseable commands remain POSIX-shell commands and use `/bin/sh` only for Linux or macOS; malformed commands are rejected. The native Windows compatibility claim is deliberately limited to the direct Node-descriptor lane, not an all-shell launch guarantee.
+
+`--target-platform <win32|linux|darwin>` is available only for an OMP conversion that selects `hooks` in `--parts`. Its resolution is explicit flag > saved OMP ownership-manifest target > conversion host. Use an explicit Windows target when generating from WSL:
+
+```bash
+bun src/index.ts convert-flat "$CONSUMER_ROOT" --harness omp --parts hooks --target-platform win32 --dry-run
+bun src/index.ts convert-flat "$CONSUMER_ROOT" --harness omp --parts hooks --target-platform win32 --yes
+```
+
+A `win32` target rejects shell-dependent hooks while the conversion plan is built, before any writes. The selected target is persisted in the OMP ownership manifest; later partial conversions that do not select hooks retain it, while removing hooks clears it.
+
+Launch failures fail open with bounded, redacted diagnostics: generated bridges cap stdout and stderr independently at 1 MiB and do not log commands, argv, environment, payload, or raw stderr. Timeout and output-limit handling makes a bounded attempt to clean up the owned child tree; it does not promise cleanup for arbitrary self-daemonized processes. `PreToolUse.additionalContext` is not model-visible context in OMP and remains out of scope (#162).
+
+OMP skill conversion copies `.claude/skills/<name>/**` byte-for-byte into `.omp/skills/`, skips
+internal `_*/SKILL.md` entrypoints, validates descriptions and effective-name uniqueness before any
+write, and disables only the Claude user/project skill sources. Because OMP merges project
+`.claude/settings.json` after `.omp/config.yml`, top-level `skills` or `disabledProviders` settings
+block skill takeover rather than producing an ineffective toggle.
+
+OMP context conversion writes `.omp/AGENTS.md` as the exact `@../CLAUDE.md` import, keeping the root
+`CLAUDE.md` authoritative instead of copying it. A missing root file produces a Layer 1 report note
+without a target, and an existing unowned `.omp/AGENTS.md` remains a collision unless `--force` is used.
+
+Use `--force` to overwrite conflicts on ordinary unowned or user-edited managed targets. A regular,
+non-conflicting `.omp/config.yml` is adopted by `settings` through sentinel merge without `--force`;
+edits inside its TDK-managed sentinel region remain fail-closed even with `--force`.

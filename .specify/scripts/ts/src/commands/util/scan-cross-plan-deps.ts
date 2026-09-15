@@ -8,7 +8,7 @@
 import { readFileSync, writeFileSync, renameSync, existsSync, statSync, readdirSync, mkdirSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { Command } from 'commander';
-import { loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson } from '../../utils/index';
+import { loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson, findConfigFile } from '../../utils/index';
 import { extractFrontmatter, type FrontmatterResult } from './parse-plan-frontmatter';
 import { detectAll, applyD1Fix, type PlanIndexEntry } from './cross-plan-deps-detectors';
 
@@ -105,8 +105,9 @@ function main(): void {
     .parse();
 
   const opts = program.opts<{ current?: string; fixD1?: string; verify: boolean; json: boolean }>();
-  const env = loadFeatureEnv();
-  const specsRoot = join(getRepoRoot(), env.specsRoot);
+  const repoRoot = getRepoRoot();
+  const env = loadFeatureEnv(findConfigFile(repoRoot));
+  const specsRoot = join(repoRoot, env.specsRoot);
   const cachePath = join(specsRoot, env.defaultFolder, CACHE_FILENAME);
 
   const startedAt = Date.now();

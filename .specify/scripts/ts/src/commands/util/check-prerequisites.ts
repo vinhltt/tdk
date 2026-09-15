@@ -5,7 +5,7 @@
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson } from '../../utils/index';
+import { loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson, findConfigFile } from '../../utils/index';
 
 const program = new Command()
   .name('check-prerequisites')
@@ -16,8 +16,8 @@ const program = new Command()
   .option('--include-tasks', '[deprecated] Include tasks.md in available docs list', false)
   .option('--paths-only', 'Only output path variables, no validation', false)
   .action((taskId: string, opts: { json: boolean; requireTasks: boolean; includeTasks: boolean; pathsOnly: boolean }) => {
-    const env = loadFeatureEnv();
     const repoRoot = getRepoRoot();
+    const env = loadFeatureEnv(findConfigFile(repoRoot));
     const paths = getFeaturePaths(
       join(repoRoot, env.specsRoot, env.defaultFolder, taskId.includes('/') ? taskId.slice(taskId.indexOf('/') + 1) : taskId),
       repoRoot,

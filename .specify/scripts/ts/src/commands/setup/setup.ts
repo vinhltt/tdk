@@ -1,17 +1,8 @@
 #!/usr/bin/env bun
-import { execFileSync } from 'node:child_process';
+import { getRepoRoot } from '../../utils/index';
 import { parseSetupArgs, runSetupSteps } from './setup-cli';
 import { defaultRunner } from './utils/default-command-runner';
 import { banner, stepHeader, successMsg, failMsg, skipMsg, summaryTable, manualSteps, finalMessage } from './utils/output-helpers';
-
-function getProjectRoot(): string {
-  if (process.env.CLAUDE_PROJECT_DIR) return process.env.CLAUDE_PROJECT_DIR;
-  try {
-    return execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' }).trim();
-  } catch {
-    return process.cwd();
-  }
-}
 
 function detectOs(): string {
   switch (process.platform) {
@@ -69,7 +60,7 @@ OPTIONS:
   }
 
   const opts = parseSetupArgs(argv);
-  const projectRoot = getProjectRoot();
+  const projectRoot = getRepoRoot();
   const ctx = {
     projectRoot,
     os: detectOs(),

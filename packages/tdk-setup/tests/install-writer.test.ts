@@ -276,7 +276,7 @@ describe('applyInstallPlan', () => {
     const result = await applyInstallPlan(repairPlan, { yes: true, interactive: false });
 
     expect(result.settingsWritten).toBe(true);
-    expect(fs.readFileSync(path.join(consumer.root, '.claude', 'settings.json'), 'utf-8')).toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(fs.readFileSync(path.join(consumer.root, '.claude', 'settings.json'), 'utf-8')).toContain('.claude/hooks/tdk-core/hooks/hook-gateway.cjs');
   });
 
   test('backs up and removes unmanaged stale generated hooks json after approval', async () => {
@@ -941,6 +941,7 @@ describe('applyInstallPlan', () => {
     fs.mkdirSync(path.dirname(target), { recursive: true });
     fs.writeFileSync(target, originalContent);
     fs.chmodSync(target, 0o700);
+    const originalMode = fs.statSync(target).mode & 0o7777;
     plan.writes = [{
       ...plan.writes[0]!,
       sourceChecksum: sha256Buffer(replacement),
@@ -953,7 +954,7 @@ describe('applyInstallPlan', () => {
     await expect(applyInstallPlan(plan, { yes: true, interactive: false })).rejects.toThrow(/Checksum mismatch/);
 
     expect(fs.readFileSync(target)).toEqual(originalContent);
-    expect(fs.statSync(target).mode & 0o7777).toBe(0o700);
+    expect(fs.statSync(target).mode & 0o7777).toBe(originalMode);
     expect(fs.existsSync(plan.manifestPath)).toBe(false);
   });
 

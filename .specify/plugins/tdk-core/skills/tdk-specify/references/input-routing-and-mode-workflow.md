@@ -59,12 +59,28 @@ Discovery is parent epic context, not a direct predecessor for /tdk-specify. Con
 
 The replay path is the only case that may skip duplicate-spec STOP.
 
-Check duplicate git branches as non-blocking warning:
+Check duplicate git branches as non-blocking warning. Run the check in the repositories the branch would
+actually be created in — the sub-workspaces — anchoring every command so a session opened elsewhere does not
+silently inspect the wrong repository:
 
 ```bash
-git branch --list "$FOLDER/$TICKET_ID" 2>/dev/null
-git ls-remote --heads origin "refs/heads/$FOLDER/$TICKET_ID" 2>/dev/null
+EXPECTED_BRANCH="$FOLDER/$TICKET_ID"
+SUB_WORKSPACE_PATHS=(...)   # PROJECT_CONTEXT.subWorkspaces[].path
+[ ${#SUB_WORKSPACE_PATHS[@]} -eq 0 ] && SUB_WORKSPACE_PATHS=(".")
+
+# A remote check must stay bounded: credentials must never open a prompt, and an unreachable
+# remote must not stall a step documented as a non-blocking warning.
+TIMEOUT_BIN=$(command -v timeout || command -v gtimeout || true)
+
+for SUB_PATH in "${SUB_WORKSPACE_PATHS[@]}"; do
+  git -C "$PROJECT_DIR/$SUB_PATH" branch --list "$EXPECTED_BRANCH" 2>/dev/null
+  GIT_TERMINAL_PROMPT=0 ${TIMEOUT_BIN:+$TIMEOUT_BIN 5} \
+    git -C "$PROJECT_DIR/$SUB_PATH" ls-remote --heads origin "refs/heads/$EXPECTED_BRANCH" 2>/dev/null
+done
 ```
+
+A path that is not a git repository, an unreachable remote, and a timeout all fail quietly and are
+skipped. This check never blocks and never prompts.
 
 Create feature directory when `SPEC_REPLAY_INTERVIEW` is not true:
 
@@ -72,16 +88,20 @@ Create feature directory when `SPEC_REPLAY_INTERVIEW` is not true:
 mkdir -p "$FEATURE_DIR"
 ```
 
-Note current branch for warning:
+Read the artifact host's branch for display:
 
 ```bash
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "N/A")
-EXPECTED_BRANCH="$FOLDER/$TICKET_ID"
+HOST_BRANCH=$(git -C "$PROJECT_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "N/A")
 ```
 
-If `CURRENT_BRANCH != EXPECTED_BRANCH`, print warning only.
+Print it as `Artifact host: $HOST_BRANCH`. This is **not** a milestone: a milestone is a property of a
+code repository, and on a polyrepo the artifact host is not one of them. Do not compare it against
+`EXPECTED_BRANCH` and do not warn about it — `EXPECTED_BRANCH` names a branch no repository is supposed
+to be on yet, since `/tdk-implement` Step 6A creates it. Comparing the two fires on every correct run and
+pushes the user toward the checkout that `tdk-branch-preflight` — the authority on this model — exists to
+prevent.
 
-Store: `FEATURE_DIR`, `SPEC_FILE`, `EXPECTED_BRANCH`, `CURRENT_BRANCH`.
+Store: `FEATURE_DIR`, `SPEC_FILE`, `EXPECTED_BRANCH`, `HOST_BRANCH`.
 
 ## Step 0.2a: Reject Direct Discovery-To-Specify Routing
 

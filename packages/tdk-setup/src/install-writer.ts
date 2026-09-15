@@ -5,6 +5,7 @@ import { sha256Buffer, sha256File } from './checksum';
 import { blockingCollisions, isPromptableCollision } from './collisions';
 import {
   backupTargetPath,
+  durableBackupTargetPath,
   ensureInstallPlanOperationStamp,
   harnessAllowedRoots,
   migrationJournalTargetPath,
@@ -178,6 +179,66 @@ function backupFile(plan: InstallPlan, prompt: RequiredPrompt, transaction: Inst
       fs.unlinkSync(temporary);
     }
   }
+}
+
+function collectDurableBackupEntries(
+  root: string,
+  current: string,
+  directories: string[],
+  files: string[],
+): void {
+  const stat = fs.lstatSync(current);
+  if (stat.isSymbolicLink()) throw new Error(`Refusing symlink in durable backup source: ${path.relative(root, current) || '.'}`);
+  if (stat.isFile()) {
+    files.push(current);
+    return;
+  }
+  if (!stat.isDirectory()) throw new Error(`Refusing non-file entry in durable backup source: ${path.relative(root, current) || '.'}`);
+  directories.push(current);
+  for (const entry of fs.readdirSync(current).sort()) {
+    collectDurableBackupEntries(root, path.join(current, entry), directories, files);
+  }
+}
+
+function backupDurableRoot(plan: InstallPlan, relativeRoot: string): string | undefined {
+  const source = path.join(plan.consumerRoot, relativeRoot);
+  if (!fs.existsSync(source)) return undefined;
+  validateHarnessTargetPath({
+    consumerRoot: plan.consumerRoot,
+    targetPath: source,
+    allowedRoots: [source],
+    label: `Durable backup source ${relativeRoot}`,
+  });
+  const destination = durableBackupTargetPath(plan, relativeRoot);
+  validateMutationTarget(plan, destination, `Durable backup ${relativeRoot}`);
+  if (fs.existsSync(destination)) throw new Error(`Durable backup already exists: ${destination}`);
+
+  const directories: string[] = [];
+  const files: string[] = [];
+  collectDurableBackupEntries(source, source, directories, files);
+  try {
+    for (const directory of directories) {
+      fs.mkdirSync(path.join(destination, path.relative(source, directory)), { recursive: true });
+    }
+    for (const file of files) {
+      validateHarnessTargetPath({
+        consumerRoot: plan.consumerRoot,
+        targetPath: file,
+        allowedRoots: [source],
+        label: `Durable backup source file ${path.relative(source, file)}`,
+      });
+      const stat = fs.lstatSync(file);
+      if (!stat.isFile() || stat.isSymbolicLink()) {
+        throw new Error(`Durable backup source changed during copy: ${path.relative(source, file)}`);
+      }
+      const target = path.join(destination, path.relative(source, file));
+      fs.copyFileSync(file, target, fs.constants.COPYFILE_EXCL);
+    }
+  } catch (error) {
+    if (fs.existsSync(destination)) fs.rmSync(destination, { recursive: true, force: true });
+    throw error;
+  }
+  return destination;
 }
 
 type FileSnapshot =
@@ -413,6 +474,7 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
   const written: string[] = [];
   const removed: string[] = [];
   const warnings: string[] = [];
+  const durableBackups: string[] = [];
   let settingsWritten = false;
   let installSettingsWritten = false;
 
@@ -428,6 +490,16 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
   };
 
   try {
+    const mutatesHarnessTargets = plan.writes.length > 0
+      || plan.removals.length > 0
+      || plan.settingsChanged
+      || plan.installSettingsChanged;
+    if (mutatesHarnessTargets) {
+      for (const relativeRoot of plan.durableBackupRoots ?? []) {
+        const backup = backupDurableRoot(plan, relativeRoot);
+        if (backup) durableBackups.push(backup);
+      }
+    }
     for (const prompt of plan.prompts) backupFile(plan, prompt, transaction);
     if (plannedJournalPath) {
       migrationJournalPath = writeMigrationJournal(plan, transaction, expectedPreimage(plannedJournalPath));
@@ -516,7 +588,7 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
   return {
     written,
     removed,
-    backedUp: transaction.backupFiles,
+    backedUp: [...durableBackups, ...transaction.backupFiles],
     manifestPath: plan.manifestPath,
     settingsWritten,
     installSettingsWritten,

@@ -1,11 +1,34 @@
 // CLI: setup-plan — ensure feature directory exists and copy plan template
 // Replaces: bash/setup-plan.sh
 
-import { existsSync, mkdirSync, copyFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, copyFileSync, writeFileSync, realpathSync } from 'node:fs';
+import { join, resolve, dirname, basename } from 'node:path';
 import { Command } from 'commander';
-import { loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson, parseFeatureId, findConfigFile } from '../../utils/index';
+import {
+  loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson, parseFeatureId, findConfigFile,
+  realpathOrSelf, isWithin,
+} from '../../utils/index';
 import { extractFrontmatter } from './parse-plan-frontmatter';
+
+/**
+ * Where `path` will physically live once created.
+ *
+ * `realpathSync` throws on a path that does not exist yet, and a lexical `resolve()` cannot see a
+ * symlinked ancestor — so the deepest existing ancestor is resolved and the not-yet-created
+ * segments are re-attached to it.
+ */
+function physicalDestination(path: string): string {
+  const absolute = resolve(path);
+  const pending: string[] = [];
+  let existing = absolute;
+  while (!existsSync(existing)) {
+    const parent = dirname(existing);
+    if (parent === existing) return absolute;
+    pending.unshift(basename(existing));
+    existing = parent;
+  }
+  return join(realpathSync.native(existing), ...pending);
+}
 
 const program = new Command()
   .name('setup-plan')
@@ -17,15 +40,11 @@ const program = new Command()
     const repoRoot = getRepoRoot();
     const env = loadFeatureEnv(findConfigFile(repoRoot));
 
-    // Build feature dir path respecting folder/ticket split
+    // parseFeatureId, not a raw join: the task ID is user input and a raw join happily builds
+    // `<root>/.specify/../../elsewhere`. The same guard already protected `parent_spec` below;
+    // the task being created was the one path that skipped it.
     const id = taskId.toLowerCase();
-    let featureDirPath: string;
-    if (id.includes('/')) {
-      const slash = id.indexOf('/');
-      featureDirPath = join(repoRoot, env.specsRoot, id.slice(0, slash), id.slice(slash + 1));
-    } else {
-      featureDirPath = join(repoRoot, env.specsRoot, env.defaultFolder, id);
-    }
+    const featureDirPath = parseFeatureId(id, repoRoot, env.specsRoot, env.defaultFolder).featureDir;
 
     const paths = getFeaturePaths(featureDirPath, repoRoot, taskId) as Record<string, string | boolean>;
     const featureDir = paths['featureDir'] as string;
@@ -58,6 +77,18 @@ const program = new Command()
           process.exit(1);
         }
       }
+    }
+
+    // A resolved-but-lexical path is not proof of location. `realpath(repoRoot)` says nothing
+    // about an artifact directory *below* it: with `.specify/specs` symlinked out of the host,
+    // featureDir still reads as "inside the host" while mkdir/copy land somewhere else entirely.
+    // Resolve where the write physically goes, and refuse rather than repair.
+    const physicalDest = physicalDestination(featureDir);
+    if (!isWithin(realpathOrSelf(repoRoot), physicalDest)) {
+      process.stderr.write(
+        `ERROR: refusing to write outside the artifact host — '${featureDir}' physically resolves to '${physicalDest}', which is outside '${realpathOrSelf(repoRoot)}'. Check for a symlinked ${env.specsRoot} directory.\n`,
+      );
+      process.exit(1);
     }
 
     // Ensure feature directory exists

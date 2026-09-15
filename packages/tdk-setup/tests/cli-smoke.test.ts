@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
+import { fileURLToPath } from 'node:url';
 
-const CLI_ENTRY = new URL('../src/index.ts', import.meta.url).pathname;
+const CLI_ENTRY = fileURLToPath(new URL('../src/index.ts', import.meta.url));
 
 async function runCli(args: string[]): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   const proc = Bun.spawn(['bun', CLI_ENTRY, ...args], {

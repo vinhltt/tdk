@@ -1,8 +1,8 @@
 // Config loading, workspace/sub-workspace/module detection
 // Replaces: detect-config.sh core logic
 
-import { readFileSync, existsSync } from 'node:fs';
-import { resolve, relative, dirname, join, normalize } from 'node:path';
+import { readFileSync, existsSync, realpathSync } from 'node:fs';
+import { resolve, relative, dirname, join, normalize, isAbsolute } from 'node:path';
 import { SpecifyConfigSchema, type SpecifyConfig, type SubWorkspace, type Module } from './types';
 
 const MAX_SEARCH_DEPTH = 20;
@@ -49,6 +49,8 @@ export interface ConfigResult {
   availableSubWorkspaces?: string[];
   requestedModule?: string;
   availableModules?: string[];
+  /** Conflicting `subWorkspaces[].path` values, keyed by the duplicated name. */
+  duplicateSubWorkspaceNames?: Record<string, string[]>;
 }
 
 // --- Config discovery ---
@@ -66,6 +68,89 @@ export function findConfigFile(startDir?: string): string | null {
     current = parent;
   }
   return null;
+}
+
+// --- Artifact host resolution ---
+
+/**
+ * Per-invocation cache for host resolution.
+ *
+ * Deliberately NOT a module-level singleton. `(cwd, env)` does not describe the filesystem,
+ * but the answer depends on it: creating or deleting a `.specify/.specify.json`, or repointing
+ * a symlink, changes the host for the very same `(cwd, env)`. A long-lived cache would keep
+ * serving the stale host and no reset hook can fix that in production — a reset hook only makes
+ * *tests* deterministic. So the cache lives for exactly one resolve and then dies.
+ *
+ * The key is the already-normalized `dir`, never `(cwd, env)`: one resolve calls `hostOf` twice
+ * with two different directories (`hostOf(env)` then `hostOf(cwd)`), so a `(cwd, env)` key would
+ * make the second call read back the first call's answer.
+ */
+export interface ResolveContext {
+  hosts: Map<string, string | null>;
+}
+
+export function createResolveContext(): ResolveContext {
+  return { hosts: new Map() };
+}
+
+/** True when `configPath` points at a config declaring itself a sub-workspace, not a workspace. */
+function isSubWorkspaceConfig(configPath: string): boolean {
+  try {
+    const raw = readFileSync(configPath, 'utf-8');
+    if (configPath.endsWith('.yaml') || configPath.endsWith('.yml')) return false;
+    return (JSON.parse(raw) as { type?: unknown } | null)?.type === 'sub-workspace';
+  } catch {
+    // Unreadable or malformed config: treat as a workspace so the caller reports the parse
+    // error against this host rather than silently walking past it to an outer one.
+    return false;
+  }
+}
+
+/**
+ * The artifact host for `dir`: the nearest enclosing directory holding a **workspace**
+ * `.specify/.specify.json`, with its symlinks resolved. Child `type: "sub-workspace"` configs are
+ * skipped — they describe a member repository, not the place artifacts are read from and written to.
+ *
+ * Returns `null` when no workspace config encloses `dir`.
+ */
+export function hostOf(dir: string, ctx: ResolveContext = createResolveContext()): string | null {
+  const start = realpathOrSelf(dir);
+  const cached = ctx.hosts.get(start);
+  if (cached !== undefined) return cached;
+
+  let search: string | null = start;
+  let host: string | null = null;
+  for (let i = 0; i < MAX_SEARCH_DEPTH && search !== null; i++) {
+    const configPath: string | null = findConfigFile(search);
+    if (configPath === null) break;
+    const candidate = dirname(dirname(configPath));
+    if (!isSubWorkspaceConfig(configPath)) {
+      host = realpathOrSelf(candidate);
+      break;
+    }
+    // Skip this child config and keep climbing from above the directory that holds it.
+    const parent = dirname(candidate);
+    search = parent === candidate ? null : parent;
+  }
+
+  ctx.hosts.set(start, host);
+  return host;
+}
+
+/** `realpathSync.native` when the path exists, otherwise the resolved-but-unrealized path. */
+export function realpathOrSelf(dir: string): string {
+  try {
+    return realpathSync.native(resolve(dir));
+  } catch {
+    return resolve(dir);
+  }
+}
+
+/** True when `descendant` is `ancestor` itself or nested inside it. Both must already be real paths. */
+export function isWithin(ancestor: string, descendant: string): boolean {
+  if (ancestor === descendant) return true;
+  const rel = relative(ancestor, descendant);
+  return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel);
 }
 
 export function parseConfig(configPath: string): { config: SpecifyConfig | null; error: string | null } {
@@ -189,6 +274,29 @@ export function validateModules(config: SpecifyConfig): string[] {
   return warnings;
 }
 
+/**
+ * Sub-workspace names that appear more than once, with the paths that collide.
+ *
+ * Every per-repository map — the spec's `milestone_branch`, `base_commit_by_repo`,
+ * `cleaning_by_repo`, `cleaned_by_repo` — is keyed by this name, while the schema only requires it
+ * to be non-empty. Two entries sharing a name therefore share one slot: the later one overwrites
+ * the earlier, resume compares one repository against the other's commit, and cleaning one marks
+ * both. No concurrency is needed; a plain sequential loop does it.
+ *
+ * Reported rather than repaired: merging or suffixing names would silently change which repository
+ * a recorded value belongs to.
+ */
+export function findDuplicateSubWorkspaceNames(config: SpecifyConfig): Record<string, string[]> {
+  const pathsByName: Record<string, string[]> = Object.create(null);
+  for (const sub of config.subWorkspaces ?? []) (pathsByName[sub.name] ??= []).push(sub.path);
+
+  const duplicates: Record<string, string[]> = Object.create(null);
+  for (const [name, paths] of Object.entries(pathsByName)) {
+    if (paths.length > 1) duplicates[name] = paths;
+  }
+  return duplicates;
+}
+
 export function validatePathContainment(basePath: string, targetPath: string): void {
   const absBase = resolve(basePath);
   const absTarget = resolve(targetPath);
@@ -203,11 +311,24 @@ export function validatePathContainment(basePath: string, targetPath: string): v
 export interface DetectConfigOptions {
   subWorkspace?: string;
   module?: string;
+  /**
+   * Where the user is standing. Drives sub-workspace and module autodetection, and — when
+   * `configAnchor` is absent — also the config search. Keep passing the real cwd.
+   */
   cwd?: string;
+  /**
+   * Where to start looking for `.specify/.specify.json`. Callers that already resolved the
+   * artifact host pass it here so config discovery and the rest of the process agree on one root.
+   *
+   * This is a separate knob on purpose: `cwd` also decides which sub-workspace/module the user is
+   * targeting, so folding the host into `cwd` resolves the right root while destroying the target
+   * (`autoDetectSubWorkspace`/`autoDetectModule` would see the host instead of the user's location).
+   */
+  configAnchor?: string;
 }
 
 export function detectConfig(opts: DetectConfigOptions = {}): ConfigResult {
-  const configPath = findConfigFile(opts.cwd);
+  const configPath = findConfigFile(opts.configAnchor ?? opts.cwd);
 
   const emptyResult: ConfigResult = {
     configFound: false, workspaceRoot: '', workspaceName: '', docsPath: '', memoryPath: '.specify/memory',
@@ -226,6 +347,21 @@ export function detectConfig(opts: DetectConfigOptions = {}): ConfigResult {
   }
 
   const warnings = validateModules(config);
+
+  // A blocking config error, not a warning: every per-repository map is keyed by sub-workspace
+  // name, so duplicates silently make two repositories share one record. Surfaced before any
+  // caller can seed, migrate or mutate anything.
+  const duplicates = findDuplicateSubWorkspaceNames(config);
+  if (Object.keys(duplicates).length > 0) {
+    return {
+      ...emptyResult,
+      workspaceRoot,
+      subWorkspaces: config.subWorkspaces ?? [],
+      error: 'duplicate_sub_workspace_names',
+      duplicateSubWorkspaceNames: duplicates,
+      warnings,
+    };
+  }
 
   const result: ConfigResult = {
     configFound: true,

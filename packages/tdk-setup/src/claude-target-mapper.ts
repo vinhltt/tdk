@@ -6,6 +6,7 @@ export interface HarnessTargetMapper {
   targetDir(): '.claude';
   settingsPath(): '.claude/settings.json';
   hookRoot(plugin: string): string;
+  libRoot(plugin: string): string;
   scriptRoot(plugin: string): string;
   mapTargetPath(plugin: string, sourceRelativePath: string): string | undefined;
 }
@@ -14,7 +15,8 @@ export const claudeTargetMapper: HarnessTargetMapper = {
   name: 'claude',
   targetDir: () => '.claude',
   settingsPath: () => '.claude/settings.json',
-  hookRoot: (plugin) => posixTargetPath('.claude', 'hooks', plugin),
+  hookRoot: (plugin) => posixTargetPath('.claude', 'hooks', plugin, 'hooks'),
+  libRoot: (plugin) => posixTargetPath('.claude', 'hooks', plugin, 'lib'),
   scriptRoot: (plugin) => posixTargetPath('.claude', 'scripts', plugin),
   mapTargetPath(plugin, sourceRelativePath) {
     const parts = sourceRelativePath.split('/');
@@ -28,11 +30,11 @@ export const claudeTargetMapper: HarnessTargetMapper = {
         return posixTargetPath('.claude', 'agents', rest);
       case 'hooks':
         if (rest === 'hooks.json') return undefined;
-        return posixTargetPath('.claude', 'hooks', plugin, rest);
+        return posixTargetPath(claudeTargetMapper.hookRoot(plugin), rest);
       case 'commands':
         return posixTargetPath('.claude', 'commands', rest);
       case 'lib':
-        return posixTargetPath('.claude', 'lib', rest);
+        return posixTargetPath(claudeTargetMapper.libRoot(plugin), rest);
       case 'scripts':
         return posixTargetPath('.claude', 'scripts', plugin, rest);
       default:

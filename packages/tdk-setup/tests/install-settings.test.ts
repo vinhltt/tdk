@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import * as fs from 'node:fs';
 import {
+  assertAllowedOmpTargetDir,
+  defaultInstallSettings,
   loadInstallSettings,
   parseHarnessList,
   resolveClaudeSettings,
@@ -29,6 +31,32 @@ describe('install settings', () => {
     expect(settings?.defaults.sourcePrefix).toBe('tdk-');
     expect(settings?.defaults.targetPrefix).toBe('sample-');
     expect(settings?.defaults.selectedPlugins).toEqual(['tdk-core']);
+  });
+
+  test('provides the validated OMP target and default model map', () => {
+    const consumer = makeConsumer();
+    const settings = defaultInstallSettings();
+
+    expect(assertAllowedOmpTargetDir(consumer.root, '.omp')).toBe('.omp');
+    expect(() => assertAllowedOmpTargetDir(consumer.root, '.codex')).toThrow(/Only .omp/);
+    expect(settings.harnesses.omp).toEqual({
+      enabled: true,
+      targetDir: '.omp',
+      modelMap: { haiku: '@smol', sonnet: '@task', opus: '@slow' },
+    });
+  });
+
+  test('loads a persisted OMP model map override', () => {
+    const consumer = makeConsumer();
+    const settings = defaultInstallSettings();
+    settings.harnesses.omp!.modelMap.sonnet = '@review';
+    fs.writeFileSync(settingsPathFor(consumer.root), JSON.stringify(settings));
+
+    expect(loadInstallSettings(consumer.root)?.harnesses.omp?.modelMap).toEqual({
+      haiku: '@smol',
+      sonnet: '@review',
+      opus: '@slow',
+    });
   });
 
   test('rejects per-harness prefix and plugin overrides in v1', () => {

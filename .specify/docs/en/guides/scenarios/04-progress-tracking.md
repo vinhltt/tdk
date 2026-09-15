@@ -21,6 +21,11 @@
 - **Artifact checklist** — which files exist (spec.md, plan.md) with last modified dates
 - **Progress bar** — visual 22-character bar showing completion percentage (derived from plan.md ## Phases)
 - **Phase breakdown** — completed vs. remaining phases from plan.md ## Phases table
+- **Artifact host** — the branch the workspace holding the artifacts is on. Informational only: a
+  milestone belongs to a code repository, and on a polyrepo the artifact host is not one of them
+- **Sub-workspaces** — on a polyrepo project, the branch each repository is live on, the branch `git-map.md`
+  records for it, its own milestone, and whether the two agree. Omitted entirely on single-repo
+  projects, where the milestone is reported under `git` instead
 - **Recommendations** — what command to run next based on current state
 - **Warnings** — stale artifacts (>7 days unchanged) or outdated artifacts (>14 days)
 
@@ -31,6 +36,7 @@ Example output:
 ```
 Feature: feat-001
 Status: In Progress
+Artifact host: epic-1
 
 Artifacts:
   ✓ spec.md      (2026-02-10)
@@ -47,6 +53,18 @@ Phases (from plan.md ## Phases):
 
 Next: Continue with /tdk-implement feat-001
 ```
+
+On a polyrepo project the report adds a per-repository section between the header and the artifacts:
+
+```
+Sub-workspaces (3)
+  api   apps/api   feature/feat-001  ✅ matches git-map
+  web   apps/web   develop           ⚠️ git-map records feature/feat-001
+  jobs  apps/jobs  —                 ⏸️ not created (seed: origin/main)
+```
+
+A ⚠️ line means that repository is on a different branch than the task recorded — often because it is busy
+with other work. `/tdk-repo-worktree create` gives the task its own working root without disturbing it.
 
 ## Tips
 

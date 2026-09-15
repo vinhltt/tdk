@@ -17,7 +17,7 @@
 //    parseConfig() only supports JSON. Falls back to parent docsPath if yaml-only.
 
 import { Command } from 'commander';
-import { detectConfig } from '../../utils/index';
+import { detectConfig, getRepoRoot } from '../../utils/index';
 import {
   syncFromSubWorkspace,
   syncToSubWorkspace,
@@ -48,7 +48,14 @@ const program = new Command()
     }
 
     // Config detection via TS utils — no subprocess (matches bash lines 79-90)
-    const cfg = detectConfig();
+    const cfg = detectConfig({ configAnchor: getRepoRoot(), cwd: process.cwd() });
+    if (cfg.error) {
+      const duplicateNames = cfg.duplicateSubWorkspaceNames === undefined
+        ? ''
+        : `: ${Object.keys(cfg.duplicateSubWorkspaceNames).join(', ')}`;
+      process.stderr.write(`ERROR: ${cfg.error}${duplicateNames}\n`);
+      process.exit(1);
+    }
     if (!cfg.configFound) {
       process.stderr.write('ERROR: No .specify.yaml found\n');
       process.exit(1);

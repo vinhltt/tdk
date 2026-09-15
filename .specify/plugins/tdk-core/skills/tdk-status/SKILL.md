@@ -1,8 +1,8 @@
 ---
 name: tdk-status
-description: "Track Workflow Progress"
+description: "This skill should be used when the user asks to 'check status', 'tdk-status', 'what's the progress of <task-id>', 'which branch is each repo on', or needs a read-only report of a TDK feature's artifacts, phase progress, and per-repository branch state. Never modifies files."
 metadata:
-  version: "3.4.11"
+  version: "13.0.2"
 ---
 
 # /tdk-status - Track Workflow Progress
@@ -41,7 +41,36 @@ Use structured JSON fields, not this skill's formatted report or recommendation 
 - `phases.currentPhase`: first `in_progress` phase file, or empty string
 - `phases.nextPhase`: first `todo` phase file, or empty string
 - `phases.rows[].phase_status`
+- `git.available`, `git.branch`, `git.uncommitted`
+- `git.rootBranch`: live branch of the **artifact host** (same value as `git.branch`). This is not a
+  milestone — a milestone belongs to a code repository, and on a polyrepo the artifact host is not one
+- `git.featureBranch`: `feature_branch` from `spec.md`; falls back to `<defaultFolder>/<ticket>` when absent or invalid
+- `git.featureBranchExists`: whether that branch exists in the root repository
+- `git.milestone`: **single-repository projects only** — the milestone for the artifact host, which is
+  also the code repository there. Absent on a polyrepo, where milestones are per sub-workspace
+- `git.milestoneState`: **single-repository projects only** — `matched` | `drifted` | `unknown`,
+  derived from whether the feature branch exists and descends from the milestone
+- `subWorkspaces[].name`: sub-workspace identity
+- `subWorkspaces[].path`: workspace-relative path — from config, or from the map row when the row is no longer in config
+- `subWorkspaces[].expectedBranch`: branch recorded in that repository's own `git-map.md` row, or `null` when
+  the row is absent, still seeded, or the repository is untouched by this task
+- `subWorkspaces[].actualBranch`: branch the repository is live on, or `null` when it could not be read
+- `subWorkspaces[].worktreePath`: working-root override, or `null` when the main checkout is used
+- `subWorkspaces[].state`: `matched` | `drifted` | `not-created` | `unknown`
+- `subWorkspaces[].baseRef`: base ref recorded for that repository
+- `subWorkspaces[].milestone`: effective milestone for that repository, resolved by the git-map
+  contract's precedence — the spec's map wins over the recorded `Milestone` column
+- `subWorkspaces[].milestoneState`: `matched` | `drifted` | `unverified` | `unknown` | `invalid`.
+  `invalid` means the recorded base commit is present but unusable and must be fixed by hand;
+  `unverified` means no base commit was recorded, so the base cannot be checked
+- `subWorkspaces[].note`: short explanation, present only on `unknown` rows — `detached HEAD`,
+  `not a separate git repository`, `not a git working tree`, `recorded worktree is missing`,
+  `worktree path is not a worktree of this repository`, or `not in config`
 - `error` and `phasesParseError` for stop conditions
+
+Every branch field listed above is additive: no previously published field changed name or type.
+The whole `subWorkspaces` key is omitted on single-repo projects, and `git.milestone` /
+`git.milestoneState` appear only there.
 
 The collector reads `plan.md` `## Phases`; appended phase files are visible only after they are added to that table.
 
@@ -88,8 +117,36 @@ Using the JSON data, render the following sections:
 
 Feature: {title}
 Location: {location}
-Branch: {git.branch}
+Artifact host: {git.rootBranch}
 ```
+
+Display only. Never warn about the branch here and never suggest a checkout — `tdk-branch-preflight`
+owns that comparison and the action that follows it.
+
+### Sub-workspaces
+
+Render this section only when `subWorkspaces` is present and non-empty. Omit it entirely otherwise — a
+single-repo project must see the exact output it saw before this section existed.
+
+```
+Sub-workspaces (3)
+  api   apps/api   feature/sample-001  ✅ matches git-map
+  web   apps/web   develop             ⚠️ git-map records feature/sample-001
+  jobs  apps/jobs  —                   ⏸️ not created (seed: origin/main)
+```
+
+One line per entry, using `subWorkspaces[].state`:
+
+| `state` | Icon | Text | Extra |
+|---|---|---|---|
+| `matched` | ✅ | `matches git-map` | — |
+| `drifted` | ⚠️ | `git-map records {expectedBranch}` | append `— use /tdk-repo-worktree create if the repo is busy` |
+| `not-created` | ⏸️ | `not created` | append `(seed: {baseRef})` when `baseRef` is set |
+| `unknown` | ❔ | `{note}` | A sub-workspace that is a plain directory of the root repo reports
+  `not a separate git repository`; it shares the root's branch and has none of its own |
+
+Show `actualBranch` as the branch column, or `—` when it is `null`. When `worktreePath` is set, append
+`@ {worktreePath}` so the reader knows which working root the branch was read from.
 
 ### ErcSpec Workflow (if `workflows.ercspec` is true)
 ```
@@ -133,4 +190,6 @@ If `warnings[]` is non-empty, show each with ⚠️ icon:
 - `outdated` (>14 days): "Consider updating"
 
 ### Git Status
-Show branch, feature_branch_exists, uncommitted count from `git` object.
+Show `git.rootBranch`, `git.featureBranch`, `git.featureBranchExists`, and `git.uncommitted` from the
+`git` object. Every value here describes the **root workspace repository** only; per-repository branch
+state lives in the `Sub-workspaces` section above.

@@ -12,6 +12,7 @@ export interface CheckboxOpts {
   selectedMsgPrefix: string;
   cancelMsg: string;
   allowEmpty?: boolean;
+  initialSelected?: string[];
 }
 
 export function canUseCheckboxPrompt(
@@ -47,7 +48,8 @@ export async function selectFromCheckbox(
   io: CheckboxPromptIo = { input: defaultInput, output: defaultOutput },
 ): Promise<string[]> {
   const { input, output } = io;
-  const selected = new Set<number>();
+  const initiallySelected = new Set(opts.initialSelected ?? []);
+  const selected = new Set(items.flatMap((item, index) => initiallySelected.has(item) ? [index] : []));
   let cursor = 0;
   let message = '';
   const wasRaw = input.isRaw;

@@ -89,9 +89,15 @@ describe('spec-template YAML frontmatter migration contract', () => {
       expect(contract).toContain('schema_version: 1');
     });
 
-    it('instructs agent to record the root branch without switching branches', () => {
+    it('seeds milestone_branch per repository, observationally, switching nothing', () => {
       expect(contract).toContain('milestone_branch');
+      // Per repository, anchored at each sub-workspace. The artifact host is only the fallback for
+      // a single-repository project, never the source for its children.
+      expect(contract).toContain('git -C "$PROJECT_DIR/<sub-path>" branch --show-current');
       expect(contract).toContain('git -C "$PROJECT_DIR" branch --show-current');
+      expect(contract).toContain('creates and switches no branch');
+      // The superseded rule stays called out where it lived, so the inversion is discoverable.
+      expect(contract).toContain('replaces the earlier rule');
     });
 
     it('confirms milestone_branch on polyrepo projects and skips it on single-repo', () => {

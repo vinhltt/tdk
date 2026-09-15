@@ -6,6 +6,51 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.116.0] - 2026-09-15
+
+### Changed
+- **[Contract]** A milestone is a property of a code repository, not of the workspace that stores the artifacts. `git-map-contract.md` now defines three roles — builder root, artifact host, code repo — that coincide only on a single-repository project, and every rule below is stated against them
+- **[tdk-specify]** Seeds `milestone_branch` per repository. A bare scalar remains valid and means the artifact host's own milestone; it is no longer applied to child repositories
+- **[tdk-plan]** Step 3e resolves `(Base ref, Base commit, kind)` per repository from its own milestone, reading both the remote and the branch name from the milestone's upstream. The remote is no longer assumed to be `origin`: an upstream-selected non-first remote is fetched, repositories with several remotes and no upstream require confirmation, and repositories with no remote skip fetch and resolve a local default without constructing an invalid remote ref
+- **[tdk-plan]** Reseeding is idempotent per repository, and a phase append now reaches Step 3e. Previously the sequence implement → cleanup → append → implement erased `feature_branch` and every row, and a repository first introduced by an appended phase was never seeded at all
+- **[tdk-branch-preflight]** The wrong-milestone guard classifies the row first and compares ancestry against the recorded base commit, across eight ordered transitions. It re-resolves the canonical `(Base ref, Base commit, kind)` after final confirmation and publishes the complete intent before mutation. Comparing a live branch against a milestone reported every successful implement, and every advanced milestone, as a problem
+- **[tdk-branch-preflight]** A repository sitting on its own confirmed milestone is no longer "busy". Only the branch condition was narrowed; a dirty tree still blocks
+- **[tdk-repo-worktree]** Cleanup keeps the row and splits intent from verified result, so a half-finished cleanup is resumable instead of reading as complete. New `reset` mode gives a cleaned or cancelled row a way back
+- **[Scripts]** `git-map.md` is read by header name, with exactly two recognised header sets and no positional fallback. Reading the six-column set positionally yields a plausible, entirely wrong row
+- **[Scripts]** `base_commit_by_repo` is validated before lifecycle and intent checks: grammar at the read boundary, then repository-aware existence and commit-kind validation with lazy object fetching disabled. A ghost SHA or blob now reports `invalid`, not ancestry `drifted`
+- **[Scripts]** `subWorkspaces[].name` must be unique: every per-repository map is keyed by it, so duplicates silently make two repositories share one record. Duplicate configs now fail closed before probing or mutation, including names inherited from `Object.prototype`
+- **[Scripts]** `status` reports `subWorkspaces[].milestone` and `.milestoneState` on a polyrepo, and `git.milestone` / `git.milestoneState` on a single-repository project
+
+## [1.115.0] - 2026-09-15
+
+### Added
+- **[Scripts]** Per-repository branch reporting in the status collector
+  - `git-map.md` reader that parses seed and realized states and degrades to no data on a malformed file
+  - Live branch probe per sub-workspace, classified as matched, drifted, not created, or unknown
+  - `subWorkspaces[]` block in the status JSON, additive and omitted entirely on single-repo projects
+  - `git.rootBranch` alongside the existing `git` fields
+  - Two-way drift test between the emitted status JSON and the field list documented in `tdk-status`
+
+### Changed
+- **[tdk-status]** Reports branch state per repository instead of a single unlabelled branch line
+  - Root branch is labelled as the milestone
+  - A `Sub-workspaces` section lists each repository's live branch against the one `git-map.md` records
+  - `description` rewritten with concrete trigger phrases and an explicit read-only scope
+- **[Scripts]** Every git command in the status collector is now anchored to an explicit working
+  directory; unanchored calls reported the enclosing repository's branch regardless of which
+  repository was being described
+- **[Scripts]** `git.featureBranch` is read from the spec's `feature_branch` field, falling back to
+  `<defaultFolder>/<ticket>`; the branch prefix is no longer hard-coded
+- **[Scripts]** Branch and ref values from committed files are rejected when they carry a `..` segment,
+  which the character allowlist alone permitted
+- **[tdk-specify]** Dropped the warning that fired whenever the root workspace sat on its milestone
+  branch — the expected state — and anchored the duplicate-branch check to each sub-workspace
+- **[tdk-plan]** Seeds each repository's base ref from its real default branch via a parallel read-only
+  fetch with a per-repository timeout, falling back to `mainBranch` with a note when the fetch cannot run
+- **[tdk-branch-preflight]** Batched confirmation labels every branch line with the repository it
+  belongs to; the git map contract records that plan time now fetches read-only
+- **[Docs]** Progress-tracking scenario and skills guide describe the per-repository branch report
+
 ## [1.114.2] - 2026-09-04
 
 ### Added

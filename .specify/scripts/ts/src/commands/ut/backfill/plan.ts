@@ -4,7 +4,7 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson } from '../../../utils/index';
+import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson, findConfigFile } from '../../../utils/index';
 import { handleCliError } from '../cli-error-handler';
 
 /** Build the `plan` Commander command; used for standalone invocation only (not registered in the public CLI tree) */
@@ -18,12 +18,12 @@ export function createPlanCommand(): Command {
     .option('--force', 'Force overwrite', false)
     .option('--standalone', 'Skip feature spec requirement', false)
     .action((featureId, opts) => {
-    const env = loadFeatureEnv();
     const repoRoot = getRepoRoot();
+    const env = loadFeatureEnv(findConfigFile(repoRoot));
     featureId = featureId.toLowerCase();
 
     const feature = parseFeatureId(featureId, repoRoot, env.specsRoot, env.defaultFolder);
-    const config = detectConfig({ subWorkspace: opts.subWorkspace, module: opts.module });
+    const config = detectConfig({ configAnchor: repoRoot, cwd: process.cwd(), subWorkspace: opts.subWorkspace, module: opts.module });
 
     const cliError = handleCliError(config, opts);
     if (cliError) {

@@ -4,8 +4,11 @@
 
 import { existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
-import { execFileSync } from 'node:child_process'; // [RT4-7] Never execSync
-import { findConfigFile, parseConfig } from './config';
+import { execFileSync } from 'node:child_process'; // [RT4-7] Never execSync — bash validation hook only
+import {
+  findConfigFile, parseConfig, hostOf, createResolveContext, realpathOrSelf, isWithin,
+} from './config';
+import { runGit } from './git-env';
 import type { SpecifyConfig } from './types';
 
 // --- Feature environment ---
@@ -194,7 +197,22 @@ export function resolveSkillWorkspace(opts: {
   const configFound = (opts.configJson as Record<string, unknown>).configFound;
   if (!configFound) return result;
 
-  result.workspaceRoot = String((opts.configJson as Record<string, unknown>).workspaceRoot ?? repoRoot);
+  // The config may name its own workspaceRoot. Honour it only when it agrees with the root we
+  // already resolved — equal to it, or an ancestor of it. A config pointing somewhere else means
+  // this process would read under one host and write under another; say so instead of picking one.
+  const declaredRoot = (opts.configJson as Record<string, unknown>).workspaceRoot;
+  if (declaredRoot !== undefined && declaredRoot !== null && String(declaredRoot) !== '') {
+    const declared = realpathOrSelf(String(declaredRoot));
+    if (!isWithin(declared, realpathOrSelf(repoRoot))) {
+      throw new Error(
+        `config_workspace_root_conflict:config declares workspaceRoot ${String(declaredRoot)} ` +
+        `which does not contain the resolved artifact host ${repoRoot}`,
+      );
+    }
+    result.workspaceRoot = String(declaredRoot);
+  } else {
+    result.workspaceRoot = repoRoot;
+  }
   const target = (opts.configJson as Record<string, unknown>).targetSubWorkspace as Record<string, string> | undefined;
   if (target?.root) {
     result.targetRoot = target.root;
@@ -207,10 +225,54 @@ export function resolveSkillWorkspace(opts: {
 
 // --- Feature workflow functions ---
 
+/**
+ * The artifact host this invocation reads and writes under.
+ *
+ * Both candidate sources — `CLAUDE_PROJECT_DIR` and the process cwd — are normalized to an
+ * artifact host *before* they are compared. Comparing a raw path against a project root compares
+ * two different kinds of thing: `CLAUDE_PROJECT_DIR` pointing at a directory *inside* a host
+ * (say `<host>/.specify/scripts/ts`) used to win outright and every artifact path was then built
+ * under that subdirectory.
+ *
+ * Ladder (see the phase-02 decision table):
+ *   E1  both hosts, equal                      -> that host
+ *   E2a both hosts, cwd host inside env host    -> cwd host   (innermost host wins)
+ *   E2b both hosts, env host inside cwd host    -> env host   (innermost host wins)
+ *   E2c both hosts, unrelated trees             -> env host   (explicit caller intent)
+ *   E3  cwd host only, env set, cwd host not under env -> realpath(env)
+ *   E4  cwd host only, env set, cwd host under env     -> cwd host  (the original bug)
+ *   E5  cwd host only, env unset                -> cwd host
+ *   E6  env host only                           -> env host
+ *   E7  no host, env set                        -> realpath(env)
+ *   E8  no host, env unset                      -> git toplevel (anchored at cwd), else cwd
+ */
 export function getRepoRoot(): string {
-  if (process.env.CLAUDE_PROJECT_DIR) return process.env.CLAUDE_PROJECT_DIR;
-  try {
-    return execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' }).trim();
+  // A fresh context per call: the cache exists to stop hostOf() traversing twice within this
+  // one resolve, not to remember a host across filesystem changes.
+  const ctx = createResolveContext();
+  const envRaw = process.env.CLAUDE_PROJECT_DIR;
+  const envPath = envRaw ? realpathOrSelf(envRaw) : null;
+  const envHost = envPath === null ? null : hostOf(envPath, ctx);
+  const cwdPath = realpathOrSelf(process.cwd());
+  const cwdHost = hostOf(cwdPath, ctx);
+
+  if (envHost !== null && cwdHost !== null) {
+    if (envHost === cwdHost) return envHost;                    // E1
+    if (isWithin(envHost, cwdHost)) return cwdHost;             // E2a
+    if (isWithin(cwdHost, envHost)) return envHost;             // E2b
+    return envHost;                                             // E2c
+  }
+
+  if (cwdHost !== null) {
+    if (envPath === null) return cwdHost;                       // E5
+    return isWithin(envPath, cwdHost) ? cwdHost : envPath;      // E4 / E3
+  }
+
+  if (envHost !== null) return envHost;                         // E6
+  if (envPath !== null) return envPath;                         // E7
+
+  try {                                                         // E8
+    return runGit(['rev-parse', '--show-toplevel'], { cwd: cwdPath });
   } catch {
     return process.cwd();
   }
@@ -232,9 +294,11 @@ export function findFeatureDirByPrefix(branchName: string, repoRoot: string, spe
 // Bash outputs: REPO_ROOT, TASK_ID, HAS_GIT, FEATURE_DIR, FEATURE_SPEC, IMPL_PLAN,
 //               TASKS, RESEARCH, DATA_MODEL, QUICKSTART, CONTRACTS_DIR (11 fields)
 export function getFeaturePaths(featureDir: string, repoRoot: string, taskId: string): Record<string, string | boolean> {
+  // Anchored at repoRoot: unanchored this answered for whatever repository the caller's cwd
+  // happened to sit in, which on a multi-repo checkout is a different repository entirely.
   let hasGit = false;
   try {
-    execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8', stdio: 'pipe' });
+    runGit(['rev-parse', '--show-toplevel'], { cwd: repoRoot });
     hasGit = true;
   } catch { /* not a git repo */ }
 

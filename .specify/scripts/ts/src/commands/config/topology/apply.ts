@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { randomUUID } from 'node:crypto';
 import { writeAgentJson } from '../../../utils/agent-output';
+import { getRepoRoot } from '../../../utils/common';
 import { CliExitError, EXIT_STALE_PLAN, EXIT_SUCCESS, EXIT_VALIDATION, getExitCode } from '../../../utils/exit-codes';
 import { SpecifyConfigSchema } from '../../../utils/types';
 import { buildApplyPlan, type ApplyPlan } from './apply-plan';
@@ -37,8 +38,14 @@ function parseRawConfig(rawText: string): Record<string, unknown> {
 function buildPlanFromCurrentInputs(input: {
   topology?: string;
   runId?: string;
+  /**
+   * Artifact host this run operates on. Passed in rather than re-derived from `process.cwd()`:
+   * preview and apply must agree on one host, and the lock plus `--expect-hash` only prove the
+   * snapshot is current — they cannot tell that the host itself is the wrong one.
+   */
+  configAnchor: string;
 }): ApplyPlan {
-  const target = resolveJsonConfigTarget(process.cwd());
+  const target = resolveJsonConfigTarget(input.configAnchor);
   const safeConfig = validateConfigTargetBeforeRead(target);
   const rawConfig = parseRawConfig(safeConfig.rawText);
   const before = SpecifyConfigSchema.parse(rawConfig);
@@ -105,12 +112,14 @@ function rejectInvalidFlagCombinations(opts: TopologyApplyOptions, command: Comm
 
 function runApply(opts: TopologyApplyOptions): void {
   const runId = randomUUID();
-  const preLockPlan = buildPlanFromCurrentInputs({ topology: opts.topology, runId });
+  // One host for the whole run: preview, lock and apply must touch the same .specify.json.
+  const configAnchor = getRepoRoot();
+  const preLockPlan = buildPlanFromCurrentInputs({ topology: opts.topology, runId, configAnchor });
   if (!preLockPlan.applyEligible) {
     throw new CliExitError('--yes requires layout/topology under .specify/configurations/workspace-layout/ or .specify/configurations/workspace-topology/. External layout/topology dry-runs are not apply-eligible.', EXIT_VALIDATION, 'topology-eligibility');
   }
 
-  const target = resolveJsonConfigTarget(process.cwd());
+  const target = resolveJsonConfigTarget(configAnchor);
   const paths = buildSafeTopologyApplyPaths(target, runId, preLockPlan.topologyRealPath);
   const lock = acquireApplyLock(paths, {
     runId,
@@ -120,7 +129,7 @@ function runApply(opts: TopologyApplyOptions): void {
   });
 
   try {
-    const plan = buildPlanFromCurrentInputs({ topology: opts.topology, runId });
+    const plan = buildPlanFromCurrentInputs({ topology: opts.topology, runId, configAnchor });
     if (!plan.applyEligible) {
       throw new CliExitError('--yes requires layout/topology under .specify/configurations/workspace-layout/ or .specify/configurations/workspace-topology/. External layout/topology dry-runs are not apply-eligible.', EXIT_VALIDATION, 'topology-eligibility');
     }
@@ -162,7 +171,7 @@ export function createConfigTopologyApplyCommand(): Command {
           return;
         }
 
-        writeDryRun(buildPlanFromCurrentInputs({ topology: opts.topology }));
+        writeDryRun(buildPlanFromCurrentInputs({ topology: opts.topology, configAnchor: getRepoRoot() }));
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         const exitCode = getExitCode(error);

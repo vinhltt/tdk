@@ -38,6 +38,13 @@ export function renderMigrationReport(report: MigrationReport): string {
     lines.push('Skipped entries:');
     for (const entry of report.skipped) lines.push(`  - ${entry.path}: ${entry.reason}`);
   }
+  if (report.facts && report.facts.length > 0) {
+    lines.push('Migration facts:');
+    for (const fact of report.facts) {
+      const location = [fact.source, fact.key].filter(Boolean).join('#');
+      lines.push(`  - [layer ${fact.layer}][${fact.status}]${location ? ` ${location}:` : ''} ${fact.message}`);
+    }
+  }
   if (report.warnings.length > 0) {
     lines.push('Warnings:');
     for (const warning of report.warnings) lines.push(`  - ${warning}`);

@@ -11,7 +11,7 @@ const defaultPrefixSettings = { sourcePrefix: 'tdk-', targetPrefix: 'tdk-' };
 describe('hook merge', () => {
   test('rewrites CLAUDE_PLUGIN_ROOT command through CLAUDE_PROJECT_DIR cwd', () => {
     const rewritten = rewriteHookCommand('node "${CLAUDE_PLUGIN_ROOT}/hooks/hook-gateway.cjs" dev-context-injector');
-    expect(rewritten).toBe('cd "$CLAUDE_PROJECT_DIR" && node "${CLAUDE_PROJECT_DIR}/.claude/hooks/tdk-core/hook-gateway.cjs" dev-context-injector');
+    expect(rewritten).toBe('cd "$CLAUDE_PROJECT_DIR" && node "${CLAUDE_PROJECT_DIR}/.claude/hooks/tdk-core/hooks/hook-gateway.cjs" dev-context-injector');
   });
 
   test('preserves unmanaged hooks and adds selected plugin hook', () => {
@@ -42,7 +42,7 @@ describe('hook merge', () => {
     expect(result.collisions).toEqual([]);
     expect(result.managedHooks).toHaveLength(1);
     expect(JSON.stringify(result.nextSettings)).toContain('privacy-block.cjs');
-    expect(JSON.stringify(result.nextSettings)).toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(JSON.stringify(result.nextSettings)).toContain('.claude/hooks/tdk-core/hooks/hook-gateway.cjs');
   });
 
   test('preserves hook handler fields while rewriting args paths', () => {
@@ -278,7 +278,7 @@ describe('hook merge', () => {
     const text = JSON.stringify(result.nextSettings);
     expect(text).not.toContain(' old');
     expect(text).toContain('custom.cjs');
-    expect(text).toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(text).toContain('.claude/hooks/tdk-core/hooks/hook-gateway.cjs');
     expect(result.settingsChanged).toBe(true);
   });
 
@@ -293,7 +293,7 @@ describe('hook merge', () => {
             hooks: [
               {
                 type: 'command',
-                command: 'cd "$CLAUDE_PROJECT_DIR" && node "${CLAUDE_PROJECT_DIR}/.claude/hooks/tdk-core/hook-gateway.cjs" dev-context-injector',
+                command: 'cd "$CLAUDE_PROJECT_DIR" && node "${CLAUDE_PROJECT_DIR}/.claude/hooks/tdk-core/hooks/hook-gateway.cjs" dev-context-injector',
               },
             ],
           },
@@ -379,8 +379,8 @@ describe('hook merge', () => {
 
     expect(result.collisions).toEqual([]);
     const text = JSON.stringify(result.nextSettings);
-    expect(text).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
-    expect(text).not.toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(text).toContain('.claude/hooks/erc-core/hooks/hook-gateway.cjs');
+    expect(text).not.toContain('.claude/hooks/tdk-core/hooks/hook-gateway.cjs');
     expect(result.managedHooks[0]?.plugin).toBe('tdk-core');
   });
 
@@ -417,8 +417,8 @@ describe('hook merge', () => {
     expect(text).toContain('tdk-context');
     expect(text).not.toContain('erc-context');
     // Plugin-id segment in path uses original tdk-core (not remapped via rewriteMap)
-    expect(text).toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
-    expect(text).not.toContain('.claude/hooks/erc-core/hook-gateway.cjs');
+    expect(text).toContain('.claude/hooks/tdk-core/hooks/hook-gateway.cjs');
+    expect(text).not.toContain('.claude/hooks/erc-core/hooks/hook-gateway.cjs');
   });
 
   test('rewrite.hooks=true rewrites both hook-body text and plugin-id path', () => {
@@ -451,8 +451,8 @@ describe('hook merge', () => {
     expect(text).toContain('erc-context');
     expect(text).not.toContain('tdk-context');
     // Plugin-id segment is remapped via rewriteMap
-    expect(text).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
-    expect(text).not.toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(text).toContain('.claude/hooks/erc-core/hooks/hook-gateway.cjs');
+    expect(text).not.toContain('.claude/hooks/tdk-core/hooks/hook-gateway.cjs');
   });
 
   test('migrates managed hook command roots to transformed plugin ids', () => {
@@ -464,7 +464,7 @@ describe('hook merge', () => {
       event: 'UserPromptSubmit',
       matcher: '*',
       type: 'command',
-      command: 'cd "$CLAUDE_PROJECT_DIR" && node "${CLAUDE_PROJECT_DIR}/.claude/hooks/tdk-core/hook-gateway.cjs" dev-context-injector',
+      command: 'cd "$CLAUDE_PROJECT_DIR" && node "${CLAUDE_PROJECT_DIR}/.claude/hooks/tdk-core/hooks/hook-gateway.cjs" dev-context-injector',
     };
     const settings = {
       hooks: {
@@ -490,8 +490,8 @@ describe('hook merge', () => {
     const text = JSON.stringify(result.nextSettings);
     expect(result.collisions).toEqual([]);
     expect(result.mutations.map((mutation) => mutation.action)).toEqual(['remove', 'add']);
-    expect(text).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
-    expect(text).not.toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(text).toContain('.claude/hooks/erc-core/hooks/hook-gateway.cjs');
+    expect(text).not.toContain('.claude/hooks/tdk-core/hooks/hook-gateway.cjs');
     expect(result.managedHooks[0]?.plugin).toBe('tdk-core');
   });
 });

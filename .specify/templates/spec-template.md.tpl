@@ -5,9 +5,14 @@ feature_branch: "[FEATURE BRANCH]"    # branch created FOR this task; on a polyr
                                       # name is created in every affected sub-workspace repo.
                                       # NOT the branch it is created FROM — that base ref is decided
                                       # per repo at /tdk-implement and recorded in git-map.md.
-milestone_branch: "[MILESTONE BRANCH]"  # milestone/epic branch this task belongs to. /tdk-implement
-                                        # compares the root workspace repo against it to catch a task
-                                        # being implemented under the wrong milestone.
+milestone_branch: "[MILESTONE BRANCH]"  # milestone/epic branch this task belongs to, PER REPOSITORY.
+                                        # Map form, one key per sub-workspace name:
+                                        #   milestone_branch:
+                                        #     api: epic-1
+                                        #     web: epic-2
+                                        # A bare scalar is the legacy single-repo form and means the
+                                        # artifact host's own milestone; it is NOT applied to child
+                                        # repos. /tdk-implement offers a one-time migration to the map.
 created: "[DATE]"
 input: 'User description: "$ARGUMENTS"'
 memory_context_loaded: [true/false]

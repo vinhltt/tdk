@@ -6,7 +6,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { Command } from 'commander';
-import { detectConfig, writeAgentJson } from '../../utils/index';
+import { detectConfig, writeAgentJson, getRepoRoot } from '../../utils/index';
 
 // [RT2-3] Validate git ref format — allowlist only safe characters
 const GIT_REF_REGEX = /^[a-zA-Z0-9._/~^@{}\-]+$/;
@@ -44,7 +44,7 @@ export function createConfigDiffCommand(): Command {
       process.exit(1);
     }
 
-    const config = detectConfig({ subWorkspace: opts.subWorkspace });
+    const config = detectConfig({ configAnchor: getRepoRoot(), cwd: process.cwd(), subWorkspace: opts.subWorkspace });
 
     if (config.error === 'sub_workspace_not_found') {
       process.stderr.write(`Error: Sub-workspace '${config.requestedSubWorkspace}' not found\n`);

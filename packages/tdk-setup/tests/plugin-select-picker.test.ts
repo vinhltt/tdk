@@ -1,11 +1,16 @@
-import { describe, expect, mock, spyOn, test } from 'bun:test';
+import { afterAll, describe, expect, mock, spyOn, test } from 'bun:test';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type { Command } from 'commander';
 import { sha256, writePluginDependencyPolicy } from './fixtures';
+import * as prompt from '../src/prompt';
 
 const sourcePath = path.resolve('src');
+
+// Bun's default test runner uses one shared global, so restore the preceding
+// prompt module after this file rather than leaving a module mock for later files.
+const previousPrompt = { ...prompt };
 let pickedCatalog: string[] = [];
 
 await mock.module(`${sourcePath}/prompt`, () => ({
@@ -15,6 +20,10 @@ await mock.module(`${sourcePath}/prompt`, () => ({
   askPrefixInteractively: async (prefix: string) => prefix,
   confirmInstallTarget: async () => false,
 }));
+
+afterAll(async () => {
+  await mock.module(`${sourcePath}/prompt`, () => previousPrompt);
+});
 
 const { createInstallCommand } = await import(`${sourcePath}/install`);
 

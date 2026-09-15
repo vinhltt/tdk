@@ -64,6 +64,15 @@ describe('harness target path safety', () => {
     expect(() => validateClaude(consumer.root, path.join(consumer.root, '..', 'outside'))).toThrow(/escapes consumer root/);
   });
 
+  test('allows only the native OMP root plus shared state files for OMP', () => {
+    const consumer = makeConsumer();
+    const roots = harnessAllowedRoots(consumer.root, 'omp');
+
+    expect(roots).toContain(path.join(consumer.root, '.omp'));
+    expect(roots).not.toContain(path.join(consumer.root, '.codex'));
+    expect(roots).not.toContain(path.join(consumer.root, '.agents'));
+  });
+
   test('rejects a symlinked top-level allowed root before writes can follow it', () => {
     const consumer = makeConsumer();
     const outside = fs.mkdtempSync(path.join(consumer.root, '..', 'tdk-outside-'));
@@ -94,6 +103,8 @@ describe('harness target path safety', () => {
     { name: 'Codex .agents nested root', harness: 'codex' as const, link: '.agents/skills', target: '.agents/skills/demo/SKILL.md' },
     { name: 'Codex .codex top-level root', harness: 'codex' as const, link: '.codex', target: '.codex/config.toml' },
     { name: 'Codex .codex nested root', harness: 'codex' as const, link: '.codex/hooks', target: '.codex/hooks/hook-gateway.cjs' },
+    { name: 'OMP top-level root', harness: 'omp' as const, link: '.omp', target: '.omp/config.yml' },
+    { name: 'OMP nested root', harness: 'omp' as const, link: '.omp/agents', target: '.omp/agents/reviewer.md' },
   ]) {
     test(`rejects ${scenario.name} symlink ancestors without touching outside files`, () => {
       const consumer = makeConsumer();

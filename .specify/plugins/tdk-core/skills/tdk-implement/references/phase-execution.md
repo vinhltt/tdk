@@ -57,7 +57,9 @@ section entirely.** This reference loads on every run, so an unconditional check
 record that was never created and stop a perfectly valid run.
 
 When `GIT_MAP` does exist, inject its content into the execution context for each phase that touches a
-sub-workspace repository: the root branch, and the mapping from repository to branch and worktree path.
+sub-workspace repository: per repository, its milestone, branch, base commit and worktree path. The
+artifact host's own branch is **not** injected as milestone context — a milestone belongs to a code
+repository, and the artifact host is not one of them.
 
 Before the phase writes anything, re-verify that the repository still stands where the record says:
 

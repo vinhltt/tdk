@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "13.0.1"
+  version: "13.0.2"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -223,10 +223,174 @@ appearing for the first time at implement time. Runs after Step 3d, because it r
 1. Collect every path under `## Related Code Files` across the generated phases and prefix-match them against
    `PROJECT_CONTEXT.subWorkspaces[].path`. Paths matching none belong to the root repo — skip them. Skip a
    sub-workspace whose directory is not its own repository.
-2. Seed each affected repository's base ref from `PROJECT_CONTEXT.featureEnv.mainBranch`, written fully
-   qualified as `<remote>/<branch>` (for example `origin/main`).
-3. Write the seed rows with `Branch` and `Worktree path` as `-`, and **omit `feature_branch` from the
-   frontmatter**. Plan time records intent only; it creates no branch and runs no fetch.
+2. Resolve each affected repository's fetch remote before dispatch, then seed its base ref. A confirmed
+   milestone with an upstream uses that upstream's remote even when it is not the first remote; a local-only
+   milestone needs no fetch. Without a milestone, use the sole remote, or leave the remote unresolved and
+   ask when several exist. A repository on `develop` must not be handed `origin/main` for the user to correct
+   by hand at every implement run.
+
+   ```bash
+   AFFECTED_SUBS=(...)        # workspace-relative paths of the repos matched in step 1
+   AFFECTED_MILESTONES=(...)  # same order; empty string means this repo has no confirmed milestone
+   FETCH_TMP=$(mktemp -d)
+
+   # `timeout` is absent from a stock macOS. Resolve it once, then prove it can actually enforce a
+   # deadline: plain `timeout` only sends SIGTERM, and a transport that blocks the signal — SSH, a
+   # credential helper, an unreaped child — survives it and hangs this step forever. So
+   # `--kill-after` is required, and a `timeout` without it counts as no timeout at all.
+   #
+   # This block must not run under `set -e`: `return 99` has to reach `echo "$?"` below.
+   TIMEOUT_BIN=$(command -v timeout || command -v gtimeout || true)
+   FETCH_DEADLINE=10          # seconds; kill-after adds 5 to cover SIGTERM-ignoring processes
+
+   # Capability probe, exactly once.
+   if [ -n "$TIMEOUT_BIN" ] && ! "$TIMEOUT_BIN" --kill-after=1 1 true >/dev/null 2>&1; then
+     TIMEOUT_BIN=""           # present but cannot enforce a deadline — treat as absent
+   fi
+
+   # Sentinel 99, not 127: `timeout 1 <nonexistent-command>` already exits 127 while `timeout`
+   # itself is perfectly available, so 127 would misattribute an exec failure to a missing binary.
+   RUN_FETCH() {
+     if [ -z "$TIMEOUT_BIN" ]; then
+       return 99              # no enforceable deadline available: skip the network entirely
+     fi
+     "$TIMEOUT_BIN" --kill-after=5 "$FETCH_DEADLINE" "$@"
+   }
+
+   IDX=0
+   for SUB in "${AFFECTED_SUBS[@]}"; do
+     # Index, not a sanitized path: two different paths can sanitize to the same string, which is
+     # exactly how one repository's failure ends up reported against another.
+     KEY="$IDX"
+     MILESTONE="${AFFECTED_MILESTONES[$IDX]:-}"
+     echo "$SUB" > "$FETCH_TMP/$KEY.sub"
+     IDX=$((IDX + 1))
+
+     REMOTE=""
+     REMOTE_STATE=""
+     if [ -n "$MILESTONE" ]; then
+       UPSTREAM=$(git -C "$PROJECT_DIR/$SUB" rev-parse --symbolic-full-name \
+         "$MILESTONE@{upstream}" 2>/dev/null || true)
+       case "$UPSTREAM" in
+         refs/remotes/*)
+           REMOTE=$(git -C "$PROJECT_DIR/$SUB" config "branch.$MILESTONE.remote" 2>/dev/null || true)
+           if [ -z "$REMOTE" ] || [ "$REMOTE" = "." ]; then REMOTE_STATE="multiple_remotes"; fi
+           ;;
+         *)
+           if git -C "$PROJECT_DIR/$SUB" show-ref --verify --quiet "refs/heads/$MILESTONE"; then
+             REMOTE_STATE="local_milestone"
+           else
+             REMOTE_STATE="unresolved_milestone"
+           fi
+           ;;
+       esac
+     else
+       set -- $(git -C "$PROJECT_DIR/$SUB" remote)
+       case "$#" in
+         0) REMOTE_STATE="no_remote" ;;
+         1) REMOTE="$1" ;;
+         *) REMOTE_STATE="multiple_remotes" ;;
+       esac
+     fi
+     echo "$REMOTE" > "$FETCH_TMP/$KEY.remote"
+     (
+       case "$REMOTE_STATE" in
+         no_remote)
+           echo 98 > "$FETCH_TMP/$KEY.rc"
+           : > "$FETCH_TMP/$KEY.head"
+           : > "$FETCH_TMP/$KEY.err"
+           ;;
+         unresolved_milestone)
+           echo 95 > "$FETCH_TMP/$KEY.rc"
+           : > "$FETCH_TMP/$KEY.head"
+           echo "confirmed milestone is unresolved" > "$FETCH_TMP/$KEY.err"
+           ;;
+         local_milestone)
+           echo 97 > "$FETCH_TMP/$KEY.rc"
+           : > "$FETCH_TMP/$KEY.head"
+           : > "$FETCH_TMP/$KEY.err"
+           ;;
+         multiple_remotes)
+           echo 96 > "$FETCH_TMP/$KEY.rc"
+           : > "$FETCH_TMP/$KEY.head"
+           echo "multiple remotes require confirmation" > "$FETCH_TMP/$KEY.err"
+           ;;
+         *)
+           GIT_TERMINAL_PROMPT=0 RUN_FETCH git -C "$PROJECT_DIR/$SUB" fetch --quiet "$REMOTE" \
+             2>"$FETCH_TMP/$KEY.err"
+           echo "$?" > "$FETCH_TMP/$KEY.rc"
+           git -C "$PROJECT_DIR/$SUB" symbolic-ref "refs/remotes/$REMOTE/HEAD" 2>/dev/null \
+             > "$FETCH_TMP/$KEY.head" || true
+           ;;
+       esac
+     ) &
+   done
+   wait
+   ```
+
+   `GIT_TERMINAL_PROMPT=0` is required: a remote needing credentials would otherwise open an interactive
+   prompt inside a step that must never block. Read each repository back through its `.sub` file so a
+   result is always attributed to the path that produced it.
+
+   Read the per-repository results only after `wait`. Seeding resolves the triple
+   `(Base ref, Base commit, kind)` using the **Base resolution** table in
+   `tdk-branch-preflight/references/git-map-contract.md` — that table is the single definition, and the
+   outcomes below are its tier 3 through tier 6 inputs:
+
+   | Condition | `Base ref` seeded | Note |
+   |---|---|---|
+   | `rc` = 95 (confirmed milestone has neither an upstream nor a local branch) | unresolved | `confirmed milestone is unresolved`; require user resolution and do not fall through to a default remote |
+   | `rc` = 96 (several remotes and no upstream-selected remote) | unresolved | `multiple remotes require confirmation`; ask for the remote, then run the same bounded fetch once for that confirmed remote before resolving the triple |
+   | `rc` = 97 (confirmed local-only milestone) | `refs/heads/<milestone>` | resolve through tier 2; no fetch |
+   | `rc` = 98 (no remote) and `refs/heads/{featureEnv.mainBranch}` resolves | `refs/heads/{featureEnv.mainBranch}` | `no remote; seeded local mainBranch` |
+   | `rc` = 98 and that local branch does not resolve | `refs/heads/{featureEnv.mainBranch}` | `no remote and local mainBranch is unresolved; requires confirmation` |
+   | `rc` = 0 and `<remote>/HEAD` resolves | the resolved value, for example `refs/remotes/origin/develop` | — |
+   | `rc` = 0 but `<remote>/HEAD` is unset | `refs/remotes/<remote>/{featureEnv.mainBranch}` | `<remote>/HEAD unset; seeded from mainBranch` |
+   | `rc` = 99 | `refs/remotes/<remote>/{featureEnv.mainBranch}` | `no enforceable fetch deadline (timeout unavailable or --kill-after unsupported); skipped fetch, seeded from mainBranch` |
+   | `rc` ≠ 0 otherwise, including the deadline firing | `refs/remotes/<remote>/{featureEnv.mainBranch}` | `fetch failed: <short reason>; seeded from mainBranch` |
+
+   A repository whose milestone is already confirmed uses tier 1 or tier 2. Tier 1 fetches the remote named
+   by the milestone's upstream; tier 2 performs no fetch. A no-remote repository with no confirmed milestone
+   may use its local `mainBranch` only when that branch resolves; otherwise it has no canonical triple and
+   the batched confirmation must require user resolution. A milestone that was confirmed but resolves neither
+   locally nor remotely is also a question for the user — it never silently falls back to the default branch.
+
+   Each repository with a remote is fetched at most once, and every such fetch is bounded by
+   `FETCH_DEADLINE` + `--kill-after` (10s + 5s here); the repositories run in parallel, so the whole
+   step is bounded by that same budget rather than by the number of repositories. A no-remote repository
+   runs no fetch.
+
+   Fetching is best-effort and must never stop the plan. Offline, unauthenticated, or unreachable remotes
+   fall back to their remote `mainBranch` and carry a note into the Step 4 report — notes belong in the
+   report, not in `git-map.md`, whose schema is closed. A plan is a thinking artifact and must complete
+   without a network.
+
+   The fetch is the only network access here, and it is read-only: no branch is created, nothing is checked
+   out, nothing is pruned.
+3. Write the seed rows with `Branch` and `Worktree path` as `-`. **Omit `feature_branch` from the
+   frontmatter when creating the file; when it is already present, keep it.** Plan time records intent
+   only: it creates nothing, and fetches read-only to seed base refs. For every resolved triple, write its
+   commit into `base_commit_by_repo[<sub>]`; when a base cannot resolve, omit that key entirely — **never
+   serialize `-` as a base commit**.
+
+   **Reseeding is idempotent per repository.** Step 3e is a `git-map.md` writer and runs again on every
+   rewrite and on every phase append, so it must not undo an implement run. Read the existing file
+   first, then, per repository:
+
+   | Existing row state | Reseed does |
+   |---|---|
+   | no row | add the seed row |
+   | `seed`, `pending` | update `Milestone`, `Base ref`, and the resolved `base_commit_by_repo` entry; remove that entry when the new base is unresolved |
+   | `realized`, `realized-unverified`, `cleaning`, `cleaned` | **leave the row and its map entries exactly as they are** |
+   | `feature_branch` already in frontmatter | keep it — reseed never removes the discriminator |
+
+   Reseed may only **add** intent for a repository new to `subWorkspaces` and **update** one that has not
+   been realized. Demoting a realized row is the explicit `reset` operation in the git-map contract, not
+   a side effect of appending a phase.
+
+   Without this, the sequence *implement → cleanup → append a phase → implement* erases `feature_branch`,
+   `Branch`, `Worktree path` and all three frontmatter maps; preflight then loses the resume path and
+   offers to recreate precisely what the user just cleaned up.
 
 The absent `feature_branch` is what marks the file as a plan seed rather than a completed run — see
 `tdk-branch-preflight/references/git-map-contract.md`. `/tdk-implement` re-verifies every seeded value

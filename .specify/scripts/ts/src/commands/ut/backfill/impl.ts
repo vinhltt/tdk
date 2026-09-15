@@ -3,7 +3,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson } from '../../../utils/index';
+import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson, findConfigFile } from '../../../utils/index';
 import { handleCliError } from '../cli-error-handler';
 
 /** Create ut-impl command for CLI registration (group: tdk ut impl) */
@@ -14,12 +14,12 @@ export function createImplCommand(): Command {
     .option('--sub-workspace <name>', 'Target sub-workspace')
     .option('--module <name>', 'Target module')
     .action((featureId, opts) => {
-    const env = loadFeatureEnv();
     const repoRoot = getRepoRoot();
+    const env = loadFeatureEnv(findConfigFile(repoRoot));
     featureId = featureId.toLowerCase();
 
     const feature = parseFeatureId(featureId, repoRoot, env.specsRoot, env.defaultFolder);
-    const config = detectConfig({ subWorkspace: opts.subWorkspace, module: opts.module });
+    const config = detectConfig({ configAnchor: repoRoot, cwd: process.cwd(), subWorkspace: opts.subWorkspace, module: opts.module });
 
     const cliError = handleCliError(config, opts);
     if (cliError) {

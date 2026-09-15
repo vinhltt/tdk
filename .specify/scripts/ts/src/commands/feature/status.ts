@@ -5,9 +5,11 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { execFileSync } from 'node:child_process';
 import { Command } from 'commander';
-import { loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson } from '../../utils/index';
+import {
+  loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson,
+  detectConfig, readGitMap, probeSubWorkspaces, isValidBranchRef, runGit, findConfigFile,
+  type FeatureEnv, type GitMap, type MilestoneState } from '../../utils/index';
 import { parsePhasesTable, type PhaseRow } from '../util/phases-table-parser';
 import { extractFrontmatter } from '../util/parse-plan-frontmatter';
 
@@ -240,24 +242,112 @@ function listFeatures(featuresDir: string): void {
 // Git info
 // ---------------------------------------------------------------------------
 
-function getGitInfo(featureDir: string, ticket: string): object {
+function getGitInfo(
+  featureDir: string,
+  ticket: string,
+  repoRoot: string,
+  env: FeatureEnv,
+  isMonolith: boolean,
+): object {
+  // Anchor every command to repoRoot. An unanchored git call resolves against whatever CWD the
+  // caller happened to have, which reports a different repository's branch as this feature's.
+  // runGit also strips GIT_DIR/GIT_WORK_TREE, which would otherwise override the anchor.
+  const git = (args: string[]): string => runGit(args, { cwd: repoRoot });
+
   try {
-    execFileSync('git', ['rev-parse', '--git-dir'], { stdio: 'pipe' });
+    runGit(['rev-parse', '--git-dir'], { cwd: repoRoot });
   } catch { return { available: false }; }
 
-  const branch = (() => { try { return execFileSync('git', ['branch', '--show-current'], { encoding: 'utf-8', stdio: 'pipe' }).trim(); } catch { return 'unknown'; } })();
-  const featureBranch = `feature/${ticket}`;
-  const branchExists = (() => { try { return execFileSync('git', ['branch', '--list', featureBranch], { encoding: 'utf-8', stdio: 'pipe' }).trim().length > 0; } catch { return false; } })();
-  const uncommitted = (() => { try { return execFileSync('git', ['status', '--porcelain', featureDir], { encoding: 'utf-8', stdio: 'pipe' }).trim().split('\n').filter(Boolean).length; } catch { return 0; } })();
+  const branch = (() => { try { return git(['branch', '--show-current']); } catch { return 'unknown'; } })();
 
-  return { available: true, branch, featureBranch, featureBranchExists: branchExists, uncommitted };
+  // spec.md is committed, so its branch fields are untrusted input. A bad value falls back to the
+  // conventional name — a read-only status report must never stop on someone else's typo.
+  const spec = extractFrontmatter(join(featureDir, 'spec.md'), ticket);
+  const specBranch = (key: string): string | null => {
+    const value = spec?.parsed[key];
+    return isValidBranchRef(value) ? value : null;
+  };
+  // `branch` is the pre-rename spelling of `feature_branch`; branch preflight still reads it, so
+  // reporting a different value here would put the two skills at odds on an older spec.
+  const featureBranch = specBranch('feature_branch') ?? specBranch('branch')
+    ?? `${env.defaultFolder}/${ticket}`;
+
+  const branchExists = (() => { try { return git(['branch', '--list', featureBranch]).length > 0; } catch { return false; } })();
+  const uncommitted = (() => { try { return git(['status', '--porcelain', featureDir]).split('\n').filter(Boolean).length; } catch { return 0; } })();
+
+  return {
+    available: true,
+    branch,
+    // The artifact host's live branch. Named `rootBranch` for continuity; it is not a milestone.
+    rootBranch: branch,
+    featureBranch,
+    featureBranchExists: branchExists,
+    uncommitted,
+    // On a single-repository project the artifact host IS the code repository, so it is the one
+    // place a milestone can be reported. A polyrepo reports milestones per sub-workspace instead,
+    // and these two keys are absent there rather than carrying a meaningless whole-project value.
+    ...(isMonolith
+      ? {
+          milestone: specBranch('milestone_branch'),
+          milestoneState: monolithMilestoneState(
+            repoRoot, specBranch('milestone_branch'), featureBranch, branchExists,
+          ),
+        }
+      : {}),
+  };
+}
+
+/**
+ * Milestone agreement for a single-repository project, which has no git-map row to classify.
+ *
+ * Derived from whether the feature branch exists: without one there is nothing to compare, and
+ * with one the question is whether it descends from the milestone.
+ */
+function monolithMilestoneState(
+  repoRoot: string,
+  milestone: string | null,
+  featureBranch: string,
+  featureBranchExists: boolean,
+): MilestoneState {
+  if (milestone === null || !featureBranchExists) return 'unknown';
+  try {
+    runGit(['merge-base', '--is-ancestor', milestone, featureBranch], { cwd: repoRoot });
+    return 'matched';
+  } catch { return 'drifted'; }
 }
 
 // ---------------------------------------------------------------------------
 // Detailed feature mode
 // ---------------------------------------------------------------------------
 
-function detailFeature(featureId: string, repoRoot: string, env: ReturnType<typeof loadFeatureEnv>): void {
+/**
+ * Effective milestone per sub-workspace, by the git-map contract's precedence:
+ * the spec's map, then the row's `Milestone` column, then a scalar — and a scalar applies only to
+ * the artifact host, never to a child repository.
+ *
+ * Resolved once here and passed down, so `status` and the branch guard cannot disagree about which
+ * milestone is current after a user edits the spec.
+ */
+function resolveEffectiveMilestones(
+  specMilestone: unknown,
+  subWorkspaces: { name: string }[],
+  gitMap: GitMap | null,
+): Record<string, string> {
+  const fromSpec = specMilestone !== null && typeof specMilestone === 'object' && !Array.isArray(specMilestone)
+    ? specMilestone as Record<string, unknown>
+    : {};
+
+  const resolved = Object.create(null) as Record<string, string>;
+  for (const sub of subWorkspaces) {
+    const specValue = Object.hasOwn(fromSpec, sub.name) ? fromSpec[sub.name] : undefined;
+    if (isValidBranchRef(specValue)) { resolved[sub.name] = specValue; continue; }
+    const recorded = gitMap?.rows.find(r => r.subWorkspace === sub.name)?.milestone;
+    if (recorded !== null && recorded !== undefined) resolved[sub.name] = recorded;
+  }
+  return resolved;
+}
+
+function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): void {
   const id = featureId.toLowerCase();
   let folder: string, ticket: string;
   if (id.includes('/')) {
@@ -276,6 +366,20 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
     try { readdirSync(featuresDir, { withFileTypes: true }).filter(e => e.isDirectory()).forEach(e => available.push(e.name)); } catch { /* ignore */ }
     process.stdout.write(formatAgentJson({ error: 'Feature not found', featureId: id, available }));
     process.exit(1);
+  }
+
+  // A duplicate sub-workspace name aliases per-repository git-map state. Stop before either
+  // root-branch or sub-workspace probing, while preserving the exact conflicting names for callers.
+  const config = detectConfig({ configAnchor: repoRoot, cwd: process.cwd() });
+  if (config.error) {
+    writeAgentJson({
+      featureId: id,
+      error: config.error,
+      ...(config.duplicateSubWorkspaceNames === undefined
+        ? {}
+        : { duplicateSubWorkspaceNames: config.duplicateSubWorkspaceNames }),
+    });
+    return;
   }
 
   const hasSpec = existsSync(join(featureDir, 'spec.md'));
@@ -375,6 +479,26 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
     }
   }
 
+  // Per-sub-workspace branch state. Anchored to workspaceRoot, not repoRoot: subWorkspaces[].path
+  // is defined relative to the directory holding .specify/.
+  const gitMap = readGitMap(featureDir);
+
+  // Effective milestone is resolved here, once, and handed down. probeSubWorkspaces has no route
+  // to spec.md, and giving it one would duplicate the precedence rule in a second place.
+  const specFrontmatter = extractFrontmatter(join(featureDir, 'spec.md'), ticket);
+  const effectiveMilestones = resolveEffectiveMilestones(
+    specFrontmatter?.parsed['milestone_branch'],
+    config.subWorkspaces,
+    gitMap,
+  );
+
+  const subWorkspaces = probeSubWorkspaces(
+    config.workspaceRoot,
+    config.subWorkspaces,
+    gitMap,
+    effectiveMilestones,
+  );
+
   // Title
   let title = id;
   try {
@@ -403,7 +527,8 @@ function detailFeature(featureId: string, repoRoot: string, env: ReturnType<type
       nextPhase: phasesData.nextPhase,
       rows: phasesData.rows,
     },
-    git: getGitInfo(featureDir, ticket),
+    git: getGitInfo(featureDir, ticket, repoRoot, env, config.subWorkspaces.length === 0),
+    ...(subWorkspaces.length > 0 ? { subWorkspaces } : {}),
     recommendation: rec,
     warnings,
   };
@@ -424,8 +549,8 @@ const program = new Command()
   .description('Collect feature status as JSON. No arg: list all. With arg: detailed status.')
   .argument('[feature-id]', 'Feature ID (e.g., aa-001, hotfix/aa-123). Omit to list all.')
   .action((featureId?: string) => {
-    const env = loadFeatureEnv();
     const repoRoot = getRepoRoot();
+    const env = loadFeatureEnv(findConfigFile(repoRoot));
     const featuresDir = join(repoRoot, env.specsRoot, env.defaultFolder);
 
     if (!featureId) {

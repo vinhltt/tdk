@@ -18,7 +18,7 @@ import {
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { runGit } from '../../../utils/git-env';
 import { hostname } from 'node:os';
 import { basename, join, relative, sep } from 'node:path';
 import { CliExitError, EXIT_FAIL_CLOSED, EXIT_STALE_PLAN } from '../../../utils/exit-codes';
@@ -64,11 +64,9 @@ function toPosixPath(path: string): string {
   return path.split(sep).join('/');
 }
 
-function runGit(workspaceRootRealPath: string, args: string[]): string {
-  return execFileSync('git', ['-C', workspaceRootRealPath, ...args], {
-    encoding: 'utf-8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  }).trim();
+/** Git inside the workspace checkout. Named distinctly from the shared runGit it delegates to. */
+function gitInWorkspace(workspaceRootRealPath: string, args: string[]): string {
+  return runGit(['-C', workspaceRootRealPath, ...args]);
 }
 
 function isProcessAlive(pid: number): boolean {
@@ -156,7 +154,7 @@ export function acquireApplyLock(paths: SafeWriterPaths, metadata: Record<string
 export function assessRecoverability(workspaceRootRealPath: string, targetRealPath: string): Recoverability {
   let repoRoot: string;
   try {
-    repoRoot = realpathSync.native(runGit(workspaceRootRealPath, ['rev-parse', '--show-toplevel']));
+    repoRoot = realpathSync.native(gitInWorkspace(workspaceRootRealPath, ['rev-parse', '--show-toplevel']));
   } catch {
     return { kind: 'non-git' };
   }
@@ -168,23 +166,23 @@ export function assessRecoverability(workspaceRootRealPath: string, targetRealPa
   const relativeTarget = toPosixPath(targetRelative);
 
   try {
-    runGit(workspaceRootRealPath, ['ls-files', '--error-unmatch', '--', relativeTarget]);
+    gitInWorkspace(workspaceRootRealPath, ['ls-files', '--error-unmatch', '--', relativeTarget]);
   } catch {
     return { kind: 'git-untracked-present', repoRoot, relativeTarget };
   }
 
   try {
-    runGit(workspaceRootRealPath, ['rev-parse', '--verify', 'HEAD']);
+    gitInWorkspace(workspaceRootRealPath, ['rev-parse', '--verify', 'HEAD']);
   } catch {
     return { kind: 'git-untracked-present', repoRoot, relativeTarget };
   }
 
-  const status = runGit(workspaceRootRealPath, ['status', '--porcelain', '--', relativeTarget]);
+  const status = gitInWorkspace(workspaceRootRealPath, ['status', '--porcelain', '--', relativeTarget]);
   if (status.length > 0) {
     return { kind: 'git-tracked-dirty', repoRoot, relativeTarget };
   }
 
-  const gitDiff = runGit(workspaceRootRealPath, ['diff', '--no-color', 'HEAD', '--', relativeTarget]);
+  const gitDiff = gitInWorkspace(workspaceRootRealPath, ['diff', '--no-color', 'HEAD', '--', relativeTarget]);
   return { kind: 'git-tracked-clean', repoRoot, relativeTarget, gitDiff };
 }
 

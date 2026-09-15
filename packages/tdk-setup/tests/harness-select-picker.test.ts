@@ -10,26 +10,30 @@
  * reached after interactive harness selection.
  */
 
-import { mock, spyOn, expect, test, describe } from 'bun:test';
+import { afterAll, mock, spyOn, expect, test, describe } from 'bun:test';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
 import type { Command } from 'commander';
 import { makeConsumer, writeBasicPlugin, writePluginDependencyPolicy } from './fixtures';
+import * as checkboxPrompt from '../src/checkbox-prompt';
+import * as prompt from '../src/prompt';
+import * as rootResolution from '../src/root-resolution';
 
 // Absolute path to the harness source directory — mock.module requires absolute keys.
 const harnessPath = path.resolve('src');
 
-// Mutable scenario state shared across all tests in this file.
-// mock.module registrations are file-scoped and cannot be reset between tests, so we use
-// mutable captures that the stubs delegate to instead of re-registering.
+// Bun's default test runner uses one shared global, so module mocks persist beyond
+// this file unless the preceding module implementations are put back explicitly.
+const previousCheckboxPrompt = { ...checkboxPrompt };
+const previousPrompt = { ...prompt };
+const previousRootResolution = { ...rootResolution };
 let pickerResult: string[] = ['codex'];
 let pickerCalled = false;
 let resolveConsumerRootCalled = false;
 let consumerRoot = os.tmpdir();
 
-// Register all stubs before any import so that when install.ts is loaded its bindings
-// point at these mocked modules.
+// Register stubs before importing install.ts so its bindings resolve to these mocks.
 await mock.module(`${harnessPath}/checkbox-prompt`, () => ({
   canUseCheckboxPrompt: () => true, // simulate a checkbox-capable terminal
 }));
@@ -49,6 +53,12 @@ await mock.module(`${harnessPath}/root-resolution`, () => ({
     return { consumerRoot, warnings: [] };
   },
 }));
+
+afterAll(async () => {
+  await mock.module(`${harnessPath}/checkbox-prompt`, () => previousCheckboxPrompt);
+  await mock.module(`${harnessPath}/prompt`, () => previousPrompt);
+  await mock.module(`${harnessPath}/root-resolution`, () => previousRootResolution);
+});
 
 // Import install.ts after stubs are in place so bindings resolve to mocked modules.
 const { createInstallCommand } = await import(`${harnessPath}/install`);

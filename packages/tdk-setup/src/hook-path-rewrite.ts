@@ -1,4 +1,5 @@
 import * as path from 'node:path';
+import { claudeTargetMapper } from './claude-target-mapper';
 import type { HookHandler } from './types';
 
 const SUPPORTED_HOOK_TYPES = new Set(['command', 'http', 'mcp_tool', 'prompt', 'agent']);
@@ -11,8 +12,8 @@ export interface HookRewritePaths {
 
 function defaultRewritePaths(plugin: string): HookRewritePaths {
   return {
-    hookRoot: `.claude/hooks/${plugin}`,
-    scriptRoot: `.claude/scripts/${plugin}`,
+    hookRoot: claudeTargetMapper.hookRoot(plugin),
+    scriptRoot: claudeTargetMapper.scriptRoot(plugin),
   };
 }
 

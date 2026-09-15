@@ -61,28 +61,36 @@ Write `SPEC_FILE` using `.specify/templates/spec-template.md.tpl`, preserving se
 Emit the YAML frontmatter block at the top with `title`, `status`, `feature_branch`, `milestone_branch`, `created`, `input`, `memory_context_loaded`, `memory_validation` (only when the memory-validation gate produced a decision — see the gate in `SKILL.md`; omit the key otherwise), and `schema_version: 1`.
 Keep `# Feature Specification: <title>` directly below closing `---`.
 
-Set `feature_branch` to the starting value `<defaultFolder>/<TICKET_ID>` — the same form the branch warning
-computes. It is a starting value only: `/tdk-implement` presents it as an editable suggestion and enforces no
+Set `feature_branch` to the starting value `<defaultFolder>/<TICKET_ID>` — the same form the duplicate-branch
+check in Step 0.2 looks for. It is a starting value only: `/tdk-implement` presents it as an editable suggestion and enforces no
 format on what the user types. Never leave the title placeholder in `feature_branch`.
 
 `feature_branch` names the branch created *for* this task. The branch it is created *from* is a separate
 per-repository base ref, settled at `/tdk-implement` and recorded in `git-map.md`; it never appears here.
 
-Seed `milestone_branch` from the root workspace repo's current branch with
-`git -C "$PROJECT_DIR" branch --show-current`, anchored at the project root so a session opened inside a
-sub-workspace does not record that sub-repository's branch instead. This read is observational —
-`/tdk-specify` still creates and switches no branch. When the result is empty, as on a detached HEAD, write
-the placeholder instead; branch preflight then treats it as missing and asks.
+Seed `milestone_branch` **per repository**. Each sub-workspace that is genuinely its own repository
+contributes its own current branch, read with `git -C "$PROJECT_DIR/<sub-path>" branch --show-current`;
+a sub-workspace whose toplevel equals the artifact host's is a plain directory and is skipped. When
+`subWorkspaces` is empty or absent, seed a scalar from the artifact host with
+`git -C "$PROJECT_DIR" branch --show-current`. These reads are observational — `/tdk-specify` still
+creates and switches no branch. When a result is empty, as on a detached HEAD, write the placeholder
+instead; branch preflight then treats it as missing and asks.
+
+**This replaces the earlier rule that seeded a single milestone from the root workspace repository.**
+That rule was deliberate, and it is now wrong: a milestone is a property of a code repository, and on a
+polyrepo the artifact host is not one of the repositories the work lands in — so its branch described
+nothing the task actually touched. The reasoning and the three-role topology live in
+`tdk-branch-preflight/references/git-map-contract.md`.
 
 ### Confirming `milestone_branch`
 
-`milestone_branch` records the milestone or epic this task belongs to. `/tdk-implement` compares the root
-workspace repo's live branch against it to catch a task being implemented under the wrong milestone. It is
-neither the branch created for the task (`feature_branch`) nor the base ref each sub-workspace branches from
-(per repository, settled at Step 6A, stored in `git-map.md`).
+`milestone_branch` records the milestone or epic each repository belongs to. `/tdk-implement` compares
+each repository's live branch against its own recorded milestone, to catch work landing under the wrong
+one. It is neither the branch created for the task (`feature_branch`) nor the base ref each sub-workspace
+branches from (per repository, settled at Step 6A, stored in `git-map.md`).
 
-The seed is observed from the root repo, but the value is a **declaration of intent** — a user who is
-deliberately specifying work for a milestone other than the one currently checked out corrects it here.
+The seed is observed, but the value is a **declaration of intent** — a user deliberately specifying work
+for a milestone other than the one currently checked out corrects it here.
 
 **When `PROJECT_CONTEXT.subWorkspaces` is non-empty, confirm the detected value with one `AskUserQuestion`
 before writing the frontmatter.** State plainly what is being recorded and what is not, so the distinction is
@@ -91,16 +99,19 @@ settled at the moment the value is captured rather than discovered later:
 ```json
 {
   "questions": [{
-    "question": "Record 'epic-1' as milestone_branch — the milestone/epic this task belongs to? Seeded from the root workspace repo's current branch. /tdk-implement compares the root repo against it to catch work landing under the wrong milestone. It is NOT the branch created for the task (feature_branch), and NOT the base branch sub-workspaces (api, web) branch from — that is confirmed per repo at /tdk-implement.",
-    "header": "Root branch",
+    "question": "Record these as milestone_branch — the milestone/epic each repository belongs to? api: epic-1, web: epic-2. Each value is seeded from that repository's own current branch. /tdk-implement compares each repository against its own milestone to catch work landing under the wrong one. These are NOT the branch created for the task (feature_branch), and NOT the base ref each repository branches from — that is resolved per repo at /tdk-implement.",
+    "header": "Milestones",
     "options": [
-      {"label": "Yes, record epic-1", "description": "This task belongs to the milestone the root repo is on"},
-      {"label": "Let me enter another", "description": "This task belongs to a different milestone — enter it via Other"}
+      {"label": "Yes, record as detected", "description": "api: epic-1, web: epic-2"},
+      {"label": "Let me enter them", "description": "One or more repositories belong to a different milestone — enter them via Other"}
     ],
     "multiSelect": false
   }]
 }
 ```
+
+One question covers every repository. The artifact host's own branch is not among them: it is not a
+code repository for this task.
 
 **Skip the confirmation when `subWorkspaces` is empty or absent.** The cross-epic guard it feeds is itself a
 no-op on single-repository projects, so asking there adds a prompt that can change nothing. Phrase the check

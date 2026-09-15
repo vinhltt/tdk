@@ -1,6 +1,8 @@
 import type { ManifestEntry } from './manifest-types';
+import type { ConvertPart } from './convert-parts';
+import type { HookTargetPlatform } from './lib/harness-transform/hook-command';
 
-export type HarnessName = 'claude' | 'codex';
+export type HarnessName = 'claude' | 'codex' | 'omp';
 
 export type InstallAction = 'create' | 'update';
 
@@ -27,6 +29,8 @@ export interface HarnessInstallManifest {
   installedAt: string;
   managedFiles: ManagedFile[];
   managedHooks: ManagedHook[];
+  convertedParts?: ConvertPart[];
+  hookTargetPlatform?: HookTargetPlatform;
 }
 
 export interface ManagedFile {
@@ -35,6 +39,8 @@ export interface ManagedFile {
   targetRelativePath: string;
   sourceChecksum: string;
   installedChecksum: string;
+  part?: ConvertPart;
+  managedRegionChecksum?: string;
 }
 
 export interface ManagedHook {
@@ -140,6 +146,7 @@ export interface InstallPlan {
   installSettingsChanged: boolean;
   migration?: PrefixMigrationPlan;
   operationStamp?: string;
+  durableBackupRoots?: string[];
 }
 
 export interface BuildPlanInput {

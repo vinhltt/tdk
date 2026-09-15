@@ -4,6 +4,23 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.3.0] - 2026-09-15
+
+### Added
+- tdk-repo-worktree `reset` mode: the way out of a cleaned row, and the way to cancel an unfinished cleanup
+
+### Changed
+- git-map contract defines three roles (builder root, artifact host, code repo), six row states, base resolution by tier, object-name validation, atomic publication and a repository identity gate; an unresolved commit is omitted rather than serialized as an invalid `-`
+- tdk-branch-preflight compares ancestry against the recorded base commit across eight ordered transitions, instead of a live branch against a scalar milestone, and publishes the final `(Base ref, Base commit, kind)` intent before the first git mutation
+- tdk-branch-preflight no longer treats a repository on its own confirmed milestone as busy; the dirty-tree condition is unchanged
+- tdk-repo-worktree cleanup keeps the row and separates cleanup intent from verified result, so a half-finished cleanup is resumable
+
+## [4.2.2] - 2026-08-25
+
+### Changed
+- tdk-branch-preflight batched confirmation labels every branch line with the repository it belongs to, distinguishing the root workspace milestone from each sub-workspace
+- git map contract records that plan time now fetches read-only to seed base refs, degrading to mainBranch when unavailable
+
 ## [4.2.1] - 2026-08-10
 
 ### Changed

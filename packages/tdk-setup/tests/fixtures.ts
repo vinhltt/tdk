@@ -13,8 +13,18 @@ export function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
 }
 
+const createdRoots: string[] = [];
+
+/** Removes every temp root handed out by makeConsumer; wired up globally in tests/preload.ts. */
+export function cleanupConsumers(): void {
+  for (const root of createdRoots.splice(0)) {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+}
+
 export function makeConsumer(prefix = 'tdk-harness-'): FixtureConsumer {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  createdRoots.push(root);
   const scriptsDir = path.join(root, '.specify', 'scripts', 'ts');
   const pluginRoot = path.join(root, '.specify', 'plugins', 'tdk-core');
   fs.mkdirSync(scriptsDir, { recursive: true });

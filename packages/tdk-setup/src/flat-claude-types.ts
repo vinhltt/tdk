@@ -1,7 +1,9 @@
 import type { CodexHooksJsonFragment } from './lib/harness-transform/hooks-json-fragment';
+import type { ConvertPart } from './convert-parts';
 
 export type FlatClaudeRecord =
   | FlatClaudeAgentRecord
+  | FlatClaudeRuleRecord
   | FlatClaudeSkillRecord
   | FlatClaudeCommandRecord
   | FlatClaudeHooksRecord
@@ -14,11 +16,16 @@ export interface FlatClaudeFrontmatterFile {
   name: string;
   description?: string;
   frontmatter: Record<string, unknown>;
+  frontmatterParseError?: string;
   body: string;
 }
 
 export interface FlatClaudeAgentRecord extends FlatClaudeFrontmatterFile {
   kind: 'agent';
+}
+
+export interface FlatClaudeRuleRecord extends FlatClaudeFrontmatterFile {
+  kind: 'rule';
 }
 
 export interface FlatClaudeCommandRecord extends FlatClaudeFrontmatterFile {
@@ -43,6 +50,8 @@ export interface FlatClaudeHookCommand {
   command: string;
   timeout?: number;
   matcher?: string;
+  args?: unknown;
+  shell?: unknown;
   sourceRelativePath?: string;
 }
 
@@ -61,6 +70,12 @@ export interface FlatClaudeSettingsRecord {
   value: unknown;
 }
 
+export interface FlatClaudeSettingsParseError {
+  sourcePath: string;
+  sourceRelativePath: '.claude/settings.json';
+  message: string;
+}
+
 export interface FlatClaudeMdRecord {
   kind: 'claude-md';
   sourcePath: string;
@@ -77,6 +92,8 @@ export interface FlatClaudeInventory {
   records: FlatClaudeRecord[];
   unrecognized: UnrecognizedEntry[];
   warnings: string[];
+  settingsParseError?: FlatClaudeSettingsParseError;
+  skillSymlinks?: string[];
 }
 
 export interface UnknownArtifact {
@@ -84,11 +101,20 @@ export interface UnknownArtifact {
   reason: string;
 }
 
+export interface MigrationFact {
+  layer: 1 | 2 | 3;
+  status: 'converted' | 'dropped' | 'local-not-converted' | 'signal' | 'note';
+  message: string;
+  source?: string;
+  key?: string;
+}
+
 export interface MigrationReport {
   recognized: string[];
   reported: UnknownArtifact[];
   skipped: UnknownArtifact[];
   warnings: string[];
+  facts?: MigrationFact[];
 }
 
 export interface CodexTargetFile {
@@ -98,6 +124,13 @@ export interface CodexTargetFile {
   sourceChecksum: string;
   installedChecksum: string;
   content: Buffer;
+}
+
+export interface ConvertTargetFile extends CodexTargetFile {
+  part?: ConvertPart;
+  managedRegionChecksum?: string;
+  currentManagedRegionChecksum?: string;
+  unmanageAfterWrite?: boolean;
 }
 
 export interface CodexWritePlan {

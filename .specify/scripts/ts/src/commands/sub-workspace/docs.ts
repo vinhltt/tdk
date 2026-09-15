@@ -5,7 +5,7 @@
 import { Command } from 'commander';
 import { existsSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { detectConfig, subWorkspaceDocsDir, writeAgentJson } from '../../utils/index';
+import { detectConfig, subWorkspaceDocsDir, writeAgentJson, hostOf } from '../../utils/index';
 import {
   DocsError,
   EXPECTED_DOC_FILES,
@@ -46,7 +46,9 @@ export function resolveTargets(
   resolved: ResolvedArgs,
   cwd?: string,
 ): { workspaceRoot: string; docsPath: string; targets: RawTarget[] } {
-  const cfg = detectConfig({ cwd });
+  // configAnchor, not cwd: config discovery must land on the artifact host (skipping any child
+  // `type: "sub-workspace"` config), while cwd keeps deciding which sub-workspace the user targets.
+  const cfg = detectConfig({ configAnchor: hostOf(cwd ?? process.cwd()) ?? undefined, cwd });
   if (!cfg.configFound) {
     throw new DocsError('CONFIG_NOT_FOUND', 'No .specify config found in ancestor directories');
   }

@@ -3,7 +3,7 @@ name: tdk-specify
 description: "Create spec.md from a feature or child-slice description, or replay --interview against existing spec.md. Supports --fast, memory, and an embedded quality gate."
 argument-hint: "<id> [<desc>] [--fast] [--interview]"
 metadata:
-  version: "13.0.1"
+  version: "13.0.2"
 ---
 
 # tdk-specify
@@ -100,7 +100,7 @@ Must preserve these routing invariants:
   discovery directory. STOP and route to `/tdk-epic-prd <id>` instead of
   creating a spec from discovery.
 
-Store: `FEATURE_DIR`, `SPEC_FILE`, `EXPECTED_BRANCH`, `CURRENT_BRANCH`.
+Store: `FEATURE_DIR`, `SPEC_FILE`, `EXPECTED_BRANCH`, `ROOT_BRANCH`.
 
 ### Step 0.2a - Reject Direct Discovery-To-Specify Routing
 
@@ -174,14 +174,29 @@ current `spec.md`, then continues to Step 2.5. Emit frontmatter with `title`,
 `memory_validation` (emit only when Step 1.6 produced a decision; omit the key otherwise), and
 `schema_version: 1`; keep the H1 directly below closing `---`.
 
-Set `feature_branch` to the starting value `<defaultFolder>/<TICKET_ID>`, and seed `milestone_branch` from
-`git -C "$PROJECT_DIR" branch --show-current`. Both are recorded only — this skill creates no branch and
-switches to none.
+Set `feature_branch` to the starting value `<defaultFolder>/<TICKET_ID>`, and seed `milestone_branch`
+**per repository** — each sub-workspace contributes its own current branch:
+
+```bash
+# One entry per sub-workspace that is genuinely its own repository.
+for SUB in "${SUB_PATHS[@]}"; do
+  TOP=$(git -C "$PROJECT_DIR/$SUB" rev-parse --show-toplevel 2>/dev/null) || continue
+  [ "$TOP" = "$(git -C "$PROJECT_DIR" rev-parse --show-toplevel)" ] && continue   # plain directory
+  git -C "$PROJECT_DIR/$SUB" branch --show-current
+done
+# subWorkspaces empty or absent: seed a scalar from the artifact host instead.
+git -C "$PROJECT_DIR" branch --show-current
+```
+
+An empty result — a detached HEAD — writes the placeholder; branch preflight then treats it as missing
+and asks. Both fields are recorded only: this skill creates no branch and switches to none.
 
 `feature_branch` is the branch created FOR this task; the base ref it is created FROM is settled per
-repository at `/tdk-implement`. `milestone_branch` is the milestone/epic the task belongs to, used at
-implement time to catch work landing under the wrong milestone. Confirm `milestone_branch` with one
-`AskUserQuestion` when `PROJECT_CONTEXT.subWorkspaces` is non-empty; skip it when empty or absent.
+repository at `/tdk-implement`. `milestone_branch` is the milestone/epic each repository belongs to. A
+milestone is a property of a **code repository**, not of the workspace that stores the artifacts — see
+`tdk-branch-preflight/references/git-map-contract.md`. Confirm the detected values with one
+`AskUserQuestion` listing every repository when `PROJECT_CONTEXT.subWorkspaces` is non-empty; skip it
+when empty or absent.
 
 ### Step 2.5: Optional Interview Alignment Gate
 

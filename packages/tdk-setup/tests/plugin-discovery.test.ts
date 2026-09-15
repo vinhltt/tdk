@@ -16,7 +16,7 @@ describe('discoverPluginInventory', () => {
 
     expect(targets).toContain('.claude/skills/demo/SKILL.md');
     expect(targets).toContain('.claude/agents/demo.md');
-    expect(targets).toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
+    expect(targets).toContain('.claude/hooks/tdk-core/hooks/hook-gateway.cjs');
     expect(targets).not.toContain('.claude/hooks/hooks.json');
     expect(targets).toContain('.claude/scripts/tdk-core/demo.js');
   });

@@ -1,91 +1,49 @@
 # TDK - TiHon Development Kit
 
-**TDK (TiHon Development Kit)** is a specification-driven development toolkit for AI coding agents. It helps a consumer project move from intent to specs, plans, implementation, review, and durable project memory.
+**TDK (TiHon Development Kit)** is a specification-driven development toolkit for AI coding agents.
+It moves a consumer project from intent to specs, plans, implementation, review, and durable project
+memory.
 
-TDK currently targets **Claude Code** and supports generated **Codex** harness artifacts. Cursor, Copilot, and Antigravity support are coming soon.
+Core idea: write the work down first. Broad work becomes discovery, epic PRD, high-level design, and
+child spec seeds. Small clear work starts at a feature spec.
 
-Core idea: write the work down first. Broad work becomes discovery, epic PRD, high-level design, and child spec seeds. Small clear work starts at a feature spec. Implementation follows the accepted plan and feeds review/memory afterward.
+Targets **Claude Code**, with generated **Codex** harness artifacts. Cursor, Copilot, and Antigravity
+are coming soon.
 
 ![TDK lifecycle workflow](assets/lifecycle-share-graph.svg)
 
-## Fast Path
+## Install
 
-Use this when you are installing TDK from a source checkout into a consumer project.
-
-### 1. Clone TDK Source
+Run from a TDK source checkout against the consumer project:
 
 ```bash
-git clone <tdk-source-url> tdk
-cd tdk
 CONSUMER_ROOT=/path/to/consumer-project
-```
 
-### 2. Distribute the Payload
-
-```bash
+# 1. Copy the .specify/ payload (plugins, templates, scripts, schemas, docs, setup script)
 bash distribute.sh "$CONSUMER_ROOT" --dry-run
 bash distribute.sh "$CONSUMER_ROOT" --yes
-```
 
-This copies the configured `.specify/` payload into the consumer project. The default payload includes the workflow plugins, dependency policy, guides, templates, scripts, schemas, setup script, and release manifest.
+# 2. Bootstrap: prerequisites, TypeScript deps, plugin metadata registration
+(cd "$CONSUMER_ROOT" && bash .specify/setup.sh)
 
-### 3. Bootstrap the Consumer Project
-
-Run from the consumer project root after `.specify/` exists:
-
-```bash
-cd "$CONSUMER_ROOT"
-bash .specify/setup.sh
-```
-
-This checks prerequisites, installs TypeScript dependencies, verifies setup, and registers available plugin metadata from the consumer project's `.specify/` directory.
-
-### 4. Install a Harness
-
-Run harness install from the TDK source checkout:
-
-```bash
-cd /path/to/tdk/packages/tdk-setup
-```
-
-For Claude Code:
-
-```bash
+# 3. Install the Claude Code harness
+cd packages/tdk-setup
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --dry-run
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --yes
 ```
 
-For Codex, materialize packages in the consumer project, then compute their manifest before installation:
+Codex is a separate install run; a combined Claude+Codex install is unsupported. It also needs
+materialized Codex packages and a consumer-local manifest first, because the default payload omits
+`.specify/codex-plugins/**`. Full sequence: [tdk-setup README](packages/tdk-setup/README.md).
 
-```bash
-cd "$CONSUMER_ROOT"
+Commands not visible, or setup failing? [Setup Guide](.specify/docs/en/guides/setup/setup-guide.md).
 
-# Generate the ignored Codex packages from the distributed source plugins.
-bun /path/to/tdk/packages/tdk-setup/src/index.ts convert --all-plugins
+## Usage
 
-# Write and verify the consumer-local source and Codex package manifests.
-bun /path/to/tdk/.specify/scripts/ts/src/commands/manifest/compute.ts --project-root "$CONSUMER_ROOT" --write
-bun /path/to/tdk/.specify/scripts/ts/src/commands/manifest/compute.ts --project-root "$CONSUMER_ROOT" --check
+`/tdk-*` commands run in the agent chat, not in a terminal. Use the terminal only for shell
+snippets such as `bash`, `bun`, `git`, or test runners.
 
-# Optional freshness check; it requires materialized output.
-bun /path/to/tdk/packages/tdk-setup/src/index.ts convert --all-plugins --check
-
-# Install the consumer-local materialized packages.
-bun /path/to/tdk/packages/tdk-setup/src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --dry-run
-bun /path/to/tdk/packages/tdk-setup/src/index.ts install "$CONSUMER_ROOT" --harness codex --all-plugins --yes
-```
-
-Claude and Codex installs are separate runs. A combined Claude+Codex install is unsupported.
-
-Important Codex caveat: `install --harness codex` reads consumer-local materialized packages and `.specify/codex-plugins/manifest.json`. The default `distribute.json` payload intentionally omits `.specify/codex-plugins/**`; both the packages and manifest must exist before Codex install.
-
-## How You Use TDK
-
-Type `/tdk-*` workflow commands in the agent chat, not in a terminal. Use terminal commands only for shell snippets such as `bash`, `bun`, `git`, or test runners.
-
-### Greenfield to Sub-Workspace Setup
-
-Use this when starting a new project or shaping a repo into sub-workspaces:
+### Greenfield project and sub-workspaces
 
 ```text
 /tdk-greenfield-start "Project brief..." --full
@@ -97,11 +55,12 @@ Use this when starting a new project or shaping a repo into sub-workspaces:
 /tdk-sub-workspace-docs --all
 ```
 
-The config apply step previews changes first. Approve it only after the shown diff matches the intended workspace layout.
+`/tdk-workflow-config-apply` previews changes first. Approve only when the diff matches the intended
+workspace layout.
 
-### Start a Large Epic
+### Broad epic to child specs
 
-Use this when the work is broad, vague, or likely to split into multiple child features:
+Use when the work is vague or likely to split into multiple features:
 
 ```text
 /tdk-discovery epic-001 "Broad epic brief"
@@ -110,23 +69,13 @@ Use this when the work is broad, vague, or likely to split into multiple child f
 /tdk-task-breakdown epic-001
 ```
 
-For selective harness installs, make sure the parent epic commands are
-included. Include child feature commands too when you want to continue from
-task breakdown into `/tdk-specify`, `/tdk-clarify`, `/tdk-plan`, and
-`/tdk-implement`.
+Then promote one generated child seed into a spec and deliver it with the small-spec flow below.
+For selective harness installs, make sure the parent epic commands are included, plus the child
+feature commands to continue past task breakdown.
 
-Then choose one generated child seed and promote it into a child spec:
+### Small feature or fix
 
-```text
-/tdk-specify feat-001 "Seed from tasks-breakdown/task-001-slice.md"
-/tdk-clarify feat-001
-/tdk-plan feat-001
-/tdk-implement feat-001
-```
-
-### Start a Small Spec
-
-Use this when the feature or fix is already clear enough to skip the parent epic flow:
+Use when the work is already clear enough to skip the epic flow:
 
 ```text
 /tdk-specify feat-001 "Small feature or fix description"
@@ -135,114 +84,23 @@ Use this when the feature or fix is already clear enough to skip the parent epic
 /tdk-implement feat-001
 ```
 
-Run `/tdk-clarify` until unresolved questions are gone or explicitly deferred. Treat `spec.md` as the requirement authority.
+Run `/tdk-clarify` until unresolved questions are gone or explicitly deferred. `spec.md` is the
+requirement authority.
 
-### Implement a Plan
-
-`/tdk-implement` has three execution forms:
-
-```text
-/tdk-implement <task-id>
-/tdk-implement <task-id> --phase NN
-/tdk-implement <task-id> --parallel
-```
-
-The default serial form executes ready phases in plan-table order. `--phase NN`
-(also accepted as `--phase=NN`) runs one selected phase serially after its
-dependencies are satisfied. Both keep the existing routing, recovery, review,
-test, and status behavior. `--phase` and `--parallel` are mutually exclusive.
-
-Claude Code supports `--parallel` as a dynamic wave controller. Generated plans
-mark a phase `parallel_safe: auto` only when its complete access set is known;
-otherwise they emit `parallel_safe: never` with a factual reason. Untouched
-legacy phases with no parallel metadata are serial barriers. The default serial
-command or `--phase NN` remains the legacy serial escape hatch. During a
-parallel run, the controller executes a `never` or legacy barrier through the
-selected serial path under its retained lease, then ends so the next invocation
-can recompute the plan state.
-
-Parallel safety comes from the exact `## Related Code Files` entries in each
-phase. `Read` grants read access only; `Modify`, `Create`, and `Delete` grant
-exact write ownership. Read/read overlap is allowed. Write/write and either
-direction of read/write overlap, including ancestor/descendant paths, cannot
-share a wave. Generated, ignored, migration, lock, shared-global, broad, or
-otherwise unbounded effects force serial execution. Dependencies are resolved
-again after each successful wave, in numeric order, with a fixed cap of four
-workers.
-
-Worker admission requires a clean Git worktree with no staged, unstaged, or
-untracked changes. The project root and every selected access path must be on a
-proven case-sensitive POSIX filesystem. WSL paths are supported only with exact
-case; native Windows, DrvFS, case-insensitive or unknown roots, and an unsupported
-nested mount under an access path are rejected. Two read-only concurrency
-canaries must also prove concurrent spawn and join before the controller acquires
-its repo-wide fenced lease; there is no silent serial fallback.
-
-The controller snapshots the whole wave, dispatches one synchronous concurrent
-batch, audits every reported path against declared ownership, runs shared gates
-after all workers join, and only then publishes whole-wave completion. Status
-frontmatter and the `plan.md` table use a recovery journal for crash-atomic
-whole-wave persistence. Any worker, gate, malformed-result, or audit failure
-leaves every admitted sibling `in_progress`; explicit recovery reconciles an
-interrupted journal, ends that invocation, and requires a clean rerun. Leases
-have no automatic timeout or theft path.
-
-Parallel, serial `/tdk-implement`, and every mutating `/tdk-plan` flow use one
-atomic repo-wide mutation reservation under the Git common directory. A held
-reservation stops the later invocation; no path waits, steals, or ages it out.
-Pre-mutation cancellation releases immediately. Cancellation or interruption
-after mutation retains the reservation and recovery evidence until exact status
-reconciliation and stable verification complete. Clear is state-based, never
-TTL-, PID-, or mtime-based. Status/WAL files publish through durable atomic
-replacement. Wave admission keeps a mutation marker until its finalized audit
-and all-phase completion; planner writes keep a durable feature snapshot until
-validated finalization or verified rollback. Git-backed projects are required for mutating workflows. V1
-dispatch is synchronous, so there is no worker timeout or controller polling loop.
-
-Planner snapshots use a content-addressed schema (v2) for the feature directory: duplicate file
-bytes anywhere under the feature directory are stored once by SHA-256, bounded by unique content
-size (32 MiB) rather than naive total size, plus a 4,096-entry cap and a 48 MiB
-serialized-snapshot-file cap. Declared external files (routing and cross-plan `plan.md` files
-outside the feature) remain inline per file under their own separate 8 MiB aggregate bound; they
-are not part of the feature's content-addressed dedup pool. A v1 (inline-payload) feature snapshot
-written by an older binary remains readable by `recover-plan`/`finalize-plan`; restore fully
-validates every referenced blob before it clears any existing feature content. Do not downgrade to
-a pre-v2 binary while a planner reservation still holds an active snapshot: older binaries cannot
-read a v2 snapshot file. Snapshot capture,
-recovery, and finalization durably fsync-replace files and directories; on native Windows,
-directory-entry fsync is an unsupported OS capability rather than a failed mutation, so the atomic
-file rename itself still lands, but Windows cannot get the same POSIX parent-directory-entry
-power-loss durability guarantee that Linux/macOS get from this primitive. Planner finalization
-always validates plan/resolver artifacts through the resolver's platform-independent
-`--validate-only` mode: no filesystem capability check, no case-sensitivity probe, and no
-executable wave or serial barrier. This is structural correctness validation, not execution
-admission, and it is distinct from parallel scheduling itself, which still rejects native Windows
-and DrvFS exactly as before -- `--validate-only` succeeding on a host never implies
-`/tdk-implement --parallel` can schedule work there.
-
-Parallel implementation is Claude-first in V1. The generated Codex
-`tdk-implement` skill contains an early `--parallel` STOP before task validation,
-reference loading, or project mutation. On Codex, rerun `/tdk-implement <task-id>`
-without `--parallel` to use the default serial path; harness identity is fixed by
-conversion rather than runtime environment guessing.
-
-### Review, Status, and Tests
-
-Use status and review commands after planning or implementation:
+### Review, status, and tests
 
 ```text
 /tdk-status feat-001
-/tdk-plan feat-001 --validate
-/tdk-plan feat-001 --red-team
-/tdk-plan feat-001 --tdd
+/tdk-plan feat-001 --validate       # interview the plan for missing assumptions
+/tdk-plan feat-001 --red-team       # adversarial plan review
+/tdk-plan feat-001 --tdd            # fold tests-first phases into the plan
 /tdk-plan feat-001 --ut-backfill --sub-workspace backend
 ```
 
-`--validate` interviews the plan for missing assumptions. `--red-team` reviews the plan adversarially. `--tdd` folds tests-first phases into the implementation plan. `--ut-backfill` plans unit-test coverage for existing code and routes test implementation through the configured consumer test skill.
+`--ut-backfill` plans unit-test coverage for existing code and routes test implementation through
+the configured consumer test skill.
 
-### Update Memory and Learning
-
-Use memory for accepted durable project knowledge. Use retro for post-work learning proposals:
+### Memory and retrospectives
 
 ```text
 /tdk-memory-update "Accepted business rule, architecture decision, or domain fact"
@@ -251,130 +109,76 @@ Use memory for accepted durable project knowledge. Use retro for post-work learn
 /tdk-retro-apply
 ```
 
-Retrospectives propose changes. Memory updates store accepted domain knowledge.
+Memory stores accepted durable domain knowledge. Retrospectives only propose changes.
 
-## Maintainer Setup Notes
+## Implementation Modes
 
-`distribute.sh` is a source-checkout maintainer tool. It reads root-relative `ship` and `doNotShip` rules from `distribute.json`.
-
-Current default shipped payload:
-
-- `.specify/_shared/`
-- `.specify/plugins/`
-- `.specify/claude-rules/`
-- `.specify/scripts/`
-- `.specify/templates/`
-- `.specify/setup.sh`
-- `.specify/schemas/`
-- `.specify/docs/`
-- `.specify/.specify.json.example`
-- `.specify/release-manifest.json`
-
-Current default omitted payload:
-
-- `.specify/codex-plugins/**`
-- `.specify/CHANGELOG.md`
-
-Regenerate the source release manifest before shipping when payload files or `distribute.json` change:
-
-```bash
-bun .claude/skills/tdk-bump/scripts/generate-release-manifest.ts --project-root . --write
-```
-
-Normal updates and removals require a regular, non-symlink target file whose
-SHA-256 still matches the prior target release manifest. `--yes` approves the sync
-prompt and `--yes-delete` separately approves removals; neither bypasses ownership
-proof. Payload changes are applied before the release manifest is replaced, and a
-failed run restores transaction backups while keeping the previous manifest.
-
-`--force` is different: it is an explicit destructive override. Every regular
-target file at a current release path is replaced with the current source output,
-even when consumer bytes changed or the target manifest has missing, stale, or
-legacy MD5 ownership metadata. Only paths listed in the current source manifest or
-the prior target manifest are in scope; unrelated target files remain untouched.
-Symlink, path-containment, nonregular-node, source-manifest, rollback, and manifest
-publication checks still apply.
-
-Preview a legacy or branded consumer migration first, then approve sync and any
-prior-manifest-only deletion independently:
-
-```bash
-bash distribute.sh "$CONSUMER_ROOT" --prefix sample --force --dry-run
-bash distribute.sh "$CONSUMER_ROOT" --prefix sample --force --yes --yes-delete
-```
-
-Use `--no-delete` instead when stale prior-manifest paths must be preserved. Force
-backs up each overwrite/delete candidate before mutation and attempts to restore
-those bytes on an ordinary copy, delete, publication, `INT`, `TERM`, `HUP`, or
-unexpected-exit failure. Signals during final manifest publication are deferred
-until the payload and manifest form a consistent committed state. Physical
-snapshot checks detect target races before mutation and around manifest
-publication, but they are not a filesystem lock or atomic compare-and-swap: an
-external change after the final check can escape detection. If an external change
-blocks restoration, rollback preserves it instead of overwriting it and reports
-manual inspection; other restoration failures can also leave rollback incomplete.
-
-For branded consumer payload text, pass a prefix:
-
-```bash
-bash distribute.sh "$CONSUMER_ROOT" --prefix sample --dry-run
-bash distribute.sh "$CONSUMER_ROOT" --prefix sample --yes
-```
-
-Use the same prefix for harness install:
-
-```bash
-cd packages/tdk-setup
-bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --prefix sample --yes
-```
-
-`--prefix sample` rewrites safe distributed payload text from `tdk-`/`tdk`/`TDK` to `sample-`/`sample`/`SAMPLE`. It keeps manifest-managed plugin paths and generated package paths source-identical when those paths are shipped.
-
-See [tdk-setup README](packages/tdk-setup/README.md) for the full setup CLI reference, including plugin selection, Codex conversion, and `convert-flat`.
-
-## Core Workflows
-
-| Workflow | Start here |
+| Form | Behavior |
 |---|---|
-| Install or troubleshoot setup | [Setup Guide](.specify/docs/en/guides/setup/setup-guide.md) |
-| New greenfield project and sub-workspaces | [Greenfield Full Start](.specify/docs/en/guides/scenarios/10-greenfield-full-start-architecture-topology.md) |
-| Broad epic to child specs | [Epic Start Guide](.specify/docs/en/guides/scenarios/00-epic-start-guide.md) |
-| Small child feature implementation | [Child Feature Implementation](.specify/docs/en/guides/scenarios/01-child-feature-implementation.md) |
-| Command and artifact relationships | [Workflow Map](.specify/docs/en/guides/workflow-map.md) |
-| Command catalog and tips | [TDK Skills Guide](.specify/docs/en/guides/skills-guide.md) |
-| Harness install and Codex conversion | [tdk-setup README](packages/tdk-setup/README.md) |
+| `/tdk-implement <task-id>` | Serial: ready phases in plan-table order |
+| `/tdk-implement <task-id> --phase NN` | One phase, serially, after its dependencies |
+| `/tdk-implement <task-id> --parallel` | Claude Code only: dynamic waves, max four workers |
+
+`--phase` and `--parallel` are mutually exclusive. The default serial path keeps the existing
+routing, recovery, review, test, and status behavior, and stays the escape hatch for any phase
+parallel mode refuses.
+
+Parallel essentials:
+
+- **Ownership comes from `## Related Code Files`.** `Read` grants read access; `Modify`, `Create`,
+  and `Delete` grant exact write ownership. Read/read overlap is fine; write/write and either
+  direction of read/write overlap, including ancestor/descendant paths, cannot share a wave.
+- **Plans classify phases.** `parallel_safe: auto` only when the complete access set is known;
+  otherwise `parallel_safe: never` with a factual reason. Legacy phases without the metadata are
+  serial barriers, executed through the serial path.
+- **Admission is strict.** Clean Git worktree, Git-backed project, and case-sensitive POSIX paths
+  (WSL with exact case). Native Windows, DrvFS, case-insensitive or unknown roots, and an
+  unsupported nested mount under an access path are rejected. Concurrency canaries must prove
+  concurrent spawn and join. There is no silent serial fallback.
+- **Waves are all-or-nothing.** Dispatch is synchronous, so there is no worker timeout or polling
+  loop. Status writes are crash-atomic through a recovery journal. Any worker, gate, audit, or
+  malformed-result failure leaves admitted siblings `in_progress`; explicit recovery reconciles the
+  journal and requires a clean rerun.
+- **One mutation reservation.** Mutating `/tdk-implement` and `/tdk-plan` flows share a single
+  repo-wide mutation reservation, cleared by state, never by TTL, PID, or mtime.
+- **Codex STOPs on `--parallel`.** Rerun without the flag to use the default serial path; harness
+  identity is fixed at conversion time, not guessed at runtime.
+
+Full contract:
+[parallel phase orchestration](.specify/plugins/tdk-core/skills/tdk-implement/references/parallel-phase-orchestration.md).
 
 ## Plugins
 
 | Plugin | Purpose |
 |---|---|
-| **tdk-core** | Child feature delivery: specify, clarify, plan, analyze, implement, status, and test-planning modes; also owns the shared hook/runtime gateway |
-| **tdk-inception** | Project/workspace foundation: greenfield/brownfield start, constitution, architecture, workspace layout/config, dependency policy, and sub-workspace documentation |
-| **tdk-epic** | Parent epic discovery, epic PRD, HLD, and task breakdown before child specs |
-| **tdk-utils** | Generic scout, research, docs-seeker, context engineering, brainstorming, and problem-solving utilities |
-| **tdk-memory** | Domain memory init, update, query, changelog, checksum, and memory agent |
-| **tdk-test-api** | API test planning, testcase generation, and Playwright TypeScript code generation |
-| **tdk-retro** | Retrospective feedback collection, learning proposal, and approved learning application |
-| **tdk-scaffold** | Sub-workspace automation recommendations, skill/agent scaffolding, delegate-routing, and guarded golden-path recipes |
+| **tdk-core** | Child feature delivery: specify, clarify, plan, analyze, implement, status, test-planning modes; owns the shared hook/runtime gateway |
+| **tdk-inception** | Project foundation: greenfield/brownfield start, constitution, architecture, workspace layout/config, dependency policy, sub-workspace docs |
+| **tdk-epic** | Parent epic discovery, epic PRD, HLD, task breakdown |
+| **tdk-utils** | Scout, research, docs-seeker, context engineering, brainstorming, problem-solving |
+| **tdk-memory** | Domain memory init, update, query, changelog, checksum, memory agent |
+| **tdk-test-api** | API test planning, testcase generation, Playwright TypeScript codegen |
+| **tdk-retro** | Retrospective collection, learning proposal, approved learning application |
+| **tdk-scaffold** | Sub-workspace automation recommendations, skill/agent scaffolding, delegate routing, guarded golden-path recipes |
 
-Every install includes the coupled base `tdk-core`, `tdk-inception`, `tdk-memory`, and `tdk-utils`. Plugin selection adds optional workflows to that base; it does not create a runtime-independent core-only or inception-only install. `--plugins tdk-core` remains accepted as base-only compatibility syntax.
+Every install includes the coupled base `tdk-core`, `tdk-inception`, `tdk-memory`, and `tdk-utils`.
+Selection adds optional workflows to that base; there is no runtime-independent core-only install.
+`--plugins tdk-core` is accepted as base-only compatibility syntax.
 
 ## Tech Stack
 
-- **Runtime:** Bun
-- **Language:** TypeScript with strict mode and `noUncheckedIndexedAccess`
-- **CLI:** Commander.js
-- **Validation:** Zod schemas and Commander argument parsing
-- **Testing:** Bun test runner
-- **Config format:** `.specify.json`
-- **Setup package:** `packages/tdk-setup/`
+Bun runtime, TypeScript in strict mode with `noUncheckedIndexedAccess`, Commander.js CLI, Zod
+validation, Bun test runner, `.specify.json` config, setup CLI in `packages/tdk-setup/`.
 
 ## Documentation
 
-- [TDK Docs Index](.specify/docs/README.md)
-- [TDK Guides](.specify/docs/en/guides/index.md)
-- [Scenario Catalog](.specify/docs/en/guides/scenarios/scenario-catalog.md)
-- [Setup Guide](.specify/docs/en/guides/setup/setup-guide.md)
-- [Workflow Map](.specify/docs/en/guides/workflow-map.md)
-- [TDK Skills Guide](.specify/docs/en/guides/skills-guide.md)
-- [tdk-setup README](packages/tdk-setup/README.md)
+| Topic | Start here |
+|---|---|
+| Install or troubleshoot setup | [Setup Guide](.specify/docs/en/guides/setup/setup-guide.md) |
+| Harness install and Codex conversion | [tdk-setup README](packages/tdk-setup/README.md) |
+| Greenfield project and sub-workspaces | [Greenfield Full Start](.specify/docs/en/guides/scenarios/10-greenfield-full-start-architecture-topology.md) |
+| Broad epic to child specs | [Epic Start Guide](.specify/docs/en/guides/scenarios/00-epic-start-guide.md) |
+| Small child feature delivery | [Child Feature Implementation](.specify/docs/en/guides/scenarios/01-child-feature-implementation.md) |
+| Command and artifact relationships | [Workflow Map](.specify/docs/en/guides/workflow-map.md) |
+| Command catalog and tips | [Skills Guide](.specify/docs/en/guides/skills-guide.md) |
+| All guides and scenarios | [Docs Index](.specify/docs/README.md) · [Scenario Catalog](.specify/docs/en/guides/scenarios/scenario-catalog.md) |
+| Shipping a payload (maintainers) | [Maintainer Distribution Notes](docs/maintainer-distribution.md) |

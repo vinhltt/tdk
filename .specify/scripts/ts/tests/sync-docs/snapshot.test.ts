@@ -4,7 +4,7 @@
 // Each test: reset fixture → run TS → compare to bash snapshot
 
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdtempSync } from 'node:fs';
@@ -84,6 +84,28 @@ describe('sync-docs snapshot parity tests', () => {
   it('S-06: --all --dry-run', () => {
     const tsOutput = runTS(['--all', '--dry-run']);
     compareToSnapshot(tsOutput, 'all-dryrun');
+  });
+
+  it('S-07: duplicate names stop sync before it can write a sub-workspace document', () => {
+    const configPath = join(fixtureRoot, '.specify', '.specify.json');
+    const config = JSON.parse(readFileSync(configPath, 'utf-8'));
+    config.subWorkspaces.push({ name: 'alpha', path: 'duplicate-alpha' });
+    writeFileSync(configPath, JSON.stringify(config));
+
+    const target = join(fixtureRoot, 'sub-alpha', '.specify', 'configurations', 'from-parent.md');
+    const result = spawnSync('bun', [
+      resolve(TS_ROOT, 'src/commands/util/sync-docs.ts'),
+      '--to-sub-workspace', 'alpha',
+    ], {
+      cwd: fixtureRoot,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('duplicate_sub_workspace_names');
+    expect(result.stderr).toContain('alpha');
+    expect(existsSync(target)).toBe(false);
   });
 
   // --- Parity notes for Phase 4 documentation ---

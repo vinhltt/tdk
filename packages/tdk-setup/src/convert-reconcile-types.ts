@@ -9,7 +9,7 @@ export interface ReconcileItem {
   previous?: ManagedFile;
 }
 
-export interface CodexReconcilePlan {
+export interface ConvertReconcilePlan {
   consumerRoot: string;
   manifestPath: string;
   items: ReconcileItem[];

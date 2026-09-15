@@ -75,6 +75,27 @@ describe('transformTextContent (new settings-based signature)', () => {
     expect(transformTextContent('builder-tdk-x', TDK_TO_SAMPLE)).toBe('builder-tdk-x');
   });
 
+  test('rewrites literal session command allowlist only when the brand prefix changes', () => {
+    const allowlist = [
+      "'tdk-clarify'",
+      "'tdk-consistency-check'",
+      "'tdk-implement'",
+      "'tdk-plan'",
+      "'tdk-specify'",
+      "'tdk-status'",
+    ].join(', ');
+
+    expect(transformTextContent(allowlist, TDK_TO_SAMPLE)).toBe([
+      "'sample-clarify'",
+      "'sample-consistency-check'",
+      "'sample-implement'",
+      "'sample-plan'",
+      "'sample-specify'",
+      "'sample-status'",
+    ].join(', '));
+    expect(transformTextContent(allowlist, TDK_TO_TDK)).toBe(allowlist);
+  });
+
   // ── Per-family source-path conversion ────────────────────────────────────────
 
   test('skills family: drops plugin segment (tdk-utils/skills/tdk-scout/SKILL.md → .claude/skills/sample-scout/SKILL.md)', () => {
@@ -94,7 +115,7 @@ describe('transformTextContent (new settings-based signature)', () => {
 
   test('lib family: drops plugin segment', () => {
     const text = '.specify/plugins/tdk-core/lib/tdk-shared/utils.ts';
-    expect(transformTextContent(text, TDK_TO_SAMPLE)).toBe('.claude/lib/sample-shared/utils.ts');
+    expect(transformTextContent(text, TDK_TO_SAMPLE)).toBe('.claude/hooks/sample-core/lib/sample-shared/utils.ts');
   });
 
   test('scripts family: keeps plugin segment', () => {
@@ -104,7 +125,7 @@ describe('transformTextContent (new settings-based signature)', () => {
 
   test('hooks family with non-hooks.json rest: keeps plugin segment', () => {
     const text = '.specify/plugins/tdk-core/hooks/hook-gateway.cjs';
-    expect(transformTextContent(text, TDK_TO_SAMPLE)).toBe('.claude/hooks/sample-core/hook-gateway.cjs');
+    expect(transformTextContent(text, TDK_TO_SAMPLE)).toBe('.claude/hooks/sample-core/hooks/hook-gateway.cjs');
   });
 
   test('converted path also gets blanket rewrite on the component name inside', () => {
@@ -135,9 +156,9 @@ describe('transformTextContent (new settings-based signature)', () => {
     expect(transformTextContent('.specify/plugins/tdk-scaffold/skills/', TDK_TO_SAMPLE)).toBe('.claude/skills/');
     expect(transformTextContent('.specify/plugins/tdk-core/agents/', TDK_TO_SAMPLE)).toBe('.claude/agents/');
     expect(transformTextContent('.specify/plugins/tdk-core/commands/', TDK_TO_SAMPLE)).toBe('.claude/commands/');
-    expect(transformTextContent('.specify/plugins/tdk-core/lib/', TDK_TO_SAMPLE)).toBe('.claude/lib/');
+    expect(transformTextContent('.specify/plugins/tdk-core/lib/', TDK_TO_SAMPLE)).toBe('.claude/hooks/sample-core/lib/');
     expect(transformTextContent('.specify/plugins/tdk-core/scripts/', TDK_TO_SAMPLE)).toBe('.claude/scripts/sample-core/');
-    expect(transformTextContent('.specify/plugins/tdk-core/hooks/', TDK_TO_SAMPLE)).toBe('.claude/hooks/sample-core/');
+    expect(transformTextContent('.specify/plugins/tdk-core/hooks/', TDK_TO_SAMPLE)).toBe('.claude/hooks/sample-core/hooks/');
   });
 
   test('prose with skill-family source roots converts to installed skill root', () => {

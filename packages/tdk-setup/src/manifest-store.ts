@@ -1,6 +1,12 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { assertSafeClaudeTargetRelativePath, assertSafeCodexTargetRelativePath } from './target-relative-path';
+import { ALL_CONVERT_PARTS, isConvertPart } from './convert-parts';
+import { isHookTargetPlatform } from './lib/harness-transform/hook-command';
+import {
+  assertSafeClaudeTargetRelativePath,
+  assertSafeCodexTargetRelativePath,
+  assertSafeOmpTargetRelativePath,
+} from './target-relative-path';
 import { validateHarnessTargetPath } from './target-path-safety';
 import type { HarnessInstallManifest, HarnessName } from './types';
 
@@ -26,17 +32,45 @@ export function manifestPathFor(consumerRoot: string, harness: HarnessName = 'cl
 
 function readManifest(manifestPath: string, expectedHarness: HarnessName): HarnessInstallManifest {
   const data = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as HarnessInstallManifest;
-  if (data.version !== 1 || data.harness !== expectedHarness || !Array.isArray(data.managedFiles) || !Array.isArray(data.managedHooks)) {
+  if (
+    data.version !== 1 ||
+    data.harness !== expectedHarness ||
+    !Array.isArray(data.managedFiles) ||
+    !Array.isArray(data.managedHooks) ||
+    (data.convertedParts !== undefined && (
+      !Array.isArray(data.convertedParts) ||
+      !data.convertedParts.every(isConvertPart)
+    )) ||
+    (data.hookTargetPlatform !== undefined && !isHookTargetPlatform(data.hookTargetPlatform))
+  ) {
     throw new Error('unexpected manifest shape');
   }
   return {
     ...data,
-    managedFiles: data.managedFiles.map((file) => ({
-      ...file,
-      targetRelativePath: expectedHarness === 'claude'
-        ? assertSafeClaudeTargetRelativePath(file.targetRelativePath, 'managed target path')
-        : assertSafeCodexTargetRelativePath(file.targetRelativePath, 'managed target path'),
-    })),
+    convertedParts: data.convertedParts === undefined
+      ? undefined
+      : ALL_CONVERT_PARTS.filter((part) => data.convertedParts!.includes(part)),
+    managedFiles: data.managedFiles.map((file) => {
+      if (
+        (file.part !== undefined && !isConvertPart(file.part)) ||
+        (file.managedRegionChecksum !== undefined && !/^[a-f0-9]{64}$/.test(file.managedRegionChecksum))
+      ) {
+        throw new Error('unexpected manifest shape');
+      }
+      let targetRelativePath: string;
+      switch (expectedHarness) {
+        case 'claude':
+          targetRelativePath = assertSafeClaudeTargetRelativePath(file.targetRelativePath, 'managed target path');
+          break;
+        case 'codex':
+          targetRelativePath = assertSafeCodexTargetRelativePath(file.targetRelativePath, 'managed target path');
+          break;
+        case 'omp':
+          targetRelativePath = assertSafeOmpTargetRelativePath(file.targetRelativePath, 'managed target path');
+          break;
+      }
+      return { ...file, targetRelativePath };
+    }),
   };
 }
 

@@ -26,10 +26,12 @@ describe('no-lease-artifact guard (D4) — static', () => {
     expect(hits).toEqual([]);
   });
 
-  it('no surviving source file queries --git-common-dir, the only call site the lease directory was ever built from', () => {
-    const hits = allSourceFiles().filter((file) => readFileSync(file, 'utf8').includes('--git-common-dir'));
-    expect(hits).toEqual([]);
-  });
+  // A second static check used to assert that no source file mentions `--git-common-dir` at all,
+  // on the grounds that the lease directory was the only thing ever built from it. That stopped
+  // being true: the git-map identity gate uses `--git-common-dir` to prove a worktree and its
+  // repository share one object store. The assertion was a proxy for "no lease artifacts", and the
+  // behavioural tests below assert that invariant directly by watching the directory itself, so the
+  // proxy has been removed rather than rewritten to carve out an exception.
 });
 
 describe('no-lease-artifact guard (D4) — behavioral', () => {

@@ -54,7 +54,11 @@ export function setupTestApiEnv(args: TestApiArgs): TestApiSetup {
 
   const featureId = args.featureId.toLowerCase();
   const repoRoot = getRepoRoot();
-  const configResult = detectConfig({ subWorkspace: args.subWorkspace });
+  const configResult = detectConfig({
+    configAnchor: repoRoot,
+    cwd: process.cwd(),
+    subWorkspace: args.subWorkspace,
+  });
 
   if (configResult.error) {
     process.stderr.write(`Error: ${configResult.error}\n`);
@@ -70,7 +74,7 @@ export function setupTestApiEnv(args: TestApiArgs): TestApiSetup {
     repoRoot,
   });
 
-  const configPath = findConfigFile();
+  const configPath = findConfigFile(repoRoot);
   const { config } = configPath ? parseConfig(configPath) : { config: null };
   const env = loadFeatureEnv(configPath ?? undefined);
   const feature = parseFeatureId(featureId, repoRoot, env.specsRoot, env.defaultFolder);

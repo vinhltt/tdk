@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { buildCodexReconcilePlan } from '../src/codex-reconcile';
+import { buildCodexReconcilePlan } from '../src/convert-reconcile';
 import { sha256Buffer } from '../src/checksum';
 import { makeConsumer } from './fixtures';
 import type { CodexTargetFile, MigrationReport } from '../src/flat-claude-types';

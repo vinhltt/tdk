@@ -45,7 +45,7 @@ describe('buildClaudeInstallPlan', () => {
     const plan = buildPlan(consumer.root);
 
     expect(plan.writes.some((write) => write.targetRelativePath === '.claude/hooks/hooks.json')).toBe(false);
-    expect(plan.writes.some((write) => write.targetRelativePath === '.claude/hooks/tdk-core/hook-gateway.cjs')).toBe(true);
+    expect(plan.writes.some((write) => write.targetRelativePath === '.claude/hooks/tdk-core/hooks/hook-gateway.cjs')).toBe(true);
   });
 
   test('installs claude rule files into .claude/rules with prefix rewrite', () => {
@@ -125,10 +125,10 @@ describe('buildClaudeInstallPlan', () => {
     });
 
     expect(plan.collisions).toEqual([]);
-    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
-    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/tdk-memory/hook-gateway.cjs');
-    expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
-    expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/tdk-memory/hook-gateway.cjs');
+    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/tdk-core/hooks/hook-gateway.cjs');
+    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/tdk-memory/hooks/hook-gateway.cjs');
+    expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/tdk-core/hooks/hook-gateway.cjs');
+    expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/tdk-memory/hooks/hook-gateway.cjs');
   });
 
   test('namespaces hook filenames using transformed plugin ids for custom prefixes', () => {
@@ -176,12 +176,12 @@ describe('buildClaudeInstallPlan', () => {
     });
 
     expect(plan.collisions).toEqual([]);
-    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
-    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/erc-memory/hook-gateway.cjs');
-    expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/erc-core/hook-gateway.cjs');
-    expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/erc-memory/hook-gateway.cjs');
-    expect(JSON.stringify(plan.nextSettings)).not.toContain('.claude/hooks/tdk-core/hook-gateway.cjs');
-    expect(JSON.stringify(plan.nextSettings)).not.toContain('.claude/hooks/tdk-memory/hook-gateway.cjs');
+    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/erc-core/hooks/hook-gateway.cjs');
+    expect(plan.writes.map((write) => write.targetRelativePath)).toContain('.claude/hooks/erc-memory/hooks/hook-gateway.cjs');
+    expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/erc-core/hooks/hook-gateway.cjs');
+    expect(JSON.stringify(plan.nextSettings)).toContain('.claude/hooks/erc-memory/hooks/hook-gateway.cjs');
+    expect(JSON.stringify(plan.nextSettings)).not.toContain('.claude/hooks/tdk-core/hooks/hook-gateway.cjs');
+    expect(JSON.stringify(plan.nextSettings)).not.toContain('.claude/hooks/tdk-memory/hooks/hook-gateway.cjs');
   });
 
   test('requires prompt for unmanaged target collision', () => {

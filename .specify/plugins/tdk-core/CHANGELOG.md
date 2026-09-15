@@ -4,6 +4,30 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [13.3.0] - 2026-09-15
+
+### Changed
+- tdk-specify seeds `milestone_branch` per repository; a scalar stays valid as the artifact host's own milestone and is no longer applied to children
+- tdk-plan Step 3e resolves (Base ref, Base commit, kind) per repository from its own milestone, taking both remote and branch name from the milestone's upstream; `origin` is no longer assumed, an upstream-selected non-first remote is fetched, several remotes without an upstream require confirmation, and a repository with no remote skips fetch and resolves its local default instead of constructing `refs/remotes//...`
+- tdk-plan reseed is idempotent per repository, and Append now chains Step 3e so a repository introduced by an appended phase is seeded
+- tdk-status documents the closed status shape: `subWorkspaces[].milestone`/`.milestoneState` on a polyrepo, `git.milestone`/`git.milestoneState` on a single-repository project; the unrelated root branch is labelled as the artifact host
+- tdk-implement injects each repository's own milestone and base commit, not the artifact host's branch
+
+## [13.2.2] - 2026-09-15
+
+### Fixed
+- tdk-plan Step 3e no longer retries an unbounded fetch. `RUN_FETCH` used `[ -n "$TIMEOUT_BIN" ] && "$TIMEOUT_BIN" 10 "$@" || "$@"`, so a fetch that timed out or failed made the `||` branch run the same fetch again with no deadline at all — the exact hang the step claims to prevent
+- `--kill-after` is now required and probed once: plain `timeout` only sends SIGTERM, and a transport that blocks it survives. A `timeout` without `--kill-after` is treated as no timeout, taking the same skip-the-network branch as a missing binary
+- Restored the fourth outcome row and gave "no enforceable deadline" (`rc` 99) a note distinct from a genuine fetch failure. Sentinel 99 rather than 127, because `timeout` already exits 127 for an exec failure while being perfectly available
+
+## [13.2.1] - 2026-09-15
+
+### Changed
+- tdk-status reports branch state per repository: the root branch labelled as the milestone, plus a Sub-workspaces section comparing each repository's live branch against git-map.md
+- tdk-status description rewritten with concrete trigger phrases and an explicit read-only scope
+- tdk-specify no longer warns when the root workspace sits on its milestone branch, and anchors the duplicate-branch check to each sub-workspace
+- tdk-plan seeds each repository's base ref from its real default branch via a parallel read-only fetch with a per-repository timeout, falling back to mainBranch with a note
+
 ## [13.2.0] - 2026-09-04
 
 ### Added

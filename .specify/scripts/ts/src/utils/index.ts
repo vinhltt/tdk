@@ -5,4 +5,6 @@ export * from './types';
 export * from './config';
 export * from './feature';
 export * from './common';
+export * from './git-env';
+export * from './git-map';
 export * from './agent-output';

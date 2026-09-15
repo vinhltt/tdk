@@ -7,9 +7,9 @@ description: "Manage Git worktrees for sub-workspace repositories of a polyrepo 
   Also invoked by tdk-branch-preflight when it finds a busy repository.
   Operates on sub-workspace repositories only, never on the root workspace repository."
 metadata:
-  version: "4.1.0"
+  version: "4.1.1"
   category: "Git"
-  input_format: "Mode (create|list|cleanup), task ID, optional --repo <sub-workspace-name>; PROJECT_DIR from the caller when delegated"
+  input_format: "Mode (create|list|cleanup|reset), task ID, optional --repo <sub-workspace-name>; PROJECT_DIR from the caller when delegated"
   output_format: "Worktree records written to git-map.md, or a status report per repository"
 ---
 
@@ -29,6 +29,7 @@ builder-local worktree tooling that operates on the toolkit repository itself.
 | create | `create <task-id> [--repo <sub-name>]` |
 | list | `list [<task-id>]` |
 | cleanup | `cleanup <task-id>` |
+| reset | `reset <task-id> [--repo <sub-name>]` |
 
 ### Scope
 
@@ -112,21 +113,26 @@ swallow an entire sub-repository checkout.
 5. **Derive `<worktree-name>` from the agreed branch**, only after step 4 has settled it — after the user's
    edit when direct, from the caller when delegated. An empty result is a STOP. The full path is
    `"$PROJECT_DIR/_worktrees/<sub>/<worktree-name>"`.
-6. **Fetch and confirm the base ref**, unless preflight already confirmed it. Each base ref is confirmed
-   exactly once — either in preflight or here, never twice.
+6. **Confirm the base**, unless preflight already confirmed it. Each base is confirmed exactly once —
+   either in preflight or here, never twice. Judge it by the `kind` recorded in `git-map.md`: a `local`
+   base only has to resolve in the repository, while a `remote` base also needs its fetch to have
+   succeeded. See the Base resolution table in
+   `../tdk-branch-preflight/references/git-map-contract.md`.
 
    ```bash
-   # Branch does not exist yet
-   git -C "$PROJECT_DIR/$SUB_PATH" worktree add "$PROJECT_DIR/_worktrees/$SUB/$WORKTREE_NAME" -b "$BRANCH" "$BASE_REF"
+   # Branch does not exist yet — BASE_COMMIT is the start point for the new branch
+   git -C "$PROJECT_DIR/$SUB_PATH" worktree add "$PROJECT_DIR/_worktrees/$SUB/$WORKTREE_NAME" -b "$BRANCH" "$BASE_COMMIT"
 
-   # Branch already exists (preflight created it, or this is a resume) — no -b
+   # Branch already exists (preflight created it, or this is a resume) — no -b.
+   # The final argument is the branch to ATTACH, and it must stay a branch name. Passing a commit
+   # here opens the worktree at a detached HEAD on the base and abandons every commit already made.
    git -C "$PROJECT_DIR/$SUB_PATH" worktree add "$PROJECT_DIR/_worktrees/$SUB/$WORKTREE_NAME" "$BRANCH"
    ```
 
-   Before attaching to an existing branch, verify it matches the recorded base:
+   Before attaching to an existing branch, verify it contains the recorded base commit:
 
    ```bash
-   git -C "$PROJECT_DIR/$SUB_PATH" merge-base --is-ancestor "$BASE_REF" "$BRANCH"
+   git -C "$PROJECT_DIR/$SUB_PATH" merge-base --is-ancestor "$BASE_COMMIT" "$BRANCH"
    ```
 
    When `worktree add` fails with "already checked out", run
@@ -180,19 +186,60 @@ Read `git-map.md` for the task and take each worktree path **verbatim from the `
 not re-derive it from the branch: the branch may have been edited after the worktree was created, so a fresh
 derivation would point at a path that does not exist and would miss the real worktree.
 
-Records are hints. Re-verify live git state on this machine before touching anything:
+Records are hints. Re-verify live git state on this machine before touching anything.
+
+**Write the intent before the first git command.** `cleaning_by_repo[<sub>]` records what is about to
+be removed and the **original** `worktree_path`, so a cleanup that fails or crashes halfway can be
+continued rather than guessed at:
+
+```yaml
+cleaning_by_repo:
+  web:
+    intent: worktree+branch
+    worktree_path: _worktrees/web/feature-sample-001
+```
 
 1. **Worktree absent locally** — report it and do nothing. The record was made on another machine.
 2. **Worktree present** — check for a dirty tree first. Dirty means STOP for that repository, with a report
    to the user. Otherwise `git -C "$PROJECT_DIR/$SUB_PATH" worktree remove "$PROJECT_DIR/$WORKTREE_PATH"`.
-3. **Empty branch** — when `git -C "$PROJECT_DIR/$SUB_PATH" log "$BASE_REF".."$BRANCH"` is empty, the branch carries no work (a skipped
-   phase). Offer to delete it, confirming once per group. Delete with `git -C "$PROJECT_DIR/$SUB_PATH" branch
-   -d -- "$BRANCH"`, never `-D`, so Git refuses anything unmerged as a last line of defence.
+3. **Empty branch** — when `git -C "$PROJECT_DIR/$SUB_PATH" log "$BASE_COMMIT".."$BRANCH"` is empty, the
+   branch carries no work (a skipped phase). Offer to delete it, confirming once per group. Delete with
+   `git -C "$PROJECT_DIR/$SUB_PATH" branch -d -- "$BRANCH"`, never `-D`, so Git refuses anything unmerged
+   as a last line of defence.
 
    **Warn when the branch has not been pushed.** Determine that by checking for an upstream:
    `git -C "$PROJECT_DIR/$SUB_PATH" rev-parse --verify --quiet "$BRANCH@{upstream}"`. No upstream means no
-   remote copy, so any local commit would be lost for good — say so plainly in the confirmation.
-4. **Update git-map.md** — drop the worktree row, keeping branch history when the branch itself survives.
+   remote copy, so any local commit would be lost for good — say so plainly in the confirmation. A base of
+   `kind: local` is **not** evidence that anything was pushed; never infer it from the base ref.
+4. **Record the result after each command succeeds and is verified.** Keep the row and keep its
+   `Milestone`; dropping the row drops the intent, and resume would then offer to recreate exactly what
+   was just removed.
+
+   | Event | Written |
+   |---|---|
+   | `worktree remove` verified — the path is gone from `worktree list` | `cleaned_by_repo[<sub>] = worktree`, and only now does `Worktree path` become `-` |
+   | `branch -d` also succeeds | `cleaned_by_repo[<sub>] = worktree+branch`, and `cleaning_by_repo[<sub>]` is removed — the row is now `cleaned` |
+   | `branch -d` refused | `cleaning_by_repo[<sub>]` stays. The row remains `cleaning`, and a rerun does only the branch deletion |
+
+   Writing `worktree+branch` up front would turn a failed cleanup into a claim that everything was
+   removed, while also clearing the one path a retry needs.
+
+## reset
+
+The way out of a `cleaned` row, and the way to cancel an unfinished `cleaning` one. Without it a cleaned
+row is a dead end for the user.
+
+| Item | Behaviour |
+|---|---|
+| Scope | per repository by default; `--repo <sub-name>` narrows it further |
+| `cleaned` row | remove `cleaned_by_repo[<sub>]`, return the row to `pending`, keep `Milestone` |
+| `cleaning` row | cancel: remove `cleaning_by_repo[<sub>]`, and remove `cleaned_by_repo[<sub>]` when it holds only a partial result. Report which removals cannot be undone |
+| `feature_branch` | released **only** when every row of the task is `seed`, `pending` or `cleaned`. Checked across the whole task before writing |
+| Confirmation | one `AskUserQuestion` naming the repository, the resulting row state, and whether `feature_branch` is released |
+
+Resetting one repository while a sibling is still `realized` does not release the task-level
+`feature_branch`: every repository in a task shares one branch name, and the guard stops when a row
+carries a different one.
 
 ## Additional Resources
 

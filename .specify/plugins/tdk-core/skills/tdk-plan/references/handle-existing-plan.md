@@ -104,6 +104,13 @@ files and STOPs with exact diagnostics.
    in `plan.md`, must remove the appended phase file, and STOPs with exact
    diagnostics. Leave no orphan phase or table row. Never auto-fix, repair, or
    downgrade rejected output.
+10. **Run Step 3e:** Once Step 3d has succeeded, seed `git-map.md` exactly as the new-spec flow does.
+    An appended phase can introduce a repository that appears in the plan for the first time, and
+    without this that repository is never seeded — `/tdk-implement` then has no row for it.
+
+    Step 3e is idempotent per repository: it adds the missing row and leaves every realized, cleaning
+    or cleaned row — and `feature_branch` — untouched. A Step 3d failure still reverts the append and
+    STOPs before reaching this point.
 
 ## Abort
 

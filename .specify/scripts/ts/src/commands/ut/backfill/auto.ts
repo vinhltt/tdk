@@ -3,7 +3,7 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command } from 'commander';
-import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson } from '../../../utils/index';
+import { detectConfig, parseFeatureId, loadFeatureEnv, getRepoRoot, formatAgentJson, writeAgentJson, findConfigFile } from '../../../utils/index';
 import { handleCliError } from '../cli-error-handler';
 
 /** Create ut-auto command for CLI registration (group: tdk ut auto) */
@@ -17,12 +17,12 @@ export function createAutoCommand(): Command {
     .option('--plan-only', 'Only create plan', false)
     .option('--force', 'Force overwrite', false)
     .action((featureId, opts) => {
-    const env = loadFeatureEnv();
     const repoRoot = getRepoRoot();
+    const env = loadFeatureEnv(findConfigFile(repoRoot));
     featureId = featureId.toLowerCase();
 
     const feature = parseFeatureId(featureId, repoRoot, env.specsRoot, env.defaultFolder);
-    const config = detectConfig({ subWorkspace: opts.subWorkspace, module: opts.module });
+    const config = detectConfig({ configAnchor: repoRoot, cwd: process.cwd(), subWorkspace: opts.subWorkspace, module: opts.module });
 
     const cliError = handleCliError(config, opts);
     if (cliError) {

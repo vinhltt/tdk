@@ -11,6 +11,16 @@ export interface RewriteSettings {
   hooks: boolean;
 }
 
+export interface OmpModelMap {
+  [claudeModel: string]: string;
+}
+
+const DEFAULT_OMP_MODEL_MAP: OmpModelMap = {
+  haiku: '@smol',
+  sonnet: '@task',
+  opus: '@slow',
+};
+
 export interface InstallSettings {
   version: 1;
   defaults: {
@@ -29,6 +39,11 @@ export interface InstallSettings {
     codex?: {
       enabled: boolean;
       targetDir: '.codex';
+    };
+    omp?: {
+      enabled: boolean;
+      targetDir: '.omp';
+      modelMap: OmpModelMap;
     };
   };
 }
@@ -66,6 +81,10 @@ const HarnessSchema = z.object({
   settingsPath: z.string().optional(),
 }).passthrough();
 
+const OmpHarnessSchema = HarnessSchema.extend({
+  modelMap: z.record(z.string()).optional(),
+});
+
 const SettingsSchema = z.object({
   version: z.literal(1),
   defaults: z.object({
@@ -77,6 +96,7 @@ const SettingsSchema = z.object({
   harnesses: z.object({
     claude: HarnessSchema.optional(),
     codex: HarnessSchema.optional(),
+    omp: OmpHarnessSchema.optional(),
   }).passthrough().default({}),
 }).strict();
 
@@ -106,6 +126,12 @@ export function assertAllowedCodexTargetDir(root: string, targetDir: string): '.
   return '.codex';
 }
 
+export function assertAllowedOmpTargetDir(root: string, targetDir: string): '.omp' {
+  validateContainedNoFollowPath(root, targetDir, 'OMP target dir');
+  if (targetDir !== '.omp') throw new Error('Only .omp targetDir is supported for OMP convert settings v1.');
+  return '.omp';
+}
+
 export function defaultInstallSettings(selectedPlugins: string[] = []): InstallSettings {
   return {
     version: 1,
@@ -118,6 +144,7 @@ export function defaultInstallSettings(selectedPlugins: string[] = []): InstallS
     harnesses: {
       claude: { enabled: true, targetDir: '.claude', settingsPath: '.claude/settings.json' },
       codex: { enabled: true, targetDir: '.codex' },
+      omp: { enabled: true, targetDir: '.omp', modelMap: { ...DEFAULT_OMP_MODEL_MAP } },
     },
   };
 }
@@ -148,6 +175,12 @@ function validateSettings(root: string, input: unknown): InstallSettings {
 
   const codex = raw.harnesses.codex;
   const codexTargetDir = codex ? assertAllowedCodexTargetDir(root, codex.targetDir) : undefined;
+  const omp = raw.harnesses.omp as {
+    enabled?: boolean;
+    targetDir: string;
+    modelMap?: Record<string, string>;
+  } | undefined;
+  const ompTargetDir = omp ? assertAllowedOmpTargetDir(root, omp.targetDir) : undefined;
 
   return {
     version: 1,
@@ -155,6 +188,13 @@ function validateSettings(root: string, input: unknown): InstallSettings {
     harnesses: {
       claude: { enabled: claude.enabled ?? true, targetDir, settingsPath: '.claude/settings.json' },
       ...(codex ? { codex: { enabled: Boolean(codex.enabled), targetDir: codexTargetDir! } } : {}),
+      ...(omp ? {
+        omp: {
+          enabled: omp.enabled ?? true,
+          targetDir: ompTargetDir!,
+          modelMap: { ...DEFAULT_OMP_MODEL_MAP, ...omp.modelMap },
+        },
+      } : {}),
     },
   };
 }
@@ -223,6 +263,16 @@ export function resolveCodexSettings(params: {
     rewrite: settings.defaults.rewrite,
     existingInstall: Boolean(params.settings || (params.oldManifest && (params.oldManifest.selectedPlugins.length > 0 || params.oldManifest.managedFiles.length > 0))),
   };
+}
+
+export function resolveOmpModelMap(params: {
+  root: string;
+  settings?: InstallSettings;
+}): OmpModelMap {
+  const omp = params.settings?.harnesses.omp ?? defaultInstallSettings().harnesses.omp!;
+  if (!omp.enabled) throw new Error('OMP harness is disabled in install settings.');
+  assertAllowedOmpTargetDir(params.root, omp.targetDir);
+  return { ...omp.modelMap };
 }
 
 export function parseHarnessList(value: string): HarnessName[] {
