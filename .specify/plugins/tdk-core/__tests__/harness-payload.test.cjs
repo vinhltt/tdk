@@ -3,9 +3,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
+  SUPPORTED_HARNESSES,
   loadPayloadHarness,
   loadPayloadClaudeCodeHarness,
   loadPayloadOmpHarness,
+  loadPayloadCodexHarness,
 } = require('../lib/harness-payload.cjs');
 
 test('Claude Code payload maps snake_case fields to the canonical shape', () => {
@@ -165,6 +167,49 @@ test('generic loader dispatches by env, lets an explicit harness win, and forwar
     assert.throws(
       () => loadPayloadHarness({}, 'unknown'),
       /Unsupported harness "unknown"/,
+    );
+  } finally {
+    if (previousHarness === undefined) delete process.env.TDK_HARNESS;
+    else process.env.TDK_HARNESS = previousHarness;
+  }
+});
+
+test('T32/T33/T34 codex is a real dispatch case, not a claude fallthrough', () => {
+  const previousHarness = process.env.TDK_HARNESS;
+  const raw = {
+    session_id: 'codex-session-1',
+    transcript_path: '/tmp/codex-session.jsonl',
+    cwd: '/workspace/project',
+    hook_event_name: 'UserPromptSubmit',
+    prompt: 'status of cd-001',
+  };
+
+  try {
+    assert.deepEqual([...SUPPORTED_HARNESSES], ['claude', 'omp', 'codex']);
+
+    // T32: explicit harness argument.
+    const explicit = loadPayloadHarness(raw, 'codex');
+    assert.equal(explicit.harness, 'codex');
+    assert.notEqual(explicit.harness, 'claude');
+    assert.equal(explicit.sessionId, 'codex-session-1');
+    assert.equal(explicit.transcriptPath, '/tmp/codex-session.jsonl');
+    assert.equal(explicit.cwd, '/workspace/project');
+    assert.equal(explicit.eventName, 'UserPromptSubmit');
+    assert.equal(explicit.prompt, 'status of cd-001');
+
+    // The direct adapter maps the same Claude-shaped payload.
+    assert.equal(loadPayloadCodexHarness(JSON.stringify(raw)).harness, 'codex');
+
+    // T33: the env default path, which is how the generated wrapper labels runs.
+    process.env.TDK_HARNESS = 'codex';
+    const fromEnv = loadPayloadHarness(raw);
+    assert.equal(fromEnv.harness, 'codex');
+    assert.equal(fromEnv.sessionId, 'codex-session-1');
+
+    // T34: a genuinely unknown harness still throws, and names every supported one.
+    assert.throws(
+      () => loadPayloadHarness(raw, 'gemini'),
+      /Unsupported harness "gemini"\. Supported harnesses: claude, omp, codex\./,
     );
   } finally {
     if (previousHarness === undefined) delete process.env.TDK_HARNESS;

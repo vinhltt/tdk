@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Command } from 'commander';
 import { checkCodexPluginFreshness, renderFreshnessMismatches } from './codex-convert-check';
+import { assertCodexHarnessCompat, HARNESS_PAYLOAD_RELATIVE_PATH } from './codex-harness-compat';
 import { codexPackageRoot } from './codex-package-root';
 import { buildCodexPluginArtifacts, ensureInterfaceSidecar } from './codex-plugin-emitter';
 import { discoverCodexConvertPlugins, listCodexConvertArtifactPaths } from './codex-plugin-tree-adapter';
@@ -58,6 +59,17 @@ export function createConvertCommand(): Command {
           process.stdout.write(renderFreshnessMismatches(mismatches));
           if (mismatches.length > 0) process.exitCode = 1;
           return;
+        }
+
+        // Reject-before-write: a codex-labelling wrapper against a lib with no
+        // codex dispatch would make destructive-command-block fail open.
+        for (const plugin of plugins) {
+          const installedLib = plugin.lib.find((file) => file.sourceRelativePath === HARNESS_PAYLOAD_RELATIVE_PATH);
+          assertCodexHarnessCompat({
+            hookSources: plugin.hooks.files.map((file) => ({ path: file.sourceRelativePath, content: file.content })),
+            harnessPayload: installedLib?.content ?? null,
+            harnessPayloadPath: `${plugin.name}/${HARNESS_PAYLOAD_RELATIVE_PATH}`,
+          }, plugin.name);
         }
 
         const lines = ['Codex harness convert'];

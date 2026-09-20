@@ -88,19 +88,29 @@ function runInstalledHook(
   gatewayFile: string,
   cwd: string,
   payload: Record<string, unknown>,
-  harness: 'claude' | 'omp' = 'claude',
+  harness: 'claude' | 'omp' | 'unset' = 'claude',
   projectRoot: string = cwd,
 ) {
+  // The trusted project root is explicit so the fixture never inherits the
+  // developer's own CLAUDE_PROJECT_DIR. 'unset' exercises the default harness
+  // path, where harnessSource must be "default" rather than "env".
+  const env = { ...process.env, TDK_HARNESS: harness, CLAUDE_PROJECT_DIR: projectRoot };
+  if (harness === 'unset') delete (env as Record<string, string | undefined>).TDK_HARNESS;
   return Bun.spawnSync({
     cmd: ['node', gatewayFile, 'dev-context-injector'],
     cwd,
-    // The trusted project root is explicit so the fixture never inherits the
-    // developer's own CLAUDE_PROJECT_DIR.
-    env: { ...process.env, TDK_HARNESS: harness, CLAUDE_PROJECT_DIR: projectRoot },
+    env,
     stdin: Buffer.from(JSON.stringify(payload)),
     stdout: 'pipe',
     stderr: 'pipe',
   });
+}
+
+function sessionRecords(file: string): Array<Record<string, unknown>> {
+  return fs.readFileSync(file, 'utf8')
+    .split('\n')
+    .filter((line) => line.length > 0)
+    .map((line) => JSON.parse(line) as Record<string, unknown>);
 }
 
 test('Claude install preserves topology and records installed-hook sessions across harnesses', async () => {
@@ -149,7 +159,7 @@ test('Claude install preserves topology and records installed-hook sessions acro
   writeSessionConfig(consumer.root, [{ name: 'app', path: 'app' }]);
 
   const specDir = path.join(consumer.root, '.specify', 'specs', 'cd-001');
-  const sessionsFile = path.join(specDir, 'sessions.txt');
+  const sessionsFile = path.join(specDir, 'sessions.jsonl');
   fs.mkdirSync(specDir, { recursive: true });
 
   const appRoot = path.join(consumer.root, 'app');
@@ -174,7 +184,8 @@ test('Claude install preserves topology and records installed-hook sessions acro
     prompt: 'Continue the current task',
   }, 'claude', consumer.root);
   expect(claudeResult.exitCode).toBe(0);
-  expect(fs.readFileSync(sessionsFile, 'utf8')).toBe(`${claudeSessionId}\n`);
+  expect(sessionRecords(sessionsFile).map((record) => record.session)).toEqual([claudeSessionId]);
+  expect(sessionRecords(sessionsFile)[0]!.harness).toBe('claude');
 
   const dedupTranscript = path.join(consumer.root, 'dedup-transcript.jsonl');
   fs.writeFileSync(dedupTranscript, '<!-- speckit-dev-context-injected -->\n', 'utf8');
@@ -188,7 +199,8 @@ test('Claude install preserves topology and records installed-hook sessions acro
   });
   expect(repairResult.exitCode).toBe(0);
   expect(repairResult.stdout.toString().trim()).toBe('');
-  expect(fs.readFileSync(sessionsFile, 'utf8')).toBe(`${claudeSessionId}\n${repairedSessionId}\n`);
+  expect(sessionRecords(sessionsFile).map((record) => record.session))
+    .toEqual([claudeSessionId, repairedSessionId]);
 
   const ompSessionId = 'omp-polyrepo-session-001';
   const ompResult = runInstalledHook(gatewayFile, appRoot, {
@@ -204,9 +216,12 @@ test('Claude install preserves topology and records installed-hook sessions acro
     eventName: 'UserPromptSubmit',
   }, 'omp', consumer.root);
   expect(ompResult.exitCode).toBe(0);
-  expect(fs.readFileSync(sessionsFile, 'utf8')).toBe(
-    `${claudeSessionId}\n${repairedSessionId}\n${ompSessionId}\n`,
-  );
+  const records = sessionRecords(sessionsFile);
+  expect(records.map((record) => record.session))
+    .toEqual([claudeSessionId, repairedSessionId, ompSessionId]);
+  // AC4: the OMP run is labelled from the env, not guessed.
+  expect(records.map((record) => record.harness)).toEqual(['claude', 'claude', 'omp']);
+  expect(records.map((record) => record.harnessSource)).toEqual(['env', 'env', 'env']);
 });
 
 test('a branded install associates every mentioned ticket regardless of command prefix', async () => {
@@ -216,8 +231,8 @@ test('a branded install associates every mentioned ticket regardless of command 
 
   const firstSpecDir = path.join(consumer.root, '.specify', 'specs', 'cd-001');
   const secondSpecDir = path.join(consumer.root, '.specify', 'specs', 'cd-002');
-  const firstSessionsFile = path.join(firstSpecDir, 'sessions.txt');
-  const secondSessionsFile = path.join(secondSpecDir, 'sessions.txt');
+  const firstSessionsFile = path.join(firstSpecDir, 'sessions.jsonl');
+  const secondSessionsFile = path.join(secondSpecDir, 'sessions.jsonl');
   fs.mkdirSync(firstSpecDir, { recursive: true });
   fs.mkdirSync(secondSpecDir, { recursive: true });
 
@@ -232,8 +247,8 @@ test('a branded install associates every mentioned ticket regardless of command 
     prompt: '/sample-status CD-001 then compare cd-002',
   });
   expect(brandedResult.exitCode).toBe(0);
-  expect(fs.readFileSync(firstSessionsFile, 'utf8')).toBe(`${brandedSessionId}\n`);
-  expect(fs.readFileSync(secondSessionsFile, 'utf8')).toBe(`${brandedSessionId}\n`);
+  expect(sessionRecords(firstSessionsFile).map((record) => record.session)).toEqual([brandedSessionId]);
+  expect(sessionRecords(secondSessionsFile).map((record) => record.session)).toEqual([brandedSessionId]);
   expect(fs.readdirSync(path.join(consumer.root, '.specify', 'specs')).filter((name) => name.toLowerCase() === 'cd-001'))
     .toEqual(['cd-001']);
 
@@ -247,8 +262,9 @@ test('a branded install associates every mentioned ticket regardless of command 
     prompt: '/tdk-status cd-001',
   });
   expect(unbrandedResult.exitCode).toBe(0);
-  expect(fs.readFileSync(firstSessionsFile, 'utf8')).toBe(`${brandedSessionId}\n${unbrandedSessionId}\n`);
-  expect(fs.readFileSync(secondSessionsFile, 'utf8')).toBe(`${brandedSessionId}\n`);
+  expect(sessionRecords(firstSessionsFile).map((record) => record.session))
+    .toEqual([brandedSessionId, unbrandedSessionId]);
+  expect(sessionRecords(secondSessionsFile).map((record) => record.session)).toEqual([brandedSessionId]);
 
   // A mention whose spec folder is absent is skipped without blocking the valid one.
   const partialSessionId = 'sample-partial-session-001';
@@ -260,8 +276,24 @@ test('a branded install associates every mentioned ticket regardless of command 
     prompt: 'cd-002 and CD-999',
   });
   expect(partialResult.exitCode).toBe(0);
-  expect(fs.readFileSync(secondSessionsFile, 'utf8')).toBe(`${brandedSessionId}\n${partialSessionId}\n`);
+  expect(sessionRecords(secondSessionsFile).map((record) => record.session))
+    .toEqual([brandedSessionId, partialSessionId]);
   expect(fs.existsSync(path.join(consumer.root, '.specify', 'specs', 'cd-999'))).toBe(false);
+
+  // T45: without TDK_HARNESS the record must say so instead of asserting a guess.
+  const defaultSessionId = 'sample-default-harness-session-001';
+  const defaultResult = runInstalledHook(gatewayFile, consumer.root, {
+    session_id: defaultSessionId,
+    transcript_path: path.join(consumer.root, 'missing-sample-default.jsonl'),
+    cwd: consumer.root,
+    hook_event_name: 'UserPromptSubmit',
+    prompt: 'cd-001 again',
+  }, 'unset');
+  expect(defaultResult.exitCode).toBe(0);
+  const defaultRecord = sessionRecords(firstSessionsFile).at(-1)!;
+  expect(defaultRecord.session).toBe(defaultSessionId);
+  expect(defaultRecord.harness).toBe('claude');
+  expect(defaultRecord.harnessSource).toBe('default');
 });
 
 test('converted installed hooks associate sessions through generated OMP modules', async () => {
@@ -303,7 +335,7 @@ test('converted installed hooks associate sessions through generated OMP modules
   for (const handler of promptHandlers) {
     await handler({ type: 'before_agent_start', prompt: 'CD-001' }, { cwd: consumer.root });
   }
-  expect(fs.existsSync(path.join(consumer.root, '.specify', 'specs', 'cd-001', 'sessions.txt'))).toBe(false);
+  expect(fs.existsSync(path.join(consumer.root, '.specify', 'specs', 'cd-001', 'sessions.jsonl'))).toBe(false);
   const context = {
     cwd: consumer.root,
     sessionManager: {
@@ -317,8 +349,10 @@ test('converted installed hooks associate sessions through generated OMP modules
     }
   }
   for (const ticket of tickets) {
-    expect(fs.readFileSync(path.join(consumer.root, '.specify', 'specs', ticket, 'sessions.txt'), 'utf8'))
-      .toBe('synthetic-generated-omp-session\n');
+    const generatedRecords = sessionRecords(path.join(consumer.root, '.specify', 'specs', ticket, 'sessions.jsonl'));
+    expect(generatedRecords.map((record) => record.session)).toEqual(['synthetic-generated-omp-session']);
+    expect(generatedRecords[0]!.harness).toBe('omp');
+    expect(generatedRecords[0]!.harnessSource).toBe('env');
   }
   expect(fs.existsSync(path.join(consumer.root, '.specify', 'specs', 'cd-999'))).toBe(false);
   const blockers = handlers.get('tool_call');

@@ -2,7 +2,7 @@
 name: tdk-retro-collect
 description: "Create or update retrospective feedback after a TDK spec: reviews, phase drift, UT results, Langfuse traces when available, and user feedback. Writes retro-feedback.md and supports adding or removing user feedback entries across repeated collection runs."
 metadata:
-  version: "1.0.5"
+  version: "1.0.6"
   category: "TDK Retro"
   requires:
     - tdk-implement
@@ -104,20 +104,42 @@ Follow `references/langfuse-trace-analysis.md`.
 
 Guard order:
 1. `which langfuse` missing -> record skipped reason.
-2. `{FEATURE_DIR}/sessions.txt` missing or empty -> record skipped reason.
-3. `$PROJECT_DIR/.env` missing -> record skipped reason.
-4. Otherwise fetch trace metadata for up to 10 session IDs.
+2. No session file (`sessions.jsonl` or `sessions.txt`) for `{FEATURE_DIR}` -> record skipped reason.
+3. Session file present but no usable session id -> record skipped reason.
+4. `$PROJECT_DIR/.env` missing -> record skipped reason.
+5. Otherwise fetch trace metadata for up to 10 session IDs.
+
+Build the ID list as a union of both files, never either/or: a session recorded
+before the JSONL cutover exists only in the legacy `sessions.txt`, which is read
+but never written. Dedupe by session ID, prefer the JSONL record's metadata,
+order JSONL records in file order (append order = first-association order)
+followed by legacy IDs in file order, and only then truncate to the first 10.
+
+A corrupt line is skipped, never fatal: keep a JSONL line only when it parses to
+an object carrying `v == 1` and a string `session`. Pass only that `session`
+value to langfuse — never a whole JSON line.
 
 Run Langfuse from project root so `--env .env` resolves correctly:
 
 ```bash
 PROJECT_DIR="$1"
+FEATURE_DIR="$2"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR"
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
   exit 1
 fi
-(cd "$PROJECT_DIR" && langfuse --env .env api traces list --session-id "{session_id}")
+
+session_ids() {
+  jq -rR 'fromjson? // empty | select(type == "object") | select(.v == 1)
+          | select(.session | type == "string") | .session' \
+    "$FEATURE_DIR/sessions.jsonl" 2>/dev/null
+  grep -v '^[[:space:]]*$' "$FEATURE_DIR/sessions.txt" 2>/dev/null
+}
+
+session_ids | awk '!seen[$0]++' | head -10 | while read -r session_id; do
+  (cd "$PROJECT_DIR" && langfuse --env .env api traces list --session-id "$session_id")
+done
 ```
 
 Analyze recurring errors, token waste, and tool misuse. Keep only evidence-backed findings.

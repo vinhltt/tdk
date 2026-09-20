@@ -4,7 +4,7 @@
  * Canonical payload returned by every harness adapter.
  *
  * @typedef {Object} HarnessPayload
- * @property {'claude'|'omp'} harness
+ * @property {'claude'|'omp'|'codex'} harness
  * @property {string|null} sessionId
  * @property {string|null} transcriptPath
  * @property {string} cwd
@@ -15,7 +15,7 @@
  * @property {unknown} raw
  */
 
-const SUPPORTED_HARNESSES = new Set(['claude', 'omp']);
+const SUPPORTED_HARNESSES = new Set(['claude', 'omp', 'codex']);
 
 function parsePayload(rawPayload) {
   const parsed = typeof rawPayload === 'string' ? JSON.parse(rawPayload) : rawPayload;
@@ -70,6 +70,20 @@ function loadPayloadClaudeCodeHarness(rawPayload) {
 }
 
 /**
+ * Load a Codex hook payload into the canonical shape.
+ *
+ * The generated Codex wrapper forwards the harness's stdin unmodified, so the
+ * payload is Claude-shaped. The harness label is still distinct: a provenance
+ * record must say `codex` rather than inherit the Claude default.
+ *
+ * @param {string|Object} rawPayload
+ * @returns {HarnessPayload}
+ */
+function loadPayloadCodexHarness(rawPayload) {
+  return { ...loadPayloadClaudeCodeHarness(rawPayload), harness: 'codex' };
+}
+
+/**
  * Load an OMP hook event into the canonical shape.
  *
  * A serialized bridge envelope carries `{ event, context, eventName }`, with
@@ -115,7 +129,7 @@ function loadPayloadOmpHarness(rawEventOrEnvelope, context) {
  * existing standalone .cjs hooks.
  *
  * @param {string|Object} rawPayload
- * @param {'claude'|'omp'} [harness]
+ * @param {'claude'|'omp'|'codex'} [harness]
  * @param {Object} [context] Native harness context when the payload is not an envelope.
  * @returns {HarnessPayload}
  */
@@ -125,8 +139,10 @@ function loadPayloadHarness(rawPayload, harness = process.env.TDK_HARNESS || 'cl
       return loadPayloadClaudeCodeHarness(rawPayload);
     case 'omp':
       return loadPayloadOmpHarness(rawPayload, context);
+    case 'codex':
+      return loadPayloadCodexHarness(rawPayload);
     default:
-      throw new Error(`Unsupported harness "${harness}". Supported harnesses: claude, omp.`);
+      throw new Error(`Unsupported harness "${harness}". Supported harnesses: claude, omp, codex.`);
   }
 }
 
@@ -135,4 +151,5 @@ module.exports = {
   loadPayloadHarness,
   loadPayloadClaudeCodeHarness,
   loadPayloadOmpHarness,
+  loadPayloadCodexHarness,
 };

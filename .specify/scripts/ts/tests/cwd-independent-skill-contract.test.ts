@@ -202,7 +202,9 @@ describe('cwd-independent skill command contract', () => {
     expectSafeScriptCommand(retroProposeSkill, 'src/commands/util/check-prerequisites.ts {task_id} --paths-only --json');
     expectSafeScriptCommand(retroApplySkill, 'src/commands/util/check-prerequisites.ts {task_id} --paths-only --json');
     expectSafeScriptCommand(retroCollectSkill, 'src/commands/util/parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json');
-    expect(retroCollectSkill).toContain('(cd "$PROJECT_DIR" && langfuse --env .env api traces list --session-id "{session_id}")');
+    // The session id now arrives from the union reader loop, but the portable
+    // `cd "$PROJECT_DIR" &&` wrapper is still the contract under test.
+    expect(retroCollectSkill).toContain('(cd "$PROJECT_DIR" && langfuse --env .env api traces list --session-id "$session_id")');
   });
 
   it('requires moved config script examples under tdk-inception', () => {

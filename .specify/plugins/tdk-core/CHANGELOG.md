@@ -4,6 +4,25 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.0.0] - 2026-09-20
+
+### Changed
+- **BREAKING** Session tracking writes `.specify/specs/<ticket>/sessions.jsonl` instead of `sessions.txt`. One JSON record per `(session, ticket)` **first association**, schema `v: 1`: `session`, `harness`, `harnessSource`, `firstSeen`, `machineId`, `host`, `user`, `os`, `osRelease`, `repo`, `branch`, `cwd`, `transcript`, `source`. A bare session ID is no longer written anywhere
+- **BREAKING** Records include the OS hostname and username by default. `.specify/specs/**` carries no ignore rule, so these values are commit-eligible in a consumer repository. `TDK_SESSION_IDENTITY=hashed` drops `host` and `user` and keeps only `machineId` — forward-only, it does not rewrite history already committed
+- A legacy `sessions.txt` is read for dedup and never written, created or deleted. A session already recorded there suppresses the new append, so an upgraded consumer does not double-record
+- `loadPayloadHarness` gained a real `codex` dispatch; `SUPPORTED_HARNESSES` is now `claude, omp, codex` and the unsupported-harness error lists all three. A hook running under a generated Codex wrapper reports `harness: "codex"` instead of defaulting to `claude`
+
+### Added
+- `lib/session-provenance.cjs`: pure record builder with injected `now`/`os`/`crypto`/`getGitBranch`, plus `classifySessionLine` — the single line rule shared by the writer, the dedup pass and the documented consumer recipes
+- `machineId` = first 12 hex of `sha256(hostname \0 username \0 platform)`. It is a host/user/platform fingerprint: stable only while all three inputs are unchanged, not rename-surviving, not unique across identical inputs, not anonymity
+- `os` distinguishes WSL from native Windows (`linux-x64+wsl` vs `win32-x64`)
+
+### Fixed
+- `cwd` and `transcript` are emitted only as locators relative to the workspace root or `$HOME`, and are `null` otherwise — including a Windows drive/UNC mismatch and an encoded-home transcript directory name (the harness flattens the home path into the file name), which would otherwise republish the home path
+- No git process is spawned when `payload.cwd` is outside the trusted workspace root, preserving the resolver's attribution boundary. The branch probe runs at most once per hook invocation and never inside the write lock, so the 100 ms lock budget cannot span a 3 s git call
+- A corrupt, truncated, `null`, array or unknown-`v` line is skipped for dedup instead of being fatal, and a file whose last line lost its newline gets a boundary newline before the append so the two records cannot fuse
+- A lock timeout returns `{ skipped: 'lock-timeout' }` and appends nothing; there is no unlocked-append fallback
+
 ## [13.3.0] - 2026-09-15
 
 ### Changed

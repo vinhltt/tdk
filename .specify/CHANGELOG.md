@@ -6,6 +6,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.117.0] - 2026-09-20
+
+### Changed
+- **[BREAKING][tdk-core]** Session tracking writes `.specify/specs/<ticket>/sessions.jsonl` — one schema-v1 JSON provenance record per `(session, ticket)` first association — instead of appending a bare ID to `sessions.txt`. A legacy `sessions.txt` is read for dedup and never written, so an upgraded consumer neither loses nor duplicates history
+- **[BREAKING][Privacy]** A record carries the OS hostname and username by default. `.specify/specs/**` has no ignore rule, so those values are commit-eligible in a consumer repository. `TDK_SESSION_IDENTITY=hashed` keeps only the `machineId` fingerprint, forward-only, without rewriting committed history
+- **[tdk-core]** `loadPayloadHarness` dispatches a real `codex` case; a hook under a generated Codex wrapper now reports `harness: "codex"`, `harnessSource: "env"` instead of silently defaulting to `claude`
+- **[tdk-retro]** `tdk-retro-collect` reads the union of `sessions.jsonl` and legacy `sessions.txt`, passes only `.session` values to Langfuse, and documents order-then-cap-10 with corrupt-line-tolerant recipes
+- **[tdk-setup]** `convert` and `convert-flat --harness codex` run a capability preflight before their first write and refuse the conversion when the installed `lib/harness-payload.cjs` has no `codex` dispatch. Without it, a codex-labelled wrapper makes `loadPayloadHarness` throw and `destructive-command-block` answer exit 0 — allow — for `rm -rf /`
+
+### Added
+- **[tdk-core]** `lib/session-provenance.cjs`: pure record builder plus `classifySessionLine`, the one line rule shared by writer, dedup and the published consumer recipes. `os` distinguishes WSL from native Windows; `cwd`/`transcript` are relative locators or `null`, never absolute home paths
+
 ## [1.116.0] - 2026-09-15
 
 ### Changed

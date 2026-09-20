@@ -114,6 +114,32 @@ Only `.codex-plugin/plugin.json` lives under `.codex-plugin/`; skills, hooks, an
 
 Underscore-prefixed shared skill directories such as `_shared` are copied as reference assets, but their `SKILL.md` entrypoint is not installed as a loadable Codex skill.
 
+### Codex harness label and preflight
+
+A generated Codex wrapper exports `TDK_HARNESS=codex` to the hook it runs, so an installed hook
+reports the harness it actually ran under instead of defaulting to `claude`. Both generation paths
+(`convert` and `convert-flat --harness codex`) therefore run a capability preflight **before the
+first filesystem write**: they read the installed `lib/harness-payload.cjs` and refuse the whole
+conversion when it has no `codex` dispatch, leaving the target tree byte-unchanged.
+
+This is a behaviour change for consumers on an older plugin: a conversion that previously
+"succeeded" now exits non-zero with `Codex harness preflight failed: …`. The refusal is deliberate —
+a codex-labelled wrapper against a lib that cannot dispatch it makes `loadPayloadHarness` throw,
+which `destructive-command-block` catches and answers with exit 0, i.e. **allow**. Upgrade the
+installed `tdk-core` plugin and re-run; there is no bypass flag.
+
+### Session provenance in the consumer repository
+
+Installed hooks record one JSON provenance line per `(session, ticket)` first association in
+`.specify/specs/<ticket>/sessions.jsonl`. By default that record includes the OS hostname and
+username (`host`, `user`) alongside `machineId`, `harness`, `os`, and `branch`. `tdk-setup` writes
+no `.gitignore` for `.specify/specs/**`, so those records are commit-eligible and can reach a
+public diff.
+
+Set `TDK_SESSION_IDENTITY=hashed` to drop the `host` and `user` keys and keep only `machineId`
+(a `sha256(hostname \0 username \0 platform)` prefix). The opt-out is forward-only: it changes what
+future records contain and never rewrites history that is already committed.
+
 ## Convert-Flat Notes
 
 `convert-flat` requires `--harness codex` or `--harness omp` and leaves the source `.claude/` tree

@@ -4,6 +4,17 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.1.0] - 2026-09-20
+
+### Changed
+- tdk-retro-collect reads the **union** of `{FEATURE_DIR}/sessions.jsonl` and legacy `{FEATURE_DIR}/sessions.txt`, never either/or: a session recorded before the JSONL cutover exists only in the legacy file, which is read and never written
+- Dedup is by session ID with JSONL metadata winning; ordering is JSONL records in file order (append order = first-association order), then legacy IDs in file order, and only then the existing cap of 10
+- Only the extracted `.session` value is passed to `langfuse … --session-id`, never a raw JSONL line
+- Skip-reason literals are union-aware: `no session file (sessions.jsonl or sessions.txt) for {FEATURE_DIR}` and `session file present but no usable session id` replace `sessions.txt missing` / `sessions.txt empty`
+
+### Added
+- Reverse-trace `jq` recipes in `references/langfuse-trace-analysis.md`, all guarded with `fromjson? // empty` so one corrupt byte cannot abort a retro run, and with `// "-"` placeholders because `host`/`user` are absent under `TDK_SESSION_IDENTITY=hashed`
+
 ## [1.0.6] - 2026-08-08
 
 ### Changed

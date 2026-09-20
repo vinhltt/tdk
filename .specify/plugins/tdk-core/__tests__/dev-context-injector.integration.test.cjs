@@ -86,7 +86,22 @@ function makeTranscript(t, root, withMarker = true) {
 }
 
 function sessionsPath(root, ticketId) {
+  return path.join(root, '.specify', 'specs', ticketId, 'sessions.jsonl');
+}
+
+function legacySessionsPath(root, ticketId) {
   return path.join(root, '.specify', 'specs', ticketId, 'sessions.txt');
+}
+
+function sessionRecords(root, ticketId) {
+  return fs.readFileSync(sessionsPath(root, ticketId), 'utf-8')
+    .split('\n')
+    .filter((line) => line.length > 0)
+    .map((line) => JSON.parse(line));
+}
+
+function sessionIds(root, ticketId) {
+  return sessionRecords(root, ticketId).map((record) => record.session);
 }
 
 function captureMain(stdin, trackingDependencies, { projectRoot: trustedRoot, cwd } = {}) {
@@ -191,8 +206,32 @@ test('every mentioned spec receives the session before dedup and without stdout'
 
   assert.equal(result.status, 0);
   assert.equal(result.stdout.trim(), '');
-  assert.equal(fs.readFileSync(sessionsPath(root, 'mrr-2836'), 'utf-8'), 'multi-ticket-session\n');
-  assert.equal(fs.readFileSync(sessionsPath(root, 'cd-001'), 'utf-8'), 'multi-ticket-session\n');
+  assert.deepEqual(sessionIds(root, 'mrr-2836'), ['multi-ticket-session']);
+  assert.deepEqual(sessionIds(root, 'cd-001'), ['multi-ticket-session']);
+});
+
+test('T17/T23 a multi-ticket prompt probes git once and leaks neither the prompt nor $HOME', (t) => {
+  const root = makeWorkspace(t, { ticketIds: ['mrr-2836', 'cd-001'] });
+  let branchCalls = 0;
+
+  const result = captureMain({
+    session_id: 'single-probe-session',
+    transcript_path: '',
+    cwd: root,
+    hook_event_name: 'UserPromptSubmit',
+    prompt: 'compare MRR-2836 with cd-001 please'
+  }, {
+    getGitBranch: () => { branchCalls += 1; return 'main'; }
+  }, { projectRoot: root, cwd: root });
+
+  assert.equal(result.status, 0);
+  assert.equal(branchCalls, 1, 'one git probe per hook invocation, not per association');
+
+  const serialized = fs.readFileSync(sessionsPath(root, 'mrr-2836'), 'utf-8');
+  assert.match(serialized, /"branch":"main"/);
+  assert.equal(serialized.includes('compare MRR-2836'), false, 'no prompt text in the record');
+  assert.equal(serialized.includes(os.homedir()), false, 'no absolute home path in the record');
+  assert.deepEqual(sessionIds(root, 'cd-001'), ['single-probe-session']);
 });
 
 test('repeated mentions and repeated events never duplicate a session line', (t) => {
@@ -208,13 +247,13 @@ test('repeated mentions and repeated events never duplicate a session line', (t)
 
   assert.equal(runHook(projectRoot, payload, { logRoot: root }).status, 0);
   assert.equal(runHook(projectRoot, payload, { logRoot: root }).status, 0);
-  assert.equal(fs.readFileSync(sessionsPath(root, 'mrr-2836'), 'utf-8'), 'idempotent-session\n');
+  assert.deepEqual(sessionIds(root, 'mrr-2836'), ['idempotent-session']);
 });
 
 test('a later prompt adds another association instead of blocking a rebind', (t) => {
   const root = makeWorkspace(t, { ticketIds: ['mrr-2836', 'mrr-9999'] });
   const transcript = makeTranscript(t, root);
-  fs.writeFileSync(sessionsPath(root, 'mrr-2836'), 'bound-session\n', 'utf-8');
+  fs.writeFileSync(legacySessionsPath(root, 'mrr-2836'), 'bound-session\n', 'utf-8');
 
   const result = runHook(projectRoot, {
     session_id: 'bound-session',
@@ -226,8 +265,9 @@ test('a later prompt adds another association instead of blocking a rebind', (t)
 
   assert.equal(result.status, 0);
   assert.equal(result.stdout.trim(), '');
-  assert.equal(fs.readFileSync(sessionsPath(root, 'mrr-2836'), 'utf-8'), 'bound-session\n');
-  assert.equal(fs.readFileSync(sessionsPath(root, 'mrr-9999'), 'utf-8'), 'bound-session\n');
+  assert.equal(fs.readFileSync(legacySessionsPath(root, 'mrr-2836'), 'utf-8'), 'bound-session\n');
+  assert.equal(fs.existsSync(sessionsPath(root, 'mrr-2836')), false, 'a legacy association is never re-written');
+  assert.deepEqual(sessionIds(root, 'mrr-9999'), ['bound-session']);
   assert.ok(trackerEntries(root).some((entry) =>
     entry.status === 'ok' && entry.ticketId === 'mrr-9999' && entry.source === 'prompt-mention'
   ));
@@ -246,7 +286,7 @@ test('a mention without a spec folder is logged while valid mentions still recor
   }, { logRoot: root });
 
   assert.equal(result.status, 0);
-  assert.equal(fs.readFileSync(sessionsPath(root, 'mrr-2836'), 'utf-8'), 'partial-session\n');
+  assert.deepEqual(sessionIds(root, 'mrr-2836'), ['partial-session']);
   assert.equal(fs.existsSync(sessionsPath(root, 'mrr-9999')), false);
   assert.ok(trackerEntries(root).some((entry) =>
     entry.status === 'skip' && entry.note === 'no-task-folder' && entry.ticketId === 'mrr-9999'
@@ -269,7 +309,7 @@ test('a failing write target never blocks the other ticket or the injected conte
 
   assert.equal(result.status, 0);
   assert.match(result.stdout, /## Session/);
-  assert.equal(fs.readFileSync(sessionsPath(root, 'mrr-2836'), 'utf-8'), 'partial-failure-session\n');
+  assert.deepEqual(sessionIds(root, 'mrr-2836'), ['partial-failure-session']);
   assert.ok(trackerEntries(root).some((entry) =>
     entry.status === 'skip' && entry.note === 'record-error' && entry.ticketId === 'cd-001'
   ));
@@ -288,7 +328,7 @@ test('Claude payload and serialized OMP envelope record equivalent canonical ass
     hook_event_name: 'UserPromptSubmit',
     prompt: 'status of CD-001'
   }, { harness: 'claude', logRoot: root });
-  const afterClaude = fs.readFileSync(sessionsPath(root, 'cd-001'), 'utf-8');
+  const afterClaude = sessionRecords(root, 'cd-001');
 
   const ompResult = runHook(projectRoot, {
     eventName: 'before_agent_start',
@@ -307,11 +347,13 @@ test('Claude payload and serialized OMP envelope record equivalent canonical ass
   assert.equal(ompResult.status, 0);
   assert.equal(claudeResult.stdout.trim(), '');
   assert.equal(ompResult.stdout.trim(), '');
-  assert.equal(afterClaude, `${claudeSessionId}\n`);
-  assert.equal(
-    fs.readFileSync(sessionsPath(root, 'cd-001'), 'utf-8'),
-    `${claudeSessionId}\n${ompSessionId}\n`
-  );
+  assert.deepEqual(afterClaude.map((record) => record.session), [claudeSessionId]);
+  assert.equal(afterClaude[0].harness, 'claude');
+
+  const records = sessionRecords(root, 'cd-001');
+  assert.deepEqual(records.map((record) => record.session), [claudeSessionId, ompSessionId]);
+  assert.deepEqual(records.map((record) => record.harness), ['claude', 'omp']);
+  assert.deepEqual(records.map((record) => record.harnessSource), ['env', 'env']);
 });
 
 test('without a prompt ticket the branch of the CWD repository is used', (t) => {
@@ -331,7 +373,8 @@ test('without a prompt ticket the branch of the CWD repository is used', (t) => 
 
   assert.equal(result.status, 0);
   assert.match(result.stdout, /## Session/);
-  assert.equal(fs.readFileSync(sessionsPath(root, 'cd-001'), 'utf-8'), 'root-branch-session\n');
+  assert.deepEqual(sessionIds(root, 'cd-001'), ['root-branch-session']);
+  assert.equal(sessionRecords(root, 'cd-001')[0].source, 'cwd-branch');
 });
 
 test('a root session on main never inherits a child repository feature branch', (t) => {
@@ -364,7 +407,7 @@ test('a root session on main never inherits a child repository feature branch', 
   }, { logRoot: root });
 
   assert.equal(serviceResult.status, 0);
-  assert.equal(fs.readFileSync(sessionsPath(root, 'mrr-2836'), 'utf-8'), 'service-session\n');
+  assert.deepEqual(sessionIds(root, 'mrr-2836'), ['service-session']);
 });
 
 test('a nested activity CWD with its own config cannot override the trusted root', (t) => {
@@ -391,7 +434,7 @@ test('a nested activity CWD with its own config cannot override the trusted root
   }, { logRoot: root });
 
   assert.equal(result.status, 0);
-  assert.equal(fs.readFileSync(sessionsPath(root, 'mrr-2836'), 'utf-8'), 'nested-session\n');
+  assert.deepEqual(sessionIds(root, 'mrr-2836'), ['nested-session']);
   assert.equal(fs.existsSync(sessionsPath(nested, 'cd-001')), false);
   assert.ok(trackerEntries(root).some((entry) =>
     entry.status === 'skip' && entry.note === 'no-task-folder' && entry.ticketId === 'cd-001'
@@ -428,7 +471,7 @@ test('an absent project-root variable falls back to the process project root', (
   }, undefined, { projectRoot: null, cwd: root });
 
   assert.equal(result.status, 0);
-  assert.equal(fs.readFileSync(sessionsPath(root, 'mrr-2836'), 'utf-8'), 'process-root-session\n');
+  assert.deepEqual(sessionIds(root, 'mrr-2836'), ['process-root-session']);
 });
 
 test('resolver failure is fail-open and context injection still runs once', (t) => {

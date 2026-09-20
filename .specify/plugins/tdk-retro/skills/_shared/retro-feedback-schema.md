@@ -63,6 +63,6 @@ Use one of:
 - Keep every finding evidence-backed.
 - Use short excerpts only; avoid dumping full reports or traces.
 - If a source is unavailable, keep the section and record `Status: skipped` with a clear reason.
-- Do not fabricate Langfuse findings when CLI, `.env`, or `sessions.txt` is unavailable.
+- Do not fabricate Langfuse findings when the CLI, `.env`, or the session file (`sessions.jsonl`, or legacy `sessions.txt`) is unavailable.
 - Preserve active user feedback across update runs unless the user explicitly removes it.
 - Removed user feedback is no longer an active learning signal; `/tdk-retro-propose` must ignore entries with `status: removed`.

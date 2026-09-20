@@ -12,6 +12,7 @@ import {
 } from './convert-reconcile';
 import type { ConvertReconcilePlan } from './convert-reconcile-types';
 import { buildCodexWritePlan } from './codex-output-writer';
+import { assertCodexHarnessCompat } from './codex-harness-compat';
 import { buildMigrationReport, renderMigrationReport } from './flat-claude-migration-report';
 import { discoverFlatClaudeInventory } from './flat-claude-adapter';
 import type { MigrationReport } from './flat-claude-types';
@@ -140,6 +141,38 @@ export function createConvertFlatCommand(): Command {
           writeProgress('Scanning source .claude tree...');
           const inventory = discoverFlatClaudeInventory(root.consumerRoot);
           writeInventoryProgress(inventory.records.length);
+          // Reject-before-write: refuse a codex-labelling conversion against an
+          // installed lib that cannot dispatch the codex harness.
+          writeProgress('Checking Codex harness compatibility...');
+          const hookSources: Array<{ path: string; content: Buffer }> = [];
+          const payloadCopies: Array<{ path: string; content: Buffer }> = [];
+          for (const record of inventory.records) {
+            if (record.kind !== 'hooks') continue;
+            for (const file of record.files) {
+              if (!/\.(?:c|m)?js$/.test(file.sourceRelativePath)) continue;
+              const content = fs.readFileSync(file.sourcePath);
+              hookSources.push({ path: file.sourceRelativePath, content });
+              // An installed tree nests the lib under its branded plugin dir,
+              // so the payload contract is located from the inventory itself.
+              if (file.sourceRelativePath.endsWith('/harness-payload.cjs')) {
+                payloadCopies.push({ path: file.sourceRelativePath, content });
+              }
+            }
+          }
+          if (payloadCopies.length === 0) {
+            assertCodexHarnessCompat({
+              hookSources,
+              harnessPayload: null,
+              harnessPayloadPath: '.claude/hooks/**/lib/harness-payload.cjs',
+            }, 'convert-flat --harness codex');
+          }
+          for (const copy of payloadCopies) {
+            assertCodexHarnessCompat({
+              hookSources,
+              harnessPayload: copy.content,
+              harnessPayloadPath: copy.path,
+            }, 'convert-flat --harness codex');
+          }
           const baseReport = buildMigrationReport(inventory);
           writeProgress('Validating and rendering Codex targets...');
           const writePlan = await buildCodexWritePlan(inventory);

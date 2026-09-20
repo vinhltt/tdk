@@ -11,10 +11,11 @@ try {
   const path = require('path');
   const { loadPayloadHarness } = require('../lib/harness-payload.cjs');
   const { logHook, createHookTimer, logHookCrash } = require('../lib/hook-logger.cjs');
-  const { buildSpeckitContext, wasRecentlyInjected } = require('../lib/context-builder.cjs');
+  const { buildSpeckitContext, wasRecentlyInjected, getGitBranch } = require('../lib/context-builder.cjs');
   const { loadSpeckitConfig } = require('../lib/speckit-config-reader.cjs');
   const { resolveSessionTickets } = require('../lib/session-ticket-resolver.cjs');
   const { recordSession } = require('../lib/session-tracker.cjs');
+  const { buildSessionProvenance } = require('../lib/session-provenance.cjs');
   /**
    * Resolve the project root that owns configuration and specs.
    * `CLAUDE_PROJECT_DIR` wins; only an absent variable falls back to the
@@ -53,12 +54,14 @@ try {
    * Associations are additive and each write is isolated, so one failing
    * target never suppresses the others or the injected context.
    * @param {import('../lib/harness-payload.cjs').HarnessPayload} payload
-   * @param {{ resolveSessionTickets?: Function, recordSession?: Function, loadSpeckitConfig?: Function }} [dependencies]
+   * @param {{ resolveSessionTickets?: Function, recordSession?: Function, loadSpeckitConfig?: Function, buildSessionProvenance?: Function, getGitBranch?: Function }} [dependencies]
    */
   function trackSession(payload, dependencies = {}) {
     const resolveTickets = dependencies.resolveSessionTickets || resolveSessionTickets;
     const record = dependencies.recordSession || recordSession;
     const loadConfig = dependencies.loadSpeckitConfig || loadSpeckitConfig;
+    const buildProvenance = dependencies.buildSessionProvenance || buildSessionProvenance;
+    const gitBranch = dependencies.getGitBranch || getGitBranch;
 
     const workspaceRoot = resolveTrustedProjectRoot();
     if (!workspaceRoot) {
@@ -100,13 +103,34 @@ try {
     }
 
     const specsRoot = path.posix.join(config.specs.root, config.specs.defaultFolder);
+    // One git probe per hook invocation, whatever the association count, and
+    // none at all when every association dedups.
+    let branchProbed = false;
+    let branchValue = null;
+    const memoGitBranch = (dir) => {
+      if (!branchProbed) {
+        branchProbed = true;
+        branchValue = gitBranch(dir);
+      }
+      return branchValue;
+    };
+    const provenanceFor = (source) => () => buildProvenance({
+      sessionId: payload.sessionId,
+      harness: payload.harness,
+      cwd: payload.cwd,
+      transcriptPath: payload.transcriptPath,
+      workspaceRoot,
+      source
+    }, { getGitBranch: memoGitBranch });
+
     for (const association of resolution.associations || []) {
       try {
         const tracking = record({
           specsRoot,
           ticketId: association.ticketId,
           sessionId: payload.sessionId,
-          cwd: workspaceRoot
+          cwd: workspaceRoot,
+          provenance: provenanceFor(association.source)
         });
         logTracking({
           status: tracking?.skipped ? 'skip' : 'ok',
@@ -132,7 +156,7 @@ try {
   /**
    * Main entry point for dev-context-injector hook.
    * @param {string} [stdinData] - Pre-read stdin from hook-gateway.cjs. If omitted, reads stdin directly.
-   * @param {{ resolveSessionTickets?: Function, recordSession?: Function, loadSpeckitConfig?: Function }} [trackingDependencies]
+   * @param {{ resolveSessionTickets?: Function, recordSession?: Function, loadSpeckitConfig?: Function, buildSessionProvenance?: Function, getGitBranch?: Function }} [trackingDependencies]
    * @returns {number} Exit code (always 0 — fail-open).
    */
   function main(stdinData, trackingDependencies) {

@@ -95,7 +95,7 @@ function main() {
     const rules = event && SCRUB_RULES[event];
     const result = spawnSync(ORIGINAL_INVOCATION[0], ORIGINAL_INVOCATION.slice(1), {
       input: stdinData,
-      env: process.env,
+      env: { ...process.env, TDK_HARNESS: "codex" },
       encoding: "utf8",
       timeout: HOOK_TIMEOUT_MS,
     });

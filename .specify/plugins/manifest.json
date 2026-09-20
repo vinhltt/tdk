@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-09-15T14:01:16Z",
+  "generated_at": "2026-09-20T06:23:33Z",
   "plugins": {
     "tdk-core": {
-      "version": "13.3.0",
+      "version": "14.0.0",
       "components": {
         "skills": {
           "tdk-clarify": {
@@ -35,34 +35,36 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e94fd7a0f43ccf93767b3eb6c87adec554f4846b89f5e62f6caa22f700a68c31",
-        ".claude-plugin/plugin.json": "aadd277cc594bb26cabe1d1fb1e96bb19605828c19d5365bbbcf129638275623",
-        ".codex-plugin/plugin.json": "f3ac77d4611050e40b808b90019d75cdfb1dba8e6ff6571e1b2d5738dc454274",
-        ".cursor-plugin/plugin.json": "f3ac77d4611050e40b808b90019d75cdfb1dba8e6ff6571e1b2d5738dc454274",
-        "CHANGELOG.md": "6b7d21a3b8243c8046f404e2886bc09e1795194f72174cc75b08a2c4f2ccfb82",
+        ".claude-plugin/plugin.json": "e8fe67a818ea2af34004ceddeead064dbd98cdcc07173c941d40dacebd5ff1d7",
+        ".codex-plugin/plugin.json": "e436a424a07acfcaeaf13f3cb20402d84d131a8cf80700b0cfa5bd7bd6a5512b",
+        ".cursor-plugin/plugin.json": "e436a424a07acfcaeaf13f3cb20402d84d131a8cf80700b0cfa5bd7bd6a5512b",
+        "CHANGELOG.md": "ec1b287a6ffc5eae0d02494dc016a44078fd2fd959e0025cf8d1402c04bd00a3",
         "__tests__/context-builder.test.cjs": "704c828646af0d26cab0be3b82b37d150114faf8406899d0f6bbc020b10f0d60",
         "__tests__/destructive-command-block.integration.test.cjs": "b075e672b42716ebe4cbcd52f1de22fc1831e9107bf5b5d2a24a3311b922839e",
-        "__tests__/dev-context-injector.integration.test.cjs": "5f751b347b9d7a0bfbd63b1e2c623fbb1a77bd4c516d9601cb25806884dbc0a2",
-        "__tests__/harness-payload.test.cjs": "cb4ad98e1214c0e8cae5200e66a2c324a750a618a5dc85c38cdfb0f6a5ebc3bc",
+        "__tests__/dev-context-injector.integration.test.cjs": "e894303762748db990b0be206576adff65aa5c8c8623a78d61bec29e7c97cbf0",
+        "__tests__/harness-payload.test.cjs": "82a9b51b9a0dd5b29772a7aa3a16af69017499a78ce2849b2d8384cfb6bd104c",
         "__tests__/hook-gateway.test.cjs": "ba98af82942a275928a7492e90fa31894f58825688af133dbbff6a1055c557fd",
         "__tests__/path-rule-injector.integration.test.cjs": "43f91aa0e45f06c59ea7ca27d2ed775ad167ec29866084faea3f64a884682f27",
         "__tests__/rule-loader.test.cjs": "bf51158d948ccc2abb20d45b3191dc432cecb4ecea8ebbad5a3562f2fff8d116",
         "__tests__/rule-matcher.test.cjs": "99bb7c60b0cbc4894733ea99a26723a44c7a37f389003c6df818bfc5b6cbb281",
+        "__tests__/session-provenance.test.cjs": "17a92ee3cee99f3a816029cf01e89492ef6897e65a7b249b1b291a66692a818a",
         "__tests__/session-ticket-resolver.git-isolation.test.cjs": "59ea30a20f669ee90cc422fdb514748e1c994e3893e79dca5fc187b421130c67",
         "__tests__/session-ticket-resolver.test.cjs": "218e05c136b4901fa26913f60c0098b6df87335d7749f9a95af89c77eb6b37d2",
-        "__tests__/session-tracker.test.cjs": "0e47cc6a28f9c47c1b4d445855a171953206c5fb029f59881a14a82f30298ea7",
+        "__tests__/session-tracker.test.cjs": "3c9d7378841fe7b2fa8313c147784b686e5f26dfde76628bffd0aa56e4669079",
         "__tests__/speckit-config-reader.test.cjs": "86a8f6c9fada8a018779f1b3454670890a9587139c44f08e863f0d0ac30064a7",
         "hooks/destructive-command-block.cjs": "8973b014c2f2eb59a481c1747b5395572dcc630029b4434f151843bea6b4cb8a",
-        "hooks/dev-context-injector.cjs": "f96ac18f909aac9d1ed6daebcd1c95510a7599954d7cd01e9924e9c2b369e473",
+        "hooks/dev-context-injector.cjs": "fde6601d2a445b4a3924afa9373637e67e45d9f7588e16dc3a7b80826fbe205f",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
         "hooks/hooks.json": "ef649b325180c3876ad2123add47abb8cb57dbe8a8ecc755b6cf929ae0a41481",
         "hooks/path-rule-injector.cjs": "3ddc004c23ff44759218f668defa86641c6cc1f7a946e948a199857096d1b33f",
         "lib/context-builder.cjs": "17e57421eff9840a6b192859e0bb3dec51ed14eece84e46ebcdf7b6bb5404353",
-        "lib/harness-payload.cjs": "c94e6b1b83b242e81ab7fc0d0f32e06a950d3c14b295a627e4d88accf9d92c27",
+        "lib/harness-payload.cjs": "21e17a9020589312b64f7630c621022364ac6c7109206b03b84fbd017c6e76ad",
         "lib/hook-logger.cjs": "75791d51062176a1cead41210991c89c0930d598f7f1a13be15360153b70a639",
         "lib/rule-loader.cjs": "7658c99484fe3c55995f27fb409e5af11c3ee498b693159b602f3b0a8e9547dd",
         "lib/rule-matcher.cjs": "a8dbd4a51c337a2936fbf8fdb7ab021a9d8c7de447725ac2de00ba420d31119b",
+        "lib/session-provenance.cjs": "3f546ea87f68491e44dda3de220373ae15dae124311efa5fcdef1598401ebddd",
         "lib/session-ticket-resolver.cjs": "ac5a2b6653ed7a65d0aefcd40e3a7b477dc591c7426e9e8ad951affe42fd07b4",
-        "lib/session-tracker.cjs": "c3c472e24d58df14e7abecd67acaf513e02b8dda59631c7adc4f022a822db471",
+        "lib/session-tracker.cjs": "456c7e196d7028e8fbc8ababe53d8267c70b6d8df45fcc31b1d735e49d3cfb7b",
         "lib/speckit-config-reader.cjs": "d2ca20ed0151485c5d161696b2f6d8cc289f76cf9cbf17bd5c736d5af57ac0c3",
         "lib/vendored/minimatch.cjs": "2021ee14763ba8ab9c769902703f5952cf005892657b4af8b98a67e1af2a1c01",
         "lib/vendored/yaml.cjs": "6c24d3c958711e289bfad621a8fb95a5ff6cf9d0b043a02cba2eb1b77f5d5e23",
@@ -324,17 +326,17 @@
       }
     },
     "tdk-retro": {
-      "version": "1.0.6",
+      "version": "1.1.0",
       "components": {
         "skills": {
           "_shared": {
-            "version": "1.0.6"
+            "version": "1.0.7"
           },
           "tdk-retro-apply": {
             "version": "0.1.1"
           },
           "tdk-retro-collect": {
-            "version": "1.0.5"
+            "version": "1.0.6"
           },
           "tdk-retro-propose": {
             "version": "0.1.1"
@@ -346,23 +348,23 @@
       },
       "files": {
         ".claude-plugin/interface.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
-        ".claude-plugin/plugin.json": "806fb74bcc35a941af9c355dfdeee0094a3e11183ea0f70146b3a3e61c594cc7",
-        ".codex-plugin/plugin.json": "806fb74bcc35a941af9c355dfdeee0094a3e11183ea0f70146b3a3e61c594cc7",
-        ".cursor-plugin/plugin.json": "806fb74bcc35a941af9c355dfdeee0094a3e11183ea0f70146b3a3e61c594cc7",
-        "CHANGELOG.md": "96b52c9fe030226e82cc47b128a75b02f44359fc1f8053f48cea39eed3d5a8ae",
+        ".claude-plugin/plugin.json": "df788d0390849bc01d9d6e03dca872cc428856461016d263505256cce0687738",
+        ".codex-plugin/plugin.json": "df788d0390849bc01d9d6e03dca872cc428856461016d263505256cce0687738",
+        ".cursor-plugin/plugin.json": "df788d0390849bc01d9d6e03dca872cc428856461016d263505256cce0687738",
+        "CHANGELOG.md": "52e483b7731bcf65f005a9608c6aabba84a6b607a1e87f0f6cc98acda270d251",
         "README.md": "c74e7f4263e8aec94548695e08de4d7faf0c899429f5520e1cf57134c2cb0657",
-        "skills/_shared/SKILL.md": "293907ec0d6c054ab5c3a563f2a1a5136d93aedce74ff0336fbca748d9ba149a",
+        "skills/_shared/SKILL.md": "9305270a5db93207456e995c822432ad82d1212e58c175f7ac9887e25fa8be07",
         "skills/_shared/consumer-skill-discovery.md": "452a972210fbd4889544f917d2f61a03ebbb23271f53d9611d23e7134b146958",
         "skills/_shared/learning-delta-schema.md": "75ea06307874ce5e92579e0e8de381c94e7b4ab2f6b5fbe61e7b22dda13b20ba",
-        "skills/_shared/retro-feedback-schema.md": "2713c595ed38d92929ca2f0b74fd67f5109b52940629686bb2e6a1e1610c0636",
+        "skills/_shared/retro-feedback-schema.md": "e5f34ddb5f86ae59010ebbd4a3f7a4d165a0b1f6c03536e766c2812a4c3ebefe",
         "skills/_shared/script-command-contract.md": "9bc0cfdc5316b6b19ddd72b6bd3fe267d71d7e6831f35ac15e65533098061116",
         "skills/_shared/signal-target-routing.md": "af259402c604054b2c249467452d467109922ca1643d332e7a4e66f4908c3f2b",
         "skills/tdk-retro-apply/SKILL.md": "66a83d1ec6be93090877b0e880a068c52f059b2c682f40be19907be72b9c674f",
         "skills/tdk-retro-apply/references/apply-flow-memory.md": "13a66a5ee193c53232ea56cf9c42c0c914315f33ef3a2c11f6b156dba45b100a",
         "skills/tdk-retro-apply/references/apply-flow-technical.md": "b4d34fb99eee4982007ff3f0c758b069c28d7e871fe3bfacce9b01cc4136809e",
         "skills/tdk-retro-apply/references/memory-delegate-contract.md": "81e9da7995fd021b78262976a47cfed8fc41a9b75e49261582f13edd2f8bf1fa",
-        "skills/tdk-retro-collect/SKILL.md": "f612bbe69070ed6c12f5a1dd9f62fff1fc94de9bac325fc13f230fb082c4320b",
-        "skills/tdk-retro-collect/references/langfuse-trace-analysis.md": "4c72df23d5165b9b9d7ac91d3c93b45418bd1f59efab1b6f8ab7bcbfef25f1de",
+        "skills/tdk-retro-collect/SKILL.md": "998b7f7569397daf37addf36e810d1ae2b6a696e13cabb0b706239366d517f94",
+        "skills/tdk-retro-collect/references/langfuse-trace-analysis.md": "e7a1432ac3848d5d7359a62d904482e71ee6a805b68f67f81dedca79bbe3a383",
         "skills/tdk-retro-collect/references/phase-drift-detection.md": "a70cea214d69689f5ae481ef81ae714ed94031b2a440c470f33cfa79c7546eab",
         "skills/tdk-retro-propose/SKILL.md": "6e4f5af1bb0c733053f55d0b8702d527423f9b3f1d2ca93f050a2f861900f504"
       }
