@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "13.0.2"
+  version: "14.0.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -397,14 +397,18 @@ The absent `feature_branch` is what marks the file as a plan seed rather than a 
 against live git, confirms it with the user, and only then creates anything.
 
 This is a plan artifact like any other: list it in `## Supporting Artifacts` rather than adding a section to
-`plan.md`, whose structure and frontmatter schema both stay closed.
+`plan.md`, whose structure and frontmatter remain closed to the explicit schema
+in `references/plan-output-contract.md`, including its optional memory-gate fields.
 
 ### Phase 0.guardian — Business Logic Validation
 Load: `references/gates.md` <!-- semantics in same file as Step 0.memory -->
-Skip this gate when the binding-coverage precondition in `references/gates.md` resolves to
-`none` or `unknown`; record the reason in `## Memory Constraints`, not in frontmatter.
-Otherwise spawn `tdk-memory-agent` agent with `--mode validate`. Read Guardian Report; act per `BLOCK_IMPL` / `REVIEW` / `CLEAR` outcome.
-If the report returns `STATUS: MCP_UNAVAILABLE`, preserve the guardian fallback behavior from `references/gates.md`; do not weaken the plan blocking gate.
+Evaluate coverage, fast mode, task decision, and fallback in that order. Zero
+binding coverage can skip; unknown coverage cannot silently bypass requested
+validation. Follow the persistent gate-state and authorization contract.
+Otherwise spawn `tdk-memory-agent` using the caller-owned `mode: validate` control
+header from `references/gates.md`. Validate the complete Guardian Report before
+acting on `BLOCK_IMPL` / `REVIEW` / `CLEAR`. Preserve NOT CHECKED semantics and
+persistent gate state; do not weaken the plan blocking gate.
 
 ### Step 4 — Report Results
 **Inline.** <!-- terminal output, <10 lines -->

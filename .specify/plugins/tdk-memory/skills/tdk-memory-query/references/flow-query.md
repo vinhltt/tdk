@@ -1,12 +1,11 @@
-# Query Flow — Normal (No MCP)
+# Query Flow
 
-> Used when `MCP_AVAILABLE = false`. All paths are **disk paths** relative to project root.
-> Uses Claude Code built-in tools: Read, Glob, Grep.
+All paths are disk paths under the resolved memory root. Use Read, Glob, Grep.
 
 ## Step 1: Guard checks
 
-- `Glob(".specify/memory/memory-index.md")` → must return a result
-- `Glob(".specify/memory/memory.yaml")` → must return a result
+- `Glob("<memoryRoot>/memory-index.md")` → must return a result
+- `Glob("<memoryRoot>/memory.yaml")` → must return a result
 
 Either missing → STOP: "Memory not initialized. Run /tdk-memory-init first."
 
@@ -51,14 +50,15 @@ MEMORY_QUERY_RESULT_END
 
 ### Data-model resolver (`--type data-model`, `schema`, or a known global data-model path/entity request)
 
-This is the sole resolver for data-model queries in this transport, including
+This is the sole resolver for data-model queries, including
 `--for-agent` calls from `tdk-memory-agent`. Read
-`.specify/memory/memory-index.md`, parse its **Data Model** table into a
+`<memoryRoot>/memory-index.md`, parse its **Data Model** table into a
 stable-sorted canonical `data-model/*.md` inventory, and preserve every indexed
 path's actual casing for exact reads and output. Search/index metadata only nominates candidates; exact-read content supplies identity, eligibility, and domain evidence.
+Exclude `_templates/**` and `_deprecated/**` from the canonical inventory.
 
 1. **Candidate nomination and rank verification.** Use
-   `Glob(".specify/memory/data-model/*.md")` only to verify inventory paths; do
+   `Glob("<memoryRoot>/data-model/*.md")` only to verify inventory paths; do
    not discover binding candidates outside the index. For an entity query,
    evaluate identity ranks in this order: exact frontmatter `id`, exact filename
    stem, exact title, then exact alias. At each rank, collect matching index
@@ -70,7 +70,7 @@ path's actual casing for exact reads and output. Search/index metadata only nomi
    This loop is bounded by four identity ranks and their nominated paths, not the
    full inventory. Do not use a blind top-K or ranked-search cutoff.
 2. **Known-path precedence.** A supplied `data-model/{name}.md`,
-   `memory/data-model/{name}.md`, or `.specify/memory/data-model/{name}.md` is
+   or `<memoryRoot>/data-model/{name}.md` is
    normalized to a canonical indexed repository-relative POSIX path. Canonical
    path equality is the highest-precedence exact identity: select and exact-read
    only that path, without applying the text identity ranks. A path outside the
@@ -112,11 +112,11 @@ path's actual casing for exact reads and output. Search/index metadata only nomi
 
 **With `--domain` flag:**
 
-- `Glob(".specify/memory/domains/{domain}/*.md")` → build CANDIDATE_FILES.
+- `Glob("<memoryRoot>/domains/{domain}/*.md")` → build CANDIDATE_FILES.
 
 **With `--type` flag:**
 
-- `Read(".specify/memory/memory-index.md")` → parse the Routing Rules table manually.
+- `Read("<memoryRoot>/memory-index.md")` → parse the Routing Rules table manually.
 - Find all files tagged with `type: {canonical-type}` → build CANDIDATE_FILES.
 - Also map canonical types to path prefixes when tags are absent:
   - `services` → `domains/*/services.md`
@@ -139,8 +139,27 @@ path's actual casing for exact reads and output. Search/index metadata only nomi
 
 **Natural language (no explicit flags):**
 
-- `Grep("{keywords}", ".specify/memory")` → match across all memory files.
-- Build CANDIDATE_FILES from top matching results (max 5).
+- Enumerate the complete eligible Markdown inventory under `<memoryRoot>`.
+  Exclude `_templates/**`, `_deprecated/**`, `memory-architect/**`, and assets
+  **before** nomination, ranking, or counting. Normalize paths to relative POSIX
+  form and deduplicate; preserve original casing for reads and output.
+- Grep the complete inventory and match filename/frontmatter too; never let tool
+  encounter order or a search-result limit choose the winners. Normalize query
+  and compared identity strings with Unicode NFC, trim, and locale-independent
+  lowercase. Treat the normalized query as a literal, not a regular expression.
+- Give each candidate one score: exact frontmatter `id` **5**; exact filename
+  stem **4**; exact title **3**; exact alias **2**; literal relative-path match
+  **1**; literal body match **0**. Use only the highest matching rule. A file
+  matching none is not a candidate; exact-read nominated metadata/body to verify
+  its score. Search snippets alone never establish identity or binding.
+- Sort **all** candidates by descending integer score, then canonical relative
+  path using UTF-8 byte order (not locale collation). Only then take the first
+  five, plus every candidate tied at the highest score. Six top-scored ties
+  therefore return all six; never silently truncate that tie.
+- Set CANDIDATE_FILES to that ordered result. In normal mode show the candidate
+  paths; in agent mode retain the same order and label nonbinding context.
+  These rules do not replace the typed data-model resolver above: its four
+  outcomes, complete highest-rank ties, eligibility checks, and cache are unchanged.
 - If a matched candidate is under `arc42/`, treat it as summary context only.
   Follow one hop through `related.path` or wikilinks to typed `binding: true`
   files before returning it as blocking evidence for agents.
@@ -151,7 +170,7 @@ If a resolved path does not exist on disk: skip with note `{file}: not found`.
 
 Step 3 resolves data-model candidates and, only for a requested domain, its
 nominated proof files. For each other file in CANDIDATE_FILES:
-- `Read(".specify/memory/{relative-path}")` — full disk path.
+- `Read("<memoryRoot>/{relative-path}")` — full disk path.
 
 For a **resolved data-model in normal mode** (without `--for-agent`), extract its
 exact-read Markdown using `--format`:
@@ -213,11 +232,11 @@ query: "{normalized query term}"
 content_type: data-model
 requested_domain: "{requested domain, or empty string when none was requested}"
 candidate_paths:
-  - .specify/memory/data-model/{actual-indexed-name}.md
-resolved_path: .specify/memory/data-model/{actual-indexed-name}.md
+  - <memoryRoot>/data-model/{actual-indexed-name}.md
+resolved_path: <memoryRoot>/data-model/{actual-indexed-name}.md
 files_read:
-  - .specify/memory/data-model/{actual-indexed-name}.md
-  - .specify/memory/memory-index.md
+  - <memoryRoot>/data-model/{actual-indexed-name}.md
+  - <memoryRoot>/memory-index.md
 binding: {true|false}
 note: "{explanation; empty when resolved}"
 ---

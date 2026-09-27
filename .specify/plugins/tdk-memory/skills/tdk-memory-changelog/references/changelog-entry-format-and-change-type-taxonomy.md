@@ -123,5 +123,5 @@ Always **prepend** new entries (newest at top). Do not sort or reorder existing 
 | `modified` | Working-tree file at its current path |
 | `deprecated` | Working-tree file at `_deprecated/{rel-path}` (already moved) |
 
-Use `compute-sha256-hashes.py` shared utility for all hashes.
+Use the shipped `memory-manifest.cjs hash` command from the shared root contract.
 Never compute SHA256 inline in SKILL.md — always use the script.

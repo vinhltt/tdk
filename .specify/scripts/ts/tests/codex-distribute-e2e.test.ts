@@ -181,7 +181,7 @@ function buildSyntheticSource(): string {
   fs.mkdirSync(path.dirname(schemaPath), { recursive: true });
   fs.writeFileSync(schemaPath, '{"$schema":"https://json-schema.org/draft/2020-12/schema"}\n', 'utf-8');
 
-  const memoryTemplatePath = path.join(consumer.root, '.specify', 'templates', 'memory', 'decision-record-template.md.tpl');
+  const memoryTemplatePath = path.join(consumer.root, '.specify', 'plugins', 'tdk-memory', 'skills', 'tdk-memory-init', 'references', 'templates', 'memory', 'decision-record-template.md.tpl');
   fs.mkdirSync(path.dirname(memoryTemplatePath), { recursive: true });
   fs.writeFileSync(memoryTemplatePath, '# Decision Record\n\nDistributed memory template fixture.\n', 'utf-8');
 
@@ -265,8 +265,8 @@ describe('codex distribute payload', () => {
       '.specify/schemas/ must be distributed to the consumer',
     ).toBe(true);
     expect(
-      fs.existsSync(path.join(consumerRoot, '.specify', 'templates', 'memory', 'decision-record-template.md.tpl')),
-      '.specify/templates/memory/ must be distributed to the consumer',
+      fs.existsSync(path.join(consumerRoot, '.specify', 'plugins', 'tdk-memory', 'skills', 'tdk-memory-init', 'references', 'templates', 'memory', 'decision-record-template.md.tpl')),
+      'skill-owned memory seeds must be distributed to the consumer',
     ).toBe(true);
     expect(
       fs.existsSync(path.join(consumerRoot, '.specify', 'memory', 'constitution.md')),
@@ -287,6 +287,7 @@ describe('codex distribute payload', () => {
     const emptyDocsDir = path.join(consumerRoot, '.specify', 'docs', 'keep-empty');
     const staleTemplatePath = path.join(consumerRoot, '.specify', 'templates', 'stale-orphan.md.tpl');
     fs.mkdirSync(emptyDocsDir, { recursive: true });
+    fs.mkdirSync(path.dirname(staleTemplatePath), { recursive: true });
     fs.writeFileSync(staleTemplatePath, '# stale template orphan\n', 'utf-8');
 
     const deleteOrphan = runDistribute(sourceRoot, consumerRoot, ['--yes', '--yes-delete']);

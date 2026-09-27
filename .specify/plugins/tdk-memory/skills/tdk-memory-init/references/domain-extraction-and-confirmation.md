@@ -79,6 +79,9 @@ Shared by Fresh Init and Re-run flows. Covers file input, extraction, validation
 **Evidence snippet redaction:** Before displaying, omit lines matching: API key patterns (`sk_live_`, `Bearer `, `apikey:`), connection strings (`mongodb://`, `postgres://`), or secret key names (`password:`, `secret:`, `private_key:`).
 
 Parse final list: trim, lowercase, kebab-case.
+Reject a domain starting with `_`, containing path separators, or equal to `.` or
+`..`; do not normalize an unsafe identifier into a different accepted domain.
+Apply the shared memory-root contract to every destination before any write.
 
 ---
 

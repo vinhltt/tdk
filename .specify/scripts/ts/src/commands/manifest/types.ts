@@ -7,8 +7,10 @@ export type ComponentType = 'skills' | 'agents' | 'hooks' | 'commands';
 
 export const COMPONENT_TYPES: readonly ComponentType[] = ['skills', 'agents', 'hooks', 'commands'];
 
-// Directories and extensions excluded from hashing (mirrors Python EXCLUDE_DIRS / EXCLUDE_EXTENSIONS)
-export const EXCLUDE_DIRS = new Set(['.git', '__pycache__', '.logs']);
+// Development dependencies, VCS metadata, and transient runtime files are not plugin assets.
+export const EXCLUDE_DIRS: Readonly<Record<string, true>> = {
+  '.git': true, '__pycache__': true, '.logs': true, node_modules: true,
+};
 export const EXCLUDE_EXTENSIONS = new Set(['.pyc']);
 
 /** Per-component map: component name → {version} */

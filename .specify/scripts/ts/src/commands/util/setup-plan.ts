@@ -1,9 +1,10 @@
 // CLI: setup-plan — ensure feature directory exists and copy plan template
 // Replaces: bash/setup-plan.sh
 
-import { existsSync, mkdirSync, copyFileSync, writeFileSync, realpathSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync, realpathSync } from 'node:fs';
 import { join, resolve, dirname, basename } from 'node:path';
 import { Command } from 'commander';
+import { parseDocument, stringify } from 'yaml';
 import {
   loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson, parseFeatureId, findConfigFile,
   realpathOrSelf, isWithin,
@@ -30,12 +31,42 @@ function physicalDestination(path: string): string {
   return join(realpathSync.native(existing), ...pending);
 }
 
+function preserveMemoryGate(original: string, template: string): string {
+  const frontmatter = /^(?:\uFEFF)?---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(original);
+  if (/^(?:\uFEFF)?---(?:\r?\n|$)/.test(original) && !frontmatter) throw new Error('Existing plan frontmatter is malformed; refusing to erase memory gate');
+  let replacement = template;
+  if (frontmatter) {
+    const document = parseDocument(frontmatter[1]!, { uniqueKeys: true });
+    const parsed = document.toJS();
+    if (document.errors.length || document.warnings.length || !parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Existing plan frontmatter is malformed; refusing to erase memory gate');
+    const gate: Record<string, unknown> = {};
+    for (const key of ['memory_gate', 'memory_gate_reason', 'memory_gate_at', 'memory_gate_actor']) {
+      if (Object.hasOwn(parsed, key)) gate[key] = parsed[key];
+    }
+    if (Object.keys(gate).length > 0) {
+      const templateHeader = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(template);
+      const defaults = templateHeader ? parseDocument(templateHeader[1]!, { uniqueKeys: true }) : undefined;
+      const metadata = defaults?.toJS() ?? {};
+      if (defaults?.errors.length || defaults?.warnings.length || typeof metadata !== 'object' || Array.isArray(metadata)) throw new Error('Plan template frontmatter is malformed');
+      replacement = `---\n${stringify({ ...metadata, ...gate })}---\n${template.slice(templateHeader?.[0].length ?? 0)}`;
+    }
+  }
+  const heading = /^## Memory Constraints[ \t]*\r?$/m.exec(original);
+  if (heading) {
+    const contentStart = heading.index + heading[0].length;
+    const nextHeading = /^#{1,2}[ \t]/m.exec(original.slice(contentStart));
+    const constraints = original.slice(heading.index, nextHeading ? contentStart + nextHeading.index : original.length).trimEnd();
+    replacement = `${replacement.trimEnd()}\n\n${constraints}\n`;
+  }
+  return replacement;
+}
+
 const program = new Command()
   .name('setup-plan')
   .description('Ensure feature directory exists and copy plan template')
   .argument('<task-id>', 'Task ID (e.g., pref-001, feature/aa-123)')
   .option('--json', 'Output results in JSON format', false)
-  .option('--force', 'Overwrite existing plan.md unconditionally', false)
+  .option('--force', 'Replace plan content while preserving memory gate and constraints', false)
   .action((taskId: string, opts: { json: boolean; force: boolean }) => {
     const repoRoot = getRepoRoot();
     const env = loadFeatureEnv(findConfigFile(repoRoot));
@@ -84,9 +115,11 @@ const program = new Command()
     // featureDir still reads as "inside the host" while mkdir/copy land somewhere else entirely.
     // Resolve where the write physically goes, and refuse rather than repair.
     const physicalDest = physicalDestination(featureDir);
-    if (!isWithin(realpathOrSelf(repoRoot), physicalDest)) {
+    const physicalPlan = physicalDestination(implPlan);
+    if (!isWithin(realpathOrSelf(repoRoot), physicalDest) ||
+        !isWithin(realpathOrSelf(repoRoot), physicalPlan)) {
       process.stderr.write(
-        `ERROR: refusing to write outside the artifact host — '${featureDir}' physically resolves to '${physicalDest}', which is outside '${realpathOrSelf(repoRoot)}'. Check for a symlinked ${env.specsRoot} directory.\n`,
+        `ERROR: refusing to write outside the artifact host — directory '${featureDir}' resolves to '${physicalDest}'; plan '${implPlan}' resolves to '${physicalPlan}'. Check for symlinks outside '${realpathOrSelf(repoRoot)}'.\n`,
       );
       process.exit(1);
     }
@@ -101,7 +134,17 @@ const program = new Command()
     const templateFile = join(repoRoot, env.specsRoot, 'templates', 'plan-template.md.tpl');
     if (existsSync(templateFile)) {
       if (!planExists || opts.force) {
-        copyFileSync(templateFile, implPlan);
+        const original = planExists ? readFileSync(implPlan, 'utf8') : undefined;
+        const template = readFileSync(templateFile, 'utf8');
+        const replacement = original === undefined ? template : preserveMemoryGate(original, template);
+        const temporary = `${implPlan}.${process.pid}.${Date.now()}.tmp`;
+        try {
+          writeFileSync(temporary, replacement, { flag: 'wx' });
+          if (original === undefined ? existsSync(implPlan) : readFileSync(implPlan, 'utf8') !== original) throw new Error('Plan changed concurrently; refusing replacement');
+          renameSync(temporary, implPlan);
+        } finally {
+          rmSync(temporary, { force: true });
+        }
         if (!opts.json) console.log(`Copied plan template to ${implPlan}`);
       } else {
         if (!opts.json) console.log(`Plan already exists at ${implPlan} — skipping copy (use --force to overwrite)`);

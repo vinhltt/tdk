@@ -51,6 +51,11 @@ then continue to Step 2 with **REGENERATE mode**. Regenerate and classify every
 rewritten phase; no rewritten phase receives the untouched-legacy metadata
 exemption. Any setup, write, or validation failure removes only invocation-new
 files and STOPs with exact diagnostics.
+The rewrite transaction must retain `memory_gate`, `memory_gate_reason`,
+`memory_gate_at`, `memory_gate_actor`, and the existing Memory Constraints
+section before replacing any plan bytes. `setup-plan.ts --force` preserves them
+atomically. Do not delete them while drafting or on an interrupted rewrite;
+only a legitimate new Guardian outcome or live authorization may replace them.
 
 ## Option (b) Append Phase
 

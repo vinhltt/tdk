@@ -43,6 +43,7 @@ Rebuild `memory-index.md` from current FS state using template in `references/me
 - Include all existing files in "Files by Domain" sections
 - For NEW domains: list `domain-overview.md` row (not placeholder)
 - For existing domains: scan filesystem to list actual files
+- Exclude `_templates/**` and `_deprecated/**` from active tables and coverage
 - Preserve Routing Rules table (static)
 
 **Domain Map scope column:**
@@ -56,6 +57,8 @@ Rebuild `memory-index.md` from current FS state using template in `references/me
 - Add SHA256 entries for newly created `domain-overview.md` files (one per new domain)
 - Preserve existing file checksums (do not recompute existing files)
 - Recompute `memory_index_sha256` from regenerated memory-index.md
+- Preserve `templates[]` and unrelated metadata; use the shipped Node hash command
+  from the shared contract, then validate a temporary candidate before publishing
 
 ---
 

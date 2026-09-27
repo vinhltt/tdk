@@ -17,6 +17,7 @@ function collectFiles(pluginDir: string): string[] {
   function walk(dir: string): void {
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
+      if (EXCLUDE_DIRS[entry.name] === true) continue;
       const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
         walk(fullPath);
@@ -33,7 +34,7 @@ function collectFiles(pluginDir: string): string[] {
     const rel = path.relative(pluginDir, f);
     const parts = rel.split(path.sep);
     // Python: any(p in EXCLUDE_DIRS for p in parts)
-    if (parts.some((p) => EXCLUDE_DIRS.has(p))) return false;
+    if (parts.some((p) => EXCLUDE_DIRS[p] === true)) return false;
     if (EXCLUDE_EXTENSIONS.has(path.extname(f))) return false;
     return true;
   });

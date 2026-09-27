@@ -4,6 +4,19 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [Unreleased]
+
+### Changed
+- Vendored Obsidian Markdown and JSON Canvas references with the upstream MIT notice; removed the runtime dependency on `tdk-utils`.
+- **BREAKING** Memory operations are file-only. Removed external transport discovery, transport-specific flows, and availability fallback.
+- **BREAKING** Agent invocations require a leading caller-owned control header instead of payload-scanned mode flags.
+- Bundled a Node.js >=18 checksum runtime and its YAML parser/license. Consumers need no Python, Bun, or dependency installation; `memory.yaml` remains version `"2"`.
+- Moved all twenty templates into the initialization skill; materialize-only initialization tracks additive `templates[]` receipts and preserves edited templates unless refresh is explicitly requested.
+- Added explicit root resolution, two containment boundaries, malformed-manifest preflight, approval-gated repair, and deterministic free-text ranking without truncating highest-rank ties.
+- Added a standalone marketplace, MIT license, reproducible maintainer build, and Node-only local tests; TDK synchronization uses a one-way subtree with commit-derived drift checks.
+- TDK release packaging excludes runtime `.logs/`, maintainer dependencies, and plugin-local tests; directory-glob exclusions are now honored by release inventory generation.
+- Kept the maintainer package and lock beside the TypeScript source, not at plugin root, so marketplace installation does not auto-install build dependencies.
+
 ## [3.0.3] - 2026-08-17
 
 ### Added

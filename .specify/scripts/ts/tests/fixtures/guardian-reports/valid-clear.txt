@@ -1,0 +1,23 @@
+=== GUARDIAN REPORT ===
+Feature: fixture
+Domains reviewed: account
+Memory files checked: 1
+Date: 2026-09-22
+
+## CONFLICTS (must resolve before implement)
+None found
+
+## WARNINGS (should review)
+None found
+
+## OK
+- account.id is not nullable, matching memory
+
+## NOT CHECKED (no relevant memory)
+None found
+
+## Summary
+Total claims checked: 1
+CONFLICTS: 0 | WARNINGS: 0 | OK: 1 | NOT CHECKED: 0
+Action required: CLEAR
+=== END GUARDIAN REPORT ===

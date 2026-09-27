@@ -1,130 +1,152 @@
-import { describe, expect, it } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { afterEach, describe, expect, it } from 'bun:test';
+import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { implementationGate, validateGuardianReport } from '../src/commands/util/memory-gate';
 
-const PROJECT_ROOT = resolve(import.meta.dir, '../../../..');
-const SPECIFY_DIR = resolve(PROJECT_ROOT, '.specify');
-const PLUGINS_DIR = resolve(import.meta.dir, '../../../plugins');
+const FIXTURES = resolve(import.meta.dir, 'fixtures/guardian-reports');
+const roots: string[] = [];
+afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true }))); });
 
-const GATES = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-plan/references/gates.md');
-const TDK_PLAN_SKILL = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-plan/SKILL.md');
-const TDK_SPECIFY_SKILL = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-specify/SKILL.md');
-const TDK_SPECIFY_INPUT_ROUTING = resolve(
-  PLUGINS_DIR,
-  'tdk-core/skills/tdk-specify/references/input-routing-and-mode-workflow.md',
-);
-const TDK_CLARIFY = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-clarify/SKILL.md');
-const TDK_CONSISTENCY_CHECK = resolve(PLUGINS_DIR, 'tdk-core/skills/tdk-consistency-check/SKILL.md');
-const MEMORY_INDEX_TEMPLATE = resolve(
-  PLUGINS_DIR,
-  'tdk-memory/skills/tdk-memory-init/references/memory-index-template.md',
-);
-const REGENERATE_MEMORY_INDEX_FLOW = resolve(
-  PLUGINS_DIR,
-  'tdk-memory/skills/tdk-memory-update/references/regenerate-memory-index-flow.md',
-);
-const SPEC_TEMPLATE = resolve(SPECIFY_DIR, 'templates/spec-template.md.tpl');
-
-function read(path: string): string {
-  return readFileSync(path, 'utf-8');
+async function fixture() {
+  const workspace = await mkdtemp(join(tmpdir(), 'tdk-gate-'));
+  roots.push(workspace);
+  const root = join(workspace, 'memory');
+  await mkdir(join(root, 'data-model'), { recursive: true });
+  const path = join(root, 'data-model/account.md');
+  const note = '---\ntype: data-model\nstatus: active\nauthority: memory\nbinding: true\n---\n\n## Fields\n\nid is non-nullable.\n';
+  await writeFile(path, note);
+  return { workspace, root, path, note };
 }
 
-function markdownSection(content: string, heading: string): string {
-  const start = content.indexOf(heading);
-  expect(start).toBeGreaterThanOrEqual(0);
-
-  const bodyStart = start + heading.length;
-  const headingLevel = heading.match(/^#+/)?.[0].length ?? 1;
-  const nextSectionPattern = new RegExp(`\\n#{1,${headingLevel}} `);
-  const nextSection = content.slice(bodyStart).search(nextSectionPattern);
-  return nextSection === -1 ? content.slice(start) : content.slice(start, bodyStart + nextSection);
+async function report(name: string, path?: string) {
+  const text = await readFile(join(FIXTURES, `${name}.txt`), 'utf8');
+  return path ? text.replaceAll('.specify/memory/data-model/account.md', path) : text;
 }
 
-describe('memory-validation-gate contract', () => {
-  describe('Mechanism A: binding-coverage precondition', () => {
-    it('memory-index-template.md declares the Binding coverage summary line', () => {
-      const content = read(MEMORY_INDEX_TEMPLATE);
-      expect(content).toContain('Binding coverage: {binding-true-count} of {typed-file-count} typed files');
-    });
+describe('Guardian report boundary', () => {
+  it.each(['empty', 'bare-clear', 'clear-with-conflict', 'two-actions'])(
+    'does not grant implementation for malformed %s output', async name => {
+      const { root } = await fixture();
+      expect((await validateGuardianReport(await report(name), 0, root)).state).toBe('not-checked');
+    },
+  );
 
-    it('memory-index-template.md uses the 4-column typed header, not the bare 3-column form', () => {
-      const content = read(MEMORY_INDEX_TEMPLATE);
-      expect(content).toContain('| File | Title | Updated | Binding |');
-      expect(content).not.toMatch(/^\| File \| Title \| Updated \|$/m);
-    });
-
-    it('memory-index-template.md keeps the Deprecated table on its own 2-column shape', () => {
-      const content = read(MEMORY_INDEX_TEMPLATE);
-      expect(content).toContain('| File | Deprecated At |');
-    });
-
-    it('regenerate-memory-index-flow.md recomputes Binding coverage without inferring a default', () => {
-      const content = read(REGENERATE_MEMORY_INDEX_FLOW);
-      expect(content).toContain('Recompute the');
-      expect(content).toContain('Binding coverage:');
-      expect(content).toContain('do not infer a default');
-    });
-
-    it('gates.md Phase 0.guardian resolves BINDING_COVERAGE to unknown, none, or a reported count', () => {
-      const content = read(GATES);
-      const guardianSection = markdownSection(content, '## Phase 0.guardian');
-      expect(guardianSection).toContain('unknown');
-      expect(guardianSection).toContain('none');
-      expect(guardianSection).toContain('Binding coverage:');
-    });
-
-    it('gates.md Phase 0.guardian resolves an unset BINDING_COVERAGE to unknown as a fail-safe', () => {
-      const content = read(GATES);
-      const guardianSection = markdownSection(content, '## Phase 0.guardian');
-      expect(guardianSection).toContain('never set');
-    });
-
-    it('tdk-plan SKILL.md Phase 0.guardian gates on the binding-coverage precondition', () => {
-      const content = read(TDK_PLAN_SKILL);
-      const guardianSection = markdownSection(content, '### Phase 0.guardian');
-      expect(guardianSection).toContain('binding-coverage precondition');
-    });
+  it('treats failed execution as unchecked even when stdout looks CLEAR', async () => {
+    const { root } = await fixture();
+    expect((await validateGuardianReport(await report('valid-clear'), 7, root)).state).toBe('not-checked');
   });
 
-  describe('Mechanism B: memory_validation task-lifecycle gate', () => {
-    it('spec-template.md.tpl declares the memory_validation frontmatter field', () => {
-      const content = read(SPEC_TEMPLATE);
-      expect(content).toContain('memory_validation:');
-    });
+  it('accepts a complete CLEAR report with a counted verified claim', async () => {
+    const { root } = await fixture();
+    expect((await validateGuardianReport(await report('valid-clear'), 0, root)).state).toBe('clear');
+  });
 
-    it('Step 1.6 Memory Validation Scope Gate exists in tdk-specify SKILL.md and the input-routing reference', () => {
-      const skillContent = read(TDK_SPECIFY_SKILL);
-      expect(skillContent).toContain('Step 1.6');
+  it('blocks on a conflict supported by a real active binding note and heading', async () => {
+    const { root, path } = await fixture();
+    expect((await validateGuardianReport(await report('valid-block', path), 0, root)).state).toBe('block-impl');
+  });
 
-      const routingContent = read(TDK_SPECIFY_INPUT_ROUTING);
-      const scopeGateSection = markdownSection(routingContent, '## Step 1.6: Memory Validation Scope Gate');
-      expect(scopeGateSection).toContain('AskUserQuestion');
-      expect(scopeGateSection).toContain('MEMORY_VALIDATION');
-    });
+  it('rejects claimed evidence when the exact note is nonbinding or the anchor is absent', async () => {
+    const { root, path, note } = await fixture();
+    const text = await report('valid-block', path);
+    expect((await validateGuardianReport(text.replace('#fields', '#missing'), 0, root)).state).toBe('not-checked');
+    await writeFile(path, note.replace('binding: true', 'binding: false'));
+    expect((await validateGuardianReport(text, 0, root)).state).toBe('not-checked');
+  });
 
-    const MALFORMED_VALUE_CONSUMERS: Array<[path: string, label: string]> = [
-      [TDK_CLARIFY, 'tdk-clarify/SKILL.md'],
-      [TDK_CONSISTENCY_CHECK, 'tdk-consistency-check/SKILL.md'],
-      [GATES, 'tdk-plan/references/gates.md'],
-    ];
+  it('never treats template or deprecated assets as conflict evidence', async () => {
+    const { root, note } = await fixture();
+    for (const directory of ['_templates', '_deprecated']) {
+      await mkdir(join(root, directory));
+      const path = join(root, directory, 'account.md');
+      await writeFile(path, note);
+      expect((await validateGuardianReport(await report('valid-block', path), 0, root)).state).toBe('not-checked');
+    }
+  });
 
-    it.each(MALFORMED_VALUE_CONSUMERS)(
-      '%s reads memory_validation and treats an unreplaced placeholder as absent',
-      (path) => {
-        const content = read(path);
-        expect(content).toContain('memory_validation');
-        expect(content).toContain('placeholder');
-      },
-    );
+  it('rejects an in-root citation whose symlink resolves outside memory', async () => {
+    const { root, path, workspace, note } = await fixture();
+    const external = join(workspace, 'outside.md');
+    await writeFile(external, note);
+    await rm(path);
+    await symlink(external, path);
+    expect((await validateGuardianReport(await report('valid-block', path), 0, root)).state).toBe('not-checked');
+  });
 
-    it('tdk-clarify and tdk-consistency-check never ask the user for the memory_validation decision', () => {
-      expect(read(TDK_CLARIFY)).toContain('Never ask the user here');
-      expect(read(TDK_CONSISTENCY_CHECK)).toContain('Never ask the user here');
-    });
+  it('rejects summary totals and entry counts that cannot describe the actual report', async () => {
+    const { root } = await fixture();
+    const clear = await report('valid-clear');
+    expect((await validateGuardianReport(clear.replace('Total claims checked: 1', 'Total claims checked: 2'), 0, root)).state).toBe('not-checked');
+    expect((await validateGuardianReport(clear.replace('- account.id is not nullable, matching memory', 'None found'), 0, root)).state).toBe('not-checked');
+  });
 
-    it('gates.md defines the no-spec terminal default for memory_validation', () => {
-      const content = read(GATES);
-      expect(content).toContain('no spec.md for this feature');
-    });
+  it('rejects duplicate reports and an action moved outside Summary', async () => {
+    const { root } = await fixture();
+    const clear = await report('valid-clear');
+    expect((await validateGuardianReport(clear + clear, 0, root)).state).toBe('not-checked');
+    expect((await validateGuardianReport(clear.replace('Action required: CLEAR\n', '') + '\nAction required: CLEAR\n', 0, root)).state).toBe('not-checked');
+  });
+
+  it('uses the same anchored delimiter pair for validation and slicing', async () => {
+    const { root } = await fixture();
+    const clear = await report('valid-clear');
+    expect((await validateGuardianReport(`quoted ${clear}\n=== GUARDIAN REPORT ===\n`, 0, root)).state).toBe('not-checked');
+  });
+
+  it('rejects conflicts misplaced in OK, NOT CHECKED, or Summary', async () => {
+    const { root, path } = await fixture();
+    const clear = await report('valid-clear');
+    for (const section of ['OK', 'NOT CHECKED', 'Summary']) {
+      const malformed = clear.replace(new RegExp(`^## ${section}[^\\n]*\\n`, 'm'), `$&### CONFLICT-001\nEvidence: ${path}#fields\nIssue: contradicts memory\n`);
+      expect((await validateGuardianReport(malformed, 0, root)).state).toBe('not-checked');
+    }
+  });
+
+  it('rejects malformed evidence type and example-only anchors', async () => {
+    const { root, path, note } = await fixture();
+    const text = await report('valid-block', path);
+    await writeFile(path, note.replace('type: data-model', 'type: [data-model]'));
+    expect((await validateGuardianReport(text, 0, root)).state).toBe('not-checked');
+    for (const body of ['```markdown\n## Fields\n```\n', '~~~\n## Fields\n~~~\n', '<!--\n## Fields\n-->\n', '    ## Fields\n']) {
+      await writeFile(path, note.split('## Fields')[0] + body);
+      expect((await validateGuardianReport(text, 0, root)).state).toBe('not-checked');
+    }
+    await writeFile(path, note.split('## Fields')[0] + '```\nExample ^fields\n```\n');
+    expect((await validateGuardianReport(text.replace('#fields', '#^fields'), 0, root)).state).toBe('not-checked');
+    await writeFile(path, note + '\nActual constraint ^fields\n');
+    expect((await validateGuardianReport(text.replace('#fields', '#^fields'), 0, root)).state).toBe('block-impl');
+  });
+
+  it('continues with REVIEW only when actual warning entries support its count', async () => {
+    const { root } = await fixture();
+    const review = (await report('valid-clear')).replace('## WARNINGS (should review)\nNone found', '## WARNINGS (should review)\n### WARN-001\nIssue: nonbinding context differs')
+      .replace('Total claims checked: 1', 'Total claims checked: 2').replace('WARNINGS: 0', 'WARNINGS: 1').replace('Action required: CLEAR', 'Action required: REVIEW');
+    expect((await validateGuardianReport(review, 0, root)).state).toBe('review');
+  });
+});
+
+describe('persisted implementation gate', () => {
+  const metadata = { memory_gate_reason: 'fixture outcome', memory_gate_at: '2026-09-22T00:00:00Z' };
+  it('keeps legacy plans compatible but rejects unknown or incomplete gate states', () => {
+    expect(implementationGate({})).toBe('allow');
+    expect(implementationGate({ ...metadata, memory_gate: 'invalid' })).toBe('block');
+    expect(implementationGate({ memory_gate: 'clear' })).toBe('block');
+  });
+  it('never coerces malformed sequences or partial metadata into permission', () => {
+    for (const memory_gate of [['clear'], ['review'], ['skipped'], {}, null, true]) {
+      expect(implementationGate({ ...metadata, memory_gate })).toBe('block');
+    }
+    expect(implementationGate(metadata)).toBe('block');
+  });
+  it('allows valid outcomes and genuine skips without turning failures into permission', () => {
+    for (const state of ['clear', 'review', 'skipped']) expect(implementationGate({ ...metadata, memory_gate: state })).toBe('allow');
+    for (const state of ['not-checked', 'block-impl']) expect(implementationGate({ ...metadata, memory_gate: state })).toBe('block');
+  });
+  it('requires live confirmation even for complete handwritten authorization metadata', () => {
+    expect(implementationGate({ ...metadata, memory_gate: 'authorized' })).toBe('block');
+    expect(implementationGate({ ...metadata, memory_gate: 'authorized', memory_gate_actor: 'agent' })).toBe('block');
+    expect(implementationGate({ ...metadata, memory_gate: 'authorized', memory_gate_actor: 'user' })).toBe('confirm');
+    expect(implementationGate({ ...metadata, memory_gate: 'authorized', memory_gate_actor: 'user', memory_gate_at: 'not-a-date' })).toBe('block');
   });
 });

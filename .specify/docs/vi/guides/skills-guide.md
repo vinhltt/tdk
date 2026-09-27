@@ -185,13 +185,21 @@ Excluded:
 
 | Skill | Summary | Main modes/options | Dùng khi |
 |-------|---------|--------------------|----------|
-| `/tdk-memory-init` | Initialize domain memory structure. | project/domain setup inputs | Project cần `.specify/memory/` scaffolding. |
+| `/tdk-memory-init` | Khởi tạo memory hoặc materialize 20 template mà không phỏng vấn domain. | `--memory-root`, `--ensure-templates`, `--refresh-templates` | Cần memory file-backed hoặc nâng cấp template. |
 | `/tdk-memory-update` | Add hoặc modify domain knowledge. | natural-language memory updates | Business rules, services, data models, flows, hoặc decisions thay đổi. |
 | `/tdk-memory-query` | Query project memory bằng natural language. | query text | Planning/implementation cần memory context. |
 | `/tdk-memory-changelog` | Record staged memory changes trong `CHANGELOG.md`. | staged `.specify/memory/` diff | Memory edits ready để document trước commit. |
+| `/tdk-memory-checksum` | Kiểm tra integrity bằng Node.js; repair chỉ sau khi được duyệt. | `--memory-root`, `--fix` | Phát hiện drift hoặc chẩn đoán `memory.yaml` lỗi mà không tự chấp nhận byte bị sửa. |
 | `/tdk-retro-collect` | Collect retrospective feedback sau TDK spec/session. | reviews, drift, UT results, traces, user feedback | Completed workflow nên feed learning loop. |
 | `/tdk-retro-propose` | Propose technical hoặc memory learning deltas từ feedback. | `retro-feedback.md` | Feedback cần reviewable learning changes. |
 | `/tdk-retro-apply` | Apply approved learning deltas. | approved `learning-delta.md` entries | Accepted retro learnings nên update skills/docs/memory. |
+
+Memory skills cần Node.js >=18, không cần Python hay máy chủ transport ngoài.
+`memory.yaml` giữ version `"2"`; receipt template là phần bổ sung tùy chọn.
+Manifest lỗi chặn writer trước mutation. Guardian lỗi được lưu là NOT CHECKED
+và chặn implement cho tới khi xác minh được hoặc user cho phép chạy không kiểm
+tra memory. Custom root áp dụng trong memory skills; existence gate phía TDK
+vẫn dùng `.specify/memory/`.
 
 ### Guide And Research Utilities
 
@@ -274,7 +282,7 @@ Dùng unit-test backfill riêng khi mục tiêu là project/module unit testing 
 
 ### Internal Helpers Not Listed As User Commands
 
-Các helper này tồn tại trong source nhưng không được catalog như direct user commands: `_shared`, `tdk-memory-checksum`, `tdk-load-project-context`, `tdk-validate-task-id`, `brainstorming`, `common`, `context-engineering`, `obsidian-brain`, `problem-solving`, `research`, và các helper `user-invocable: false` khác.
+Các helper này tồn tại trong source nhưng không được catalog như direct user commands: `_shared`, `tdk-load-project-context`, `tdk-validate-task-id`, `brainstorming`, `common`, `context-engineering`, `obsidian-brain`, `problem-solving`, `research`, và các helper `user-invocable: false` khác.
 
 ---
 

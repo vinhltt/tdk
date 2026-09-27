@@ -3,7 +3,7 @@ name: tdk-specify
 description: "Create spec.md from a feature or child-slice description, or replay --interview against existing spec.md. Supports --fast, memory, and an embedded quality gate."
 argument-hint: "<id> [<desc>] [--fast] [--interview]"
 metadata:
-  version: "13.0.2"
+  version: "14.0.1"
 ---
 
 # tdk-specify
@@ -130,7 +130,7 @@ Follow `references/input-routing-and-mode-workflow.md` Step 0.memory.
 Only validate when `.specify/memory/memory-index.md` exists **and** its
 `Binding coverage:` line reports a non-zero count; resolve that line into
 `BINDING_COVERAGE` here and skip the step when it is `none` or `unknown`. Use
-`tdk-memory-agent --mode validate`, store `MEMORY_VALIDATE_REPORT`, persist
+the caller-owned `mode: validate` control header from the workflow, store `MEMORY_VALIDATE_REPORT`, persist
 accepted `MEMORY_RESOLUTIONS`, and set `memory_context_loaded` in Step 2. This
 step MUST NOT block or error.
 

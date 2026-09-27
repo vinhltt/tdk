@@ -82,6 +82,17 @@ Codex install writes skills to `.agents/skills/`, hooks and lib files to `.codex
 
 Claude install writes managed artifacts to `.claude/`, copies `.specify/claude-rules/*.md` to `.claude/rules/` with the same prefix transform, merges hook runtime entries into `.claude/settings.json`, and writes ownership state to `.specify/state/harness-install/claude.json`.
 
+Runtime asset references are resolved against the selected plugin inventory before
+installation. Skill directory references ending in `/` (for example, template
+directories) resolve only when shipped files exist beneath them, including under
+a custom skill prefix. Missing directories, traversal, and file paths used as
+directories are rejected rather than guessed from the source filesystem.
+
+Memory install regressions exercise the installed Node CJS `hash` and YAML
+`validate` commands after removing source plugins and unsetting Claude root
+variables, for both default and custom prefixes. Run this package's `bun test`
+and `bun run typecheck` separately from the `.specify/scripts/ts` suite.
+
 Existing unmanaged `.claude/` files require explicit interactive overwrite approval. `--yes` only approves clean writes, clean updates, and clean removals.
 
 Claude and Codex harness installs are separate runs. A combined Claude+Codex install is unsupported.

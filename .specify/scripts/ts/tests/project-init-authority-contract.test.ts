@@ -97,16 +97,15 @@ describe('constitution-driven project init contract', () => {
 
     const canonicalSection = section(skill, '### Arc42 And Typed Memory Templates');
     const templateTargets = [
-      ['templates/memory/arc42-readme-template.md.tpl', '.specify/templates/memory/arc42-readme-template.md.tpl', 'arc42/README.md'],
-      ['templates/memory/arc42-summary-template.md.tpl', '.specify/templates/memory/arc42-summary-template.md.tpl', 'arc42/01-introduction-and-goals.md'],
-      ['templates/memory/decision-record-template.md.tpl', '.specify/templates/memory/decision-record-template.md.tpl', 'decisions/{decision-id}.md'],
-      ['templates/memory/risk-debt-template.md.tpl', '.specify/templates/memory/risk-debt-template.md.tpl', 'risks-and-debt/{risk-or-debt-id}.md'],
-      ['templates/memory/quality-requirement-template.md.tpl', '.specify/templates/memory/quality-requirement-template.md.tpl', 'quality-requirements/{quality-attribute}.md'],
+      ['arc42-readme-template.md.tpl', 'arc42/README.md'],
+      ['arc42-summary-template.md.tpl', 'arc42/01-introduction-and-goals.md'],
+      ['decision-record-template.md.tpl', 'decisions/{decision-id}.md'],
+      ['risk-debt-template.md.tpl', 'risks-and-debt/{risk-or-debt-id}.md'],
+      ['quality-requirement-template.md.tpl', 'quality-requirements/{quality-attribute}.md'],
     ];
 
-    for (const [sourcePath, skillPath, target] of templateTargets) {
-      expect(existsSync(resolve(SPECIFY_ROOT, sourcePath))).toBe(true);
-      expect(canonicalSection).toContain(skillPath);
+    for (const [sourcePath, target] of templateTargets) {
+      expect(existsSync(resolve(SPECIFY_ROOT, 'plugins/tdk-memory/skills/tdk-memory-init/references/templates/memory', sourcePath))).toBe(true);
       expect(canonicalSection).toContain(target);
     }
 

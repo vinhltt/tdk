@@ -16,10 +16,10 @@ Follow the full **Domain Extraction & Confirmation** flow in `references/domain-
 
 ## Step 4: Create Root Control Plane
 
-Create `{memory.path}` and root control files only:
+Create `<memoryRoot>` and root control files only:
 
 ```
-.specify/memory/
+<memoryRoot>/
 ├── README.md
 ├── CHANGELOG.md
 ├── memory-index.md
@@ -35,7 +35,7 @@ Do not create empty optional typed folders (`arc42/`, `data-model/`,
 `state-machines/`, or `_deprecated/`). Those folders are lazy and are created
 only when `tdk-memory-update` or `tdk-constitution` writes the first file.
 
-Create `README.md` from `.specify/templates/memory/memory-readme-template.md.tpl`.
+Create `README.md` from `<memoryRoot>/_templates/memory-readme-template.md.tpl`.
 Create `CHANGELOG.md` with a short initial entry if it is missing. Later steps
 write `memory-index.md`, `memory-map.canvas`, and `memory.yaml`.
 
@@ -63,7 +63,7 @@ Write `domains/{domain}/domain-overview.md` using template in `references/domain
 
 **Step 5.1 — Enrich domain-overview.md with Obsidian frontmatter:**
 
-Activate the `obsidian-brain` skill (Writer Mode) to load Obsidian Flavored Markdown syntax reference before applying enrichment.
+Read `references/obsidian-markdown.md` before applying enrichment; it is the packaged Obsidian Flavored Markdown syntax reference.
 
 After writing each `domains/{domain}/domain-overview.md`:
 
@@ -71,7 +71,7 @@ After writing each `domains/{domain}/domain-overview.md`:
 
 The template in `references/domain-overview-template.md` already includes full Obsidian frontmatter with `aliases:`, `type:`, `id:`, `status:`, `authority:`, `binding:`, `related:`, `domain:`, `tags:`, `created_at:`, `updated_by:`. Ensure all `{domain}`, `{domain-slug}`, and `{YYYY-MM-DD}` placeholders are replaced with actual values during file write.
 
-**Add wikilinks** in the first readable section after frontmatter (only if sibling file EXISTS in `.specify/memory/`):
+**Add wikilinks** in the first readable section after frontmatter (only if sibling file EXISTS in `<memoryRoot>/`):
 - `[[services|Services]]` — if `domains/{domain}/services.md` exists
 - `[[business-rules|Business Rules]]` — if `domains/{domain}/business-rules.md` exists
 
@@ -101,7 +101,8 @@ Replace `{per-domain-sections}` with per-domain subsections:
 Replace `{binding-true-count}` and `{typed-file-count}` in the `Binding coverage:`
 line with counts computed from the files actually written during this init. Count
 a file toward `{binding-true-count}` only when its frontmatter says `binding: true`;
-`arc42/` read-models and files with no `binding:` field do not count. Do not
+`arc42/` read-models and files with no `binding:` field do not count. Exclude
+`_templates/**` and `_deprecated/**` from both coverage counts. Do not
 hard-code the line — a fresh init that writes `domain-overview.md` files already
 has binding coverage, because `domain-overview-template.md` emits `binding: true`.
 
@@ -109,9 +110,9 @@ has binding coverage, because `domain-overview-template.md` emits `binding: true
 
 ## Step 6.5: Create memory-map.canvas
 
-Activate the `obsidian-brain` skill (Canvas Mode) to load JSON Canvas spec before creating the `.canvas` file.
+Read `references/obsidian-json-canvas.md` before creating the `.canvas` file; it is the packaged JSON Canvas reference.
 
-Create `{memory.path}/memory-map.canvas` with a visual domain map.
+Create `<memoryRoot>/memory-map.canvas` with a visual domain map.
 
 **Canvas JSON structure:**
 - Central `text` node: id `"memory-index"`, text `"Memory Index"`, position `(0, 0)`, width `250`, height `60`, color `"1"` (red)
@@ -143,25 +144,32 @@ After creating canvas file: add entry to `memory.yaml` manifest (see Step 7).
 Compute SHA256 of `memory-index.md`:
 
 ```bash
-$VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
-  "$(pwd)/.specify/memory/" "memory-index.md"
+node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "memory-index.md"
 ```
 
 For each domain, compute SHA256 of `domains/{domain}/domain-overview.md`:
 
 ```bash
-$VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
-  "$(pwd)/.specify/memory/" "domains/{domain}/domain-overview.md"
+node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "domains/{domain}/domain-overview.md"
 ```
 
 Compute SHA256 of `memory-map.canvas`:
 
 ```bash
-$VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
-  "$(pwd)/.specify/memory/" "memory-map.canvas"
+node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "memory-map.canvas"
 ```
 
-Write `memory.yaml`:
+Hash `README.md` and `CHANGELOG.md` with the same command (replace the relative
+path). Merge into `memory.yaml`, preserving `templates[]` from materialization
+and all unrelated existing records. Validate a temporary YAML candidate before
+atomic publication under the shared contract. The knowledge fields are:
+Root `CHANGELOG.md` and `memory-map.canvas` are deliberately excluded from
+automatic discovery for legacy compatibility. Add their explicit receipts here;
+do not require them to appear in `missing_from_manifest` before publication.
+Validate the candidate, not a guessed discrepancy/count pattern on the old manifest.
 ```yaml
 version: "2"
 generated_at: "{ISO datetime}"
@@ -193,7 +201,7 @@ for `memory-index.md`.
 ## Step 8: Report Summary
 
 ```
-Memory v3 initialized at .specify/memory/
+Memory v3 initialized at <memoryRoot>/
 
    Domains: {N} ({comma-separated list}) — extracted via {file-based | text description}
    Files created: root control files + {N} domain-overview.md files (1 per domain)

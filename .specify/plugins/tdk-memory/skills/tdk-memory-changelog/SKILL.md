@@ -1,6 +1,6 @@
 ---
 name: tdk-memory-changelog
-description: "Record staged .specify/memory/ changes in CHANGELOG.md via git diff --staged. Stage edits first with 'git add .specify/memory/', then run this skill before committing. Requires /tdk-memory-init first."
+description: "Record staged project memory changes in CHANGELOG.md via git diff --staged. Stage the selected memory root first, then run this skill before committing. Supports --memory-root; requires initialized memory."
 metadata: 
   version: 3.0.1
   category: "Analysis & Review"
@@ -8,6 +8,15 @@ metadata:
     - tdk-memory-init
   
 ---
+
+## Memory root resolution
+
+Before reading staged paths or writing anything, load
+`${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-init/references/memory-root-and-asset-contract.md`.
+Resolve `<memoryRoot>`, enforce both containment layers, and complete Node/YAML
+preflight. Preserve `templates[]`; template assets are not knowledge changes.
+Flat installation: without a plugin root, resolve the contract through sibling
+`../tdk-memory-init/references/memory-root-and-asset-contract.md` from this SKILL.md.
 
 ## ⛔ CRITICAL: Error Handling
 
@@ -17,9 +26,9 @@ metadata:
 3. **Wait for user** direction before proceeding
 
 ```
-If .specify/memory/ missing → STOP: "Run /tdk-memory-init first."
-If no staged memory changes → EXIT: "No staged changes in .specify/memory/. Stage edits first: git add .specify/memory/"
-If --file used with unstaged path → EXIT: "File not staged. Run: git add .specify/memory/{path} first."
+If <memoryRoot>/ missing → STOP: "Run /tdk-memory-init first."
+If no staged memory changes → EXIT with staging guidance for the selected root.
+If --file used with an unstaged path → EXIT with staging guidance for that path.
 ```
 
 ## Security
@@ -34,7 +43,7 @@ If --file used with unstaged path → EXIT: "File not staged. Run: git add .spec
 
 ## Purpose
 
-Detects staged `.specify/memory/` changes via `git diff --staged`, asks user for
+Detects staged `<memoryRoot>/` changes via `git diff --staged`, asks user for
 descriptions per change group, then writes a structured CHANGELOG.md entry.
 Natural git workflow: stage edits → run skill → commit everything together.
 
@@ -54,10 +63,15 @@ Optional: `--file [path]` to record a specific staged file only.
 ### Step 1: Parse staged memory changes
 
 ```bash
-git diff --staged --name-status -- .specify/memory/
+git diff --staged --name-status -- "<memoryRoot>/" ":(exclude)<memoryRoot>/_templates/" ":(exclude)<memoryRoot>/memory.yaml" ":(exclude)<memoryRoot>/memory-index.md" ":(exclude)<memoryRoot>/CHANGELOG.md"
 ```
 
-Returns tab-separated lines: `M\t.specify/memory/data-model/customer.md`, `A\t...`, `D\t...`
+Use workspace-relative POSIX paths in the pathspec; exclude assets before grouping.
+Generated control files are not staged knowledge entries: never group or create
+`files[]` receipts for `memory.yaml` or `memory-index.md`. The index has only
+`memory_index_sha256`; CHANGELOG's own receipt is updated explicitly after writing.
+Apply the same filtering when `--file` is supplied. Report a control-file-only
+selection as no staged knowledge changes.
 
 Parse with bash — split on tab to extract status + path:
 - `M` → change type: `modified`
@@ -70,8 +84,8 @@ If `--file` provided, filter to that path only; verify it is staged (exit with h
 
 If zero memory files are staged:
 ```
-No staged changes in .specify/memory/.
-Stage edits first: git add .specify/memory/
+No staged knowledge changes in <memoryRoot>/.
+Stage edits first: git add "<memoryRoot>/"
 ```
 
 ### Step 3: AskUserQuestion for descriptions
@@ -88,18 +102,13 @@ Change type is auto-derived from git status — do NOT ask user to specify type.
 
 ### Step 4: Compute SHA256 per changed file
 
-```bash
-VENV_PY="$(pwd)/.venv/Scripts/python.exe"
-[ -f "$VENV_PY" ] || VENV_PY="$(pwd)/.venv/bin/python3"
-```
-
 For each changed file:
 - Modified / Added: hash working-tree file at its current path
 - Deprecated (`D`): file was moved to `_deprecated/` — hash from `_deprecated/{rel-path}`
 
 ```bash
-$VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
-  "$(pwd)/.specify/memory/" "{relative-file-path}"
+node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "{relative-file-path}"
 ```
 
 ### Step 5: Write ONE combined CHANGELOG.md entry
@@ -130,6 +139,8 @@ Full regeneration (same logic as `/tdk-memory-update` Step 5).
 ### Step 7: Update memory.yaml
 
 For all recorded files: update `sha256`, `updated_at`, `updated_by: "tdk-memory-changelog"`.
+Preserve `templates[]` and unrelated records; recompute `memory_index_sha256`
+and the changed root CHANGELOG receipt. Publish a validated temporary manifest.
 
 ### Step 8: Report summary
 

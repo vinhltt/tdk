@@ -11,6 +11,7 @@ import {
   writeMultiPluginManifest,
   writePluginDependencyPolicy,
   writePluginFile,
+  type FixtureConsumer,
 } from './fixtures';
 
 const cliPath = path.resolve('src/index.ts');
@@ -40,6 +41,69 @@ function writeChecksumSkill(consumer: ReturnType<typeof makeConsumer>, skill: st
         'skills/tdk-memory-checksum/scripts/validate.py': sha256(script),
       },
     },
+  });
+}
+
+function verifyInstalledMemoryRuntime(consumer: FixtureConsumer, prefix: string): void {
+  const documents = [
+    `${prefix}memory-changelog/SKILL.md`,
+    `${prefix}memory-checksum/SKILL.md`,
+    `${prefix}memory-init/references/fresh-init-flow.md`,
+    `${prefix}memory-init/references/memory-root-and-asset-contract.md`,
+    `${prefix}memory-update/references/flow-update.md`,
+  ];
+  const runtimeRefs = new Set<string>();
+  for (const document of documents) {
+    const content = fs.readFileSync(path.join(consumer.root, '.claude/skills', document), 'utf-8');
+    const commands = [...content.matchAll(/^node\s+"([^"\n]+\.cjs)"\s+(?:hash|validate)\b/gm)];
+    if (commands.length === 0) throw new Error(`No memory runtime command in installed ${document}`);
+    for (const command of commands) runtimeRefs.add(command[1]);
+  }
+  expect([...runtimeRefs]).toEqual([
+    `$(pwd)/.claude/skills/${prefix}memory-checksum/scripts/memory-manifest.cjs`,
+  ]);
+  const runtime = [...runtimeRefs][0].replace('$(pwd)', consumer.root);
+  const memoryRoot = path.join(consumer.root, 'docs', 'brain');
+  const note = '# Invoice\nAmount: 12500 VND.\n';
+  const index = '# Memory\n[[data-model/invoice]]\n';
+  fs.mkdirSync(path.join(memoryRoot, 'data-model'), { recursive: true });
+  fs.writeFileSync(path.join(memoryRoot, 'data-model/invoice.md'), note);
+  fs.writeFileSync(path.join(memoryRoot, 'memory-index.md'), index);
+  fs.writeFileSync(path.join(memoryRoot, 'memory.yaml'), [
+    'version: "2"',
+    'generated_at: "2026-09-22T00:00:00Z"',
+    `memory_index_sha256: ${sha256(index)}`,
+    'files:',
+    '  - path: data-model/invoice.md',
+    `    sha256: ${sha256(note)}`,
+    '    updated_at: "2026-09-22T00:00:00Z"',
+    '    updated_by: integration-test',
+    '',
+  ].join('\n'));
+  const env = { ...process.env };
+  delete env.CLAUDE_PLUGIN_ROOT;
+  delete env.CLAUDE_SKILL_DIR;
+  delete env.CLAUDE_PROJECT_DIR;
+  delete env.NODE_PATH;
+  delete env.NODE_OPTIONS;
+  const hash = Bun.spawnSync({
+    cmd: ['node', runtime, 'hash', memoryRoot, 'data-model/invoice.md'],
+    cwd: consumer.root, env, stdout: 'pipe', stderr: 'pipe',
+  });
+  if (hash.exitCode !== 0) throw new Error(hash.stderr.toString());
+  expect(hash.stdout.toString().trim()).toBe(sha256(note));
+  const validation = Bun.spawnSync({
+    cmd: ['node', runtime, 'validate', memoryRoot],
+    cwd: consumer.root, env, stdout: 'pipe', stderr: 'pipe',
+  });
+  if (validation.exitCode !== 0) throw new Error(validation.stderr.toString());
+  expect(JSON.parse(validation.stdout.toString())).toEqual({
+    mismatches: [],
+    missing_from_manifest: [],
+    missing_from_disk: [],
+    verified_count: 1,
+    index_mismatch: false,
+    templates_mismatches: [],
   });
 }
 
@@ -127,10 +191,9 @@ describe('runtime asset transform regressions', () => {
 
     fs.rmSync(pluginRoot(consumer, 'tdk-memory'), { recursive: true, force: true });
     fs.rmSync(pluginRoot(consumer, 'tdk-utils'), { recursive: true, force: true });
+    verifyInstalledMemoryRuntime(consumer, 'tdk-');
 
     const expectations = [
-      ['skills/tdk-memory-changelog/SKILL.md', 'scripts/tdk-memory/compute-sha256-hashes.py'],
-      ['skills/tdk-memory-checksum/SKILL.md', 'skills/tdk-memory-checksum/scripts/validate-memory-checksums-against-manifest.py'],
       ['skills/brainstorming/SKILL.md', 'skills/brainstorming/scripts/brainstorm.py'],
       ['skills/shard-doc/SKILL.md', 'skills/shard-doc/scripts/shard_doc.py'],
     ];
@@ -147,7 +210,7 @@ describe('runtime asset transform regressions', () => {
     }
   });
 
-  test('actual memory plugin custom-prefix install uses transformed script plugin folders', () => {
+  test('actual memory plugin custom-prefix install runs the transformed skill-local runtime without source plugins', () => {
     const consumer = makeConsumer();
     const sourcePlugins = path.resolve('../../.specify/plugins');
     fs.cpSync(path.join(sourcePlugins, 'tdk-memory'), pluginRoot(consumer, 'tdk-memory'), { recursive: true });
@@ -167,13 +230,7 @@ describe('runtime asset transform regressions', () => {
 
     fs.rmSync(pluginRoot(consumer, 'tdk-memory'), { recursive: true, force: true });
 
-    const installedSkill = fs.readFileSync(
-      path.join(consumer.root, '.claude', 'skills', 'erc-memory-init', 'SKILL.md'),
-      'utf-8',
-    );
-    expect(installedSkill).toContain('$(pwd)/.claude/scripts/erc-memory/compute-sha256-hashes.py');
-    expect(installedSkill).not.toContain('.claude/scripts/tdk-memory');
-    expect(fs.existsSync(path.join(consumer.root, '.claude', 'scripts', 'erc-memory', 'compute-sha256-hashes.py'))).toBe(true);
-    expect(fs.existsSync(path.join(consumer.root, '.claude', 'scripts', 'tdk-memory', 'compute-sha256-hashes.py'))).toBe(false);
+    verifyInstalledMemoryRuntime(consumer, 'erc-');
+    expect(fs.existsSync(path.join(consumer.root, '.claude', 'skills', 'tdk-memory-checksum'))).toBe(false);
   });
 });

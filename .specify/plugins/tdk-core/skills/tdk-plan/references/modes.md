@@ -88,13 +88,13 @@ Natural-language sub-workspace/module mentions and CWD auto-detection remain acc
 | Step 4.5 Red team (Phase 06) | no | skip | yes |
 | Step 4.7 Validate (Phase 07) | prompt | skip | prompt |
 
-`--fast` keeps Step 0.memory and skips Phase 0.guardian. `--mode load` returns
+`--fast` keeps Step 0.memory and skips Phase 0.guardian. `mode: load` returns
 content the plan is actually written from, so it stays; guardian spawns a second
 full subagent pass over the drafted plan, making it the most expensive step in
-the flow. Guardian is additionally skipped in every mode when the
-binding-coverage precondition resolves to `none` or `unknown`; see
+the flow. Guardian skips zero binding coverage; unknown coverage blocks when
+validation is selected rather than silently disabling the gate. See
 `references/gates.md` Phase 0.guardian for that precondition, spawn details, and
-MCP_UNAVAILABLE handling. Only research / scope / deps / guardian / red-team /
+NOT CHECKED handling and persistent blocking state. Only research / scope / deps / guardian / red-team /
 validate are skipped in `--fast`; test modes are rejected before dispatch.
 
 `--red-team` and `--validate` are subcommand-equivalent action flags. They short-circuit straight into Phase 06 / 07 over an existing plan; they do NOT run Steps 0–4 again. `--migrate-artifacts` short-circuits immediately after project context and follows `migrate-artifacts-workflow.md`.

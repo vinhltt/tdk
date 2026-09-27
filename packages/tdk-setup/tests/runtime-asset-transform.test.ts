@@ -11,6 +11,7 @@ import {
   writeMultiPluginManifest,
   writePluginDependencyPolicy,
   writePluginFile,
+  type FixtureConsumer,
 } from './fixtures';
 
 const cliPath = path.resolve('src/index.ts');
@@ -39,6 +40,22 @@ function writeMemoryRuntimePlugin(consumer: ReturnType<typeof makeConsumer>, ski
         'scripts/compute-sha256-hashes.py': sha256(script),
         'skills/tdk-memory-init/SKILL.md': sha256(skillContent),
       },
+    },
+  });
+}
+
+function writeTemplateDirectoryPlugin(consumer: FixtureConsumer, reference: string): void {
+  const files = {
+    'skills/tdk-memory-init/SKILL.md': `# Templates\nRead \`${reference}\`.\n`,
+    'skills/tdk-memory-init/references/templates/memory/note.md.tpl': '# Seed\n',
+  };
+  for (const [relativePath, content] of Object.entries(files)) {
+    writePluginFile(consumer, relativePath, content, 'tdk-memory');
+  }
+  writeMultiPluginManifest(consumer, {
+    'tdk-memory': {
+      version: '1.0.0',
+      files: Object.fromEntries(Object.entries(files).map(([relativePath, content]) => [relativePath, sha256(content)])),
     },
   });
 }
@@ -81,6 +98,27 @@ describe('runtime asset transform planning', () => {
     expect(write?.targetRelativePath).toBe('.claude/skills/sample-memory-checksum/SKILL.md');
     expect(write?.content.toString('utf-8')).toContain('$(pwd)/.claude/skills/sample-memory-checksum/scripts/validate.py');
     expect(write?.content.toString('utf-8')).not.toContain('TDK_SKILL_ROOT');
+  });
+
+  test('resolves a template directory from shipped descendants under the custom skill prefix', () => {
+    const consumer = makeConsumer();
+    writeTemplateDirectoryPlugin(consumer, '${CLAUDE_SKILL_DIR}/references/templates/memory/');
+    const plan = buildPlan(consumer, ['tdk-memory'], 'erc-');
+    const skill = plan.writes.find((item) => item.sourceRelativePath === 'skills/tdk-memory-init/SKILL.md');
+    const directory = '.claude/skills/erc-memory-init/references/templates/memory/';
+    expect(skill?.content.toString('utf-8')).toBe(`# Templates\nRead \`$(pwd)/${directory}\`.\n`);
+    expect(plan.writes.find((item) => item.targetRelativePath === `${directory}note.md.tpl`)?.content.toString()).toBe('# Seed\n');
+  });
+
+  test.each([
+    'references/templates/missing/',
+    'references/templates/memory/../',
+    'references//templates/memory/',
+    'references/templates/memory/note.md.tpl/',
+  ])('rejects unsafe or unbacked directory reference %s', (relativePath) => {
+    const consumer = makeConsumer();
+    writeTemplateDirectoryPlugin(consumer, `\${CLAUDE_SKILL_DIR}/${relativePath}`);
+    expect(() => buildPlan(consumer, ['tdk-memory'])).toThrow(/skill runtime asset/);
   });
 
   test('fails planning when runtime asset placeholders cannot be resolved', () => {

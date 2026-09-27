@@ -56,6 +56,20 @@ function hasRelativeExecutableSourceRef(text: string): boolean {
   return relativePluginScriptRef.test(text) || relativeSkillScriptRef.test(text);
 }
 
+function registerSkillAsset(map: Map<string, string>, plugin: string, skill: string, rel: string, target: string): void {
+  map.set(`${plugin}/${skill}/${rel}`, commandPath(target));
+  // Directory references are witnessed by shipped descendants, never guessed from disk.
+  let directory = path.posix.dirname(rel);
+  let targetDirectory = path.posix.dirname(normalizeTargetRelativePath(target));
+  while (directory !== '.') {
+    const key = `${plugin}/${skill}/${directory}/`;
+    if (map.has(key)) break;
+    map.set(key, `${commandPath(targetDirectory)}/`);
+    directory = path.posix.dirname(directory);
+    targetDirectory = path.posix.dirname(targetDirectory);
+  }
+}
+
 export function buildRuntimeAssetMap(files: RuntimeAssetFile[]): RuntimeAssetMap {
   const pluginScripts = new Map<string, string>();
   const skillAssets = new Map<string, string>();
@@ -70,10 +84,10 @@ export function buildRuntimeAssetMap(files: RuntimeAssetFile[]): RuntimeAssetMap
 
     if (parts[0] === 'skills' && parts[1] && parts.length > 3 && (parts[2] === 'scripts' || parts[2] === 'references')) {
       const rel = normalizeAssetPath(parts.slice(2).join('/'), 'skill asset path');
-      skillAssets.set(`${file.plugin}/${parts[1]}/${rel}`, commandPath(file.targetRelativePath));
+      registerSkillAsset(skillAssets, file.plugin, parts[1], rel, file.targetRelativePath);
       const targetSkill = targetSkillName(file);
       if (targetSkill && targetSkill !== parts[1]) {
-        skillAssets.set(`${file.plugin}/${targetSkill}/${rel}`, commandPath(file.targetRelativePath));
+        registerSkillAsset(skillAssets, file.plugin, targetSkill, rel, file.targetRelativePath);
       }
     }
   }
@@ -114,7 +128,8 @@ function replacePluginScriptRef(file: RuntimeAssetFile, map: RuntimeAssetMap, pl
 
 function replaceSkillAssetRef(file: RuntimeAssetFile, map: RuntimeAssetMap, skill: string | undefined, rel: string): string {
   if (!skill) throw runtimeAssetError(file, 'skill-local runtime assets can only be used from files inside a skill');
-  const normalized = normalizeAssetPath(rel, 'skill runtime asset path');
+  const directory = rel.endsWith('/');
+  const normalized = normalizeAssetPath(directory ? rel.slice(0, -1) : rel, 'skill runtime asset path') + (directory ? '/' : '');
   const target = map.skillAssets.get(`${file.plugin}/${skill}/${normalized}`);
   if (!target) throw runtimeAssetError(file, `unknown skill runtime asset: ${skill}/${normalized}`);
   return target;

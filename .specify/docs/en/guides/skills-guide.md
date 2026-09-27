@@ -186,13 +186,21 @@ Excluded:
 
 | Skill | Summary | Main modes/options | Use when |
 |-------|---------|--------------------|----------|
-| `/tdk-memory-init` | Initialize domain memory structure. | project/domain setup inputs | A project needs `.specify/memory/` scaffolding. |
+| `/tdk-memory-init` | Initialize memory or materialize twenty owned templates without a domain interview. | `--memory-root`, `--ensure-templates`, `--refresh-templates` | A project needs file-backed memory or a template upgrade. |
 | `/tdk-memory-update` | Add or modify domain knowledge. | natural-language memory updates | Business rules, services, data models, flows, or decisions changed. |
 | `/tdk-memory-query` | Query project memory by natural language. | query text | Planning/implementation needs memory context. |
 | `/tdk-memory-changelog` | Record staged memory changes in `CHANGELOG.md`. | staged `.specify/memory/` diff | Memory edits are ready to document before commit. |
+| `/tdk-memory-checksum` | Read-only Node.js integrity validation; explicitly approved repair. | `--memory-root`, `--fix` | Detect drift or diagnose a malformed `memory.yaml` without silently accepting changed bytes. |
 | `/tdk-retro-collect` | Collect retrospective feedback after a TDK spec/session. | reviews, drift, UT results, traces, user feedback | A completed workflow should feed the learning loop. |
 | `/tdk-retro-propose` | Propose technical or memory learning deltas from feedback. | `retro-feedback.md` | Feedback needs reviewable learning changes. |
 | `/tdk-retro-apply` | Apply approved learning deltas. | approved `learning-delta.md` entries | Accepted retro learnings should update skills/docs/memory. |
+
+Memory skills require Node.js >=18, not Python or an external transport server.
+`memory.yaml` remains version `"2"`; optional template receipts are additive.
+Malformed manifests stop ordinary writers. TDK Guardian failures persist as NOT
+CHECKED and block implementation until validation succeeds or the user explicitly
+authorizes an unchecked run. Custom roots work within memory skills; upstream
+TDK existence gates still use `.specify/memory/`.
 
 ### Guide And Research Utilities
 
@@ -275,7 +283,7 @@ Use unit-test backfill separately when the goal is project/module unit testing i
 
 ### Internal Helpers Not Listed As User Commands
 
-These exist in source but are not cataloged as direct user commands: `_shared`, `tdk-memory-checksum`, `tdk-load-project-context`, `tdk-validate-task-id`, `tdk-branch-preflight`, `brainstorming`, `common`, `context-engineering`, `obsidian-brain`, `problem-solving`, `research`, and other `user-invocable: false` helpers.
+These exist in source but are not cataloged as direct user commands: `_shared`, `tdk-load-project-context`, `tdk-validate-task-id`, `tdk-branch-preflight`, `brainstorming`, `common`, `context-engineering`, `obsidian-brain`, `problem-solving`, `research`, and other `user-invocable: false` helpers.
 
 ---
 

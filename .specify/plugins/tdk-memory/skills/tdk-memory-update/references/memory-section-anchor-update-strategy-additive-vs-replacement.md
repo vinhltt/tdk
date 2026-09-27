@@ -125,8 +125,8 @@ This is non-negotiable. A missing closing tag means the file was corrupted
 
 When `--screen auth/login` is given and `screens/auth/login.md` does not exist:
 
-1. Create directory: `.specify/memory/screens/auth/`
-2. Copy screen template from `tdk-memory-init/references/` templates
+1. Enforce root containment, then create `<memoryRoot>/screens/auth/`
+2. Read the materialized screen template from `<memoryRoot>/_templates/`
 3. Replace `{Screen Name}` with "Login", set `updated_at` to today
 4. Apply the user's change to the appropriate section(s)
 5. Add entry to `memory.yaml`, rebuild `memory-index.md`

@@ -1,0 +1,73 @@
+{
+  "version": "2",
+  "generated_at": "2026-09-22T00:00:00Z",
+  "memory_index_sha256": "3d3382c8a1edef61ffeb7fa65080d638f0a305673d517f67648c9b88fcf3d881",
+  "files": [
+    {
+      "path": "data-model/ambiguous-a.md",
+      "sha256": "340df7ecade9166fba99012a7a928831e56d784339b7841a2a9bdc2656d35826",
+      "updated_at": "2026-09-22T00:00:00Z",
+      "updated_by": "fixture"
+    },
+    {
+      "path": "data-model/ambiguous-b.md",
+      "sha256": "c16da79bccd46f40577ccce9c3a4eb85caf8838aba3146a99c2690fbe91ba84b",
+      "updated_at": "2026-09-22T00:00:00Z",
+      "updated_by": "fixture"
+    },
+    {
+      "path": "data-model/ineligible.md",
+      "sha256": "f57a11cfadceafe7d5fc465891fd8f34ef6d2950d0f652e1e7d42a1eaf75bcae",
+      "updated_at": "2026-09-22T00:00:00Z",
+      "updated_by": "fixture"
+    },
+    {
+      "path": "data-model/mixed-active.md",
+      "sha256": "ba8f88dfeca0f37a9e7b80ccace93fc83d1c92b6945c2c93bf6cce636d48d6e2",
+      "updated_at": "2026-09-22T00:00:00Z",
+      "updated_by": "fixture"
+    },
+    {
+      "path": "data-model/mixed-unverified.md",
+      "sha256": "272273e5795d86986160f8c8b204d16aae3578c3c8162f99ab271270364bf8e4",
+      "updated_at": "2026-09-22T00:00:00Z",
+      "updated_by": "fixture"
+    },
+    {
+      "path": "data-model/tied-1.md",
+      "sha256": "188fc41dd0ca82aaf09533ba03e3670de4ec1f15e56c0d0a75c0be9da3e97743",
+      "updated_at": "2026-09-22T00:00:00Z",
+      "updated_by": "fixture"
+    },
+    {
+      "path": "data-model/tied-2.md",
+      "sha256": "14588ff6d251280d3908bf594e2e205025d96df01513919a8f9d192d2f3245f6",
+      "updated_at": "2026-09-22T00:00:00Z",
+      "updated_by": "fixture"
+    },
+    {
+      "path": "data-model/tied-3.md",
+      "sha256": "a3f638ed891bcb362ce0d42f1bed3ee01a84674d15db602f857be23add51db74",
+      "updated_at": "2026-09-22T00:00:00Z",
+      "updated_by": "fixture"
+    },
+    {
+      "path": "data-model/tied-4.md",
+      "sha256": "09f5db7105a26a9a517c0249d5b01433754e4cc768df03a61ba37d7f03d18265",
+      "updated_at": "2026-09-22T00:00:00Z",
+      "updated_by": "fixture"
+    },
+    {
+      "path": "data-model/tied-5.md",
+      "sha256": "591892792df3747525a6cc9e3acb413fbe573b002472033e1bee8801bce9e187",
+      "updated_at": "2026-09-22T00:00:00Z",
+      "updated_by": "fixture"
+    },
+    {
+      "path": "data-model/tied-6.md",
+      "sha256": "c658e410aeadd00a059673db3e576ab49ad0e34f80456ad4e36276dc9b21c058",
+      "updated_at": "2026-09-22T00:00:00Z",
+      "updated_by": "fixture"
+    }
+  ]
+}

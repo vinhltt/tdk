@@ -2,7 +2,7 @@
 name: tdk-constitution
 description: "Create or update the project constitution and constitution-owned project knowledge artifacts from interactive or provided principle inputs"
 metadata:
-  version: "1.0.1"
+  version: "1.1.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -32,10 +32,6 @@ Use an explicit project-init branch when the user passes `--init` or asks to ini
 project docs/knowledge. Accepted init input is either an inline brief or a markdown file
 inside the workspace.
 
-## Skill References
-
-> Shared base instructions: `.specify/_shared/skills/brainstorm.md`
-
 ### Embedded Brainstorming (Principle Trade-offs)
 
 **Mode:** Embedded -- reasoning technique only.
@@ -64,6 +60,10 @@ approved amendments across dependent artifacts.
 
 **Note**: This is a PROJECT-LEVEL document that applies to ALL features. It does NOT require a task ID.
 
+Track every file created or changed by this invocation and its exact post-write
+SHA256. Both actionable modes must finalize those accepted writes through
+`tdk-memory-update --finalize-written` before reporting completion; template
+materialization alone is not an up-to-date knowledge index or checksum baseline.
 ### Mode Resolution
 
 `/tdk-constitution` runs in one of three modes, resolved from the passed flag and
@@ -89,8 +89,11 @@ clear message on every non-actionable combination instead of guessing:
 | no flag | missing | no flag+missing stops and points to `--init` |
 | conflicting/unknown | any | conflicting or unknown modes stop |
 
-After mode resolution, apply the migration and report-stub policy in the
-sections below.
+After resolving an actionable mode and **before creating or editing any file**,
+perform the public `tdk-memory-init --ensure-templates` invocation in
+`### Arc42 And Typed Memory Templates`. This is also the shared YAML preflight
+for both init and update; a malformed existing manifest stops without a
+constitution write. Then apply the migration and report-stub policy below.
 
 ### Project Init Contract
 
@@ -138,6 +141,8 @@ When running `/tdk-constitution --init <brief|file>`:
    confirmation. Stale legacy targets are reported, not silently overwritten.
 10. README conflicts with constitution or memory authority must stop for confirmation.
    Do not silently derive project authority from README when memory/constitution disagree.
+11. Finalize the exact written files through the public handoff below before
+    reporting success. Existing-domain notes and unrelated receipts stay unchanged.
 
 ### Constitution Bootstrap Source
 
@@ -147,29 +152,34 @@ Load: `templates/constitution.md.tpl`
 
 ### Arc42 And Typed Memory Templates
 
-Use these repository templates when init mode creates or updates project knowledge
-artifacts. Arc42 files are summary read-models (`binding: false`) and must link
+For both actionable `--init` and `--update` modes, resolve `<memoryRoot>` from
+`memory.path` with the existing default, then invoke
+`/tdk-memory-init --ensure-templates --memory-root <memoryRoot>` by skill name
+before rendering. This materialize-only invocation must not interview, delete
+domains, or force-reinit. Stop rendering if materialization fails. Never read an
+installed file from another plugin. Read only the workspace templates below.
+Arc42 files are summary read-models (`binding: false`) and must link
 to typed memory files for any binding claim.
 
 | Template | Target under `memory.path` |
 |----------|----------------------------|
-| `.specify/templates/memory/arc42-readme-template.md.tpl` | `arc42/README.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/01-introduction-and-goals.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/02-constraints.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/03-context-and-scope.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/04-solution-strategy.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/05-building-block-view.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/06-runtime-view.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/07-deployment-view.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/08-crosscutting-concepts.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/09-architecture-decisions.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/10-quality-requirements.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/11-risks-and-technical-debt.md` |
-| `.specify/templates/memory/arc42-summary-template.md.tpl` | `arc42/12-glossary.md` |
-| `.specify/templates/memory/decision-record-template.md.tpl` | `decisions/{decision-id}.md` |
-| `.specify/templates/memory/risk-debt-template.md.tpl` | `risks-and-debt/{risk-or-debt-id}.md` |
-| `.specify/templates/memory/quality-requirement-template.md.tpl` | `quality-requirements/{quality-attribute}.md` |
-| `.specify/templates/memory/glossary-template.md.tpl` | `glossary/{term}.md` |
+| `<memoryRoot>/_templates/arc42-readme-template.md.tpl` | `arc42/README.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/01-introduction-and-goals.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/02-constraints.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/03-context-and-scope.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/04-solution-strategy.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/05-building-block-view.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/06-runtime-view.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/07-deployment-view.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/08-crosscutting-concepts.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/09-architecture-decisions.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/10-quality-requirements.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/11-risks-and-technical-debt.md` |
+| `<memoryRoot>/_templates/arc42-summary-template.md.tpl` | `arc42/12-glossary.md` |
+| `<memoryRoot>/_templates/decision-record-template.md.tpl` | `decisions/{decision-id}.md` |
+| `<memoryRoot>/_templates/risk-debt-template.md.tpl` | `risks-and-debt/{risk-or-debt-id}.md` |
+| `<memoryRoot>/_templates/quality-requirement-template.md.tpl` | `quality-requirements/{quality-attribute}.md` |
+| `<memoryRoot>/_templates/glossary-template.md.tpl` | `glossary/{term}.md` |
 
 Creation/update rules:
 
@@ -272,6 +282,17 @@ Follow this execution flow:
 7. Write the completed constitution back to `.specify/memory/constitution.md` (overwrite).
    If init rendered project knowledge artifacts, update only AUTO-GEN sections unless the
    user explicitly confirms markerless conversion.
+
+   Before completion in either mode, write a temporary workspace handoff JSON
+   `{"writer":"tdk-constitution","files":[{"path":"<root-relative-written-path>","sha256":"<exact-post-write-SHA256>"}]}`
+   containing only files this invocation actually created/changed, including
+   constitution and rendered arc42/typed artifacts. Invoke
+   `/tdk-memory-update --finalize-written <handoff.json> --memory-root <memoryRoot>`
+   by name. It regenerates binding coverage/index and publishes only those
+   authorized receipts while preserving templates and unrelated state. Never
+   read another plugin's implementation paths. Finalization failure STOPs the
+   constitution workflow; do not report success with unindexed/untracked facts.
+   Remove the temporary handoff after a successful return.
 
 8. Output a final summary to the user with:
    - New version and bump rationale.

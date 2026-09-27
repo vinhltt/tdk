@@ -8,7 +8,7 @@ const CONSTITUTION_SKILL_PATH = resolve(
 );
 const ARC42_SUMMARY_TEMPLATE_PATH = resolve(
   import.meta.dir,
-  '../../../templates/memory/arc42-summary-template.md.tpl',
+  '../../../plugins/tdk-memory/skills/tdk-memory-init/references/templates/memory/arc42-summary-template.md.tpl',
 );
 const CURRENT_AUTHORITY_GUIDES = [
   ['English workflow map', '../../../docs/en/guides/workflow-map.md'],
@@ -52,7 +52,6 @@ describe('tdk-constitution arc42 project context contract', () => {
     expect(canonicalSection).toContain('arc42/01-introduction-and-goals.md');
     expect(canonicalSection).toContain('arc42/03-context-and-scope.md');
     expect(canonicalSection).toContain('arc42/04-solution-strategy.md');
-    expect(canonicalSection).toContain('.specify/templates/memory/arc42-summary-template.md.tpl');
     expect(canonicalSection).toContain('Product-level facts live in constitution plus typed memory routes');
     expect(skill).toContain('Validate project knowledge artifacts');
     expect(canonicalSection).not.toContain('product-context.md');

@@ -1,0 +1,11 @@
+{
+  "name": "tdk-memory-marketplace",
+  "owner": { "name": "VinhLTT" },
+  "plugins": [
+    {
+      "name": "tdk-memory",
+      "source": "./",
+      "description": "File-backed project memory, deterministic queries, integrity receipts, and read-only Guardian validation."
+    }
+  ]
+}

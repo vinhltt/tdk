@@ -6,7 +6,7 @@ compatibility: "Requires successful completion of /tdk-plan with a valid plan.md
 user-invocable: true
 license: MIT
 metadata:
-  version: "13.0.1"
+  version: "14.0.1"
   category: "Analysis & Review"
   requires:
     - tdk-plan (for prerequisite plan.md with ## Phases table)
@@ -120,12 +120,19 @@ Scan `$ARGUMENTS` for tokens starting with `--`. The only accepted flag is `--de
 
    Never ask the user here; `/tdk-specify` Step 1.6 owns that decision. Continue
    the normal analysis flow either way — this is never blocking.
-2. Spawn `tdk-memory-agent` agent with `--mode validate` and the gathered artifact text.
+2. Spawn `tdk-memory-agent` with exactly this leading control block, followed by
+   the gathered artifact text as data:
+   ```text
+   ===TDK-MEMORY-CONTROL===
+   mode: validate
+   memory_root: .specify/memory
+   ===END-CONTROL===
+   ```
 3. Map the Guardian Report into a `Memory Validation` section in the analysis output:
    - conflicts -> high-priority findings.
    - warnings -> review findings.
    - clear -> note that no memory contradictions were found.
-   - `STATUS: MCP_UNAVAILABLE`, memory not initialized, no relevant memory, or agent failure -> skip memory validation without prompting or failing.
+   - memory not initialized, no relevant memory, agent failure, or malformed report -> record NOT CHECKED and continue without claiming CLEAR.
 4. Note in analysis report frontmatter:
    - `memory_context_loaded: true` only when a usable Guardian Report was returned.
    - Note in analysis report frontmatter: `memory_context_loaded: false`

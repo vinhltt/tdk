@@ -1,0 +1,68 @@
+[
+  {
+    "name": "equal-alias",
+    "query": "Twin",
+    "status": "warning_ambiguous",
+    "candidate_paths": [
+      "data-model/ambiguous-a.md",
+      "data-model/ambiguous-b.md"
+    ],
+    "resolved_path": null
+  },
+  {
+    "name": "mixed-eligibility",
+    "query": "Mixed",
+    "status": "resolved",
+    "candidate_paths": [
+      "data-model/mixed-active.md",
+      "data-model/mixed-unverified.md"
+    ],
+    "resolved_path": "data-model/mixed-active.md"
+  },
+  {
+    "name": "ineligible-exact",
+    "query": "Unverified",
+    "status": "warning_unverified",
+    "candidate_paths": [
+      "data-model/ineligible.md"
+    ],
+    "resolved_path": "data-model/ineligible.md"
+  },
+  {
+    "name": "known-path",
+    "query": "data-model/ambiguous-b.md",
+    "status": "resolved",
+    "candidate_paths": [
+      "data-model/ambiguous-b.md"
+    ],
+    "resolved_path": "data-model/ambiguous-b.md"
+  },
+  {
+    "name": "six-way",
+    "query": "SixWay",
+    "status": "warning_ambiguous",
+    "candidate_paths": [
+      "data-model/tied-1.md",
+      "data-model/tied-2.md",
+      "data-model/tied-3.md",
+      "data-model/tied-4.md",
+      "data-model/tied-5.md",
+      "data-model/tied-6.md"
+    ],
+    "resolved_path": null
+  },
+  {
+    "name": "exclude-template",
+    "query": "TemplateOnly",
+    "status": "not_found",
+    "candidate_paths": [],
+    "resolved_path": null
+  },
+  {
+    "name": "exclude-deprecated",
+    "query": "DeprecatedOnly",
+    "status": "not_found",
+    "candidate_paths": [],
+    "resolved_path": null
+  }
+]

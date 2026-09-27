@@ -38,16 +38,12 @@ Wait for all researcher reports before continuing to design. If any researcher r
 
 ## Project Knowledge Sources
 
-**Obsidian MCP** (project knowledge across the vault):
+**Project memory** (file-backed knowledge):
 
-```
-- vault(action="search", query="feature-name", searchStrategy="auto", ranked=true, includeSnippets=true) -> discover candidate files
-- vault(action="search", query="memory-index", searchStrategy="filename", ranked=true) -> find known memory files
-- vault(action="read", path="memory/memory-index.md", raw=true) -> read evidence files
-```
-
-Search ranks candidate files only; verify important claims by read before using
-them in research conclusions.
+Read `.specify/memory/memory-index.md`, use its routing/domain tables to nominate
+contained paths, then scoped Glob/Grep and exact Read for evidence. Exclude
+template assets and deprecated files. Use `tdk-memory-query` for typed entities;
+search metadata never establishes identity or binding eligibility.
 
 **AI Docs Manager** — `tdk-memory-query` skill OR ask `tdk-memory-agent` agent. Reads `.specify/memory/` based on feature domain.
 

@@ -6,6 +6,38 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.118.0] - 2026-09-25
+
+### Added
+- **[tdk-memory]** Extracted as a Git subtree of the public MIT repo `vinhltt/tdk-memory`, pinned by `.specify/plugins/tdk-memory.upstream-pin`; plugin version stays `3.0.3` (upstream-owned)
+  - Standalone marketplace, `LICENSE`, `README.md`, and Node-only plugin-local contract tests
+  - Bundled Node.js >=18 checksum runtime (`memory-manifest.cjs` + TS source, YAML parser license); consumers need no Python, Bun, or install step
+  - Vendored Obsidian Markdown and JSON Canvas references with the upstream MIT notice; runtime dependency on `tdk-utils` removed
+  - All twenty memory templates now owned by `tdk-memory-init` (`--ensure-templates`, `--refresh-templates`) with additive `templates[]` receipts in `memory.yaml` (still version `"2"`)
+  - Explicit memory-root resolution, containment boundaries, malformed-manifest preflight, approval-gated checksum repair, and deterministic free-text query ranking
+- **[Scripts]** New maintainer and gate commands
+  - `util/check-memory-subtree.ts`: compares the tdk-memory prefix with the pinned upstream commit via `git ls-tree` paths, modes, and blob IDs; rejects `.git`, `.logs/`, and plugin tests in the release inventory
+  - `util/memory-gate.ts`: ordered memory-validation precondition evaluation and deterministic Guardian report verification
+- **[Docs]** `docs/tdk-memory-subtree.md`: one-way upstream→TDK subtree sync procedure and what the pin guard proves
+
+### Changed
+- **[BREAKING][tdk-core]** Memory callers (`tdk-plan`, `tdk-implement`, `tdk-clarify`, `tdk-consistency-check`, `tdk-specify`) send a leading control header and use file-backed validation; external transport fallback removed
+- **[BREAKING][tdk-core]** Failed or malformed Guardian validation persists as NOT CHECKED and blocks implementation unless the user explicitly authorizes an unchecked run; unknown binding coverage no longer silently skips requested validation
+- **[tdk-core]** Plan schema v3 gains optional `memory_gate`, `memory_gate_reason`, `memory_gate_at`, `memory_gate_actor`; resumed sessions re-confirm unchecked authorization and hand-edited metadata cannot grant it
+- **[BREAKING][tdk-memory]** Memory operations are file-only; agent invocations require a caller-owned control header instead of payload-scanned mode flags
+- **[tdk-inception]** `tdk-constitution` materializes memory templates by skill name from the selected memory root before writing, and stops on malformed memory manifests during shared preflight
+- **[Scripts]** Contract and release hardening
+  - `setup-plan --force` replaces plan content atomically while preserving memory-gate frontmatter and the `## Memory Constraints` section; refuses malformed frontmatter, concurrent edits, and plan paths resolving outside the artifact host
+  - Manifest file scan skips `node_modules/` and prunes excluded directories before traversal
+- **[Claude Skills]** `tdk-bump` release-manifest resolver honors directory-glob `doNotShip` patterns, compiling them once and pruning excluded directories
+- **[Setup]** `distribute.json` no longer ships nested `.logs/`, the retired `.specify/templates/memory/`, or tdk-memory `node_modules/` and `tests/`
+- **[Docs]** EN/VI skills guide: `tdk-memory-init` template modes, `tdk-memory-checksum` listed as a user command, Node.js >=18 requirement and Guardian NOT CHECKED behavior
+
+### Removed
+- **[tdk-memory]** Python checksum scripts (`compute-sha256-hashes.py`, `validate-memory-checksums-against-manifest.py`), MCP transport flows (`flow-available-mcp.md`, `flow-update-mcp.md`), and the `_shared` skill (was 0.1.0) with its Obsidian MCP action contract
+- **[Templates]** `.specify/templates/memory/` seed directory — moved into `tdk-memory-init` references
+- **[Scripts]** `tdk-memory-v3-flow-contract` and `tdk-memory-v3-routing-contract` tests, superseded by plugin-local tests and the subtree pin guard
+
 ## [1.117.0] - 2026-09-20
 
 ### Changed

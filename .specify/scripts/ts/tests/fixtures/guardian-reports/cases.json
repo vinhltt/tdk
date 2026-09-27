@@ -1,0 +1,44 @@
+[
+  {
+    "name": "empty",
+    "report": "empty.txt",
+    "exit_code": 0,
+    "expected_gate": "not-checked"
+  },
+  {
+    "name": "spawn-failure",
+    "report": "spawn-failure.txt",
+    "exit_code": 7,
+    "expected_gate": "not-checked"
+  },
+  {
+    "name": "bare-clear",
+    "report": "bare-clear.txt",
+    "exit_code": 0,
+    "expected_gate": "not-checked"
+  },
+  {
+    "name": "clear-with-conflict",
+    "report": "clear-with-conflict.txt",
+    "exit_code": 0,
+    "expected_gate": "not-checked"
+  },
+  {
+    "name": "two-actions",
+    "report": "two-actions.txt",
+    "exit_code": 0,
+    "expected_gate": "not-checked"
+  },
+  {
+    "name": "valid-clear",
+    "report": "valid-clear.txt",
+    "exit_code": 0,
+    "expected_gate": "clear"
+  },
+  {
+    "name": "valid-block",
+    "report": "valid-block.txt",
+    "exit_code": 0,
+    "expected_gate": "block-impl"
+  }
+]

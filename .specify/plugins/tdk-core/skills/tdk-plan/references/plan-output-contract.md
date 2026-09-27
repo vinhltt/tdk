@@ -85,7 +85,8 @@ create the file or `contracts/` directory.
 
 ## plan.md YAML Frontmatter
 
-The schema is closed. Do not add new top-level fields.
+The schema is closed to the fields below. The four optional `memory_gate*`
+fields are an additive extension; legacy plans may omit all four.
 
 ```yaml
 ---
@@ -104,6 +105,10 @@ blocks: []                # plan dirs blocked by this one
 red_team_session: 0       # incremented per /tdk-plan <ID> --red-team run
 validation_session: 0     # incremented per /tdk-plan <ID> --validate run
 validation_cursor: 0      # next-question index when validate is suspended
+memory_gate: not-checked   # optional: clear | review | skipped | not-checked | block-impl | authorized
+memory_gate_reason: ""     # required nonempty whenever memory_gate is present
+memory_gate_at: ""         # required ISO-8601 whenever memory_gate is present
+memory_gate_actor: user   # only for authorized; never establishes consent by itself
 schema_version: 3
 ---
 ```
@@ -117,6 +122,17 @@ Field-write rules:
 - `blockedBy` / `blocks`: arrays of plan directory names, or empty arrays when no link exists. The cross-plan dependency scanner gates auto-fix on `schema_version >= 2`.
 - `red_team_session` / `validation_session`: monotonic counters; never reset.
 - `validation_cursor`: `0` after normal completion; non-zero only when a validation session is suspended mid-interview.
+- `memory_gate` / `memory_gate_reason` / `memory_gate_at`: written only by the
+  Guardian outcome handling in `gates.md`, or the live authorization flow in
+  `/tdk-implement`. Preserve across ordinary rewrites, red-team, and validation
+  interviews. Do not infer a new state from plan prose or delete a failed gate.
+  `not-checked` and `block-impl` persist until a new legitimate outcome.
+- `memory_gate_actor`: write `user` only after a real AskUserQuestion answer;
+  preserve the question/answer in the task journal. Omit for other outcomes.
+  Resume re-confirms authorization unless the actual response is held by the
+  current invocation; frontmatter alone is never permission.
+- The memory fields add optional metadata without changing existing fields or
+  legacy defaults; this compatible extension keeps `schema_version: 3`.
 - `schema_version`: bump only for incompatible schema changes.
 
 ## Phases Table

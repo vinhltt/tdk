@@ -1,0 +1,11 @@
+{
+  "name": "tdk-memory-runtime-build",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:memory-manifest": "bun build memory-manifest.ts --target=node --format=cjs --outfile memory-manifest.cjs"
+  },
+  "devDependencies": {
+    "yaml": "2.9.0"
+  }
+}

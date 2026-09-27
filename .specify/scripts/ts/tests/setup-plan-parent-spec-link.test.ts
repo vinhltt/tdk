@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { parse } from 'yaml';
+import { implementationGate } from '../src/commands/util/memory-gate';
 
 const CLI = resolve(import.meta.dir, '../src/commands/util/setup-plan.ts');
 
@@ -9,8 +11,9 @@ const CLI = resolve(import.meta.dir, '../src/commands/util/setup-plan.ts');
 async function runCli(
   taskId: string,
   tmpDir: string,
+  args: string[] = [],
 ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
-  const proc = Bun.spawn(['bun', CLI, taskId], {
+  const proc = Bun.spawn(['bun', CLI, taskId, ...args], {
     stdout: 'pipe',
     stderr: 'pipe',
     env: { ...process.env, CLAUDE_PROJECT_DIR: tmpDir },
@@ -91,6 +94,38 @@ describe('setup-plan parent_spec link-integrity check', () => {
     const { exitCode, stderr } = await runCli('feat-200', tmpDir);
     expect(exitCode).toBe(0);
     expect(stderr).not.toContain('ERROR: parent_spec');
+  });
+
+  it('preserves a failed memory gate and its constraints across a forced rewrite', async () => {
+    tmpDir = mkdtempSync(join(tmpdir(), 'setup-plan-gate-'));
+    writeSpecWithFrontmatter(tmpDir, 'feat-200', { title: 'Gated' });
+    const templates = join(tmpDir, '.specify/templates');
+    mkdirSync(templates, { recursive: true });
+    writeFileSync(join(templates, 'plan-template.md.tpl'), '# New plan template\n\n## Phases\n\n');
+    const plan = join(tmpDir, '.specify/feature/feat-200/plan.md');
+    writeFileSync(plan, '---\nmemory_gate: not-checked\nmemory_gate_reason: agent failed\nmemory_gate_at: 2026-09-22T00:00:00Z\n---\n# Old plan\n\n## Memory Constraints\n\nKeep account.id non-null.\n\n## Old Tasks\n\nObsolete work\n');
+    const result = await runCli('feat-200', tmpDir, ['--force']);
+    expect(result.exitCode).toBe(0);
+    const rewritten = readFileSync(plan, 'utf8');
+    const metadata = parse(/^---\n([\s\S]*?)\n---/.exec(rewritten)![1]!);
+    expect(implementationGate(metadata)).toBe('block');
+    expect(rewritten).toContain('Keep account.id non-null.');
+    expect(rewritten).toContain('# New plan template');
+    expect(rewritten).not.toContain('Obsolete work');
+  });
+
+  it('does not erase an unreadable gate during forced regeneration', async () => {
+    tmpDir = mkdtempSync(join(tmpdir(), 'setup-plan-malformed-'));
+    writeSpecWithFrontmatter(tmpDir, 'feat-200', { title: 'Malformed gate' });
+    const templates = join(tmpDir, '.specify/templates');
+    mkdirSync(templates, { recursive: true });
+    writeFileSync(join(templates, 'plan-template.md.tpl'), '# New plan\n');
+    const plan = join(tmpDir, '.specify/feature/feat-200/plan.md');
+    const original = '---\nmemory_gate: [not-checked\n---\n# Existing plan\n';
+    writeFileSync(plan, original);
+    const result = await runCli('feat-200', tmpDir, ['--force']);
+    expect(result.exitCode).not.toBe(0);
+    expect(readFileSync(plan, 'utf8')).toBe(original);
   });
 
   it('non-default-category parent resolves to correct dir — exitCode 0 and no ERROR: parent_spec in stderr', async () => {

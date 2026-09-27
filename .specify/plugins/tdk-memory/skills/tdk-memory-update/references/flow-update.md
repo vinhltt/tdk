@@ -1,15 +1,15 @@
-# Update Flow — Normal (No MCP)
+# Update Flow
 
-> Used when `MCP_AVAILABLE = false`. All paths are **disk paths** relative to project root.
-> Uses Claude Code built-in tools: Read, Glob, Grep, Edit, Write.
+All paths are disk paths under the resolved memory root. Use Read, Glob, Grep,
+Edit, and Write after the shared root/runtime/YAML preflight.
 
 ## Step 1: Guard checks + Read memory-index.md
 
-1. `Glob(".specify/memory/memory-index.md")` → must return a result
-2. `Glob(".specify/memory/memory.yaml")` → must return a result
+1. `Glob("<memoryRoot>/memory-index.md")` → must return a result
+2. `Glob("<memoryRoot>/memory.yaml")` → must return a result
    - Either missing → STOP: "Run /tdk-memory-init first."
 
-3. `Read(".specify/memory/memory-index.md")` — parse:
+3. `Read("<memoryRoot>/memory-index.md")` — parse:
    - Extract `## Routing Rules` table: content type → target pattern + template mapping
    - Extract `## Domain Map` table: valid domain names + folder paths
 
@@ -59,7 +59,10 @@ Follow `references/domain-source-extraction-flow.md`.
 
 ## Step 3: Read template
 
-`Read(".specify/templates/memory/{type}-template.md.tpl")` based on content type.
+Invoke `/tdk-memory-init --ensure-templates --memory-root <memoryRoot>` by name.
+Append `--allow-external-root` only if explicitly supplied by this invocation;
+carry that same permission to every hash/validate call, never infer it from config.
+`Read("<memoryRoot>/_templates/{type}-template.md.tpl")` based on content type.
 
 If missing: STOP "Template not found. Re-run /tdk-memory-init to restore templates."
 
@@ -100,7 +103,7 @@ If target does NOT exist: skip (Step 5 creates from template).
 
 **New file:**
 
-`Write(".specify/memory/{resolved-path}", content)` — create from template, replace placeholders (`{domain}`, `{Domain}`, `{module}`, `{YYYY-MM-DD}`), fill sections. Then proceed to Step 5.1.
+`Write("<memoryRoot>/{resolved-path}", content)` — create from template, replace placeholders (`{domain}`, `{Domain}`, `{module}`, `{YYYY-MM-DD}`), fill sections. Enforce both containment layers before writing. Then proceed to Step 5.1.
 
 **Existing file** — use Edit tool:
 
@@ -121,7 +124,7 @@ If target does NOT exist: skip (Step 5 creates from template).
 - `Edit` old value → new value (e.g. `updated_at: {today ISO date}`)
 
 *When file has Obsidian block IDs (`^block-id`) — prefer block targeting:*
-- `Grep("\\^{file-slug}-{section-name}", ".specify/memory/{file}")` to locate block
+- `Grep("\\^{file-slug}-{section-name}", "<memoryRoot>/{file}")` to locate block
 - `Edit` to append new entry before the block ID line
 
 Then proceed to Step 5.2.
@@ -214,12 +217,14 @@ Follow `references/regenerate-memory-index-flow.md`.
 
 1. Recompute SHA256:
 ```bash
-$VENV_PY "${CLAUDE_PLUGIN_ROOT}/scripts/compute-sha256-hashes.py" \
-  "$(pwd)/.specify/memory/" "{relative-file-path}"
+node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "{relative-file-path}"
 ```
 
 2. Update `memory.yaml`: `sha256`, `updated_at`, `updated_by: "tdk-memory-update"`
 3. Compute SHA256 of regenerated `memory-index.md` → store as `memory_index_sha256`
+4. Preserve `templates[]`, unrelated file records, and metadata. Validate a
+   temporary YAML candidate, then publish under the shared concurrency contract.
 
 Report:
 ```

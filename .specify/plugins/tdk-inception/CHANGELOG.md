@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.1.1] - 2026-09-25
+
+### Changed
+- Constitution init and update invoke memory template materialization by skill name before writing. Templates are read from the selected memory root, not another plugin or the removed shared seed directory.
+- Existing malformed memory manifests stop constitution writes during shared preflight; existing domains and template receipts remain intact.
+
 ## [1.1.0] - 2026-08-09
 
 ### Added

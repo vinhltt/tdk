@@ -13,6 +13,11 @@
   ],
   "doNotShip": [
     ".specify/plugins/tdk-core/.logs/",
+    "**/.logs/",
+    ".specify/templates/memory/",
+    ".specify/plugins/tdk-memory/node_modules/",
+    ".specify/plugins/tdk-memory/**/node_modules/",
+    ".specify/plugins/tdk-memory/tests/",
     ".specify/configurations/",
     ".specify/memory/",
     ".specify/CHANGELOG.md",

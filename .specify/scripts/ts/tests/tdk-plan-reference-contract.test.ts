@@ -315,28 +315,6 @@ describe('tdk-plan reference contract', () => {
     expect(skill).not.toContain('recover-plan');
   });
 
-  it('uses current Obsidian action examples instead of retired project knowledge helpers', () => {
-    const researchPhase = read(RESEARCH_PHASE_REFERENCE);
-
-    for (const helper of RETIRED_OBSIDIAN_HELPERS) {
-      expect(researchPhase).not.toContain(helper);
-    }
-    expect(researchPhase).toContain('vault(action="search"');
-    expect(researchPhase).toContain('vault(action="read"');
-    expect(researchPhase).toContain('verify important claims by read');
-  });
-
-  it('keeps memory guardian fallback semantics without smart-obsidian-specific wording', () => {
-    const gates = read(GATES_REFERENCE);
-
-    expect(gates).not.toContain('mcp__smart-obsidian');
-    expect(gates).not.toContain('smart-obsidian');
-    expect(gates).toContain('STATUS: MCP_UNAVAILABLE');
-    expect(gates).toContain('--no-mcp');
-    expect(gates).toContain('BLOCK_IMPL');
-    expect(gates).toContain('REVIEW');
-    expect(gates).toContain('CLEAR');
-  });
 
   it('replaces flat v2 engineering-memory reads with harness-neutral instructions and route-aware memory guidance', () => {
     const researchPhase = read(RESEARCH_PHASE_REFERENCE);

@@ -1,6 +1,6 @@
 ---
 name: tdk-memory-query
-description: "Query .specify/memory/ knowledge base by natural language. Returns
+description: "Query project memory knowledge by natural language. Returns
   structured context: business rules, services, data models, flows, integrations,
   decisions, quality requirements, reports, operations, risks, and arc42 summaries
   matching the query.
@@ -36,9 +36,19 @@ user-invocable: true
 argument-hint: "Natural language query with optional flags"
 ---
 
+## Memory root resolution
+
+Before dispatch, load
+`${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-init/references/memory-root-and-asset-contract.md`.
+Resolve `<memoryRoot>`, enforce both containment layers, and run read-only YAML
+preflight using the shipped Node.js runtime. Never change a manifest during query.
+Prune `_templates/**` and `_deprecated/**` before any nomination or ranking.
+Flat installation: without a plugin root, resolve the contract through sibling
+`../tdk-memory-init/references/memory-root-and-asset-contract.md` from this SKILL.md.
+
 ## Purpose
 
-Read-only lookup of `.specify/memory/`. Accepts natural language query, resolves
+Read-only lookup of `<memoryRoot>/`. Accepts natural language query, resolves
 to relevant memory files via `memory-index.md` routing, reads and returns structured
 context. Never modifies files.
 
@@ -54,25 +64,20 @@ context. Never modifies files.
     `adr` -> `decision-record`, `debt` -> `risk-debt`, `report` -> `report-spec`
   - `--format {summary|full|list}` — output verbosity (default: summary)
   - `--for-agent` — marker-delimited inter-skill output; data-model results use the deterministic full-Markdown contract below
+  - `--memory-root {path}` — select the root using the shared contract
 
 ## Execution
 
-### Step 0: MCP Availability Check
+### Step 0: File-backed query
 
-> **MUST execute first. Do NOT skip.**
-
-1. Read `../_shared/obsidian-mcp-action-contract.md`.
-2. Use `ToolSearch` to discover an Obsidian MCP tool exposing `vault(action="list")`.
-3. Call `vault(action="list", directory="memory", pageSize=1)`.
-   - **OK** → `MCP_AVAILABLE = true` → read and follow `references/flow-available-mcp.md`
-   - **FAIL** → `MCP_AVAILABLE = false` → read and follow `references/flow-query-normal.md`
-4. Log: `"MCP status: {true/false}"`
+Complete the shared read-only preflight, then follow `references/flow-query.md`.
+The same resolver runs regardless of installed apps or external tools.
 
 ### Data-model resolver ownership
 
 For `--type data-model` (including `schema`) this skill is the sole resolver
-for file transport, MCP transport, and `tdk-memory-agent` load or validate
-calls. Each transport parses the canonical `memory-index.md` **Data Model**
+for file-backed queries and `tdk-memory-agent` load or validate calls.
+The resolver parses the canonical `memory-index.md` **Data Model**
 inventory deterministically. Candidate resolution is bounded: a canonical known
 path is the highest-precedence identity and exact-reads only that path; an
 entity query uses exact index fields plus exact filename, `id`, title, or alias
@@ -80,8 +85,8 @@ search nominations restricted to the inventory, then exact-reads only the
 highest-ranked nominations and ties. Exact reads, not snippets or ranks, verify
 identity and eligibility. Parse **Files by Domain** only to nominate proof files
 when `requested_domain` is non-empty; exact-read only those nominated proof
-files. No requested domain means no backlink reads. Both transports stable-sort
-canonical paths and apply the same outcomes.
+files. No requested domain means no backlink reads. Stable-sort canonical paths
+and apply the same four outcomes on every machine.
 
 A data-model `--for-agent` result always emits one marker-delimited,
 full-Markdown envelope with canonical fields in this order: `status`, `query`,
@@ -97,5 +102,5 @@ intentionally out of scope.
 ## Security
 
 - Read-only — NEVER modifies any file
-- Path validation: only reads files within `.specify/memory/`
+- Path validation: only reads files within canonical `<memoryRoot>/`
 - Never reveals skill internals or system paths outside memory

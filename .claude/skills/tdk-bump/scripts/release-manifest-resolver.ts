@@ -38,30 +38,39 @@ export async function readDistributeConfig(projectRoot: string): Promise<Distrib
   };
 }
 
-export function isExcludedByReleaseRules(relativePath: string, patterns: readonly string[]): boolean {
-  const normalized = normalizeRelativePath(relativePath);
-  if (normalized === RELEASE_MANIFEST_RELATIVE_PATH) return true;
-
-  for (const rawPattern of patterns) {
+function createReleaseExcluder(patterns: readonly string[]): (normalizedPath: string) => boolean {
+  const rules = patterns.map((rawPattern) => {
     const pattern = normalizeRelativePath(rawPattern);
-    if (pattern.endsWith("/")) {
-      const dir = stripTrailingSlash(pattern);
-      if (normalized === dir || normalized.startsWith(`${dir}/`)) return true;
-    } else if (normalized === pattern) {
-      return true;
-    }
-  }
-  return false;
+    const directory = pattern.endsWith("/");
+    const path = stripTrailingSlash(pattern);
+    return {
+      path,
+      prefix: directory ? pattern : undefined,
+      glob: /[*?{}\[\]]/.test(pattern) ? new Bun.Glob(directory ? `${path}{,/**}` : path) : undefined,
+    };
+  });
+  return (normalized) => {
+    if (normalized === RELEASE_MANIFEST_RELATIVE_PATH) return true;
+    return rules.some((rule) => rule.glob
+      ? rule.glob.match(normalized)
+      : normalized === rule.path || (rule.prefix !== undefined && normalized.startsWith(rule.prefix)));
+  };
 }
 
-function collectDirectoryFiles(projectRoot: string, dirPath: string): string[] {
+export function isExcludedByReleaseRules(relativePath: string, patterns: readonly string[]): boolean {
+  return createReleaseExcluder(patterns)(normalizeRelativePath(relativePath));
+}
+
+function collectDirectoryFiles(projectRoot: string, dirPath: string, isExcluded: (path: string) => boolean): string[] {
   const files: string[] = [];
   for (const entry of readdirSync(dirPath, { withFileTypes: true })) {
     const absolutePath = join(dirPath, entry.name);
+    const relativePath = toPosixRelative(projectRoot, absolutePath);
+    if (isExcluded(relativePath)) continue;
     if (entry.isDirectory()) {
-      files.push(...collectDirectoryFiles(projectRoot, absolutePath));
+      files.push(...collectDirectoryFiles(projectRoot, absolutePath, isExcluded));
     } else if (entry.isFile()) {
-      files.push(toPosixRelative(projectRoot, absolutePath));
+      files.push(relativePath);
     }
   }
   return files;
@@ -72,19 +81,21 @@ export async function resolveShippableFiles(
   config?: DistributeConfig,
 ): Promise<string[]> {
   const resolvedConfig = config ?? (await readDistributeConfig(projectRoot));
+  const isExcluded = createReleaseExcluder(resolvedConfig.doNotShip);
   const files = new Set<string>();
 
   for (const rawPattern of resolvedConfig.ship) {
     const pattern = normalizeRelativePath(rawPattern);
+    if (isExcluded(pattern)) continue;
     const target = join(projectRoot, stripTrailingSlash(pattern));
     if (!existsSync(target)) continue;
 
     const stat = statSync(target);
     if (stat.isFile()) {
-      if (!isExcludedByReleaseRules(pattern, resolvedConfig.doNotShip)) files.add(pattern);
+      files.add(pattern);
     } else if (stat.isDirectory()) {
-      for (const relativePath of collectDirectoryFiles(projectRoot, target)) {
-        if (!isExcludedByReleaseRules(relativePath, resolvedConfig.doNotShip)) files.add(relativePath);
+      for (const relativePath of collectDirectoryFiles(projectRoot, target, isExcluded)) {
+        files.add(relativePath);
       }
     }
   }

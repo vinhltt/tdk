@@ -1,6 +1,8 @@
 # Memory Index Template
 
 Use this template when generating `memory-index.md`.
+Never include `_templates/**` or `_deprecated/**` in active tables or either
+number of `Binding coverage`; template receipts belong only in the manifest.
 
 ---
 
@@ -59,7 +61,7 @@ before selecting a target.
 
 ## Templates
 
-All templates: `.specify/templates/memory/`
+All templates: `<memoryRoot>/_templates/`
 - `memory-readme-template.md.tpl` — root memory control guide
 - `arc42-readme-template.md.tpl` — arc42 read-model guide
 - `arc42-summary-template.md.tpl` — non-binding arc42 section summary

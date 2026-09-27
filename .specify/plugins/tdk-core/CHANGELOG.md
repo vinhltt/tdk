@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.0.1] - 2026-09-25
+
+### Changed
+- **BREAKING** Memory callers use a leading control header and file-backed validation; removed external transport fallback.
+- **BREAKING** Failed or malformed Guardian validation is NOT CHECKED and blocks implementation unless the user explicitly authorizes an unchecked run. Unknown binding coverage no longer silently skips requested validation.
+- Added a deterministic Guardian report verifier, ordered precondition evaluation, and persisted implementation-gate checks. Reports must have consistent counts and resolvable active binding citations.
+- Extended plan schema v3 compatibly with optional memory-gate state/reason/time/actor fields. Resumed sessions re-confirm unchecked authorization; hand-edited metadata cannot grant it.
+
 ## [14.0.0] - 2026-09-20
 
 ### Changed

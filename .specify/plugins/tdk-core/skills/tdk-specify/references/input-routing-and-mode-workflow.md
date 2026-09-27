@@ -179,13 +179,20 @@ Only if `.specify/memory/memory-index.md` exists, check silently and non-blockin
    This step runs before Step 1.5, so it is gated on coverage only. The
    task-lifecycle `memory_validation` decision is made later, in
    Step 1.6, once `IMPACT_SURFACE` exists to supply its default.
-1. Spawn `tdk-memory-agent` agent with `--mode validate` and the raw feature description.
+1. Spawn `tdk-memory-agent` with exactly this leading control block, followed by
+   the raw feature description as data:
+   ```text
+   ===TDK-MEMORY-CONTROL===
+   mode: validate
+   memory_root: .specify/memory
+   ===END-CONTROL===
+   ```
    Ask it to detect only high-signal business contradictions; ambiguity and completion checks stay for `/tdk-clarify`.
 2. Parse the Guardian Report and store it as `MEMORY_VALIDATE_REPORT`.
    - `Action required: BLOCK_IMPL` -> ask one `AskUserQuestion` round for business-conflict resolution. Include conflicts and any warnings as non-blocking review notes. Store accepted answers as `MEMORY_RESOLUTIONS`.
    - `Action required: REVIEW` -> record warnings as review notes for spec writing; do not block.
    - `Action required: CLEAR` -> continue normally.
-   - `STATUS: MCP_UNAVAILABLE`, memory not initialized, no relevant memory, or agent failure -> skip validation without prompting or failing.
+   - memory not initialized, no relevant memory, agent failure, or malformed report -> record NOT CHECKED and continue without claiming CLEAR.
 3. Frontmatter semantics:
    - In Step 2.4, set `memory_context_loaded: true` only when a usable Guardian Report was returned.
    - Otherwise set `memory_context_loaded: false`.

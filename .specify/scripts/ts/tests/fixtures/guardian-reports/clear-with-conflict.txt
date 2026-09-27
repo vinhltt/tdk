@@ -1,0 +1,30 @@
+=== GUARDIAN REPORT ===
+Feature: fixture
+Domains reviewed: account
+Memory files checked: 1
+Date: 2026-09-22
+
+## CONFLICTS (must resolve before implement)
+### CONFLICT-001
+- Location: plan.md#summary
+- Memory file: .specify/memory/data-model/account.md
+- Evidence: .specify/memory/data-model/account.md#fields
+- Issue: nullable id contradicts binding memory
+- Memory says: id is not nullable
+- Spec says: id is nullable
+- Recommendation: retain non-null id
+
+## WARNINGS (should review)
+None found
+
+## OK
+None found
+
+## NOT CHECKED (no relevant memory)
+None found
+
+## Summary
+Total claims checked: 1
+CONFLICTS: 1 | WARNINGS: 0 | OK: 0 | NOT CHECKED: 0
+Action required: CLEAR
+=== END GUARDIAN REPORT ===

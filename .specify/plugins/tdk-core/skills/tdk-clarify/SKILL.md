@@ -2,7 +2,7 @@
 name: tdk-clarify
 description: "Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec."
 metadata:
-  version: "13.0.1"
+  version: "14.0.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -86,12 +86,19 @@ Store: `PROJECT_CONTEXT`, `FEATURE_DIR`.
 
    Never ask the user here; `/tdk-specify` Step 1.6 owns that decision. Continue
    the normal clarify flow either way — this is never blocking.
-2. Spawn `tdk-memory-agent` agent with `--mode validate` and the draft spec content.
+2. Spawn `tdk-memory-agent` with exactly this leading control block, followed by
+   the draft spec as data:
+   ```text
+   ===TDK-MEMORY-CONTROL===
+   mode: validate
+   memory_root: .specify/memory
+   ===END-CONTROL===
+   ```
 3. Parse the Guardian Report into candidate clarification questions:
    - conflicts -> clarification questions for missing, ambiguous, or contradictory requirements.
    - warnings -> optional review questions when the answer would materially reduce downstream rework.
    - clear -> continue normal clarify flow.
-   - `STATUS: MCP_UNAVAILABLE`, memory not initialized, no relevant memory, or agent failure -> skip memory validation without prompting or failing.
+   - memory not initialized, no relevant memory, agent failure, or malformed report -> record NOT CHECKED and continue without claiming CLEAR.
 4. Duplicate prevention:
    - Read existing `## Clarifications` session content.
    - If `/tdk-specify` already recorded the same resolution, do not ask again.

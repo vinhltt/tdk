@@ -1,5 +1,7 @@
 {
   "name": "tdk-memory",
   "description": "Domain-based project memory: init, update, checksum, changelog, query, and context loading. Includes tdk-memory-agent for memory context loading and business logic conflict detection.",
-  "version": "3.0.3"
+  "version": "3.0.3",
+  "repository": "https://github.com/vinhltt/tdk-memory",
+  "license": "MIT"
 }

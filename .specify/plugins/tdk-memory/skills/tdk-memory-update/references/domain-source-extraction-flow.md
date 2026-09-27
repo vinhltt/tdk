@@ -34,6 +34,8 @@ Apply shared guards from `../tdk-memory-init/references/domain-extraction-and-co
 - **Path Restriction Guard**: reject `..`, absolute paths outside project, sensitive patterns
 - **File Size Check**: >50KB → warn, ask for smaller file
 - **Abnormal File Handling**: not found, binary, non-English — same rules
+- **Destination guard**: apply the shared memory-root contract to the resolved
+  target; source inputs never authorize writes outside canonical `<memoryRoot>`.
 
 ---
 
