@@ -53,7 +53,8 @@ function readManifest(manifestPath: string, expectedHarness: HarnessName): Harne
     managedFiles: data.managedFiles.map((file) => {
       if (
         (file.part !== undefined && !isConvertPart(file.part)) ||
-        (file.managedRegionChecksum !== undefined && !/^[a-f0-9]{64}$/.test(file.managedRegionChecksum))
+        (file.managedRegionChecksum !== undefined && !/^[a-f0-9]{64}$/.test(file.managedRegionChecksum)) ||
+        (file.sourcePresent !== undefined && typeof file.sourcePresent !== 'boolean')
       ) {
         throw new Error('unexpected manifest shape');
       }

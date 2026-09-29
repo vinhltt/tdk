@@ -65,6 +65,7 @@ function toManagedFile(file: ConvertTargetFile): ManagedFile {
     installedChecksum: file.installedChecksum,
     part: file.part,
     managedRegionChecksum: file.managedRegionChecksum,
+    sourcePresent: file.sourcePresent,
   };
 }
 

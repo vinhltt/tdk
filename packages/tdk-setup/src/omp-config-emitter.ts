@@ -335,8 +335,10 @@ export function emitOmpConfigFile(input: OmpConfigEmitInput): OmpConfigEmitResul
   const currentPayload = extractOmpManagedPayload(existing);
   const desiredPayload = extractOmpManagedPayload(merged.content);
   const sourcePath = settingsRecord?.sourcePath ?? path.join(input.inventory.consumerRoot, '.claude/settings.json');
-  const sourceChecksum = settingsRecord && fs.existsSync(settingsRecord.sourcePath)
-    ? sha256File(settingsRecord.sourcePath)
+  const sourceStat = fs.existsSync(sourcePath) ? fs.lstatSync(sourcePath) : undefined;
+  const sourceIsRegularFile = sourceStat?.isFile() === true && !sourceStat.isSymbolicLink();
+  const sourceChecksum = sourceIsRegularFile
+    ? sha256File(sourcePath)
     : sha256Buffer(Buffer.alloc(0));
   const content = Buffer.from(merged.content, 'utf-8');
   return {
@@ -347,6 +349,7 @@ export function emitOmpConfigFile(input: OmpConfigEmitInput): OmpConfigEmitResul
       sourceChecksum,
       installedChecksum: sha256Buffer(content),
       content,
+      sourcePresent: sourceStat !== undefined,
       ...(desiredPayload !== undefined
         ? { managedRegionChecksum: sha256Buffer(Buffer.from(desiredPayload, 'utf-8')) }
         : { unmanageAfterWrite: true }),

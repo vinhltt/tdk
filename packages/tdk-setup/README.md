@@ -203,6 +203,24 @@ OMP context conversion writes `.omp/AGENTS.md` as the exact `@../CLAUDE.md` impo
 `CLAUDE.md` authoritative instead of copying it. A missing root file produces a Layer 1 report note
 without a target, and an existing unowned `.omp/AGENTS.md` remains a collision unless `--force` is used.
 
+### OMP drift gate
+
+After an OMP conversion has written its ownership manifest, use this read-only checksum gate in CI:
+
+```bash
+bun src/index.ts convert-flat "$CONSUMER_ROOT" --harness omp --check
+```
+
+`--check` is available only with `--harness omp` and cannot be combined with conversion options. It
+exits 0 when no drift is detected and nonzero for drift or unavailable/incompatible OMP ownership
+data. The command reads `.specify/state/harness-install/omp.json` and reports changed managed
+sources, edited managed targets, and missing managed targets as `source-changed`,
+`target-modified`, and `target-missing`. For `.omp/config.yml`, only the payload between the TDK
+sentinels is checked; user-owned YAML outside that region may change without causing drift. The
+check never writes, removes, backs up, or regenerates files. Run the relevant conversion part again
+to refresh a changed source; review target-side edits before deciding whether to port them back to
+`.claude/` or reconvert.
+
 Use `--force` to overwrite conflicts on ordinary unowned or user-edited managed targets. A regular,
 non-conflicting `.omp/config.yml` is adopted by `settings` through sentinel merge without `--force`;
 edits inside its TDK-managed sentinel region remain fail-closed even with `--force`.

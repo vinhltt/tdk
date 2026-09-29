@@ -41,6 +41,7 @@ export interface ManagedFile {
   installedChecksum: string;
   part?: ConvertPart;
   managedRegionChecksum?: string;
+  sourcePresent?: boolean;
 }
 
 export interface ManagedHook {

@@ -129,6 +129,7 @@ export interface CodexTargetFile {
 export interface ConvertTargetFile extends CodexTargetFile {
   part?: ConvertPart;
   managedRegionChecksum?: string;
+  sourcePresent?: boolean;
   currentManagedRegionChecksum?: string;
   unmanageAfterWrite?: boolean;
 }

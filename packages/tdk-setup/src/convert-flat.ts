@@ -21,6 +21,7 @@ import { resolveHookTargetPlatform } from './lib/harness-transform/hook-command'
 import { applyInstallPlan } from './install-writer';
 import { loadHarnessManifest, manifestPathFor } from './manifest-store';
 import { buildOmpWritePlan } from './omp-output-writer';
+import { checkOmpDrift, renderOmpDriftFindings } from './omp-drift-check';
 import { renderApplyResult } from './render';
 import { resolveConsumerRoot } from './root-resolution';
 
@@ -28,6 +29,7 @@ interface ConvertFlatOptions {
   harness?: string;
   parts?: string;
   removeParts?: string;
+  check?: boolean;
   dryRun?: boolean;
   force?: boolean;
   yes?: boolean;
@@ -65,6 +67,7 @@ export function createConvertFlatCommand(): Command {
     .option('--remove-parts <csv>', 'OMP parts to remove')
     .option('--target-platform <win32|linux|darwin>', 'target platform for selected OMP hooks')
     .option('--dry-run', 'render the migration and reconcile plan without mutating files')
+    .option('--check', 'check OMP managed sources and targets for checksum drift without writing')
     .option('--force', 'overwrite convert-flat conflicts instead of reporting and skipping them')
     .option('--yes', 'apply clean writes/removals without prompting')
     .action(async (rootArg: string | undefined, opts: ConvertFlatOptions) => {
@@ -73,8 +76,29 @@ export function createConvertFlatCommand(): Command {
           throw new Error('--harness is required and must be one of: codex, omp.');
         }
         const requestedRoot = rootArg ? path.resolve(rootArg) : process.cwd();
-        writeProgress(`Start: harness=${opts.harness} mode=${opts.dryRun ? 'dry-run' : 'apply'} root=${requestedRoot}`);
+        const mode = opts.check ? 'check' : opts.dryRun ? 'dry-run' : 'apply';
+        writeProgress(`Start: harness=${opts.harness} mode=${mode} root=${requestedRoot}`);
         const root = resolveConsumerRoot(requestedRoot);
+        if (opts.check) {
+          if (opts.harness !== 'omp') {
+            throw new Error('--check is supported only with --harness omp.');
+          }
+          const incompatible = [
+            opts.parts === undefined ? undefined : '--parts',
+            opts.removeParts === undefined ? undefined : '--remove-parts',
+            opts.targetPlatform === undefined ? undefined : '--target-platform',
+            opts.dryRun ? '--dry-run' : undefined,
+            opts.force ? '--force' : undefined,
+            opts.yes ? '--yes' : undefined,
+          ].filter((flag): flag is string => flag !== undefined);
+          if (incompatible.length > 0) {
+            throw new Error(`--check cannot be combined with conversion options: ${incompatible.join(', ')}.`);
+          }
+          const findings = checkOmpDrift(root.consumerRoot);
+          process.stdout.write(renderOmpDriftFindings(findings));
+          if (findings.length > 0) process.exitCode = 1;
+          return;
+        }
         let migrationReport: MigrationReport;
         let reconcilePlan: ConvertReconcilePlan;
         if (opts.harness === 'omp') {
