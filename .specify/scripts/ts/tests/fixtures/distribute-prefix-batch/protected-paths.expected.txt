@@ -1,0 +1,8 @@
+Use sample-plan with sample and SAMPLE branding.
+.specify/plugins/tdk-core/skills/tdk-plan/SKILL.md sample-next
+.specify/codex-plugins/tdk-core/agents/tdk-helper.md sample-next
+".specify/plugins/tdk-core/tdk-plan" 'sample-plan' `sample-plan`
+(.specify/plugins/tdk-core/tdk-plan) [.specify/plugins/tdk-core/tdk-plan] {.specify/plugins/tdk-core/tdk-plan}
+.specify/cache/tdk-scout/tdk-plan.json sample-next
+.specify/cache/tdk-gkg/tdk-index.json sample-next
+.specify/plugins/tdk-core/tdk-plan,tdk-next;tdk-last sample-after

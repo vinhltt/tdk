@@ -178,6 +178,7 @@ DISTRIBUTE_CONFIG="$SOURCE_ROOT/distribute.json"
 RELEASE_MANIFEST_REL=".specify/release-manifest.json"
 SOURCE_RELEASE_MANIFEST="$SOURCE_ROOT/$RELEASE_MANIFEST_REL"
 DIFF_RELEASE_MANIFESTS_TS_SCRIPT="$SOURCE_ROOT/.claude/skills/tdk-bump/scripts/diff-release-manifests.ts"
+CLASSIFY_DISTRIBUTION_TS_SCRIPT="$SOURCE_ROOT/.claude/skills/tdk-bump/scripts/classify-distribution.ts"
 
 if [[ ! -d "$SOURCE_SPECIFY" ]]; then
     echo -e "${RED}Error: source .specify/ not found at $SOURCE_SPECIFY${NC}" >&2
@@ -193,7 +194,6 @@ fi
 
 TARGET_RELEASE_MANIFEST="$TARGET_ROOT/$RELEASE_MANIFEST_REL"
 
-PYTHON_BIN=""
 RENDER_TMP_DIR=""
 cleanup_render_tmp() {
     if [[ -n "${RENDER_TMP_DIR:-}" && -d "$RENDER_TMP_DIR" ]]; then
@@ -202,11 +202,6 @@ cleanup_render_tmp() {
     fi
 }
 if [[ -n "$BRAND_PREFIX" ]]; then
-    PYTHON_BIN="$(command -v python3 2>/dev/null || true)"
-    if [[ -z "$PYTHON_BIN" ]]; then
-        echo -e "${RED}Error: --prefix requires python3 for payload text rewrite${NC}" >&2
-        exit 1
-    fi
     RENDER_TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/tdk-distribute.XXXXXX")"
     trap cleanup_render_tmp EXIT
 fi
@@ -657,121 +652,6 @@ snapshot_target_release_manifest() {
     TARGET_MANIFEST_SNAPSHOT_SHA="$(file_sha256 "$TARGET_RELEASE_MANIFEST")" || return 1
 }
 
-has_payload_text_extension() {
-    case "$1" in
-        *.md|*.mdx|*.txt|*.json|*.yaml|*.yml|*.tpl|*.sh|*.svg|*.excalidraw) return 0 ;;
-        *) return 1 ;;
-    esac
-}
-
-has_scripts_ts_text_extension() {
-    case "$1" in
-        *.ts|*.json|*.md|*.txt|*.yaml|*.yml) return 0 ;;
-        *) return 1 ;;
-    esac
-}
-
-is_scripts_ts_rewrite_candidate() {
-    local rel_path="$1"
-    case "$rel_path" in
-        scripts/ts/*) has_scripts_ts_text_extension "$rel_path"; return ;;
-        *) return 1 ;;
-    esac
-}
-
-is_payload_rewrite_candidate() {
-    local rel_path="$1"
-    if is_scripts_ts_rewrite_candidate "$rel_path"; then
-        return 0
-    fi
-    case "$rel_path" in
-        setup.sh|CHANGELOG.md|.specify*.example) return 0 ;;
-        plugins/*|codex-plugins/*|scripts/*|schemas/*) return 1 ;;
-        docs/assets/*) has_payload_text_extension "$rel_path"; return ;;
-        docs/*|templates/*|claude-rules/*) has_payload_text_extension "$rel_path"; return ;;
-        *) return 1 ;;
-    esac
-}
-
-should_rewrite_source_file() {
-    local source_dir="$1" rel_path="$2"
-    local specify_rel
-    [[ -n "$BRAND_PREFIX" && "$source_dir" == "$SOURCE_ROOT" ]] || return 1
-    case "$rel_path" in
-        .specify/*) specify_rel="${rel_path#.specify/}" ;;
-        *) return 1 ;;
-    esac
-    is_payload_rewrite_candidate "$specify_rel"
-}
-
-payload_text_rewrite() {
-    local source_file="$1"
-    "$PYTHON_BIN" - "$SOURCE_PREFIX" "$BRAND_PREFIX" "$source_file" <<'PY'
-import pathlib
-import re
-import sys
-
-source_prefix = sys.argv[1]
-target_prefix = sys.argv[2]
-source_file = pathlib.Path(sys.argv[3])
-source_brand = source_prefix[:-1] if source_prefix.endswith("-") else source_prefix
-target_brand = target_prefix[:-1] if target_prefix.endswith("-") else target_prefix
-
-text = source_file.read_bytes().decode("utf-8")
-protected = []
-
-def protect(pattern):
-    global text
-    def replace(match):
-        protected.append(match.group(0))
-        return f"\ue000{len(protected) - 1}\ue001"
-    text = re.sub(pattern, replace, text)
-
-# These references point to plugin paths that distribute intentionally does not rename.
-protect(r"\.specify/(?:codex-)?plugins/[^\s\"'`)\]}]+")
-protect(r"\.specify/cache/tdk-[^\s\"'`)\]}]+")
-
-# These references point to files/paths that distribute intentionally does not rename.
-protect(r"(?:(?:\.{1,2}|[A-Za-z0-9_.-]+)/)+[^\s\"'`)\]}]*tdk-[^\s\"'`)\]}]*")
-protect(r"(?:[A-Za-z0-9_.-]+/)*tdk-[^\s\"'`)\]}]+\.(?:md|mdx|png|svg|excalidraw|json|yaml|yml|tpl|ts|sh)")
-protect(r"(['\"])" + re.escape(source_prefix) + r"[A-Za-z0-9_-]+\1(?=\s*:)")
-
-def rewrite_anchor_fragment(fragment):
-    if source_prefix and target_prefix:
-        fragment = re.sub(
-            r"(^|-)" + re.escape(source_prefix),
-            lambda match: f"{match.group(1)}{target_prefix}",
-            fragment,
-        )
-    if source_brand and target_brand:
-        fragment = re.sub(
-            r"(^|-)" + re.escape(source_brand.lower()) + r"(?=$|-)",
-            lambda match: f"{match.group(1)}{target_brand.lower()}",
-            fragment,
-        )
-        fragment = re.sub(
-            r"(^|-)" + re.escape(source_brand.upper()) + r"(?=$|-)",
-            lambda match: f"{match.group(1)}{target_brand.upper()}",
-            fragment,
-        )
-    return fragment
-
-def rewrite_markdown_link_fragment(match):
-    return f"{match.group(1)}{rewrite_anchor_fragment(match.group(2))}{match.group(3)}"
-
-text = re.sub(r"(\]\([^\s)]*#)([^)\s]+)(\))", rewrite_markdown_link_fragment, text)
-
-text = re.sub(r"(?<![a-z0-9-])" + re.escape(source_prefix), target_prefix, text)
-if source_brand and target_brand:
-    text = re.sub(r"(?<![\w${-])" + re.escape(source_brand.lower()) + r"(?![\w-])", target_brand.lower(), text)
-    text = re.sub(r"(?<![\w${-])" + re.escape(source_brand.upper()) + r"(?![\w-])", target_brand.upper(), text)
-
-for index, value in enumerate(protected):
-    text = text.replace(f"\ue000{index}\ue001", value)
-
-sys.stdout.buffer.write(text.encode("utf-8"))
-PY
-}
 
 copy_source_mode() {
     local src="$1" dst="$2" mode
@@ -779,33 +659,21 @@ copy_source_mode() {
     [[ -n "$mode" ]] && chmod "$mode" "$dst" 2>/dev/null || true
 }
 
-render_source_to_path() {
-    local src="$1" source_dir="$2" rel_path="$3" out="$4"
-    if should_rewrite_source_file "$source_dir" "$rel_path"; then
-        payload_text_rewrite "$src" > "$out"
+# Prefix bytes are rendered once during classification; never re-render at apply time.
+copy_distribution_source() {
+    local src="$1" rel="$2" out="$3"
+    if [[ -n "$BRAND_PREFIX" ]]; then
+        local rendered="${PREFIX_RENDERED_PATH[$rel]:-}"
+        [[ -n "$rendered" && -f "$rendered" && ! -L "$rendered" ]] || return 1
+        cp -f "$rendered" "$out"
     else
         cp -f "$src" "$out"
     fi
 }
 
-rendered_source_sha256() {
-    local src="$1" source_dir="$2" rel_path="$3" tmp digest
-    if should_rewrite_source_file "$source_dir" "$rel_path"; then
-        tmp="$(mktemp "$RENDER_TMP_DIR/sha256.XXXXXX")" || return 1
-        if ! render_source_to_path "$src" "$source_dir" "$rel_path" "$tmp" || \
-            ! digest="$(file_sha256 "$tmp")"; then
-            rm -f "$tmp"
-            return 1
-        fi
-        rm -f "$tmp" || return 1
-        printf '%s\n' "$digest"
-    else
-        file_sha256 "$src"
-    fi
-}
-
 # ─── Utility: check exclude match ────────────────────────────────────────────
 is_excluded() {
+    # Keep literal directory/exact matching coupled to classify-distribution.ts.
     local rel_path="$1"; shift
     local pattern
     for pattern in "$@"; do
@@ -879,7 +747,7 @@ collect_files() {
             log_dim "  [include] $pattern/ (directory)" >&2
             paths_file="$(mktemp "${TMPDIR:-/tmp}/tdk-distribute-files.XXXXXX")" || return 1
             if ! find "$target" ${EXCLUDE_PRUNE_ARGS[@]+"${EXCLUDE_PRUNE_ARGS[@]}"} \
-                -type f -print0 2>/dev/null | sort -z > "$paths_file"; then
+                -type f -print0 2>/dev/null | LC_ALL=C sort -z > "$paths_file"; then
                 rm -f "$paths_file"
                 return 1
             fi
@@ -898,54 +766,6 @@ collect_files() {
     done
 }
 
-# ─── Collect orphan files in target not present in source ────────────────────
-collect_target_orphans() {
-    local source_dir="$1" target_dir="$2"; shift 2
-    local -a includes=() excludes=() EXCLUDE_PRUNE_ARGS=()
-    local -A mapped_targets=()
-    local pattern target source_files_file target_files_file source_rel file rel
-
-    while [[ $# -gt 0 && "$1" != "--" ]]; do includes+=("$1"); shift; done
-    [[ "${1:-}" == "--" ]] && shift
-    excludes=("$@")
-
-    source_files_file="$(mktemp "${TMPDIR:-/tmp}/tdk-distribute-source-files.XXXXXX")" || return 1
-    if ! collect_files "$source_dir" "${includes[@]}" -- "${excludes[@]}" > "$source_files_file"; then
-        rm -f "$source_files_file"
-        return 1
-    fi
-    while IFS= read -r -d '' source_rel; do
-        mapped_targets["$source_rel"]=1
-    done < "$source_files_file"
-    rm -f "$source_files_file"
-
-    # Rooted at the target, not the source: root-anchored prunes are absolute paths.
-    build_exclude_prune_args "$target_dir" ${excludes[@]+"${excludes[@]}"}
-
-    for pattern in "${includes[@]}"; do
-        target="$target_dir/${pattern%/}"
-        if [[ -d "$target" ]]; then
-            target_files_file="$(mktemp "${TMPDIR:-/tmp}/tdk-distribute-target-files.XXXXXX")" || return 1
-            if ! find "$target" ${EXCLUDE_PRUNE_ARGS[@]+"${EXCLUDE_PRUNE_ARGS[@]}"} \
-                -type f -print0 2>/dev/null | sort -z > "$target_files_file"; then
-                rm -f "$target_files_file"
-                return 1
-            fi
-            while IFS= read -r -d '' file; do
-                rel="${file#$target_dir/}"
-                if ! is_excluded "$rel" "${excludes[@]}" && [[ -z "${mapped_targets[$rel]+present}" ]]; then
-                    printf '%s\0' "$rel"
-                fi
-            done < "$target_files_file"
-            rm -f "$target_files_file"
-        elif [[ -f "$target" ]]; then
-            rel="${pattern%/}"
-            if ! is_excluded "$rel" "${excludes[@]}" && [[ -z "${mapped_targets[$rel]+present}" ]]; then
-                printf '%s\0' "$rel"
-            fi
-        fi
-    done
-}
 
 # ─── Classify files into new/updated/unchanged/deleted ──────────────────────
 # Sets global arrays: G_NEW, G_UPDATED, G_UNCHANGED, G_DELETED
@@ -953,71 +773,78 @@ G_NEW=()
 G_UPDATED=()
 G_UNCHANGED=()
 G_DELETED=()
+declare -A PREFIX_RENDERED_PATH=()
+declare -A PREFIX_RENDERED_SHA=()
 
-classify_files() {
-    local source_dir="$1" target_dir="$2"; shift 2
-    local -a saved_includes=() saved_excludes=()
-    local files_file orphans_file rel src dst src_sha dst_sha
-    local total=0 count=0
+# The counted stream is parsed only after a successful helper exit. A partial
+# record, missing/mismatched trailer, or trailing bytes must abort before preflight.
+classify_prefix_batch() {
+    local source_dir="$1" target_dir="$2" mode="$3"
+    local output_file="$RENDER_TMP_DIR/classification.nul"
+    local paths_file="$RENDER_TMP_DIR/force-paths.nul"
+    local action rel sha rendered extra count=0 trailer=false malformed=false
+    local -a path_args=()
+
+    if [[ ! -f "$CLASSIFY_DISTRIBUTION_TS_SCRIPT" ]]; then
+        echo -e "${RED}Error: prefix classification helper not found: $CLASSIFY_DISTRIBUTION_TS_SCRIPT${NC}" >&2
+        return 1
+    fi
+    if [[ "$mode" == "force" ]]; then
+        printf '%s\0' "${G_NEW[@]}" "${G_UPDATED[@]}" > "$paths_file" || return 1
+        path_args=(--paths-file "$paths_file")
+    fi
+    if ! bun "$CLASSIFY_DISTRIBUTION_TS_SCRIPT" \
+        --source-root "$source_dir" --target-root "$target_dir" \
+        --render-dir "$RENDER_TMP_DIR" --prefix "$BRAND_PREFIX" \
+        --mode "$mode" "${path_args[@]}" > "$output_file"; then
+        echo -e "${RED}Error: prefix classification helper failed; no files were changed${NC}" >&2
+        return 1
+    fi
 
     G_NEW=()
     G_UPDATED=()
     G_UNCHANGED=()
-    G_DELETED=()
-
-    while [[ $# -gt 0 && "$1" != "--" ]]; do saved_includes+=("$1"); shift; done
-    [[ "${1:-}" == "--" ]] && shift
-    saved_excludes=("$@")
-
-    files_file="$(mktemp "${TMPDIR:-/tmp}/tdk-distribute-files.XXXXXX")" || return 1
-    if ! collect_files "$source_dir" "${saved_includes[@]}" -- "${saved_excludes[@]}" > "$files_file"; then
-        rm -f "$files_file"
-        return 1
-    fi
-    while IFS= read -r -d '' rel; do ((total+=1)); done < "$files_file"
-
-    while IFS= read -r -d '' rel; do
+    PREFIX_RENDERED_PATH=()
+    PREFIX_RENDERED_SHA=()
+    exec 3< "$output_file"
+    while IFS= read -r -d '' action <&3; do
+        if ! IFS= read -r -d '' rel <&3 || ! IFS= read -r -d '' sha <&3 || \
+            ! IFS= read -r -d '' rendered <&3; then
+            malformed=true
+            break
+        fi
+        if [[ "$action" == "end" ]]; then
+            if [[ "$rel" != "$count" || -n "$sha" || -n "$rendered" ]]; then
+                malformed=true
+            fi
+            trailer=true
+            extra=""
+            if IFS= read -r -d '' extra <&3 || [[ -n "$extra" ]]; then
+                malformed=true
+            fi
+            break
+        fi
+        if [[ -z "$rel" || ! "$sha" =~ ^[a-f0-9]{64}$ || \
+            ! "$rendered" =~ ^batch-[A-Za-z0-9]+/[0-9]+$ || \
+            ! -f "$RENDER_TMP_DIR/$rendered" || -L "$RENDER_TMP_DIR/$rendered" ]]; then
+            malformed=true
+            break
+        fi
+        case "$action" in
+            new) G_NEW+=("$rel") ;;
+            updated) G_UPDATED+=("$rel") ;;
+            unchanged) G_UNCHANGED+=("$rel") ;;
+            *) malformed=true; break ;;
+        esac
+        PREFIX_RENDERED_PATH["$rel"]="$RENDER_TMP_DIR/$rendered"
+        PREFIX_RENDERED_SHA["$rel"]="$sha"
         ((count+=1))
-        printf "\r${DIM}  [%d/%d] Comparing...${NC}" "$count" "$total" >&2
-        src="$source_dir/$rel"
-        dst="$target_dir/$rel"
-
-        if [[ ! -f "$dst" ]]; then
-            G_NEW+=("$rel")
-            log_dim "  [NEW] $rel"
-        elif $FORCE; then
-            G_UPDATED+=("$rel")
-            log_dim "  [FORCE] $rel → UPDATED"
-        else
-            if ! src_sha="$(rendered_source_sha256 "$src" "$source_dir" "$rel")" || \
-                ! dst_sha="$(file_sha256 "$dst")"; then
-                rm -f "$files_file"
-                return 1
-            fi
-            if [[ "$src_sha" != "$dst_sha" ]]; then
-                G_UPDATED+=("$rel")
-                log_dim "  [SHA-256] $rel: $src_sha ≠ $dst_sha → UPDATED"
-            else
-                G_UNCHANGED+=("$rel")
-                log_dim "  [SHA-256] $rel: $src_sha → UNCHANGED"
-            fi
-        fi
-    done < "$files_file"
-    rm -f "$files_file"
-    printf "\r%*s\r" 50 "" >&2
-
-    if ! $NO_DELETE; then
-        orphans_file="$(mktemp "${TMPDIR:-/tmp}/tdk-distribute-orphans.XXXXXX")" || return 1
-        if ! collect_target_orphans "$source_dir" "$target_dir" \
-            "${saved_includes[@]}" -- "${saved_excludes[@]}" > "$orphans_file"; then
-            rm -f "$orphans_file"
-            return 1
-        fi
-        while IFS= read -r -d '' rel; do
-            G_DELETED+=("$rel")
-            log_dim "  [ORPHAN] $rel → DELETED"
-        done < "$orphans_file"
-        rm -f "$orphans_file"
+        log_dim "  [PREFIX] $rel → ${action^^}"
+    done
+    exec 3<&-
+    if $malformed || ! $trailer; then
+        echo -e "${RED}Error: invalid or incomplete prefix classification stream; no files were changed${NC}" >&2
+        return 1
     fi
 }
 
@@ -1302,13 +1129,20 @@ classify_distribution_files() {
         load_release_manifest_diff "$source_dir" "$target_dir"
         log_dim "Using destructive force classification with validated release-manifest path inventory"
         classify_force_release_manifest_paths "$source_dir" "$target_dir" || exit 1
+        if [[ -n "$BRAND_PREFIX" ]]; then
+            classify_prefix_batch "$source_dir" "$target_dir" force || exit 1
+        fi
     elif [[ ! -f "$TARGET_RELEASE_MANIFEST" ]]; then
         log_dim "Target release manifest missing; first ship will not delete target orphans"
-        classify_target_without_release_manifest "$source_dir" "$target_dir" "$@"
+        if [[ -n "$BRAND_PREFIX" ]]; then
+            classify_prefix_batch "$source_dir" "$target_dir" bootstrap || exit 1
+        else
+            classify_target_without_release_manifest "$source_dir" "$target_dir" "$@"
+        fi
     elif [[ -n "$BRAND_PREFIX" ]]; then
         load_release_manifest_diff "$source_dir" "$target_dir"
         log_dim "Using rendered/full classification with release-manifest ownership proof"
-        classify_files "$source_dir" "$target_dir" "$@"
+        classify_prefix_batch "$source_dir" "$target_dir" compare || exit 1
         if $NO_DELETE; then
             G_DELETED=()
         else
@@ -1339,29 +1173,28 @@ show_skill_diffs() {
         return
     }
 
-    python3 -c "
-import json, sys
-data = json.loads(sys.argv[1])
-any_change = False
-for plugin_name, plugin_data in sorted(data.items()):
-    new_f = plugin_data.get('new_files', [])
-    changed_f = plugin_data.get('changed_files', [])
-    removed_f = plugin_data.get('removed_files', [])
-    unchanged_f = plugin_data.get('unchanged_files', [])
-    if new_f or changed_f or removed_f:
-        any_change = True
-        print(f'  \033[1m{plugin_name}\033[0m')
-        for f in new_f:
-            print(f'    \033[0;32m+ {f}\033[0m')
-        for f in changed_f:
-            print(f'    \033[1;33m~ {f}\033[0m')
-        for f in removed_f:
-            print(f'    \033[0;31m- {f}\033[0m')
-    elif unchanged_f:
-        print(f'  \033[2m{plugin_name}: {len(unchanged_f)} files unchanged\033[0m')
-if not any_change:
-    print('  \033[2mAll files match manifest.json\033[0m')
-" "$src_json"
+    bun -e '
+const data = JSON.parse(process.argv[1]);
+let anyChange = false;
+const names = Object.keys(data).sort((a, b) => Buffer.compare(Buffer.from(a), Buffer.from(b)));
+for (const name of names) {
+    const plugin = data[name];
+    const added = plugin.new_files ?? [];
+    const changed = plugin.changed_files ?? [];
+    const removed = plugin.removed_files ?? [];
+    const unchanged = plugin.unchanged_files ?? [];
+    if (added.length || changed.length || removed.length) {
+        anyChange = true;
+        console.log(`  \x1b[1m${name}\x1b[0m`);
+        for (const file of added) console.log(`    \x1b[0;32m+ ${file}\x1b[0m`);
+        for (const file of changed) console.log(`    \x1b[1;33m~ ${file}\x1b[0m`);
+        for (const file of removed) console.log(`    \x1b[0;31m- ${file}\x1b[0m`);
+    } else if (unchanged.length) {
+        console.log(`  \x1b[2m${name}: ${unchanged.length} files unchanged\x1b[0m`);
+    }
+}
+if (!anyChange) console.log("  \x1b[2mAll files match manifest.json\x1b[0m");
+' "$src_json"
     echo ""
 }
 
@@ -1742,8 +1575,9 @@ copy_one() {
         discard_active_transaction_temp
         abort_if_transaction_signal_pending
     fi
-    if render_source_to_path "$src" "$SOURCE_ROOT" "$rel" "$tmp" 2>/dev/null && \
-        copy_source_mode "$src" "$tmp" && rendered_sha="$(file_sha256 "$tmp")"; then
+    if copy_distribution_source "$src" "$rel" "$tmp" 2>/dev/null && \
+        copy_source_mode "$src" "$tmp" && rendered_sha="$(file_sha256 "$tmp")" && \
+        { [[ -z "$BRAND_PREFIX" ]] || [[ "$rendered_sha" == "${PREFIX_RENDERED_SHA[$rel]:-}" ]]; }; then
         if $FORCE; then
             if ! verify_force_target_preimage "$rel"; then
                 discard_active_transaction_temp

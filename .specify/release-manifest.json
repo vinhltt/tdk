@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-09-25T10:20:46.245Z",
+  "generatedAt": "2026-10-01T11:32:12.659Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -212,7 +212,7 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "68dfe9232c4700c6cefde735056dc87f7849b54de0b945ed716296f197b6bc79",
+      "sha256": "9012fde7ccdf09bce4b42d3c22f5c94c81766e7a1a3fa9ef5277270e0229b6d8",
       "size": 50482,
       "mode": "0644"
     },

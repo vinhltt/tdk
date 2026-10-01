@@ -1,0 +1,8 @@
+Use tdk-plan with tdk and TDK branding.
+.specify/plugins/tdk-core/skills/tdk-plan/SKILL.md tdk-next
+.specify/codex-plugins/tdk-core/agents/tdk-helper.md tdk-next
+".specify/plugins/tdk-core/tdk-plan" 'tdk-plan' `tdk-plan`
+(.specify/plugins/tdk-core/tdk-plan) [.specify/plugins/tdk-core/tdk-plan] {.specify/plugins/tdk-core/tdk-plan}
+.specify/cache/tdk-scout/tdk-plan.json tdk-next
+.specify/cache/tdk-gkg/tdk-index.json tdk-next
+.specify/plugins/tdk-core/tdk-plan,tdk-next;tdk-last tdk-after

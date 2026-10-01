@@ -6,6 +6,15 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [Unreleased]
+
+## [1.118.1] - 2026-10-01
+
+### Changed
+- **[Distribution]** Prefix classification, rendering, and SHA-256 comparison now run in one builder-only Bun process across normal, first-install, and force modes. Apply reuses staged bytes, preserves source file mode, and retains ownership, transaction, and release-manifest verification.
+- **[Distribution]** Prefix runs no longer execute Python: payload rendering and the existing per-file component report use Bun. File selection and rewrite bytes remain compatible with the frozen Python reference; source collection order is pinned to `LC_ALL=C`.
+- **[Distribution]** Incomplete helper output aborts before target mutation. Counted NUL framing and render-root-relative artifact names preserve cleanup and relative `TMPDIR` support.
+
 ## [1.118.0] - 2026-09-25
 
 ### Added

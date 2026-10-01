@@ -1,0 +1,2 @@
+Unicode 16 unassigned boundary: 𳄽tdk 𳄽TDK tdk𳄽 TDK𳄽
+Unicode 16 astral letter: 𐐀tdk 𐐀TDK tdk𐐀 TDK𐐀

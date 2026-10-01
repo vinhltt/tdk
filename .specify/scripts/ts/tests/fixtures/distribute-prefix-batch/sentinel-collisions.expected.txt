@@ -1,0 +1,6 @@
+Literal placeholders: .specify/plugins/tdk-core/.specify/codex-plugins/tdk-other/tdk-helper/tdk-plan .specify/codex-plugins/tdk-other/tdk-helper .specify/cache/tdk-scout/tdk-plan ./tdk-plan.md 99 01.
+First protected path: .specify/plugins/tdk-core/.specify/codex-plugins/tdk-other/tdk-helper/tdk-plan
+Second protected path: .specify/codex-plugins/tdk-other/tdk-helper
+Protected cache: .specify/cache/tdk-scout/tdk-plan
+Protected file: ./tdk-plan.md
+Unpaired sentinels: sample-plan sample-plan -tdk- sample SAMPLE.

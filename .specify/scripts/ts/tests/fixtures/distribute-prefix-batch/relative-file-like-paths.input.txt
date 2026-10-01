@@ -1,0 +1,9 @@
+./tdk-plan.md ../tdk-plan.md ../../docs/tdk-plan.md
+folder/tdk-plan folder/subdir/tdk-plan ./tdk-plan ../tdk-plan
+/a/tdk-plan /tdk-plan folder/tdk-plan#tdk-anchor
+folder/tdk-plan with tdk-plan and TDK outside paths
+bare: tdk-plan.md tdk-plan.mdx tdk-plan.png tdk-plan.svg tdk-plan.excalidraw
+bare: tdk-plan.json tdk-plan.yaml tdk-plan.yml tdk-plan.tpl tdk-plan.ts tdk-plan.sh
+partial: tdk-plan.txt tdk-plan.css tdk-plan.MD tdk-plan.md.extra
+file-like: tdk-plan.md/tdk-next tdk-plan.md#tdk-anchor tdk-plan.md,tdk-next
+relative: a_b.c-d/tdk-plan;tdk-next tdk-plan.

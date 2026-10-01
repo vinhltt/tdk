@@ -1,0 +1,15 @@
+{
+  "tdk-plan": "tdk-plan",
+  "tdk-plan_extra-2" : "tdk-helper",
+  'tdk-helper': 'tdk-helper',
+  "tdk-plan"
+  : "tdk-plan",
+  "tdk-plan": "tdk-plan",
+  "tdk-plan": "tdk-plan",
+  "tdk-é": "tdk-plan",
+  "tdk-plan!": "tdk-plan",
+  "TDK": "TDK",
+  "tdk": "tdk",
+  "tdk-plan" "tdk-next": "tdk-last",
+  'tdk-plan": "tdk-plan"
+}

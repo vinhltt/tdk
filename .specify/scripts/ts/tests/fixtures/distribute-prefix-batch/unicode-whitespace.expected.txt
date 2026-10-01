@@ -1,0 +1,33 @@
+U+0009: .specify/plugins/tdk-core/tdk-plan	sample-next "tdk-key"	: "sample-value" [anchor](#sample-plan	tail)
+U+000A: .specify/plugins/tdk-core/tdk-plan
+sample-next "tdk-key"
+: "sample-value" [anchor](#sample-plan
+tail)
+U+000B: .specify/plugins/tdk-core/tdk-plansample-next "tdk-key": "sample-value" [anchor](#sample-plantail)
+U+000C: .specify/plugins/tdk-core/tdk-plansample-next "tdk-key": "sample-value" [anchor](#sample-plantail)
+U+000D: .specify/plugins/tdk-core/tdk-plansample-next "tdk-key": "sample-value" [anchor](#sample-plantail)
+U+0020: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+001C: .specify/plugins/tdk-core/tdk-plansample-next "tdk-key": "sample-value" [anchor](#sample-plantail)
+U+001D: .specify/plugins/tdk-core/tdk-plansample-next "tdk-key": "sample-value" [anchor](#sample-plantail)
+U+001E: .specify/plugins/tdk-core/tdk-plansample-next "tdk-key": "sample-value" [anchor](#sample-plantail)
+U+001F: .specify/plugins/tdk-core/tdk-plansample-next "tdk-key": "sample-value" [anchor](#sample-plantail)
+U+0085: .specify/plugins/tdk-core/tdk-plansample-next "tdk-key": "sample-value" [anchor](#sample-plantail)
+U+00A0: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+1680: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2000: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2001: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2002: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2003: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2004: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2005: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2006: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2007: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2008: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2009: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+200A: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2028: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+2029: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+202F: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+205F: .specify/plugins/tdk-core/tdk-plan sample-next "tdk-key" : "sample-value" [anchor](#sample-plan tail)
+U+3000: .specify/plugins/tdk-core/tdk-plan　sample-next "tdk-key"　: "sample-value" [anchor](#sample-plan　tail)
+Nonspace: .specify/plugins/tdk-core/tdk-plan​tdk-next "sample-key"​: "sample-value"

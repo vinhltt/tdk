@@ -1,0 +1,15 @@
+{
+  "tdk-plan": "sample-plan",
+  "tdk-plan_extra-2" : "sample-helper",
+  'tdk-helper': 'sample-helper',
+  "tdk-plan"
+  : "sample-plan",
+  "tdk-plan": "sample-plan",
+  "tdk-plan": "sample-plan",
+  "sample-é": "sample-plan",
+  "sample-plan!": "sample-plan",
+  "SAMPLE": "SAMPLE",
+  "sample": "sample",
+  "sample-plan" "tdk-next": "sample-last",
+  'sample-plan": "sample-plan"
+}
