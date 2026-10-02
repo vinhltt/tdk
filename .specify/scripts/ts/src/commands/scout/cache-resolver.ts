@@ -1,8 +1,9 @@
-// Resolves cache paths + mtime-based cache validity for tdk-scout.
+// Resolves cache paths + mtime/schema-version validity for tdk-scout.
 
-import { existsSync, mkdirSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { findProjectRoot } from '../manifest/find-project-root';
+import { TIER1_VERSION, type Tier1Result } from './types';
 
 export interface CachePaths {
   cacheRoot: string;
@@ -43,7 +44,7 @@ export function resolveCachePaths(opts: ResolveCacheOpts): CachePaths {
 }
 
 /**
- * Tier 1 cache valid iff JSON exists AND newer than pack.
+ * Tier 1 cache valid iff JSON exists, is newer than pack, and has the current schema version.
  *
  * The cache key deliberately ignores repomix --include/--ignore patterns, and adding a
  * pattern hash would be dead weight. Those patterns only apply in scope mode, and scope
@@ -53,9 +54,15 @@ export function resolveCachePaths(opts: ResolveCacheOpts): CachePaths {
  * each other's results. Cache hits are reachable only in from-pack mode, which rejects
  * both pattern flags.
  */
-export function isTier1CacheValid(tier1JsonPath: string, packPath: string): boolean {
-  if (!existsSync(tier1JsonPath) || !existsSync(packPath)) return false;
+export function readTier1Cache(tier1JsonPath: string, packPath: string): Tier1Result | undefined {
+  if (!existsSync(tier1JsonPath) || !existsSync(packPath)) return undefined;
   const jsonStat = statSync(tier1JsonPath);
   const packStat = statSync(packPath);
-  return jsonStat.mtimeMs >= packStat.mtimeMs;
+  if (jsonStat.mtimeMs < packStat.mtimeMs) return undefined;
+  try {
+    const cached = JSON.parse(readFileSync(tier1JsonPath, 'utf-8'));
+    return cached?.tier1Version === TIER1_VERSION ? cached : undefined;
+  } catch {
+    return undefined;
+  }
 }

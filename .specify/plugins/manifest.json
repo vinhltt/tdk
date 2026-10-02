@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-10-01T11:32:06Z",
+  "generated_at": "2026-10-02T00:50:16Z",
   "plugins": {
     "tdk-core": {
       "version": "14.0.1",
@@ -501,7 +501,7 @@
       }
     },
     "tdk-utils": {
-      "version": "4.3.0",
+      "version": "4.3.1",
       "components": {
         "skills": {
           "brainstorming": {
@@ -538,7 +538,7 @@
             "version": "4.1.1"
           },
           "tdk-scout": {
-            "version": "3.0.3"
+            "version": "4.3.1"
           },
           "tdk-setup-guide": {
             "version": "2.2.6"
@@ -567,7 +567,7 @@
             "version": "3.0.1"
           },
           "tdk-scout-runner": {
-            "version": "0.1.0"
+            "version": "4.3.1"
           }
         },
         "hooks": {},
@@ -575,16 +575,16 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e68f07c43a122d63dbd44fafbd978b0adb4f5f18bb95537f80014e859846f8b4",
-        ".claude-plugin/plugin.json": "ac968e4766228403a77bafb6b7f3d504d0ed96b99c052aa847645daa417cf809",
-        ".codex-plugin/plugin.json": "ac968e4766228403a77bafb6b7f3d504d0ed96b99c052aa847645daa417cf809",
-        ".cursor-plugin/plugin.json": "ac968e4766228403a77bafb6b7f3d504d0ed96b99c052aa847645daa417cf809",
-        "CHANGELOG.md": "bec8dfd41af21844ef2624a833e63623475330996b5b8be048ca8c216ec9761b",
+        ".claude-plugin/plugin.json": "4a846503c09f585547de9cfd57fbb986eb32fa97151bc24d32c439e21e6c61d6",
+        ".codex-plugin/plugin.json": "4a846503c09f585547de9cfd57fbb986eb32fa97151bc24d32c439e21e6c61d6",
+        ".cursor-plugin/plugin.json": "4a846503c09f585547de9cfd57fbb986eb32fa97151bc24d32c439e21e6c61d6",
+        "CHANGELOG.md": "426063212d8b9820a4d61a984e7dc58686beddb27bfaaf5060e27fdf476133a4",
         "agents/researcher.md": "239051264f41b129ef5c59adb573b7e762a528bb58d0ff8dd1e32eee243baaaf",
         "agents/tdk-counsel.md": "7fae0ea0d0e4986a204f411b9edbd6c8ddcad4289d045b7337b855bc707b2fe7",
         "agents/tdk-red-team-reliability.md": "8585ee27a9d1f6b79b9988fc6020317baa3be7e37f80be9086708bfc35c74ea8",
         "agents/tdk-red-team-security.md": "8e808e7330b21e83e830f70bf6221150ba0e91d235061ba0c6b2a32060ea7a33",
         "agents/tdk-red-team-skeptic.md": "15466ca23a4935e5300d9de5a908ad7ac7c0ba15797ab1eec5797bea3cb2f3ca",
-        "agents/tdk-scout-runner.md": "e12b66f1755440072f78f006938e8716a567e308dad6af41c44363d6caba05ea",
+        "agents/tdk-scout-runner.md": "eff7713b77bf04a016b12999bdae8356e993a8278be12cdf35b3001f964d87f6",
         "skills/brainstorming/SKILL.md": "0b7df94153742b98602f3f97c5661aa25c35bfa2ae77266f0337c93d52ddf5fe",
         "skills/brainstorming/scripts/README.md": "2cf2a585153087eb14e49daeef8de22c1904d6799058d3666c1710a95f36e566",
         "skills/brainstorming/scripts/brainstorm.py": "ae22620928cbd69e03b05e4db707367bfb166b5c87eb70aa22114ddd6fd8461e",
@@ -632,7 +632,7 @@
         "skills/tdk-branch-preflight/references/git-map-contract.md": "bc14c517be382195f1ea4a56921ff656a85a47099f58ceccc823fb3f7e0df6e0",
         "skills/tdk-load-project-context/SKILL.md": "1ef6d106970375084c517e598e0417c5cedf52c91054738e4a4c6a4d3b5ef3b2",
         "skills/tdk-repo-worktree/SKILL.md": "4998e077ca3dee1000885bbc58b4d85f6b58f8bc59c9cbb6281e0739e3e90a56",
-        "skills/tdk-scout/SKILL.md": "b682727e3b42de84b99ae063b79879afa4b5ed53d6697585400237503c99d3bc",
+        "skills/tdk-scout/SKILL.md": "1d77d0df4687d6012a6e18c8db0d34e238678a019c8d86e63be73f90fffa91c8",
         "skills/tdk-setup-guide/SKILL.md": "18ff64ec1cf1cb4e223702f808a25373fe525e57323f678c48455c279e49063f",
         "skills/tdk-skill-guide/SKILL.md": "a2dd1cbffdb3882d6db1240454ff41a1b3d213e647fb69882690d2adc4f75d4d",
         "skills/tdk-validate-task-id/SKILL.md": "b6f034eca3829f7c8a8d759297d7895cad0db2c86a4d948b363da0c793d38996"

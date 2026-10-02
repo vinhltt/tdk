@@ -7,7 +7,8 @@ import { splitPack } from './pack-splitter';
 import { buildTree } from './tree-builder';
 import { estimateTokens } from './tokens';
 import { getParser } from './language-parsers/index';
-import type { FileEntry, Tier1Result } from './types';
+import { aggregateTier1 } from './dir-aggregator';
+import { MAX_SCOUT_FILES, TIER1_VERSION, type FileEntry, type Tier1Result } from './types';
 
 export interface ExtractOptions {
   scope?: string;
@@ -50,23 +51,24 @@ export function extractPack(
     totalTokens += tokens;
   }
 
-  const tree = buildTree(files.map((f) => f.path));
-
-  const result: Tier1Result = {
+  const needsAggregation = files.length > MAX_SCOUT_FILES;
+  let result: Tier1Result = {
+    tier1Version: TIER1_VERSION,
     scope: opts.scope ?? basename(packPath, '.md'),
     totalFiles: files.length,
     totalLoc,
     totalTokens,
     tier1GeneratedAt: new Date().toISOString(),
     files,
-    tree,
+    tree: needsAggregation ? {} : buildTree(files.map((f) => f.path)),
     unparsed,
   };
+  if (needsAggregation) result = aggregateTier1(result, blocks);
 
   // Atomic write.
   mkdirSync(dirname(outputPath), { recursive: true });
   const tmp = `${outputPath}.tmp`;
-  writeFileSync(tmp, JSON.stringify(result, null, 2), 'utf-8');
+  writeFileSync(tmp, JSON.stringify(result, null, needsAggregation ? undefined : 2), 'utf-8');
   renameSync(tmp, outputPath);
 
   return result;

@@ -2,7 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync, utimesSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { resolveCachePaths, isTier1CacheValid } from '../../src/commands/scout/cache-resolver';
+import { resolveCachePaths, readTier1Cache } from '../../src/commands/scout/cache-resolver';
+import { TIER1_VERSION } from '../../src/commands/scout/types';
 
 describe('cache-resolver', () => {
   let tempDir: string;
@@ -28,29 +29,42 @@ describe('cache-resolver', () => {
     expect(p.packPath).toBe(resolve('/tmp/abc.md'));
   });
 
-  it('isTier1CacheValid: returns false when JSON missing', () => {
+  it('does not load a missing cache', () => {
     const pack = join(tempDir, 'pack.md');
     writeFileSync(pack, 'pack');
-    expect(isTier1CacheValid(join(tempDir, 'missing.json'), pack)).toBe(false);
+    expect(readTier1Cache(join(tempDir, 'missing.json'), pack)).toBeUndefined();
   });
 
-  it('isTier1CacheValid: returns false when JSON older than pack', () => {
+  it('does not load a cache older than its pack', () => {
     const pack = join(tempDir, 'p.md');
     const json = join(tempDir, 'p.json');
-    writeFileSync(json, '{}');
+    writeFileSync(json, JSON.stringify({ tier1Version: TIER1_VERSION }));
     writeFileSync(pack, 'pack');
     const past = new Date(Date.now() - 60_000);
     utimesSync(json, past, past);
-    expect(isTier1CacheValid(json, pack)).toBe(false);
+    expect(readTier1Cache(json, pack)).toBeUndefined();
   });
 
-  it('isTier1CacheValid: returns true when JSON newer than pack', () => {
+  it('loads current-version data only when newer than its pack', () => {
     const pack = join(tempDir, 'p.md');
     const json = join(tempDir, 'p.json');
     writeFileSync(pack, 'pack');
     const past = new Date(Date.now() - 60_000);
     utimesSync(pack, past, past);
-    writeFileSync(json, '{}');
-    expect(isTier1CacheValid(json, pack)).toBe(true);
+    const cached = { tier1Version: TIER1_VERSION, totalFiles: 1, files: [{ path: 'main.ts' }] };
+    writeFileSync(json, JSON.stringify(cached));
+    expect(readTier1Cache(json, pack)).toEqual(cached);
+  });
+
+  it('invalidates fresh legacy, stale-version, future-version, and malformed caches', () => {
+    const pack = join(tempDir, 'p.md');
+    const json = join(tempDir, 'p.json');
+    writeFileSync(pack, 'pack');
+    const past = new Date(Date.now() - 60_000);
+    utimesSync(pack, past, past);
+    for (const content of ['{}', '{"tier1Version":1}', '{"tier1Version":999}', 'broken', 'null']) {
+      writeFileSync(json, content);
+      expect(readTier1Cache(json, pack)).toBeUndefined();
+    }
   });
 });

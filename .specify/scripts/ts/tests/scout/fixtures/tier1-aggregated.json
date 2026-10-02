@@ -1,0 +1,821 @@
+{
+  "tier1Version": 2,
+  "scope": "commerce-scale-fixture",
+  "totalFiles": 1303,
+  "totalLoc": 2799772,
+  "totalTokens": 13995335,
+  "tier1GeneratedAt": "2026-10-01T00:00:00.000Z",
+  "files": [
+    {
+      "path": "src/backend/index.ts",
+      "loc": 2,
+      "tokens": 25,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "checkout"
+      ],
+      "symbols": [
+        "checkout"
+      ]
+    },
+    {
+      "path": "src/frontend/index.ts",
+      "loc": 2,
+      "tokens": 26,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "renderOrder"
+      ],
+      "symbols": [
+        "renderOrder"
+      ]
+    },
+    {
+      "path": "src/shared/index.ts",
+      "loc": 1,
+      "tokens": 14,
+      "imports": [],
+      "exports": [
+        "Order"
+      ],
+      "symbols": [
+        "Order"
+      ]
+    },
+    {
+      "path": "src/backend/unit1.ts",
+      "loc": 2154,
+      "tokens": 10768,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1"
+      ],
+      "symbols": [
+        "unit1"
+      ]
+    },
+    {
+      "path": "src/backend/unit10.ts",
+      "loc": 2154,
+      "tokens": 10768,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit10"
+      ],
+      "symbols": [
+        "unit10"
+      ]
+    },
+    {
+      "path": "src/backend/unit100.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit100"
+      ],
+      "symbols": [
+        "unit100"
+      ]
+    },
+    {
+      "path": "src/backend/unit1000.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1000"
+      ],
+      "symbols": [
+        "unit1000"
+      ]
+    },
+    {
+      "path": "src/backend/unit1003.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1003"
+      ],
+      "symbols": [
+        "unit1003"
+      ]
+    },
+    {
+      "path": "src/backend/unit1006.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1006"
+      ],
+      "symbols": [
+        "unit1006"
+      ]
+    },
+    {
+      "path": "src/backend/unit1009.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1009"
+      ],
+      "symbols": [
+        "unit1009"
+      ]
+    },
+    {
+      "path": "src/backend/unit1012.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1012"
+      ],
+      "symbols": [
+        "unit1012"
+      ]
+    },
+    {
+      "path": "src/backend/unit1015.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1015"
+      ],
+      "symbols": [
+        "unit1015"
+      ]
+    },
+    {
+      "path": "src/backend/unit1018.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1018"
+      ],
+      "symbols": [
+        "unit1018"
+      ]
+    },
+    {
+      "path": "src/backend/unit1021.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1021"
+      ],
+      "symbols": [
+        "unit1021"
+      ]
+    },
+    {
+      "path": "src/backend/unit1024.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1024"
+      ],
+      "symbols": [
+        "unit1024"
+      ]
+    },
+    {
+      "path": "src/backend/unit1027.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1027"
+      ],
+      "symbols": [
+        "unit1027"
+      ]
+    },
+    {
+      "path": "src/backend/unit103.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit103"
+      ],
+      "symbols": [
+        "unit103"
+      ]
+    },
+    {
+      "path": "src/backend/unit1030.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1030"
+      ],
+      "symbols": [
+        "unit1030"
+      ]
+    },
+    {
+      "path": "src/backend/unit1033.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1033"
+      ],
+      "symbols": [
+        "unit1033"
+      ]
+    },
+    {
+      "path": "src/backend/unit1036.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1036"
+      ],
+      "symbols": [
+        "unit1036"
+      ]
+    },
+    {
+      "path": "src/backend/unit1039.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1039"
+      ],
+      "symbols": [
+        "unit1039"
+      ]
+    },
+    {
+      "path": "src/backend/unit1042.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1042"
+      ],
+      "symbols": [
+        "unit1042"
+      ]
+    },
+    {
+      "path": "src/backend/unit1045.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1045"
+      ],
+      "symbols": [
+        "unit1045"
+      ]
+    },
+    {
+      "path": "src/backend/unit1048.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1048"
+      ],
+      "symbols": [
+        "unit1048"
+      ]
+    },
+    {
+      "path": "src/backend/unit1051.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1051"
+      ],
+      "symbols": [
+        "unit1051"
+      ]
+    },
+    {
+      "path": "src/backend/unit1054.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1054"
+      ],
+      "symbols": [
+        "unit1054"
+      ]
+    },
+    {
+      "path": "src/backend/unit1057.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1057"
+      ],
+      "symbols": [
+        "unit1057"
+      ]
+    },
+    {
+      "path": "src/backend/unit106.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit106"
+      ],
+      "symbols": [
+        "unit106"
+      ]
+    },
+    {
+      "path": "src/backend/unit1060.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1060"
+      ],
+      "symbols": [
+        "unit1060"
+      ]
+    },
+    {
+      "path": "src/backend/unit1063.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1063"
+      ],
+      "symbols": [
+        "unit1063"
+      ]
+    },
+    {
+      "path": "src/backend/unit1066.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1066"
+      ],
+      "symbols": [
+        "unit1066"
+      ]
+    },
+    {
+      "path": "src/backend/unit1069.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1069"
+      ],
+      "symbols": [
+        "unit1069"
+      ]
+    },
+    {
+      "path": "src/backend/unit1072.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1072"
+      ],
+      "symbols": [
+        "unit1072"
+      ]
+    },
+    {
+      "path": "src/backend/unit1075.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1075"
+      ],
+      "symbols": [
+        "unit1075"
+      ]
+    },
+    {
+      "path": "src/backend/unit1078.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1078"
+      ],
+      "symbols": [
+        "unit1078"
+      ]
+    },
+    {
+      "path": "src/backend/unit1081.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1081"
+      ],
+      "symbols": [
+        "unit1081"
+      ]
+    },
+    {
+      "path": "src/backend/unit1084.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1084"
+      ],
+      "symbols": [
+        "unit1084"
+      ]
+    },
+    {
+      "path": "src/backend/unit1087.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1087"
+      ],
+      "symbols": [
+        "unit1087"
+      ]
+    },
+    {
+      "path": "src/backend/unit109.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit109"
+      ],
+      "symbols": [
+        "unit109"
+      ]
+    },
+    {
+      "path": "src/backend/unit1090.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1090"
+      ],
+      "symbols": [
+        "unit1090"
+      ]
+    },
+    {
+      "path": "src/backend/unit1093.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1093"
+      ],
+      "symbols": [
+        "unit1093"
+      ]
+    },
+    {
+      "path": "src/backend/unit1096.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1096"
+      ],
+      "symbols": [
+        "unit1096"
+      ]
+    },
+    {
+      "path": "src/backend/unit1099.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1099"
+      ],
+      "symbols": [
+        "unit1099"
+      ]
+    },
+    {
+      "path": "src/backend/unit1102.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1102"
+      ],
+      "symbols": [
+        "unit1102"
+      ]
+    },
+    {
+      "path": "src/backend/unit1105.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1105"
+      ],
+      "symbols": [
+        "unit1105"
+      ]
+    },
+    {
+      "path": "src/backend/unit1108.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1108"
+      ],
+      "symbols": [
+        "unit1108"
+      ]
+    },
+    {
+      "path": "src/backend/unit1111.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1111"
+      ],
+      "symbols": [
+        "unit1111"
+      ]
+    },
+    {
+      "path": "src/backend/unit1114.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1114"
+      ],
+      "symbols": [
+        "unit1114"
+      ]
+    },
+    {
+      "path": "src/backend/unit1117.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit1117"
+      ],
+      "symbols": [
+        "unit1117"
+      ]
+    },
+    {
+      "path": "src/backend/unit112.ts",
+      "loc": 2154,
+      "tokens": 10769,
+      "imports": [
+        "../shared/index"
+      ],
+      "exports": [
+        "unit112"
+      ],
+      "symbols": [
+        "unit112"
+      ]
+    }
+  ],
+  "tree": {
+    "src": {
+      "backend": {
+        "__files__": [
+          "index.ts",
+          "unit1.ts",
+          "unit10.ts",
+          "unit100.ts",
+          "unit1000.ts",
+          "unit1003.ts",
+          "unit1006.ts",
+          "unit1009.ts",
+          "unit1012.ts",
+          "unit1015.ts",
+          "unit1018.ts",
+          "unit1021.ts",
+          "unit1024.ts",
+          "unit1027.ts",
+          "unit103.ts",
+          "unit1030.ts",
+          "unit1033.ts",
+          "unit1036.ts",
+          "unit1039.ts",
+          "unit1042.ts",
+          "unit1045.ts",
+          "unit1048.ts",
+          "unit1051.ts",
+          "unit1054.ts",
+          "unit1057.ts",
+          "unit106.ts",
+          "unit1060.ts",
+          "unit1063.ts",
+          "unit1066.ts",
+          "unit1069.ts",
+          "unit1072.ts",
+          "unit1075.ts",
+          "unit1078.ts",
+          "unit1081.ts",
+          "unit1084.ts",
+          "unit1087.ts",
+          "unit109.ts",
+          "unit1090.ts",
+          "unit1093.ts",
+          "unit1096.ts",
+          "unit1099.ts",
+          "unit1102.ts",
+          "unit1105.ts",
+          "unit1108.ts",
+          "unit1111.ts",
+          "unit1114.ts",
+          "unit1117.ts",
+          "unit112.ts"
+        ]
+      },
+      "frontend": {
+        "__files__": [
+          "index.ts"
+        ]
+      },
+      "shared": {
+        "__files__": [
+          "index.ts"
+        ]
+      }
+    }
+  },
+  "unparsed": [],
+  "unparsedCount": 0,
+  "aggregated": [
+    {
+      "path": "src/backend",
+      "fileCount": 434,
+      "totalLoc": 932684,
+      "totalTokens": 4662969,
+      "entryPoints": [
+        "src/backend/index.ts",
+        "src/backend/unit1.ts",
+        "src/backend/unit10.ts"
+      ],
+      "imports": [
+        {
+          "path": "src/shared",
+          "fileCount": 434
+        }
+      ]
+    },
+    {
+      "path": "src/frontend",
+      "fileCount": 435,
+      "totalLoc": 934838,
+      "totalTokens": 4673738,
+      "entryPoints": [
+        "src/frontend/index.ts"
+      ],
+      "imports": [
+        {
+          "path": "src/shared",
+          "fileCount": 435
+        }
+      ]
+    },
+    {
+      "path": "src/shared",
+      "fileCount": 434,
+      "totalLoc": 932250,
+      "totalTokens": 4658628,
+      "entryPoints": [
+        "src/shared/index.ts"
+      ],
+      "imports": []
+    }
+  ],
+  "aggregationDepth": 2
+}

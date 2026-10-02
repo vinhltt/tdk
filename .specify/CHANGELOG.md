@@ -8,6 +8,17 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [1.118.2] - 2026-10-02
+
+### Added
+- **[Scripts]** Add bounded directory aggregation for scout scopes above 800 files, preserving full-scope totals and resolved directed dependencies within 50,000 UTF-8 bytes and at most 50 representative files.
+
+### Changed
+- **[Scripts]** Emit Tier 1 schema v2, regenerate legacy caches, validate cached artifact consistency, and cover mode boundaries, aggregation, and cache transitions with regression tests.
+- **[tdk-utils]**
+  - `tdk-scout`: document per-file and aggregated modes, representative-only source access, byte limits, and directory evidence for downstream layout workflows.
+  - `tdk-scout-runner`: validate schema v2, rank directory groups in aggregated mode, enforce source-read budgets, and report directory dependencies and sampled-coverage gaps.
+
 ## [1.118.1] - 2026-10-01
 
 ### Changed

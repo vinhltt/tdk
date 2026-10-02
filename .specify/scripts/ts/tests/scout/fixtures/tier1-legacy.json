@@ -1,0 +1,104 @@
+{
+  "tier1Version": 2,
+  "scope": "small-fixture",
+  "totalFiles": 5,
+  "totalLoc": 17,
+  "totalTokens": 139,
+  "tier1GeneratedAt": "2026-10-01T00:00:00.000Z",
+  "files": [
+    {
+      "path": "src/index.ts",
+      "loc": 7,
+      "tokens": 46,
+      "imports": [
+        "./foo",
+        "./bar",
+        "zod"
+      ],
+      "exports": [
+        "main",
+        "helper",
+        "Service"
+      ],
+      "symbols": [
+        "main",
+        "helper",
+        "Service"
+      ]
+    },
+    {
+      "path": "src/foo.ts",
+      "loc": 2,
+      "tokens": 20,
+      "imports": [],
+      "exports": [
+        "foo",
+        "legacy"
+      ],
+      "symbols": [
+        "foo",
+        "legacy"
+      ]
+    },
+    {
+      "path": "src/bar.ts",
+      "loc": 2,
+      "tokens": 16,
+      "imports": [],
+      "exports": [
+        "bar"
+      ],
+      "symbols": [
+        "local",
+        "bar"
+      ]
+    },
+    {
+      "path": "src/utils/helpers.ts",
+      "loc": 4,
+      "tokens": 34,
+      "imports": [
+        "node:path",
+        "node:fs"
+      ],
+      "exports": [
+        "Helper",
+        "Opts"
+      ],
+      "symbols": [
+        "internal",
+        "Helper",
+        "Opts"
+      ]
+    },
+    {
+      "path": "src/utils/format.ts",
+      "loc": 2,
+      "tokens": 23,
+      "imports": [],
+      "exports": [
+        "format",
+        "foo"
+      ],
+      "symbols": [
+        "format"
+      ]
+    }
+  ],
+  "tree": {
+    "src": {
+      "__files__": [
+        "index.ts",
+        "foo.ts",
+        "bar.ts"
+      ],
+      "utils": {
+        "__files__": [
+          "helpers.ts",
+          "format.ts"
+        ]
+      }
+    }
+  },
+  "unparsed": []
+}

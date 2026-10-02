@@ -4,6 +4,18 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.3.1] - 2026-10-02
+
+### Changed
+- tdk-scout: document per-file and aggregated modes, representative-only source access, byte limits, and directory evidence for downstream layout workflows.
+- tdk-scout-runner: validate schema v2, rank directory groups in aggregated mode, enforce source-read budgets, and report directory dependencies and sampled-coverage gaps.
+
+## [Unreleased]
+
+### Changed
+- `tdk-scout` emits a bounded directory-level Tier 1 view above 800 files instead of failing solely on file count. Directory summaries preserve full-scope counts, LOC, estimated tokens and resolved directed dependencies; `files[]` contains at most 50 original representatives, not the complete file universe.
+- Tier 1 schema version 2 invalidates old caches. The runner reports its input mode and sampled coverage, navigates directory summaries before file reads, and keeps `sample_budget` as a file-read limit.
+
 ## [4.3.0] - 2026-09-15
 
 ### Added

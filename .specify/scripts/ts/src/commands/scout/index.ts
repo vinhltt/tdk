@@ -3,56 +3,23 @@
 // All logs/progress go to stderr.
 
 import { Command } from 'commander';
-import { readFileSync, statSync } from 'node:fs';
+import { statSync } from 'node:fs';
+import { posix } from 'node:path';
 import { validateArgs, type ResolvedArgs } from './args-validator';
-import { resolveCachePaths, isTier1CacheValid } from './cache-resolver';
+import { resolveCachePaths, readTier1Cache } from './cache-resolver';
 import { runRepomix } from './repomix-runner';
 import { extractPack } from './extract';
+import { MAX_REPRESENTATIVE_FILES } from './dir-aggregator';
+import { MAX_SCOUT_FILES, MAX_AGGREGATED_BYTES, TIER1_VERSION, type Tier1Result } from './types';
 import { writeAgentJson } from '../../utils/index';
 
-// Hard ceiling on how many files one scout run may hand to the tier 2 agent.
-// That agent loads the whole Tier 1 JSON into context before it reads anything, and on this
-// codebase a Tier 1 entry costs roughly 300-800 bytes per file, so a ~50K-token working
-// budget is really used up somewhere between 250 and 550 files. 800 sits deliberately above
-// that band so that scouting this toolkit's own workspace (681 files) is not blocked. Treat
-// it as a backstop against runaway repos, not as a guarantee that a passing report fits the
-// agent's budget.
-const MAX_SCOUT_FILES = 800;
-
-// Advisory-only pack size. The Tier 1 JSON is much smaller than the pack it came from, but
-// the ratio is unstable: the densest case measured on this codebase was ~0.20x the pack size,
-// while other repos came in as low as 0.03x. A pack past this size can therefore produce a
-// Tier 1 JSON beyond the agent's budget, but often will not — so this only warns, and the
-// exact file-count check runs right after it.
+// Pack bytes are an advisory signal only; extracted file count chooses the output mode.
 const PACK_SIZE_WARN_BYTES = 1_000_000;
-
-export interface Tier1Summary {
-  totalFiles: number;
-}
-
-/**
- * Reads the file count out of an already-written Tier 1 JSON (used on the cache-hit path).
- *
- * A cached JSON with no usable count cannot be checked against the ceiling, so this refuses
- * rather than substituting a default. Treating a missing count as zero would let a cached
- * report skip the ceiling check entirely — the silent pass this check exists to prevent.
- */
-export function readTier1Summary(tier1JsonPath: string): Tier1Summary {
-  const parsed = JSON.parse(readFileSync(tier1JsonPath, 'utf-8')) as { totalFiles?: unknown };
-  if (typeof parsed.totalFiles !== 'number' || !Number.isFinite(parsed.totalFiles)) {
-    throw new Error(
-      `cached tier 1 JSON has no usable totalFiles: ${tier1JsonPath}. ` +
-      'Re-run with --force-refresh to rebuild it.',
-    );
-  }
-  return { totalFiles: parsed.totalFiles };
-}
 
 export interface RunDeps {
   runRepomix?: typeof runRepomix;
   extractPack?: typeof extractPack;
-  isTier1CacheValid?: typeof isTier1CacheValid;
-  readTier1Summary?: typeof readTier1Summary;
+  readTier1Cache?: typeof readTier1Cache;
 }
 
 export interface RunResult {
@@ -67,8 +34,7 @@ export interface RunResult {
 export function runScout(args: ResolvedArgs, deps: RunDeps = {}): RunResult {
   const repomix = deps.runRepomix ?? runRepomix;
   const extract = deps.extractPack ?? extractPack;
-  const isCacheValid = deps.isTier1CacheValid ?? isTier1CacheValid;
-  const readSummary = deps.readTier1Summary ?? readTier1Summary;
+  const readCache = deps.readTier1Cache ?? readTier1Cache;
 
   const packPathOverride = args.mode === 'from-pack' ? args.packPath : undefined;
   const paths = resolveCachePaths({
@@ -93,14 +59,14 @@ export function runScout(args: ResolvedArgs, deps: RunDeps = {}): RunResult {
   warnOnLargePack(packPath);
 
   let cacheHit = false;
-  if (!args.forceRefresh && isCacheValid(paths.tier1JsonPath, packPath)) {
+  const cached = args.forceRefresh ? undefined : readCache(paths.tier1JsonPath, packPath);
+  if (cached !== undefined) {
+    assertCachedTier1(cached, paths.tier1JsonPath);
     process.stderr.write('[tdk-scout] tier 1 cache hit\n');
     cacheHit = true;
-    assertWithinFileCeiling(readSummary(paths.tier1JsonPath).totalFiles);
   } else {
     process.stderr.write('[tdk-scout] running tier 1 extract\n');
-    const tier1 = extract(packPath, paths.tier1JsonPath, { scope: args.scopeKey });
-    assertWithinFileCeiling(tier1.totalFiles);
+    extract(packPath, paths.tier1JsonPath, { scope: args.scopeKey });
   }
 
   return {
@@ -113,24 +79,105 @@ export function runScout(args: ResolvedArgs, deps: RunDeps = {}): RunResult {
   };
 }
 
-/** Approximate early signal on pack size. Never fatal — the file-count check decides. */
+/** Approximate early signal; oversized scopes are bounded during extraction, not rejected. */
 function warnOnLargePack(packPath: string): void {
   const packBytes = statSync(packPath).size;
   if (packBytes <= PACK_SIZE_WARN_BYTES) return;
   process.stderr.write(
     `[tdk-scout] warning: pack is ${packBytes} bytes (> ${PACK_SIZE_WARN_BYTES}); ` +
-    'the tier 1 report may be too large for the tier 2 agent. ' +
-    'This is approximate — the exact file-count check follows.\n',
+    `tier 1 uses bounded directory aggregation above ${MAX_SCOUT_FILES} files. ` +
+    'Pack bytes alone do not determine report size.\n',
   );
 }
 
-/** Single ceiling check shared by the cache-hit and fresh-extract paths so they cannot drift. */
-function assertWithinFileCeiling(totalFiles: number): void {
-  if (totalFiles <= MAX_SCOUT_FILES) return;
-  throw new Error(
-    `scope too large for tier 2: ${totalFiles} files exceeds the limit of ${MAX_SCOUT_FILES}. ` +
-    'Re-run with --scope <subdir> to narrow the scope (or --include <patterns> to pack a subset).',
-  );
+/** Version alone cannot make a count-only, unbounded or inconsistent cached artifact usable. */
+function assertCachedTier1(tier1: Tier1Result, path: string): void {
+  const recovery = 'Re-run with --force-refresh to rebuild it.';
+  if (typeof tier1.totalFiles !== 'number' || !Number.isSafeInteger(tier1.totalFiles) || tier1.totalFiles < 0) {
+    throw new Error(`cached tier 1 JSON has no usable totalFiles: ${path}. ${recovery}`);
+  }
+  let valid = tier1.tier1Version === TIER1_VERSION &&
+    typeof tier1.scope === 'string' && tier1.scope.length > 0 &&
+    typeof tier1.tier1GeneratedAt === 'string' && tier1.tier1GeneratedAt.length > 0 &&
+    Number.isSafeInteger(tier1.totalLoc) && tier1.totalLoc >= 0 &&
+    Number.isSafeInteger(tier1.totalTokens) && tier1.totalTokens >= 0 &&
+    Array.isArray(tier1.files) && isStringArray(tier1.unparsed) && tier1.tree !== null &&
+    typeof tier1.tree === 'object' && !Array.isArray(tier1.tree);
+  let filePaths: Set<string> | undefined;
+  if (valid) {
+    valid = tier1.files.every((file) => file !== null && typeof file === 'object' &&
+      typeof file.path === 'string' && file.path.length > 0 &&
+      Number.isSafeInteger(file.loc) && file.loc >= 0 &&
+      Number.isSafeInteger(file.tokens) && file.tokens >= 0 &&
+      isStringArray(file.imports) && isStringArray(file.exports) && isStringArray(file.symbols));
+    if (valid) {
+      filePaths = new Set(tier1.files.map((file) => file.path));
+      valid = filePaths.size === tier1.files.length &&
+        tier1.unparsed.every((file) => filePaths!.has(file));
+    }
+    if (tier1.totalFiles <= MAX_SCOUT_FILES) {
+      valid &&= tier1.aggregated === undefined && tier1.files.length === tier1.totalFiles;
+    } else {
+      const groups = tier1.aggregated;
+      valid &&= tier1.files.length > 0 && tier1.files.length <= MAX_REPRESENTATIVE_FILES &&
+        typeof tier1.aggregationDepth === 'number' && Number.isSafeInteger(tier1.aggregationDepth) &&
+        tier1.aggregationDepth >= 0 && typeof tier1.unparsedCount === 'number' &&
+        Number.isSafeInteger(tier1.unparsedCount) && tier1.unparsedCount >= tier1.unparsed.length &&
+        tier1.unparsedCount <= tier1.totalFiles && Array.isArray(groups) && groups.length > 0 &&
+        statSync(path).size <= MAX_AGGREGATED_BYTES;
+      if (valid && groups) {
+        const groupPaths = new Set<string>();
+        const fileGroups = new Map<string, string>();
+        for (const file of tier1.files) {
+          const parent = posix.dirname(posix.normalize(file.path));
+          const group = tier1.aggregationDepth === 0 || parent === '.' ? '.' :
+            parent.split('/').slice(0, tier1.aggregationDepth).join('/');
+          fileGroups.set(file.path, group);
+        }
+        let totalFiles = 0;
+        let totalLoc = 0;
+        let totalTokens = 0;
+        for (const group of groups) {
+          if (group === null || typeof group !== 'object' || typeof group.path !== 'string' ||
+            !group.path || groupPaths.has(group.path) || !Number.isSafeInteger(group.fileCount) ||
+            group.fileCount <= 0 || !Number.isSafeInteger(group.totalLoc) || group.totalLoc < 0 ||
+            !Number.isSafeInteger(group.totalTokens) || group.totalTokens < 0 ||
+            !Array.isArray(group.entryPoints) || group.entryPoints.length === 0 ||
+            !group.entryPoints.every((entry) => typeof entry === 'string' && fileGroups.get(entry) === group.path) ||
+            !Array.isArray(group.imports)) {
+            valid = false;
+            break;
+          }
+          groupPaths.add(group.path);
+          totalFiles += group.fileCount;
+          totalLoc += group.totalLoc;
+          totalTokens += group.totalTokens;
+        }
+        valid &&= totalFiles === tier1.totalFiles && totalLoc === tier1.totalLoc && totalTokens === tier1.totalTokens &&
+          [...fileGroups.values()].every(group => groupPaths.has(group));
+        if (valid) {
+          for (const group of groups) {
+            const targets = new Set<string>();
+            for (const edge of group.imports) {
+              if (edge === null || typeof edge !== 'object' || !groupPaths.has(edge.path) ||
+                edge.path === group.path || targets.has(edge.path) || !Number.isSafeInteger(edge.fileCount) ||
+                edge.fileCount <= 0 || edge.fileCount > group.fileCount) {
+                valid = false;
+                break;
+              }
+              targets.add(edge.path);
+            }
+            if (!valid) break;
+          }
+        }
+      }
+    }
+  }
+  if (!valid) throw new Error(`cached tier 1 JSON has an unusable tier ${TIER1_VERSION} schema: ${path}. ${recovery}`);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every(item => typeof item === 'string');
 }
 
 export function createScoutCommand(): Command {
