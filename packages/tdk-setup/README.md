@@ -23,6 +23,29 @@ bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --dry-r
 bun src/index.ts install "$CONSUMER_ROOT" --harness claude --all-plugins --prefix sample --yes
 ```
 
+Check whether the installed Claude projection matches the distributed payload:
+
+```bash
+bun src/index.ts install "$CONSUMER_ROOT" --harness claude --check
+```
+
+`install --check` is read-only and never prompts. Without `--plugins` or
+`--all-plugins`, it reuses the resolved selection from Claude ownership state,
+falling back to `.specify/install-settings.json`'s requested optional plugins
+when ownership state is absent. Saved prefix and rewrite settings still apply.
+An explicit selector is required if neither saved selection exists.
+
+Exit codes are **0** for a current projection, **1** for confirmed stale
+targets, removals, hook/settings drift, or structural collisions, and **2** for
+an operational or invalid-input error. Each stale item is printed. A managed
+target edited locally while its payload is unchanged is reported as
+`modified (informational)` and does not make the projection stale; a payload
+change still does. A locally edited file removed from the selected payload is
+stale because its active projection cannot be removed automatically; duplicate
+projected targets are also stale. The check does not refresh files, settings, or ownership
+state. It is Claude-only and rejects `--yes`, `--dry-run`, and
+`--harness codex`.
+
 Materialize and install Codex artifacts in the consumer context:
 
 ```bash
@@ -65,6 +88,11 @@ output distinguishes `Requested optional plugins` from the complete
 `Resolved plugins` set.
 
 If `.specify/` was distributed with `bash distribute.sh <consumer-root> --prefix sample`, use the same `--prefix sample` here. `distribute.sh --prefix` brands safe `.specify/` payload text; `tdk-setup install --prefix` brands installed `.claude/`, `.codex/`, and `.agents/skills/` harness artifacts.
+
+Keep canonical external identities in opaque `.txt` resources rather than
+brandable skill prose. Claude and Codex leave those bytes unchanged, and OMP
+preserves them during flat conversion; a consumer prefix must not rename an
+upstream project or tracker.
 
 ## Commands
 
@@ -176,6 +204,11 @@ byte-preserving sentinel merge, records a managed-region checksum, and creates a
 backup of the existing `.omp/` tree. Unsupported or local-only settings are reported without copying
 their values; scoped permissions are never broadened into global approvals.
 
+User-owned `modelRoles` outside the TDK sentinels takes precedence over the
+Claude `model` mapping. Conversion preserves that entire root byte-for-byte
+and reports the skipped mapping; converter-owned model roles still update
+normally. Other duplicate ownership roots remain blocking conflicts.
+
 ### OMP hooks
 
 OMP hook conversion preserves the eight supported event mappings and their existing matcher, session, and output-control contract in the [generated bridge](src/lib/harness-transform/claude-hook-bridge.ts). `Stop` runs only for terminal main-session `agent_end` events; `SubagentStart` and `SubagentStop` run only for detected child sessions. When topology metadata is unavailable, the conservative fallback runs `Stop` and skips `Subagent*`. `SessionStart` and `PreCompact` matchers degrade to match-all when OMP does not expose matcher data.
@@ -212,8 +245,8 @@ bun src/index.ts convert-flat "$CONSUMER_ROOT" --harness omp --check
 ```
 
 `--check` is available only with `--harness omp` and cannot be combined with conversion options. It
-exits 0 when no drift is detected and nonzero for drift or unavailable/incompatible OMP ownership
-data. The command reads `.specify/state/harness-install/omp.json` and reports changed managed
+exits 0 when no drift is detected, 1 for detected drift, and 2 for an invalid invocation or
+unavailable/incompatible ownership data. The command reads `.specify/state/harness-install/omp.json` and reports changed managed
 sources, edited managed targets, and missing managed targets as `source-changed`,
 `target-modified`, and `target-missing`. For `.omp/config.yml`, only the payload between the TDK
 sentinels is checked; user-owned YAML outside that region may change without causing drift. The

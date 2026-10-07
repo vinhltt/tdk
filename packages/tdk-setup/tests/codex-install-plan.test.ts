@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { createHash } from 'node:crypto';
+import { parse as parseYaml } from 'yaml';
 import { buildCodexInstallPlan } from '../src/codex-install-plan';
 import { emptyHarnessManifest } from '../src/manifest-store';
 import { makeConsumer, sha256, writeMultiPluginManifest, writePluginFile } from './fixtures';
@@ -159,8 +160,15 @@ describe('codex install plan', () => {
     expect(configWrite!.content.toString('utf-8')).toContain('[agents.tdk-helper]');
   });
 
-  test('rewrites custom prefixes across skill dirs, agent files, and config entries', () => {
+  test('rewrites custom prefixes across runtime names without branding canonical identity data', () => {
     const consumer = writePreconvertedPlugin(makeConsumer('tdk-codex-prefix-'));
+    const manifestPath = path.join(consumer.root, '.specify/codex-plugins/manifest.json');
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    manifest.plugins['tdk-core'].files['skills/tdk-demo/references/owner.txt'] = writeCodexPkgFile(
+      consumer.root, 'tdk-core', 'skills/tdk-demo/references/owner.txt',
+      'target_project: tdk-builder\nsuggested_tracker: https://github.com/vinhltt/tdk-builder\n',
+    );
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest));
     const plan = buildCodexInstallPlan({
       consumerRoot: consumer.root,
       selectedPlugins: ['tdk-core'],
@@ -175,6 +183,11 @@ describe('codex install plan', () => {
     const config = plan.writes.find((write) => write.targetRelativePath === '.codex/config.toml')?.content.toString('utf-8') ?? '';
     expect(config).toContain('[agents.sample-helper]');
     expect(config).toContain('config_file = "agents/sample-helper.toml"');
+    const identity = plan.writes.find(write => write.targetRelativePath === '.agents/skills/sample-demo/references/owner.txt');
+    expect(parseYaml(identity!.content.toString('utf8'))).toEqual({
+      target_project: 'tdk-builder',
+      suggested_tracker: 'https://github.com/vinhltt/tdk-builder',
+    });
   });
 
   test('skips internal shared skill entrypoints while preserving shared reference files', () => {

@@ -4,7 +4,8 @@ The canonical source is the public MIT repository <https://github.com/vinhltt/td
 TDK embeds its regular files at `.specify/plugins/tdk-memory/` using Git subtree, not a
 submodule. Consumers need Node.js >=18 for the shipped checksum bundle; Bun and package
 installation are maintainer-only build requirements. The consumer manifest remains
-`memory.yaml` version `"2"`, and this extraction does not bump plugin version `3.0.3`.
+`memory.yaml` version `"2"`. The file-only/control-header contract is released as
+plugin version `4.0.0`.
 
 ## One-way synchronization: upstream to TDK
 
@@ -81,3 +82,10 @@ move to plugin root: Claude would automatically install it during marketplace
 installation. The generated CJS artifact must match the checked-in artifact
 byte-for-byte. Consumers never run that build. Codex
 execution remains **NOT VERIFIED**; manifest presence is not an execution claim.
+
+The #169 sync encountered a checkout with no `git-subtree-dir` history marker;
+`subtree pull --squash` failed with “was never added”. The release was still
+published upstream first. Its exact diff from pinned `ccb46d4` to published
+`8bfe2d6` was applied to the prefix, then the pin and inventories were updated.
+The full commit-derived guard described above proves the imported files, not a successful
+subtree merge. Do not fabricate ancestry markers or bypass a failed guard.

@@ -4,7 +4,7 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
-## [Unreleased]
+## [4.0.0] - 2026-10-04
 
 ### Changed
 - Vendored Obsidian Markdown and JSON Canvas references with the upstream MIT notice; removed the runtime dependency on `tdk-utils`.

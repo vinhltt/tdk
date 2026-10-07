@@ -209,6 +209,7 @@ TDK existence gates still use `.specify/memory/`.
 | `/tdk-skill-guide` | Interactive guide for skills, commands, scenarios, search, and tips. | no args, `<skill-name>`, `scenario <N>`, `search <keyword>`, `tips <skill-name>` | You need help using a TDK skill from installed docs/source. |
 | `/tdk-setup-guide` | Interactive setup guide and verifier. | no args, `check`, `verify`, `troubleshoot`, `<topic>` | Environment setup, prerequisite checks, or troubleshooting is needed. |
 | `/tdk-scout` | Codebase navigation and two-tier source analysis. | task-specific scout input | Planning needs repo structure, relevant files, and code context. |
+| `/tdk-handoff` | Preserve one purpose for a recipient to review and reverify; capture only. | `[task-id \| issue-url \| focus]`, `--kind`, `--slug`; [usage](#handoff-capture) | Another session needs context, a proposal needs review, or a consumer defect needs upstream triage. |
 | `docs-seeker` | Route documentation queries to Context7, GitHub, or web fallbacks. | docs query text | You need current library/API docs while working inside TDK. |
 
 ### Detailed Mode Notes
@@ -325,6 +326,7 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 30 | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--yes]` | Review and register delegate-routing proposals explicitly |
 | — | **Primary Implementation** | |
 | 33 | `/tdk-implement <id> [--phase NN]` | Execute implementation directly from plan.md ## Phases (recommended) |
+| — | `/tdk-handoff [task-id \| issue-url \| focus] [--kind continuation\|spec\|investigation\|feature\|upstream-bug] [--slug <slug>]` | Capture one local packet; review and share manually, without lifecycle or tracker actions |
 
 ---
 
@@ -364,6 +366,164 @@ For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalo
 | status | `/tdk-status <id>` | — | Feature directory, `git-map.md` | Progress report (no file created) | specify |
 
 `/tdk-plan` accepts freeform content after `<id>` in every mode. Default, `--fast`, and `--hard` treat content as planning instruction; `--red-team` treats it as review focus; `--validate` treats it as validation focus. Known mode flags can appear after `<id>` before or after the content. `--tdd` and `--ut-backfill` are independent test-mode flags: they select whether generated phases include tests-first or backfill sections with `Test Quality Gate` rows, and compose with the default or `--hard` speed mode (not `--fast`).
+
+### Handoff Capture
+
+Use handoff for portable context, not authorization to execute work. The
+[owning skill](../../../plugins/tdk-utils/skills/tdk-handoff/SKILL.md) defines
+input gates and capture boundaries; the
+[artifact schema](../../../plugins/tdk-utils/skills/tdk-handoff/references/artifact-schema.md)
+owns packet fields and evidence requirements. Invoke it in agent chat:
+
+```text
+/tdk-handoff [task-id | issue-url | focus] [--kind continuation|spec|investigation|feature|upstream-bug] [--slug <slug>]
+```
+
+An explicit kind chooses the purpose; a task ID or issue URL is provenance,
+not a request to fetch, assign, or create work. Use a sanitized focus and a
+lowercase alphanumeric kebab-case slug of at most 50 characters. There is no
+output override or overwrite flag. Ambiguous purpose or capture host needs
+clarification before writing.
+
+**Capture host versus recipient.** The host is the confirmed existing local
+workspace that owns the packet; the recipient is where someone may later act.
+For example, a defect found in `consumer-app` stays in that consumer's
+`.specify/handoffs/`, even when a maintainer checkout is also open. For an
+upstream bug, resolve the canonical target and suggested tracker from
+[upstream-owner.txt](../../../plugins/tdk-utils/skills/tdk-handoff/references/upstream-owner.txt),
+not a branded command name, the consumer, or the distribution/release repository.
+Naming a person/team does not assign them. Clear `spec`, `investigation`, and
+`feature` purposes default to the consumer destination unless another is named.
+
+**Preparation and ownership.** Bun with the Markdown capabilities required by
+the skill and its bundled `scripts/handoff-export.js` must already be available.
+Resolve the exporter relative to the loaded skill, including branded installs;
+the consumer does not need `.specify/scripts/ts` or npm dependencies. Missing
+prerequisites stop capture; arrange provisioning outside the invocation using
+the [Setup Guide](setup/setup-guide.md). Capture does not install, build,
+bootstrap, run fresh checks/reproductions, or require AK, Git, a task, project
+configuration, or tracker authentication. The
+[exporter](../../../plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-export.js) owns the
+host-relative `.specify/handoffs/yyyyMMdd-slug.md` output and refuses an existing
+file. A collision needs another explicit slug, not automatic numbering,
+replacement, or another output directory.
+
+**Evidence and disclosure.** Preserve known context, not transcripts or raw
+diffs. Keep timed live observations, user-reported/unverified facts, and earlier
+command results distinct. Missing evidence is exactly
+`Not captured in this session`; an unread link is only a pointer. Consult the
+[redaction boundary](../../../plugins/tdk-utils/skills/tdk-handoff/references/redaction-patterns.md)
+before capture and inspect the resulting file before sharing. Pattern redaction
+and its reported count do not guarantee public safety.
+
+#### Choosing a kind
+
+These examples teach purpose and recipient decisions. Their context is
+illustrative sender-provided material, **user-reported, unverified**, not proof
+of a check or reproduction. Unspecified evidence remains
+`Not captured in this session`; do not invent it to complete a packet.
+
+**Continuation — resume the same work in the consumer.**
+
+```text
+/tdk-handoff "Resume pagination integration" --kind continuation --slug pagination-resume
+```
+
+Goal: finish pagination integration; current stage: implementation; blocker:
+outstanding API edits are not bundled. Done: API handler draft and web design
+review; Remaining: API review/tests and web integration. Decision: preserve
+existing response fields. Keep API and web repository snapshots separate,
+including their branch, HEAD, dirty state, and observation time when known;
+missing values are `Not captured in this session`. The recipient first checks
+their actual worktrees and how the outstanding edits will reach them; a packet
+does not transport local code.
+
+**Spec — preserve a conditional seed, not a ready-to-build claim.**
+
+```text
+/tdk-handoff "Prepare CSV export seed" --kind spec --slug csv-export-seed
+```
+
+Destination: `consumer-app`. Seed/source summary: a CSV adapter for existing
+report rows. Outcome/acceptance: emit `id,label` columns in that order, with one
+output row per supplied input row. Scope/source-work boundary: adapter only;
+non-goals: report implementation, API/schema changes, and scheduling.
+Dependency/interface: read-only rows with `id` and `label`, pending API-owner
+approval. Assumption: the adapter may access those rows, unconfirmed. Risk:
+an unapproved interface may change. Clarification: confirm access and the row
+contract. Readiness stays **blocked until interface approval and access
+confirmation**. Named recipient and authoritative source pointer:
+`Not captured in this session`; the portable summary cannot be replaced by a link.
+
+**Investigation — carry a question and evidence, not a presumed root cause.**
+
+```text
+/tdk-handoff "Investigate duplicate rows after refresh" --kind investigation --slug duplicate-rows
+```
+
+Destination: `consumer-app`. Question: why does refresh duplicate rows?
+Expected: one row per ID; actual: duplicate IDs after refresh, user-reported
+and not reproduced during capture. Hypothesis: refresh appends rather than
+replaces; conclusion: `Not captured in this session`. Prior experiment/outcome:
+clearing the cache did not remove duplicates; its command/time:
+`Not captured in this session`. Impact: misleading totals. Unknown: source-side
+or client-side duplication. Exit condition: stop when evidence identifies the
+duplication path or the data-source owner confirms upstream duplication.
+The recipient revalidates evidence before choosing the next safe observation;
+specify is not a required transition.
+
+**Feature — propose value without implying approved scope.**
+
+```text
+/tdk-handoff "Consider pending-job cancellation" --kind feature --slug pending-job-cancel
+```
+
+Destination: `consumer-app`. Who: operations staff; problem: accidentally queued
+jobs cannot be withdrawn; value: avoid unnecessary work. Use case: cancel a
+pending job before execution. Proposed scope/acceptance: cancel a pending job
+and display its final state; running-job interruption is out of scope.
+Constraint: preserve permission checks. Rationale: pending cancellation is a
+different decision from interrupting running work. Unknowns: permission model
+and queue-state races. The recipient confirms need and constraints before
+accepting scope or choosing the consumer's normal feature workflow.
+
+**Upstream bug — capture in the consumer for manual maintainer triage.**
+
+```text
+/tdk-handoff "Report missing schema reference after flat install" --kind upstream-bug --slug missing-schema-reference
+```
+
+Host/source: `consumer-app`; recipient target/tracker: canonical values from the
+identity reference above. Expected: the bundled schema is readable; actual:
+reference lookup fails. Known minimal repro: open the flat-installed handoff
+skill and follow its schema reference; failing command:
+`Not captured in this session`. Impact: packet construction is blocked.
+Sender-confirmed workaround, not verified during capture: read the reference
+from an existing intact plugin installation. Environment: Linux, Bun, OMP;
+runtime/harness versions: `Not captured in this session`. Component: handoff
+skill references. Source-plugin version/hash and installed-harness version/hash
+are distinct evidence, each `Not captured in this session` here; matching
+version labels alone would not prove matching content. The maintainer rechecks
+source-versus-installed state and reported behavior before deciding triage or
+issue creation.
+
+#### Manual receiver workflow
+
+The sender reviews the file for residual sensitive context and lost meaning,
+then shares it manually. The receiver treats it as a snapshot: verify the
+intended project, Current state, assumptions, and any missing local edits
+against their own live environment before acting. Capture creates no spec,
+task, branch, issue, assignment, publication, dispatch, or automatic resume.
+
+For a `spec` seed, retain unresolved questions and blocked readiness even when
+the source is inaccessible. Only after the receiver resolves readiness gates
+and checks their project's prerequisites in the
+[specify owner](../../../plugins/tdk-core/skills/tdk-specify/SKILL.md) may they
+manually choose a new valid ID and invoke
+`/tdk-specify <new-id> "<self-contained seed>"`. Do not reuse a provenance ID,
+invent `--source`, or treat capture as automatic specify or lifecycle linkage.
+Other kinds follow their purpose-specific review decision, not a forced
+specification workflow.
 
 ### Project Inception Commands
 

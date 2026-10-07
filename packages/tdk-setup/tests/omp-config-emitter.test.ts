@@ -201,6 +201,53 @@ describe('OMP config emitter', () => {
       skills: { enableClaudeUser: false, enableClaudeProject: false },
     });
   });
+
+  test('preserves user-owned model roles while updating other managed settings', () => {
+    const consumer = makeConsumer('tdk-omp-user-model-roles-');
+    const userBytes = '# My models\r\nmodelRoles:\r\n  default: user/default\r\n  task: user/task\r\n\r\n';
+    writeFile(consumer.root, '.omp/config.yml', mergeConfigYaml(userBytes, 'skills:\n  enableClaudeUser: false').content);
+    const source = inventory(consumer.root, { model: 'opus', effortLevel: 'high' });
+    const input = {
+      inventory: source,
+      activeParts: ['settings', 'skills'] as const,
+      modelMap: { opus: '@slow' },
+      previousManifest: emptyHarnessManifest('omp'),
+    };
+    const result = emitOmpConfigFile(input);
+    const output = result.file!.content.toString('utf-8');
+    const payload = extractOmpManagedPayload(output)!;
+
+    expect(parse(output)).toEqual({
+      modelRoles: { default: 'user/default', task: 'user/task' },
+      defaultThinkingLevel: 'high',
+      skills: { enableClaudeUser: false, enableClaudeProject: false },
+    });
+    expect(mergeConfigYaml(output, '').unmanagedContent).toBe(userBytes);
+    expect(parse(payload).modelRoles).toBeUndefined();
+    expect(result.facts).toContainEqual(expect.objectContaining({
+      status: 'dropped', key: 'model', message: expect.stringMatching(/user-owned/i),
+    }));
+    fs.writeFileSync(path.join(consumer.root, '.omp/config.yml'), output);
+    expect(emitOmpConfigFile(input).file!.content.toString('utf-8')).toBe(output);
+  });
+
+  test('updates converter-owned model roles and still rejects unrelated ownership conflicts', () => {
+    const consumer = makeConsumer('tdk-omp-managed-model-roles-');
+    const source = inventory(consumer.root, { model: 'opus', effortLevel: 'high' });
+    writeFile(consumer.root, '.omp/config.yml', mergeConfigYaml(
+      'retry:\n  enabled: true\n',
+      'modelRoles:\n  default: old/model',
+    ).content);
+    const input = {
+      inventory: source,
+      activeParts: ['settings'] as const,
+      modelMap: { opus: '@slow' },
+      previousManifest: emptyHarnessManifest('omp'),
+    };
+    expect(parse(emitOmpConfigFile(input).file!.content.toString('utf-8')).modelRoles).toEqual({ default: '@slow' });
+    writeFile(consumer.root, '.omp/config.yml', 'modelRoles:\n  default: user/model\ndefaultThinkingLevel: low\n');
+    expect(() => emitOmpConfigFile(input)).toThrow(/ownership conflict.*defaultThinkingLevel/);
+  });
   test('reports every unsupported settings family without copying its value', () => {
     const consumer = makeConsumer('tdk-omp-config-drops-');
     const marker = 'UNSUPPORTED_VALUE_MARKER';

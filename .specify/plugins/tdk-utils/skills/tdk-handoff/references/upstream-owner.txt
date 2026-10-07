@@ -1,0 +1,3 @@
+target_project: tdk-builder
+suggested_tracker: https://github.com/vinhltt/tdk-builder
+release_repository: vinhltt/tdk

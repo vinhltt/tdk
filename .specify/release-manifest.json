@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-10-02T00:50:24.559Z",
+  "generatedAt": "2026-10-07T03:37:08.098Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -22,6 +22,7 @@
       ".specify/templates/memory/",
       ".specify/plugins/tdk-memory/node_modules/",
       ".specify/plugins/tdk-memory/**/node_modules/",
+      ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/node_modules/",
       ".specify/plugins/tdk-memory/tests/",
       ".specify/configurations/",
       ".specify/memory/",
@@ -137,8 +138,8 @@
       "mode": "0644"
     },
     ".specify/docs/en/guides/skills-guide.md": {
-      "sha256": "bb1cb69061d9897731b173e53370bab275de118254bfe52fedc02ebcb67563d7",
-      "size": 54044,
+      "sha256": "7dd624f7348d21e66c6f2b6ff0a1da55924c0b6b7e77cab21f49312fb63f1823",
+      "size": 63272,
       "mode": "0644"
     },
     ".specify/docs/en/guides/workflow-map.md": {
@@ -147,8 +148,8 @@
       "mode": "0644"
     },
     ".specify/docs/tdk-memory-subtree.md": {
-      "sha256": "7db6b2bf1d9cad3974f0b5c26c00bc3438523408ea8fdbe73924377e73a57023",
-      "size": 4679,
+      "sha256": "15acb493999bb7318b665e142453384deaefda67429bdfbebc079caa12632869",
+      "size": 5180,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/concepts/glossary.md": {
@@ -202,8 +203,8 @@
       "mode": "0644"
     },
     ".specify/docs/vi/guides/skills-guide.md": {
-      "sha256": "7336fb2108c9c46a395ac30337cbe4fbb2448af4bdcee4678b179a71b22c0993",
-      "size": 53536,
+      "sha256": "25ce85cb7b8fe0f5afc615858f4cacfd71b2880a8d849e84ecd6eef12ca5d131",
+      "size": 63601,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/workflow-map.md": {
@@ -212,8 +213,8 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "a38990d3f86c487750f5944c740f53924211bcba9207ee3b05c8882af1567af0",
-      "size": 50482,
+      "sha256": "1306044d3afbf7363e20bcb2bdba13f39f5c1a53c15599b239e347023a4a561b",
+      "size": 52253,
       "mode": "0644"
     },
     ".specify/plugins/plugin-dependencies.json": {
@@ -932,7 +933,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory.upstream-pin": {
-      "sha256": "80ccbca93f873164dc21532186d3846b0f994bbc706e45b9e8aa60f02cb047f1",
+      "sha256": "f9100cd680d66b49ef90963cfee5116f1f3f27864a7d828463fdb133f204649c",
       "size": 93,
       "mode": "0644"
     },
@@ -947,17 +948,17 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/.claude-plugin/plugin.json": {
-      "sha256": "6e81fcff3bb25726191e86a9b25f83ad87071277f613d8a9a712a6eb2ef2f543",
+      "sha256": "430d2913cf118ccf875f84bb7f02fb91ca67c1c2af5663fbb1a74231421ce329",
       "size": 330,
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/.codex-plugin/plugin.json": {
-      "sha256": "1c92e8df9e78dacbf63ccbde69bb6188f21026af2a1a5883f890654a15937f5a",
+      "sha256": "54a17328deac2cc3d2b6957e55f2bd8deb465947af1e4b1c3988218c8fc88fb5",
       "size": 253,
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/.cursor-plugin/plugin.json": {
-      "sha256": "1c92e8df9e78dacbf63ccbde69bb6188f21026af2a1a5883f890654a15937f5a",
+      "sha256": "54a17328deac2cc3d2b6957e55f2bd8deb465947af1e4b1c3988218c8fc88fb5",
       "size": 253,
       "mode": "0644"
     },
@@ -967,8 +968,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/CHANGELOG.md": {
-      "sha256": "132552df7c40857916c75c74786d983d7aa5a7e3ddca096ae73b8fee8965a68a",
-      "size": 4884,
+      "sha256": "b85830b3644a7baab74a44786948a7e30c638a2cf120a801df1ec9914a7bcb03",
+      "size": 4892,
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/LICENSE": {
@@ -982,12 +983,12 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/agents/tdk-memory-agent.md": {
-      "sha256": "049aa36bde33ba532cade48dc5c41a289dcb385a46a14034a42c7f46e07f4415",
+      "sha256": "57a24470065e748b98c2b14372687fa5f0c0c468b12ed2d0595e3ac8161fcaab",
       "size": 17886,
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/skills/tdk-memory-changelog/SKILL.md": {
-      "sha256": "b7887d3fff25b91ed15f0e3ba2d02124474680bffe65e7af0e80b39c09d80bec",
+      "sha256": "8b49fe1ad0b18f6e62d74e30da4b7171d87a856d2b68c88be8fa82fa1add6314",
       "size": 5364,
       "mode": "0644"
     },
@@ -997,7 +998,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/skills/tdk-memory-checksum/SKILL.md": {
-      "sha256": "9964200a0167e5fc74f569396f64863dd393d43ed076ce2f380a7fe4a4209ea0",
+      "sha256": "98b0a9d60254e133f7141a4af78a69e1e6003389085fbf67533ade219a55208d",
       "size": 7938,
       "mode": "0644"
     },
@@ -1027,7 +1028,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/skills/tdk-memory-init/SKILL.md": {
-      "sha256": "cdf6bb63111d2a33b2d29afdba0c74c7a0125de0459fe26801a9f5b5e82e81e9",
+      "sha256": "ff7fa4649a59a99035837d2b967e2041497203d1dd7c4577383d6b85f8e00a10",
       "size": 6280,
       "mode": "0644"
     },
@@ -1187,7 +1188,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/skills/tdk-memory-query/SKILL.md": {
-      "sha256": "c888726e3cc606c4ff1771e79bef87237d243b5d119125921fa50c7f33750423",
+      "sha256": "12112aeec4ce4b7431c2ed196885be8ae361305ea7f376227aca0de838853aa5",
       "size": 5647,
       "mode": "0644"
     },
@@ -1197,7 +1198,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-memory/skills/tdk-memory-update/SKILL.md": {
-      "sha256": "4e26116f818c3e6957b32a4e5acfed16adb0a2c7123e980e6ffd1c6ad81bbc8b",
+      "sha256": "caca95e865cbec41e3feceb3683775396e118adeb4c07e896e7d8026c745aa11",
       "size": 4733,
       "mode": "0644"
     },
@@ -1527,23 +1528,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.claude-plugin/plugin.json": {
-      "sha256": "4a846503c09f585547de9cfd57fbb986eb32fa97151bc24d32c439e21e6c61d6",
+      "sha256": "b1a825192f6f5beef88c60e4655aad7e73b51517cce8c2ee0f5c0be8a8071137",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.codex-plugin/plugin.json": {
-      "sha256": "4a846503c09f585547de9cfd57fbb986eb32fa97151bc24d32c439e21e6c61d6",
+      "sha256": "b1a825192f6f5beef88c60e4655aad7e73b51517cce8c2ee0f5c0be8a8071137",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.cursor-plugin/plugin.json": {
-      "sha256": "4a846503c09f585547de9cfd57fbb986eb32fa97151bc24d32c439e21e6c61d6",
+      "sha256": "b1a825192f6f5beef88c60e4655aad7e73b51517cce8c2ee0f5c0be8a8071137",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/CHANGELOG.md": {
-      "sha256": "426063212d8b9820a4d61a984e7dc58686beddb27bfaaf5060e27fdf476133a4",
-      "size": 9913,
+      "sha256": "01f6419a78b3d8899aca918dfc0bad3d3797130a1a35d15e6b8a41a97e70c2b3",
+      "size": 10230,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/researcher.md": {
@@ -1799,6 +1800,76 @@
     ".specify/plugins/tdk-utils/skills/tdk-branch-preflight/references/git-map-contract.md": {
       "sha256": "bc14c517be382195f1ea4a56921ff656a85a47099f58ceccc823fb3f7e0df6e0",
       "size": 30501,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/LICENSE.txt": {
+      "sha256": "1bd321a3b9cfa8d4af2105e20edd69d830df0b28e83a1b0255558f888e493981",
+      "size": 1069,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/SKILL.md": {
+      "sha256": "6d17b04f91ab9d9d6173e494c14860ab899af573e30bedf7f16a92a4d5506bfd",
+      "size": 20194,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/references/artifact-schema.md": {
+      "sha256": "78a8dcde46d3b6ae6111aca4b45c035f466b0730a3a19765b0c7dda740c983ad",
+      "size": 19605,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/references/redaction-patterns.md": {
+      "sha256": "98830a7ad664cbaf75e7b2974bfc47f4606714b78e0e1c320a4787c9c1c4a0c8",
+      "size": 5898,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/references/upstream-owner.txt": {
+      "sha256": "3db76c50da7db44169ac8ecb4d8fdeb50e52ecad577e3a32e997ca176a441aee",
+      "size": 118,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/RUNTIME-LICENSE.txt": {
+      "sha256": "3ea3e8d23e7f9bc30a2c9b54c0c6d946ee52b49e72652c94139063afbd875c3a",
+      "size": 3102,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/build.ts": {
+      "sha256": "484754b33a236e4e44f8e3cf352dd715a443bb7dba57b3801c704f7eb5b219dc",
+      "size": 673,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/bun.lock": {
+      "sha256": "9493a44b31eae535b70ff383f65284f3eb3e1231b1ed5b7d54c0f621ffe4be5e",
+      "size": 719,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-artifact.ts": {
+      "sha256": "46146b7b3b74355debeabdb0be2adb424a52a076a6ebe37a7c455571a9ebe2a0",
+      "size": 12734,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-export.js": {
+      "sha256": "dea0b86d87db8a34c8af1c8eee1f30ac909e43096c3e1018ffe7a72d5fe6cb08",
+      "size": 464469,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-export.ts": {
+      "sha256": "fcadec2f4761a1cb1da00e3fb4fb19c54cf800d174e0fe0e962056976655894e",
+      "size": 6317,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-redaction.ts": {
+      "sha256": "0a3c8022ac1b1b9072d2e4d84e08493218772acdef257d6ccb19654636bfa0af",
+      "size": 15336,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/package.json": {
+      "sha256": "8d1d3bb7f74e064f6971834ee9adbfacbcd202ae65fc39554cd7522111a47ed4",
+      "size": 339,
+      "mode": "0644"
+    },
+    ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/tsconfig.json": {
+      "sha256": "2825ddd3e39b6cf920d5e61f7e57e4efcd597874ee9e8e8ee128f559d242b79c",
+      "size": 381,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-load-project-context/SKILL.md": {

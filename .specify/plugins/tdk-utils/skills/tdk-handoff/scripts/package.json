@@ -1,0 +1,14 @@
+{
+  "name": "tdk-handoff-runtime-build",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:handoff-export": "bun --no-install build.ts",
+    "typecheck": "../../../../../scripts/ts/node_modules/.bin/tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "commander": "13.1.0",
+    "yaml": "2.9.0",
+    "zod": "3.25.76"
+  }
+}

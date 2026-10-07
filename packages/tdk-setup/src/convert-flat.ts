@@ -59,7 +59,13 @@ async function confirmConvertFlat(consumerRoot: string, harness: 'codex' | 'omp'
 }
 
 export function createConvertFlatCommand(): Command {
+  const checkIndex = process.argv.indexOf('--check');
+  const terminatorIndex = process.argv.indexOf('--');
+  const checkRequested = checkIndex !== -1 && (terminatorIndex === -1 || checkIndex < terminatorIndex);
   return new Command('convert-flat')
+    .exitOverride((error) => {
+      process.exit(checkRequested && error.exitCode !== 0 ? 2 : error.exitCode);
+    })
     .description('Convert an existing flat .claude/ tree into harness-native artifacts')
     .argument('[root]', 'consumer project root')
     .option('--harness <name>', 'target harness: codex or omp')
@@ -239,7 +245,7 @@ export function createConvertFlatCommand(): Command {
         writeProgress('Complete.');
       } catch (err) {
         process.stderr.write(`[tdk-setup convert-flat] error: ${(err as Error).message}\n`);
-        process.exit(1);
+        process.exit(opts.check || checkRequested ? 2 : 1);
       }
     });
 }

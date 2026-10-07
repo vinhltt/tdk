@@ -208,6 +208,7 @@ vẫn dùng `.specify/memory/`.
 | `/tdk-skill-guide` | Interactive guide cho skills, commands, scenarios, search, và tips. | no args, `<skill-name>`, `scenario <N>`, `search <keyword>`, `tips <skill-name>` | Bạn cần help dùng TDK skill từ installed docs/source. |
 | `/tdk-setup-guide` | Interactive setup guide và verifier. | no args, `check`, `verify`, `troubleshoot`, `<topic>` | Cần environment setup, prerequisite checks, hoặc troubleshooting. |
 | `/tdk-scout` | Codebase navigation và two-tier source analysis. | task-specific scout input | Planning cần repo structure, relevant files, và code context. |
+| `/tdk-handoff` | Giữ context cho một mục đích để người nhận review và xác minh lại; chỉ capture. | `[task-id \| issue-url \| focus]`, `--kind`, `--slug`; [usage](#handoff-capture) | Session khác cần context, proposal cần review, hoặc lỗi trong consumer cần upstream triage. |
 | `docs-seeker` | Route documentation queries tới Context7, GitHub, hoặc web fallbacks. | docs query text | Bạn cần current library/API docs khi làm việc trong TDK. |
 
 ### Detailed Mode Notes
@@ -323,6 +324,7 @@ Các helper này tồn tại trong source nhưng không được catalog như di
 | 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | Scaffold reviewed skills/agents từ approved recommendation |
 | — | **Primary Implementation** | |
 | 33 | `/tdk-implement <id> [--phase NN]` | Execute implementation trực tiếp từ `plan.md ## Phases` |
+| — | `/tdk-handoff [task-id \| issue-url \| focus] [--kind continuation\|spec\|investigation\|feature\|upstream-bug] [--slug <slug>]` | Capture một packet local; review và chia sẻ thủ công, không chạy lifecycle hay thao tác tracker |
 
 ---
 
@@ -362,6 +364,162 @@ Dùng file này để tra cứu command. Nếu cần workflow từng bước đ�
 | status | `/tdk-status <id>` | — | Feature directory | Progress report, không tạo file | specify |
 
 `/tdk-plan` nhận freeform content sau `<id>` trong mọi mode. Default, `--fast`, và `--hard` xem content là planning instruction; `--red-team` xem là review focus; `--validate` xem là validation focus. Mode flags có thể đứng sau `<id>` trước hoặc sau content.
+
+### Handoff Capture
+
+Dùng handoff để chuyển context, không phải cấp quyền thực thi work.
+[Skill sở hữu contract](../../../plugins/tdk-utils/skills/tdk-handoff/SKILL.md)
+quy định input gates và capture boundaries;
+[artifact schema](../../../plugins/tdk-utils/skills/tdk-handoff/references/artifact-schema.md)
+sở hữu packet fields và evidence requirements. Gọi trong agent chat:
+
+```text
+/tdk-handoff [task-id | issue-url | focus] [--kind continuation|spec|investigation|feature|upstream-bug] [--slug <slug>]
+```
+
+Kind tường minh chọn mục đích; task ID hay issue URL là provenance, không phải
+yêu cầu fetch, assign, hay tạo work. Dùng focus đã loại thông tin nhạy cảm và
+slug chữ/số viết thường dạng kebab-case, tối đa 50 ký tự. Không có flag đổi
+output hay overwrite. Mục đích hoặc capture host chưa rõ cần được làm rõ trước
+khi ghi.
+
+**Capture host và người nhận.** Host là workspace local đang tồn tại, đã được
+xác nhận và sở hữu packet; recipient là nơi người nhận có thể hành động sau đó.
+Ví dụ, lỗi trong `consumer-app` được giữ ở `.specify/handoffs/` của consumer
+đó, ngay cả khi maintainer checkout cũng đang mở. Với upstream bug, lấy target
+và suggested tracker canonical từ
+[upstream-owner.txt](../../../plugins/tdk-utils/skills/tdk-handoff/references/upstream-owner.txt),
+không suy ra từ command name đã đổi branding, consumer, hay distribution/release
+repository. Ghi tên người/team không có nghĩa assign. Mục đích `spec`,
+`investigation`, và `feature` rõ ràng mặc định hướng tới consumer, trừ khi chỉ
+định nơi nhận khác.
+
+**Chuẩn bị và quyền sở hữu.** Cần Bun có Markdown capabilities mà skill yêu cầu
+và bundle `scripts/handoff-export.js` đi kèm skill. Resolve exporter tương đối
+với skill đang được load, kể cả bản đổi branding; consumer không cần cây
+`.specify/scripts/ts` hay npm dependencies. Thiếu prerequisite thì dừng capture;
+chuẩn bị bên ngoài invocation theo [Setup Guide](setup/setup-guide.md).
+Capture không install, build, bootstrap, chạy check/reproduction mới, và không
+yêu cầu AK, Git, task, project configuration hay tracker authentication.
+[Exporter](../../../plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-export.js) sở hữu output
+`.specify/handoffs/yyyyMMdd-slug.md` tương đối với host và từ chối file đã tồn
+tại. Collision cần một slug tường minh khác, không tự đánh số, thay thế, hay
+chuyển output directory.
+
+**Evidence và disclosure.** Giữ context đã biết, không chép transcript hay raw
+diff. Phân biệt live observation có thời điểm, thông tin user-reported/chưa xác
+minh, và command result trước đó. Evidence thiếu phải ghi đúng
+`Not captured in this session`; link chưa đọc chỉ là pointer. Xem
+[redaction boundary](../../../plugins/tdk-utils/skills/tdk-handoff/references/redaction-patterns.md)
+trước capture và kiểm tra file kết quả trước khi chia sẻ. Pattern redaction
+và số lần redaction được báo không bảo đảm an toàn để công khai.
+
+#### Chọn kind
+
+Các ví dụ giúp chọn mục đích và người nhận. Context là thông tin minh họa do
+người gửi cung cấp, **user-reported, unverified**, không phải bằng chứng đã chạy
+check hay reproduction. Evidence không có vẫn là
+`Not captured in this session`; không tự bịa để điền packet.
+
+**Continuation — tiếp tục cùng work trong consumer.**
+
+```text
+/tdk-handoff "Resume pagination integration" --kind continuation --slug pagination-resume
+```
+
+Goal: hoàn tất pagination integration; giai đoạn hiện tại: implementation;
+blocker: API edits local chưa được đóng gói. Done: API handler draft và web
+design review; Remaining: API review/tests và web integration. Decision: giữ
+response fields hiện tại. Giữ riêng snapshot của API và web repository,
+gồm branch, HEAD, dirty state, và thời điểm quan sát khi đã biết; giá trị thiếu
+là `Not captured in this session`. Người nhận kiểm tra worktree thực tế và
+cách nhận outstanding edits trước tiên; packet không vận chuyển code local.
+
+**Spec — giữ conditional seed, không khẳng định sẵn sàng build.**
+
+```text
+/tdk-handoff "Prepare CSV export seed" --kind spec --slug csv-export-seed
+```
+
+Destination: `consumer-app`. Seed/source summary: CSV adapter cho report rows
+hiện tại. Outcome/acceptance: xuất cột `id,label` đúng thứ tự, một output row
+cho mỗi input row được cung cấp. Scope/source-work boundary: chỉ adapter;
+non-goals: report implementation, thay đổi API/schema, và scheduling.
+Dependency/interface: rows read-only có `id` và `label`, chờ API owner duyệt.
+Assumption: adapter được phép truy cập rows, chưa xác nhận. Risk: interface
+chưa duyệt có thể đổi. Clarification: xác nhận access và row contract.
+Readiness vẫn **blocked cho tới khi interface được duyệt và access được xác
+nhận**. Người nhận cụ thể và authoritative source pointer:
+`Not captured in this session`; link không thay thế portable summary.
+
+**Investigation — chuyển câu hỏi và evidence, không giả định root cause.**
+
+```text
+/tdk-handoff "Investigate duplicate rows after refresh" --kind investigation --slug duplicate-rows
+```
+
+Destination: `consumer-app`. Question: vì sao refresh làm trùng rows?
+Expected: một row cho mỗi ID; actual: ID trùng sau refresh, user-reported và
+không reproduced trong capture. Hypothesis: refresh append thay vì replace;
+conclusion: `Not captured in this session`. Prior experiment/outcome: xóa
+cache không loại được duplicate; command/time:
+`Not captured in this session`. Impact: totals sai lệch. Unknown: duplication
+ở source hay client. Exit condition: dừng khi evidence xác định duplication
+path hoặc data-source owner xác nhận upstream duplication. Người nhận xác
+minh lại evidence trước khi chọn safe observation tiếp theo; không bắt buộc
+chuyển sang specify.
+
+**Feature — đề xuất giá trị, không ngụ ý scope đã được duyệt.**
+
+```text
+/tdk-handoff "Consider pending-job cancellation" --kind feature --slug pending-job-cancel
+```
+
+Destination: `consumer-app`. Who: operations staff; problem: job đưa nhầm vào
+queue không thể rút lại; value: tránh work không cần thiết. Use case: hủy pending
+job trước execution. Proposed scope/acceptance: hủy pending job và hiển thị
+final state; ngắt running job nằm ngoài scope. Constraint: giữ permission
+checks. Rationale: hủy pending job khác với ngắt work đang chạy. Unknowns:
+permission model và queue-state races. Người nhận xác nhận nhu cầu và constraints
+trước khi chấp nhận scope hay chọn feature workflow thông thường của consumer.
+
+**Upstream bug — capture trong consumer để maintainer triage thủ công.**
+
+```text
+/tdk-handoff "Report missing schema reference after flat install" --kind upstream-bug --slug missing-schema-reference
+```
+
+Host/source: `consumer-app`; recipient target/tracker: giá trị canonical từ
+identity reference phía trên. Expected: đọc được bundled schema; actual:
+reference lookup thất bại. Known minimal repro: mở handoff skill đã flat-install
+và theo schema reference của nó; failing command:
+`Not captured in this session`. Impact: không thể dựng packet.
+Workaround do người gửi xác nhận, chưa được kiểm tra trong capture: đọc reference
+từ plugin installation hiện có còn nguyên vẹn. Environment: Linux, Bun, OMP;
+runtime/harness versions: `Not captured in this session`. Component: handoff
+skill references. Source-plugin version/hash và installed-harness version/hash
+là evidence riêng biệt, mỗi giá trị ở đây là `Not captured in this session`;
+version labels trùng nhau không đủ chứng minh content giống nhau. Maintainer
+kiểm tra lại source-versus-installed state và reported behavior trước khi quyết
+định triage hay tạo issue.
+
+#### Workflow thủ công của người nhận
+
+Người gửi review file để tìm context nhạy cảm còn sót và nội dung mất ý nghĩa,
+rồi chia sẻ thủ công. Người nhận xem packet là snapshot: xác minh intended
+project, Current state, assumptions, và local edits còn thiếu trong môi trường
+live của mình trước khi hành động. Capture không tạo spec, task, branch, issue,
+assignment, publication, dispatch, hay tự động resume.
+
+Với `spec` seed, giữ unresolved questions và blocked readiness ngay cả khi
+không truy cập được source. Chỉ sau khi người nhận giải quyết readiness gates
+và kiểm tra prerequisite của project theo
+[specify owner](../../../plugins/tdk-core/skills/tdk-specify/SKILL.md) mới được
+tự chọn một ID mới hợp lệ và gọi thủ công
+`/tdk-specify <new-id> "<self-contained seed>"`. Không dùng lại provenance ID,
+không bịa `--source`, và không xem capture là automatic specify hay lifecycle
+linkage. Các kind khác đi theo quyết định review riêng cho mục đích của chúng,
+không ép vào specification workflow.
 
 ### Project Inception Commands
 

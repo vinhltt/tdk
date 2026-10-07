@@ -34,3 +34,37 @@ test('release generation ships runtime and notice but excludes nested logs, test
   const manifest = await buildReleaseManifest(root);
   expect(Object.keys(manifest.files).sort()).toEqual(files.slice(0, 2).sort());
 });
+
+test('release generation ships handoff source, bundled runtime, build metadata, and licenses without consumer packets or dependencies', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'handoff-payload-'));
+  temporary.push(root);
+  const skill = '.specify/plugins/tdk-utils/skills/tdk-handoff/';
+  const shippable = [
+    `${skill}SKILL.md`,
+    `${skill}LICENSE.txt`,
+    `${skill}scripts/handoff-export.ts`,
+    `${skill}scripts/handoff-artifact.ts`,
+    `${skill}scripts/handoff-redaction.ts`,
+    `${skill}scripts/handoff-export.js`,
+    `${skill}scripts/build.ts`,
+    `${skill}scripts/tsconfig.json`,
+    `${skill}scripts/package.json`,
+    `${skill}scripts/bun.lock`,
+    `${skill}scripts/RUNTIME-LICENSE.txt`,
+  ];
+  const excluded = [
+    '.specify/handoffs/20261004-consumer-context.md',
+    `${skill}scripts/node_modules/yaml/index.js`,
+    `${skill}scripts/node_modules/commander/package.json`,
+    `${skill}scripts/node_modules/marked/lib/marked.esm.js`,
+  ];
+  for (const path of [...shippable, ...excluded]) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), `fixture bytes for ${path}\n`);
+  }
+  writeFileSync(join(root, 'distribute.json'), readFileSync(join(ROOT, 'distribute.json')));
+
+  const manifest = await buildReleaseManifest(root);
+
+  expect(Object.keys(manifest.files).sort()).toEqual(shippable.sort());
+});

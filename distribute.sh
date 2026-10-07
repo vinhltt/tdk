@@ -2,8 +2,7 @@
 # distribute.sh — Distribute/update TDK from source to a target project
 #
 # One-way sync of root-relative paths from distribute.json to a target project.
-# Explicit harness mutation should use `bun src/index.ts install <target> --harness claude`
-# from the tdk-setup package (packages/tdk-setup).
+# Explicit harness mutation uses the source-root tdk-setup CLI shown in install hints.
 # Uses distribute.json include/exclude rules.
 # Compares files by release manifest when available. Prefix mode compares rendered
 # output. Force mode is a destructive override of target ownership and checksums.
@@ -34,6 +33,10 @@
 #   bash distribute.sh /path/to/my-project --dry-run        # preview changes
 #   bash distribute.sh /path/to/my-project --prefix sample --dry-run
 #   # Then run tdk-setup install with the same prefix for .claude/.codex harness output
+#
+# After a successful sync, checks Claude against the payload before checking OMP
+# against .claude/. Notices never change the distribution exit status.
+# Harness install hints preserve saved plugin selection and preview with --dry-run.
 
 set -euo pipefail
 # ERR trap: only fires on unexpected failures (not inside || && if contexts per bash spec)
@@ -228,6 +231,156 @@ scope_description() {
     fi
 }
 
+read_json_array() {
+    local config_file="$1" query_path="$2"
+    local js='
+const fs = require("fs");
+const configFile = process.argv[1];
+const queryPath = process.argv[2];
+const data = JSON.parse(fs.readFileSync(configFile, "utf8"));
+let value = data;
+for (const part of queryPath.split(".")) {
+  value = value?.[part];
+}
+if (!Array.isArray(value)) {
+  console.error(`Missing array in ${configFile}: ${queryPath}`);
+  process.exit(2);
+}
+for (const entry of value) {
+  if (typeof entry !== "string" || entry.length === 0 || entry.includes("\0")) {
+    console.error(`Invalid array entry in ${configFile}: ${queryPath}`);
+    process.exit(3);
+  }
+  process.stdout.write(`${entry}\0`);
+}
+'
+    if command -v bun &>/dev/null; then
+        bun -e "$js" "$config_file" "$query_path"
+    elif command -v node &>/dev/null; then
+        node -e "$js" "$config_file" "$query_path"
+    elif command -v python3 &>/dev/null; then
+        python3 - "$config_file" "$query_path" <<'PY'
+import json
+import sys
+
+config_file, query_path = sys.argv[1], sys.argv[2]
+with open(config_file, "r", encoding="utf-8") as handle:
+    value = json.load(handle)
+for part in query_path.split("."):
+    value = value.get(part) if isinstance(value, dict) else None
+if not isinstance(value, list):
+    print(f"Missing array in {config_file}: {query_path}", file=sys.stderr)
+    sys.exit(2)
+for entry in value:
+    if not isinstance(entry, str) or not entry or "\0" in entry:
+        print(f"Invalid array entry in {config_file}: {query_path}", file=sys.stderr)
+        sys.exit(3)
+    sys.stdout.write(entry + "\0")
+PY
+    elif command -v python &>/dev/null; then
+        python - "$config_file" "$query_path" <<'PY'
+import json
+import sys
+
+config_file, query_path = sys.argv[1], sys.argv[2]
+with open(config_file, "r") as handle:
+    value = json.load(handle)
+for part in query_path.split("."):
+    value = value.get(part) if isinstance(value, dict) else None
+if not isinstance(value, list):
+    print("Missing array in %s: %s" % (config_file, query_path), file=sys.stderr)
+    sys.exit(2)
+for entry in value:
+    if not isinstance(entry, str) or not entry or "\0" in entry:
+        print("Invalid array entry in %s: %s" % (config_file, query_path), file=sys.stderr)
+        sys.exit(3)
+    sys.stdout.write(entry + "\0")
+PY
+    else
+        echo "Error: distribute.json requires bun, node, python3, or python for parsing" >&2
+        return 127
+    fi
+}
+
+SETUP="$SOURCE_ROOT/packages/tdk-setup/src/index.ts"
+
+harness_install_hint() {
+    local settings="$TARGET_ROOT/.specify/install-settings.json" plugins="" prefix=""
+    if [[ -f "$settings" ]]; then
+        if ! plugins="$(read_json_array "$settings" "defaults.selectedPlugins" 2>/dev/null | {
+            separator=""
+            while IFS= read -r -d '' plugin; do
+                printf '%s%s' "$separator" "$plugin"
+                separator=","
+            done
+        })"; then
+            printf 'Install hint unavailable (cannot read defaults.selectedPlugins from %s)' "$settings"
+            return 0
+        fi
+    fi
+    [[ -n "$plugins" ]] || plugins="tdk-core"
+    [[ -z "$BRAND_PREFIX" ]] || prefix=" --prefix $BRAND_WORD"
+    printf 'bun "%s" install "%s" --harness claude --plugins %q%s --dry-run' \
+        "$SETUP" "$TARGET_ROOT" "$plugins" "$prefix"
+}
+
+INSTALL_HINT="$(harness_install_hint)"
+
+check_harness_freshness() {
+    local bun_path harness manifest rc out reason result_lines
+    local stale=false
+    local -a stale_output=() unchecked_reasons=() error_output=()
+    if ! bun_path="$(command -v bun 2>/dev/null)" || [[ ! -x "$bun_path" ]]; then
+        unchecked_reasons+=("bun not available")
+    elif [[ ! -d "$SOURCE_ROOT/packages/tdk-setup/node_modules" ]]; then
+        unchecked_reasons+=("tdk-setup dependencies missing")
+    else
+        # Claude compares the shipped payload first; OMP compares its .claude source.
+        for harness in claude omp; do
+            manifest="$TARGET_ROOT/.specify/state/harness-install/$harness.json"
+            if [[ ! -f "$manifest" ]]; then
+                unchecked_reasons+=("$harness manifest missing")
+                continue
+            fi
+            rc=0
+            if [[ "$harness" == "claude" ]]; then
+                out=$(bun "$SETUP" install "$TARGET_ROOT" --harness claude --check 2>&1) || rc=$?
+            else
+                out=$(bun "$SETUP" convert-flat "$TARGET_ROOT" --harness omp --check 2>&1) || rc=$?
+            fi
+            case "$rc" in
+                0) ;;
+                1)
+                    # Bun startup/import failures also exit 1, before CLI error handling.
+                    result_lines=$'\n'"$out"$'\n'
+                    if [[ "$harness" == "claude" && "$result_lines" == *$'\nClaude projection is stale ('*$'). No files changed.\n'* ]] || \
+                       [[ "$harness" == "omp" && "$result_lines" == *$'\nOMP convert-flat drift detected:\n'* ]]; then
+                        stale=true
+                        stale_output+=("$out")
+                    else
+                        unchecked_reasons+=("$harness check exited 1 without a drift result")
+                        error_output+=("$out")
+                    fi
+                    ;;
+                *) unchecked_reasons+=("$harness check exited $rc"); error_output+=("$out") ;;
+            esac
+        done
+    fi
+    if $stale; then
+        echo -e "  ${YELLOW}STALE: harness projection is behind .specify/plugins${NC}"
+        printf '    %s\n' "$INSTALL_HINT"
+        for out in "${stale_output[@]}"; do printf '%s\n' "$out"; done
+    fi
+    for reason in "${unchecked_reasons[@]}"; do
+        printf "  ${YELLOW}Harness freshness not checked (%s)${NC}\n" "$reason"
+    done
+    if [[ ${#unchecked_reasons[@]} -gt 0 ]]; then
+        printf '    %s\n' "$INSTALL_HINT"
+        for out in "${error_output[@]}"; do printf '%s\n' "$out"; done
+    fi
+    return 0
+}
+
 # ─── Banner ───────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════╗${NC}"
@@ -237,11 +390,7 @@ echo ""
 echo -e "  ${WHITE}Source:${NC}  $SOURCE_ROOT"
 echo -e "  ${WHITE}Target:${NC}  $TARGET_ROOT"
 echo -e "  ${WHITE}Scope:${NC}   $(scope_description)"
-if [[ -n "$BRAND_PREFIX" ]]; then
-    echo -e "  ${WHITE}Next:${NC}    cd \"$SOURCE_ROOT/packages/tdk-setup\" && bun src/index.ts install \"$TARGET_ROOT\" --harness claude --all-plugins --prefix $BRAND_WORD --dry-run"
-else
-    echo -e "  ${WHITE}Next:${NC}    cd \"$SOURCE_ROOT/packages/tdk-setup\" && bun src/index.ts install \"$TARGET_ROOT\" --harness claude --plugins tdk-core --dry-run"
-fi
+printf "  ${WHITE}Next:${NC}    %s\n" "$INSTALL_HINT"
 if [[ -n "$BRAND_PREFIX" ]]; then
     echo -e "  ${WHITE}Brand:${NC}   safe .specify payload text tdk-/tdk/TDK -> $BRAND_PREFIX/$BRAND_WORD/$BRAND_WORD_UPPER"
     echo -e "  ${DIM}         plugins/, codex-plugins/, schemas/, and filename/path refs stay source-identical${NC}"
@@ -350,77 +499,6 @@ remove_orphaned_parallel_lease
 
 DISTRIBUTE_INCLUDES=()
 DISTRIBUTE_EXCLUDES=()
-
-read_json_array() {
-    local config_file="$1" query_path="$2"
-    local js='
-const fs = require("fs");
-const configFile = process.argv[1];
-const queryPath = process.argv[2];
-const data = JSON.parse(fs.readFileSync(configFile, "utf8"));
-let value = data;
-for (const part of queryPath.split(".")) {
-  value = value?.[part];
-}
-if (!Array.isArray(value)) {
-  console.error(`Missing array in ${configFile}: ${queryPath}`);
-  process.exit(2);
-}
-for (const entry of value) {
-  if (typeof entry !== "string" || entry.length === 0 || entry.includes("\0")) {
-    console.error(`Invalid array entry in ${configFile}: ${queryPath}`);
-    process.exit(3);
-  }
-  process.stdout.write(`${entry}\0`);
-}
-'
-    if command -v bun &>/dev/null; then
-        bun -e "$js" "$config_file" "$query_path"
-    elif command -v node &>/dev/null; then
-        node -e "$js" "$config_file" "$query_path"
-    elif command -v python3 &>/dev/null; then
-        python3 - "$config_file" "$query_path" <<'PY'
-import json
-import sys
-
-config_file, query_path = sys.argv[1], sys.argv[2]
-with open(config_file, "r", encoding="utf-8") as handle:
-    value = json.load(handle)
-for part in query_path.split("."):
-    value = value.get(part) if isinstance(value, dict) else None
-if not isinstance(value, list):
-    print(f"Missing array in {config_file}: {query_path}", file=sys.stderr)
-    sys.exit(2)
-for entry in value:
-    if not isinstance(entry, str) or not entry or "\0" in entry:
-        print(f"Invalid array entry in {config_file}: {query_path}", file=sys.stderr)
-        sys.exit(3)
-    sys.stdout.write(entry + "\0")
-PY
-    elif command -v python &>/dev/null; then
-        python - "$config_file" "$query_path" <<'PY'
-import json
-import sys
-
-config_file, query_path = sys.argv[1], sys.argv[2]
-with open(config_file, "r") as handle:
-    value = json.load(handle)
-for part in query_path.split("."):
-    value = value.get(part) if isinstance(value, dict) else None
-if not isinstance(value, list):
-    print("Missing array in %s: %s" % (config_file, query_path), file=sys.stderr)
-    sys.exit(2)
-for entry in value:
-    if not isinstance(entry, str) or not entry or "\0" in entry:
-        print("Invalid array entry in %s: %s" % (config_file, query_path), file=sys.stderr)
-        sys.exit(3)
-    sys.stdout.write(entry + "\0")
-PY
-    else
-        echo "Error: distribute.json requires bun, node, python3, or python for parsing" >&2
-        return 127
-    fi
-}
 
 load_json_array() {
     local array_name="$1" query_path="$2" output_file entry
@@ -1974,5 +2052,6 @@ else
     echo -e "${GREEN}Distribution complete! $COPIED_COUNT files synced, $DELETED_COUNT files removed from $TARGET_ROOT${NC}"
     echo ""
     echo -e "  ${WHITE}Re-run:${NC}   bash distribute.sh \"$TARGET_ROOT\"${BRAND_PREFIX:+ --prefix $BRAND_WORD}"
-    echo -e "  ${WHITE}Install:${NC}  bun packages/tdk-setup/src/index.ts install \"$TARGET_ROOT\" --harness claude --all-plugins${BRAND_PREFIX:+ --prefix $BRAND_WORD} --yes"
+    printf "  ${WHITE}Install:${NC}  %s\n" "$INSTALL_HINT"
+    check_harness_freshness
 fi

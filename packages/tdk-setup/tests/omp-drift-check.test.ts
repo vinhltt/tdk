@@ -66,6 +66,24 @@ describe('OMP convert-flat drift check', () => {
     expect(snapshotFiles(consumer.root)).toEqual(before);
   });
 
+  test('uses exit 2 for check parser errors and exit 1 only for detected drift', () => {
+    const consumer = makeConsumer('tdk-omp-drift-exit-codes-');
+    const source = installAgent(consumer.root);
+    const before = snapshotFiles(consumer.root);
+    for (const args of [
+      ['--check', '--unknown-check-option'],
+      ['--check', '--parts'],
+      ['--parts', '--check'],
+    ]) {
+      const result = runConvertFlat(consumer.root, args);
+      expect(result.exitCode, result.stderr.toString()).toBe(2);
+      expect(snapshotFiles(consumer.root)).toEqual(before);
+    }
+    expect(runConvertFlat(consumer.root, ['--check', '--help']).exitCode).toBe(0);
+    fs.appendFileSync(source.sourcePath, '\nChanged source.\n');
+    expect(runConvertFlat(consumer.root, ['--check']).exitCode).toBe(1);
+  });
+
   test('distinguishes source changes, target edits, missing targets, and simultaneous drift', () => {
     const sourceConsumer = makeConsumer('tdk-omp-drift-source-');
     const source = installAgent(sourceConsumer.root);

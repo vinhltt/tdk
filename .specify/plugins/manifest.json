@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-10-02T00:50:16Z",
+  "generated_at": "2026-10-07T03:37:08Z",
   "plugins": {
     "tdk-core": {
       "version": "14.0.1",
@@ -264,28 +264,28 @@
       }
     },
     "tdk-memory": {
-      "version": "3.0.3",
+      "version": "4.0.0",
       "components": {
         "skills": {
           "tdk-memory-changelog": {
-            "version": "3.0.1"
+            "version": "4.0.0"
           },
           "tdk-memory-checksum": {
-            "version": "3.0.0"
+            "version": "4.0.0"
           },
           "tdk-memory-init": {
-            "version": "3.0.3"
+            "version": "4.0.0"
           },
           "tdk-memory-query": {
-            "version": "3.0.1"
+            "version": "4.0.0"
           },
           "tdk-memory-update": {
-            "version": "3.0.3"
+            "version": "4.0.0"
           }
         },
         "agents": {
           "tdk-memory-agent": {
-            "version": "3.0.3"
+            "version": "4.0.0"
           }
         },
         "hooks": {},
@@ -294,23 +294,23 @@
       "files": {
         ".claude-plugin/interface.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
         ".claude-plugin/marketplace.json": "5a7a114551cc99a3971a18ac960035cb6711caff03042fa65b5ed8a871f91be1",
-        ".claude-plugin/plugin.json": "6e81fcff3bb25726191e86a9b25f83ad87071277f613d8a9a712a6eb2ef2f543",
-        ".codex-plugin/plugin.json": "1c92e8df9e78dacbf63ccbde69bb6188f21026af2a1a5883f890654a15937f5a",
-        ".cursor-plugin/plugin.json": "1c92e8df9e78dacbf63ccbde69bb6188f21026af2a1a5883f890654a15937f5a",
+        ".claude-plugin/plugin.json": "430d2913cf118ccf875f84bb7f02fb91ca67c1c2af5663fbb1a74231421ce329",
+        ".codex-plugin/plugin.json": "54a17328deac2cc3d2b6957e55f2bd8deb465947af1e4b1c3988218c8fc88fb5",
+        ".cursor-plugin/plugin.json": "54a17328deac2cc3d2b6957e55f2bd8deb465947af1e4b1c3988218c8fc88fb5",
         ".gitignore": "14567ef9a3ede22540eba90110f351cc338ad2a05b506f5da1d265cda25be5c9",
-        "CHANGELOG.md": "132552df7c40857916c75c74786d983d7aa5a7e3ddca096ae73b8fee8965a68a",
+        "CHANGELOG.md": "b85830b3644a7baab74a44786948a7e30c638a2cf120a801df1ec9914a7bcb03",
         "LICENSE": "4537167969bc06e8bfe5a9da25f32de98551bf9f20e797f34b23b7325dcbaf0f",
         "README.md": "565b9538c729eb20dd70188c52c16585589a353b8421ee6222dcb6b18f9f9bcf",
-        "agents/tdk-memory-agent.md": "049aa36bde33ba532cade48dc5c41a289dcb385a46a14034a42c7f46e07f4415",
-        "skills/tdk-memory-changelog/SKILL.md": "b7887d3fff25b91ed15f0e3ba2d02124474680bffe65e7af0e80b39c09d80bec",
+        "agents/tdk-memory-agent.md": "57a24470065e748b98c2b14372687fa5f0c0c468b12ed2d0595e3ac8161fcaab",
+        "skills/tdk-memory-changelog/SKILL.md": "8b49fe1ad0b18f6e62d74e30da4b7171d87a856d2b68c88be8fa82fa1add6314",
         "skills/tdk-memory-changelog/references/changelog-entry-format-and-change-type-taxonomy.md": "e2c40e4449b3755a790ad7096bed556f3f959a238f4113caa44c81b009161410",
-        "skills/tdk-memory-checksum/SKILL.md": "9964200a0167e5fc74f569396f64863dd393d43ed076ce2f380a7fe4a4209ea0",
+        "skills/tdk-memory-checksum/SKILL.md": "98b0a9d60254e133f7141a4af78a69e1e6003389085fbf67533ade219a55208d",
         "skills/tdk-memory-checksum/scripts/RUNTIME-LICENSE.txt": "8d6c916d6d599ee1c90d9df35c32f1e460558ad5bec797929eb5872b6a2790b5",
         "skills/tdk-memory-checksum/scripts/bun.lock": "0dcf8b1f7e59bc66328f2aba397ae50be6b3c7e58f92baef384326c472f00c54",
         "skills/tdk-memory-checksum/scripts/memory-manifest.cjs": "88e2490ecfae98853b809665ffeff572c8d23c8c286d7931d040c993da72a758",
         "skills/tdk-memory-checksum/scripts/memory-manifest.ts": "188fe5f77662713f0e4bb028610deae0ed8a5b5c31affb6aac64f7e2f4b05704",
         "skills/tdk-memory-checksum/scripts/package.json": "19e6d3a9eb91640c725d294ba61fe315d7fef0d4a60a6591fdc83af500e26154",
-        "skills/tdk-memory-init/SKILL.md": "cdf6bb63111d2a33b2d29afdba0c74c7a0125de0459fe26801a9f5b5e82e81e9",
+        "skills/tdk-memory-init/SKILL.md": "ff7fa4649a59a99035837d2b967e2041497203d1dd7c4577383d6b85f8e00a10",
         "skills/tdk-memory-init/references/VENDORED-LICENSE.md": "64c64d48361edfe8610016441bf593256ea9b67f133b00f47c55aa29ee878567",
         "skills/tdk-memory-init/references/VENDORED.md": "d3299f1a96e1078867d4ceb9fbbae216dd088a572f8bf998afd4d3b511dfd44f",
         "skills/tdk-memory-init/references/domain-extraction-and-confirmation.md": "8cc8986efd9eec697cccf885094e3a11461ec3b5c7c271a9b59972f529b20c76",
@@ -342,9 +342,9 @@
         "skills/tdk-memory-init/references/templates/memory/services-template.md.tpl": "39f8f03a9917e08b5dff45bf474f1ce390b4e748b787cdc5f1d74909835840d7",
         "skills/tdk-memory-init/references/templates/memory/stakeholders-and-roles-template.md.tpl": "54cf79511cd464cccb5f4435b4adc0893134cff230908b6d8f2592209d68fe46",
         "skills/tdk-memory-init/references/templates/memory/state-machine-template.md.tpl": "e5c672736c70762df25f7cf4f7b7ec337aff934decc89aa584f9517ff6bd7b1a",
-        "skills/tdk-memory-query/SKILL.md": "c888726e3cc606c4ff1771e79bef87237d243b5d119125921fa50c7f33750423",
+        "skills/tdk-memory-query/SKILL.md": "12112aeec4ce4b7431c2ed196885be8ae361305ea7f376227aca0de838853aa5",
         "skills/tdk-memory-query/references/flow-query.md": "437cc2276f97563b6668c916b1daf181ca396a921300c9149609deb1a66ee956",
-        "skills/tdk-memory-update/SKILL.md": "4e26116f818c3e6957b32a4e5acfed16adb0a2c7123e980e6ffd1c6ad81bbc8b",
+        "skills/tdk-memory-update/SKILL.md": "caca95e865cbec41e3feceb3683775396e118adeb4c07e896e7d8026c745aa11",
         "skills/tdk-memory-update/references/deprecation-flow.md": "60b736e76c164723fcb44cdc48bd61dd846666d4609c452e33de69db29243f27",
         "skills/tdk-memory-update/references/domain-source-extraction-flow.md": "0f53c4d5ee3c867dbdca1badac5ff2ad3b6aebf491ceff77814e669b7b543029",
         "skills/tdk-memory-update/references/finalize-written-files.md": "18d833859b4d277de9ca957b6fa08432c5485d9d27e73d60f92d1db46ca38a0a",
@@ -501,7 +501,7 @@
       }
     },
     "tdk-utils": {
-      "version": "4.3.1",
+      "version": "4.4.0",
       "components": {
         "skills": {
           "brainstorming": {
@@ -530,6 +530,9 @@
           },
           "tdk-branch-preflight": {
             "version": "4.2.2"
+          },
+          "tdk-handoff": {
+            "version": "4.4.0"
           },
           "tdk-load-project-context": {
             "version": "4.2.1"
@@ -575,10 +578,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e68f07c43a122d63dbd44fafbd978b0adb4f5f18bb95537f80014e859846f8b4",
-        ".claude-plugin/plugin.json": "4a846503c09f585547de9cfd57fbb986eb32fa97151bc24d32c439e21e6c61d6",
-        ".codex-plugin/plugin.json": "4a846503c09f585547de9cfd57fbb986eb32fa97151bc24d32c439e21e6c61d6",
-        ".cursor-plugin/plugin.json": "4a846503c09f585547de9cfd57fbb986eb32fa97151bc24d32c439e21e6c61d6",
-        "CHANGELOG.md": "426063212d8b9820a4d61a984e7dc58686beddb27bfaaf5060e27fdf476133a4",
+        ".claude-plugin/plugin.json": "b1a825192f6f5beef88c60e4655aad7e73b51517cce8c2ee0f5c0be8a8071137",
+        ".codex-plugin/plugin.json": "b1a825192f6f5beef88c60e4655aad7e73b51517cce8c2ee0f5c0be8a8071137",
+        ".cursor-plugin/plugin.json": "b1a825192f6f5beef88c60e4655aad7e73b51517cce8c2ee0f5c0be8a8071137",
+        "CHANGELOG.md": "01f6419a78b3d8899aca918dfc0bad3d3797130a1a35d15e6b8a41a97e70c2b3",
         "agents/researcher.md": "239051264f41b129ef5c59adb573b7e762a528bb58d0ff8dd1e32eee243baaaf",
         "agents/tdk-counsel.md": "7fae0ea0d0e4986a204f411b9edbd6c8ddcad4289d045b7337b855bc707b2fe7",
         "agents/tdk-red-team-reliability.md": "8585ee27a9d1f6b79b9988fc6020317baa3be7e37f80be9086708bfc35c74ea8",
@@ -630,6 +633,20 @@
         "skills/shard-doc/tests/sample-small.md": "14c3a01e4f97046ecfbe58ea208d758387561b377a37aad69a71e411d2ea82c3",
         "skills/tdk-branch-preflight/SKILL.md": "ce8d39adac847a56029c4400c90ad877ed5fef52194ba6dfe1078bd9f8f839a0",
         "skills/tdk-branch-preflight/references/git-map-contract.md": "bc14c517be382195f1ea4a56921ff656a85a47099f58ceccc823fb3f7e0df6e0",
+        "skills/tdk-handoff/LICENSE.txt": "1bd321a3b9cfa8d4af2105e20edd69d830df0b28e83a1b0255558f888e493981",
+        "skills/tdk-handoff/SKILL.md": "6d17b04f91ab9d9d6173e494c14860ab899af573e30bedf7f16a92a4d5506bfd",
+        "skills/tdk-handoff/references/artifact-schema.md": "78a8dcde46d3b6ae6111aca4b45c035f466b0730a3a19765b0c7dda740c983ad",
+        "skills/tdk-handoff/references/redaction-patterns.md": "98830a7ad664cbaf75e7b2974bfc47f4606714b78e0e1c320a4787c9c1c4a0c8",
+        "skills/tdk-handoff/references/upstream-owner.txt": "3db76c50da7db44169ac8ecb4d8fdeb50e52ecad577e3a32e997ca176a441aee",
+        "skills/tdk-handoff/scripts/RUNTIME-LICENSE.txt": "3ea3e8d23e7f9bc30a2c9b54c0c6d946ee52b49e72652c94139063afbd875c3a",
+        "skills/tdk-handoff/scripts/build.ts": "484754b33a236e4e44f8e3cf352dd715a443bb7dba57b3801c704f7eb5b219dc",
+        "skills/tdk-handoff/scripts/bun.lock": "9493a44b31eae535b70ff383f65284f3eb3e1231b1ed5b7d54c0f621ffe4be5e",
+        "skills/tdk-handoff/scripts/handoff-artifact.ts": "46146b7b3b74355debeabdb0be2adb424a52a076a6ebe37a7c455571a9ebe2a0",
+        "skills/tdk-handoff/scripts/handoff-export.js": "dea0b86d87db8a34c8af1c8eee1f30ac909e43096c3e1018ffe7a72d5fe6cb08",
+        "skills/tdk-handoff/scripts/handoff-export.ts": "fcadec2f4761a1cb1da00e3fb4fb19c54cf800d174e0fe0e962056976655894e",
+        "skills/tdk-handoff/scripts/handoff-redaction.ts": "0a3c8022ac1b1b9072d2e4d84e08493218772acdef257d6ccb19654636bfa0af",
+        "skills/tdk-handoff/scripts/package.json": "8d1d3bb7f74e064f6971834ee9adbfacbcd202ae65fc39554cd7522111a47ed4",
+        "skills/tdk-handoff/scripts/tsconfig.json": "2825ddd3e39b6cf920d5e61f7e57e4efcd597874ee9e8e8ee128f559d242b79c",
         "skills/tdk-load-project-context/SKILL.md": "1ef6d106970375084c517e598e0417c5cedf52c91054738e4a4c6a4d3b5ef3b2",
         "skills/tdk-repo-worktree/SKILL.md": "4998e077ca3dee1000885bbc58b4d85f6b58f8bc59c9cbb6281e0739e3e90a56",
         "skills/tdk-scout/SKILL.md": "1d77d0df4687d6012a6e18c8db0d34e238678a019c8d86e63be73f90fffa91c8",

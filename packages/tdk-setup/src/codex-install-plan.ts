@@ -110,7 +110,6 @@ function isPrefixRewriteTextArtifact(relativePath: string): boolean {
     relativePath.endsWith('.toml') ||
     relativePath.endsWith('.json') ||
     relativePath.endsWith('.md') ||
-    relativePath.endsWith('.txt') ||
     relativePath.endsWith('.tpl') ||
     relativePath.endsWith('.py') ||
     relativePath.endsWith('.ts') ||

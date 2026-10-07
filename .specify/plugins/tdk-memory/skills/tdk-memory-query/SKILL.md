@@ -8,7 +8,7 @@ description: "Query project memory knowledge by natural language. Returns
   'show data model for Z', or when other skills need memory context before implementing.
   Invocable by user (/tdk-memory-query) and by other skills/agents."
 metadata:
-  version: 3.0.1
+  version: 4.0.0
   category: "Context & Memory"
   requires:
     - tdk-memory-init

@@ -2,7 +2,7 @@
 name: tdk-memory-changelog
 description: "Record staged project memory changes in CHANGELOG.md via git diff --staged. Stage the selected memory root first, then run this skill before committing. Supports --memory-root; requires initialized memory."
 metadata: 
-  version: 3.0.1
+  version: 4.0.0
   category: "Analysis & Review"
   requires:
     - tdk-memory-init

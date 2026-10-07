@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { stringify } from 'yaml';
+import { parse, stringify } from 'yaml';
 import { sha256Buffer, sha256File } from './checksum';
 import { CONVERT_FLAT_OWNER } from './convert-reconcile';
 import { mapClaudeToolName } from './lib/harness-transform/claude-tool-to-omp';
@@ -210,6 +210,7 @@ function settingsFragment(
   modelMap: OmpModelMap,
   facts: MigrationFact[],
   warnings: string[],
+  userOwnsModelRoles: boolean,
 ): Record<string, unknown> {
   const target: Record<string, unknown> = {};
   const settings = objectValue(record?.value);
@@ -219,11 +220,15 @@ function settingsFragment(
   }
 
   if (typeof settings.model === 'string') {
-    const mapped = Object.hasOwn(modelMap, settings.model) ? modelMap[settings.model] : undefined;
-    if (mapped) {
-      target.modelRoles = { default: mapped };
-      facts.push(fact('converted', 'model', `Mapped through harnesses.omp.modelMap to ${mapped}.`));
-    } else facts.push(fact('dropped', 'model', 'No harnesses.omp.modelMap entry for the configured alias.'));
+    if (userOwnsModelRoles) {
+      facts.push(fact('dropped', 'model', 'User-owned .omp/config.yml modelRoles takes precedence; no model roles were converted.'));
+    } else {
+      const mapped = Object.hasOwn(modelMap, settings.model) ? modelMap[settings.model] : undefined;
+      if (mapped) {
+        target.modelRoles = { default: mapped };
+        facts.push(fact('converted', 'model', `Mapped through harnesses.omp.modelMap to ${mapped}.`));
+      } else facts.push(fact('dropped', 'model', 'No harnesses.omp.modelMap entry for the configured alias.'));
+    }
   } else if (settings.model !== undefined) facts.push(fact('dropped', 'model', 'Expected a string model alias.'));
 
   if (typeof settings.effortLevel === 'string' && SUPPORTED_THINKING_LEVELS.has(settings.effortLevel)) {
@@ -308,12 +313,23 @@ export function emitOmpConfigFile(input: OmpConfigEmitInput): OmpConfigEmitResul
   );
   if (!settingsActive && !skillsActive && !previous) return { warnings, facts };
 
+  const targetPath = path.join(input.inventory.consumerRoot, OMP_CONFIG_TARGET);
+  let existing = '';
+  if (fs.existsSync(targetPath)) {
+    const stat = fs.lstatSync(targetPath);
+    if (stat.isFile() && !stat.isSymbolicLink()) existing = fs.readFileSync(targetPath, 'utf-8');
+  }
+  const userRegion = mergeConfigYaml(existing, '');
+  if (userRegion.error) throw new Error(userRegion.error);
+  const userConfig = objectValue(parse(userRegion.unmanagedContent));
+  const userOwnsModelRoles = userConfig !== undefined && Object.hasOwn(userConfig, 'modelRoles');
+
   const managed: Record<string, unknown> = {};
   const settingsRecord = input.inventory.records.find(
     (record): record is FlatClaudeSettingsRecord => record.kind === 'settings',
   );
   if (settingsActive) {
-    Object.assign(managed, settingsFragment(settingsRecord, input.modelMap, facts, warnings));
+    Object.assign(managed, settingsFragment(settingsRecord, input.modelMap, facts, warnings, userOwnsModelRoles));
     addLocalPresenceFacts(input.inventory.consumerRoot, facts);
     addHookSignals(input.inventory, facts);
   }
@@ -321,12 +337,6 @@ export function emitOmpConfigFile(input: OmpConfigEmitInput): OmpConfigEmitResul
     managed.skills = { enableClaudeUser: false, enableClaudeProject: false };
   }
 
-  const targetPath = path.join(input.inventory.consumerRoot, OMP_CONFIG_TARGET);
-  let existing = '';
-  if (fs.existsSync(targetPath)) {
-    const stat = fs.lstatSync(targetPath);
-    if (stat.isFile() && !stat.isSymbolicLink()) existing = fs.readFileSync(targetPath, 'utf-8');
-  }
   const managedBlock = Object.keys(managed).length > 0 ? stringify(managed).trimEnd() : '';
   const merged = mergeConfigYaml(existing, managedBlock);
   if (merged.error) throw new Error(merged.error);

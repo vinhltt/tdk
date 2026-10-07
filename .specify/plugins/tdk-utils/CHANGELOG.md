@@ -4,17 +4,22 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [Unreleased]
+
+### Fixed
+- `tdk-handoff`: restore the branding-safe upstream identity resource and pinned adapted-source MIT notice so linked resources accompany default and branded installed skills.
+
+## [4.4.0] - 2026-10-04
+
+### Added
+- tdk-handoff: capture five portable handoff kinds with explicit host ownership, bounded redaction and manual receiver re-verification; never publish, dispatch or create tasks. Ships as a self-contained skill: bundled Bun exporter, no consumer shared scripts or npm dependencies.
+
 ## [4.3.1] - 2026-10-02
 
 ### Changed
-- tdk-scout: document per-file and aggregated modes, representative-only source access, byte limits, and directory evidence for downstream layout workflows.
-- tdk-scout-runner: validate schema v2, rank directory groups in aggregated mode, enforce source-read budgets, and report directory dependencies and sampled-coverage gaps.
-
-## [Unreleased]
-
-### Changed
-- `tdk-scout` emits a bounded directory-level Tier 1 view above 800 files instead of failing solely on file count. Directory summaries preserve full-scope counts, LOC, estimated tokens and resolved directed dependencies; `files[]` contains at most 50 original representatives, not the complete file universe.
-- Tier 1 schema version 2 invalidates old caches. The runner reports its input mode and sampled coverage, navigates directory summaries before file reads, and keeps `sample_budget` as a file-read limit.
+- `tdk-scout`: document complete per-file results for scopes up to 800 files and bounded directory aggregation for larger scopes, replacing count-only rejection. Directory summaries retain full-scope metrics and resolved dependencies; `files[]` contains at most 50 representative files.
+- `tdk-scout-runner`: validate Tier 1 schema v2, rank and navigate directory summaries before reading representative files, and report dependency evidence and sampled-coverage gaps. Keep `sample_budget` as a file-read limit, not a directory-coverage limit.
+- Tier 1 caches: invalidate legacy schema versions before reuse so cached results match the runner's current input contract.
 
 ## [4.3.0] - 2026-09-15
 
