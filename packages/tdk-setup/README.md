@@ -255,5 +255,8 @@ to refresh a changed source; review target-side edits before deciding whether to
 `.claude/` or reconvert.
 
 Use `--force` to overwrite conflicts on ordinary unowned or user-edited managed targets. A regular,
-non-conflicting `.omp/config.yml` is adopted by `settings` through sentinel merge without `--force`;
-edits inside its TDK-managed sentinel region remain fail-closed even with `--force`.
+non-conflicting `.omp/config.yml` is adopted by `settings` through sentinel merge without `--force`.
+Edits inside its TDK-managed region block conversion by default; `--force` replaces that region with
+the converted Claude settings and active-part configuration, preserves user-owned YAML outside the
+sentinels byte-for-byte, and backs up the existing `.omp/` tree before writing. Malformed YAML,
+duplicate ownership roots, unsafe paths, and files owned by another manifest entry remain blockers.

@@ -6,16 +6,12 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-## [Unreleased]
-
-### Fixed
-- **[tdk-utils]** Restore `tdk-handoff`'s canonical upstream identity and original MIT attribution in the source and distributed skill payload; preserve capture-only behavior and the bundled runtime.
-
 ## [1.119.0] - 2026-10-04
 
 ### Added
-- **[tdk-utils]** `tdk-handoff`: capture continuation, conditional spec seeds, investigations, feature proposals and upstream bug reports as portable Markdown packets; retain explicit unknowns and receiver re-verification without creating tasks, publishing or dispatching.
-- **[tdk-utils]** Skill-local handoff sources and bundled Bun exporter provide explicit-host, exclusive create-new writes, bounded credential/path redaction, strict Markdown structure and safe stdin transport without consumer shared scripts or npm dependencies.
+- **[tdk-utils]** Add `tdk-handoff` with capture-only behavior, canonical upstream identity and original MIT attribution in the source and distributed skill payload.
+  - Capture continuation, conditional spec seeds, investigations, feature proposals and upstream bug reports as portable Markdown packets; retain explicit unknowns and receiver re-verification without creating tasks, publishing or dispatching.
+  - Skill-local handoff sources and bundled Bun exporter provide explicit-host, exclusive create-new writes, bounded credential/path redaction, strict Markdown structure and safe stdin transport without consumer shared scripts or npm dependencies.
 - **[Tests]** Behavioral coverage for output containment, no-clobber concurrency, redaction boundaries, isolated skill execution and release exclusion of consumer-owned packets.
 
 ### Changed
@@ -25,6 +21,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - **[Setup]**
   - Codex prefix installs preserve opaque `.txt` identity resources instead of renaming canonical upstream projects and trackers.
   - Malformed `install --check` invocations retain operational exit code 2 even when option parsing consumes the check flag as a value, rather than misreporting a stale projection.
+  - `convert-flat --harness omp --force` replaces user-edited managed config regions from the Claude source while preserving YAML outside the TDK sentinels and the durable pre-write backup; non-force conversion still blocks managed-region edits.
 - **[Tests]** Distribution freshness regressions execute emitted installer guidance and verify preserved selection and dry-run immutability instead of pinning shell-quoting presentation.
 
 ## [1.118.2] - 2026-10-02

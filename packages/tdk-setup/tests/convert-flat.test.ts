@@ -663,16 +663,22 @@ describe('harness convert-flat', () => {
     expect(loadHarnessManifest(consumer.root, 'omp').managedFiles).toEqual([]);
   });
 
-  test('blocks settings reapply after a managed-region edit', () => {
+  test('blocks managed-region edits by default and force restores only converted settings', () => {
     const consumer = makeConsumer('tdk-convert-flat-omp-settings-drift-');
-    writeFile(consumer.root, '.claude/settings.json', JSON.stringify({ effortLevel: 'high' }));
+    const userConfig = '# My OMP preferences\r\nmodelRoles:\r\n  default: user/model:xhigh\r\nretry:\r\n  enabled: true\r\n\r\n';
+    writeFile(consumer.root, '.omp/config.yml', userConfig);
+    const sourceSettings = JSON.stringify({ effortLevel: 'high', model: 'opus' });
+    writeFile(consumer.root, '.claude/settings.json', sourceSettings);
     const applied = runConvertFlat(consumer.root, ['--parts', 'settings', '--yes'], 'omp');
     expect(applied.exitCode).toBe(0);
     const targetPath = path.join(consumer.root, '.omp/config.yml');
-    const edited = fs.readFileSync(targetPath, 'utf-8').replace('defaultThinkingLevel: high', 'defaultThinkingLevel: medium');
+    const installed = fs.readFileSync(targetPath, 'utf-8');
+    const edited = installed.replace('defaultThinkingLevel: high', 'defaultThinkingLevel: xhigh');
     fs.writeFileSync(targetPath, edited, 'utf-8');
     const manifestPath = manifestPathFor(consumer.root, 'omp');
     const manifestBefore = fs.readFileSync(manifestPath);
+    const backupsRoot = path.join(consumer.root, '.specify/state/harness-install/backups');
+    const backupsBefore = new Set(fs.readdirSync(backupsRoot));
 
     const result = runConvertFlat(consumer.root, ['--parts', 'settings', '--yes'], 'omp');
 
@@ -680,6 +686,26 @@ describe('harness convert-flat', () => {
     expect(result.stderr.toString()).toContain('managed region has user edits');
     expect(fs.readFileSync(targetPath, 'utf-8')).toBe(edited);
     expect(fs.readFileSync(manifestPath)).toEqual(manifestBefore);
+    expect(new Set(fs.readdirSync(backupsRoot))).toEqual(backupsBefore);
+
+    const forced = runConvertFlat(consumer.root, ['--parts', 'settings', '--force', '--yes'], 'omp');
+
+    expect(forced.exitCode).toBe(0);
+    const restored = fs.readFileSync(targetPath, 'utf-8');
+    expect(restored).toBe(installed);
+    expect(mergeConfigYaml(restored, '').unmanagedContent).toBe(userConfig);
+    expect(fs.readFileSync(path.join(consumer.root, '.claude/settings.json'), 'utf-8')).toBe(sourceSettings);
+    const configEntry = loadHarnessManifest(consumer.root, 'omp').managedFiles.find(
+      (file) => file.targetRelativePath === '.omp/config.yml',
+    );
+    expect(configEntry?.managedRegionChecksum).toBe(
+      sha256Buffer(Buffer.from(extractOmpManagedPayload(restored)!)),
+    );
+    const newBackups = fs.readdirSync(backupsRoot).filter((stamp) => !backupsBefore.has(stamp));
+    expect(newBackups).toHaveLength(1);
+    expect(fs.readFileSync(path.join(backupsRoot, newBackups[0]!, '.omp/config.yml'), 'utf-8')).toBe(edited);
+    const checked = runConvertFlat(consumer.root, ['--check'], 'omp');
+    expect(checked.exitCode).toBe(0);
   });
 
   test('rejects a user YAML document end that would strand the managed block', () => {
@@ -696,7 +722,7 @@ describe('harness convert-flat', () => {
     expect(fs.existsSync(manifestPathFor(consumer.root, 'omp'))).toBe(false);
   });
 
-  test('rejects OMP config ownership duplicates before backup or write', () => {
+  test.each([false, true])('rejects OMP config ownership duplicates before backup or write (force=%s)', (force) => {
     const consumer = makeConsumer('tdk-convert-flat-omp-settings-duplicate-');
     const userConfig = 'tools:\n  approval: {}\n';
     const targetPath = writeFile(consumer.root, '.omp/config.yml', userConfig);
@@ -704,7 +730,9 @@ describe('harness convert-flat', () => {
       permissions: { allow: ['Read'] },
     }));
 
-    const result = runConvertFlat(consumer.root, ['--parts', 'settings', '--yes'], 'omp');
+    const result = runConvertFlat(
+      consumer.root, ['--parts', 'settings', '--yes', ...(force ? ['--force'] : [])], 'omp',
+    );
 
     expect(result.exitCode).not.toBe(0);
     expect(result.stderr.toString()).toMatch(/ownership conflict.*tools/);

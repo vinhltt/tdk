@@ -133,7 +133,7 @@ function fileState(
       previous.managedRegionChecksum !== undefined &&
       file.currentManagedRegionChecksum !== undefined
     ) {
-      if (file.currentManagedRegionChecksum !== previous.managedRegionChecksum) {
+      if (file.currentManagedRegionChecksum !== previous.managedRegionChecksum && !force) {
         return {
           item: { action: 'conflict', targetRelativePath, reason: 'managed region has user edits', previous },
           nextManaged: previous,
