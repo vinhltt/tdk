@@ -2,6 +2,8 @@
 
 **Trigger:** only when `planExists == "true"` from `setup-plan.ts`. Skip entirely if `planExists == "false"` (proceed to Step 2 in **NEW mode**).
 
+For delegate-only changes, use `/tdk-plan <TASK_ID> --refresh-routing` instead of rewrite/append; that action branches immediately after project context, previews only eligible drifted `todo` phases, and refuses any `in_progress` phase. Append never refreshes existing phase delegates.
+
 ## Branch B (re-run) — prompt user 2 options
 
 Use **AskUserQuestion** tool:
@@ -45,12 +47,11 @@ Use **AskUserQuestion** tool:
 **ONLY**. Do not touch conditional `research/`, `reports/`, `contracts/`, or any
 legacy standalone artifact. Use `--migrate-artifacts` for explicit migration.
 
-**On proceed:** re-run
+**On proceed:** confirm that the generation transaction's pre-mutation byte snapshots contain the prior `plan.md` and every phase to be overwritten/deleted, plus the existing-file inventory. Capture them before any destructive action, especially `setup-plan.ts --force`; STOP before writing if capture failed. Re-run
 `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/setup-plan.ts {task_id} --force --json)`,
 then continue to Step 2 with **REGENERATE mode**. Regenerate and classify every
 rewritten phase; no rewritten phase receives the untouched-legacy metadata
-exemption. Any setup, write, or validation failure removes only invocation-new
-files and STOPs with exact diagnostics.
+exemption. Keep snapshots until Step 3d's resolver, readiness assessment, and ordered post-write gates finish. Any setup/write/resolver/validation failure restores the prior plan and overwritten/deleted phases byte-for-byte, removes only invocation-new files, preserves unrelated/pre-existing files, and STOPs with exact diagnostics. A static readiness failure alone retains structurally valid generated files for Step 4's NOT RUNNABLE report.
 The rewrite transaction must retain `memory_gate`, `memory_gate_reason`,
 `memory_gate_at`, `memory_gate_actor`, and the existing Memory Constraints
 section before replacing any plan bytes. `setup-plan.ts --force` preserves them
@@ -92,23 +93,19 @@ only a legitimate new Guardian outcome or live authorization may replace them.
    dependency and parallel-safety placeholders. Uncertain eligibility emits
    `parallel_safe: never` with the first factual reason; never write an
    unclassified candidate.
-8. **Apply one append:** Write the phase file, append its row, and update only
-   the reciprocal `Blocks` cells in `plan.md`.
-   Preserve every existing phase file byte-for-byte.
+8. **Apply one append:** Retain the pre-mutation `plan.md` byte snapshot and existing-file inventory before writing the phase, appending its row, or changing reciprocal `Blocks` cells. Draft the new phase without delegate sections and with matching provisional `todo` frontmatter/table status. Record its required final status before writing: a direct spike dependent must finish as `blocked`; otherwise default to `todo`. Write its file, append its row, and update only the reciprocal `Blocks` cells in `plan.md`.
+   Preserve every existing phase file byte-for-byte, including its current delegates. Routing injection selects only the new phase; use `--refresh-routing` separately for stale old phases.
    The table row uses:
    - **VALID_STATUSES (enforced):** `todo | in_progress | done | skipped | blocked | cancelled`. Default for new phases = `todo`. NEVER use `not-started`, `pending`, `planned`, `new`, or any other value — the Step 3d status validator WILL reject it.
-   - `Status = todo` and the normalized `Blocks` / `BlockedBy` relations from Step 6.
+   - Draft `Status = todo` and the normalized `Blocks` / `BlockedBy` relations from Step 6. Finalize required `blocked` status after injection, before any validation/reporting; never reset an existing phase or publish the draft.
    - File column: `[phase-${NN}-${slug}](phases/phase-${NN}-${slug}.md)` (lowercase path).
 
    **PROHIBITED:** Do NOT add any prose, narrative, or description anywhere in `plan.md`. All phase context belongs exclusively in the phase file's `## Overview` section. The Step 3d prose validator will reject violations.
-9. **Run Step 3d:** Execute the four ordered post-write gates from
+9. **Run Step 3d:** First run the selected new-phase resolver check/apply per `delegate-routing-injection.md`'s **Generation Routing Transaction**. Use the same explicit new-phase selector and digest for check/apply, passing `--allow-in-progress-plan` only because an older phase may already be active. Finalize the new phase's recorded status in both frontmatter and table (a spike dependent becomes `blocked`), then collect read-only Tier 1 readiness. The resolver still never mutates existing blocked phases. Then execute the four ordered post-write gates from
    `plan-output-contract.md`. Gate 3 validates only the appended phase; gate 4
    validates write disjointness across every `parallel_safe: auto` phase in the
    plan. Accept warnings for untouched legacy metadata only. Any invalid result,
-   non-zero exit, malformed JSON, or runtime/I/O error reverts the appended row
-   in `plan.md`, must remove the appended phase file, and STOPs with exact
-   diagnostics. Leave no orphan phase or table row. Never auto-fix, repair, or
-   downgrade rejected output.
+   non-zero exit, malformed JSON, or runtime/I/O error restores the **whole prior `plan.md` bytes**, including every reciprocal `Blocks` cell, and restores any overwritten phase bytes; remove only invocation-new files, including the appended phase. This also rolls back partial resolver apply. Preserve unrelated/pre-existing files and STOP with exact diagnostics. Leave no orphan phase or table row; never auto-fix, repair, or downgrade rejected output. If only static readiness fails and all output gates pass, keep the append and report NOT RUNNABLE in Step 4.
 10. **Run Step 3e:** Once Step 3d has succeeded, seed `git-map.md` exactly as the new-spec flow does.
     An appended phase can introduce a repository that appears in the plan for the first time, and
     without this that repository is never seeded — `/tdk-implement` then has no row for it.
@@ -166,8 +163,6 @@ parallel_safe: {Parallel Safe}
 ## Key Insights
 
 - [Important finding or constraint.]
-
-<!-- Insert ## Delegate Skills here, then ## Delegate Agents directly after it, only when delegate routing applies. Omit either section when its group is empty. -->
 
 ## Requirements
 

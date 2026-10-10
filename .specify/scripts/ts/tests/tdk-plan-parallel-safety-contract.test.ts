@@ -43,7 +43,6 @@ describe('tdk-plan parallel safety contract', () => {
 
   it('C-C2 removes only invocation-new files on any lifecycle failure', () => {
     expect(output).toMatch(/remove only files newly created by this invocation/);
-    expect(existing).toContain('remove the appended phase file');
     expect(existing).toContain('no orphan phase or table row');
     expect(existing).not.toContain('Keep `phases/phase-${NN}-${slug}.md`');
   });

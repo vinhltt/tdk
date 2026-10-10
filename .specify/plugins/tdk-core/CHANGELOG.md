@@ -4,6 +4,25 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.0.2] - 2026-10-10
+
+### BREAKING
+- Delegate registration now requires the reviewed `--approval <approvalDigest>` plus `--yes`; proposal or route edits invalidate approval.
+
+### Added
+- `/tdk-plan <id> --refresh-routing` refreshes approved, drifted `todo` delegates only; active phases block refresh.
+- Plan-time readiness reports `NOT RUNNABLE` with remediation instead of silently repairing delegates.
+
+### Changed
+- Shared routing resolution preserves test-before-domain order for TDD and test-only routing for UT backfill.
+- Executor readiness is dispatcher-specific and requires skill-load receipts; static failures keep `todo`, while dispatched load failures require recovery. See the [loading contract](skills/tdk-implement/references/phase-execution.md#delegate-skill-loading-requirement).
+- Failed generation restores previous plan/phase bytes, including append dependencies.
+
+### Fixed
+- Delegate refresh preserves unchanged bytes and mixed line endings; unsafe section content or ambiguous fences reject the selected write set. Parsing remains line-based, not CommonMark-equivalent; see [rewrite rules and limitations](skills/tdk-plan/references/delegate-routing-injection.md#idempotency).
+- Missing anchors exclude only phases needing insertion; spikes use `Key Insights`, support phase `00`, and inject delegates before finalizing blocked dependents.
+- Duplicate workspace sections retain first-match routing and per-workspace global fallback.
+
 ## [14.0.1] - 2026-09-25
 
 ### Changed
@@ -125,8 +144,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
 ### Removed
 - tdk-plan reference skill-routing.md superseded by delegate-routing-injection.md
-
-## [Unreleased]
 
 ### BREAKING
 - `/tdk-plan` and `/tdk-implement` read `{docs.path}/custom-workflow/delegate-routing.md`. The old `plan-skill-routing.md` is never read for routes — it is only detected, and triggers `Legacy routing file detected; rename to delegate-routing.md and migrate @agent syntax`.

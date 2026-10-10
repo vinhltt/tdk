@@ -6,6 +6,28 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.120.0] - 2026-10-10
+
+### Added
+- **[Scripts]** Shared `routing phase-delegates check|apply|domains` resolver for snapshot-approved, byte-preserving delegate refresh.
+- **[tdk-core]** `tdk-plan --refresh-routing` refreshes selected drifted `todo` delegates without regenerating the plan.
+
+### Changed
+- **[Scripts]** **Breaking:** route registration requires the reviewed `--approval <approvalDigest>` plus `--yes`; edits invalidate approval. Verification checks route equality only.
+- **[tdk-core]**
+  - Shared routing preserves TDD test-before-domain order and test-only UT backfill; failed generation restores previous plan/phase bytes.
+  - Executors require dispatcher-specific readiness and skill-load receipts. See the [plugin changelog](plugins/tdk-core/CHANGELOG.md).
+- **[tdk-scaffold]**
+  - **Breaking:** custom artifacts now use canonical `.claude/skills/` and `.claude/agents/`, with reviewed reconciliation instead of implicit overwrites.
+  - Recommendations separate executor agents from skill toolsets; reuse-only proposals support explicit executor replacement. See the [plugin changelog](plugins/tdk-scaffold/CHANGELOG.md).
+- **[Setup]** OMP conversion maps Claude `skills` to `autoloadSkills` and replaces the Claude `Skill` tool with child-loading guidance; preload does not prove runtime loading.
+- **[Docs]** EN/VI guides explain harness syntax, canonical reconciliation, approved routing refresh, and independent readiness checks.
+
+### Fixed
+- **[Scripts]**
+  - Unsafe delegate content or ambiguous fences reject refresh without partial writes; unchanged bytes and mixed line endings are preserved. Parsing remains line-based, not CommonMark-equivalent.
+  - Corrected missing-anchor exclusions, spike routing, phase `00`, and per-workspace global fallback.
+
 ## [1.119.0] - 2026-10-04
 
 ### Added

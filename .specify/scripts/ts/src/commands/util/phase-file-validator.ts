@@ -109,7 +109,7 @@ export function validatePhaseFile(
 
   if (phaseType === 'spike') {
     validateSpikeSections(markdown, options.requireResult ?? false, errors);
-    if (!options.planMarkdown || !options.phaseNumber) {
+    if (!options.planMarkdown || options.phaseNumber === undefined) {
       errors.push('Spike validation requires plan.md and the numeric phase number');
     } else {
       const parsed = parsePhasesTable(options.planMarkdown);

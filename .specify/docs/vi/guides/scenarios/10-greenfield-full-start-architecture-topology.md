@@ -215,10 +215,16 @@ Output:
 - `.specify/configurations/workspace-layout/workspace-layout-proposal.json`
 
 JSON là authoring proposal, không phải runtime config. Runtime-backed fields
-giới hạn ở `architecture.type`, `subWorkspaces[]`, docs, và `modules[]`. Test
-skill routing dùng `delegate-routing.md` và `## Delegate Skills`. Các field như `boundaryType`, `owner`, `contracts`,
-`allowedDependencies`, và `routing` chỉ report-only trừ khi future schema
-expansion promote chúng.
+giới hạn ở `architecture.type`, `subWorkspaces[]`, docs và `modules[]`.
+Implementation/test routing nằm trong `delegate-routing.md`: `/skills` cung cấp
+toolset, `@agents` tùy chọn cung cấp executor, thể hiện qua `## Delegate Skills`
+và `## Delegate Agents`. Backfill chỉ lấy test route; TDD lấy test trước rồi
+domain route. Các field `boundaryType`, `owner`, `contracts`,
+`allowedDependencies` và `routing` vẫn chỉ report-only nếu schema chưa mở rộng.
+Sau khi đối chiếu nguồn chuẩn `.claude/` và chuyển sang OMP bằng source-checkout
+CLI nếu cần, duyệt routing diff rồi dùng `/tdk-plan <id> --refresh-routing` cho
+các phase todo hiện có; route equality không chứng minh executor readiness.
+Xem [skills guide](../skills-guide.md#detailed-mode-notes).
 
 ### 8. Workflow config review and guarded apply
 

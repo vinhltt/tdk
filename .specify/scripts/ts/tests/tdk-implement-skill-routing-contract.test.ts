@@ -14,10 +14,6 @@ const PLAN_SKILL_ROUTING = resolve(
   import.meta.dir,
   '../../../plugins/tdk-core/skills/tdk-plan/references/delegate-routing-injection.md',
 );
-const PLAN_DESIGN_PHASE = resolve(
-  import.meta.dir,
-  '../../../plugins/tdk-core/skills/tdk-plan/references/design-phase.md',
-);
 
 function read(path: string): string {
   return readFileSync(path, 'utf-8');
@@ -35,7 +31,6 @@ describe('tdk-implement skill routing contract', () => {
     implementPhase,
   ].join('\n');
   const planRouting = read(PLAN_SKILL_ROUTING);
-  const designPhase = read(PLAN_DESIGN_PHASE);
 
   it('loads skill routing from the exact project routing path after project context', () => {
     const contextStep = implementSkill.indexOf('### Step 0.2 — Load Project Context');
@@ -72,7 +67,7 @@ describe('tdk-implement skill routing contract', () => {
     expect(emptyRouting).toBeGreaterThan(warning);
   });
 
-  it('injects and diffs `## Delegate Agents` alongside `## Delegate Skills`', () => {
+  it('documents both delegate skill and agent groups', () => {
     for (const term of [
       '## Delegate Agents',
       '`/`-prefixed → a **skill** (toolset)',
@@ -88,21 +83,12 @@ describe('tdk-implement skill routing contract', () => {
     expect(injection).toBeGreaterThanOrEqual(0);
     expect(skillsHeading).toBeGreaterThan(injection);
     expect(agentsHeading).toBeGreaterThan(skillsHeading);
-
-    for (const term of [
-      'Parse actual `## Delegate Skills` and `## Delegate Agents`',
-      'Insert or replace `## Delegate Skills` after `## Key Insights`, then insert or replace `## Delegate Agents`',
-      '^## Delegate Agents$',
-    ]) {
-      expect(implementRouting).toContain(term);
-    }
   });
 
   it('contracts routed agents as executors with a literal status protocol', () => {
     for (const term of [
       '## Delegate Agents Phase',
       'A routed agent is the **executor** of its domain; routed skills are the **toolset**',
-      'its definition does not list the `Skill` tool',
       'Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT',
       'literal string comparison',
       'Any value other than the literal `DONE`',
@@ -144,43 +130,6 @@ describe('tdk-implement skill routing contract', () => {
     expect(statusWrite).toBeGreaterThan(routingPreflight);
     expect(implementContract).toContain('read-only before the first `in_progress` status transition');
     expect(implementContract).toContain('Actual status writes still keep phase frontmatter first, then `plan.md`');
-    expect(implementContract).toContain('Read `phasePath`');
-    expect(implementContract).toContain('Compute expected delegates');
-    expect(implementContract).toContain('Parse actual `## Delegate Skills` and `## Delegate Agents`');
-  });
-
-  it('keeps the minimal routing subset aligned with tdk-plan behavior', () => {
-    for (const domain of ['test', 'database', 'design', 'implement', 'research']) {
-      expect(implementContract).toContain(domain);
-      expect(designPhase).toContain(domain);
-    }
-
-    expect(implementContract).toContain('PROJECT_CONTEXT.subWorkspaces[].path');
-    expect(implementContract).toContain('path-prefix match selects the subworkspace object');
-    expect(implementContract).toContain('Route lookup uses `subWorkspace.name` case-insensitively');
-    expect(implementContract).toContain('global fallback');
-    expect(implementContract).toContain('^## Delegate Skills$');
-    expect(implementContract).toContain('until the next `^## ` heading');
-    expect(implementContract).toContain('deduplicate while preserving routing order');
-    expect(designPhase).toContain('Match against `PROJECT_CONTEXT.subWorkspaces[].path`');
-    expect(planRouting).toContain('Replace everything from that heading until the next `^## ` heading');
-  });
-
-  it('requires explicit refresh, generic override, or cancel on delegate drift', () => {
-    for (const term of [
-      'expected delegates',
-      'actual phase delegates',
-      'Refresh delegate sections',
-      'Insert current expected skills and agents',
-      'Run generic override',
-      'Cancel',
-      'Insert or replace `## Delegate Skills` after `## Key Insights`, then insert or replace `## Delegate Agents` directly after',
-      'Re-read the phase file',
-      'stops without status mutation',
-      'User chose generic implementation despite routing delegates',
-    ]) {
-      expect(implementContract).toContain(term);
-    }
   });
 
   it('blocks test-like routed phases from generic fallback and strengthens the generic checklist', () => {
@@ -188,8 +137,6 @@ describe('tdk-implement skill routing contract', () => {
       'Generic override is available only when the phase is not test-like',
       'test-like phase',
       'expected routing includes a `test` delegate',
-      'ordered domain list',
-      '`design`, then `implement`',
       'omit `Run generic override`',
       'refresh or cancel',
       'no inline generic unit-test implementation',

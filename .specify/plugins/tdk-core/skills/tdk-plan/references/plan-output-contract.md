@@ -148,6 +148,8 @@ Use the 5-column convention:
 
 Status vocabulary: `todo`, `in_progress`, `done`, `skipped`, `blocked`, `cancelled`.
 
+Phase numbers are non-negative integers. Zero-padded forms normalize numerically: `00` and `0` identify the same phase in routing selectors, status updates and validation.
+
 Update phase status with:
 
 1. `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" {status})`
@@ -246,6 +248,8 @@ research, investigation, or evaluation notes are not phases.
 A spike keeps the standard frontmatter and adds `phase_type: spike`. It must
 contain substantive sections:
 
+- `## Key Insights`, the delegate-routing anchor; spikes always anchor routed
+  delegates after it, whatever the plan's `test_mode`
 - `## Spike Objective`
 - `## Experiment` with reproducible command, steps, procedure, prototype,
   input, or expected result
@@ -255,8 +259,12 @@ contain substantive sections:
 
 The spike row's `Blocks` column must list at least one downstream phase. Every
 listed dependent includes the spike in `BlockedBy` and starts with
-`Status: blocked`. `/tdk-implement` validates the phase file before execution;
-do not emit `phase_type` for normal phases.
+`Status: blocked`. During the generation transaction only, invocation-owned
+drafts are temporarily `todo` in both status sources so every phase receives
+routing injection; finalize required `blocked` statuses before the post-write
+gates and reporting (see `delegate-routing-injection.md`). This never permits
+refresh or preflight to reset/mutate an existing blocked phase. `/tdk-implement`
+validates the phase file before execution; do not emit `phase_type` for normal phases.
 
 ### Test Mode Sections
 
@@ -327,8 +335,10 @@ See `references/design-phase.md` Test Mode Phase Generation for section content 
 
 ## Transactional Post-write Validation
 
-After candidate artifacts are written, run these gates in this exact order,
-before `Phase 0.guardian`, Step 4 reporting, red-team, or validation interview:
+After routing injection and finalization of generation-assigned statuses,
+including every direct spike dependent's `blocked` status in table/frontmatter,
+run these gates in this exact order, before `Phase 0.guardian`, Step 4 reporting,
+red-team, or validation interview:
 
 Portable cwd-independent exemplars for the first two validators:
 

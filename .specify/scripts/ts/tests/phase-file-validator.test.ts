@@ -64,6 +64,15 @@ describe('phase file validator', () => {
     expect(result.dependentPhases).toEqual([2]);
   });
 
+  it('accepts phase 00 as a spike owner while keeping its dependent blocked', () => {
+    const planMarkdown = plan().replace(/\b01\b/g, '00').replace(/\b02\b/g, '01');
+    const result = validatePhaseFile(spike().replace('phase: 1', 'phase: 0'), { planMarkdown, phaseNumber: 0 });
+    expect(result.valid).toBe(true);
+    expect(result.dependentPhases).toEqual([1]);
+    expect(validatePhaseFile(spike(), { planMarkdown: planMarkdown.replace('| blocked |', '| todo |'), phaseNumber: 0 }).errors)
+      .toContain('Dependent phase 1 must remain blocked until the spike decision is approved');
+  });
+
   it('rejects missing spike sections and vague research phases', () => {
     const missing = validatePhaseFile('---\nphase_type: spike\n---\n', { planMarkdown: plan(), phaseNumber: 1 });
     expect(missing.valid).toBe(false);

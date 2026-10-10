@@ -4,6 +4,22 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.0.2] - 2026-10-10
+
+### BREAKING
+- Custom scaffolds now target `.claude/skills/` and `.claude/agents/`, not release-owned plugin directories.
+- Delegate registration requires the reviewed `--approval <approvalDigest>` plus `--yes`; verification checks route equality only.
+
+### Added
+- Executor Decisions separate agents from skill toolsets, prefer reuse, and allow justified `no agent` choices.
+- Reviewed artifact reconciliation supports reuse, patch, keep, or confirmed regeneration; patches reject changed snapshots.
+- Reuse-only/route-only proposals support explicit executor replacement without silently retaining both agents.
+- Optional `--task <id>` checks phase freshness independently of source, runtime, and route readiness; without it, phases remain `not checked`.
+- OMP conversion requires a source-checkout CLI; unresolved ownership or loaders remain unready. See the [handoff contract](skills/tdk-scaffold-from-recommendation/SKILL.md).
+
+### Migration
+- Move only consumer-created custom artifacts from `.specify/plugins/tdk-scaffold/` to `.claude/`; leave shipped files untouched. Review, convert for OMP if needed, approve route registration, then refresh `todo` delegates. Do not force-adopt unowned OMP targets.
+
 ## [3.0.1] - 2026-08-09
 
 ### Changed

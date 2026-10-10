@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { parseConfig } from './config';
@@ -174,7 +175,7 @@ function renderRoute(domain: string, delegates: string[]): string {
   return `- ${domain}: ${value}`;
 }
 
-function findSection(
+export function findSection(
   document: DelegateRoutingDocument,
   section: string,
 ): DelegateRoutingSection | undefined {
@@ -182,7 +183,7 @@ function findSection(
   return document.sections.find((candidate) => candidate.name.toLowerCase() === wanted);
 }
 
-function findRoute(
+export function findRoute(
   section: DelegateRoutingSection | undefined,
   domain: string,
 ): DelegateRoute | undefined {
@@ -344,4 +345,17 @@ export function verifyRoutingProposal(
     operations: diff.operations,
     warnings: diff.warnings,
   };
+}
+
+/** Bind approval to the normalized proposal and the exact route bytes, including absence. */
+export function routingApprovalDigest(proposal: RoutingProposal, routeBytes?: Buffer): string {
+  const canonicalProposal = JSON.stringify(proposal);
+  const hash = createHash('sha256').update(`${Buffer.byteLength(canonicalProposal)}:`);
+  hash.update(canonicalProposal);
+  if (routeBytes === undefined) {
+    hash.update('missing');
+  } else {
+    hash.update(`present:${routeBytes.length}:`).update(routeBytes);
+  }
+  return hash.digest('hex');
 }

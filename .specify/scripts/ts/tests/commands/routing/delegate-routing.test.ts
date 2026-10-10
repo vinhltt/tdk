@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { routingApprovalDigest } from '../../../src/utils/delegate-routing';
+import { validateRoutingProposal } from '../../../src/utils/delegate-routing-proposal';
 
 const CLI = join(import.meta.dir, '../../../src/index.ts');
 
@@ -40,6 +42,13 @@ function writeProposal(root: string, entries: Record<string, unknown>[]): string
   const proposalPath = join(root, 'delegate-routing-proposal.json');
   writeFileSync(proposalPath, JSON.stringify({ version: 1, entries }), 'utf-8');
   return proposalPath;
+}
+
+// Invalid-route/operation fixtures cannot produce a successful diff. A current digest lets
+// those tests reach their existing validation paths without weakening the approval guard.
+function approvalForCurrent(root: string, proposalPath: string): string {
+  const { proposal } = validateRoutingProposal(JSON.parse(readFileSync(proposalPath, 'utf-8')));
+  return routingApprovalDigest(proposal, existsSync(routeFile(root)) ? readFileSync(routeFile(root)) : undefined);
 }
 
 async function runCli(
@@ -106,9 +115,10 @@ describe('tdk routing delegate command', () => {
     const diffPayload = JSON.parse(diff.stdout);
     expect(diffPayload.warnings.some((w: string) => w.startsWith('Duplicate route'))).toBe(true);
     expect(diffPayload.warnings.some((w: string) => w.includes("Domain 'docs'"))).toBe(true);
+    expect(diffPayload.approvalDigest).toMatch(/^[a-f0-9]{64}$/);
 
     const registered = await runCli(root, [
-      'routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes',
+      'routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', diffPayload.approvalDigest,
     ]);
     expect(registered.exitCode).toBe(0);
     expect(JSON.parse(registered.stdout).status).toBe('registered');
@@ -117,9 +127,11 @@ describe('tdk routing delegate command', () => {
     const verify = await runCli(root, ['routing', 'delegate', 'verify', '--project-root', root, '--proposal', proposalPath]);
     expect(verify.exitCode).toBe(0);
     expect(JSON.parse(verify.stdout).status).toBe('verified');
+    expect(JSON.parse(verify.stdout).scope).toBe('route-equality');
 
+    const secondDiff = await runCli(root, ['routing', 'delegate', 'diff', '--project-root', root, '--proposal', proposalPath]);
     const secondRegister = await runCli(root, [
-      'routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes',
+      'routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', JSON.parse(secondDiff.stdout).approvalDigest,
     ]);
     expect(secondRegister.exitCode).toBe(0);
     expect(JSON.parse(secondRegister.stdout).status).toBe('noop');
@@ -132,12 +144,13 @@ describe('tdk routing delegate command', () => {
     ]);
 
     const register = await runCli(root, [
-      'routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes',
+      'routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', approvalForCurrent(root, proposalPath),
     ]);
     expect(register.exitCode).toBe(1);
     const payload = JSON.parse(register.stdout);
     expect(payload.status).toBe('missing');
     expect(payload.errors[0]).toContain('Copy .specify/templates/plan/delegate-routing-template.tpl');
+    expect(existsSync(routeFile(root))).toBe(false);
   });
 
   it('blocks register and verify when conflicting duplicate routes exist', async () => {
@@ -149,7 +162,7 @@ describe('tdk routing delegate command', () => {
 
     const before = readFileSync(routeFile(root), 'utf-8');
     const register = await runCli(root, [
-      'routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes',
+      'routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', approvalForCurrent(root, proposalPath),
     ]);
     expect(register.exitCode).toBe(1);
     expect(JSON.parse(register.stdout).errors[0]).toContain('route file has conflicts');
@@ -169,10 +182,78 @@ describe('tdk routing delegate command', () => {
 
     const before = readFileSync(routeFile(root), 'utf-8');
     const result = await runCli(root, [
-      'routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes',
+      'routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', approvalForCurrent(root, proposalPath),
     ]);
     expect(result.exitCode).toBe(1);
     expect(JSON.parse(result.stdout).errors[0]).toContain("operation 'add'");
     expect(readFileSync(routeFile(root), 'utf-8')).toBe(before);
+  });
+
+  it('requires a matching approval and --yes, with byte-identical refusal on every missing or wrong approval', async () => {
+    const root = makeRoot();
+    writeRoute(root, '## global\n- implement: /existing, @existing-agent\n');
+    const proposalPath = writeProposal(root, [{ subWorkspace: 'global', domain: 'implement', delegates: ['/new'] }]);
+    const before = readFileSync(routeFile(root));
+    const missing = await runCli(root, ['routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes']);
+    expect(missing.exitCode).toBe(1);
+    expect(JSON.parse(missing.stdout).status).toBe('approval_required');
+    expect(readFileSync(routeFile(root))).toEqual(before);
+    const wrong = await runCli(root, ['routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', 'wrong']);
+    expect(wrong.exitCode).toBe(1);
+    expect(JSON.parse(wrong.stdout)).toMatchObject({
+      ok: false, status: 'stale_approval', errors: ['Proposal or route file changed since diff; rerun diff and review.'],
+    });
+    expect(readFileSync(routeFile(root))).toEqual(before);
+    const diff = await runCli(root, ['routing', 'delegate', 'diff', '--project-root', root, '--proposal', proposalPath]);
+    const noYes = await runCli(root, ['routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--approval', JSON.parse(diff.stdout).approvalDigest]);
+    expect(noYes.exitCode).toBe(1);
+    expect(JSON.parse(noYes.stdout).status).toBe('confirmation_required');
+    expect(readFileSync(routeFile(root))).toEqual(before);
+  });
+
+  it('rejects a proposal edited after diff and preserves route bytes', async () => {
+    const root = makeRoot();
+    writeRoute(root, '## global\n- implement: /existing\n');
+    const proposalPath = writeProposal(root, [{ subWorkspace: 'global', domain: 'implement', delegates: ['/approved'] }]);
+    const diff = await runCli(root, ['routing', 'delegate', 'diff', '--project-root', root, '--proposal', proposalPath]);
+    expect(diff.exitCode).toBe(0);
+    writeProposal(root, [{ subWorkspace: 'global', domain: 'implement', delegates: ['/unreviewed'] }]);
+    const before = readFileSync(routeFile(root));
+    const result = await runCli(root, ['routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', JSON.parse(diff.stdout).approvalDigest]);
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stdout).status).toBe('stale_approval');
+    expect(readFileSync(routeFile(root))).toEqual(before);
+  });
+
+  it('rejects a route edited after diff, keeping the newly added delegate instead of dropping it', async () => {
+    const root = makeRoot();
+    writeRoute(root, '## global\n- implement: /existing\n');
+    const proposalPath = writeProposal(root, [{ subWorkspace: 'global', domain: 'implement', delegates: ['/approved'] }]);
+    const diff = await runCli(root, ['routing', 'delegate', 'diff', '--project-root', root, '--proposal', proposalPath]);
+    expect(diff.exitCode).toBe(0);
+    writeRoute(root, '## global\n- implement: /existing, @added-after-review\n');
+    const before = readFileSync(routeFile(root));
+    const result = await runCli(root, ['routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', JSON.parse(diff.stdout).approvalDigest]);
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stdout).status).toBe('stale_approval');
+    expect(readFileSync(routeFile(root))).toEqual(before);
+    expect(readFileSync(routeFile(root), 'utf-8')).toContain('@added-after-review');
+  });
+
+  it('binds missing routing as a distinct snapshot and accepts canonical-equivalent proposal formatting', async () => {
+    const root = makeRoot();
+    const proposalPath = writeProposal(root, [{ subWorkspace: 'global', domain: 'implement', delegates: ['/approved'] }]);
+    const missingDiff = await runCli(root, ['routing', 'delegate', 'diff', '--project-root', root, '--proposal', proposalPath]);
+    writeRoute(root, '');
+    const emptyDiff = await runCli(root, ['routing', 'delegate', 'diff', '--project-root', root, '--proposal', proposalPath]);
+    expect(JSON.parse(missingDiff.stdout).approvalDigest).not.toBe(JSON.parse(emptyDiff.stdout).approvalDigest);
+    const refused = await runCli(root, ['routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', JSON.parse(missingDiff.stdout).approvalDigest]);
+    expect(refused.exitCode).toBe(1);
+    expect(JSON.parse(refused.stdout).status).toBe('stale_approval');
+    expect(readFileSync(routeFile(root), 'utf-8')).toBe('');
+    writeFileSync(proposalPath, JSON.stringify({ entries: [{ delegates: ['approved'], domain: 'implement', subWorkspace: 'global', operation: 'register' }], version: 1 }, null, 2));
+    const registered = await runCli(root, ['routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', JSON.parse(emptyDiff.stdout).approvalDigest]);
+    expect(registered.exitCode).toBe(0);
+    expect(readFileSync(routeFile(root), 'utf-8')).toContain('- implement: /approved');
   });
 });

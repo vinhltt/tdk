@@ -5,16 +5,15 @@ Single source of truth for `/tdk-plan` flag dispatch. SKILL.md only routes; this
 ## Grammar
 
 ```
-/tdk-plan <TASK_ID> [USER_CONTENT...] [--fast | --hard] [--tdd | --ut-backfill] [--sub-workspace <name>] [--module <name>] [--standalone] [--red-team | --validate | --migrate-artifacts] [USER_CONTENT...]
+/tdk-plan <TASK_ID> [USER_CONTENT...] [--fast | --hard] [--tdd | --ut-backfill] [--sub-workspace <name>] [--module <name>] [--standalone] [--red-team | --validate | --migrate-artifacts | --refresh-routing] [USER_CONTENT...]
 ```
 
 - `<TASK_ID>` — first argument token, mandatory. Regex: `^([a-zA-Z]+/)?([a-zA-Z]+)-([0-9]+)$`.
 - `USER_CONTENT` — optional freeform text after `<TASK_ID>`. Preserve order after removing known flags.
 - Known mode flags may appear anywhere after `<TASK_ID>`.
-- Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`, `--migrate-artifacts`). Flags within the same category are **mutually exclusive**. Multiple flags from the same category → STOP with error.
+- Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing`). Flags within the same category are **mutually exclusive**. Multiple flags from the same category → STOP with error.
 - `--fast` is incompatible with `--tdd` and `--ut-backfill` (fast prunes research/UT work). `--hard` and default (no speed flag) both compose with either test flag.
-- `--migrate-artifacts` is action-only and conflicts with every speed, test,
-  targeting, red-team, and validate flag. It defaults to a mutation-free dry run.
+- `--migrate-artifacts` and `--refresh-routing` are action-only. Each conflicts with every speed, test, targeting, and other action flag, including one another. Reject conflicts before any mutation. Migration defaults to a mutation-free dry run; refresh requires an existing plan and explicit approval of a selected-phase preview.
 - Any token beginning with `--` that is not an exact whitelisted mode flag → STOP with error.
 - Backfill targeting flag values are not `USER_CONTENT`; parse and store them in `BACKFILL_TARGET`.
 - No `--auto` flag. No auto-detection. No-flag invocation = default full flow.
@@ -65,6 +64,7 @@ Natural-language sub-workspace/module mentions and CWD auto-detection remain acc
 | `--red-team` | Treat `USER_CONTENT` as red-team focus for reviewer prompts. |
 | `--validate` | Treat `USER_CONTENT` as validation focus for question generation. |
 | `--migrate-artifacts` | Ignore freeform planning intent; dry-run legacy artifact consolidation for the resolved feature. |
+| `--refresh-routing` | Ignore freeform planning intent; preview delegate drift on the existing plan and ask before refreshing eligible phases. |
 
 ## Per-Mode Matrix
 
@@ -97,7 +97,7 @@ validation is selected rather than silently disabling the gate. See
 NOT CHECKED handling and persistent blocking state. Only research / scope / deps / guardian / red-team /
 validate are skipped in `--fast`; test modes are rejected before dispatch.
 
-`--red-team` and `--validate` are subcommand-equivalent action flags. They short-circuit straight into Phase 06 / 07 over an existing plan; they do NOT run Steps 0–4 again. `--migrate-artifacts` short-circuits immediately after project context and follows `migrate-artifacts-workflow.md`.
+`--red-team` and `--validate` are subcommand-equivalent action flags. They short-circuit straight into Phase 06 / 07 over an existing plan; they do NOT run Steps 0–4 again. `--migrate-artifacts` and `--refresh-routing` short-circuit immediately after project context, before setup or generation: migration follows `migrate-artifacts-workflow.md`; refresh follows **Refresh Routing Only** in `delegate-routing-injection.md`. Neither runs the missing-routing opt-in question, memory, scope, dependencies, design, generation gates, or review workflows.
 
 ## Frontmatter Write Rules
 
@@ -109,6 +109,7 @@ validate are skipped in `--fast`; test modes are rejected before dispatch.
 - `test_mode: ut_backfill` — written only on `--ut-backfill`.
 - No test flag → omit `test_mode:` (or leave the reserved default `none` per `plan-output-contract.md`).
 - `--red-team` / `--validate` invocations don't change `test_mode:`.
+- `--refresh-routing` changes no plan frontmatter or statuses; it uses the existing plan-level `test_mode` for resolver anchors and backfill test-only semantics.
 
 ## Conflict Handling
 
@@ -126,6 +127,12 @@ validate are skipped in `--fast`; test modes are rejected before dispatch.
 | `<TASK_ID> --validate <content>` | dispatch validate subcommand with `USER_CONTENT` as validation focus |
 | `<TASK_ID> --migrate-artifacts` | dispatch migration dry-run; ask before apply |
 | `<TASK_ID> --migrate-artifacts --hard` | STOP — `Error: --migrate-artifacts cannot combine with planning or review modes.` |
+| `<TASK_ID> --refresh-routing` | dispatch existing-plan all-phase scan, selected-phase preview, approval-bound apply; no generation |
+| `<TASK_ID> --refresh-routing --hard` | STOP — `Error: --refresh-routing cannot combine with planning, targeting, or review modes.` |
+| `<TASK_ID> --refresh-routing --tdd` | STOP — `Error: --refresh-routing cannot combine with planning, targeting, or review modes.` |
+| `<TASK_ID> --refresh-routing --standalone` | STOP — `Error: --refresh-routing cannot combine with planning, targeting, or review modes.` |
+| `<TASK_ID> --refresh-routing --red-team` | STOP — `Error: --refresh-routing cannot combine with planning, targeting, or review modes.` |
+| `<TASK_ID> --migrate-artifacts --refresh-routing` | STOP — `Error: --migrate-artifacts and --refresh-routing are mutually exclusive action flags.` |
 | `<TASK_ID> --fast --hard` | STOP — `Error: --fast and --hard are mutually exclusive.` |
 | `<TASK_ID> --tdd` | dispatch default with `test_mode: tdd` |
 | `<TASK_ID> --hard --tdd` | dispatch hard with `test_mode: tdd` |
@@ -141,11 +148,11 @@ validate are skipped in `--fast`; test modes are rejected before dispatch.
 | `<TASK_ID> --ut-backfill --sub-workspace` | STOP — `Error: --sub-workspace requires a value.` |
 | `<TASK_ID> --ut-backfill --module orders` | STOP — `Error: --module requires --sub-workspace.` |
 | `<TASK_ID> --ut-backfill --sub-workspace api --module` | STOP — `Error: --module requires a value.` |
-| `<TASK_ID> --foo` | STOP — `Error: unknown flag --foo. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.` |
-| `<TASK_ID> --foo=bar` | STOP — `Error: unknown flag --foo=bar. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.` |
-| `<TASK_ID> --phase=02` | STOP — `Error: unknown flag --phase=02. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.` |
-| `<TASK_ID> --fast=true` | STOP — `Error: unknown flag --fast=true. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.` |
-| `<TASK_ID> --fast --foo <content>` | STOP — `Error: unknown flag --foo. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.` |
+| `<TASK_ID> --foo` | STOP — `Error: unknown flag --foo. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts, --refresh-routing.` |
+| `<TASK_ID> --foo=bar` | STOP — `Error: unknown flag --foo=bar. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts, --refresh-routing.` |
+| `<TASK_ID> --phase=02` | STOP — `Error: unknown flag --phase=02. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts, --refresh-routing.` |
+| `<TASK_ID> --fast=true` | STOP — `Error: unknown flag --fast=true. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts, --refresh-routing.` |
+| `<TASK_ID> --fast --foo <content>` | STOP — `Error: unknown flag --foo. Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts, --refresh-routing.` |
 | `<content> <TASK_ID>` | STOP — `Error: TASK_ID must be the first argument; known mode flags must appear after TASK_ID.` |
 
 ## Banner Output

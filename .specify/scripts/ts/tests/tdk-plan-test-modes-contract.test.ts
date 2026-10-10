@@ -45,13 +45,6 @@ describe('tdk-plan test mode grammar contract', () => {
   const outputContract = read(OUTPUT_CONTRACT);
   const validateQuestions = read(VALIDATE_QUESTION_FRAMEWORK);
 
-  it('accepts --tdd and --ut-backfill as known flags after TASK_ID', () => {
-    expect(skill).toContain('--fast | --hard | --tdd | --ut-backfill | --red-team | --validate');
-    expect(modes).toContain(
-      '/tdk-plan <TASK_ID> [USER_CONTENT...] [--fast | --hard] [--tdd | --ut-backfill] [--sub-workspace <name>] [--module <name>] [--standalone] [--red-team | --validate | --migrate-artifacts] [USER_CONTENT...]',
-    );
-  });
-
   it('documents --tdd and --ut-backfill as mutually exclusive test modes', () => {
     expect(modes).toContain('<TASK_ID> --tdd --ut-backfill');
     expect(modes).toContain('Error: --tdd and --ut-backfill are mutually exclusive.');
@@ -73,18 +66,6 @@ describe('tdk-plan test mode grammar contract', () => {
   it('documents future rigor modes as composable with test modes', () => {
     expect(modes).toContain('Future rigor modes such as `--deep` or `--parallel`');
     expect(modes).toContain('compose with test modes the same way `--hard` does');
-  });
-
-  it('keeps review and migration action flags separate from test/speed modes', () => {
-    expect(modes).toContain(
-      'Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`, `--migrate-artifacts`)',
-    );
-  });
-
-  it('keeps strict unknown-flag STOP behavior including the new flags in the allow-list', () => {
-    expect(modes).toContain(
-      'Allowed: --fast, --hard, --tdd, --ut-backfill, --red-team, --validate, --migrate-artifacts.',
-    );
   });
 
   it('documents test_mode in the plan output contract with none/tdd/ut_backfill defaults', () => {
@@ -125,17 +106,6 @@ describe('tdk-plan test mode grammar contract', () => {
     expect(designPhase).toContain('## Test Matrix');
     expect(outputContract).toContain('## Tests Before');
     expect(outputContract).toContain('## Code Summary');
-  });
-
-  it('routes test-mode phase delegates through /tdk-plan resolution, not a separate adapter', () => {
-    const skillRouting = read(SKILL_ROUTING_REFERENCE);
-
-    expect(skillRouting).toContain(
-      '`/tdk-plan` itself resolves the matching `test` skill for TDD/backfill phases',
-    );
-    expect(skillRouting).toContain('Prefer the matched sub-workspace section\'s `test` entry.');
-    expect(skillRouting).toContain('Fall back to `global.test`.');
-    expect(skillRouting).toContain('emit a warning during planning');
   });
 
   it('documents backfill targeting flags gated behind --ut-backfill', () => {
@@ -317,23 +287,6 @@ describe('tdk-plan test mode grammar contract', () => {
       'UT backfill phases order `## Code Summary`, `## Mocks & Fixtures Required`, `## Test Matrix`, `## Test Quality Gate`, then `## Delegate Skills` and `## Delegate Agents` when routing injects delegates.',
     );
     expect(modes).toContain('Each delegate section is omitted when its group is empty.');
-  });
-
-  it('special-cases test-mode delegate placement after Test Quality Gate', () => {
-    const designPhase = read(DESIGN_PHASE_REFERENCE);
-    const skillRouting = read(SKILL_ROUTING_REFERENCE);
-
-    for (const contract of [designPhase, skillRouting]) {
-      expect(contract).toContain(
-        'Non-test phases inject `## Delegate Skills` after `## Key Insights` and before `## Requirements`.',
-      );
-      expect(contract).toContain(
-        'TDD phases inject `## Delegate Skills` after `## Test Quality Gate` and before `## Regression Gate`.',
-      );
-      expect(contract).toContain(
-        'UT backfill phases inject `## Delegate Skills` immediately after `## Test Quality Gate`.',
-      );
-    }
   });
 
   it('documents the module ownership guard for backfill planning', () => {

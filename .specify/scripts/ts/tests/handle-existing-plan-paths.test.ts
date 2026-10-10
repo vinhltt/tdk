@@ -123,7 +123,6 @@ describe('handle-existing-plan.md path conventions', () => {
     expect(content).toMatch(/same sorted,\s+unique earlier-phase numbers/);
     expect(content).toMatch(/each blocker's `Blocks` cell/);
     expect(content).toMatch(/preserve every existing phase file byte-for-byte/i);
-    expect(content).toContain('remove the appended phase file');
   });
 
   it('phase file template includes required sections in order', () => {

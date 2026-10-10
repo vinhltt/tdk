@@ -243,17 +243,17 @@ flowchart TD
     end
 
     subgraph GENERATION_UT["Routed Test Implementation"]
-        UT_GEN["consumer test skill<br/>from ## Delegate Skills"]
+        UT_GEN["consumer test executor/toolset<br/>from ## Delegate Agents / ## Delegate Skills"]
         TEST_FILES["*.test.ts / test_*.py<br/>*Test.php + fixtures"]
     end
 
-    ROUTING["delegate-routing.md<br/>test domain"]
+    ROUTING["delegate-routing.md<br/>test route only for backfill"]
 
-    ROUTING -->|selects test skill| UT_PLAN_CMD
+    ROUTING -->|selects test skills and/or executor agent| UT_PLAN_CMD
     UT_SKILL -->|conventions| UT_PLAN_CMD
     UT_PLAN_CMD --> UT_PLAN
     UT_PLAN_CMD --> UT_PHASES
-    UT_PHASES -->|## Delegate Skills| UT_GEN
+    UT_PHASES -->|"Delegate Skills / Delegate Agents"| UT_GEN
     UT_SKILL -.->|conventions| UT_GEN
     UT_GEN --> TEST_FILES
     SPEC_UT -.->|optional input| UT_PLAN_CMD
@@ -268,7 +268,7 @@ flowchart TD
     class SPEC_UT,UT_SKILL reference
 ```
 
-Use `/tdk-plan <id> --ut-backfill` (or `--tdd` for tests-first phases) to fold unit-test planning into `plan.md` phases. Test-mode phases include `Test Quality Gate` rows before implementation can mark the phase done: TDK owns baseline rubric, traceability, and gate row completion; the consumer test skill listed in `## Delegate Skills` owns framework commands and numeric coverage policy. `--sub-workspace` targets a specific workspace (e.g., `backend`, `frontend`), `--module` narrows to a module, and `--standalone` on `--ut-backfill` skips spec dependency for existing code.
+Use `/tdk-plan <id> --ut-backfill` (or `--tdd` for tests-first phases) to fold unit-test planning into `plan.md` phases. Backfill uses the **test route only**; TDD resolves test delegates before domain delegates. Routes may name `/skills`, an `@executor`, or both, rendered as `## Delegate Skills` and `## Delegate Agents` after `Test Quality Gate`. TDK owns baseline rubric, traceability, and gate row completion before a phase becomes done; the consumer test toolset/executor owns framework commands and numeric coverage policy. `--sub-workspace` targets a workspace, `--module` narrows to a module, and `--standalone` on `--ut-backfill` skips spec dependency for existing code. See [routing and readiness](skills-guide.md#detailed-mode-notes) for approval-bound refresh and static/runtime loading boundaries.
 
 For Codex harness installs, materialize `.specify/codex-plugins/**` in the
 consumer with setup CLI `convert --all-plugins`, then run manifest compute with
@@ -367,9 +367,9 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `contracts/*.{json,yaml,yml,graphql,proto}` | `/tdk-plan` | Declared machine consumer plus validation command | Generator, validator, runtime, or downstream integration | Conditional only |
 | `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
-| `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), consumer test skill routing | `/tdk-implement` with `Test Quality Gate` before done | Feature UT |
-| `phases/phase-NN-{module}.md` (backfill sections) | `/tdk-plan --ut-backfill` | `spec.md` (opt), `delegate-routing.md` | consumer test skill via `## Delegate Skills`, then gate validation | Feature UT |
-| `*.test.ts` / `test_*.py` etc. | consumer test skill | `phases/phase-NN-{module}.md` | Test runner | Feature UT |
+| `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), test/domain routing (TDD) or test routing only (backfill) | `/tdk-implement` with readiness and `Test Quality Gate` before done | Feature UT |
+| `phases/phase-NN-{module}.md` (backfill sections) | `/tdk-plan --ut-backfill`; approved `--refresh-routing` for todo delegates | `spec.md` (opt), `delegate-routing.md` test route only | consumer test skills and/or executor via both delegate sections, then gate validation | Feature UT |
+| `*.test.ts` / `test_*.py` etc. | consumer test toolset/executor | `phases/phase-NN-{module}.md` | Test runner | Feature UT |
 | `.specify/.specify.json` | `/tdk-sub-workspace-init` | Project config | `config:*`, unit-test routing, sub-workspace docs | Project setup |
 | `document-manager.md` | `/tdk-config-index` | All docs files | Manual reference, LLM tools | On demand |
 

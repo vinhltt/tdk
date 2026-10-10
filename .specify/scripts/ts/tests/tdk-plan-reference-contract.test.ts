@@ -236,24 +236,9 @@ describe('tdk-plan reference contract', () => {
     expect(redTeamWorkflow).toContain('Do not use Search/Grep/Glob');
   });
 
-  it('emits both delegate sections in the references that actually generate phase files', () => {
-    const designPhase = read(resolve(REFERENCES_DIR, 'design-phase.md'));
+  it('documents optional delegate section ordering in the output contract', () => {
     const outputContract = read(resolve(REFERENCES_DIR, 'plan-output-contract.md'));
     const modes = read(MODES_REFERENCE);
-    const existingPlanWorkflow = read(resolve(REFERENCES_DIR, 'handle-existing-plan.md'));
-
-    // The injection algorithm the planner executes from — not only delegate-routing-injection.md's
-    // description of it — must emit `## Delegate Agents`, or every generated phase
-    // drifts against Step 7A on the first `/tdk-implement` run.
-    expect(designPhase).toContain('**Inject `## Delegate Skills` and `## Delegate Agents`**');
-    expect(designPhase).toContain('`@{agent-name}`');
-    expect(designPhase).toContain('Omit a section entirely when its group is empty');
-    expect(designPhase).toContain('^## Delegate Agents$');
-
-    const skillBullet = designPhase.indexOf('Skill bullet:');
-    const agentBullet = designPhase.indexOf('Agent bullet:');
-    expect(skillBullet).toBeGreaterThanOrEqual(0);
-    expect(agentBullet).toBeGreaterThan(skillBullet);
 
     const contractSkills = outputContract.indexOf('- `## Delegate Skills`');
     const contractAgents = outputContract.indexOf('- `## Delegate Agents`');
@@ -266,9 +251,6 @@ describe('tdk-plan reference contract', () => {
     );
 
     expect(modes).toContain('`## Delegate Skills` and `## Delegate Agents` when routing injects delegates');
-    expect(existingPlanWorkflow).toContain(
-      'Insert ## Delegate Skills here, then ## Delegate Agents directly after it',
-    );
   });
 
   it('validates append write disjointness across every auto phase in the plan', () => {

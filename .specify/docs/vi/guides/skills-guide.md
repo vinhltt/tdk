@@ -4,7 +4,7 @@
 >
 > **Source baseline**: TDK `60977e8 v1.103.1`
 >
-> **Chạy ở đâu**: Tất cả command `/tdk-*` được gõ trong **Claude Code chat interface** như VSCode extension hoặc Claude CLI prompt, KHÔNG gõ trong terminal hoặc bash shell.
+> **Chạy ở đâu**: Dùng `/tdk-*` trong **Claude Code chat** (VSCode extension hoặc Claude CLI). Sau khi chạy `convert-flat --harness omp`, dùng `/skill:tdk-*` trong **OMP chat**. Không gõ lời gọi skill vào shell; các lệnh Bun cho setup/routing bên dưới mới là lệnh terminal.
 
 ---
 
@@ -27,7 +27,7 @@
 
 TDK là framework specification-driven development giúp tạo specs, optional portable task breakdowns, plans, và code từ natural language. Bạn mô tả feature; TDK dẫn bạn qua toàn bộ artifact chain — từ requirements đến implementation sẵn sàng đưa vào production.
 
-TDK là bản native cho Claude Code của framework này.
+TDK dùng `.claude/` làm nguồn chuẩn cho skill/agent; setup CLI chuyển đổi nguồn này thành các file chạy trên OMP. Xem [hướng dẫn setup](setup/setup-guide.md) để cài cho từng harness.
 
 ## Tổng Quan
 
@@ -137,7 +137,7 @@ Excluded:
 | `/tdk-clarify` | Hỏi targeted questions và ghi answer lại vào `spec.md`. | `<id>` | `spec.md` có gaps cần resolve trước planning. |
 | `/tdk-epic-hld` | Tạo parent epic high-level design context. | `<epic-id>`, `--force` | Epic PRD tồn tại và cần design lenses trước child breakdown. |
 | `/tdk-task-breakdown` | Generate child spec seed Markdown từ epic PRD cộng HLD. | `<epic-id>`, `--force` | Một epic cần các child slices có thể spec độc lập. |
-| `/tdk-plan` | Generate implementation plan và conditional supporting artifacts. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` đã sẵn sàng thành implementation phases; chỉ dùng migration cho legacy feature folder. |
+| `/tdk-plan` | Tạo implementation plan hoặc chỉ làm mới delegate của phase hiện có. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` đã sẵn sàng để lập plan; dùng refresh sau khi duyệt đổi route, hoặc migration cho legacy feature folder. |
 | `/tdk-implement` | Execute runnable rows từ `plan.md ## Phases`. | `<id>`, `--phase NN` | Plan đã tồn tại và một hoặc nhiều implementation phases đã ready. |
 | `/tdk-consistency-check` | Cross-artifact consistency check trên spec, plan, và constitution. | `<id>`, `--deep` | Bạn cần read-only verification trên spec, plan, và phases; thêm `--deep` để verify claim của plan so với source. |
 | `/tdk-status` | Hiển thị workflow progress. | `<id>` | Bạn cần read-only status snapshot. |
@@ -170,7 +170,8 @@ Excluded:
 | `/tdk-sub-workspace-list` | List configured sub-workspaces. | no flags | Bạn cần inventory sub-workspace config. |
 | `/tdk-sub-workspace-docs` | Generate arc42-lite docs cho một hoặc tất cả sub-workspaces. | `--sub-workspace NAME`, `--all`, `--force` | Sub-workspace docs cần README, architecture, interfaces, data-flow, và engineering pages. |
 | `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents cho một sub-workspace. | `--sub-workspace <name>`, `--no-community-search` | Existing sub-workspace docs nên drive automation recommendations. |
-| `/tdk-scaffold-from-recommendation` | Scaffold approved skill/agent recommendation stubs. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only` | Reviewed automation recommendation được approve để scaffold. |
+| `/tdk-scaffold-from-recommendation` | Đối chiếu skill/agent đã duyệt trong nguồn chuẩn `.claude/`. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only`, `--task <id>` | Duyệt tạo mới, tái sử dụng hoặc patch; không ghi đè ngầm. |
+| `/tdk-delegate-routing` | Duyệt, đăng ký và kiểm tra delegate-routing proposal. | `diff`, `register --approval <approvalDigest> --yes`, `verify`, `--proposal <path>` | Diff đã duyệt chỉ cho phép đúng proposal và route bytes đó; verify không chứng minh runtime readiness. |
 
 ### Testing And API
 
@@ -225,6 +226,7 @@ vẫn dùng `.specify/memory/`.
 | `--red-team` | Review existing plan theo adversarial focus. Recovery state nằm trong `.tdk-tmp`; chỉ final timestamped report ở `reports/`. |
 | `--validate` | Interview/validate existing plan. Freeform content trở thành validation focus. |
 | `--migrate-artifacts` | Dry-run việc gộp legacy checklist/data-model/quickstart/prose contract, rồi yêu cầu confirmation trước transaction có backup. |
+| `--refresh-routing` | Làm mới delegate sections của các phase `todo` sau một preview được duyệt; không tạo lại plan. Không kết hợp với bất kỳ mode/targeting flag nào khác. |
 
 Default outputs: existing `spec.md`, `plan.md`, và `phases/*.md`. Optional
 `research/`, `reports/`, và machine-consumable `contracts/` chỉ tồn tại khi có
@@ -234,6 +236,18 @@ runbook nằm trong owner phase.
 Executable experiment có thể dùng `phase_type: spike`; downstream phases giữ
 `blocked` đến khi `/tdk-implement` ghi evidence và result được approve hoặc plan
 được revise.
+
+Generation inject vào mọi draft `todo` tạm thời thuộc invocation, rồi khởi tạo các phase phụ thuộc trực tiếp spike thành `blocked` ở cả plan table và phase frontmatter trước validation/reporting. Không reset phase hiện có để inject; refresh/preflight thông thường vẫn chỉ xử lý `todo`. Phase `00` được hỗ trợ; routing selector `0` và `00` tương đương.
+
+Plan mới báo `NOT RUNNABLE: delegate readiness` khi artifact hoặc loader thiếu/chưa được chứng minh; giữ output plan hợp lệ để khắc phục, không tự sửa. TDD lấy test delegates trước domain delegates; UT backfill **chỉ lấy test route**. Cả hai dùng anchor `Test Quality Gate`; phase không có test mode dùng `Key Insights`. Spike luôn dùng anchor `Key Insights`, bất kể test mode; phase thiếu anchor chỉ bị loại với `[anchor_missing]` khi cần chèn delegate.
+
+Với `/tdk-plan <id> --refresh-routing`, [routing resolver dùng chung](../../../scripts/ts/src/commands/routing/phase-delegates.ts) quét mọi phase trước, rồi tạo preview cuối bằng `check --phase S` cho đúng các phase `todo` đang drift được chọn. Approval cho phép `apply --phase S` với **cùng tập phase và digest của nó**, không dùng digest của lượt quét toàn plan. `done` và các trạng thái khác `todo` bị loại; bất kỳ phase `in_progress` nào cũng chặn refresh. Chỉ delegate sections thay đổi; giữ nguyên bytes của `plan.md`, status, dependency và phần còn lại của phase. Route file thiếu là opt-out (không xóa); file đọc được nhưng present-empty đề xuất xóa section cũ; file không đọc được là lỗi.
+
+Resolver dùng chung bộ quét fence theo dòng, không phải parser CommonMark đầy đủ. Heading trong fence mà bộ quét nhận diện không phải delegate/input/anchor heading. Refresh giữ nguyên bytes ngoài delegate section và instruction xung quanh với LF, CRLF hoặc trộn cả hai. Managed range kết thúc tại ATX heading không thụt lề được bộ quét nhận diện (`^# ` hoặc `^## `), hoặc EOF. Body chỉ được có dòng trống hoặc delegate bullet cấp ngoài cùng được nhận diện, kèm purpose cùng dòng. Fence đã đóng/chưa đóng/đóng bởi example phía sau trong body gây `delegate_section_in_fence`; nội dung body không sạch khác gây `delegate_section_not_clean`. Với phase `todo` bị ảnh hưởng trong tập được chọn, apply từ chối với đúng reason của preview và không ghi gì, kể cả phase an toàn khác, dù nhóm token giống nhau. Hãy tự làm sạch section rồi chạy lại `check`; resolver không tự đóng hay xóa example.
+
+Điểm chèn có fence chưa đóng, khi không có ambiguity khác, gây `anchor_in_fence`. Nếu bất kỳ fence nào có opener thụt một đến ba dấu cách và chưa đóng hoặc closer thụt lề khác opener, refresh thay đổi bytes dù đã qua clean-body admission sẽ bị từ chối với `fence_container_ambiguous`, kể cả example nằm ngoài managed range/anchor. Ranh giới list-item của CommonMark có thể khác; hãy tự căn indentation của opener/closer hoặc đóng fence rồi chạy lại `check`. Fence có indentation khớp (`0 == 0`, `2 == 2`, `3 == 3`) vẫn được hỗ trợ. Byte no-op hợp lệ, không thay đổi byte nào, vẫn được chấp nhận dù có ambiguity; section sạch, đúng vị trí/thứ tự và không đổi giữ nguyên slice kể cả khi trộn LF/CRLF. Opt-out khi routing file thiếu không đổi. Apply toàn plan bỏ qua rewrite exclusion của phase khác `todo`; chọn rõ phase không phải `todo` vẫn bị từ chối. Workspace lookup vẫn không phân biệt hoa/thường, dùng section đầu tiên và global fallback theo workspace riêng biệt.
+
+**Giới hạn đã biết ở read-only/no-op:** với indented fence ambiguous, parsing/check có thể khác CommonMark reader khi xác định heading `## Delegate ...` phía sau là thật hay code. Fence chưa đóng trong list item có thể che một delegate section thật khỏi resolver dù CommonMark kết thúc list item trước heading đó. Refusal guard bảo vệ thao tác ghi, không cung cấp cách diễn giải CommonMark đầy đủ.
 
 Test-mode phases có các row `Test Quality Gate`. TDK sở hữu baseline rubric,
 traceability, và gate row completion; consumer `test` skill được route sở hữu
@@ -321,7 +335,8 @@ Các helper này tồn tại trong source nhưng không được catalog như di
 | 26 | `/tdk-sub-workspace-list` | List tất cả configured sub-workspaces |
 | 27 | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | Generate arc42-lite docs dưới `<docsPath>/sub-workspaces/<name>/` |
 | 28 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | Recommend skills/agents cho một selected sub-workspace |
-| 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | Scaffold reviewed skills/agents từ approved recommendation |
+| 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | Đối chiếu canonical skill/agent và đề xuất route, kể cả khi chỉ tái sử dụng |
+| 30 | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]` | Chỉ đăng ký diff đã duyệt; register bắt buộc có approval và `--yes` |
 | — | **Primary Implementation** | |
 | 33 | `/tdk-implement <id> [--phase NN]` | Execute implementation trực tiếp từ `plan.md ## Phases` |
 | — | `/tdk-handoff [task-id \| issue-url \| focus] [--kind continuation\|spec\|investigation\|feature\|upstream-bug] [--slug <slug>]` | Capture một packet local; review và chia sẻ thủ công, không chạy lifecycle hay thao tác tracker |
@@ -358,12 +373,13 @@ Dùng file này để tra cứu command. Nếu cần workflow từng bước đ�
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` updated | specify |
 | high-level-design | `/tdk-epic-hld <epic-id>` | `--force` | `epic-prd.md`, `prd.md`, `slice-map.md`, `open-questions.md`; optional HLD routing | `high-level-design.md` + 5 design artifacts | epic-prd |
 | task-breakdown | `/tdk-task-breakdown <epic-id>` | `--force` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | `tasks-breakdown.md`, `tasks-breakdown/task-NNN-*.md` child spec seed files | high-level-design |
-| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` cộng clarified requirements và optional context | `plan.md`, `phases/*.md`; conditional indexed `research/`, `reports/`, machine `contracts/` | clarify |
+| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` khi tạo plan; `plan.md` và route file hiện có khi refresh | `plan.md`, `phases/*.md`; refresh chỉ đổi delegate sections | clarify, hoặc route change đã duyệt |
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
 | consistency-check | `/tdk-consistency-check <id>` | `--deep` | `spec.md`, `plan.md ## Phases` | Report, không tạo file | plan |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report, không tạo file | specify |
 
 `/tdk-plan` nhận freeform content sau `<id>` trong mọi mode. Default, `--fast`, và `--hard` xem content là planning instruction; `--red-team` xem là review focus; `--validate` xem là validation focus. Mode flags có thể đứng sau `<id>` trước hoặc sau content.
+`--tdd` và `--ut-backfill` là test-mode flags độc lập, kết hợp với default hoặc `--hard`, không kết hợp `--fast`. `--refresh-routing` và `--migrate-artifacts` là action độc lập: không nhận thêm speed, test, targeting hoặc action flag, và không kết hợp với nhau.
 
 ### Handoff Capture
 
@@ -536,7 +552,8 @@ không ép vào specification workflow.
 | golden-path:scaffold | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional sau layout/policy review |
 | sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, `engineering.md` theo sub-workspace | Sau config apply |
 | sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | `--sub-workspace`, `--no-community-search` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` hoặc skills.sh lookup | `automation-recommendation.md` | Sau sub-workspace docs |
-| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | `--dry-run`, `--skills-only`, `--agents-only` | approved `automation-recommendation.md` hoặc legacy recommendation file | Scaffolded skill/agent starter files | Sau recommendation approval |
+| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | `--dry-run`, `--skills-only`, `--agents-only`, `--task` | recommendation đã duyệt với Executor Decisions và action cho từng artifact | Đối chiếu canonical skill/agent, routing proposal, readiness summary | Sau khi duyệt recommendation |
+| delegate:routing | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]` | `--proposal`, `--approval`, `--yes` | route file và proposal; `approvalDigest` đã duyệt cho register | JSON diff, đăng ký gắn với approval, hoặc kiểm tra route equality | Sau khi duyệt routing intent |
 
 Greenfield và brownfield start commands là report/routing entrypoints. Chúng không tạo specs, plans, tracker issues, source code, hoặc `.specify/.specify.json`. Greenfield full mode chạy project-inception interview trước strong routing. Quick mode ghi unanswered critical gaps. Unknown mode chỉ classify nếu chưa đủ minimum facts. Brownfield full mode dùng bounded repo evidence, config-only mode tập trung vào `.specify` state, và unknown mode recommend một evidence-backed next route.
 
@@ -585,20 +602,29 @@ Syntax: `/tdk-sub-workspace-docs [--sub-workspace NAME|--all] [--force]`.
 
 Syntax: `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]`.
 
-`/tdk-scaffold-from-recommendation` đọc approved recommendation và tạo starter skill/agent files. Nó ưu tiên `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` và giữ legacy recommendation file fallbacks.
+Recommendation phân biệt **skill** cung cấp toolset với **agent** thực thi trong `## Executor Decisions`, luôn xét `implement` và `test`. Ưu tiên executor có sẵn khi write set có giới hạn và nó sở hữu một gate, tách biệt context hoặc có caller/output contract riêng. Quyết định `no agent` phải nêu tiêu chí không đạt; không bắt buộc agent cho mọi domain. Agent chỉ có trong `.omp/agents/` mà không có canonical twin vẫn chưa rõ ownership; không tự patch hoặc chuyển thành nguồn chuẩn.
 
-Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]`.
+`/tdk-scaffold-from-recommendation` đọc recommendation đã duyệt, ưu tiên `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` và giữ legacy file fallbacks. Skill tạo mới/tái sử dụng/duyệt patch trong `.claude/skills/<name>/` và `.claude/agents/<name>.md`, không ghi vào plugin directory do release sở hữu. Khi drift, mặc định **Keep unchanged**; nếu bytes của artifact/reference đổi sau review thì approval của patch mất hiệu lực. Regenerate phá hủy nội dung cũ nên cần xác nhận riêng. Chỉ tái sử dụng vẫn tạo proposal nếu có routing intent; `--dry-run` không ghi artifact hay proposal.
 
-`/tdk-delegate-routing` quản lý route file tường minh mà planning và UT workflows
-dùng. Dùng nó để diff `delegate-routing-proposal.json` do scaffold sinh ra,
-register các entry đã duyệt với `--yes`, và verify proposal. Tạo route file lần
-đầu là bước prompt, không phải command — copy
-`.specify/templates/plan/delegate-routing-template.tpl` sang
-`{docs.path}/custom-workflow/delegate-routing.md`.
+Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]`.
+Routing artifact để review là `delegate-routing-proposal.json`, chỉ được ghi cạnh recommendation đã duyệt sau khi approve toàn bộ reconciliation plan.
 
-Một delegate là `/skill` hoặc `@agent`; cả hai loại có thể nằm chung một dòng route.
+Để chuyển sang OMP cần một **TDK source checkout** có thật: consumer payload không chứa `packages/tdk-setup`. Scaffold in lệnh dùng đường dẫn source CLI đã resolve cho `convert-flat "<consumer-root>" --harness omp --parts agents,skills --dry-run`, rồi lệnh `--yes` sau khi duyệt; nếu chưa tìm được nguồn thì báo prerequisite. Có thể copy lệnh CLI tuyệt đối được in và chạy từ consumer root. Conversion từ chối `.omp/agents/<name>.md` không thuộc ownership của TDK; không tự thêm `--force`. Xem [contract đối chiếu nguồn chuẩn](../../../plugins/tdk-scaffold/skills/tdk-scaffold-from-recommendation/SKILL.md).
 
-Syntax: `/tdk-delegate-routing <diff|register|verify> [--proposal <path>] [--yes]`.
+Readiness có bốn nhãn độc lập: **source ready**, **runtime installed**, **route matches**, **phase delegates current**; nhãn này không thay thế nhãn khác. Artifact `kept-*` không được xem là ready. Không có `--task` thì phase freshness là `not checked`; có flag thì resolver kiểm tra đúng plan của task đó, không chọn plan bất kỳ.
+
+`/tdk-delegate-routing` quản lý `{docs.path}/custom-workflow/delegate-routing.md` cho planning và implementation/test workflows. Delegate có thể là `/skill`, `@agent` hoặc cả hai; route chỉ có agent hay chỉ có skill đều hợp lệ. Skill giữ quy tắc union, nhưng quyết định đổi executor `@old` → `@new` thay token cũ, không tự dispatch cả hai; file agent cũ không bị xóa.
+
+Quy trình: `diff --proposal <path>` → review → `register --proposal <path> --approval <approvalDigest> --yes` → `verify --proposal <path>`. Digest do `diff` trả về gắn **cả proposal lẫn route bytes**; sửa một trong hai phải diff và duyệt lại, stale approval không ghi gì. `verify` báo `scope: route-equality`, kể cả khi agent không tồn tại; nó không chứng minh runtime installation, loader hay phase freshness. Tạo route file lần đầu là bước prompt, dùng `.specify/templates/plan/delegate-routing-template.tpl`.
+
+Syntax: `/tdk-delegate-routing <diff|register|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]`.
+
+Execution dùng [contract tải skill hai tầng](../../../plugins/tdk-core/skills/tdk-implement/references/phase-execution.md#delegate-skill-loading-requirement) theo dispatch primitive thực tế. Tier 1 resolve agent binding; với toolset có skill, nó còn kiểm tra loader. OMP cần khả năng child `read skill://<name>` đã được chứng minh và quyền `read` hiệu lực, không cần token Claude `Skill` trong tools. Claude `ready` khi có explicit `Skill`, `tools` bỏ trống và không delegate nào có `disable-model-invocation: true`, hoặc `skills:` preload đầy đủ (G3 đã chạy thật). Với tools tường minh và không có `Skill`, delegate chưa được preload hoặc có `disable-model-invocation: true` là `no-loader`; wildcard/tools không rõ vẫn `unverified`. Agent-only không cần skill-loader. Lỗi static (`agent-not-found`, `skill-not-found`, `no-loader`, `unverified`) giữ phase `todo`, không có F3 recovery; lỗi load sau dispatch kết thúc `Status: BLOCKED`, giữ `in_progress` và yêu cầu F3 recovery. Executor thành công liệt kê từng skill đã load cùng locator và heading đầu tiên, và phát đúng một dòng `Status:` literal.
+
+#### Di Chuyển Artifact Đã Scaffold Theo Đường Dẫn Cũ
+
+Chỉ chuyển custom skill/agent do consumer tạo trước đây dưới `.specify/plugins/tdk-scaffold/` sang `.claude/skills/` và `.claude/agents/`; không chuyển file do plugin phát hành. Review nguồn chuẩn, dùng source-checkout conversion cho OMP, rồi diff/register có approval và `/tdk-plan <id> --refresh-routing` cho plan hiện có. Plugin directory thuộc release; custom file không có trong manifest sẽ không được install. Duyệt kỹ drift trong lần refresh đầu trước khi approve.
+
 
 #### Migration Từ Route File Cũ
 

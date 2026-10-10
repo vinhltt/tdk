@@ -11,6 +11,7 @@ const SUPPORTED_AGENT_FIELDS: Readonly<Record<string, true>> = {
   description: true,
   tools: true,
   model: true,
+  skills: true,
 };
 
 const DEFAULT_AGENT_OUTPUT = {
@@ -86,9 +87,21 @@ export function emitOmpAgentFiles(records: FlatClaudeAgentRecord[], modelMap: Om
     if (Object.hasOwn(record.frontmatter, 'tools')) {
       const mapped = mapClaudeTools(record.frontmatter.tools);
       if (mapped.tools !== undefined) frontmatter.tools = mapped.tools;
-      for (const dropped of mapped.dropped) warnings.push(`${label} dropped unsupported tool: ${dropped}`);
+      for (const dropped of mapped.dropped) {
+        const hint = dropped === 'Skill' ? '; OMP loads routed skills via read skill://<name>' : '';
+        warnings.push(`${label} dropped unsupported tool: ${dropped}${hint}`);
+      }
       if (mapped.usesDefaultTools) {
         warnings.push(`${label} uses wildcard tools; OMP default-tool semantics may differ`);
+      }
+    }
+
+    if (Object.hasOwn(record.frontmatter, 'skills')) {
+      const skills = record.frontmatter.skills;
+      if (Array.isArray(skills) && skills.every((skill) => typeof skill === 'string' && skill.trim().length > 0)) {
+        frontmatter.autoloadSkills = skills;
+      } else {
+        warnings.push(`${label} dropped invalid skills field: expected a list of non-empty skill names`);
       }
     }
 

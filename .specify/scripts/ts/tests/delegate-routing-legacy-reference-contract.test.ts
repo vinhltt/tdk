@@ -32,8 +32,12 @@ const EXCLUDED_PATHS = [
 const SANCTIONED_LEGACY_REFERENCES: Record<string, string> = {
   '.specify/scripts/ts/src/commands/routing/delegate.ts':
     'existsSync detection that raises the legacy-file warning from `diff`',
+  '.specify/scripts/ts/src/commands/routing/phase-delegates.ts':
+    'resolver detection-only legacy warning; missing canonical routing remains an opt-out',
   '.specify/scripts/ts/tests/commands/routing/delegate-routing.test.ts':
     'asserts that legacy-file warning fires',
+  '.specify/scripts/ts/tests/commands/routing/phase-delegates.test.ts':
+    'behavioral CLI coverage of the resolver legacy warning and no legacy-route fallback',
   '.specify/plugins/tdk-core/skills/tdk-implement/references/routing-preflight.md':
     'legacy-detection step that keeps /tdk-implement from losing routing silently',
   '.specify/plugins/tdk-core/skills/tdk-plan/references/delegate-routing-injection.md':
@@ -43,7 +47,7 @@ const SANCTIONED_LEGACY_REFERENCES: Record<string, string> = {
 };
 
 function filesContaining(needle: string): string[] {
-  const result = execFileSync('git', ['grep', '-l', '--fixed-strings', needle, '--', '.', ...EXCLUDED_PATHS], {
+  const result = execFileSync('git', ['grep', '-l', '--untracked', '--fixed-strings', needle, '--', '.', ...EXCLUDED_PATHS], {
     cwd: REPO_ROOT,
     encoding: 'utf8',
     // git grep exits 1 when nothing matches, which is a valid result here rather than a failure.

@@ -4,7 +4,7 @@
 >
 > **Source baseline**: TDK `60977e8 v1.103.1`
 >
-> **Where to run**: All `/tdk-*` commands are typed in the **Claude Code chat interface** (VSCode extension or Claude CLI prompt), NOT in a terminal or bash shell.
+> **Where to run**: Use `/tdk-*` in **Claude Code chat** (VSCode extension or Claude CLI). After `convert-flat --harness omp`, use `/skill:tdk-*` in **OMP chat**. These skill invocations are not shell commands; the Bun setup/routing commands below are terminal commands.
 
 ---
 
@@ -27,7 +27,7 @@
 
 TDK is a specification-driven development framework that generates specs, optional portable task breakdowns, plans, and code from natural language. You describe a feature; TDK guides you through the full artifact chain — from requirements to production-ready implementation.
 
-TDK is the Claude Code native generation of this framework.
+TDK uses `.claude/` as its canonical skill/agent source; OMP runtime files are projected by the setup CLI. See the [setup guide](setup/setup-guide.md) for harness installation.
 
 ## Overview
 
@@ -136,7 +136,7 @@ Excluded:
 | `/tdk-clarify` | Ask targeted questions and write answers back into `spec.md`. | `<id>` | `spec.md` has gaps that should be resolved before planning. |
 | `/tdk-epic-hld` | Create parent epic high-level design context. | `<epic-id>`, `--force` | Epic PRD exists and needs design lenses before child breakdown. |
 | `/tdk-task-breakdown` | Generate child spec seed Markdown from epic PRD plus HLD. | `<epic-id>`, `--force` | An epic needs independently specifiable child slices. |
-| `/tdk-plan` | Generate implementation plan and conditional supporting artifacts. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` is ready to become implementation phases; use migration only for an existing legacy feature folder. |
+| `/tdk-plan` | Generate implementation plan, or refresh existing phase delegates only. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` is ready for planning; use refresh after approved routing changes, or migration for a legacy feature folder. |
 | `/tdk-implement` | Execute runnable rows from `plan.md ## Phases`. | `<id>`, `--phase NN`, `--no-branch` | A plan exists and one or more implementation phases are ready. |
 | `/tdk-consistency-check` | Cross-artifact consistency check across spec, plan, and constitution. | `<id>`, `--deep` | You need read-only verification across spec, plan, and phases; add `--deep` to verify plan claims against source. |
 | `/tdk-status` | Show workflow progress and per-repository branch state. | `<id>` | You need a read-only status snapshot, or need to see which branch each repository is on. |
@@ -169,8 +169,8 @@ Excluded:
 | `/tdk-sub-workspace-list` | List configured sub-workspaces. | no flags | You need inventory of sub-workspace config. |
 | `/tdk-sub-workspace-docs` | Generate arc42-lite docs for one or all sub-workspaces. | `--sub-workspace NAME`, `--all`, `--force` | Sub-workspace docs need README, architecture, interfaces, data-flow, and engineering pages. |
 | `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents for one sub-workspace. | `--sub-workspace <name>`, `--no-community-search` | Existing sub-workspace docs should drive automation recommendations. |
-| `/tdk-scaffold-from-recommendation` | Scaffold approved skill/agent recommendation stubs. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only` | A reviewed automation recommendation is approved for scaffolding. |
-| `/tdk-delegate-routing` | Manage reviewable delegate-routing diff, register, and verify. | `diff`, `register --yes`, `verify` | Scaffold routing suggestions or custom `/skill` and `@agent` routes need explicit review and registration. |
+| `/tdk-scaffold-from-recommendation` | Reconcile approved skills/agents in canonical `.claude/` source. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only`, `--task <id>` | Review create/reuse/patch outcomes and routing intent without silent overwrite. |
+| `/tdk-delegate-routing` | Review, register, and verify delegate-routing proposals. | `diff`, `register --approval <approvalDigest> --yes`, `verify`, `--proposal <path>` | A reviewed diff authorizes these exact proposal and route bytes; verification is route equality, not runtime readiness. |
 | `/tdk-repo-worktree` | Manage Git worktrees for sub-workspace repositories of a polyrepo project. | `create <id> [--repo <sub-name>]`, `list [<id>]`, `cleanup <id>`, `reset <id> [--repo <sub-name>]` | A sub-workspace repository is busy on another feature branch, or task worktrees need listing or cleanup. |
 
 ### Testing And API
@@ -226,6 +226,7 @@ TDK existence gates still use `.specify/memory/`.
 | `--red-team` | Review an existing plan with adversarial focus. Recovery state stays in `.tdk-tmp`; one final timestamped report stays under `reports/`. |
 | `--validate` | Interview/validate an existing plan. Freeform content becomes validation focus. |
 | `--migrate-artifacts` | Dry-run legacy checklist/data-model/quickstart/prose-contract consolidation, then require confirmation before a backed-up transaction. |
+| `--refresh-routing` | Refresh delegate sections of existing `todo` phases after one approved preview; does not regenerate the plan. Mutually exclusive with every other mode/targeting flag. |
 
 Default outputs: existing `spec.md`, `plan.md`, and `phases/*.md`. Optional
 `research/`, `reports/`, and machine-consumable `contracts/` exist only for a
@@ -235,6 +236,18 @@ and runbooks live in their owner phases.
 Executable experiments may use `phase_type: spike`; downstream phases remain
 blocked until `/tdk-implement` records evidence and the result is approved or
 the plan is revised.
+
+Generation injects every invocation-owned provisional `todo` draft, then initializes required spike dependents as `blocked` in both the plan table and phase frontmatter before validation/reporting. Existing phases are never reset for injection, and ordinary refresh/preflight remain todo-only. Phase `00` is supported; routing selectors `0` and `00` are equivalent.
+
+New plans report `NOT RUNNABLE: delegate readiness` when a routed artifact or loader is missing/unverified; valid plan output is retained for remediation, not silently repaired. TDD resolves test delegates before domain delegates; UT backfill resolves the **test route only**. Both use the `Test Quality Gate` anchor; non-test phases use `Key Insights`. Spikes always anchor on `Key Insights`, whatever the test mode; a phase missing its anchor is excluded as `[anchor_missing]` only when delegates must be inserted.
+
+For `/tdk-plan <id> --refresh-routing`, the shared [routing resolver](../../../scripts/ts/src/commands/routing/phase-delegates.ts) first scans all phases, then produces the final `check --phase S` preview for the selected drifted `todo` phases. Approval authorizes `apply --phase S` with the **same set and its digest**, not the all-phase scan's digest. `done` and other non-`todo` phases are excluded; any `in_progress` phase refuses refresh. Only delegate sections change: `plan.md`, statuses, dependencies, and other phase bytes are preserved. A missing route file is opt-out (no deletion); a readable present-empty file proposes deleting stale sections; an unreadable file is an error.
+
+The resolver uses a shared line-based fence scan, not a full CommonMark parser. Headings inside its recognized fences are not delegate/input/anchor headings. Refresh preserves non-delegate bytes and surrounding instructions with LF, CRLF, or mixed endings. Managed ranges end at its recognized unindented ATX headings (`^# ` or `^## `), or EOF. Body lines must be blank or top-level recognized delegate bullets with retained inline purposes. Closed/open/later-closed body fences cause `delegate_section_in_fence`; other non-clean body content causes `delegate_section_not_clean`. For an affected selected `todo` phase, apply refuses with the exact preview reason and zero writes, including safe selected siblings, even when token groups match. Clean the section manually, then rerun `check`; the resolver never auto-closes or discards examples.
+
+An otherwise unambiguous unclosed insertion endpoint causes `anchor_in_fence`. If any fence opener has one to three leading spaces and is unclosed or its closer has different indentation, an otherwise admitted byte-changing refresh instead refuses with `fence_container_ambiguous`, even when that example lies outside managed ranges/anchor. CommonMark list-item boundaries may differ; align opener/closer indentation or close it manually, then rerun `check`. Matching-indent fences (`0 == 0`, `2 == 2`, `3 == 3`) stay supported. A valid true byte no-op remains accepted despite ambiguity, and clean canonical unchanged sections preserve their original slices even with mixed LF/CRLF. Missing-routing opt-out remains unchanged. All-phase apply skips non-`todo` rewrite exclusions; explicit non-`todo` selection still refuses. Workspace lookup remains case-insensitive and first-section-wins, with distinct-workspace global fallback.
+
+**Known read-only/no-op limitation:** for an ambiguous indented fence, parsing/check can disagree with a CommonMark reader about whether a later `## Delegate ...` heading is real. An unclosed list-item fence can hide a real delegate section from the resolver even though CommonMark ends the list item before it. The refusal guard protects mutations, not full CommonMark interpretation.
 
 Test-mode phases include `Test Quality Gate` rows. TDK owns baseline rubric,
 traceability, and gate row completion; the routed consumer `test` skill owns
@@ -322,8 +335,8 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 26 | `/tdk-sub-workspace-list` | List all configured sub-workspaces |
 | 27 | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | Generate arc42-lite docs under `<docsPath>/sub-workspaces/<name>/` |
 | 28 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | Recommend skills/agents for one selected sub-workspace |
-| 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | Scaffold reviewed skills/agents from an approved recommendation |
-| 30 | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--yes]` | Review and register delegate-routing proposals explicitly |
+| 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | Reconcile approved canonical skills/agents and propose routing, including reuse-only runs |
+| 30 | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]` | Register only the reviewed diff; approval and `--yes` are required for register |
 | — | **Primary Implementation** | |
 | 33 | `/tdk-implement <id> [--phase NN]` | Execute implementation directly from plan.md ## Phases (recommended) |
 | — | `/tdk-handoff [task-id \| issue-url \| focus] [--kind continuation\|spec\|investigation\|feature\|upstream-bug] [--slug <slug>]` | Capture one local packet; review and share manually, without lifecycle or tracker actions |
@@ -360,12 +373,13 @@ For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalo
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
 | high-level-design | `/tdk-epic-hld <epic-id>` | `--force` | `epic-prd.md`, `prd.md`, `slice-map.md`, `open-questions.md`; optional HLD routing | `high-level-design.md` + 5 design artifacts | epic-prd |
 | task-breakdown | `/tdk-task-breakdown <epic-id>` | `--force` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | `tasks-breakdown.md`, `tasks-breakdown/task-NNN-*.md` child spec seed files | high-level-design |
-| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts` | `spec.md` plus clarified requirements and optional context | `plan.md`, `phases/*.md`; conditional indexed `research/`, `reports/`, machine `contracts/` | clarify |
+| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` for generation; existing `plan.md` and route file for refresh | `plan.md`, `phases/*.md`; refresh changes delegate sections only | clarify, or approved route change |
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
 | consistency-check | `/tdk-consistency-check <id>` | `--deep` | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
 | status | `/tdk-status <id>` | — | Feature directory, `git-map.md` | Progress report (no file created) | specify |
 
 `/tdk-plan` accepts freeform content after `<id>` in every mode. Default, `--fast`, and `--hard` treat content as planning instruction; `--red-team` treats it as review focus; `--validate` treats it as validation focus. Known mode flags can appear after `<id>` before or after the content. `--tdd` and `--ut-backfill` are independent test-mode flags: they select whether generated phases include tests-first or backfill sections with `Test Quality Gate` rows, and compose with the default or `--hard` speed mode (not `--fast`).
+`--refresh-routing` and `--migrate-artifacts` are standalone actions: neither accepts another speed, test, targeting, or action flag, and they cannot be combined with each other.
 
 ### Handoff Capture
 
@@ -540,8 +554,8 @@ specification workflow.
 | golden-path:scaffold | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional after layout/policy review |
 | sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, `engineering.md` per sub-workspace | After config apply |
 | sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | `--sub-workspace`, `--no-community-search` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` or skills.sh lookup | `automation-recommendation.md` | After sub-workspace docs |
-| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]` | `--dry-run`, `--skills-only`, `--agents-only` | approved `automation-recommendation.md` or legacy recommendation file | Scaffolded skill/agent starter files | After recommendation approval |
-| delegate:routing | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--yes]` | `--proposal`, `--yes` | `delegate-routing.md`, optional `delegate-routing-proposal.json` | JSON diff, registration, or verification result | After scaffold routing proposal or custom routing opt-in |
+| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | `--dry-run`, `--skills-only`, `--agents-only`, `--task` | approved recommendation with Executor Decisions and per-artifact actions | Canonical skill/agent reconciliation, routing proposal, readiness summary | After recommendation approval |
+| delegate:routing | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]` | `--proposal`, `--approval`, `--yes` | route file and proposal; reviewed `approvalDigest` for register | JSON diff, approval-bound registration, or route-equality verification | After routing-intent review |
 
 Greenfield and brownfield start commands are report/routing entrypoints. They do not create specs, plans, tracker issues, source code, or `.specify/.specify.json`. Greenfield full mode runs a project-inception interview before strong routing. Quick mode records unanswered critical gaps. Unknown mode classifies only unless minimum facts are present. Brownfield full mode uses bounded repo evidence, config-only mode focuses on `.specify` state, and unknown mode recommends one evidence-backed next route.
 
@@ -630,28 +644,31 @@ skills.sh. It does not support `--all` and does not use `ck:find-skills`.
 
 Syntax: `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]`.
 
-`/tdk-scaffold-from-recommendation` reads an approved recommendation and creates
-starter skill/agent files. It prefers
+Recommendations separate toolset **skills** from executor **agents** in `## Executor Decisions`, always considering `implement` and `test`. Prefer an existing executor when its write set is bounded and it owns a gate, isolates context, or has a distinct caller/output contract. A justified `no agent` names the failed criterion; agents are not mandatory. Runtime-only `.omp/agents/` definitions without canonical twins remain ownership-unresolved and are never patched or promoted automatically.
+
+`/tdk-scaffold-from-recommendation` reads the approved recommendation, preferring
 `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md`
-and keeps legacy recommendation file fallbacks. Whenever it scaffolds at least
-one skill it also writes a reviewable routing proposal and prints the next step
-for getting that skill into the route file, deriving the entry from the skill's
-purpose for any skill the recommendation's `## Routing Suggestions` does not
-cover, including when that section is absent entirely.
+with legacy file fallbacks. It creates/reuses/reviews patches in `.claude/skills/<name>/` and `.claude/agents/<name>.md`, never the release-owned plugin directory. Drift defaults to **Keep unchanged**; patch approval is invalidated if the reviewed artifact/reference bytes change. Regeneration is destructive and needs separate confirmation. A reuse-only run still produces a proposal when routable intent exists; `--dry-run` writes neither artifacts nor proposal.
 
-Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only]`.
+Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]`.
+The reviewable routing artifact is `delegate-routing-proposal.json`, written beside the approved recommendation only after run-level approval.
 
-`/tdk-delegate-routing` manages the explicit route file used by planning and
-UT workflows. Use it to diff a scaffolded `delegate-routing-proposal.json`,
-register approved entries with `--yes`, and verify proposals. Creating the route
-file for the first time is a prompt step, not a command — copy
-`.specify/templates/plan/delegate-routing-template.tpl` to
-`{docs.path}/custom-workflow/delegate-routing.md`.
+For OMP, conversion requires an existing **TDK source checkout**: `packages/tdk-setup` is not shipped in a consumer. Scaffold prints a resolved source-CLI command for `convert-flat "<consumer-root>" --harness omp --parts agents,skills --dry-run`, then an approved `--yes` command; it reports a prerequisite if that source cannot be found. Copy the printed absolute CLI command from the consumer root. Conversion refuses unowned `.omp/agents/<name>.md` targets; never add `--force` without an explicit ownership decision. See the [canonical reconciliation contract](../../../plugins/tdk-scaffold/skills/tdk-scaffold-from-recommendation/SKILL.md).
 
-A delegate is either a `/skill` or an `@agent`, and both kinds may share one
-route line.
+Readiness has four independent labels: **source ready**, **runtime installed**, **route matches**, and **phase delegates current**. None substitutes for another. `kept-*` artifacts are not ready. Without `--task`, phase freshness is `not checked`; with it, the resolver checks that task's plan, not an arbitrary plan.
 
-Syntax: `/tdk-delegate-routing <diff|register|verify> [--proposal <path>] [--yes]`.
+`/tdk-delegate-routing` manages `{docs.path}/custom-workflow/delegate-routing.md` for planning and implementation/test workflows. A delegate is a `/skill`, an `@agent`, or both on the same route; agent-only and skill-only routes are valid. Skills retain union semantics, but an explicit executor replacement `@old` → `@new` replaces the old route token rather than silently dispatching both; the old agent file is not deleted.
+
+Use `diff --proposal <path>` → review → `register --proposal <path> --approval <approvalDigest> --yes` → `verify --proposal <path>`. The digest from `diff` binds **both proposal and route bytes**. Editing either requires a new diff and approval; stale approval writes nothing. `verify` reports `scope: route-equality`, even for a nonexistent agent: it does not prove runtime installation, loading capability, or phase freshness. Creating the route file is a prompt step: use `.specify/templates/plan/delegate-routing-template.tpl`.
+
+Syntax: `/tdk-delegate-routing <diff|register|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]`.
+
+Execution uses the [two-tier loading contract](../../../plugins/tdk-core/skills/tdk-implement/references/phase-execution.md#delegate-skill-loading-requirement), selected by the actual dispatch primitive. Tier 1 resolves the executor binding and, for non-empty skill toolsets, its loader: OMP uses proven child `read skill://<name>` capability plus effective `read`, not a literal Claude `Skill` entry. Claude readiness is `ready` for an explicit `Skill` grant, omitted `tools` when no delegate has `disable-model-invocation: true`, or a complete `skills:` preload (exercised G3). With explicit tools and no `Skill`, a delegate that is not preloaded or has `disable-model-invocation: true` is `no-loader`; wildcard/unknown tools stay `unverified`. Agent-only routes need no skill-loader. Static failure (`agent-not-found`, `skill-not-found`, `no-loader`, `unverified`) keeps the phase `todo` without F3 recovery; a load failure after dispatch ends `Status: BLOCKED`, keeps `in_progress`, and requires F3 recovery. Successful executors list each loaded skill with its locator and first heading, and emit exactly one literal `Status:` line.
+
+#### Migrating Previously Scaffolded Artifacts
+
+Move only consumer-authored custom skills/agents previously scaffolded under `.specify/plugins/tdk-scaffold/` into `.claude/skills/` and `.claude/agents/`; do not move shipped plugin files. Review the canonical artifacts, run source-checkout conversion for OMP, then diff/register with approval and `/tdk-plan <id> --refresh-routing` for existing plans. The plugin directory is release-owned, and custom files absent from its manifest are not installed. Re-review first-refresh drift before approval.
+
 
 #### Migrating From The Old Route File
 

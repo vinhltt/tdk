@@ -102,6 +102,107 @@ describe('OMP agent emitter', () => {
     ]);
   });
 
+  test('maps skill preload intent, drops Skill with a URI-loader hint, and preserves body bytes', () => {
+    const consumer = makeConsumer('tdk-omp-agent-skills-');
+    const body = '## Load Skills First\r\nUse Skill before writing.\r\n\r\nStatus: DONE\r\n';
+    const record = agent(consumer.root, 'executor.md', {
+      name: 'executor',
+      description: 'Execute routed phases',
+      tools: ['Read', 'Edit', 'Write', 'Skill'],
+      skills: ['domain-guide', 'test-guide', 'domain-guide'],
+    }, body);
+
+    const result = emitOmpAgentFiles([record], {});
+    const emitted = result.files[0]!.content;
+    const frontmatter = emittedFrontmatter(emitted);
+
+    expect(frontmatter.autoloadSkills).toEqual(['domain-guide', 'test-guide', 'domain-guide']);
+    expect(frontmatter.tools).toEqual(['read', 'edit', 'write', 'yield']);
+    expect(frontmatter.skills).toBeUndefined();
+    expect(frontmatter.tools).not.toContain('Skill');
+    expect(result.warnings).toEqual([
+      'OMP agent executor (.claude/agents/executor.md) dropped unsupported tool: Skill; OMP loads routed skills via read skill://<name>',
+    ]);
+    expect(emitted.subarray(emitted.indexOf('\n---\n', 4) + 5)).toEqual(Buffer.from(body));
+  });
+
+  test('maps skills without adding an explicit tool restriction or warning', () => {
+    const consumer = makeConsumer('tdk-omp-agent-skills-inherited-');
+    const record = agent(consumer.root, 'executor.md', {
+      name: 'executor',
+      description: 'Execute with default tools',
+      skills: ['domain-guide'],
+    });
+
+    const result = emitOmpAgentFiles([record], {});
+    const frontmatter = emittedFrontmatter(result.files[0]!.content);
+
+    expect(frontmatter.autoloadSkills).toEqual(['domain-guide']);
+    expect(frontmatter.tools).toBeUndefined();
+    expect(result.warnings).toEqual([]);
+  });
+
+  test('preserves an empty skills list without warning', () => {
+    const consumer = makeConsumer('tdk-omp-agent-skills-empty-');
+    const record = agent(consumer.root, 'executor.md', {
+      name: 'executor',
+      description: 'Execute a skill-free phase',
+      skills: [],
+    });
+
+    const result = emitOmpAgentFiles([record], {});
+
+    expect(emittedFrontmatter(result.files[0]!.content).autoloadSkills).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  test.each([
+    { skills: 'domain-guide' },
+    { skills: null },
+    { skills: undefined },
+    { skills: 7 },
+    { skills: { name: 'domain-guide' } },
+    { skills: ['domain-guide', 7] },
+    { skills: ['domain-guide', ''] },
+    { skills: [' \t '] },
+  ])('drops malformed skills %j rather than emitting a partial preload', ({ skills }) => {
+    const consumer = makeConsumer('tdk-omp-agent-skills-invalid-');
+    const record = agent(consumer.root, 'executor.md', {
+      name: 'executor',
+      description: 'Execute routed phases',
+      skills,
+    });
+
+    const result = emitOmpAgentFiles([record], {});
+    const frontmatter = emittedFrontmatter(result.files[0]!.content);
+
+    expect(frontmatter.autoloadSkills).toBeUndefined();
+    expect(frontmatter.skills).toBeUndefined();
+    expect(result.warnings).toEqual([
+      'OMP agent executor (.claude/agents/executor.md) dropped invalid skills field: expected a list of non-empty skill names',
+    ]);
+  });
+
+  test('drops Skill from comma-separated tools without changing body prose', () => {
+    const consumer = makeConsumer('tdk-omp-agent-skill-tool-');
+    const body = 'Call Skill for the assigned domain guide.\n';
+    const record = agent(consumer.root, 'executor.md', {
+      name: 'executor',
+      description: 'Execute routed phases',
+      tools: 'Read, Skill',
+    }, body);
+
+    const result = emitOmpAgentFiles([record], {});
+    const frontmatter = emittedFrontmatter(result.files[0]!.content);
+
+    expect(frontmatter.tools).toEqual(['read', 'yield']);
+    expect(frontmatter.autoloadSkills).toBeUndefined();
+    expect(result.files[0]!.content.toString('utf-8').endsWith(body)).toBe(true);
+    expect(result.warnings).toEqual([
+      'OMP agent executor (.claude/agents/executor.md) dropped unsupported tool: Skill; OMP loads routed skills via read skill://<name>',
+    ]);
+  });
+
   test('omits tools for wildcard and drops an unmapped model with warnings', () => {
     const consumer = makeConsumer('tdk-omp-agent-wildcard-');
     const record = agent(consumer.root, 'default-tools.md', {

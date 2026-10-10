@@ -218,10 +218,16 @@ Output:
 - `.specify/configurations/workspace-layout/workspace-layout-proposal.json`
 
 The JSON is an authoring proposal, not runtime config. Runtime-backed fields are
-limited to `architecture.type`, `subWorkspaces[]`, docs, and `modules[]`. Test
-skill routing uses `delegate-routing.md` and `## Delegate Skills`. Fields such as `boundaryType`, `owner`, `contracts`,
-`allowedDependencies`, and `routing` are report-only unless a future schema
-expansion promotes them.
+limited to `architecture.type`, `subWorkspaces[]`, docs, and `modules[]`.
+Implementation/test routing lives in `delegate-routing.md`: `/skills` supply the
+toolset and optional `@agents` supply executors, reflected in `## Delegate Skills`
+and `## Delegate Agents`. Backfill resolves only the test route; TDD resolves
+test then domain routes. Fields such as `boundaryType`, `owner`, `contracts`,
+`allowedDependencies`, and `routing` remain report-only unless a future schema
+expansion promotes them. After canonical `.claude/` reconciliation and any OMP
+source-checkout conversion, approve the routing diff and use
+`/tdk-plan <id> --refresh-routing` for existing todo phases; route equality alone
+does not prove executor readiness. See the [skills guide](../skills-guide.md#detailed-mode-notes).
 
 ### 8. Workflow config review and guarded apply
 

@@ -8,6 +8,7 @@ import {
   parseDelegateRouting,
   registerRoutingProposal,
   resolveDelegateRoutingPath,
+  routingApprovalDigest,
   verifyRoutingProposal,
   type DelegateRoutingDocument,
 } from '../../utils/delegate-routing';
@@ -19,7 +20,7 @@ import { formatAgentJson, writeAgentJson, writeStderrLine } from '../../utils/ag
 
 type ProjectRootOptions = { projectRoot?: string };
 type ProposalOptions = ProjectRootOptions & { proposal?: string };
-type WriteOptions = ProposalOptions & { yes?: boolean };
+type WriteOptions = ProposalOptions & { yes?: boolean; approval?: string };
 
 const LEGACY_ROUTING_WARNING =
   'Legacy routing file detected; rename to delegate-routing.md and migrate @agent syntax';
@@ -74,10 +75,11 @@ function readProposal(path: string | undefined) {
   }
 }
 
-function readRoutingFile(projectRoot: string): { routingFile: string; markdown?: string } {
+function readRoutingFile(projectRoot: string): { routingFile: string; markdown?: string; bytes?: Buffer } {
   const routingFile = resolveDelegateRoutingPath(projectRoot);
   if (!existsSync(routingFile)) return { routingFile };
-  return { routingFile, markdown: readFileSync(routingFile, 'utf-8') };
+  const bytes = readFileSync(routingFile);
+  return { routingFile, markdown: bytes.toString('utf-8'), bytes };
 }
 
 export function createDelegateRoutingCommand(): Command {
@@ -93,7 +95,7 @@ export function createDelegateRoutingCommand(): Command {
       try {
         const projectRoot = projectRootFrom(opts);
         const { proposalPath, proposal, warnings: proposalWarnings } = readProposal(opts.proposal);
-        const { routingFile, markdown } = readRoutingFile(projectRoot);
+        const { routingFile, markdown, bytes } = readRoutingFile(projectRoot);
         const document = parseDelegateRouting(markdown ?? '');
         const diff = diffRoutingProposal(document, proposal);
         // Detection-only legacy-file check: never read or parse it, just flag it.
@@ -109,6 +111,7 @@ export function createDelegateRoutingCommand(): Command {
           status: markdown === undefined ? 'missing' : 'present',
           routingFile,
           proposalPath,
+          approvalDigest: routingApprovalDigest(proposal, bytes),
           operations: diff.operations,
           warnings,
         });
@@ -119,17 +122,29 @@ export function createDelegateRoutingCommand(): Command {
 
   command
     .command('register')
-    .description('Apply a routing proposal; requires --yes and an existing route file')
+    .description('Apply a reviewed routing proposal; requires --yes, --approval and an existing route file')
     .option('--project-root <root>', 'project root', process.cwd())
     .requiredOption('--proposal <path>', 'delegate-routing-proposal.json path')
     .option('--yes', 'confirm route file mutation', false)
+    .option('--approval <digest>', 'approvalDigest from the reviewed diff')
     .action((opts: WriteOptions) => {
       try {
         const projectRoot = projectRootFrom(opts);
         const { proposalPath, proposal, warnings: proposalWarnings } = readProposal(opts.proposal);
-        const { routingFile, markdown } = readRoutingFile(projectRoot);
+        const { routingFile, markdown, bytes } = readRoutingFile(projectRoot);
         if (!opts.yes) {
           writeFailedPayload({ status: 'confirmation_required', routingFile, proposalPath });
+        }
+        if (!opts.approval) {
+          writeFailedPayload({ status: 'approval_required', routingFile, proposalPath });
+        }
+        if (opts.approval !== routingApprovalDigest(proposal, bytes)) {
+          writeFailedPayload({
+            status: 'stale_approval',
+            routingFile,
+            proposalPath,
+            errors: ['Proposal or route file changed since diff; rerun diff and review.'],
+          });
         }
         if (markdown === undefined) {
           writeFailedPayload({
@@ -166,12 +181,13 @@ export function createDelegateRoutingCommand(): Command {
         const { proposalPath, proposal, warnings: proposalWarnings } = readProposal(opts.proposal);
         const { routingFile, markdown } = readRoutingFile(projectRoot);
         if (markdown === undefined) {
-          writeFailedPayload({ status: 'missing', routingFile, proposalPath });
+          writeFailedPayload({ status: 'missing', scope: 'route-equality', routingFile, proposalPath });
         }
         const document = parseDelegateRouting(markdown);
         const result = verifyRoutingProposal(document, proposal);
         const payload = {
           status: result.verified ? 'verified' : 'mismatch',
+          scope: 'route-equality',
           routingFile,
           proposalPath,
           operations: result.operations,

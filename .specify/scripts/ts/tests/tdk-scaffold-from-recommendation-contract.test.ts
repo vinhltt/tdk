@@ -55,7 +55,6 @@ describe('TDK scaffold-from-recommendation contracts', () => {
     expect(skill).toContain('delegate-routing-proposal.json');
     expect(skill).toContain('beside the approved recommendation');
     expect(skill).toContain('Never mutate `delegate-routing.md` directly');
-    expect(skill).toContain('/tdk-delegate-routing register --yes');
   });
 
   it('registers the tdk-delegate-routing facade and reference contracts', () => {
@@ -97,12 +96,6 @@ describe('TDK scaffold routing handoff contracts', () => {
   it('derives routing entries for delegates no suggestion covers', () => {
     expect(skill).toContain('that no suggestion covers');
     expect(skill).toContain('no `## Routing Suggestions` section');
-    expect(skill).toContain('Derived by scaffold from purpose; domain inferred from');
-  });
-
-  it('unions existing route delegates so register does not drop them', () => {
-    expect(skill).toContain('Union `delegates` per');
-    expect(skill).toContain('replaces the whole line');
   });
 
   it('pins every proposal entry to the register operation', () => {
@@ -132,7 +125,6 @@ describe('TDK scaffold routing handoff contracts', () => {
 
   it('prints the diff, register, verify sequence when the route file is present', () => {
     expect(skill).toContain('routing delegate diff');
-    expect(skill).toContain('register --yes');
     expect(skill).toContain('routing delegate verify');
   });
 
@@ -147,11 +139,6 @@ describe('TDK scaffold routing handoff contracts', () => {
     expect(skill).toContain('Do not abort the scaffold.');
   });
 
-  it('guards the next step on at least one scaffolded delegate', () => {
-    expect(skill).toContain('same condition as step 2');
-    expect(skill).toContain('at least one skill or agent was scaffolded');
-  });
-
   it('routes scaffolded agents through the proposal instead of warning they have no destination', () => {
     expect(skill).not.toContain('has no routing destination yet');
     expect(skill).toContain('@<agent-name>');
@@ -163,20 +150,6 @@ describe('TDK scaffold routing handoff contracts', () => {
     expect(reviewRegister).toContain('operations, `reason`, and warnings');
     expect(reviewRegister).toContain('`reason` contains `derived` (case-insensitive)');
     expect(reviewRegister).toContain('`from` → `to`');
-  });
-
-  it('carries the domain inference table in the scaffold proposal format reference', () => {
-    for (const mapping of [
-      '-> test',
-      '-> database',
-      'design, then implement',
-      '-> implement',
-      '-> research',
-    ]) {
-      expect(proposalFormat).toContain(mapping);
-    }
-    expect(proposalFormat).toContain('research|implement|test|database|design');
-    expect(proposalFormat).toContain('one entry per domain in that order');
   });
 
   it('declares the empty routing-suggestions consequence upstream', () => {

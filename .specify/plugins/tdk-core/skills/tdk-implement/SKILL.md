@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "14.0.1"
+  version: "14.0.2"
 ---
 
 ## ⛔ CRITICAL: Error Handling

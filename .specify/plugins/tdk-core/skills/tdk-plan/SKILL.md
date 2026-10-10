@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "14.0.1"
+  version: "14.0.2"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -11,6 +11,8 @@ metadata:
 1. **STOP immediately** — Do NOT attempt workarounds or auto-fixes.
 2. **Report the error** — Show the exact error message to the user.
 3. **Wait for user** — Ask user how to proceed before taking any action.
+
+Before STOP on a generation setup/write/resolver/post-write-gate error, perform the byte-exact Step 3d rollback. The only bounded retry exception is resolver `stale`: generation rechecks the identical phase set once; refresh discards approval and re-previews once for fresh approval per `delegate-routing-injection.md`. Static delegate-readiness failures are reported as NOT RUNNABLE after valid output is retained, not silently repaired.
 
 **DO NOT:**
 - Try alternative approaches when scripts fail.
@@ -60,7 +62,9 @@ flowchart TD
     A[Step 0 Parse Args + Validate TASK_ID] --> B[Step 0.1 Load Project Context]
     B --> BM{--migrate-artifacts?}
     BM -->|yes| MW[Step 0.migrate Dry-run + Confirm + Transaction]
-    BM -->|no| B2[Step 0.1b Load Skill Routing]
+    BM -->|no| BR{--refresh-routing?}
+    BR -->|yes| RW[Step 0.refresh Scan + Selected Check + Approval + Apply]
+    BR -->|no| B2[Step 0.1b Load Skill Routing]
     B2 --> C[Step 0.memory Memory Pre-load]
     C --> S[Step 0.scope Scope Challenge]
     S --> X[Step 0.deps Cross-Plan Scan]
@@ -89,11 +93,11 @@ flowchart TD
 Split `$ARGUMENTS` into `TASK_ID`, `FLAGS`, `BACKFILL_TARGET`, and `USER_CONTENT`.
 
 - `TASK_ID`: first argument token. It must be a valid task ID. Validate only this cleaned token with `tdk-validate-task-id` and host skill name `/tdk-plan`.
-- `FLAGS`: known mode flags `--fast | --hard | --tdd | --ut-backfill | --red-team | --validate | --migrate-artifacts`, allowed anywhere after `TASK_ID`. Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`, `--migrate-artifacts`). When `--ut-backfill` is present, also accept backfill targeting flags `--sub-workspace <name>`, `--module <name>` (requires `--sub-workspace`), and `--standalone`; these targeting flags are unknown-flag STOP errors when `--ut-backfill` is absent.
+- `FLAGS`: known mode flags `--fast | --hard | --tdd | --ut-backfill | --red-team | --validate | --migrate-artifacts | --refresh-routing`, allowed anywhere after `TASK_ID`. Flags fall into three independent categories: speed (`--fast`, `--hard`), test (`--tdd`, `--ut-backfill`), action (`--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing`). When `--ut-backfill` is present, also accept backfill targeting flags `--sub-workspace <name>`, `--module <name>` (requires `--sub-workspace`), and `--standalone`; these targeting flags are unknown-flag STOP errors when `--ut-backfill` is absent.
 - `BACKFILL_TARGET`: only populated when `--ut-backfill` is present. Shape: `{ sub_workspace: string | "", module: string | "", standalone: boolean }`. Remove targeting flags and their values from `USER_CONTENT`.
 - `USER_CONTENT`: remaining non-flag text after `TASK_ID`, preserving order. Empty string if no content was supplied.
 
-Reject with STOP if the first argument token is missing or invalid, a known mode flag appears before `TASK_ID`, any token beginning with `--` is not an exact whitelisted mode flag, more than one flag from the same category (speed / test / action) is present, `--fast` is combined with `--tdd` or `--ut-backfill`, `--migrate-artifacts` is combined with any speed, test, targeting, red-team, or validate flag, a backfill targeting flag appears without `--ut-backfill`, `--sub-workspace` or `--module` is missing its value, or `--module` appears without `--sub-workspace`. Unknown flag or category conflict → STOP with explicit error (see `references/modes.md`). If `tdk-validate-task-id` STOPs → halt. Store: `TASK_ID`, `TASK_ID_SOURCE`, `FLAGS`, `BACKFILL_TARGET`, `USER_CONTENT`.
+Reject with STOP if the first argument token is missing or invalid, a known mode flag appears before `TASK_ID`, any token beginning with `--` is not an exact whitelisted mode flag, more than one flag from the same category (speed / test / action) is present, `--fast` is combined with `--tdd` or `--ut-backfill`, either `--migrate-artifacts` or `--refresh-routing` is combined with any other speed, test, targeting, or action flag, a backfill targeting flag appears without `--ut-backfill`, `--sub-workspace` or `--module` is missing its value, or `--module` appears without `--sub-workspace`. Unknown flag or category conflict → STOP with explicit error (see `references/modes.md`), before any mutation. If `tdk-validate-task-id` STOPs → halt. Store: `TASK_ID`, `TASK_ID_SOURCE`, `FLAGS`, `BACKFILL_TARGET`, `USER_CONTENT`.
 
 ### Script Command Contract
 **Inline.** <!-- script invocation contract -->
@@ -123,6 +127,11 @@ Run only when `FLAGS` contains `--migrate-artifacts`, immediately after project
 context resolves `FEATURE_DIR`. Execute the dry-run/confirmation transaction
 and end the command; skip skill routing, memory, scope, dependency scan, setup,
 existing-plan handling, design, red-team, and validation.
+
+### Step 0.refresh — Refresh Delegate Routing Only
+
+Load: `references/delegate-routing-injection.md`
+Run only when `FLAGS` contains `--refresh-routing`, immediately after project context resolves `FEATURE_DIR`. Follow **Refresh Routing Only**: require an existing plan, scan all phases, refuse any `in_progress` phase, then selected-phase check → preview → approval → apply with the identical phase set and its digest. End the command afterward; do not run setup, the opt-in routing prompt, memory, scope, dependencies, design, generation validation, red-team, or validation interview.
 
 ### Step 0.1b — Load Skill Routing
 Load: `references/delegate-routing-injection.md`
@@ -162,6 +171,7 @@ fallback are missing.
 
 ### Step 1 — Setup
 **Inline.** <!-- safety-critical script invocation -->
+Before this invocation's first generation mutation, capture raw byte snapshots and existence of `plan.md` and every existing phase file that may be replaced/deleted, plus an inventory of pre-existing files in the feature directory. Capture before `setup-plan.ts` creates a new plan and before any rewrite `--force`; keep these snapshots through Step 3d. If capture fails, STOP before writing. Review-only actions do not enter this generation transaction. A setup failure uses the same rollback.
 Run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/setup-plan.ts {task_id} --json)`. Parse JSON for `taskId`, `featureSpec`, `implPlan`, `featureDir`, `hasGit`, **`planExists`**.
 
 ### Step 1.5 — Handle Existing Plan
@@ -186,6 +196,7 @@ Load: `references/research-phase.md`
 #### 3b — Design
 Load: `references/design-phase.md`
 Includes Solution Design, Embedded Brainstorming, Sequential Thinking for phase decomposition, and UT Phase Auto-inclusion.
+Draft generated phase bodies without `## Delegate Skills` / `## Delegate Agents`, with matching provisional `todo` table/frontmatter statuses and their required final statuses retained in memory. Step 3d injects exactly this invocation's new/rewritten/appended draft phase set, then finalizes required `blocked` spike dependents before validation/reporting. Never reset untouched existing statuses, omit dependents from injection, or compute delegates inline.
 
 #### 3c — Plan Layout & Output
 Load: `references/plan-output-contract.md`
@@ -198,6 +209,8 @@ or reconstruct the layout from memory.
 
 ### Step 3d — Transactional Post-write Validation
 
+First follow **Generation Routing Transaction — Step 3d** in the already loaded `references/delegate-routing-injection.md`: selected `routing phase-delegates check --phase N...` → `apply --snapshot <digest> --allow-in-progress-plan --phase N...`, using the identical normalized invocation-owned `todo` draft set. Finalize required statuses in both table/frontmatter after injection, including `blocked` spike dependents, before collecting read-only Tier 1 `delegateReadiness` and running the post-write gates. Readiness itself never dispatches or mutates status. That reference owns resolver state handling, finalization, the single same-set `stale` retry, readiness, and its remediation map.
+
 Using the already loaded `references/plan-output-contract.md`, run its four
 post-write gates in the frozen order. New/rewrite validate every generated phase;
 append validates the appended phase while the disjointness gate validates every
@@ -206,10 +219,9 @@ input yourself from each `auto` phase's `## Related Code Files` bullets, exactly
 as the contract's gate 4 specifies.
 This gate runs before `Phase 0.guardian` and Step 4 reporting.
 
-On invalid output, an unexpected non-zero exit, malformed JSON, or runtime/I/O
-failure, remove only invocation-new files, report exact diagnostics, and STOP.
-Do not repair, downgrade, retain an orphan phase/table row, or continue to
-guardian, reporting, red-team, or the validation interview.
+On invalid output, an unexpected non-zero exit, malformed JSON, or runtime/I/O failure, restore the captured `plan.md` bytes and every overwritten/deleted phase byte-for-byte, then remove only invocation-new files. Restore append's reciprocal `Blocks` cells via the prior plan snapshot; a previously absent plan must remain absent. This includes setup errors and partial resolver apply. Preserve unrelated/pre-existing files, report exact diagnostics, and STOP. Do not repair, downgrade, retain an orphan phase/table row, or continue to guardian, reporting, red-team, or the validation interview.
+
+Retain snapshots until all four post-write gates pass. If only static delegate readiness fails, valid generated files stay: carry the failures to Step 4 as NOT RUNNABLE, with no automatic remediation or status change. A later structural gate error still rolls back even when readiness also failed.
 
 ### Step 3e — Seed Git Map
 
@@ -411,8 +423,9 @@ acting on `BLOCK_IMPL` / `REVIEW` / `CLEAR`. Preserve NOT CHECKED semantics and
 persistent gate state; do not weaken the plan blocking gate.
 
 ### Step 4 — Report Results
-**Inline.** <!-- terminal output, <10 lines -->
+**Inline.** <!-- terminal output -->
 Command ends after Phase 1 design. Report: branch, `implPlan` path, generated artifacts, `## Decisions Made` summary. When `MODE != default`, print the one-line banner from `references/modes.md` (e.g. `Mode: fast — research / scope / deps / guardian / red-team / validate / UT skipped.`).
+If any plan delegate failed Tier 1 readiness, label the result `NOT RUNNABLE: delegate readiness`. List every affected phase, delegate, reason code, evidence/path, and user-run remediation from `delegate-routing-injection.md`'s **Plan Delegate Readiness** table. Keep the valid generated plan files and do not imply that review, route equality, or successful generation proves executor loading. Missing routing reports readiness skipped (opt-out); a passing static gate does not claim Tier 2 runtime verification.
 
 ### Step 4.5 — Red Team Review
 Load: `references/red-team-workflow.md`
@@ -440,6 +453,8 @@ This contract applies only to internal `references/*.md` loads. Project-specific
 |---------|-----------|---------|
 | `/tdk-plan <ID> --red-team` | `references/red-team-workflow.md` | Spawn 3 hostile personas (skeptic + security + reliability), adjudicate findings, apply session-prefixed markers. |
 | `/tdk-plan <ID> --validate` | `references/validate-workflow.md` | Template-based 3–8 question interview across 8 categories (3 tdk-prioritized + 5 ck-plan). Resume-able via `validation_cursor`. |
+| `/tdk-plan <ID> --migrate-artifacts` | `references/migrate-artifacts-workflow.md` | Review and explicitly approve legacy artifact migration; skip generation. |
+| `/tdk-plan <ID> --refresh-routing` | `references/delegate-routing-injection.md` | Preview and explicitly approve resolver-only delegate refresh for drifted todo phases; refuse active plans. |
 
 <!-- Phase 01 intentionally created the table with header only (F13 + S2.F1); rows populate as features ship. -->
 

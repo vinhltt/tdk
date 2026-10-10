@@ -69,18 +69,26 @@ batch. When `safe` holds more than four phases, take the four lowest phase numbe
 next wave. Every phase named in `conflicts` or `rejected` runs serially per `phase-execution.md`; never widen
 a wave to admit one.
 
-Pick each worker's `subagent_type` per phase, from that phase's own delegate sections:
+Pick each worker's executor and dispatch parameter per phase, from that phase's own delegate sections:
 
-- **Phase has `## Delegate Agents`** — dispatch its worker with the routed agent as `subagent_type`, and treat
-  that phase's `## Delegate Skills` as the agent's toolset rather than as work for the controller. The agent
-  tool requirement and the literal `Status:` protocol in `## Delegate Agents Phase` of `phase-execution.md`
-  apply unchanged; a phase whose routed agent fails the tool requirement is not dispatched at all.
+- **Phase has `## Delegate Agents`** — use the routed executor binding and dispatch parameter selected by
+  Tier 1 of `### Delegate Skill Loading Requirement` in `phase-execution.md` (`subagent_type` for Claude
+  `Agent`/`Task`, `agent` for OMP `task`). Its `## Delegate Skills` is the executor's toolset, not controller work.
+  The same Tier 1 requirement and literal `Status:` protocol apply unchanged. Check every routed agent
+  before any wave status transition; a missing/failed/unverified binding or loader STOPs admission without
+  dispatch, leaves all unstarted phases `todo`, and emits no F3 recovery reminder. An agent-only route still
+  resolves its binding but needs no skill-loader. This does not add OMP `--parallel` support.
 - **Phase has no `## Delegate Agents`** — dispatch the current generic worker exactly as before, carrying the
   phase's `## Delegate Skills` as delegates in the worker's boundary.
 
-`subagent_type` is a per-phase dispatch parameter, so phases in one wave may use different workers. It is
-part of the immutable wave snapshot in `routing-preflight.md`: if a phase's routed agent changed between
-admission and dispatch, discard and rebuild the wave.
+The resolved worker binding is a per-phase dispatch parameter, so phases in one wave may use different
+workers. Store it and `delegateReadiness` in the immutable wave admission snapshot from
+`routing-preflight.md`: per agent, include the exact dispatch primitive, resolved definition path/hash,
+ordered skill locators and definition hashes, effective-loader evidence, G1 autoload coverage when proven,
+verdict, and failing delegates/reason codes. Admission requires every routed result to be `ready`.
+Immediately before the first status write, re-read the snapshotted agent/skill definitions as well as the
+phase/routing hashes; any changed binding, definition, skill, or dispatch primitive discards and rebuilds
+the complete wave before mutation.
 
 Mark each dispatched phase `in_progress` with one status call per phase before spawning it, then dispatch the
 wave as one synchronous concurrent batch in a single message, one invocation per phase, and join every
@@ -125,6 +133,26 @@ that path as its working root, while the phase file keeps declaring workspace-lo
 and nothing below about branch records applies. Workers may read only declared reads plus their own write targets,
 and may read back a `Create` target after creating it. Before touching any undeclared path, delegate, or
 command, a worker reports `NEEDS_CONTEXT` instead of widening its own scope.
+
+For routed executors, carry the passing `delegateReadiness` and copy the serial Execution Context's
+`Load before writing:` block unchanged, filling one entry per skill with the selected rule-set locator:
+
+```text
+Load before writing:
+- /{skill-name}: {skill://{skill-name} for task; Skill invocation or proven full-body preload with resolved locator for Agent/Task}
+  Repeat one entry for every delegated skill in listed order; an empty toolset is "none — no skill load required".
+  Load every listed skill's full instructions before your first write. Autoload/preload presence alone is not a load receipt.
+  Report each loaded skill, its locator/loading method, and its nonce-free first heading.
+  On any load failure, name the failing skill and error, do not write, and end with exactly Status: BLOCKED.
+```
+
+Each exact snapshotted skill locator is a declared read for this mandatory load, not permission to read
+unrelated code. OMP executors read every supplied URI even with autoload coverage; Claude executors use
+effective `Skill` or verify proven full-body preload in their own context. Empty toolsets need no load or
+load receipt. Tier 2 load failure leaves the already-started phase/wave `in_progress` with the F3 recovery
+reminder, unlike Tier 1. Missing per-skill load receipts are not success even with `Status: DONE`.
+End routed reports with exactly one selected literal line: `Status: DONE`, `Status: DONE_WITH_CONCERNS`,
+`Status: BLOCKED`, or `Status: NEEDS_CONTEXT`; never emit a pipe-separated alternatives line.
 
 Workers never write `plan.md`, phase frontmatter, routing or configuration authorities, or another phase's
 targets; never run Git index/ref commands, commit, stash, reset, checkout, or clean, with a single named

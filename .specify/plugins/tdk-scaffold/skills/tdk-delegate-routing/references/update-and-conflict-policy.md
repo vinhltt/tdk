@@ -6,8 +6,24 @@
 - Updates an existing section/domain entry when the delegate list differs.
 - Returns `noop` when the proposal is already reflected.
 - Preserves unrelated route file content, comments, and prose.
-- Requires `--yes`.
+- Requires `--yes` and a matching `--approval <approvalDigest>` from the user-approved diff.
 - Refuses to create the route file when it is missing.
+- Missing approval or stale proposal/route bytes refuse mutation (`approval_required` / `stale_approval`); rerun diff and obtain fresh approval before register.
+
+## Skill Union And Executor Replacement
+
+The proposal defines the **entire** target delegate list; register replaces the matching route line, not individual tokens.
+
+- Preserve skills by stable union: existing skills, approved suggestion/decision skills, then derived skills, deduplicated in that order.
+- If an approved Executor Decision selects `create @new` or `reuse @new` for a route currently holding a different `@old`, the proposal replaces the old executor token(s) with the selected new executor.
+  Keep the skill union, put skills before the executor, and include `replaces @old (explicit)` in `reason` for each removed executor.
+  Diff must show the intentional `from` → `to`; user approval and its digest authorize that replacement.
+- Never union old and new executors silently. With no explicit selection, a different suggested/derived agent is a conflict requiring clarification, not permission to dispatch both sequentially.
+- Leave the old agent definition untouched; route replacement is not source deletion.
+- Apply `--skills-only` / `--agents-only` only to in-scope new intent. Preserve existing out-of-scope tokens unchanged; a kind-filtered run must not replace an excluded executor.
+- Confirm `unresolved-artifact` entries explicitly, defaulting to exclusion; approval of routing such an entry does not make its source or runtime ready.
+
+## Duplicate Routes
 
 Duplicate and conflict handling:
 

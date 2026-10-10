@@ -243,17 +243,17 @@ flowchart TD
     end
 
     subgraph GENERATION_UT["Routed Test Implementation"]
-        UT_GEN["consumer test skill<br/>from ## Delegate Skills"]
+        UT_GEN["consumer test executor/toolset<br/>from ## Delegate Agents / ## Delegate Skills"]
         TEST_FILES["*.test.ts / test_*.py<br/>*Test.php + fixtures"]
     end
 
-    ROUTING["delegate-routing.md<br/>test domain"]
+    ROUTING["delegate-routing.md<br/>test route only for backfill"]
 
-    ROUTING -->|selects test skill| UT_PLAN_CMD
+    ROUTING -->|selects test skills and/or executor agent| UT_PLAN_CMD
     UT_SKILL -->|conventions| UT_PLAN_CMD
     UT_PLAN_CMD --> UT_PLAN
     UT_PLAN_CMD --> UT_PHASES
-    UT_PHASES -->|## Delegate Skills| UT_GEN
+    UT_PHASES -->|"Delegate Skills / Delegate Agents"| UT_GEN
     UT_SKILL -.->|conventions| UT_GEN
     UT_GEN --> TEST_FILES
     SPEC_UT -.->|optional input| UT_PLAN_CMD
@@ -268,7 +268,7 @@ flowchart TD
     class SPEC_UT,UT_SKILL reference
 ```
 
-Dùng `/tdk-plan <id> --ut-backfill` (hoặc `--tdd` cho tests-first phases) để fold unit-test planning vào `plan.md` phases. Test-mode phases có các row `Test Quality Gate` trước khi implementation được mark done: TDK sở hữu baseline rubric, traceability, và gate row completion; consumer test skill trong `## Delegate Skills` sở hữu framework commands và numeric coverage policy. `--sub-workspace` target workspace cụ thể, ví dụ `backend`, `frontend`, `--module` narrow xuống một module, và `--standalone` trên `--ut-backfill` bỏ qua spec dependency cho existing code.
+Dùng `/tdk-plan <id> --ut-backfill` (hoặc `--tdd` cho tests-first phases) để đưa unit-test planning vào `plan.md`. Backfill **chỉ dùng test route**; TDD lấy test delegates trước domain delegates. Route có thể dùng `/skills`, `@executor` hoặc cả hai, thành `## Delegate Skills` và `## Delegate Agents` sau `Test Quality Gate`. TDK sở hữu baseline rubric, traceability và gate row completion trước khi phase done; consumer test toolset/executor sở hữu framework commands và numeric coverage policy. `--sub-workspace` chọn workspace, `--module` thu hẹp module, còn `--standalone` trên `--ut-backfill` bỏ spec dependency cho code hiện có. Xem [routing và readiness](skills-guide.md#detailed-mode-notes) để hiểu refresh có approval và ranh giới static/runtime loading.
 
 Để cài Codex harness, hãy materialize `.specify/codex-plugins/**` trong
 consumer bằng setup CLI `convert --all-plugins`, rồi chạy manifest compute với
@@ -367,9 +367,9 @@ Luôn chạy `config:diff` trước `config:sync` để preview changes. Dùng `
 | `contracts/*.{json,yaml,yml,graphql,proto}` | `/tdk-plan` | Declared machine consumer cộng validation command | Generator, validator, runtime, hoặc downstream integration | Chỉ conditional |
 | `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
-| `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), consumer test skill routing | `/tdk-implement` với `Test Quality Gate` trước khi done | Feature UT |
-| `phases/phase-NN-{module}.md` (backfill sections) | `/tdk-plan --ut-backfill` | `spec.md` (opt), `delegate-routing.md` | consumer test skill qua `## Delegate Skills`, rồi gate validation | Feature UT |
-| `*.test.ts` / `test_*.py` etc. | consumer test skill | `phases/phase-NN-{module}.md` | Test runner | Feature UT |
+| `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), test/domain routing (TDD) hoặc chỉ test routing (backfill) | `/tdk-implement` với readiness và `Test Quality Gate` trước khi done | Feature UT |
+| `phases/phase-NN-{module}.md` (backfill sections) | `/tdk-plan --ut-backfill`; `--refresh-routing` đã duyệt cho todo delegates | `spec.md` (opt), chỉ test route trong `delegate-routing.md` | consumer test skills và/hoặc executor qua hai delegate sections, rồi kiểm tra gate | Feature UT |
+| `*.test.ts` / `test_*.py` etc. | consumer test toolset/executor | `phases/phase-NN-{module}.md` | Test runner | Feature UT |
 | `.specify/.specify.json` | `/tdk-sub-workspace-init` | Project config | `config:*`, unit-test routing, sub-workspace docs | Project setup |
 | `document-manager.md` | `/tdk-config-index` | Tất cả docs files | Manual reference, LLM tools | Khi cần |
 

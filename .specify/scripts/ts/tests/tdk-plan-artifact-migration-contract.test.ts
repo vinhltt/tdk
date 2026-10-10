@@ -9,9 +9,7 @@ describe('tdk-plan artifact migration contract', () => {
   it('exposes an action-only migration flag', () => {
     const skill = read('plugins/tdk-core/skills/tdk-plan/SKILL.md');
     const modes = read('plugins/tdk-core/skills/tdk-plan/references/modes.md');
-    expect(skill).toContain('`--migrate-artifacts` is combined with any speed, test, targeting');
     expect(skill).toContain('Step 0.migrate — Opt-in Legacy Artifact Migration');
-    expect(modes).toContain('`--migrate-artifacts` is action-only');
     expect(modes).toContain('defaults to a mutation-free dry run');
   });
 

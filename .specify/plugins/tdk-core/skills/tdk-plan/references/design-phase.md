@@ -67,8 +67,11 @@ Mode: **embedded — reasoning technique only.**
 7. Reject research-only, investigate-only, and evaluate-only phases. Keep
    ordinary evidence gathering in Step 3a research. Create `phase_type: spike`
    only for an executable experiment/prototype with concrete deliverables and a
-   decision gate; initialize every direct dependent as `blocked` until approval
-   or replan.
+   decision gate; initialize every direct dependent as `blocked` in the finalized
+   output until approval or replan. Within the invocation-owned generation
+   transaction only, draft it as `todo` for routing injection, then finalize
+   `blocked` before post-write validation or reporting; never reset an existing
+   untouched dependent or leave a completed plan with a `todo` spike dependent.
 
 ## Parallel Safety Classification
 
@@ -121,49 +124,13 @@ metadata to `delegate-routing.md`.
 
 **Spec tag pre-hint**: If spec.md contains `[sw/module]` tags on ## 5. User Requirements & Testing/## 6. Functional Requirements, use them to pre-populate the subworkspace→phase mapping BEFORE scanning `## Related Code Files`. Tags provide intent; file paths provide verification.
 
-**Skip if:** `SKILL_ROUTING` is empty (file missing or parse failure).
+**Timing:** Write all generated phase bodies without delegate sections and with matching provisional `todo` statuses in frontmatter and the plan table; retain their required final statuses in memory. Step 3d follows **Generation Routing Transaction** in `delegate-routing-injection.md`: `routing phase-delegates check --plan <plan.md> --phase N...`, then `apply --snapshot <digest> --allow-in-progress-plan --phase N...` with exactly the same sorted, unique non-negative invocation phase set (`0`/`00` are equivalent). Render one `--phase N` per new/rewritten/appended draft; append never includes old phases. Inject every draft, including future blocked dependents, then finalize those dependents to `blocked` in both status sources before the existing post-write gates and reporting. Use the full project-root/Bun and status-update commands from that reference; no refresh/preflight caller may reset existing statuses or mutate non-`todo` phases.
 
-**Pre-injection refresh:** Re-read `{docs.path}/custom-workflow/delegate-routing.md` to refresh `SKILL_ROUTING` before injection. Prevents context drift from intermediate steps (memory, research, cross-plan deps loaded between Step 0.1b and 3b).
+The resolver output is authoritative. It reads current routing at check time, so do not refresh the earlier in-memory map to recompute assignments. Never skip it merely because `SKILL_ROUTING` was empty: `missing` means opt-out, `unreadable` is an error, and `present-empty` is authoritative empty routing. Resolver errors use the pre-mutation byte snapshots and Step 3d rollback; static readiness failures retain valid generated files for a NOT RUNNABLE report.
 
-**Timing:** Inline — inject while creating each phase, NOT as a post-processing pass. Phase N's assignment informs Phase N+1's choices.
+**Mode behavior owned by the resolver:** Non-test delegates belong after Key Insights and before Requirements; TDD delegates after Test Quality Gate and before Regression Gate; UT backfill delegates immediately after Test Quality Gate. Spikes (`phase_type: spike`) always anchor after Key Insights, whatever the mode. Skills precede agents, and empty groups emit no section. TDD combines the test route before the phase-domain route; backfill remains test-route-only. The plan-level `test_mode` controls this behavior for non-spike phases.
 
-**Exclusion:** None. TDD/backfill phases (`test_mode != none`) receive `## Delegate Skills` and `## Delegate Agents` injection the same as any other phase — see Test Mode Phase Generation below for ordering when both a test skill and an implementation delegate apply.
-
-For each phase being created:
-
-1. **Identify target sub-workspace(s):**
-   - Extract file paths from phase's `## Related Code Files`
-   - Match against `PROJECT_CONTEXT.subWorkspaces[].path` (prefix match)
-   - If no subWorkspaces configured (monolith) → use "global"
-   - If ambiguous (multiple sub-workspaces) → merge skill sets
-
-2. **Detect phase domain** from title/description:
-   - test/UT/spec keywords → "test"
-   - database/schema/migration → "database"
-   - UI/component/screen/mockup → "design" + "implement"
-   - API/endpoint/service → "implement"
-   - research/exploration → "research"
-   - fallback → "implement"
-
-3. **Lookup delegates:** `SKILL_ROUTING[subWorkspace][domain]`
-   - Primary: matched sub-workspace + matched domain
-   - Fallback: `SKILL_ROUTING["global"][domain]`
-   - If no match at all → skip injection for this phase
-   - Split the resolved delegates by token prefix into two groups: `/`-prefixed **skills** (toolset) and `@`-prefixed **agents** (executor). Each group keeps routing order.
-
-4. **Inject `## Delegate Skills` and `## Delegate Agents`** into phase body — `## Delegate Skills` first, `## Delegate Agents` immediately after it:
-   - Non-test phases inject `## Delegate Skills` after `## Key Insights` and before `## Requirements`.
-   - TDD phases inject `## Delegate Skills` after `## Test Quality Gate` and before `## Regression Gate`.
-   - UT backfill phases inject `## Delegate Skills` immediately after `## Test Quality Gate`.
-   - `## Delegate Agents` always goes directly after the `## Delegate Skills` section, at whichever of those positions applies. When the skills group is empty, `## Delegate Agents` takes that position itself.
-   - Skill bullet: `` `/{skill-name}` `` — {brief purpose from routing file context}
-   - Agent bullet: `` `@{agent-name}` `` — {brief purpose from routing file context}
-   - One bullet per delegate, ordered as listed in routing file.
-   - **Omit a section entirely when its group is empty.** A domain routed to skills only produces exactly the phase body it produced before agent routing existed — no empty `## Delegate Agents` heading. A domain routed to agents only emits no `## Delegate Skills` heading.
-   - For `test_mode: tdd` phases, list the routed `test` skill first, then the routed implementation delegate (if any) for the phase's domain; the same routing order applies inside `## Delegate Agents`.
-   - **Idempotency — both sections, same rule:** detect `^## Delegate Skills$` and `^## Delegate Agents$` and replace everything from that heading until the next `^## ` heading (or EOF); never append a duplicate. When a section exists but its group is now empty, delete the heading and its body. When only one of the two exists, keep it in place and insert the missing one so the file ends with `## Delegate Skills` before `## Delegate Agents`.
-
-5. **EC-11 advisory** (once per plan, not per phase): if any `PROJECT_CONTEXT.subWorkspaces[].name` has no corresponding `##` section in delegate routing file → warn: "Sub-workspace '{name}' has no skill routing — using global defaults."
+**EC-11 advisory** (once per plan, not per phase): if any `PROJECT_CONTEXT.subWorkspaces[].name` has no corresponding `##` section in delegate routing file → warn: "Sub-workspace '{name}' has no skill routing — using global defaults."
 
 ## Test Mode Phase Generation
 

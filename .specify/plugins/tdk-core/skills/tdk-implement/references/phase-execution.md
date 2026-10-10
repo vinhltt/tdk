@@ -24,7 +24,8 @@ Execution pseudo-code, ascending `row.number`:
    d1. Run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-phase-file.ts "{phasePath}" --plan "{FEATURE_DIR}/plan.md" --phase-number {row.number} --json)`.
       Validation failure STOPs before status mutation.
    d2. Apply `## Sub-Workspace Branch Context` below when `GIT_MAP` exists.
-   e0. Run routing preflight from 7A. If it cancels, STOP before status mutation.
+   e0. Run routing preflight from 7A, then Tier 1 of `### Delegate Skill Loading Requirement` for every actual routed agent.
+       Run readiness even when current routing is empty; cancellation or a readiness failure STOPs before status mutation.
    e. Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" in_progress)` -> phase file FIRST
       Run: `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} in_progress)` -> plan.md SECOND
    f. Execute phase per phase-NN-*.md instructions
@@ -144,10 +145,10 @@ this section. Read the phase for `## Delegate Agents` before applying anything b
 
 If the phase file contains a `## Delegate Skills` section and no `## Delegate Agents` section, execute it before generic implementation.
 
-Parsing rules:
+Parsing uses the shared resolver's line-based, fence-aware `parsePhaseDelegates` scan, not a full CommonMark parser. It masks examples inside its recognized fences. With an opener indented one to three spaces and mismatched closing indentation or no closer, it can disagree with a CommonMark reader about later delegate headings; an unclosed list-item fence may hide a real section from this scan. That read-only/no-op limitation remains. Routing preflight refuses otherwise admitted byte changes as `fence_container_ambiguous` until the user aligns/closes the fence manually; true byte no-ops and matching-indent fences remain supported. Reading a section never authorizes rewriting non-clean body content.
 
-1. Find heading `^## Delegate Skills$`.
-2. Read bullet lines until the next `^## ` heading or EOF.
+1. Find heading `^## Delegate Skills$` outside fences identified by the line-based scan.
+2. Read prose bullet lines until the next recognized unindented ATX boundary (`^# ` or `^## `) outside fenced code, or EOF, skipping fenced content. Indented/tab-separated ATX and setext headings are not recognized boundaries.
 3. For each bullet, extract the first backticked slash-prefixed token, e.g. `` `/my-test-skill` ``.
 4. If no backticked token exists, extract the first raw slash-prefixed token, e.g. `/my-test-skill`.
 5. Ignore placeholder bullets containing `{`, `}`, `your-`, or `(default`.
@@ -201,37 +202,109 @@ main session does not invoke them itself. With no agent routed, the main session
 it does today. A phase with only `/skill` delegates therefore behaves identically to before this section
 existed.
 
-Parsing rules:
+Parsing uses the shared resolver's line-based, fence-aware `parsePhaseDelegates` scan, not a full CommonMark parser. It masks examples inside its recognized fences. With an opener indented one to three spaces and mismatched closing indentation or no closer, it can disagree with a CommonMark reader about later delegate headings; an unclosed list-item fence may hide a real section from this scan. That read-only/no-op limitation remains. Routing preflight refuses otherwise admitted byte changes as `fence_container_ambiguous` until the user aligns/closes the fence manually; true byte no-ops and matching-indent fences remain supported. Reading a section never authorizes rewriting non-clean body content.
 
-1. Find heading `^## Delegate Agents$`.
-2. Read bullet lines until the next `^## ` heading or EOF.
+1. Find heading `^## Delegate Agents$` outside fences identified by the line-based scan.
+2. Read prose bullet lines until the next recognized unindented ATX boundary (`^# ` or `^## `) outside fenced code, or EOF, skipping fenced content. Indented/tab-separated ATX and setext headings are not recognized boundaries.
 3. For each bullet, extract the first backticked at-prefixed token, e.g. `` `@my-backend-agent` ``.
 4. If no backticked token exists, extract the first raw at-prefixed token, e.g. `@my-backend-agent`.
 5. Ignore placeholder bullets containing `{`, `}`, `your-`, or `(default`.
 6. Preserve bullet order and deduplicate exact agent names.
 
-### Agent Tool Requirement
+### Delegate Skill Loading Requirement
 
-Before dispatching, read the routed agent's definition and check its tool list.
+**Tier 1 — static readiness.** Run in Step 7A after resolving delegate drift and before the first
+`in_progress` status transition. Check every actual routed agent, including manually declared delegates
+when the routing file is missing/empty. This is a read-only gate, not executor dispatch. An agent-only route
+still needs a resolved agent binding, but an empty parsed `## Delegate Skills` toolset needs no skill-loader
+check and adds no implicit `read` or `Skill` requirement.
 
-If the phase has a non-empty `## Delegate Skills` section and the routed agent's definition does not include
-the `Skill` tool, STOP — do not dispatch, leave the phase `in_progress`, and emit the F3 recovery reminder
-with:
+Select rules from the exact subagent-dispatch primitive the controller is about to call:
+OMP `task`; Claude `Agent` or `Task`. Phase-7 G3 retry (Claude CLI, `claude-sonnet-5-5`) emitted
+`tool_use` name `Agent` with `subagent_type` while `init.tools` listed `Task`, so both names select the
+Claude rule set. Different capitalization and any other/unobserved primitive are `unverified`; never infer
+a harness from environment, paths, installation metadata, or canary output.
+Claude dispatch exposure is not proof of successful Claude preload or inherited-`Skill` behavior.
+
+Resolve bindings and skill availability under that rule set:
+
+| Dispatch primitive | Supported agent scopes, in precedence order | Delegate skill locator |
+|---|---|---|
+| `task` | Project `.omp/agents/*.md`, then the OMP user agent directory (normally `~/.omp/agent/agents/*.md`) | `skill://{skill-name}` |
+| `Agent` / `Task` | Project `.claude/agents/*.md`, then `~/.claude/agents/*.md` | `.claude/skills/{skill-name}/SKILL.md` or the resolved plugin skill |
+
+Scan agent definitions in each scope, matching exact frontmatter `name`, **not the filename**; the first
+matching name wins, project before user (OMP uses lexicographic filename order within a directory).
+Use the dispatcher's effective user directory if configured; an unresolved directory or unreadable/
+unparsable definition that prevents establishing the winning binding is `unverified`, not permission to
+guess or choose a lower-precedence agent. Missing directories are empty scopes. No match in the supported
+scopes is `agent-not-found`; list the scanned scopes and explain that managed, CLI, plugin, extension, and
+bundled agent scopes are unsupported for routed executors in this version. Do not auto-discover a replacement.
+
+For a non-empty toolset, resolve **each** skill in listed order. Read the Claude skill definition at its
+resolved local/plugin locator; for OMP, read each exact `skill://{skill-name}` from the main session.
+A missing skill is `skill-not-found`; unreadable or ambiguous evidence is `unverified`. Main-session
+readability proves availability only, not that a custom child can load it. Skill metadata and loader/tool
+semantics that cannot be parsed or established also remain `unverified`, never "incompatible".
+
+Apply the capability table only after binding and availability checks pass:
+
+| Dispatch primitive | Capability evidence for the routed toolset | Tier 1 verdict |
+|---|---|---|
+| `task` / `Agent` / `Task` | Empty toolset; agent binding resolved | `ready` without a loader check |
+| `task` | Proven G5 custom-child URI loading, with effective `read` explicitly listed or inherited by omitted `tools` per G2 | `ready` |
+| `task` | G5 failed, not run, or otherwise unproven | `unverified` even if the main session can read every URI |
+| `task` | G5 proven, but an explicit effective tool list has no `read` | `no-loader`, even with full `autoloadSkills` coverage |
+| `Agent` / `Task` | Explicit effective `Skill` grant, not denied by `disallowedTools` | `ready` under the existing explicit-tool contract |
+| `Agent` / `Task` | `tools` omitted (inherits the session toolset), `Skill` not denied by `disallowedTools`, no delegate has `disable-model-invocation: true` | `ready` (G3 P7: child called `Skill` and returned the body) |
+| `Agent` / `Task` | Every delegate in the agent's `skills:` preload, none has `disable-model-invocation: true` | `ready` without an effective `Skill` grant (G3 P5: full body loaded, 0 child tool calls) |
+| `Agent` / `Task` | Explicit tools without an effective `Skill` (absent or denied), and a delegate is not fully preloaded: missing from `skills:` or `disable-model-invocation: true` | `no-loader` (P6: a disabled skill is not preloaded; no `Skill` path exists to load it) |
+| `Agent` / `Task` | Omitted or wildcard/unknown `tools` and a delegate has `disable-model-invocation: true` | `unverified` (child `Skill` access to a disabled skill was not exercised) |
+| Any other primitive, or unresolved effective-tool semantics | No applicable proven rule | `unverified` |
+
+Evidence boundary: G1, G2, and G5 were exercised on OMP 18.8.5: `skills` conversion preserves
+`autoloadSkills`, omitted `tools` includes `read`, and a custom child actually read `skill://`.
+Record matching `autoloadSkills` coverage as G1 evidence only; it never replaces the G5 + `read` contract.
+Honor explicit tool restrictions; omission is not an empty toolset, and unknown wildcard/restriction
+semantics are not a grant. Do not silently add tools or build a generic capability-analysis subsystem.
+
+G3 was exercised on the Claude CLI (`claude-sonnet-5-5`, dispatch `tool_use` name `Agent`): P5 explicit
+`Read,Edit,Write` plus `skills:` preload returned the full body with no child tool call; P6 a
+`disable-model-invocation: true` skill was **not** preloaded and an unknown `skills:` name was silently
+ignored, so Tier 1 itself must catch missing skills; P7 omitted `tools` with no preload reached the body
+through the child `Skill` tool. These results hold only for the tested settings; effective grants must still
+respect `disallowedTools` and known session restrictions, and cases outside the table stay `unverified`.
+Never mark preload `ready` from documentation alone, and never accept a partial preload as complete.
+
+Keep the per-agent result as `delegateReadiness`: dispatch primitive, resolved agent path, ordered skill
+locators, effective-loader evidence (and G1 autoload coverage where applicable), verdict, and failing
+delegates/reason codes. In parallel mode this belongs to the immutable admission snapshot. Before dispatch,
+changed agent/skill definitions or a changed dispatch primitive invalidate readiness; recheck before any
+status transition rather than dispatching against stale evidence.
+
+If any routed agent fails, STOP without dispatch or status writes and report every failing delegate:
 
 ```text
-Routed agent @{agent-name} cannot call the phase's delegate skills: its definition does not list the `Skill` tool.
-Phase NN left in_progress. Add `Skill` to @{agent-name}'s tool list, or remove @{agent-name} from delegate-routing.md so the main session runs ## Delegate Skills itself, then rerun /tdk-implement {TASK_ID}.
+STOP BLOCKED: delegate readiness for phase NN
+Dispatch primitive / rule set: {task | Agent | Task | unverified primitive}
+Agent: @{agent-name}; resolved definition: {path, or not resolved}
+Scanned agent scopes: {project scope, user scope}
+Failing delegates: {agent/skill names with agent-not-found, skill-not-found, no-loader, or unverified}
+Evidence: {missing loader/definition/skill or unverified capability, with the relevant path}
+Phase NN remains todo; no status mutation. Fix readiness and rerun /tdk-implement {TASK_ID}.
 ```
 
-Without the `Skill` tool the phase's `## Delegate Skills` list is decorative — the agent silently cannot use
-its own toolset. Name that exact cause; never fall back to running the skills in the main session instead.
+Tier 1 failure emits **no F3 recovery reminder**: execution never started. Never fall back to invoking the
+routed skills in the main session, silently remove the agent route, or ask to add Claude `Skill` to OMP tools.
 
 ### Execution Context
 
-Dispatch one agent at a time, in listed order, using the agent name as `subagent_type`:
+Dispatch one agent at a time, in listed order, through the primitive selected by Tier 1:
+Claude `Agent`/`Task` uses `subagent_type: {agent-name}`; OMP `task` uses `agent: {agent-name}`.
+Carry the same resolved agent binding and `delegateReadiness`, not a filename-derived replacement.
 
 ```text
-subagent_type: {agent-name}
+Agent dispatch parameter: {subagent_type for Agent/Task, agent for task}: {agent-name}
 
 Context:
 - FEATURE_DIR: {FEATURE_DIR}
@@ -243,10 +316,29 @@ Context:
 - Toolset: the skills listed in this phase's `## Delegate Skills`, in listed order
 - Write targets: this phase's `## Related Code Files` Modify/Create/Delete bullets
 - Success criteria: this phase's `## Success Criteria`
+- delegateReadiness: {the passing Tier 1 result for this agent}
+
+Load before writing:
+- /{skill-name}: {skill://{skill-name} for task; Skill invocation or proven full-body preload with resolved locator for Agent/Task}
+  Repeat one entry for every delegated skill in listed order; an empty toolset is "none — no skill load required".
+  Load every listed skill's full instructions before your first write. Autoload/preload presence alone is not a load receipt.
+  Report each loaded skill, its locator/loading method, and its nonce-free first heading.
+  On any load failure, name the failing skill and error, do not write, and end with exactly Status: BLOCKED.
 
 End your report with exactly one line:
 Status: DONE | DONE_WITH_CONCERNS | BLOCKED | NEEDS_CONTEXT
 ```
+
+The pipe-separated `Status:` values above are alternatives, **not** a line to emit. Select exactly one
+literal final line: `Status: DONE`, `Status: DONE_WITH_CONCERNS`, `Status: BLOCKED`, or `Status: NEEDS_CONTEXT`.
+For OMP, use `read` on each supplied skill URI even when `autoloadSkills` covers it. For Claude, use the
+effective `Skill` tool or verify the proven full-body preload in the executor's own context. The controller
+does not load on the executor's behalf. Empty toolsets require no load or load receipt.
+
+**Tier 2 — dispatch-time load.** A failed load ends `Status: BLOCKED`; because the controller already
+transitioned before dispatch, leave the phase `in_progress` and emit the F3 recovery reminder with the
+failing skill and executor report. This is distinct from the Tier 1 `todo` STOP. Serial and wave workers
+receive this identical `Load before writing:` block.
 
 ### Status Protocol
 
@@ -264,15 +356,16 @@ Any value other than the literal `DONE` — including a missing, malformed, or d
 STOPs, leaves the phase `in_progress`, and emits the F3 recovery reminder with the agent's report attached.
 Do not infer success from a confident-sounding report, and do not downgrade a non-`DONE` status because the
 report reads complete.
+For a non-empty toolset, also require the per-skill load receipts from the execution context. A report with
+missing receipts is not delegate success even if its final line is `Status: DONE`: STOP, leave the phase
+`in_progress`, and emit the F3 recovery reminder. Static readiness alone never proves a dispatched load.
 
 Required behavior:
 - Run agents in listed order; do not invent, auto-discover, or replace a missing routed agent.
-- If a listed agent is unavailable, STOP with:
-
-```text
-Delegate agent not found: @{agent-name}
-Phase NN left in_progress. Add/fix the agent in delegate-routing.md or edit this phase's ## Delegate Agents, then rerun /tdk-implement {TASK_ID}.
-```
+- If binding/availability fails before the transition, use the Tier 1 STOP above and keep `todo`.
+- If dispatch itself fails after the transition (including an agent becoming unavailable), attach the
+  dispatch error, STOP, leave `in_progress`, and emit the F3 recovery reminder. Never substitute an agent or
+  run its delegated skills in the main session.
 
 - After every agent reports `DONE` for a non-test-mode phase, validate the phase success criteria if present, then mark the phase done.
 - Agent completion alone cannot mark a TDD or backfill phase done. Test-mode phases must continue through `## Test Quality Gate` enforcement first.
