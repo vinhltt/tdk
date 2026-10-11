@@ -6,6 +6,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.121.0] - 2026-10-11
+
+### Added
+- **[tdk-core]** `/tdk-review <task-id> [--phase NN] [--quick|--deep] [focus]` reviews an implemented task against the spec with read-only reviewers and writes one report under `reviews/` with `/tdk-plan` fix-phase seeds.
+- **[tdk-utils]** `tdk-code-reviewer` agent: four lenses (spec, quality, security, reliability), JSON findings.
+- **[tdk-scaffold]** Recommend and scaffold support the `review` routing domain.
+- **[Scripts]** `routing phase-delegates resolve --domain <d> --path <files...>`; shared `create-new-file` and `path-within` utilities.
+
+### Changed
+- **[tdk-core]** `/tdk-plan` Append pre-fills the description from `USER_CONTENT`; `/tdk-implement` suggests `/tdk-review` when it finishes.
+- **[Release]** `distribute.json` uses `**/node_modules/`, `**/tests/` and `**/__tests__/`. 18 test files stop shipping: 5 in `tdk-utils`, 13 in `tdk-core/__tests__/`.
+
 ## [1.120.0] - 2026-10-10
 
 ### Added

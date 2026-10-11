@@ -397,7 +397,7 @@ function probeBranch(repositoryRoot: string, workingRoot: string = repositoryRoo
  * membership in `worktree list --porcelain` proves git itself considers this path a live worktree
  * rather than a stale directory that merely points at the right place.
  */
-function isRegisteredWorktree(repositoryRoot: string, workingRoot: string, repoCommonDir: string): boolean {
+export function isRegisteredWorktree(repositoryRoot: string, workingRoot: string, repoCommonDir: string): boolean {
   let workingCommonDir: string;
   try {
     workingCommonDir = commonDirOf(workingRoot);
@@ -423,7 +423,7 @@ function isRegisteredWorktree(repositoryRoot: string, workingRoot: string, repoC
  * `rev-parse --git-common-dir` answers relative to the repository (`.git`), so it has to be
  * resolved against `root` and not against this process's working directory.
  */
-function commonDirOf(root: string): string {
+export function commonDirOf(root: string): string {
   const reported = runGit(['-C', root, 'rev-parse', '--git-common-dir']);
   return realpathSync(isAbsolute(reported) ? reported : join(root, reported));
 }

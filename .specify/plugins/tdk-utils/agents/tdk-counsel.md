@@ -11,7 +11,7 @@ color: cyan
 model: opus
 tools: Glob, Grep, Read, Bash, WebFetch, WebSearch
 metadata:
-  version: "4.2.0"
+  version: "4.5.0"
 ---
 
 # tdk-counsel
@@ -112,6 +112,7 @@ none of that, scout for it yourself rather than refusing.
 | Question | Owner |
 |---|---|
 | Review a plan that is already written, through fixed hostile lenses | `tdk-red-team-skeptic`, `tdk-red-team-security`, `tdk-red-team-reliability` via `/tdk-plan --red-team` |
+| Review implemented code against its spec, through fixed lenses | `tdk-code-reviewer` via `/tdk-review` |
 | Choose or recover a project-level architecture, producing an artifact | `/tdk-architecture-advisor` |
 | Gather external facts, documentation, or library behavior | `researcher` |
 | Resolve ambiguity in an existing spec by asking the user | `/tdk-clarify` |

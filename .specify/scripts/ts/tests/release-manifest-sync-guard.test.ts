@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { isExcludedByReleaseRules } from "../../../../.claude/skills/tdk-bump/scripts/release-manifest-resolver";
 
 const TDK_ROOT = resolve(import.meta.dir, "../../../..");
 const MANIFEST_PATH = join(TDK_ROOT, ".specify", "release-manifest.json");
@@ -53,14 +54,29 @@ describe("shipped release manifest stays in sync with the source tree", () => {
     expect({ missing, mismatched }).toEqual({ missing: [], mismatched: [] });
   });
 
-  test("no entry falls under a doNotShip prefix", () => {
+  // The resolver prunes while walking, so a rule is applied to every ancestor directory, not only to the file path.
+  // Matching the file alone misses `**/tests{,/**}`-style globs at depth.
+  function isShipExcluded(path: string, rules: readonly string[]): boolean {
+    const parts = path.split("/");
+    return parts.some((_, index) => isExcludedByReleaseRules(parts.slice(0, index + 1).join("/"), rules));
+  }
+
+  test("no entry falls under a doNotShip rule", () => {
     const manifest = readJson<ReleaseManifest>(MANIFEST_PATH);
-    const offenders = Object.keys(manifest.files).filter((path) =>
-      manifest.rules.doNotShip.some((rule) =>
-        rule.endsWith("/") ? path.startsWith(rule) : path === rule
-      )
-    );
+    const offenders = Object.keys(manifest.files).filter((path) => isShipExcluded(path, manifest.rules.doNotShip));
 
     expect(offenders).toEqual([]);
+  });
+
+  // Runs against the live distribute.json, so it does not depend on the manifest being regenerated first.
+  test("distribute.json excludes node_modules, tests and __tests__ at any depth and keeps lookalike names", () => {
+    const { doNotShip } = readJson<{ doNotShip: string[] }>(DISTRIBUTE_JSON_PATH);
+
+    for (const path of ["x/a/node_modules/y/z.js", "x/a/tests/b/c.md", "x/__tests__/d.cjs", "x/tests/top.md"]) {
+      expect({ path, excluded: isShipExcluded(path, doNotShip) }).toEqual({ path, excluded: true });
+    }
+    for (const path of ["x/tests-helper.cjs", "x/latests/a.md", "x/a/keep.md"]) {
+      expect({ path, excluded: isShipExcluded(path, doNotShip) }).toEqual({ path, excluded: false });
+    }
   });
 });

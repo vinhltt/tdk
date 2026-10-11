@@ -60,7 +60,7 @@ Normalize each token exactly as `delegate-routing-file-contract.md` specifies �
 - `backend.database` → `["/your-database-skill"]`
 - `backend.test` → `["/your-backend-unit-test-skill"]`
 
-Domains are freeform strings (e.g. research, implement, test, database, design, clarify, styling). The built-in unit-test implementation lookup uses the single `test` domain only. Do not introduce separate `test-plan` or `test-implement` domains.
+Domains are freeform strings (e.g. research, implement, test, database, design, clarify, styling). `review` is an explicit domain: only `/tdk-review` reads it, through `routing phase-delegates resolve`, and it is never injected into phase delegate sections. The built-in unit-test implementation lookup uses the single `test` domain only. Do not introduce separate `test-plan` or `test-implement` domains.
 
 The resolver selects the `test` route for TDD/backfill phases from the plan-level `test_mode` (see `references/modes.md`). No separate planning adapter skill reads this file on `/tdk-plan`'s behalf.
 

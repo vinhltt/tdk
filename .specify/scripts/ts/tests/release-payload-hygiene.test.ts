@@ -68,3 +68,30 @@ test('release generation ships handoff source, bundled runtime, build metadata, 
 
   expect(Object.keys(manifest.files).sort()).toEqual(shippable.sort());
 });
+
+test('release generation ships the review report-writer and scope sources, bundles, build metadata, and licenses without dependencies or its tests', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'review-payload-'));
+  temporary.push(root);
+  const skill = '.specify/plugins/tdk-core/skills/tdk-review/';
+  const shippable = [
+    `${skill}scripts/review-write-report.ts`,
+    `${skill}scripts/review-write-report.js`,
+    `${skill}scripts/review-scope.ts`,
+    `${skill}scripts/review-scope.js`,
+    `${skill}scripts/build.ts`,
+    `${skill}scripts/tsconfig.json`,
+    `${skill}scripts/package.json`,
+    `${skill}scripts/bun.lock`,
+    `${skill}scripts/RUNTIME-LICENSE.txt`,
+  ];
+  const excluded = [`${skill}scripts/node_modules/x/index.js`, `${skill}tests/review-scope.test.ts`, `${skill}tests/review-write-report.test.ts`];
+  for (const path of [...shippable, ...excluded]) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), `fixture bytes for ${path}\n`);
+  }
+  writeFileSync(join(root, 'distribute.json'), readFileSync(join(ROOT, 'distribute.json')));
+
+  const manifest = await buildReleaseManifest(root);
+
+  expect(Object.keys(manifest.files).sort()).toEqual(shippable.sort());
+});

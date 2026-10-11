@@ -76,6 +76,10 @@ describe('phase delegates route states and detection', () => {
     expect(detectDomains('Refactor', 'UT migration', ['src/components/screen.ts'])).toEqual(['test', 'database', 'design', 'implement']);
   });
 
+  it('never auto-detects the explicit review domain, whatever the text says', () => {
+    expect(detectDomains('Review the code review of the reviewer', 'review', ['src/review/scope.ts'])).not.toContain('review');
+  });
+
   it('takes only the title, Overview body and Related Code Files paths as domain inputs', () => {
     const input = extractPhaseRoutingInput(STANDARD.replace('## Requirements\n', '## Requirements\nResearch schema test UI should not affect domain detection.\n'));
     expect(input.title).toBe('Phase 01: API service');

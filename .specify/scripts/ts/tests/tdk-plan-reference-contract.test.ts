@@ -309,4 +309,16 @@ describe('tdk-plan reference contract', () => {
     expect(researchPhase).toContain('tdk-memory-query');
     expect(researchPhase).toContain('tdk-memory-agent');
   });
+
+  it('pre-fills the Append description from a non-empty USER_CONTENT after one confirm and keeps the blank prompt otherwise (AC7)', () => {
+    const existing = readFileSync(resolve(REFERENCES_DIR, 'handle-existing-plan.md'), 'utf-8');
+    const append = existing.slice(existing.indexOf('### Interactive append flow'), existing.indexOf('2. **F4 Extended AI Context**'));
+    expect(append).toMatch(/`USER_CONTENT` non-empty[^\n]*pre-fill|`USER_CONTENT` non-empty[^\n]*proposed description/);
+    expect(append).toMatch(/one confirm-or-edit question/);
+    expect(append).toMatch(/`USER_CONTENT` empty: prompt/);
+    // The seed is only the description text: the dependency question in step 6 is still asked, never pre-answered.
+    expect(append).not.toMatch(/seed carries/);
+    expect(existing).toMatch(/Ask which existing earlier\s+phases must complete/);
+    expect(readFileSync(MODES_REFERENCE, 'utf-8')).toMatch(/non-empty `USER_CONTENT` pre-fills the proposed phase description after one confirm/);
+  });
 });

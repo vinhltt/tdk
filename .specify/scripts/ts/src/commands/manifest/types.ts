@@ -7,9 +7,10 @@ export type ComponentType = 'skills' | 'agents' | 'hooks' | 'commands';
 
 export const COMPONENT_TYPES: readonly ComponentType[] = ['skills', 'agents', 'hooks', 'commands'];
 
-// Development dependencies, VCS metadata, and transient runtime files are not plugin assets.
+// Development dependencies, tests, VCS metadata, and transient runtime files are not plugin assets. Keep `tests` and
+// `__tests__` in step with distribute.json: the installer hard-fails on any manifest entry the payload does not ship.
 export const EXCLUDE_DIRS: Readonly<Record<string, true>> = {
-  '.git': true, '__pycache__': true, '.logs': true, node_modules: true,
+  '.git': true, '__pycache__': true, '.logs': true, node_modules: true, tests: true, __tests__: true,
 };
 export const EXCLUDE_EXTENSIONS = new Set(['.pyc']);
 

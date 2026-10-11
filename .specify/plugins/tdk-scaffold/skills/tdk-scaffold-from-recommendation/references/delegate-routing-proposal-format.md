@@ -67,7 +67,7 @@ Emit a separate entry for each returned domain in resolver order; do not infer d
 If the resolver is unavailable or errors, report that exact prerequisite; keep derived entries unresolved instead of guessing.
 Use frontmatter `sub_workspace`, or `global` when absent.
 Keep provenance in `reason`: `Derived by scaffold from purpose; domain inferred from routing phase-delegates domains - verify before register.`
-The automatic set is `research|implement|test|database|design`; another explicit domain needs approved rationale and its lookup warning reviewed.
+The automatic set is `research|implement|test|database|design`. `review` is an explicit, non-automatic domain consumed only by `/tdk-review`; emit it only from an approved `review` decision, never from keyword inference, and it carries no warning. Any other explicit domain needs approved rationale and its lookup warning reviewed.
 
 ## Reconcile Each Route
 

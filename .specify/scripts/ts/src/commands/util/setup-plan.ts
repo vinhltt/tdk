@@ -7,8 +7,9 @@ import { Command } from 'commander';
 import { parseDocument, stringify } from 'yaml';
 import {
   loadFeatureEnv, getRepoRoot, getFeaturePaths, writeAgentJson, parseFeatureId, findConfigFile,
-  realpathOrSelf, isWithin,
+  realpathOrSelf,
 } from '../../utils/index';
+import { isWithin } from '../../utils/path-within';
 import { extractFrontmatter } from './parse-plan-frontmatter';
 
 /**

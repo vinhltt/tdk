@@ -9,6 +9,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 ### Fixed
 - `tdk-handoff`: restore the branding-safe upstream identity resource and pinned adapted-source MIT notice so linked resources accompany default and branded installed skills.
 
+## [4.5.0] - 2026-10-11
+
+### Added
+- tdk-code-reviewer: read-only reviewer agent for `/tdk-review` (four lenses, JSON findings)
+
+### Changed
+- tdk-counsel: routes review of implemented code to `/tdk-review`
+- tdk-handoff: `handoff-export.js` rebuilt on the shared create-new utility; behavior unchanged
+- tdk-validate-task-id, tdk-load-project-context: add `tdk-review` to callers
+
 ## [4.4.0] - 2026-10-04
 
 ### Added

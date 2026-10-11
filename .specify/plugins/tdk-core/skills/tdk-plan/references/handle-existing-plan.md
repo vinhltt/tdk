@@ -62,7 +62,9 @@ only a legitimate new Guardian outcome or live authorization may replace them.
 
 ### Interactive append flow
 
-1. Prompt user: `"Describe the phase to append (e.g., 'Add OAuth2 login flow'):"`.
+1. Get the description.
+   - `USER_CONTENT` non-empty (for example a `## Proposed Fix Phases` seed from `/tdk-review`): show it as the proposed description and ask one confirm-or-edit question. Use the confirmed or edited text as the description.
+   - `USER_CONTENT` empty: prompt `"Describe the phase to append (e.g., 'Add OAuth2 login flow'):"`.
 2. **F4 Extended AI Context** — generate phase content with the following context items:
    - User description (from step 1 above).
    - Full contents of `spec.md` for this feature.

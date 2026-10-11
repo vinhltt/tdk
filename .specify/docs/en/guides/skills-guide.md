@@ -139,6 +139,7 @@ Excluded:
 | `/tdk-plan` | Generate implementation plan, or refresh existing phase delegates only. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` is ready for planning; use refresh after approved routing changes, or migration for a legacy feature folder. |
 | `/tdk-implement` | Execute runnable rows from `plan.md ## Phases`. | `<id>`, `--phase NN`, `--no-branch` | A plan exists and one or more implementation phases are ready. |
 | `/tdk-consistency-check` | Cross-artifact consistency check across spec, plan, and constitution. | `<id>`, `--deep` | You need read-only verification across spec, plan, and phases; add `--deep` to verify plan claims against source. |
+| `/tdk-review` | Review an implemented task: diff against spec and phase success criteria, with fix-phase seeds for `/tdk-plan`. | `<id>`, `--phase NN`, `--quick`, `--deep`, `[focus]` | Phases are `done` and you want a code-versus-spec review before shipping; writes one report under `reviews/`. |
 | `/tdk-status` | Show workflow progress and per-repository branch state. | `<id>` | You need a read-only status snapshot, or need to see which branch each repository is on. |
 
 > **Renamed:** `/tdk-analyze` became `/tdk-consistency-check` in tdk-core v13.0.0. The old name no longer resolves — the new name states what the skill actually checks (artifact consistency), and `--deep` adds bounded verification of plan claims against source.
@@ -315,6 +316,7 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
 | 10 | `/tdk-consistency-check <id> [--deep]` | Cross-artifact consistency check; `--deep` verifies plan claims against source |
 | 11 | `/tdk-status <id>` | Show workflow progress and per-repository branch state (read-only, any time) |
+| 12 | `/tdk-review <id> [--phase NN] [--quick\|--deep] [focus]` | Review implemented code against the spec; writes a report with `/tdk-plan` fix-phase seeds |
 | 13 | `/tdk-constitution` (update) or `/tdk-constitution --init <brief\|file>` | Update project authority or initialize constitution and Memory v3 artifacts |
 | 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake and routing report |
 | 15 | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | Existing-repo onboarding and safe setup recommendations |
@@ -376,6 +378,7 @@ For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalo
 | plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` for generation; existing `plan.md` and route file for refresh | `plan.md`, `phases/*.md`; refresh changes delegate sections only | clarify, or approved route change |
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
 | consistency-check | `/tdk-consistency-check <id>` | `--deep` | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
+| review | `/tdk-review <id> [--phase NN]` | `--quick`, `--deep` | `spec.md`, `plan.md ## Phases`, git diff of the done phases | One new `reviews/<timestamp>-<slug>.md` report | implement |
 | status | `/tdk-status <id>` | — | Feature directory, `git-map.md` | Progress report (no file created) | specify |
 
 `/tdk-plan` accepts freeform content after `<id>` in every mode. Default, `--fast`, and `--hard` treat content as planning instruction; `--red-team` treats it as review focus; `--validate` treats it as validation focus. Known mode flags can appear after `<id>` before or after the content. `--tdd` and `--ut-backfill` are independent test-mode flags: they select whether generated phases include tests-first or backfill sections with `Test Quality Gate` rows, and compose with the default or `--hard` speed mode (not `--fast`).

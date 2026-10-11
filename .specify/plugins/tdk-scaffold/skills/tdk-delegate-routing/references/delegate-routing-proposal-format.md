@@ -30,7 +30,7 @@ Rules:
 
 - `entries` must be non-empty.
 - `subWorkspace` should be `global` or a `subWorkspaces[].name` value from config. Unknown sections produce review warnings and must be verified before registration.
-- `domain` is the route key used by planning workflows, such as `research`, `implement`, `test`, `database`, or `design`. Domains outside that auto-detected set produce a warning, because no lookup resolves them.
+- `domain` is the route key used by planning workflows, such as `research`, `implement`, `test`, `database`, or `design`. `review` is an explicit domain read only by `/tdk-review` through `routing phase-delegates resolve`; it is never auto-detected or injected into phases, and it produces no warning. Any other domain outside the auto-detected set produces a warning, because no lookup resolves it.
 - `delegates` must contain at least one delegate. A delegate is a skill name (`/` prefix preferred; a missing `/` is added) or an agent name (`@` prefix, kept verbatim).
 - `operation` is optional and defaults to `register`.
 - The proposal does not authorize route mutation by itself. Obtain `approvalDigest` from `diff`, approve its operations/reasons/warnings, then call `register --approval <approvalDigest> --yes`.

@@ -2,7 +2,7 @@
 // Replaces: detect-config.sh core logic
 
 import { readFileSync, existsSync, realpathSync } from 'node:fs';
-import { resolve, relative, dirname, join, normalize, isAbsolute } from 'node:path';
+import { resolve, relative, dirname, join, normalize } from 'node:path';
 import { SpecifyConfigSchema, type SpecifyConfig, type SubWorkspace, type Module } from './types';
 
 const MAX_SEARCH_DEPTH = 20;
@@ -144,13 +144,6 @@ export function realpathOrSelf(dir: string): string {
   } catch {
     return resolve(dir);
   }
-}
-
-/** True when `descendant` is `ancestor` itself or nested inside it. Both must already be real paths. */
-export function isWithin(ancestor: string, descendant: string): boolean {
-  if (ancestor === descendant) return true;
-  const rel = relative(ancestor, descendant);
-  return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel);
 }
 
 export function parseConfig(configPath: string): { config: SpecifyConfig | null; error: string | null } {

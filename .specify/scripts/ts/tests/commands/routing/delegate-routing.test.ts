@@ -102,6 +102,27 @@ describe('tdk routing delegate command', () => {
     expect(payload.warnings.some((w: string) => w.includes('Legacy routing file detected'))).toBe(true);
   });
 
+  it('registers a review route without a warning, and resolve returns exactly the registered skill and agent (AC6, CLI half)', async () => {
+    const root = makeRoot();
+    writeRoute(root, '## global\n- implement: (default - no delegate)\n\n## backend\n- implement: (default - no delegate)\n');
+    const proposalPath = writeProposal(root, [
+      { subWorkspace: 'backend', domain: 'review', delegates: ['/my-lens', '@my-reviewer'], reason: 'review rules need isolation' },
+      // Control: the warning still fires for a domain no lookup resolves.
+      { subWorkspace: 'global', domain: 'docs', delegates: ['/docs-skill'] },
+    ]);
+    const diff = JSON.parse((await runCli(root, ['routing', 'delegate', 'diff', '--project-root', root, '--proposal', proposalPath])).stdout);
+    expect(diff.warnings.filter((w: string) => w.includes("Domain 'review'"))).toEqual([]);
+    expect(diff.warnings.some((w: string) => w.includes("Domain 'docs'"))).toBe(true);
+
+    const registered = await runCli(root, ['routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', diff.approvalDigest]);
+    expect(registered.exitCode).toBe(0);
+
+    const resolve = async (path: string) => JSON.parse((await runCli(root, ['routing', 'phase-delegates', 'resolve', '--project-root', root, '--domain', 'review', '--path', path])).stdout);
+    expect(await resolve('src/backend/a.ts')).toMatchObject({ ok: true, state: 'present-populated', skills: ['/my-lens'], agents: ['@my-reviewer'] });
+    // A path outside the sub-workspace falls back to global, which has no review route.
+    expect(await resolve('src/elsewhere/b.ts')).toMatchObject({ skills: [], agents: [] });
+  });
+
   it('merges duplicate-route and domain warnings into diff, and registers @agent tokens end to end', async () => {
     const root = makeRoot();
     writeRoute(root, '## global\n- test: /skill-a\n- test: /skill-a\n');

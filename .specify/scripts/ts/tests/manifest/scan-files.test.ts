@@ -23,3 +23,19 @@ it('hashes shipped runtime bytes without ingesting local build dependencies', ()
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+it('leaves test directories out of the plugin inventory at any depth, and keeps lookalike names', () => {
+  const root = mkdtempSync(join(tmpdir(), 'tdk-plugin-inventory-tests-'));
+  try {
+    const kept = ['skills/s/scripts/tool.js', 'skills/s/scripts/tests-helper.cjs', 'skills/latests/a.md'];
+    const dropped = ['tests/top.md', 'skills/s/tests/a.test.ts', 'skills/s/scripts/tests/b.py', '__tests__/c.test.cjs', 'skills/s/__tests__/d.cjs'];
+    for (const path of [...kept, ...dropped]) {
+      mkdirSync(join(root, path, '..'), { recursive: true });
+      writeFileSync(join(root, path), 'x');
+    }
+    expect([...scanPluginFiles(root).keys()].sort()).toEqual([...kept].sort());
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+

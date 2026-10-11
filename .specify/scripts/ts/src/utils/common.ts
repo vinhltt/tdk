@@ -6,8 +6,9 @@ import { existsSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { execFileSync } from 'node:child_process'; // [RT4-7] Never execSync — bash validation hook only
 import {
-  findConfigFile, parseConfig, hostOf, createResolveContext, realpathOrSelf, isWithin,
+  findConfigFile, parseConfig, hostOf, createResolveContext, realpathOrSelf,
 } from './config';
+import { isWithin } from './path-within';
 import { runGit } from './git-env';
 import type { SpecifyConfig } from './types';
 

@@ -1,7 +1,9 @@
 import { Command } from 'commander';
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { findConfigFile, hostOf, isWithin, parseConfig } from '../../../../../scripts/ts/src/utils/config';
+import { findConfigFile, hostOf, parseConfig } from '../../../../../scripts/ts/src/utils/config';
+import { isWithin } from '../../../../../scripts/ts/src/utils/path-within';
+import { createNewFile } from '../../../../../scripts/ts/src/utils/create-new-file';
 import { writeAgentJson } from '../../../../../scripts/ts/src/utils/agent-output';
 import { renderHandoffArtifact, type RenderedHandoffArtifact } from './handoff-artifact';
 import { containsSensitiveHandoffText } from './handoff-redaction';
@@ -55,36 +57,6 @@ function prepareDirectory(root: string, path: string): void {
   if (!checkDirectory(root, path)) throw new ExportError('unsafe_output_path');
 }
 
-/** Create-new only. Cleanup is limited to the inode opened by this invocation. */
-function writeNew(path: string, body: string): void {
-  // Bun on Windows follows dangling final symlinks even with wx; reject every occupied entry first.
-  let existing: fs.Stats | undefined;
-  try { existing = fs.lstatSync(path, { throwIfNoEntry: false }); }
-  catch { throw new ExportError('write_failed', 2); }
-  if (existing) throw new ExportError('collision_exists');
-  let fd: number;
-  try { fd = fs.openSync(path, 'wx', 0o600); }
-  catch (error) {
-    if (errorCode(error) === 'EEXIST') throw new ExportError('collision_exists');
-    throw new ExportError('write_failed', 2);
-  }
-  let identity: fs.BigIntStats | undefined;
-  let closed = false;
-  try {
-    identity = fs.fstatSync(fd, { bigint: true });
-    fs.writeFileSync(fd, body, 'utf8');
-    fs.closeSync(fd);
-    closed = true;
-  } catch {
-    if (!closed) { try { fs.closeSync(fd); } catch { /* Preserve the original write/close failure. */ } }
-    try {
-      const current = fs.lstatSync(path, { bigint: true });
-      if (identity && current.isFile() && current.dev === identity.dev && current.ino === identity.ino) fs.unlinkSync(path);
-    } catch { /* Cleanup failure cannot turn an incomplete capture into success. */ }
-    throw new ExportError('write_failed', 2);
-  }
-}
-
 /** No source collection, Git probes, environment-root selection or replacement writes. */
 export function exportHandoff(selectedRoot: string, slug: string, input: unknown, now = new Date()): ExportResult {
   try {
@@ -102,7 +74,8 @@ export function exportHandoff(selectedRoot: string, slug: string, input: unknown
     prepareDirectory(root, join(root, '.specify'));
     prepareDirectory(root, join(root, '.specify', 'handoffs'));
     const path = `.specify/handoffs/${artifact.date}-${slug}.md`;
-    writeNew(join(root, path), artifact.body);
+    const failure = createNewFile(join(root, path), artifact.body, 0o600);
+    if (failure) throw new ExportError(failure, failure === 'write_failed' ? 2 : 1);
     return { ok: true, path, kind: artifact.kind, redactions: artifact.redactions };
   } catch (error) {
     return error instanceof ExportError

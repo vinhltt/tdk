@@ -27,6 +27,7 @@ Resolve `docs.path` from the raw project `.specify/.specify.json`; default is `.
 - Other `##` headings are sub-workspace names.
 - Route lines use `- domain: <delegate>[, <delegate>]`.
 - A delegate is either a skill (`/skill-name`) or an agent (`@agent-name`).
+- `review` routes are read only by `/tdk-review` (through `routing phase-delegates resolve --domain review`) and are never injected into phase `## Delegate Skills` / `## Delegate Agents` sections.
 - `(default - no delegate)` is a no-op placeholder.
 - HTML-commented examples are preserved but inactive.
 - Unknown prose and comments must survive `register`.

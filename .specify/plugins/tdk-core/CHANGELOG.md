@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.1.0] - 2026-10-11
+
+### Added
+- tdk-review: reviews an implemented task against the spec with read-only reviewers (`--quick`, `--deep`) and writes one report under `reviews/` with `/tdk-plan` seeds
+
+### Changed
+- tdk-plan: Append pre-fills the description from `USER_CONTENT`; `review` is documented as an explicit routing domain that is never injected into phases
+- tdk-implement: completion summaries suggest `/tdk-review`
+
 ## [14.0.2] - 2026-10-10
 
 ### BREAKING

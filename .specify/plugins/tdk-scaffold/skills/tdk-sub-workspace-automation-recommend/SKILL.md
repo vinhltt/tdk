@@ -4,7 +4,7 @@ description: "Recommend skills and agents for one selected sub-workspace from ar
 user-invocable: true
 argument-hint: "--sub-workspace <name> [--no-community-search]"
 metadata:
-  version: "3.0.2"
+  version: "3.0.3"
   author: "VinhLTT"
   category: scaffold
 ---
@@ -74,7 +74,7 @@ Do not use `ck:find-skills`. Use direct CLI/site lookup only, and summarize resu
    - Scan `.claude/agents/*.md`, `.omp/agents/*.md`, and `.specify/plugins/**/agents/*.md`. Read frontmatter `name` and the role/input/output contract of likely matches; do not equate a guide skill with an executor or infer agent identity from filenames.
    - Record agents under `## Local Installed Skills Considered` alongside skills, with exact paths and tags: `canonical` for `.claude` consumer agents (record any same-name OMP binding), `runtime-only` for an `.omp` agent with no same-name `.claude` source, and `tdk-shipped` for plugin agents. Keep distinct same-name definitions visible; do not claim inventory alone proves the winning dispatch binding or runtime readiness.
    - Prefer reuse or a justified patch when a local artifact already covers the need. Preserve runtime-only agents: allow `reuse @name` as routing intent, but set their artifact action to `none` and note `runtime-only; promote to .claude/agents manually to manage`.
-   - Evaluate each considered domain using the executor rubric below, always including `implement` and `test`. Determine toolset skills separately from the executor; allow agent-only routes and one executor serving both domains when its contract owns both gates.
+   - Evaluate each considered domain using the executor rubric below, always including `implement`, `test`, and `review`. `review` may be `Applicable: no`. Determine toolset skills separately from the executor; allow agent-only routes and one executor serving both domains when its contract owns both gates.
 
 5. Optional community lookup.
    - Unless `--no-community-search` is set, run focused direct searches such as:
@@ -190,7 +190,8 @@ Repeat for every considered domain. Include one row per delegate artifact, inclu
 - Prefer a suitable existing executor over creating another. A single executor may serve `implement` and `test` when it owns both gates; do not require one agent per domain.
 - For `no agent`, give a one-line reason naming the failed criterion: `bounded write set` or `own gate ownership/context isolation benefit/distinct caller/output contract`. Mark non-applicable domains explicitly; a docs-only workspace may legitimately need no executor.
 - Derive each routing suggestion's `Domain` and `Delegates` from its decision. Emit a suggestion for each applicable domain with a non-empty delegate list; leave non-applicable or delegate-free domains without a route. Do not invent a skill to fill an agent-only route or an agent for a skill-only decision.
-- Use only `research`, `implement`, `test`, `database`, and `design` unless the decision and suggestion include an explicit rationale for another domain. When keywords inform a domain, keep `derived` in the suggestion's Why/Proposal notes so scaffold preserves it in proposal `reason`.
+- **Reviewer clause (`review` domain).** `review` is an explicit, non-phase domain: only `/tdk-review` reads it, and it is never injected into phase delegate sections. For `review`, `create @name` / `reuse @name` needs stack-specific review rules that benefit from context isolation; **no write set is required**, because a reviewer never writes. Without that, prefer a skill-only route (a lens checklist skill). The bounded-write-set criterion above does not apply to `review`.
+- Use only `research`, `implement`, `test`, `database`, `design`, and `review` unless the decision and suggestion include an explicit rationale for another domain. When keywords inform a domain, keep `derived` in the suggestion's Why/Proposal notes so scaffold preserves it in proposal `reason`.
 - List create/reuse/patch/none per artifact, not per domain. Propose new managed source artifacts only under `.claude/`; OMP bindings come from conversion, never dual-write. Inventory and recommendations are read-only except for the recommendation output.
 
 ## Error UX

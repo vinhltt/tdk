@@ -4,7 +4,7 @@ description: "This skill should be used when the user asks to \"diff a routing p
 user-invocable: true
 argument-hint: "<diff|register|verify> [--project-root <root>] [--proposal <path>] [--approval <approvalDigest>] [--yes]"
 metadata:
-  version: "3.0.2"
+  version: "3.0.3"
   author: "VinhLTT"
   category: scaffold
 ---

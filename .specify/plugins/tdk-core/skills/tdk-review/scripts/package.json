@@ -1,0 +1,14 @@
+{
+  "name": "tdk-review-runtime-build",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun --no-install build.ts",
+    "test": "bun test ../tests",
+    "typecheck": "../../../../../scripts/ts/node_modules/.bin/tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "yaml": "2.9.0",
+    "zod": "3.25.76"
+  }
+}

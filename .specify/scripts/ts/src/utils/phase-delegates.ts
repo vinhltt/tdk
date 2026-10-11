@@ -79,7 +79,7 @@ export function resolveExpected(
   document: DelegateRoutingDocument,
   subWorkspaces: SubWorkspace[],
   paths: string[],
-  domains: RoutingDomain[],
+  domains: string[],
   testMode: PlanTestMode,
 ): DelegateGroups {
   const matchedNames = new Set(subWorkspaces.filter((workspace) => {

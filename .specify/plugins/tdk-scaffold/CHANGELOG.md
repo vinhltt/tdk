@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.0.3] - 2026-10-11
+
+### Changed
+- `review` routing domain: recommend evaluates it, scaffold gets a reviewer agent pattern and a lens skill shape, and the routing docs say it is never injected into phases
+
 ## [3.0.2] - 2026-10-10
 
 ### BREAKING

@@ -81,6 +81,51 @@ describe('TDK scaffold-from-recommendation contracts', () => {
   });
 });
 
+describe('TDK review domain scaffold contracts', () => {
+  const patterns = join(SCAFFOLD_SKILLS_DIR, 'tdk-scaffold-from-recommendation/references');
+  const agentPattern = read(join(patterns, 'agent-output-pattern.md'));
+  const skillPattern = read(join(patterns, 'skill-output-pattern.md'));
+  const reviewerVariant = agentPattern.slice(agentPattern.indexOf('## Reviewer Variant'));
+
+  it('generates a reviewer that is read-only: no write, shell, or spawn tools and no executor status line', () => {
+    expect(reviewerVariant).toContain('tools: Read, Grep, Glob, Skill');
+    expect(reviewerVariant).toMatch(/Never grant `Edit`, `Write`, `Bash`/);
+    expect(reviewerVariant).toMatch(/no `Status:` executor contract/);
+    const example = reviewerVariant.slice(reviewerVariant.indexOf('```markdown'));
+    expect(example).not.toMatch(/^tools:.*(Edit|Write|Bash)/m);
+  });
+
+  it('points the reviewer variant at the shipped reviewer schema instead of inventing one', () => {
+    expect(reviewerVariant).toContain('tdk-utils/agents/tdk-code-reviewer.md');
+    for (const field of ['requirement_ref', 'evidence', 'notChecked']) expect(reviewerVariant).toContain(field);
+  });
+
+  it('keeps the executor variant for executors only and routes reviewers to their own variant', () => {
+    expect(agentPattern).toMatch(/uses the Reviewer Variant below/);
+    expect(agentPattern).not.toMatch(/Reviewers, researchers, coordinators[^\n]*keep the pattern above unchanged/);
+  });
+
+  it('describes a review lens skill that never writes', () => {
+    const lens = skillPattern.slice(skillPattern.indexOf('## Review Lens Skill Shape'), skillPattern.indexOf('## Content Guidelines'));
+    expect(lens).toMatch(/never writes/i);
+    expect(lens).toContain('Severity guidance');
+  });
+
+  it('documents review as an explicit domain that never warns and is never injected, in every routing doc', () => {
+    const routing = join(SCAFFOLD_SKILLS_DIR, 'tdk-delegate-routing/references');
+    const injection = resolve(import.meta.dir, '../../../plugins/tdk-core/skills/tdk-plan/references/delegate-routing-injection.md');
+    for (const path of [join(routing, 'delegate-routing-proposal-format.md'), join(patterns, 'delegate-routing-proposal-format.md')]) {
+      expect({ path, ok: /`review`[^\n]*no warning|`review`[^\n]*carries no warning/.test(read(path)) }).toEqual({ path, ok: true });
+    }
+    expect(read(join(routing, 'delegate-routing-file-contract.md'))).toMatch(/`review` routes are read only by `\/tdk-review`[^\n]*never injected/);
+    expect(read(injection)).toMatch(/`review` is an explicit domain[^\n]*never injected into phase delegate sections/);
+  });
+
+  it('never derives a review route from keywords', () => {
+    expect(read(join(patterns, 'delegate-routing-proposal-format.md'))).toMatch(/emit it only from an approved `review` decision, never from keyword inference/);
+  });
+});
+
 describe('TDK scaffold routing handoff contracts', () => {
   const skill = existsSync(SKILL_PATH) ? read(SKILL_PATH) : '';
   const proposalFormat = existsSync(PROPOSAL_FORMAT_PATH) ? read(PROPOSAL_FORMAT_PATH) : '';

@@ -503,4 +503,5 @@ Phases skipped: {skipped_count}
 
 Next steps:
 → /tdk-status {task_id}   — check artifact status
+→ /tdk-review {task_id}   — review the implemented code against the spec
 ```

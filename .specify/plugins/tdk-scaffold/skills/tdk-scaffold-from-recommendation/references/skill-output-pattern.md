@@ -30,6 +30,15 @@ metadata:
 6. **Error UX** — Table: Condition | Message
 7. **Notes** — Constraints, limitations, scope boundaries
 
+## Review Lens Skill Shape
+
+A skill routed for the `review` domain is a checklist that `/tdk-review` loads into a reviewer. It never writes.
+
+- Frontmatter as above. The description names the stack and says it is a review lens.
+- Sections: `## Checklist` (3-7 verifiable items, each checkable against a diff), `## Severity guidance` (what is `critical`, `high`, `medium`, `low` for this stack), `## Out of scope`.
+- No instructions to edit, run, or fix anything. Findings are reported, not acted on.
+- Keep it under 80 lines.
+
 ## Content Guidelines
 
 - Imperative tone ("Read the file", not "The file is read")

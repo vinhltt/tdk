@@ -63,6 +63,8 @@ child tdk-implement
 FEATURE-SIZED LANE, default for small/clear work
 
 tdk-specify -> tdk-clarify -> tdk-plan -> [tdk-consistency-check] -> tdk-implement
+                                                                          |
+                                                       [tdk-review] -> tdk-plan (append fix phases)
 
 tdk-status                               track progress at any point
 ```
@@ -142,6 +144,7 @@ legacy-layout guidance instead of auto-migrating them.
 | Design a phased implementation plan | `tdk-plan` | `tdk-task-breakdown`, `tdk-specify` |
 | Check spec <-> plan consistency | `tdk-consistency-check` | `tdk-clarify` |
 | Build / execute plan phases | `tdk-implement` | `tdk-plan` |
+| Review implemented code against the spec | `tdk-review` | `tdk-consistency-check`, `tdk-plan --red-team` |
 | Plan & route unit-test coverage | `tdk-plan --tdd` / `tdk-plan --ut-backfill` | `tdk-plan` (without test mode) |
 | Track workflow progress/status | `tdk-status` | — |
 
@@ -165,6 +168,7 @@ Ready to design the build                      -> tdk-plan
 Plan + spec exist, verify they agree           -> tdk-consistency-check
 Need unit-test coverage planned                -> tdk-plan --tdd or tdk-plan --ut-backfill
 Plan approved, time to build                   -> tdk-implement
+Phases done, review code vs the spec           -> tdk-review
 "Where are we?" / progress                     -> tdk-status
 ```
 
@@ -193,6 +197,11 @@ Plan approved, time to build                   -> tdk-implement
   `spec.md`; consistency-check is read-only cross-artifact checking.
 - **`tdk-implement` vs `tdk-plan`** — plan designs phases; implement executes
   them.
+- **`tdk-review` vs `tdk-consistency-check` vs `tdk-plan --red-team`** —
+  review reads implemented code (diff) against the spec after phases are done
+  and writes one report; consistency-check reads `spec.md` and `plan.md` before
+  implementation; red-team challenges the plan itself. Review never fixes code
+  or edits the plan; it prints `/tdk-plan` seeds for the user to run.
 
 ## Supporting skills
 

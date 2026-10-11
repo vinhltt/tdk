@@ -37,6 +37,7 @@ const RETAINED_CORE_SKILLS = [
   'tdk-plan',
   'tdk-implement',
   'tdk-consistency-check',
+  'tdk-review',
   'tdk-status',
 ];
 const DOCS_WRITER_AGENT = 'tdk-docs-writer';
@@ -92,7 +93,10 @@ function expectCoreOnlyRuntimeSurface(
     const runtimeFiles = listPluginFiles(CORE_PLUGIN_DIR, directory);
     expect(runtimeFiles.length).toBeGreaterThan(0);
     for (const runtimeFile of runtimeFiles) {
-      expect(coreFiles[runtimeFile]).toBeDefined();
+      // Tests stay in the source tree but are not plugin assets: the manifest must not list them, or the installer
+      // would demand files the release never ships.
+      if (directory === '__tests__') expect(coreFiles[runtimeFile]).toBeUndefined();
+      else expect(coreFiles[runtimeFile]).toBeDefined();
     }
     expect(Object.keys(inceptionFiles).some((file) => file.startsWith(`${directory}/`))).toBe(false);
   }

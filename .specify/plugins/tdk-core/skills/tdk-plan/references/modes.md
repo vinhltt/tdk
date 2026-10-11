@@ -60,7 +60,7 @@ Natural-language sub-workspace/module mentions and CWD auto-detection remain acc
 
 | Mode | Routing |
 |---|---|
-| default, `--fast`, `--hard` | Treat `USER_CONTENT` as planning instruction for Step 2/3 and append/update intent. |
+| default, `--fast`, `--hard` | Treat `USER_CONTENT` as planning instruction for Step 2/3 and append/update intent. On an existing plan with option (b) Append, a non-empty `USER_CONTENT` pre-fills the proposed phase description after one confirm; empty keeps the blank prompt. |
 | `--red-team` | Treat `USER_CONTENT` as red-team focus for reviewer prompts. |
 | `--validate` | Treat `USER_CONTENT` as validation focus for question generation. |
 | `--migrate-artifacts` | Ignore freeform planning intent; dry-run legacy artifact consolidation for the resolved feature. |

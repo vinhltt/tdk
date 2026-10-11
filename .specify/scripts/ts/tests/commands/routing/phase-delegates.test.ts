@@ -1192,3 +1192,38 @@ describe('routing phase-delegates canonical containment and rollback', () => {
     expect(fixture.phases.map((path) => readFileSync(path))).toEqual(before);
   });
 });
+
+describe('routing phase-delegates resolve', () => {
+  async function resolveCli(fixture: Fixture, domain: string, paths: string[]) {
+    const proc = Bun.spawn(['bun', CLI, 'routing', 'phase-delegates', 'resolve', '--project-root', fixture.root, '--domain', domain, '--path', ...paths], { cwd: fixture.root, stdout: 'pipe', stderr: 'pipe' });
+    const [stdout, stderr] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text()]);
+    return { exitCode: await proc.exited, stderr, payload: JSON.parse(stdout) };
+  }
+
+  it('uses the matched sub-workspace section for an explicit review domain and splits skills from agents', async () => {
+    const fixture = makeFixture();
+    writeFileSync(fixture.route, '## global\n- review: /global-lens\n\n## backend\n- review: /backend-lens, @backend-reviewer\n');
+    const result = await resolveCli(fixture, 'review', ['src/backend/service.ts']);
+    expect(result.exitCode).toBe(0);
+    expect(result.payload).toMatchObject({ ok: true, domain: 'review', state: 'present-populated', skills: ['/backend-lens'], agents: ['@backend-reviewer'] });
+  });
+
+  it('falls back to the global route when the matched section has no review route, and for unowned paths', async () => {
+    const fixture = makeFixture();
+    writeFileSync(fixture.route, '## global\n- review: /global-lens\n\n## backend\n- implement: /backend-impl\n');
+    expect((await resolveCli(fixture, 'review', ['src/backend/service.ts'])).payload).toMatchObject({ skills: ['/global-lens'], agents: [] });
+    expect((await resolveCli(fixture, 'review', ['docs/readme.md'])).payload).toMatchObject({ skills: ['/global-lens'], agents: [] });
+  });
+
+  it('returns no delegates for a missing file or a domain with no route, and fails on an unreadable file', async () => {
+    const fixture = makeFixture();
+    expect((await resolveCli(fixture, 'review', ['src/backend/a.ts'])).payload).toMatchObject({ ok: true, state: 'missing', skills: [], agents: [] });
+    writeFileSync(fixture.route, '## global\n- implement: /only-impl\n');
+    expect((await resolveCli(fixture, 'review', ['src/backend/a.ts'])).payload).toMatchObject({ skills: [], agents: [] });
+    rmSync(fixture.route);
+    mkdirSync(fixture.route);
+    const broken = await resolveCli(fixture, 'review', ['src/backend/a.ts']);
+    expect(broken.exitCode).toBe(1);
+    expect(broken.payload).toMatchObject({ ok: false, status: 'unreadable' });
+  });
+});

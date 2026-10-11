@@ -1,6 +1,8 @@
 export type RoutingProposalOperation = 'add' | 'update' | 'register';
 
 const AUTO_DETECTED_DOMAINS = ['research', 'implement', 'test', 'database', 'design'];
+/** Domains a command looks up by name. They are never auto-detected or injected into phases, so they need no warning. */
+const EXPLICIT_DOMAINS = ['review'];
 
 export interface RoutingProposalEntry {
   subWorkspace: string;
@@ -118,7 +120,7 @@ function normalizeEntry(
 ): RoutingProposalEntry {
   const entry = asRecord(raw, `entries[${index}]`);
   const domain = normalizeRoutingDomain(entry.domain);
-  if (!AUTO_DETECTED_DOMAINS.includes(domain)) {
+  if (!AUTO_DETECTED_DOMAINS.includes(domain) && !EXPLICIT_DOMAINS.includes(domain)) {
     warnings.push(
       `Domain '${domain}' is outside the auto-detected set (research, implement, test, database, design); no lookup will resolve it.`,
     );

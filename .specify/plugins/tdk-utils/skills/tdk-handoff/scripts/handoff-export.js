@@ -8626,14 +8626,14 @@ var require_parser = __commonJS((exports) => {
           case "scalar":
           case "single-quoted-scalar":
           case "double-quoted-scalar": {
-            const fs = this.flowScalar(this.type);
+            const fs2 = this.flowScalar(this.type);
             if (atNextItem || it.value) {
-              map.items.push({ start, key: fs, sep: [] });
+              map.items.push({ start, key: fs2, sep: [] });
               this.onKeyLine = true;
             } else if (it.sep) {
-              this.stack.push(fs);
+              this.stack.push(fs2);
             } else {
-              Object.assign(it, { key: fs, sep: [] });
+              Object.assign(it, { key: fs2, sep: [] });
               this.onKeyLine = true;
             }
             return;
@@ -8761,13 +8761,13 @@ var require_parser = __commonJS((exports) => {
           case "scalar":
           case "single-quoted-scalar":
           case "double-quoted-scalar": {
-            const fs = this.flowScalar(this.type);
+            const fs2 = this.flowScalar(this.type);
             if (!it || it.value)
-              fc.items.push({ start: [], key: fs, sep: [] });
+              fc.items.push({ start: [], key: fs2, sep: [] });
             else if (it.sep)
-              this.stack.push(fs);
+              this.stack.push(fs2);
             else
-              Object.assign(it, { key: fs, sep: [] });
+              Object.assign(it, { key: fs2, sep: [] });
             return;
           }
           case "flow-map-end":
@@ -9037,12 +9037,12 @@ var {
 } = import__.default;
 
 // handoff-export.ts
-import * as fs from "fs";
+import * as fs2 from "fs";
 import { join as join2 } from "path";
 
 // ../../../../../scripts/ts/src/utils/config.ts
 import { readFileSync, existsSync, realpathSync } from "fs";
-import { resolve, relative, dirname, join, normalize, isAbsolute } from "path";
+import { resolve, relative, dirname, join, normalize } from "path";
 
 // node_modules/zod/v3/external.js
 var exports_external = {};
@@ -13150,12 +13150,6 @@ function realpathOrSelf(dir) {
     return resolve(dir);
   }
 }
-function isWithin(ancestor, descendant) {
-  if (ancestor === descendant)
-    return true;
-  const rel = relative(ancestor, descendant);
-  return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
-}
 function parseConfig(configPath) {
   try {
     const raw = readFileSync(configPath, "utf-8");
@@ -13168,6 +13162,55 @@ function parseConfig(configPath) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     return { config: null, error: `parse_error:${msg}` };
+  }
+}
+
+// ../../../../../scripts/ts/src/utils/path-within.ts
+import { relative as relative2, isAbsolute } from "path";
+function isWithin(ancestor, descendant) {
+  if (ancestor === descendant)
+    return true;
+  const rel = relative2(ancestor, descendant);
+  return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
+}
+
+// ../../../../../scripts/ts/src/utils/create-new-file.ts
+import * as fs from "fs";
+function createNewFile(path, body, mode) {
+  let existing;
+  try {
+    existing = fs.lstatSync(path, { throwIfNoEntry: false });
+  } catch {
+    return "write_failed";
+  }
+  if (existing)
+    return "collision_exists";
+  let fd;
+  try {
+    fd = fs.openSync(path, "wx", mode);
+  } catch (error) {
+    return error instanceof Error && "code" in error && error.code === "EEXIST" ? "collision_exists" : "write_failed";
+  }
+  let identity;
+  let closed = false;
+  try {
+    identity = fs.fstatSync(fd, { bigint: true });
+    fs.writeFileSync(fd, body, "utf8");
+    fs.closeSync(fd);
+    closed = true;
+    return null;
+  } catch {
+    if (!closed) {
+      try {
+        fs.closeSync(fd);
+      } catch {}
+    }
+    try {
+      const current = fs.lstatSync(path, { bigint: true });
+      if (identity && current.isFile() && current.dev === identity.dev && current.ino === identity.ino)
+        fs.unlinkSync(path);
+    } catch {}
+    return "write_failed";
   }
 }
 
@@ -13878,13 +13921,13 @@ function errorCode(error) {
 function checkDirectory(root, path) {
   let stat;
   try {
-    stat = fs.lstatSync(path);
+    stat = fs2.lstatSync(path);
   } catch (error) {
     if (errorCode(error) === "ENOENT")
       return false;
     throw new ExportError("unsafe_output_path");
   }
-  if (!stat.isDirectory() || stat.isSymbolicLink() || !isWithin(root, fs.realpathSync(path))) {
+  if (!stat.isDirectory() || stat.isSymbolicLink() || !isWithin(root, fs2.realpathSync(path))) {
     throw new ExportError("unsafe_output_path");
   }
   return true;
@@ -13892,8 +13935,8 @@ function checkDirectory(root, path) {
 function captureRoot(selected) {
   let root;
   try {
-    root = fs.realpathSync(selected);
-    if (!fs.statSync(root).isDirectory())
+    root = fs2.realpathSync(selected);
+    if (!fs2.statSync(root).isDirectory())
       throw new Error;
   } catch {
     throw new ExportError("invalid_capture_root");
@@ -13914,51 +13957,13 @@ function prepareDirectory(root, path) {
   if (checkDirectory(root, path))
     return;
   try {
-    fs.mkdirSync(path);
+    fs2.mkdirSync(path);
   } catch (error) {
     if (errorCode(error) !== "EEXIST")
       throw new ExportError("write_failed", 2);
   }
   if (!checkDirectory(root, path))
     throw new ExportError("unsafe_output_path");
-}
-function writeNew(path, body) {
-  let existing;
-  try {
-    existing = fs.lstatSync(path, { throwIfNoEntry: false });
-  } catch {
-    throw new ExportError("write_failed", 2);
-  }
-  if (existing)
-    throw new ExportError("collision_exists");
-  let fd;
-  try {
-    fd = fs.openSync(path, "wx", 384);
-  } catch (error) {
-    if (errorCode(error) === "EEXIST")
-      throw new ExportError("collision_exists");
-    throw new ExportError("write_failed", 2);
-  }
-  let identity2;
-  let closed = false;
-  try {
-    identity2 = fs.fstatSync(fd, { bigint: true });
-    fs.writeFileSync(fd, body, "utf8");
-    fs.closeSync(fd);
-    closed = true;
-  } catch {
-    if (!closed) {
-      try {
-        fs.closeSync(fd);
-      } catch {}
-    }
-    try {
-      const current = fs.lstatSync(path, { bigint: true });
-      if (identity2 && current.isFile() && current.dev === identity2.dev && current.ino === identity2.ino)
-        fs.unlinkSync(path);
-    } catch {}
-    throw new ExportError("write_failed", 2);
-  }
 }
 function exportHandoff(selectedRoot, slug, input, now = new Date) {
   try {
@@ -13976,7 +13981,9 @@ function exportHandoff(selectedRoot, slug, input, now = new Date) {
     prepareDirectory(root, join2(root, ".specify"));
     prepareDirectory(root, join2(root, ".specify", "handoffs"));
     const path = `.specify/handoffs/${artifact.date}-${slug}.md`;
-    writeNew(join2(root, path), artifact.body);
+    const failure = createNewFile(join2(root, path), artifact.body, 384);
+    if (failure)
+      throw new ExportError(failure, failure === "write_failed" ? 2 : 1);
     return { ok: true, path, kind: artifact.kind, redactions: artifact.redactions };
   } catch (error) {
     return error instanceof ExportError ? { ok: false, error: error.code, exitCode: error.exitCode } : { ok: false, error: "write_failed", exitCode: 2 };
@@ -13986,7 +13993,7 @@ function createHandoffExportCommand() {
   return new Command("handoff-export").description("Create one sanitized, capture-root-local handoff without replacing existing files").requiredOption("--capture-root <directory>", "Explicit existing artifact host").requiredOption("--slug <slug>", "Safe lowercase kebab-case name").allowExcessArguments(false).configureOutput({ writeErr: () => {} }).exitOverride().action((options) => {
     let input;
     try {
-      input = JSON.parse(fs.readFileSync(0, "utf8"));
+      input = JSON.parse(fs2.readFileSync(0, "utf8"));
     } catch {
       writeAgentJson({ ok: false, error: "invalid_packet" });
       process.exitCode = 1;

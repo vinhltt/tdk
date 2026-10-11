@@ -272,6 +272,24 @@ export function createPhaseDelegatesCommand(): Command {
     .description('Detect the ordered routing domains from purpose and trigger text')
     .requiredOption('--text <text>', 'purpose and trigger text')
     .action((options: { text: string }) => writeAgentJson({ ok: true, domains: detectDomains(options.text) }));
+  command.command('resolve')
+    .description('Resolve routed delegates for an explicit domain and paths; the domain is never injected into phases (used by /tdk-review)')
+    .option('--project-root <root>', 'project root', process.cwd())
+    .requiredOption('--domain <domain>', 'routing domain, e.g. review')
+    .requiredOption('--path <paths...>', 'workspace-relative paths that select sub-workspace sections')
+    .action((options: { projectRoot: string; domain: string; path: string[] }) => {
+      try {
+        const projectRoot = resolve(options.projectRoot);
+        const route = classifyRouteFile(resolveDelegateRoutingPath(projectRoot));
+        if (route.state === 'unreadable') throw new PhaseDelegatesError('unreadable', `Cannot read routing file: ${route.error}`);
+        const { config, error } = parseConfig(join(projectRoot, '.specify', '.specify.json'));
+        if (!config || error) throw new PhaseDelegatesError('error', error ?? 'Cannot read config');
+        const delegates = resolveExpected(parseDelegateRouting(route.markdown ?? ''), config.subWorkspaces ?? [], options.path, [options.domain], 'none');
+        writeAgentJson({ ok: true, domain: options.domain, state: route.state, ...delegates });
+      } catch (error) {
+        writeFailure(error);
+      }
+    });
   for (const action of ['check', 'apply'] as const) {
     const operation = command.command(action)
       .description(action === 'check' ? 'Preview phase delegates and snapshot the selected phase set' : 'Apply an approved snapshot to eligible phase files')

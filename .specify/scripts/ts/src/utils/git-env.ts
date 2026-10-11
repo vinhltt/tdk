@@ -44,6 +44,10 @@ export interface RunGitOptions {
   cwd?: string;
   /** Extra environment variables for this invocation; repository overrides remain stripped. */
   env?: NodeJS.ProcessEnv;
+  /** Return stdout untrimmed. Needed wherever leading or trailing whitespace is data (diffs, `status --porcelain`). */
+  raw?: boolean;
+  /** Raise the child-output cap (Node's default is 1 MiB) for diff-sized output. */
+  maxBuffer?: number;
 }
 
 /**
@@ -53,10 +57,12 @@ export interface RunGitOptions {
  * just means "not a git working tree".
  */
 export function runGit(args: string[], opts: RunGitOptions = {}): string {
-  return execFileSync('git', args, {
+  const out = execFileSync('git', args, {
     encoding: 'utf-8',
     stdio: ['ignore', 'pipe', 'pipe'],
     env: sanitizedGitEnv(process.env, opts.env),
     ...(opts.cwd === undefined ? {} : { cwd: opts.cwd }),
-  }).trim();
+    ...(opts.maxBuffer === undefined ? {} : { maxBuffer: opts.maxBuffer }),
+  });
+  return opts.raw ? out : out.trim();
 }

@@ -51,6 +51,16 @@ describe('TDK sub-workspace automation recommendation contracts', () => {
     }
   });
 
+  it('always evaluates review next to implement and test, and a reviewer needs no write set', () => {
+    expect(canonical).toMatch(/always including `implement`, `test`, and `review`/);
+    const clause = canonical.slice(canonical.indexOf('Reviewer clause'));
+    expect(clause).toMatch(/no write set is required/);
+    // A skill-only lens route is the fallback when context isolation does not pay off.
+    expect(clause).toMatch(/skill-only route/);
+    // The bounded-write-set criterion must not be applied to the review domain.
+    expect(clause).toMatch(/does not apply to `review`/);
+  });
+
   it('forbids ck:find-skills while allowing direct skills CLI lookup', () => {
     expect(canonical).toContain('Do not use `ck:find-skills`');
     expect(canonical).not.toContain('Use `ck:find-skills`');

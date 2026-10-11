@@ -118,6 +118,11 @@ describe('delegate routing parser and mutator', () => {
     ).toHaveLength(0);
   });
 
+  it('does not warn for the explicit review domain', () => {
+    const entry = { subWorkspace: 'global', domain: 'review', delegates: ['/my-lens', '@my-reviewer'] };
+    expect(validateRoutingProposal({ version: 1, entries: [entry] }).warnings).toEqual([]);
+  });
+
   it('rejects docs.path values that resolve outside the project root', () => {
     const root = mkdtempSync(join(tmpdir(), 'routing-path-root-'));
     const outside = mkdtempSync(join(tmpdir(), 'routing-path-outside-'));
