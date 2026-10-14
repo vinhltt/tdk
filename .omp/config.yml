@@ -1,0 +1,87 @@
+# --- tdk-managed-start ---
+defaultThinkingLevel: xhigh
+bash:
+  patterns:
+    - match: rm ~/
+      approval: deny
+    - match: rm /
+      approval: deny
+    - match: prisma db push
+      approval: deny
+    - match: npx prisma db push
+      approval: deny
+    - match: npm run db:push
+      approval: deny
+    - match: bun run db:push
+      approval: deny
+    - match: pnpm run db:push
+      approval: deny
+    - match: rm -rf /
+      approval: deny
+    - match: rm -rf / *
+      approval: deny
+    - match: rm -rf ~
+      approval: deny
+    - match: rm -rf ~ *
+      approval: deny
+    - match: dd if=/dev/zero of=/dev/sd*
+      approval: deny
+    - match: dd if=/dev/zero of=/dev/sd* *
+      approval: deny
+    - match: fdisk
+      approval: deny
+    - match: fdisk *
+      approval: deny
+    - match: parted
+      approval: deny
+    - match: parted *
+      approval: deny
+    - match: chown -R /
+      approval: deny
+    - match: chown -R / *
+      approval: deny
+    - match: chmod -R 0 /
+      approval: deny
+    - match: chmod -R 0 / *
+      approval: deny
+    - match: shutdown
+      approval: deny
+    - match: shutdown *
+      approval: deny
+    - match: reboot
+      approval: deny
+    - match: reboot *
+      approval: deny
+    - match: systemctl poweroff
+      approval: deny
+    - match: systemctl poweroff *
+      approval: deny
+    - match: git reset --hard
+      approval: deny
+    - match: git reset --hard *
+      approval: deny
+    - match: git commit
+      approval: deny
+    - match: git commit *
+      approval: deny
+    - match: git clean -fdx
+      approval: deny
+    - match: git clean -fdx *
+      approval: deny
+    - match: git push
+      approval: deny
+    - match: git push *
+      approval: deny
+    - match: docker system prune -af
+      approval: deny
+    - match: docker system prune -af *
+      approval: deny
+    - match: docker volume rm
+      approval: deny
+    - match: docker volume rm *
+      approval: deny
+    - match: prisma migrate reset
+      approval: deny
+    - match: prisma migrate reset *
+      approval: deny
+# --- tdk-managed-end ---

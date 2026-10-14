@@ -63,5 +63,5 @@
     "tdk-test-api@tdk-plugin-marketplace": true,
     "context7-plugin@context7-marketplace": true
   },
-  "effortLevel": "high"
+  "effortLevel": "xhigh"
 }
