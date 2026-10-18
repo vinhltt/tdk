@@ -13,6 +13,10 @@ const SETUP_PACKAGE = "packages/tdk-setup";
 const BASH = Bun.which("bash")!;
 const temporaryRoots: string[] = [];
 const STALE_NOTICE = "STALE: harness projection is behind .specify/plugins";
+const UP_TO_DATE_NOTICE = "✓ Harness projection is up to date";
+const FRESHNESS_SECTION = "━━━ Harness freshness";
+const FOOTER_MARKER = "NEXT STEPS";
+const ANSI = /\x1B\[[0-?]*[ -/]*[@-~]/g;
 
 interface Fixture {
   root: string;
@@ -39,7 +43,30 @@ function put(root: string, rel: string, contents: string): void {
 }
 
 function output(result: CommandResult): string {
-  return `${Buffer.from(result.stdout)}\n${Buffer.from(result.stderr)}`.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
+  return `${Buffer.from(result.stdout)}\n${Buffer.from(result.stderr)}`.replace(ANSI, "");
+}
+
+function stdoutText(result: CommandResult): string {
+  return Buffer.from(result.stdout).toString().replace(ANSI, "");
+}
+
+// From the last NEXT STEPS title to the end of stdout.
+function footer(result: CommandResult): string {
+  const text = stdoutText(result);
+  const start = text.lastIndexOf(FOOTER_MARKER);
+  if (start === -1) throw new Error(`Distribution did not print a ${FOOTER_MARKER} footer\n${text}`);
+  return text.slice(start);
+}
+
+// The marker must be present, so a missing line cannot satisfy the order check.
+function expectFooterAfter(result: CommandResult, marker: string): void {
+  const text = stdoutText(result);
+  expect(text.indexOf(marker), text).toBeGreaterThan(-1);
+  expect(text.lastIndexOf(FOOTER_MARKER), text).toBeGreaterThan(text.lastIndexOf(marker));
+}
+
+function commandLines(text: string, prefix: string, contains: string): string[] {
+  return text.split("\n").map(line => line.trim()).filter(line => line.startsWith(prefix) && line.includes(contains));
 }
 
 function expectSuccess(result: CommandResult): void {
@@ -156,8 +183,8 @@ function removeOmpSkill(f: Fixture): void {
 
 function expectRunnableInstallHints(f: Fixture, text: string, plugins: string[]): void {
   const commands = [...new Set(text.split("\n")
-    .map(line => line.replace(/^\s*(?:(?:Next|Install):\s*)?/, ""))
-    .filter(line => line.startsWith("bun ")))];
+    .map(line => line.replace(/^\s*(?:Next:\s*)?/, ""))
+    .filter(line => line.startsWith("bun ") && line.includes(" install ")))];
   if (commands.length === 0) throw new Error("Distribution did not emit an installer command");
   const before = harnessSnapshot(f);
   for (const command of commands) {
@@ -169,6 +196,32 @@ function expectRunnableInstallHints(f: Fixture, text: string, plugins: string[])
     expect(requested === "(none)" ? [] : requested?.split(/,\s*/).sort()).toEqual([...plugins].sort());
     expect(harnessSnapshot(f)).toEqual(before);
   }
+}
+
+function expectRunnableOmpHint(f: Fixture, text: string): void {
+  const commands = commandLines(text, "bun ", " convert-flat ");
+  expect(commands, text).toHaveLength(1);
+  expect(commands[0]).toEndWith("--harness omp --dry-run");
+  const before = harnessSnapshot(f);
+  expectSuccess(Bun.spawnSync({
+    cmd: [BASH, "-c", commands[0]], cwd: f.cwd, stdin: "ignore", stdout: "pipe", stderr: "pipe",
+  }));
+  expect(harnessSnapshot(f)).toEqual(before);
+}
+
+// Runs the copied Re-run line as a preview so the check never writes the target.
+function expectRunnableRerun(f: Fixture, text: string): void {
+  const commands = commandLines(text, "bash ", "/distribute.sh");
+  expect(commands, text).toHaveLength(1);
+  if (f.prefix) expect(commands[0]).toEndWith(`--prefix ${f.prefix}`);
+  else expect(commands[0]).not.toContain("--prefix");
+  const before = harnessSnapshot(f);
+  const result = Bun.spawnSync({
+    cmd: [BASH, "-c", `${commands[0]} --dry-run`], cwd: f.cwd, stdin: "ignore", stdout: "pipe", stderr: "pipe",
+  });
+  expectSuccess(result);
+  expect(output(result)).toMatch(/Target is already up to date|Dry-run complete/);
+  expect(harnessSnapshot(f)).toEqual(before);
 }
 
 function copyWrapper(f: Fixture, body: string): string {
@@ -191,13 +244,16 @@ describe("distribute.sh real harness freshness", () => {
     expect(text).toContain(STALE_NOTICE);
     expect(text).toContain("Claude projection is stale (");
     expect(text).not.toContain("Harness freshness not checked");
-    expectRunnableInstallHints(f, text, ["tdk-extra-one", "tdk-extra-two"]);
+    expectFooterAfter(result, "Claude projection is stale (");
+    expectRunnableInstallHints(f, footer(result), ["tdk-extra-one", "tdk-extra-two"]);
+    expect(footer(result)).not.toContain(" convert-flat ");
     expect(text).not.toContain("--plugins tdk-core");
+    expectRunnableRerun(f, footer(result));
     expect(readFileSync(join(f.target, ".specify/plugins/tdk-core/skills/tdk-demo/SKILL.md"), "utf8")).toBe(f.skills["tdk-core"]);
     expect(harnessSnapshot(f)).toEqual(before);
   });
 
-  test("fresh Claude and OMP projections are silent after a real payload sync", () => {
+  test("fresh Claude and OMP projections print no detail section and confirm up to date in the footer", () => {
     const f = fixture();
     const before = harnessSnapshot(f);
     changeSetup(f);
@@ -208,6 +264,12 @@ describe("distribute.sh real harness freshness", () => {
     expect(output(result)).not.toContain("Harness freshness not checked");
     expect(output(result)).not.toContain("Claude projection is current");
     expect(output(result)).not.toContain("No OMP convert-flat drift detected");
+    expect(stdoutText(result)).not.toContain(FRESHNESS_SECTION);
+    expectFooterAfter(result, "Distribution complete!");
+    expect(footer(result)).toContain(UP_TO_DATE_NOTICE);
+    expectRunnableInstallHints(f, footer(result), []);
+    expect(footer(result)).not.toContain(" convert-flat ");
+    expectRunnableRerun(f, footer(result));
     expect(harnessSnapshot(f)).toEqual(before);
   });
 
@@ -218,7 +280,9 @@ describe("distribute.sh real harness freshness", () => {
     expectSuccess(result);
     expect(output(result)).not.toContain(STALE_NOTICE);
     expect(output(result)).not.toContain("Harness freshness not checked");
-    expectRunnableInstallHints(f, output(result), ["tdk-extra-one"]);
+    expect(footer(result)).toContain(UP_TO_DATE_NOTICE);
+    expectRunnableInstallHints(f, footer(result), ["tdk-extra-one"]);
+    expectRunnableRerun(f, footer(result));
     expect(existsSync(join(f.target, ".claude/skills/sample-demo/SKILL.md"))).toBe(true);
   });
 
@@ -233,6 +297,7 @@ describe("distribute.sh real harness freshness", () => {
     expectSuccess(result);
     expect(output(result)).not.toContain(STALE_NOTICE);
     expect(output(result)).not.toContain("Harness freshness not checked");
+    expect(footer(result)).toContain(UP_TO_DATE_NOTICE);
     expect(harnessSnapshot(f)).toEqual(before);
   });
 
@@ -245,8 +310,47 @@ describe("distribute.sh real harness freshness", () => {
     const text = output(result);
     expect(text).toContain(STALE_NOTICE);
     expect(text).toContain("OMP convert-flat drift detected:");
+    expect(text.indexOf("Claude projection is stale (")).toBeGreaterThan(-1);
     expect(text.indexOf("Claude projection is stale (")).toBeLessThan(text.indexOf("OMP convert-flat drift detected:"));
     expect(text).not.toContain("Harness freshness not checked");
+    expectFooterAfter(result, "OMP convert-flat drift detected:");
+    const steps = footer(result);
+    expect(steps).toContain(STALE_NOTICE);
+    const install = steps.indexOf(" install ");
+    expect(install).toBeGreaterThan(-1);
+    expect(install).toBeLessThan(steps.indexOf(" convert-flat "));
+    expectRunnableInstallHints(f, steps, []);
+    expectRunnableOmpHint(f, steps);
+  });
+
+  test("OMP-only drift points at convert-flat and skips the Claude install preview", () => {
+    const f = fixture();
+    removeOmpSkill(f);
+    changeSetup(f);
+    const result = distribute(f);
+    expectSuccess(result);
+    expect(output(result)).not.toContain("Claude projection is stale (");
+    expect(output(result)).not.toContain("Harness freshness not checked");
+    expectFooterAfter(result, "OMP convert-flat drift detected:");
+    const steps = footer(result);
+    expect(steps).toContain(STALE_NOTICE);
+    expect(commandLines(steps, "bun ", " install ")).toEqual([]);
+    expectRunnableOmpHint(f, steps);
+    expectRunnableRerun(f, steps);
+  });
+
+  test("an unreadable plugin selection renders the install hint as a notice, not a command", () => {
+    const f = fixture();
+    put(f.target, ".specify/install-settings.json", JSON.stringify({ defaults: { selectedPlugins: "not-an-array" } }));
+    changeSetup(f);
+    const result = distribute(f);
+    expectSuccess(result);
+    expectFooterAfter(result, "Distribution complete!");
+    const steps = footer(result);
+    expect(steps).toContain("Install hint unavailable (");
+    expect(steps).not.toMatch(/^\s*\d+\. Preview Claude harness install/m);
+    expect(commandLines(steps, "bun ", " install ")).toEqual([]);
+    expectRunnableRerun(f, steps);
   });
 
   for (const failed of ["claude", "omp"] as const) {
@@ -259,7 +363,14 @@ describe("distribute.sh real harness freshness", () => {
       expectSuccess(result);
       expect(output(result)).toContain(STALE_NOTICE);
       expect(output(result)).toContain(`Harness freshness not checked (${failed} check exited 2)`);
-      expect(output(result)).toContain(`[tdk-setup ${failed === "claude" ? "install" : "convert-flat"}] error:`);
+      const errorMarker = `[tdk-setup ${failed === "claude" ? "install" : "convert-flat"}] error:`;
+      expect(output(result)).toContain(errorMarker);
+      expectFooterAfter(result, errorMarker);
+      const steps = footer(result);
+      expect(steps).toContain(STALE_NOTICE);
+      expect(steps).toContain(`Harness freshness not checked (${failed} check exited 2)`);
+      expect(commandLines(steps, "bun ", " install ")).toHaveLength(1);
+      expect(commandLines(steps, "bun ", " convert-flat ")).toHaveLength(failed === "claude" ? 1 : 0);
     });
   }
 
@@ -271,6 +382,8 @@ describe("distribute.sh real harness freshness", () => {
     expectSuccess(result);
     expect(output(result)).not.toContain(STALE_NOTICE);
     expect(output(result)).toContain("Harness freshness not checked (claude check exited 2)");
+    expectFooterAfter(result, "[tdk-setup install] error:");
+    expect(footer(result)).not.toContain(UP_TO_DATE_NOTICE);
   });
 
   test("missing harness manifests report not checked after successful sync", () => {
@@ -282,6 +395,9 @@ describe("distribute.sh real harness freshness", () => {
     expect(output(result)).not.toContain(STALE_NOTICE);
     expect(output(result)).toContain("Harness freshness not checked (claude manifest missing)");
     expect(output(result)).toContain("Harness freshness not checked (omp manifest missing)");
+    expectFooterAfter(result, FRESHNESS_SECTION);
+    expect(footer(result)).toContain("Harness freshness not checked (claude manifest missing)");
+    expect(footer(result)).toContain("Harness freshness not checked (omp manifest missing)");
   });
 
   for (const selection of ["nonempty", "empty", "missing"] as const) {
@@ -292,11 +408,12 @@ describe("distribute.sh real harness freshness", () => {
       changeSetup(f);
       const result = distribute(f);
       expectSuccess(result);
-      expectRunnableInstallHints(f, output(result), plugins);
+      expectRunnableInstallHints(f, footer(result), plugins);
       const preview = distribute(f, ["--dry-run"]);
       expectSuccess(preview);
       expectRunnableInstallHints(f, output(preview), plugins);
       expect(output(preview)).not.toContain("Harness freshness not checked");
+      expect(stdoutText(preview)).not.toContain(FOOTER_MARKER);
     });
   }
 
@@ -308,6 +425,7 @@ describe("distribute.sh real harness freshness", () => {
     expectSuccess(result);
     expect(output(result)).not.toContain(STALE_NOTICE);
     expect(output(result)).toContain("Harness freshness not checked (tdk-setup dependencies missing)");
+    expectFooterAfter(result, FRESHNESS_SECTION);
   });
 
   test("Bun startup failures from an empty dependency directory are not mistaken for rc=1 drift", () => {
@@ -321,6 +439,7 @@ describe("distribute.sh real harness freshness", () => {
     expect(output(result)).toContain("Harness freshness not checked (claude check exited 1 without a drift result)");
     expect(output(result)).toContain("Harness freshness not checked (omp check exited 1 without a drift result)");
     expect(output(result)).toContain("Cannot find package");
+    expectFooterAfter(result, "Cannot find package");
   });
 
   test("bun disappearing after real manifest publication reports not checked without failing the sync", () => {
@@ -342,6 +461,7 @@ describe("distribute.sh real harness freshness", () => {
     expect(output(result)).toContain("Distribution complete!");
     expect(output(result)).not.toContain(STALE_NOTICE);
     expect(output(result)).toContain("Harness freshness not checked (bun not available)");
+    expectFooterAfter(result, FRESHNESS_SECTION);
     expect(existsSync(join(bin, "bun"))).toBe(false);
     expect(readFileSync(join(f.target, ".specify/setup.sh"), "utf8")).toBe(readFileSync(join(f.source, ".specify/setup.sh"), "utf8"));
   });
@@ -358,6 +478,7 @@ describe("distribute.sh real harness freshness", () => {
     expect(output(result)).not.toContain(STALE_NOTICE);
     expect(output(result)).not.toContain("Harness freshness not checked");
     expect(output(result)).not.toContain("[tdk-setup convert-flat] error:");
+    expect(stdoutText(result)).not.toContain(FOOTER_MARKER);
     expect(harnessSnapshot(f)).toEqual(before);
     expect(readFileSync(join(f.target, ".specify/plugins/tdk-core/skills/tdk-demo/SKILL.md"))).toEqual(payload);
   });
@@ -374,5 +495,6 @@ describe("distribute.sh real harness freshness", () => {
     expect(output(result)).not.toContain(STALE_NOTICE);
     expect(output(result)).not.toContain("Harness freshness not checked");
     expect(output(result)).not.toContain("Claude projection is stale (");
+    expect(stdoutText(result)).not.toContain(FOOTER_MARKER);
   });
 });

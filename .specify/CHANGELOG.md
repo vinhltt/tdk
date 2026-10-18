@@ -6,6 +6,14 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.122.1] - 2026-10-18
+
+### Changed
+- **[Distribution]** A successful `distribute.sh` sync ends with a boxed **NEXT STEPS** footer: harness status (up to date / STALE / not checked), Claude install and OMP convert-flat dry-run previews matching the detected drift, and an absolute-path Re-run command. Raw `tdk-setup` check output moves under a `Harness freshness` section above it.
+- **[Scripts]** Extend distribution harness-freshness regression coverage
+  - Cover the final `NEXT STEPS` footer across fresh and stale Claude/OMP projections, failed or unavailable freshness checks, and dry-run/no-change flows.
+  - Execute suggested install, OMP conversion, and distribution rerun commands in preview mode; check plugin selection, prefix handling, invalid-selection notices, and unchanged harness snapshots.
+
 ## [1.122.0] - 2026-10-18
 
 ### Changed

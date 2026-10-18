@@ -326,9 +326,11 @@ harness_install_hint() {
 
 INSTALL_HINT="$(harness_install_hint)"
 
-check_harness_freshness() {
-    local bun_path harness manifest rc out reason result_lines
-    local stale=false
+# Detection plus raw check output; the actionable footer is rendered last by
+# print_next_steps so long tdk-setup output never buries it mid-log.
+report_harness_freshness() {
+    local bun_path harness manifest rc out result_lines
+    local claude_stale=false omp_stale=false
     local -a stale_output=() unchecked_reasons=() error_output=()
     if ! bun_path="$(command -v bun 2>/dev/null)" || [[ ! -x "$bun_path" ]]; then
         unchecked_reasons+=("bun not available")
@@ -355,7 +357,7 @@ check_harness_freshness() {
                     result_lines=$'\n'"$out"$'\n'
                     if [[ "$harness" == "claude" && "$result_lines" == *$'\nClaude projection is stale ('*$'). No files changed.\n'* ]] || \
                        [[ "$harness" == "omp" && "$result_lines" == *$'\nOMP convert-flat drift detected:\n'* ]]; then
-                        stale=true
+                        if [[ "$harness" == "claude" ]]; then claude_stale=true; else omp_stale=true; fi
                         stale_output+=("$out")
                     else
                         unchecked_reasons+=("$harness check exited 1 without a drift result")
@@ -366,19 +368,54 @@ check_harness_freshness() {
             esac
         done
     fi
-    if $stale; then
-        echo -e "  ${YELLOW}STALE: harness projection is behind .specify/plugins${NC}"
-        printf '    %s\n' "$INSTALL_HINT"
-        for out in "${stale_output[@]}"; do printf '%s\n' "$out"; done
+    if $claude_stale || $omp_stale || [[ ${#unchecked_reasons[@]} -gt 0 ]]; then
+        echo ""
+        log "${BOLD}${CYAN}━━━ Harness freshness ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        for out in ${stale_output[@]+"${stale_output[@]}"}; do printf '%s\n' "$out"; done
+        for out in ${error_output[@]+"${error_output[@]}"}; do printf '%s\n' "$out"; done
     fi
-    for reason in "${unchecked_reasons[@]}"; do
-        printf "  ${YELLOW}Harness freshness not checked (%s)${NC}\n" "$reason"
-    done
-    if [[ ${#unchecked_reasons[@]} -gt 0 ]]; then
-        printf '    %s\n' "$INSTALL_HINT"
-        for out in "${error_output[@]}"; do printf '%s\n' "$out"; done
-    fi
+    print_next_steps "$claude_stale" "$omp_stale" ${unchecked_reasons[@]+"${unchecked_reasons[@]}"}
     return 0
+}
+
+print_step() {
+    printf "  ${WHITE}%s. %s${NC}\n" "$1" "$2"
+    printf '     %s\n' "$3"
+}
+
+# Args: claude_stale omp_stale [unchecked_reason...]. Claude install is shown
+# unless OMP drift is the only known problem; Re-run is always shown.
+print_next_steps() {
+    local claude_stale="$1" omp_stale="$2"; shift 2
+    local -a unchecked_reasons=(${@+"$@"})
+    local reason rerun step=1 stale=false
+    if [[ $claude_stale == true || $omp_stale == true ]]; then stale=true; fi
+    printf -v rerun 'bash "%s/distribute.sh" "%s"%s' \
+        "$SOURCE_ROOT" "$TARGET_ROOT" "${BRAND_PREFIX:+ --prefix $BRAND_WORD}"
+    echo ""
+    echo -e "${BOLD}${CYAN}╔══════════════════════════════════════════════════════╗${NC}"
+    echo -e "${BOLD}${CYAN}║  ▶ NEXT STEPS                                        ║${NC}"
+    echo -e "${BOLD}${CYAN}╚══════════════════════════════════════════════════════╝${NC}"
+    $stale && echo -e "  ${BOLD}${YELLOW}⚠ STALE: harness projection is behind .specify/plugins${NC}"
+    for reason in ${unchecked_reasons[@]+"${unchecked_reasons[@]}"}; do
+        printf "  ${YELLOW}⚠ Harness freshness not checked (%s)${NC}\n" "$reason"
+    done
+    if ! $stale && [[ ${#unchecked_reasons[@]} -eq 0 ]]; then
+        echo -e "  ${GREEN}✓ Harness projection is up to date${NC}"
+    fi
+    echo ""
+    if [[ $claude_stale == true || ${#unchecked_reasons[@]} -gt 0 || $omp_stale != true ]]; then
+        if [[ "$INSTALL_HINT" == "bun "* ]]; then
+            print_step "$((step++))" "Preview Claude harness install (dry-run)" "$INSTALL_HINT"
+        else
+            printf "  ${YELLOW}%s${NC}\n\n" "$INSTALL_HINT"
+        fi
+    fi
+    if [[ $omp_stale == true ]]; then
+        print_step "$((step++))" "Preview OMP convert-flat (dry-run)" \
+            "$(printf 'bun "%s" convert-flat "%s" --harness omp --dry-run' "$SETUP" "$TARGET_ROOT")"
+    fi
+    print_step "$((step++))" "Re-run distribute" "$rerun"
 }
 
 # ─── Banner ───────────────────────────────────────────────────────────────────
@@ -2050,8 +2087,5 @@ if [[ $ERROR_COUNT -gt 0 ]]; then
     exit 1
 else
     echo -e "${GREEN}Distribution complete! $COPIED_COUNT files synced, $DELETED_COUNT files removed from $TARGET_ROOT${NC}"
-    echo ""
-    echo -e "  ${WHITE}Re-run:${NC}   bash distribute.sh \"$TARGET_ROOT\"${BRAND_PREFIX:+ --prefix $BRAND_WORD}"
-    printf "  ${WHITE}Install:${NC}  %s\n" "$INSTALL_HINT"
-    check_harness_freshness
+    report_harness_freshness
 fi
