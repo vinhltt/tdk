@@ -13,6 +13,26 @@ export function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
 }
 
+export function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+/** Includes directories, file bytes/metadata, and links without following them. */
+export function treeHash(root: string): string {
+  const hash = createHash('sha256');
+  const visit = (relative: string): void => {
+    const absolute = path.join(root, relative);
+    const stat = fs.lstatSync(absolute);
+    hash.update(JSON.stringify([relative, stat.mode, stat.mtimeMs]));
+    if (stat.isSymbolicLink()) hash.update(JSON.stringify(fs.readlinkSync(absolute)));
+    else if (stat.isDirectory()) {
+      for (const name of fs.readdirSync(absolute).sort()) visit(path.join(relative, name));
+    } else hash.update(fs.readFileSync(absolute));
+  };
+  visit('');
+  return hash.digest('hex');
+}
+
 const createdRoots: string[] = [];
 
 /** Removes every temp root handed out by makeConsumer; wired up globally in tests/preload.ts. */

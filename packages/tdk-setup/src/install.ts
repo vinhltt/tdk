@@ -28,6 +28,7 @@ import { applyInstallPlan } from './install-writer';
 import { askPrefixInteractively, confirmInstallTarget, confirmOverwrite, selectHarnessInteractively, selectPluginsInteractively } from './prompt';
 import { canUseCheckboxPrompt } from './checkbox-prompt';
 import { renderApplyResult, renderInstallPlan } from './render';
+import { renderNextSteps } from './post-install-next-steps';
 import type { HarnessName, PrefixMigrationPlan } from './types';
 
 interface InstallOptions {
@@ -258,8 +259,20 @@ export function createInstallCommand(): Command {
           process.exitCode = items.length > 0 ? 1 : 0;
           return;
         }
+        // Sibling harnesses derive from .claude/, so measure the Claude change before any write.
+        const claudeChanges = resolvedSettings.harness === 'claude' ? claudeInstallIsStale(plan, previousManifest).length : undefined;
+        const printNextSteps = (mode: 'dry-run' | 'applied'): void => {
+          if (claudeChanges === undefined) return;
+          try {
+            const text = renderNextSteps({ consumerRoot: root.consumerRoot, mode, claudeChanges, settings: installSettings });
+            if (text) process.stdout.write(text);
+          } catch (err) {
+            process.stdout.write(`Next steps unavailable: ${(err as Error).message}\n`);
+          }
+        };
         if (opts.dryRun) {
           if (blockingCollisions(plan.collisions, plan.prompts).length > 0) process.exitCode = 1;
+          else printNextSteps('dry-run');
           return;
         }
 
@@ -269,6 +282,7 @@ export function createInstallCommand(): Command {
           approveOverwrite: confirmOverwrite,
         });
         process.stdout.write(renderApplyResult(result));
+        printNextSteps('applied');
       } catch (err) {
         process.stderr.write(`[tdk-setup install] error: ${(err as Error).message}\n`);
         process.exit(opts.check || checkRequested ? 2 : 1);

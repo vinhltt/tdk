@@ -125,6 +125,23 @@ Existing unmanaged `.claude/` files require explicit interactive overwrite appro
 
 Claude and Codex harness installs are separate runs. A combined Claude+Codex install is unsupported.
 
+OMP and flat Codex are derived from `.claude/` by `convert-flat`, so
+`install --harness claude` ends with a read-only advisory listing the exact
+`convert-flat` commands to run next: `After applying this install:` on
+`--dry-run`, `Next steps (other harnesses):` after apply. When the Claude
+projection changed, managed OMP gets `--dry-run` and `--yes` lines that reuse
+the saved `--parts`, plus a note that `--yes` stops on conflicts and `--force`
+overwrites `.omp` edits; an unchanged projection gets a single `--check` line.
+Convert-flat-owned Codex gets `--dry-run`/`--yes` lines only when the projection
+changed. An unmanaged `.omp/` or `.codex/` (no ownership manifest) gets a
+`--dry-run` line only. OMP is skipped when disabled in install settings or
+converted with no parts. The section never appears on `--check` or on a dry-run
+with blocking collisions, and it never changes the exit code; if detection
+fails it prints `Next steps unavailable: <reason>`. Package-installed Codex
+(`install --harness codex`) is never suggested, because it reads
+`.specify/codex-plugins/`, not `.claude/`; its staleness is not detected, so
+rerun `install --harness codex` yourself after refreshing the TDK payload.
+
 `.specify/install-settings.json` stores the most recently requested optional
 set globally. Each harness ownership manifest under
 `.specify/state/harness-install/` independently records the resolved plugins

@@ -6,6 +6,11 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.123.0] - 2026-10-18
+
+### Added
+- **[tdk-setup]** `install --harness claude` ends with a read-only `Next steps` section that lists exact `convert-flat` dry-run/apply commands for detected OMP and convert-flat Codex projections. Saved `--parts` are reused, OMP opt-outs are respected, and `--check` and exit codes are unchanged.
+
 ## [1.122.1] - 2026-10-18
 
 ### Changed

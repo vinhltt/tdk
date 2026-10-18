@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { HarnessInstallManifest } from '../src/types';
 import {
   makeConsumer,
   sha256,
+  shellQuote,
+  treeHash,
   writeBasicPlugin,
   writeMultiPluginManifest,
   writePluginDependencyPolicy,
@@ -30,26 +31,6 @@ function runInstall(consumer: FixtureConsumer, args: string[], tty = false) {
   return { exitCode: result.status, stdout: result.stdout, stderr: result.stderr };
 }
 
-function shellQuote(value: string): string {
-  return `'${value.replace(/'/g, `'\\''`)}'`;
-}
-
-/** Includes directories, file bytes/metadata, and links without following them. */
-function treeHash(root: string): string {
-  const hash = createHash('sha256');
-  const visit = (relative: string): void => {
-    const absolute = path.join(root, relative);
-    const stat = fs.lstatSync(absolute);
-    hash.update(JSON.stringify([relative, stat.mode, stat.mtimeMs]));
-    if (stat.isSymbolicLink()) hash.update(JSON.stringify(fs.readlinkSync(absolute)));
-    else if (stat.isDirectory()) {
-      for (const name of fs.readdirSync(absolute).sort()) visit(path.join(relative, name));
-    } else hash.update(fs.readFileSync(absolute));
-  };
-  visit('');
-  return hash.digest('hex');
-}
-
 function checkConsumer(consumer: FixtureConsumer, exitCode: number, args: string[] = [], tty = false) {
   const before = treeHash(consumer.root);
   const result = runInstall(consumer, ['--harness', 'claude', '--check', ...args], tty);
@@ -59,6 +40,8 @@ function checkConsumer(consumer: FixtureConsumer, exitCode: number, args: string
   expect(result.stdout).not.toContain('Target prefix (');
   expect(result.stdout).not.toContain('Select optional plugins');
   expect(result.stdout).not.toContain('Type yes to continue:');
+  expect(result.stdout).not.toContain('Next steps');
+  expect(result.stdout).not.toContain('After applying this install');
   return result;
 }
 

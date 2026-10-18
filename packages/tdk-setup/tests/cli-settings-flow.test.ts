@@ -135,7 +135,9 @@ describe('harness install CLI settings flow', () => {
     expect(JSON.parse(claudeBeforeCodex).selectedPlugins).toEqual(baseClosure);
 
     writeCodexPackageCatalog(consumer, codexResolved);
-    expect(runInstall(consumer, ['--harness', 'codex', '--plugins', 'tdk-epic', '--yes']).exitCode).toBe(0);
+    const codexInstall = runInstall(consumer, ['--harness', 'codex', '--plugins', 'tdk-epic', '--yes']);
+    expect(codexInstall.exitCode).toBe(0);
+    expect(codexInstall.stdout.toString()).not.toContain('Next steps');
     const settings = JSON.parse(fs.readFileSync(path.join(consumer.root, '.specify', 'install-settings.json'), 'utf-8'));
     const claude = JSON.parse(fs.readFileSync(claudeManifestPath, 'utf-8'));
     const codex = JSON.parse(fs.readFileSync(path.join(consumer.root, '.specify', 'state', 'harness-install', 'codex.json'), 'utf-8'));
