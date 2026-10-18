@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.2.0] - 2026-10-18
+
+### Changed
+- tdk-review: reviewers and routed delegates are isolated per sub-workspace. The scope JSON adds `slices[]` (one per repository × owning sub-workspace, with `routingPaths` and file-packed `pieces[]` at a 1500-line target, `oversized` when one file is larger) and drops `repos[].diff`. Routing resolves per slice, every lens and routed agent is dispatched per slice × piece, and the 8-subagent cap is checked on the full count before any spawn. Every piece diff, oversized ones included, is passed verbatim
+- tdk-review: findings are validated against their own piece, spec status is decided from evidence merged across pieces, dedupe keys on `repoPath`, and spec coverage gaps or unreviewed slices cap the verdict at `pass_with_concerns`. The report lists per-invocation coverage; the frontmatter schema is unchanged
+
 ## [14.1.0] - 2026-10-11
 
 ### Added

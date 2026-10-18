@@ -33,13 +33,15 @@ counts: { critical: 0, high: 1, medium: 2, low: 3, missing: 1 }
 
 `counts` covers verified findings only. `implemented` matrix rows are `low` and are not counted as defects.
 
+`reviewers[]` stays one entry per (name, lens), aggregated over every slice and piece: `status: ok` only when every invocation of that reviewer and lens was ok, otherwise `failed` when any invocation failed, else `skipped`, with the reason of the first invocation in that status; `skills_loaded` is the union in slice order. Per-invocation detail goes in the body, never in new frontmatter keys.
+
 ## Sections, in order
 
 1. **Summary**: verdict, one paragraph, counts.
-2. **Scope**: repos with base commit and `source` (label `fallback` explicitly), reviewed phases, skipped phases, `Not reviewed` rows with reasons, `stat only` files from `truncated`, and any scope warnings.
-3. **Reviewers**: one row per reviewer: status, reason code if any, skills loaded.
-4. **Spec Compliance Matrix**: one row per FR and SC ID and per phase success criterion: `implemented | partial | missing | extra`, plus `file:line` evidence or the `requirement_ref` for `missing`. A `missing` row shows no location.
-5. **Findings by severity**: `critical`, `high`, `medium`, `low`. Each finding has an ID, `file:line`, contributing lenses, evidence (≤5 lines), and recommendation.
+2. **Scope**: repos with base commit and `source` (label `fallback` explicitly), slices (id, repo, sub-workspace, files, diffLines, piece count), reviewed phases, skipped phases, `Not reviewed` rows with reasons, `stat only` files from `truncated`, and any scope warnings.
+3. **Reviewers**: one row per invocation: reviewer, lens, slice id, repo, sub-workspace, piece `i/n`, files, diffLines, an `oversized` marker when set, status, reason code if any, and the skills actually loaded. Then **Unreviewed slices**: each slice whose invocations all failed or were skipped, with their reasons, or `None.`. In `--quick`, one row per slice reviewed inline, stating that no subagent ran, plus the routed agents that were not run.
+4. **Spec Compliance Matrix**: one row per FR and SC ID and per phase success criterion, with the status decided by spec synthesis: `implemented | partial | missing | extra`, plus `file:line` evidence or the `requirement_ref` for `missing`. A `missing` row shows no location. Then **Spec coverage gaps**: each criterion left unevaluated, with its ID, why (the `notChecked` reason, or the failed or skipped invocation) and the slice ids involved, or `None.`.
+5. **Findings by severity**: `critical`, `high`, `medium`, `low`. Each finding has an ID, `file:line` (prefixed with its `repoPath` whenever the run has more than one repo), contributing lenses and invocations, evidence (≤5 lines), and recommendation.
 6. **Not verified**: findings that failed validation, with the failing rule. They are not counted and never drive the verdict.
 7. **Proposed Fix Phases**: see below.
 8. **Next actions**: the seed lines again, in the order to run them.

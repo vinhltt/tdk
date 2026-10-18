@@ -6,7 +6,7 @@ compatibility: "Requires a task with plan.md and at least one phase with status 
 user-invocable: true
 license: MIT
 metadata:
-  version: "14.1.0"
+  version: "14.2.0"
   category: "Analysis & Review"
   requires:
     - tdk-implement (phases marked done)
@@ -65,7 +65,7 @@ Follow [references/report-contract.md](references/report-contract.md): frontmatt
 
 ## Step 5: Report to the user
 
-Print the report path, the verdict, severity counts, any reviewer that was skipped or failed with its reason, and each `/tdk-plan <id> "<description>"` seed line. Then stop. Do not run the seeds.
+Print the report path, the verdict, severity counts, any reviewer that was skipped or failed with its reason, any unreviewed slice or spec coverage gap, and each `/tdk-plan <id> "<description>"` seed line. Then stop. Do not run the seeds.
 
 ## Bundled helpers
 

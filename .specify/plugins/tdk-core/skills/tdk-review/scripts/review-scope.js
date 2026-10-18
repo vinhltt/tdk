@@ -6959,7 +6959,7 @@ var require_public_api = __commonJS((exports) => {
 
 // review-scope.ts
 import { existsSync as existsSync3, lstatSync, readFileSync as readFileSync3, realpathSync as realpathSync3 } from "fs";
-import { dirname, isAbsolute as isAbsolute3, join as join2, posix, relative as relative2, resolve } from "path";
+import { dirname as dirname2, isAbsolute as isAbsolute3, join as join3, posix, relative as relative3, resolve as resolve2 } from "path";
 import { parseArgs } from "util";
 
 // ../../../../../scripts/ts/src/utils/agent-output.ts
@@ -6973,6 +6973,7 @@ function writeAgentJson(value) {
 
 // ../../../../../scripts/ts/src/utils/config.ts
 import { readFileSync, existsSync, realpathSync } from "fs";
+import { resolve, relative, dirname, join, normalize } from "path";
 
 // node_modules/zod/v3/external.js
 var exports_external = {};
@@ -11035,13 +11036,31 @@ function parseConfig(configPath) {
     return { config: null, error: `parse_error:${msg}` };
   }
 }
+function autoDetectSubWorkspace(config, workspaceRoot, cwd) {
+  const currentDir = resolve(cwd ?? process.cwd());
+  let bestMatch = null;
+  let bestDepth = -1;
+  for (const sw of config.subWorkspaces ?? []) {
+    const swPath = resolve(workspaceRoot, sw.path);
+    const normCwd = currentDir.replace(/\\/g, "/");
+    const normSwPath = swPath.replace(/\\/g, "/");
+    if (normCwd === normSwPath || normCwd.startsWith(normSwPath + "/")) {
+      const depth = normSwPath.split("/").length;
+      if (depth > bestDepth) {
+        bestMatch = sw.name;
+        bestDepth = depth;
+      }
+    }
+  }
+  return bestMatch;
+}
 
 // ../../../../../scripts/ts/src/utils/path-within.ts
-import { relative, isAbsolute } from "path";
+import { relative as relative2, isAbsolute } from "path";
 function isWithin(ancestor, descendant) {
   if (ancestor === descendant)
     return true;
-  const rel = relative(ancestor, descendant);
+  const rel = relative2(ancestor, descendant);
   return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
 }
 
@@ -11076,7 +11095,7 @@ function runGit(args, opts = {}) {
 
 // ../../../../../scripts/ts/src/utils/git-map.ts
 import { existsSync as existsSync2, readFileSync as readFileSync2, realpathSync as realpathSync2 } from "fs";
-import { join, isAbsolute as isAbsolute2 } from "path";
+import { join as join2, isAbsolute as isAbsolute2 } from "path";
 
 // node_modules/yaml/dist/index.js
 var composer = require_composer();
@@ -11197,7 +11216,7 @@ function readBaseCommits(value) {
   return out;
 }
 function readGitMap(featureDir) {
-  const file = join(featureDir, "git-map.md");
+  const file = join2(featureDir, "git-map.md");
   if (!existsSync2(file))
     return null;
   let content;
@@ -11332,7 +11351,7 @@ function isRegisteredWorktree(repositoryRoot, workingRoot, repoCommonDir) {
 }
 function commonDirOf(root) {
   const reported = runGit(["-C", root, "rev-parse", "--git-common-dir"]);
-  return realpathSync2(isAbsolute2(reported) ? reported : join(root, reported));
+  return realpathSync2(isAbsolute2(reported) ? reported : join2(root, reported));
 }
 
 // ../../../../../scripts/ts/src/utils/phase-delegates.ts
@@ -11580,6 +11599,7 @@ function splitRow2(line) {
 
 // review-scope.ts
 var PER_FILE_LINE_CAP = 2000;
+var PIECE_TARGET_LINES = 1500;
 var MAX_TEXT_BYTES = 1024 * 1024;
 var MAX_BUFFER = 512 * 1024 * 1024;
 
@@ -11595,33 +11615,37 @@ class ReviewScopeError extends Error {
 var PORCELAIN_ARGS = ["status", "--porcelain=v1", "-z", "--untracked-files=all"];
 var git = (cwd, args) => runGit(["-C", cwd, "-c", "core.quotePath=false", ...args], { raw: true, maxBuffer: MAX_BUFFER, env: { GIT_OPTIONAL_LOCKS: "0" } });
 var literal = (path) => path === "." ? "." : `:(literal)${path}`;
+var countLines = (text) => text === "" ? 0 : text.split(`
+`).length - (text.endsWith(`
+`) ? 1 : 0);
 function diffRepo(workingRoot, base, specs) {
   const pathspec = specs ? specs.map(literal) : ["."];
   const common = ["--no-ext-diff", "--no-textconv", "--no-color", "--no-renames", "--src-prefix=a/", "--dst-prefix=b/"];
   const truncated = [];
   const files = [];
+  const segments = new Map;
   const stats = git(workingRoot, ["diff", ...common, "-z", "--numstat", base, "--", ...pathspec]).split("\x00").filter(Boolean);
-  const stat = [];
   for (const entry of stats) {
     const [added, deleted, ...rest] = entry.split("\t");
     const path = rest.join("\t");
     files.push(path);
+    let statOnly = true;
     if (added === "-")
       truncated.push({ path, reason: "binary" });
     else if (Number(added) + Number(deleted) > PER_FILE_LINE_CAP)
       truncated.push({ path, reason: "oversize" });
     else
-      continue;
-    stat.push(path);
+      statOnly = false;
+    const args = statOnly ? ["diff", "--no-ext-diff", "--no-color", "--stat", base] : ["diff", ...common, base];
+    segments.set(path, git(workingRoot, [...args, "--", literal(path), `:(exclude,literal)${path}/`]));
   }
-  const exclusions = stat.map((path) => `:(exclude,literal)${path}`);
-  let diff = git(workingRoot, ["diff", ...common, base, "--", ...pathspec, ...exclusions]);
-  if (stat.length > 0)
-    diff += git(workingRoot, ["diff", "--no-ext-diff", "--no-color", "--stat", base, "--", ...stat.map(literal)]);
   const untracked = git(workingRoot, ["ls-files", "--others", "--exclude-standard", "-z", "--", ...pathspec]).split("\x00").filter(Boolean).sort();
   for (const path of untracked) {
-    files.push(path);
-    const absolute = join2(workingRoot, path);
+    const prior = segments.get(path) ?? "";
+    if (!segments.has(path))
+      files.push(path);
+    segments.set(path, prior);
+    const absolute = join3(workingRoot, path);
     let reason = null;
     try {
       const info = lstatSync(absolute);
@@ -11637,9 +11661,7 @@ function diffRepo(workingRoot, base, specs) {
           const text = bytes.toString("utf-8");
           if (bytes.subarray(0, 8000).includes(0))
             reason = "binary";
-          else if (text.split(`
-`).length - (text.endsWith(`
-`) ? 1 : 0) > PER_FILE_LINE_CAP)
+          else if (countLines(text) > PER_FILE_LINE_CAP)
             reason = "oversize";
         }
       }
@@ -11656,13 +11678,72 @@ function diffRepo(workingRoot, base, specs) {
       out = error instanceof Error && "status" in error && error.status === 1 && "stdout" in error && typeof error.stdout === "string" ? error.stdout : "";
     }
     if (out !== "")
-      diff += out;
+      segments.set(path, prior + out);
     else if (!reason)
       truncated.push({ path, reason: "unreadable" });
   }
-  return { files, diff, diffLines: diff === "" ? 0 : diff.split(`
-`).length - (diff.endsWith(`
-`) ? 1 : 0), truncated };
+  const contentless = new Set(truncated.map((entry) => entry.path));
+  const unassigned = files.filter((path) => !segments.has(path) || segments.get(path) === "" && !contentless.has(path));
+  if (unassigned.length > 0)
+    throw new ReviewScopeError("scope_failed", `No diff segment for ${unassigned.join(", ")} in ${workingRoot}`, { files: unassigned });
+  let diffLines = 0;
+  for (const segment of segments.values())
+    diffLines += countLines(segment);
+  return { files, segments, diffLines, truncated };
+}
+function packPieces(files, segments) {
+  const pieces = [];
+  let current = null;
+  for (const file of files) {
+    const segment = segments.get(file);
+    if (segment === "")
+      continue;
+    const lines = countLines(segment);
+    if (lines > PIECE_TARGET_LINES) {
+      current = null;
+      pieces.push({ index: pieces.length + 1, files: [file], diff: segment, diffLines: lines, oversized: true });
+      continue;
+    }
+    if (current === null || current.diffLines + lines > PIECE_TARGET_LINES) {
+      current = { index: pieces.length + 1, files: [], diff: "", diffLines: 0, oversized: false };
+      pieces.push(current);
+    }
+    current.files.push(file);
+    current.diff += segment;
+    current.diffLines += lines;
+  }
+  return pieces;
+}
+function buildSlices(diffs, config, projectRoot, projectReal) {
+  const slices = [];
+  for (const { repo, base, segments } of diffs) {
+    const owned = new Map;
+    for (const file of repo.files) {
+      const routingPath = base.kind === "prefix" ? posix.join(base.prefix, file) : relative3(projectReal, join3(base.top, file)).replace(/\\/g, "/");
+      const owner = autoDetectSubWorkspace(config, projectRoot, join3(projectRoot, routingPath));
+      const group = owned.get(owner) ?? { files: [], routingPaths: [] };
+      group.files.push(file);
+      group.routingPaths.push(routingPath);
+      owned.set(owner, group);
+    }
+    const owners = [...owned.keys()].sort((a, b) => a === b ? 0 : a === null ? 1 : b === null ? -1 : a < b ? -1 : 1);
+    for (const owner of owners) {
+      const { files, routingPaths } = owned.get(owner);
+      const pieces = packPieces(files, segments);
+      const members = new Set(files);
+      slices.push({
+        id: `${repo.repoPath}#${owner ?? "-"}`,
+        repoPath: repo.repoPath,
+        subWorkspace: owner,
+        files,
+        routingPaths,
+        diffLines: pieces.reduce((sum, piece) => sum + piece.diffLines, 0),
+        truncated: repo.truncated.filter((entry) => members.has(entry.path)),
+        pieces
+      });
+    }
+  }
+  return slices;
 }
 function normalizeRelated(raw) {
   const path = posix.normalize(raw.replace(/\\/g, "/").replace(/^\.\//, "")).replace(/\/$/, "");
@@ -11680,20 +11761,20 @@ function stateReason(map, sub, repositoryRoot, state) {
   return `row state is ${state}`;
 }
 function computeReviewScope(options) {
-  const projectRoot = resolve(options.projectRoot);
-  const featureDir = resolve(options.featureDir);
+  const projectRoot = resolve2(options.projectRoot);
+  const featureDir = resolve2(options.featureDir);
   const warnings = [];
   const notReviewed = [];
   let planMarkdown;
   try {
-    planMarkdown = readFileSync3(join2(featureDir, "plan.md"), "utf-8");
+    planMarkdown = readFileSync3(join3(featureDir, "plan.md"), "utf-8");
   } catch {
-    throw new ReviewScopeError("invalid_plan", `Cannot read ${join2(featureDir, "plan.md")}`);
+    throw new ReviewScopeError("invalid_plan", `Cannot read ${join3(featureDir, "plan.md")}`);
   }
   const parsed = parsePhasesTable(planMarkdown);
   if (parsed.errors.length > 0)
     throw new ReviewScopeError("invalid_plan", parsed.errors.map((e) => `Line ${e.line}: ${e.message}`).join("; "));
-  const { config, error: configError } = parseConfig(join2(projectRoot, ".specify", ".specify.json"));
+  const { config, error: configError } = parseConfig(join3(projectRoot, ".specify", ".specify.json"));
   if (!config)
     throw new ReviewScopeError("invalid_config", configError ?? "Cannot read .specify.json");
   const subs = config.subWorkspaces ?? [];
@@ -11714,7 +11795,7 @@ function computeReviewScope(options) {
   const canonicalFeature = realpathSync3(featureDir);
   const related = new Set;
   for (const row of reviewedRows) {
-    const file = resolve(featureDir, row.file);
+    const file = resolve2(featureDir, row.file);
     let markdown;
     try {
       if (!isWithin(canonicalFeature, realpathSync3(file)))
@@ -11735,6 +11816,13 @@ function computeReviewScope(options) {
   const map = readGitMap(featureDir);
   const usable = map !== null && map.layout !== "malformed" && map.featureBranch !== null ? map : null;
   const repos = [];
+  const diffs = [];
+  const pushRepo = (fields, base, specs) => {
+    const { segments, ...rendered } = diffRepo(fields.workingRoot, fields.baseCommit, specs);
+    const repo = { ...fields, ...rendered };
+    repos.push(repo);
+    diffs.push({ repo, base, segments });
+  };
   const claimed = new Set;
   const handled = new Set;
   const projectReal = realpathSync3(projectRoot);
@@ -11751,7 +11839,7 @@ function computeReviewScope(options) {
       const owned = [...related].filter((path) => path === prefix || path.startsWith(`${prefix}/`));
       if (target && owned.length === 0)
         continue;
-      const repositoryRoot = join2(projectRoot, sub.path);
+      const repositoryRoot = join3(projectRoot, sub.path);
       if (!existsSync3(repositoryRoot)) {
         owned.forEach((path) => claimed.add(path));
         notReviewed.push({ subWorkspace: sub.name, state: "missing_repository", reason: `${sub.path} does not exist` });
@@ -11785,7 +11873,7 @@ function computeReviewScope(options) {
         notReviewed.push({ subWorkspace: sub.name, state: "invalid-base-commit", reason: "no usable base commit" });
         continue;
       }
-      const recorded = row.worktreePath === null ? null : join2(projectRoot, row.worktreePath);
+      const recorded = row.worktreePath === null ? null : join3(projectRoot, row.worktreePath);
       const workingRoot = recorded !== null && existsSync3(recorded) ? recorded : repositoryRoot;
       if (workingRoot !== repositoryRoot) {
         let registered = false;
@@ -11798,28 +11886,20 @@ function computeReviewScope(options) {
         }
       }
       const specs = target ? owned.map((path) => path === prefix ? "." : path.slice(prefix.length + 1)) : undefined;
-      repos.push({
-        subWorkspace: sub.name,
-        repoPath: row.repoPath,
-        workingRoot,
-        baseCommit,
-        includesUncommitted: true,
-        source: "git-map",
-        ...diffRepo(workingRoot, baseCommit, specs)
-      });
+      pushRepo({ subWorkspace: sub.name, repoPath: row.repoPath, workingRoot, baseCommit, includesUncommitted: true, source: "git-map" }, { kind: "prefix", prefix }, specs);
     }
   const groups = new Map;
   for (const path of related) {
     if (claimed.has(path))
       continue;
-    const absolute = join2(projectRoot, path);
-    let start = dirname(absolute);
+    const absolute = join3(projectRoot, path);
+    let start = dirname2(absolute);
     try {
       if (lstatSync(absolute).isDirectory())
         start = absolute;
     } catch {}
-    while (!existsSync3(start) && start !== dirname(start))
-      start = dirname(start);
+    while (!existsSync3(start) && start !== dirname2(start))
+      start = dirname2(start);
     const realStart = realpathSync3(start);
     if (!isWithin(projectReal, realStart)) {
       notReviewed.push({ subWorkspace: path, state: "outside_project", reason: "path resolves outside the project through a symlink" });
@@ -11834,7 +11914,7 @@ function computeReviewScope(options) {
     }
     if (handled.has(top))
       continue;
-    const spec = relative2(top, join2(realStart, relative2(start, absolute))).replace(/\\/g, "/") || ".";
+    const spec = relative3(top, join3(realStart, relative3(start, absolute))).replace(/\\/g, "/") || ".";
     groups.set(top, [...groups.get(top) ?? [], spec]);
   }
   for (const [top, specs] of groups) {
@@ -11842,23 +11922,24 @@ function computeReviewScope(options) {
     try {
       base = runGit(["-C", top, "rev-parse", "--verify", "HEAD^{commit}"]);
     } catch {
-      notReviewed.push({ subWorkspace: relative2(projectReal, top) || ".", state: "no_head", reason: "repository has no commit to diff against" });
+      notReviewed.push({ subWorkspace: relative3(projectReal, top) || ".", state: "no_head", reason: "repository has no commit to diff against" });
       continue;
     }
-    repos.push({ subWorkspace: null, repoPath: relative2(projectReal, top).replace(/\\/g, "/") || ".", workingRoot: top, baseCommit: base, includesUncommitted: true, source: "fallback", ...diffRepo(top, base, specs) });
+    pushRepo({ subWorkspace: null, repoPath: relative3(projectReal, top).replace(/\\/g, "/") || ".", workingRoot: top, baseCommit: base, includesUncommitted: true, source: "fallback" }, { kind: "top", top }, specs);
   }
   const porcelain = {};
   for (const repo of repos)
     porcelain[repo.repoPath] = git(repo.workingRoot, PORCELAIN_ARGS).split("\x00").filter(Boolean);
   try {
     const hostTop = realpathSync3(runGit(["-C", canonicalFeature, "rev-parse", "--show-toplevel"]));
-    const key = relative2(projectReal, hostTop).replace(/\\/g, "/") || ".";
+    const key = relative3(projectReal, hostTop).replace(/\\/g, "/") || ".";
     if (!Object.hasOwn(porcelain, key))
       porcelain[key] = git(hostTop, PORCELAIN_ARGS).split("\x00").filter(Boolean);
   } catch {
     warnings.push("feature dir is not inside a git repository; reviewer writes there cannot be detected");
   }
-  return { ok: true, repos, notReviewed, phases, porcelain, porcelainArgs: PORCELAIN_ARGS, warnings, empty: notReviewed.length === 0 && repos.every((repo) => repo.files.length === 0) };
+  const slices = buildSlices(diffs, config, projectRoot, projectReal);
+  return { ok: true, repos, slices, notReviewed, phases, porcelain, porcelainArgs: PORCELAIN_ARGS, warnings, empty: notReviewed.length === 0 && repos.every((repo) => repo.files.length === 0) };
 }
 function main(argv) {
   let values;
@@ -11897,5 +11978,6 @@ if (import.meta.main)
   main(process.argv.slice(2));
 export {
   computeReviewScope,
-  ReviewScopeError
+  ReviewScopeError,
+  PIECE_TARGET_LINES
 };

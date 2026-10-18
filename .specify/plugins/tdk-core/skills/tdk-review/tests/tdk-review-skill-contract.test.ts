@@ -40,11 +40,44 @@ describe('tdk-review skill contract', () => {
     expect(ORCHESTRATION).not.toMatch(/git diff HEAD|git merge-base|git ls-files/);
   });
 
-  it('spawns no subagents in quick mode and the documented counts otherwise', () => {
+  it('spawns no subagents in quick mode and counts every slice × piece otherwise', () => {
     const table = ORCHESTRATION.slice(ORCHESTRATION.indexOf('## 5. Dispatch by mode'), ORCHESTRATION.indexOf('### Budget'));
-    expect(table).toMatch(/`--quick`[^\n]*\|\s*0\s*\|/);
-    expect(table).toMatch(/standard[^\n]*\|\s*2 \+ routed\s*\|/);
-    expect(table).toMatch(/`--deep`[^\n]*\|\s*4 \+ routed\s*\|/);
+    expect(table).toMatch(/`--quick`[^\n]*Routed agents are not dispatched[^\n]*\|\s*0\s*\|/);
+    expect(table).toMatch(/standard[^\n]*\|\s*Σ slices \(2 \+ ready routed agents of the slice\) × pieces\s*\|/);
+    expect(table).toMatch(/`--deep`[^\n]*\|\s*Σ slices \(4 \+ ready routed agents of the slice\) × pieces\s*\|/);
+  });
+
+  it('resolves routing per slice and keeps delegates keyed by slice, never unioned across slices', () => {
+    const routing = ORCHESTRATION.slice(ORCHESTRATION.indexOf('## 3. Routing'), ORCHESTRATION.indexOf('## 4. Readiness'));
+    expect(routing).toContain('--path <slice.routingPaths...>');
+    expect(routing).toContain('kept under `slice.id`');
+    expect(routing).toMatch(/Never union or deduplicate delegates across slices/);
+    expect(ORCHESTRATION).toMatch(/Never batch two slices into one invocation/);
+  });
+
+  it('passes every piece diff verbatim, never abridging an oversized one', () => {
+    expect(ORCHESTRATION).toMatch(/Pass `piece\.diff` verbatim, oversized pieces included/);
+    expect(ORCHESTRATION).toMatch(/Never abridge, summarize, sample, or replace any part of it/);
+  });
+
+  it('preflights the full subagent count before any spawn and stops the whole run above the cap', () => {
+    const budget = ORCHESTRATION.slice(ORCHESTRATION.indexOf('### Budget'), ORCHESTRATION.indexOf('## 6. Validate findings'));
+    expect(budget).toMatch(/before any spawn/);
+    expect(budget).toMatch(/STOP the whole run/);
+    expect(budget).toMatch(/Never drop pieces or agents, change the mode, or narrow the scope/);
+  });
+
+  it('validates findings against the invocation\'s own piece and dedupes with the repo in the key', () => {
+    expect(ORCHESTRATION).toMatch(/must exist in the invocation's own piece/);
+    expect(ORCHESTRATION).toContain('`(repoPath, file, line ±2, lens-agnostic title)`');
+  });
+
+  it('caps the verdict at pass_with_concerns for spec coverage gaps and unreviewed slices, with no new reason code', () => {
+    expect(ORCHESTRATION).toMatch(/\|\s*`pass_with_concerns`\s*\|[^\n]*spec coverage gap[^\n]*unreviewed slice/);
+    expect(ORCHESTRATION).toMatch(/every dispatched invocation failed or was skipped \(`all_reviewers_failed`\)/);
+    expect(REPORT).toContain('Spec coverage gaps');
+    expect(REPORT).toContain('Unreviewed slices');
+    expect(REPORT).toMatch(/blocked_reason: ""\s+# empty_scope \| working_tree_changed \| all_reviewers_failed;/);
   });
 
   it('keeps the review domain read-only and never mutates routing, plans, or status', () => {

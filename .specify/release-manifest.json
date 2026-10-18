@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-10-11T09:25:44.810Z",
+  "generatedAt": "2026-10-18T03:27:19.079Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -210,7 +210,7 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "652d742b3fdc25b5b10f1825823eef8989355210fc8b01c71dbead19431e8b15",
+      "sha256": "93e79fd7a9869b3361f31d8f53356f60bfe26d8d99cbb3b26a3670a6406bd7e8",
       "size": 49078,
       "mode": "0644"
     },
@@ -225,23 +225,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "2b02dc1dcbf29456eeca878296f71dc25c1c48015abeec8e98c1c32b4e7c1fcb",
+      "sha256": "c3298f885b08e05310caaa5a61cc40b69d99396b69ebd44c8ab2cb8281ee416a",
       "size": 191,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "a5fb1f7895e7daf7ab84a5e648b7623fe6e4d0fc1aed672688fe4a3954f77a5d",
+      "sha256": "51e08fe76e9f3e66e068bfb20ab3cdc6305092b8bbb9bb081f77ce73c29b1231",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "a5fb1f7895e7daf7ab84a5e648b7623fe6e4d0fc1aed672688fe4a3954f77a5d",
+      "sha256": "51e08fe76e9f3e66e068bfb20ab3cdc6305092b8bbb9bb081f77ce73c29b1231",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "4166ab07807b9e7fe08fa57748f8d35ea63ec2d172a797789034082a4a773ae2",
-      "size": 45960,
+      "sha256": "3c5f6d4591190d0b056848e2bc6eabd7f2776425972ec421023cf4edb445a0f8",
+      "size": 46818,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/hooks/destructive-command-block.cjs": {
@@ -430,18 +430,18 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/SKILL.md": {
-      "sha256": "b2170b10fb8b1a9f09248aa4983551adc1b17ef7d246c76ba7b65d0a70553cd7",
-      "size": 4181,
+      "sha256": "c14196f419477aede7d7085a77f905c29460723abf03087518e527b560341c6a",
+      "size": 4224,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/references/report-contract.md": {
-      "sha256": "ba7c0cdf7888a21d25d8b83c6bd1d728abe55d8cb241adc785573eb5ad3bedee",
-      "size": 5106,
+      "sha256": "dbcd9d065ea0f25b41eb08e7af6afd827850552efabeeb21fb73670a0a866d08",
+      "size": 6247,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/references/review-orchestration.md": {
-      "sha256": "4d4f4ef6baa7c39371e357b28034177624e6dd0a2d3c0bae15394b2969ef0164",
-      "size": 5587,
+      "sha256": "0c1ed7ae1943ec5194609b4fe5482cd5d4af78d2ad535a7e3542b5a20cf93b4d",
+      "size": 10288,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/RUNTIME-LICENSE.txt": {
@@ -465,13 +465,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-scope.js": {
-      "sha256": "c689ba0041c32474c4dbf67aa4f7a9cd667ca184da57e9a2c067ee9b726ba382",
-      "size": 387089,
+      "sha256": "e409f7fb8c2a4e86ffd408589e9293a2fb2abd5d092dd199b496151568aed332",
+      "size": 390725,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-scope.ts": {
-      "sha256": "3a3ffcab1ca5c156bbc0c04a8a8fcf0062bf1dc4ff6fa5d430d8c5f3ad9e0b30",
-      "size": 18581,
+      "sha256": "3e4c58ad81264572ad14c78c84ec51ca4c4d1b15a685c296c5109fe035ef2fae",
+      "size": 25046,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-write-report.js": {
@@ -1520,23 +1520,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.claude-plugin/plugin.json": {
-      "sha256": "25566415a0fa7c7337d16f31adb1befb34b9b41d0e35ea453e02a92ad8f04344",
+      "sha256": "ed0951712e54afa8b65d11963b23362e2996fb11aeef03c026fffedda885e508",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.codex-plugin/plugin.json": {
-      "sha256": "25566415a0fa7c7337d16f31adb1befb34b9b41d0e35ea453e02a92ad8f04344",
+      "sha256": "ed0951712e54afa8b65d11963b23362e2996fb11aeef03c026fffedda885e508",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.cursor-plugin/plugin.json": {
-      "sha256": "25566415a0fa7c7337d16f31adb1befb34b9b41d0e35ea453e02a92ad8f04344",
+      "sha256": "ed0951712e54afa8b65d11963b23362e2996fb11aeef03c026fffedda885e508",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/CHANGELOG.md": {
-      "sha256": "e426f6a311c894dad7024f5a5058e2bb2ce4f8f01efc1ebb96778dae1be73e4d",
-      "size": 10612,
+      "sha256": "31e32ca629a65d31c58492492831936d6c9d93d90f85369603d9ca51cfad6026",
+      "size": 10847,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/researcher.md": {
@@ -1545,8 +1545,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/tdk-code-reviewer.md": {
-      "sha256": "d3bac7cfd274c2982fd49a1a45be52cfde17bf5ed6bcebbb5928f87b272aac16",
-      "size": 5575,
+      "sha256": "84af7c3fa4785bc6e78bc9026ed6ee704c6bc70e3d1d146789138b2a299e83fe",
+      "size": 6310,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/tdk-counsel.md": {

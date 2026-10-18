@@ -9,6 +9,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 ### Fixed
 - `tdk-handoff`: restore the branding-safe upstream identity resource and pinned adapted-source MIT notice so linked resources accompany default and branded installed skills.
 
+## [4.5.1] - 2026-10-18
+
+### Changed
+- tdk-code-reviewer: reviews only the files of its assignment header (slice, repo, sub-workspace, piece); the `spec` lens records per-piece status and lists out-of-piece aspects under `notChecked`
+
 ## [4.5.0] - 2026-10-11
 
 ### Added

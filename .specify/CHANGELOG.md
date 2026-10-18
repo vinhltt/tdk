@@ -6,6 +6,15 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.122.0] - 2026-10-18
+
+### Changed
+- **[tdk-core]** `/tdk-review` isolates reviewers and routed skills/agents per sub-workspace
+  - Scope JSON: `slices[]` with `routingPaths` and file-packed `pieces[]` (1500-line target, `oversized` single files) added; `repos[].diff` removed
+  - Per-slice routing and per slice × piece dispatch; full subagent count checked against the cap of 8 before any spawn
+  - Per-piece finding validation, cross-piece spec synthesis, repo-aware dedupe; spec coverage gaps and unreviewed slices cap the verdict at `pass_with_concerns`
+- **[tdk-utils]** `tdk-code-reviewer` takes an assignment header and reports out-of-piece spec aspects under `notChecked`
+
 ## [1.121.0] - 2026-10-11
 
 ### Added
