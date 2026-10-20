@@ -2,7 +2,7 @@
 name: tdk-status
 description: "This skill should be used when the user asks to 'check status', 'tdk-status', 'what's the progress of <task-id>', 'which branch is each repo on', or needs a read-only report of a TDK feature's artifacts, phase progress, and per-repository branch state. Never modifies files."
 metadata:
-  version: "13.0.2"
+  version: "14.2.1"
 ---
 
 # /tdk-status - Track Workflow Progress
@@ -36,7 +36,12 @@ The agent must resolve `<agent-resolved-project-root>` from the active coding ha
 
 Use structured JSON fields, not this skill's formatted report or recommendation prose:
 
-- `feature_status`: `empty` | `specified` | `planned` | `in_progress` | `complete` | `blocked`
+- `feature_status`: `empty` | `draft` | `ready` | `planned` | `in_progress` | `blocked` | `done` | `cancelled` | `archived`.
+  Computed, not read: before a plan exists it is the live specification quality gate verdict (`ready` when
+  `/tdk-plan` would accept the spec, else `draft`); once `plan.md` has a parseable `## Phases` table it is the
+  same value the plan root `status:` is written with; a stored `archived` always wins
+- `stored_status.spec`, `stored_status.plan`: raw frontmatter `status:` of `spec.md` / `plan.md` as stored on disk,
+  or `null` when the file or key is absent. Never branch on these; use `feature_status`
 - `phases.total`, `phases.done`, `phases.skipped`, `phases.inProgress`, `phases.todo`, `phases.blocked`, `phases.percent`
 - `phases.currentPhase`: first `in_progress` phase file, or empty string
 - `phases.nextPhase`: first `todo` phase file, or empty string
@@ -66,6 +71,10 @@ Use structured JSON fields, not this skill's formatted report or recommendation 
 - `subWorkspaces[].note`: short explanation, present only on `unknown` rows — `detached HEAD`,
   `not a separate git repository`, `not a git working tree`, `recorded worktree is missing`,
   `worktree path is not a worktree of this repository`, or `not in config`
+- `warnings[].level`: `stale` | `outdated` (with `warnings[].file` and `warnings[].days`), `status_mismatch`, or
+  `status_fallback`. A `status_mismatch` warning carries `warnings[].file`, `warnings[].stored`,
+  `warnings[].derived`, `warnings[].message`, and `warnings[].fix` (the command or step that repairs it). A
+  `status_fallback` warning carries `warnings[].message` only
 - `error` and `phasesParseError` for stop conditions
 
 Every branch field listed above is additive: no previously published field changed name or type.
@@ -155,7 +164,7 @@ Show `actualBranch` as the branch column, or `—` when it is `null`. When `work
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 - Artifact checklist: ✅/❌ for spec.md, plan.md with `modified` dates
-- Feature status badge from `feature_status` field: `empty` | `specified` | `planned` | `in_progress` | `complete` | `blocked`
+- Feature status badge from `feature_status` field: `empty` | `draft` | `ready` | `planned` | `in_progress` | `blocked` | `done` | `cancelled` | `archived`
 
 **Phase Progress (from `phases.rows[]`):**
 - Progress: `Phases: {phases.done}/{phases.total - phases.skipped} ({phases.percent}%)`
@@ -188,6 +197,8 @@ If `recommendation.alternative` exists and `recommendation.alternative.command` 
 If `warnings[]` is non-empty, show each with ⚠️ icon:
 - `stale` (>7 days): "May need refresh"
 - `outdated` (>14 days): "Consider updating"
+- `status_mismatch`: show `message`, then the repair line `warnings[].fix`
+- `status_fallback`: show `message`
 
 ### Git Status
 Show `git.rootBranch`, `git.featureBranch`, `git.featureBranchExists`, and `git.uncommitted` from the

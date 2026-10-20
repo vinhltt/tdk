@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "14.1.0"
+  version: "14.2.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -171,7 +171,7 @@ fallback are missing.
 
 ### Step 1 — Setup
 **Inline.** <!-- safety-critical script invocation -->
-Before this invocation's first generation mutation, capture raw byte snapshots and existence of `plan.md` and every existing phase file that may be replaced/deleted, plus an inventory of pre-existing files in the feature directory. Capture before `setup-plan.ts` creates a new plan and before any rewrite `--force`; keep these snapshots through Step 3d. If capture fails, STOP before writing. Review-only actions do not enter this generation transaction. A setup failure uses the same rollback.
+Before this invocation's first generation mutation, capture raw byte snapshots and existence of `plan.md`, sibling `spec.md` (generation finalize rewrites its lifecycle `status`), and every existing phase file that may be replaced/deleted, plus an inventory of pre-existing files in the feature directory. Capture before `setup-plan.ts` creates a new plan and before any rewrite `--force`; keep these snapshots through Step 3d. If capture fails, STOP before writing. Review-only actions do not enter this generation transaction. A setup failure uses the same rollback.
 Run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/setup-plan.ts {task_id} --json)`. Parse JSON for `taskId`, `featureSpec`, `implPlan`, `featureDir`, `hasGit`, **`planExists`**.
 
 ### Step 1.5 — Handle Existing Plan

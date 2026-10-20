@@ -4,6 +4,18 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.2.1] - 2026-10-20
+
+### Added
+- One feature lifecycle shared by spec.md and the plan.md root status, derived from phase rows on every status write and mirrored into spec.md; archived is sticky
+- update-phase-status.ts --reconcile-root re-derives and heals a drifted plan root and spec
+- feature/archive.ts archives a done or cancelled feature into <specs>/archive/<folder>/<id>/ with restore on failure
+- /tdk-specify and /tdk-clarify set draft/ready from the Specification Quality Gate verdict
+
+### Changed
+- BREAKING: tdk-status feature_status uses the lifecycle vocabulary (specified → draft/ready, complete → done; blocked = nothing started, no todo, at least one blocked); new plans write status: planned
+- BREAKING: /tdk-implement status preflight has one row per lifecycle value; done work with only blocked rows left stops and recommends /tdk-plan
+
 ## [14.2.0] - 2026-10-18
 
 ### Changed

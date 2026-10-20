@@ -91,7 +91,7 @@ fields are an additive extension; legacy plans may omit all four.
 ```yaml
 ---
 title: "{Brief title}"
-status: todo              # todo | in_progress | done | skipped | blocked | cancelled
+status: planned           # draft | ready | planned | in_progress | blocked | done | cancelled | archived
 priority: P2              # P1 | P2 | P3
 effort: 4h                # rough estimate, sum of phase efforts
 tags: [frontend, api]
@@ -154,6 +154,32 @@ Update phase status with:
 
 1. `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-frontmatter-status.ts "{phasePath}" {status})`
 2. `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/update-phase-status.ts "{FEATURE_DIR}/plan.md" {phaseNumber} {status})`
+
+The second command also recomputes the plan root `status` from the `## Phases`
+rows and, when that value changes, mirrors it into sibling `spec.md`. It refuses
+any write on an `archived` plan. `--reconcile-root "{FEATURE_DIR}/plan.md"`
+recomputes and mirrors without changing a row.
+
+### Plan Root Lifecycle Status
+
+The plan root `status` and `spec.md` `status` share one lifecycle:
+`draft | ready | planned | in_progress | blocked | done | cancelled | archived`.
+Once a plan exists the root value is script-derived from the phase rows
+(first match wins):
+
+| Rows | Root status |
+|---|---|
+| any `in_progress` | `in_progress` |
+| all `done`/`skipped`/`cancelled`, at least one `done` | `done` |
+| all `skipped`/`cancelled` | `cancelled` |
+| some `done` plus `todo`/`blocked` | `in_progress` |
+| no `todo`, at least one `blocked` | `blocked` |
+| otherwise (incl. no rows, or `todo` with blocked spike dependents) | `planned` |
+
+New plans start at `planned`; a legacy root `todo` reads as `planned`. Manual
+root edits are overwritten by the next status write — to cancel or hold a whole
+plan, set every row to `cancelled` or `blocked`. `archived` is written only by
+`bun src/commands/feature/archive.ts <feature-id>` and is never recomputed.
 
 ## Phase File Conventions
 

@@ -1,6 +1,6 @@
 ---
 title: "[FEATURE NAME]"
-status: Draft
+status: draft  # draft | ready | planned | in_progress | blocked | done | cancelled | archived
 feature_branch: "[FEATURE BRANCH]"    # branch created FOR this task; on a polyrepo project the same
                                       # name is created in every affected sub-workspace repo.
                                       # NOT the branch it is created FROM — that base ref is decided

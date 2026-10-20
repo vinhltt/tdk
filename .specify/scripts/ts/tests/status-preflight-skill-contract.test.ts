@@ -42,9 +42,39 @@ describe('status preflight skill contract', () => {
       'planned',
       'in_progress',
       'blocked',
-      'complete',
+      'done',
     ]) {
       expect(implementContract).toContain(term);
+    }
+  });
+
+  it('tdk-implement stops on every lifecycle status that has nothing to implement', () => {
+    const rows = new Map<string, string>();
+    for (const line of implementContract.split('\n')) {
+      const match = /^\| `([a-z_]+)`[^|]*\| (.+) \|$/.exec(line);
+      if (match) rows.set(match[1]!, match[2]!);
+    }
+    for (const status of ['draft', 'ready', 'blocked', 'done', 'cancelled', 'archived', 'empty']) {
+      expect(rows.get(status)).toMatch(/^STOP/);
+    }
+    expect(rows.get('draft')).toContain('/tdk-clarify {TASK_ID}');
+    expect(rows.get('ready')).toContain('/tdk-plan {TASK_ID}');
+    expect(rows.get('planned')).toStartWith('Show todo count');
+    expect(rows.get('in_progress')).toBeDefined();
+    // Done plus only blocked rows derives in_progress with no runnable phase.
+    expect(implementContract).toMatch(
+      /^\| `in_progress` \+ no `nextPhase` \+ no `currentPhase` \| STOP\..*`\/tdk-plan \{TASK_ID\}`/m,
+    );
+  });
+
+  it('feature-status vocabulary no longer uses the pre-lifecycle values', () => {
+    const statusSource = read(STATUS_SOURCE);
+    const lifecycleSource = read(resolve(dirname(STATUS_SOURCE), 'feature-lifecycle-status.ts'));
+    for (const text of [implementContract, statusSkill, statusSource, lifecycleSource]) {
+      expect(text).not.toMatch(/feature_status[^\n]*`(specified|complete)`/);
+      expect(text).not.toMatch(/\| `(specified|complete)` \|/);
+      expect(text).not.toMatch(/FeatureStatus[^\n]*'(specified|complete)'/);
+      expect(text).not.toMatch(/case '(specified|complete)'/);
     }
   });
 

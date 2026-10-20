@@ -696,7 +696,26 @@ Command giờ là `/tdk-delegate-routing` với ba action — `diff`, `register`
 **Re-running `/tdk-plan` after implementation:**
 
 - **(a) Update phases only** — Khi feature scope mở rộng hoặc phases đổi: re-run `/tdk-plan <id>`; command overwrite `plan.md`, bạn mất current Status-column progress.
-- **(b) Append new phases** — Khi thêm follow-up work: manually add rows vào existing `## Phases` table trong `plan.md`, rồi resume với `/tdk-implement <id> [--phase NN]`.
+- **(b) Append new phases** — Khi thêm follow-up work: manually add rows vào existing `## Phases` table trong `plan.md`, chạy `bun src/commands/util/update-phase-status.ts --reconcile-root <plan>` từ `.specify/scripts/ts` để feature status rời `done`, rồi resume với `/tdk-implement <id> [--phase NN]`.
+
+### Feature Lifecycle Status
+
+`status` của `spec.md` và root `status` của `plan.md` mang cùng một giá trị từ một lifecycle chung. `/tdk-status` báo giá trị này là `feature_status` (thêm `empty` khi chưa có spec).
+
+| Status | Ý nghĩa | Owner |
+|--------|---------|-------|
+| `draft` | Spec vừa tạo, hoặc quality gate chưa được chấp nhận | `/tdk-specify`, `/tdk-clarify` |
+| `ready` | Quality gate được chấp nhận — `/tdk-plan` chạy được | `/tdk-specify`, `/tdk-clarify` |
+| `planned` | Plan đã generate, chưa phase nào bắt đầu | Phase status scripts |
+| `in_progress` | Đã bắt đầu, chưa xong; nếu sau phần done chỉ còn row `blocked`, `/tdk-status` khuyên `/tdk-plan` và `/tdk-implement` dừng | Phase status scripts |
+| `blocked` | Chưa bắt đầu, không còn `todo`, có ít nhất một `blocked` | Phase status scripts |
+| `done` | Mọi phase đã xong, có ít nhất một `done` | Phase status scripts |
+| `cancelled` | Mọi phase `skipped`/`cancelled` | Phase status scripts |
+| `archived` | Feature `done`/`cancelled` đã được archive tường minh | Archive command |
+
+- Khi đã có plan, mỗi lần ghi phase status sẽ tính lại giá trị từ các row `## Phases` và mirror sang `spec.md`. Sửa tay root sẽ bị ghi đè; muốn cancel hoặc hold cả plan, set mọi row thành `cancelled` hoặc `blocked`. Rule derivation nằm ở [plan-output-contract.md](../../../plugins/tdk-core/skills/tdk-plan/references/plan-output-contract.md#plan-root-lifecycle-status).
+- Sửa drift (ví dụ plan legacy có root `todo` và các phase đã xong) bằng `bun src/commands/util/update-phase-status.ts --reconcile-root <plan>` từ `.specify/scripts/ts`. `/tdk-status` hiển thị giá trị đang lưu ở `stored_status` và in fix line này khi lệch.
+- Archive feature `done` hoặc `cancelled` bằng `bun src/commands/feature/archive.ts <feature-id>` từ `.specify/scripts/ts`. Lệnh ghi `status: archived` và `archived_from` vào cả hai file, rồi move feature directory sang `<specsRoot>/archive/<folder>/<id>/`. Reference `blocks`/`blockedBy` và `parent_spec` trỏ tới feature chỉ được report, không rewrite. Plan đã archive từ chối mọi lần ghi phase status và vẫn đọc được qua `/tdk-status archive/<folder>/<id>`.
 
 ## Workflow Map
 

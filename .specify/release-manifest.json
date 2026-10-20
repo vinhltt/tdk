@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-10-18T09:59:43.991Z",
+  "generatedAt": "2026-10-20T07:44:45.578Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -90,8 +90,8 @@
       "mode": "0644"
     },
     ".specify/docs/en/guides/concepts/promote-convention.md": {
-      "sha256": "19b505ba32f91046537682cadbcdb0e9a9828e32ca68d5d5f14cbb14f7b911a7",
-      "size": 5372,
+      "sha256": "05b754f91ce290b6f540adac29b126847adfd72372ad66cb5b5ef548db6e6211",
+      "size": 5684,
       "mode": "0644"
     },
     ".specify/docs/en/guides/index.md": {
@@ -135,8 +135,8 @@
       "mode": "0644"
     },
     ".specify/docs/en/guides/skills-guide.md": {
-      "sha256": "e81a2a5b26bf5649723ceb6f67b60dc0d0bf433231f9efac63772154d9da9b80",
-      "size": 72484,
+      "sha256": "e1ea8f042a1e29120bfc373f5e6aa3207098f751be1cd69c49ad3b1504aac558",
+      "size": 74804,
       "mode": "0644"
     },
     ".specify/docs/en/guides/workflow-map.md": {
@@ -155,8 +155,8 @@
       "mode": "0644"
     },
     ".specify/docs/vi/guides/concepts/promote-convention.md": {
-      "sha256": "79106c78d5780cac08e219beae07bdd738a5fbb4cfe68e62be15e5ebe59dc1c2",
-      "size": 5655,
+      "sha256": "9fabecce4ea08355d591d4577cc260cb75b9f736882e300df6d1fb8cc24ec45f",
+      "size": 5990,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/index.md": {
@@ -200,8 +200,8 @@
       "mode": "0644"
     },
     ".specify/docs/vi/guides/skills-guide.md": {
-      "sha256": "fea65c8fb9c1238bdde5348022388ddc316310d507c735ffe66591ec9fbacd43",
-      "size": 75176,
+      "sha256": "8ea1e17b0db311aece085003ecf9707db751be388e1e9e110c273f78817f40e3",
+      "size": 77692,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/workflow-map.md": {
@@ -210,7 +210,7 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "5ed28738bad495594968b368036ed49a1baa6fc47efe9dd2ed8cc841e00cd1dc",
+      "sha256": "ff7b43345f064ba0c3ca995e1e3910479b15ddc6a3c7a22a518e76050af97571",
       "size": 49078,
       "mode": "0644"
     },
@@ -225,23 +225,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "c3298f885b08e05310caaa5a61cc40b69d99396b69ebd44c8ab2cb8281ee416a",
+      "sha256": "a45a4b4b3ed7c2a7cbfab8744f848406b84554190728cbf8cd12cfa0fd8fdd9b",
       "size": 191,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "51e08fe76e9f3e66e068bfb20ab3cdc6305092b8bbb9bb081f77ce73c29b1231",
+      "sha256": "eaf69c59d685b869eb20e8044a93e7ea784c4391019d8f52e07a57524016916d",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "51e08fe76e9f3e66e068bfb20ab3cdc6305092b8bbb9bb081f77ce73c29b1231",
+      "sha256": "eaf69c59d685b869eb20e8044a93e7ea784c4391019d8f52e07a57524016916d",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "3c5f6d4591190d0b056848e2bc6eabd7f2776425972ec421023cf4edb445a0f8",
-      "size": 46818,
+      "sha256": "bffa35d1bf14f163923b86f274149f32112cb1d7494212aa4c57802455a5ff34",
+      "size": 47685,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/hooks/destructive-command-block.cjs": {
@@ -325,8 +325,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-clarify/SKILL.md": {
-      "sha256": "ab24d63f464c022afb414adf2603fe821c8f8da919b58f857c912e4a0eb9126c",
-      "size": 19697,
+      "sha256": "3e39d97da17b10a33f4cbe702f0d3823f0298b1caebb24e81befdc265f19bca0",
+      "size": 20645,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-consistency-check/SKILL.md": {
@@ -335,8 +335,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/SKILL.md": {
-      "sha256": "50d6553a74b9650a25165c1d28a106bf9887b022a502764b1487ca720f689e7e",
-      "size": 11819,
+      "sha256": "d69f181d45d1d45ff62958394d0fdb4a9022a150835eb5156940e6be6f3cc37c",
+      "size": 11934,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/references/parallel-phase-orchestration.md": {
@@ -350,8 +350,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/references/project-and-phase-contract.md": {
-      "sha256": "a186abfba5720ec88abaf0114fd4dc3ad139feb329e76c7c29e7991f0c71f840",
-      "size": 10915,
+      "sha256": "3df9b47c7860518dfa5aa5a00e0ed9ce4d4415c47c29739347e6b246a758f3a1",
+      "size": 11302,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-implement/references/routing-preflight.md": {
@@ -360,8 +360,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/SKILL.md": {
-      "sha256": "340998944d172570e191014aa07225ccb2e4241456d626132fa387b978fc9c4d",
-      "size": 31373,
+      "sha256": "515850db25d8a9825bdcbedb015d30e76759a083c35ab2ea997125a5bbf0e1be",
+      "size": 31447,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/cross-plan-deps.md": {
@@ -370,13 +370,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/delegate-routing-injection.md": {
-      "sha256": "b1f5869537510f62f335a65c42e1794dcfc0b617b0785b8e44b30bb22d213d85",
-      "size": 25028,
+      "sha256": "a8780c4bfe69377249523e3c7461dfddebf655488e5987b67af0453211432354",
+      "size": 25648,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/design-phase.md": {
-      "sha256": "77a4bc01051199bf24d77013e82bf60e4c5680148e3976e8814cabd046afcacf",
-      "size": 19442,
+      "sha256": "957db57919b791e35b2d310afb358219ac510be8fed8fac824e556b000b23d56",
+      "size": 19521,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/gates.md": {
@@ -385,8 +385,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/handle-existing-plan.md": {
-      "sha256": "5e66d5ccb4a391c99da9a6c15e0013406ca9d788ff3f2b9d3d0170a6de94d3cc",
-      "size": 11758,
+      "sha256": "9cae64d1be77e92522870ba0f11fe9a304a4f574faddc0d557459b29af1a66e4",
+      "size": 12015,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/migrate-artifacts-workflow.md": {
@@ -400,8 +400,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/plan-output-contract.md": {
-      "sha256": "ae635d5da21e90b82e04b81bb6ff91f02245971694bbba172aba7c54dcc8f7f2",
-      "size": 20986,
+      "sha256": "a3755b7fbfbe569cccf1fd4b522fd6ebf2de2ff2d6a632cf30fc4944842f3668",
+      "size": 22249,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/red-team-workflow.md": {
@@ -490,8 +490,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-specify/SKILL.md": {
-      "sha256": "3294570ea2de6bde429906b3703f2bead313b5e00bd8af0ab85cbf2bdb426824",
-      "size": 9812,
+      "sha256": "57c67d23cda2694bf8c66fc69c8633c2d132dd1cc346c12a30386d00f8470451",
+      "size": 10094,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-specify/evals/evals.json": {
@@ -510,8 +510,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-specify/references/spec-generation-and-validation-workflow.md": {
-      "sha256": "62e96842bc4ff9aaf2341e00bf3fefeda6e6cca2ed04273f6b3df44b1b6a5f80",
-      "size": 11373,
+      "sha256": "52ef1f540f6cbd7b8100a671ae76c05b3cf6eeb5dbb991c95a702cb90195c6f0",
+      "size": 12190,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-specify/references/spec-quality-guidelines.md": {
@@ -525,8 +525,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-status/SKILL.md": {
-      "sha256": "08cc529223cdf680235ec335455aa661c97b6c5bddad836ca5ee58ffae776eb3",
-      "size": 10125,
+      "sha256": "810778b555891491646ce7c762beec9e3b2f78312b828fc4a2fe1a6687c91006",
+      "size": 11183,
       "mode": "0644"
     },
     ".specify/plugins/tdk-epic/.claude-plugin/interface.json": {
@@ -1984,9 +1984,24 @@
       "size": 1681,
       "mode": "0644"
     },
+    ".specify/scripts/ts/src/commands/feature/archive-incoming-references.ts": {
+      "sha256": "7c26f683d509b1a61235d81a18b8dee468d8e02bcd6874f2833a02d7eecb592d",
+      "size": 3925,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/feature/archive.ts": {
+      "sha256": "c60559712a18f298b8b081783b7ab4416021ac653217ee572472f4a954cc96ef",
+      "size": 8241,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/feature/feature-lifecycle-status.ts": {
+      "sha256": "faa9b264c7550004a809bca82864446d32ef49b3189d26d413f44c1460b571d3",
+      "size": 5938,
+      "mode": "0644"
+    },
     ".specify/scripts/ts/src/commands/feature/status.ts": {
-      "sha256": "2785117378d6f8364badf860e2fa13d4da9f6f41cd38c0ac5df24db38916078b",
-      "size": 21520,
+      "sha256": "fe3ccbb5ddd8e10439fd4c576f6e8a5c37a44b357c6af868d08b7399196cf116",
+      "size": 20883,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/manifest/compare.ts": {
@@ -2305,8 +2320,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/parallel-phase-status-reconciler.ts": {
-      "sha256": "ed7432e92656cbbe1a6da2e6ea1d54a944397e55e562274fbcd70c4094aa4317",
-      "size": 5758,
+      "sha256": "11f3b5a852edb105f1811f4b5d812b4225a394453ba27b541bbfe1da34f8fd3e",
+      "size": 7841,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/parent-directory-sync.ts": {
@@ -2335,8 +2350,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/phase-frontmatter.ts": {
-      "sha256": "426048d40334231c10c9cb72c3c3e82c82c51204785b3080bf28eaaac50b871d",
-      "size": 2147,
+      "sha256": "a8320a834d06a1829a4620bc3dde734663194893aa926dc2c2dde5e61a990ee1",
+      "size": 3469,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/phases-table-parser.ts": {
@@ -2349,9 +2364,14 @@
       "size": 5658,
       "mode": "0644"
     },
+    ".specify/scripts/ts/src/commands/util/plan-root-status.ts": {
+      "sha256": "3dd8d4143605399d3c59a3e57f6bc9c2743407afa443eba8143356eb1fa015aa",
+      "size": 4943,
+      "mode": "0644"
+    },
     ".specify/scripts/ts/src/commands/util/plan-status-validator.ts": {
-      "sha256": "ecd29ed260182a2edb4d6ac0d5f0c6fa10a20c4efbb55674e0c3e2f40b9ffe1b",
-      "size": 1659,
+      "sha256": "9c8b0ac16642e31c5f783b0df4bb0b98a49a44fdc783abd122e72a9e7e012b87",
+      "size": 2954,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/resolve-spike-decision.ts": {
@@ -2420,18 +2440,18 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/transition-phase-status.ts": {
-      "sha256": "07edea38e981f564156743a253f449e7ce2fa9af82f4c645216ebe1410eabcd9",
-      "size": 2841,
+      "sha256": "ea8dc1b4ada1fac28c54ea68c785973e72101a3fc059fe689f35d5b5fac68708",
+      "size": 2945,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/update-phase-frontmatter-status.ts": {
-      "sha256": "1f2a95e81ef39ec506d26f054bc7c524a722ae0ecc5792abb8e8a87e541386db",
-      "size": 815,
+      "sha256": "ec72bb400aa75f7e202f30bd885dcf35c4381616b528d31bd79f315b5a70fa5c",
+      "size": 1488,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/update-phase-status.ts": {
-      "sha256": "20bb0447a7ddd186e025085fa976c23056fedd88a957057ea57f62fb4cd2b193",
-      "size": 2343,
+      "sha256": "0fb56d5b284b2c958ff73169cc4cf4db495dfd9761a92e8b83266f8d001459a1",
+      "size": 5238,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/util/validate-phase-file.ts": {
@@ -2685,8 +2705,8 @@
       "mode": "0644"
     },
     ".specify/templates/spec-template.md.tpl": {
-      "sha256": "3e4152344ff357c31e79f2556bca903f88da8d64ca8b9e24c6deb4e6833caff9",
-      "size": 6995,
+      "sha256": "b08ec5b6988cb0805b4cfd03b3145fb9de445fe55780eefe53e9da9a35c702b6",
+      "size": 7076,
       "mode": "0644"
     },
     ".specify/templates/state-transitions-template.md.tpl": {

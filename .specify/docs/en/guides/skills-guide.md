@@ -742,7 +742,26 @@ actions were removed.
 
 **Re-running `/tdk-plan` after implementation:**
 - **(a) Update phases only** — When feature scope expands or phases change: re-run `/tdk-plan <id>` (overwrites plan.md; you lose current Status-column progress)
-- **(b) Append new phases** — When adding follow-up work: manually add rows to the existing `## Phases` table in plan.md, then resume with `/tdk-implement <id> [--phase NN]`
+- **(b) Append new phases** — When adding follow-up work: manually add rows to the existing `## Phases` table in plan.md, run `bun src/commands/util/update-phase-status.ts --reconcile-root <plan>` from `.specify/scripts/ts` so the feature status leaves `done`, then resume with `/tdk-implement <id> [--phase NN]`
+
+### Feature Lifecycle Status
+
+`spec.md` `status` and the `plan.md` root `status` carry the same value from one lifecycle. `/tdk-status` reports it as `feature_status` (plus `empty` when no spec exists).
+
+| Status | Meaning | Owner |
+|--------|---------|-------|
+| `draft` | Spec created, or its quality gate is not accepted | `/tdk-specify`, `/tdk-clarify` |
+| `ready` | Quality gate accepted — `/tdk-plan` can run | `/tdk-specify`, `/tdk-clarify` |
+| `planned` | Plan generated, no phase started | Phase status scripts |
+| `in_progress` | Work started and not finished; when only `blocked` rows remain after done work, `/tdk-status` recommends `/tdk-plan` and `/tdk-implement` stops | Phase status scripts |
+| `blocked` | Nothing started, no `todo` left, at least one `blocked` | Phase status scripts |
+| `done` | All phases finished, at least one `done` | Phase status scripts |
+| `cancelled` | All phases `skipped`/`cancelled` | Phase status scripts |
+| `archived` | Explicitly archived `done`/`cancelled` feature | Archive command |
+
+- After a plan exists, every phase status write recomputes the value from the `## Phases` rows and mirrors it into `spec.md`. Manual root edits are overwritten; to cancel or hold a whole plan, set every row to `cancelled` or `blocked`. The derivation rules live in [plan-output-contract.md](../../../plugins/tdk-core/skills/tdk-plan/references/plan-output-contract.md#plan-root-lifecycle-status).
+- Fix drift (for example a legacy plan with root `todo` and finished phases) with `bun src/commands/util/update-phase-status.ts --reconcile-root <plan>` from `.specify/scripts/ts`. `/tdk-status` shows the stored values as `stored_status` and prints this fix line on a mismatch.
+- Archive a `done` or `cancelled` feature with `bun src/commands/feature/archive.ts <feature-id>` from `.specify/scripts/ts`. It writes `status: archived` and `archived_from` to both files, then moves the feature directory to `<specsRoot>/archive/<folder>/<id>/`. Incoming `blocks`/`blockedBy` and `parent_spec` references are reported, not rewritten. An archived plan refuses further phase status writes and stays readable via `/tdk-status archive/<folder>/<id>`.
 
 ## Workflow Map
 

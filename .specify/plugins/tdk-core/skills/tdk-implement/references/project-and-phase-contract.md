@@ -121,9 +121,13 @@ Decision table:
 | `planned` | Show todo count and first todo phase; continue to parse/confirm. |
 | `in_progress` + `nextPhase` + no `currentPhase` | Show progress and resume target; continue to parse/confirm from `nextPhase`. |
 | `in_progress` + `currentPhase` | Continue to parse, then enter F3 recovery gate before any status mutation. |
-| `blocked` | If `todo == 0`, STOP. If at least one todo row exists, show blocked rows and continue to parse/confirm; a runnable spike or independent phase may resolve them. |
-| `complete` | STOP. Report complete. Appended phases must be present in `plan.md` `## Phases` to be detected. |
-| `specified` | STOP. Recommend `/tdk-plan {TASK_ID}`. |
+| `in_progress` + no `nextPhase` + no `currentPhase` | STOP. Only blocked rows remain after done work; show blocked rows and recommend resolving them with `/tdk-plan {TASK_ID}`. |
+| `blocked` | STOP. No actionable phase is left; show blocked rows and recommend resolving them with `/tdk-plan {TASK_ID}`. |
+| `done` | STOP. Report done. Appended phases must be present in `plan.md` `## Phases` to be detected. |
+| `cancelled` | STOP. Every phase is skipped or cancelled; nothing to implement. |
+| `archived` | STOP. Feature is archived; it is no longer an active feature. |
+| `ready` | STOP. No plan yet; recommend `/tdk-plan {TASK_ID}`. |
+| `draft` | STOP. Spec has not passed the quality gate; recommend `/tdk-clarify {TASK_ID}`. |
 | `empty` | STOP. Recommend `/tdk-specify {TASK_ID}`. |
 
 Compact preflight summary:

@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import {
   readPhaseFrontmatterStatus,
   renderPhaseFrontmatterStatus,
+  replaceFrontmatterStatusLine,
   updatePhaseFrontmatterStatus,
 } from '../src/commands/util/phase-frontmatter';
 import type { PhaseStatus } from '../src/commands/util/phases-table-parser';
@@ -118,5 +119,43 @@ describe('phase frontmatter pure helpers', () => {
     const before = readFileSync(path, 'utf-8');
     expect(readPhaseFrontmatterStatus(before, path)).toBeNull();
     expect(readPhaseFrontmatterStatus(renderPhaseFrontmatterStatus(before, 'todo', path), path)).toBe('todo');
+  });
+});
+
+describe('replaceFrontmatterStatusLine', () => {
+  it('keeps CRLF on the rewritten status line', () => {
+    const before = '---\r\nphase: 1\r\nstatus: todo\r\n---\r\n# Phase\r\n';
+    expect(replaceFrontmatterStatusLine(before, 'done')).toBe('---\r\nphase: 1\r\nstatus: done\r\n---\r\n# Phase\r\n');
+  });
+
+  it('preserves a leading BOM', () => {
+    const before = '\uFEFF---\nstatus: todo\n---\n';
+    expect(replaceFrontmatterStatusLine(before, 'done')).toBe('\uFEFF---\nstatus: done\n---\n');
+  });
+
+  it('preserves an inline comment after the value', () => {
+    expect(replaceFrontmatterStatusLine('---\nstatus: draft  # draft | ready\n---\n', 'ready'))
+      .toBe('---\nstatus: ready  # draft | ready\n---\n');
+  });
+
+  it('keeps $ replacement patterns in the frontmatter literal', () => {
+    const before = "---\ntitle: costs $$ and $' and $&\nstatus: todo\nphase: 1\n---\n# $` body\n";
+    expect(replaceFrontmatterStatusLine(before, 'done')).toBe(before.replace('status: todo', 'status: done'));
+    expect(renderPhaseFrontmatterStatus(before, 'in_progress')).toBe(before.replace('status: todo', 'status: in_progress'));
+    const noStatus = "---\ntitle: $'x$$\nphase: 1\n---\n";
+    expect(renderPhaseFrontmatterStatus(noStatus, 'todo')).toBe("---\ntitle: $'x$$\nphase: 1\nstatus: todo\n---\n");
+  });
+
+  it('is a no-op without frontmatter or status key', () => {
+    expect(replaceFrontmatterStatusLine('# body only\n', 'done')).toBe('# body only\n');
+    expect(replaceFrontmatterStatusLine('---\nphase: 1\n---\n', 'done')).toBe('---\nphase: 1\n---\n');
+  });
+
+  it('lets the phase renderer update CRLF and BOM files', () => {
+    const crlf = '---\r\nphase: 1\r\nstatus: todo\r\n---\r\n';
+    expect(renderPhaseFrontmatterStatus(crlf, 'in_progress')).toBe('---\r\nphase: 1\r\nstatus: in_progress\r\n---\r\n');
+    const bom = '\uFEFF---\nphase: 1\nstatus: todo\n---\n';
+    expect(readPhaseFrontmatterStatus(bom)).toBe('todo');
+    expect(renderPhaseFrontmatterStatus(bom, 'done')).toBe('\uFEFF---\nphase: 1\nstatus: done\n---\n');
   });
 });

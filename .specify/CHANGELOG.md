@@ -6,6 +6,24 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.124.0] - 2026-10-20
+
+### Added
+- **[tdk-core]** One feature lifecycle (`draft | ready | planned | in_progress | blocked | done | cancelled | archived`) shared by the `spec.md` status and the `plan.md` root status
+  - Every phase status write derives the plan root value from the `## Phases` rows and mirrors it into `spec.md`; `archived` stays sticky and refuses further status writes
+  - `update-phase-status.ts --reconcile-root <plan>` re-derives and heals a drifted plan root and spec without changing rows
+  - `feature/archive.ts <feature-id>` archives a done or cancelled feature: writes `status: archived` + `archived_from`, moves the folder to `<specs>/archive/<folder>/<id>/` without git commands, reports incoming references, and restores both files when the move fails
+  - `/tdk-specify` and `/tdk-clarify` set `draft`/`ready` from the Specification Quality Gate verdict; post-plan values stay script-owned
+- **[Scripts]** Status JSON gains `stored_status` (raw spec and plan values) and `status_mismatch` warnings with a fix command; `plan-status-validator` output gains a `lifecycle` field
+
+### Changed
+- **[BREAKING][tdk-core]** `tdk-status` `feature_status` uses the lifecycle vocabulary: `specified` → `draft`/`ready`, `complete` → `done`; `blocked` now means nothing started, no `todo` left, at least one `blocked`. New plans write `status: planned`
+- **[BREAKING][tdk-core]** `/tdk-implement` status preflight has one row per lifecycle value; done work with only `blocked` rows left stops and recommends `/tdk-plan`
+- **[Scripts]** Frontmatter status rewrites keep BOM, CRLF, inline comments, and `$` characters literal
+
+### Migration
+- Run `(cd .specify/scripts/ts && bun src/commands/util/update-phase-status.ts --reconcile-root "<plan.md>")` on existing plans to rewrite legacy root values (`todo` → `planned`, finished plans → `done`) and align `spec.md`. Old vocabulary comments after the root `status:` value are kept; update them by hand if wanted.
+
 ## [1.123.0] - 2026-10-18
 
 ### Added

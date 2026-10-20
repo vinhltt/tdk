@@ -93,6 +93,11 @@ missing parent forces you to demote the child first (clear `parent_spec`) rather
 silently generating a plan against a broken link. The resolution is path-traversal
 guarded — a crafted `parent_spec` cannot escape the specs root.
 
+Archiving a parent with `bun src/commands/feature/archive.ts <feature-id>` moves its
+directory under `<specsRoot>/archive/`, so every child `parent_spec` that names it
+becomes dangling. The archive command reports those children before moving but never
+rewrites them; demote them before their next `/tdk-plan`.
+
 ---
 
 ## Demote / Unlink

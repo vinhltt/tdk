@@ -1,8 +1,11 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { isAbsolute, relative, resolve } from 'node:path';
 import { durableAtomicWriteFileSync } from './durable-atomic-file';
 import { readPhaseFrontmatterStatus, renderPhaseFrontmatterStatus } from './phase-frontmatter';
-import { parsePhasesTable, renderPhaseStatuses, type PhaseStatus } from './phases-table-parser';
+import { parsePhasesTable, type PhaseStatus } from './phases-table-parser';
+import {
+  type LifecycleStatus, normalizeLifecycleStatus, readFrontmatterStatus, renderPlanStatuses, renderSpecLifecycleStatus,
+} from './plan-root-status';
 
 export interface StatusTransition { phase: number; from: PhaseStatus; to: PhaseStatus }
 export interface TransitionInput {
@@ -60,17 +63,45 @@ function requireTransitions(input: TransitionInput, data: ReturnType<typeof cont
   }
 }
 
-export function transitionParallelPhaseStatuses(input: TransitionInput): void {
+export interface TransitionResult { status: LifecycleStatus; changed: boolean; warnings: string[] }
+
+/**
+ * Spec mirror joins the transaction only when the plan root status changes, so the
+ * common mid-wave write keeps its original plan + phase file set.
+ */
+function specPayload(featureDir: string, status: LifecycleStatus, warnings: string[]): {
+  path: string; before: string; after: string;
+} | null {
+  const path = resolve(featureDir, 'spec.md');
+  if (!existsSync(path)) { warnings.push(`spec.md not found in ${featureDir}; spec status not mirrored`); return null; }
+  const before = readFileSync(path, 'utf8');
+  const { specMd, hasStatusKey } = renderSpecLifecycleStatus(before, status);
+  if (!hasStatusKey) { warnings.push(`${path} has no frontmatter status: key; spec status not mirrored`); return null; }
+  return specMd === before ? null : { path, before, after: specMd };
+}
+
+function requireNotArchived(plan: string): void {
+  const storedRoot = readFrontmatterStatus(plan);
+  if (storedRoot !== null && normalizeLifecycleStatus(storedRoot, 'plan').status === 'archived') {
+    throw new Error('plan is archived');
+  }
+}
+
+export function transitionParallelPhaseStatuses(input: TransitionInput): TransitionResult {
   const data = context(input.projectRoot, input.planPath, input.featureDir);
+  requireNotArchived(data.plan);
   requireTransitions(input, data);
   const updates = new Map(input.transitions.map(({ phase, to }) => [phase, to]));
-  const planAfter = renderPhaseStatuses(data.plan, updates);
+  const { planMd: planAfter, status, changed } = renderPlanStatuses(data.plan, updates);
+  const warnings: string[] = [];
+  const spec = changed ? specPayload(input.featureDir, status, warnings) : null;
   const payloads = input.transitions.map((item) => {
     const path = data.paths.get(item.phase)!; const before = readFileSync(path, 'utf8');
     return { item, path, before, after: renderPhaseFrontmatterStatus(before, item.to, path) };
   });
   if (readFileSync(input.planPath, 'utf8') !== data.plan
-    || payloads.some(({ path, before }) => readFileSync(path, 'utf8') !== before)) {
+    || payloads.some(({ path, before }) => readFileSync(path, 'utf8') !== before)
+    || (spec && readFileSync(spec.path, 'utf8') !== spec.before)) {
     throw new Error('status bytes drifted before write');
   }
   durableAtomicWriteFileSync(input.planPath, planAfter);
@@ -80,12 +111,21 @@ export function transitionParallelPhaseStatuses(input: TransitionInput): void {
     || inspectParallelPhaseStatuses(input.projectRoot, input.planPath, input.featureDir).mismatches.length) {
     throw new Error('status verification failed');
   }
+  if (spec) {
+    const fix = `run (cd .specify/scripts/ts && bun src/commands/util/update-phase-status.ts --reconcile-root "${input.planPath}")`;
+    try { durableAtomicWriteFileSync(spec.path, spec.after); } catch (error) {
+      throw new Error(`spec status write failed (${error instanceof Error ? error.message : String(error)}); ${fix}`);
+    }
+    if (readFileSync(spec.path, 'utf8') !== spec.after) throw new Error(`spec status verification failed; ${fix}`);
+  }
+  return { status, changed, warnings };
 }
 
 export function reconcileParallelPhaseStatusesFromPlan(input: {
   projectRoot: string; planPath: string; featureDir: string;
 }): { reconciled: number[] } {
   const data = context(input.projectRoot, input.planPath, input.featureDir); const reconciled: number[] = [];
+  requireNotArchived(data.plan);
   for (const row of data.rows) {
     const path = data.paths.get(row.number)!; const before = readFileSync(path, 'utf8');
     if (readPhaseFrontmatterStatus(before, path) === row.status) continue;

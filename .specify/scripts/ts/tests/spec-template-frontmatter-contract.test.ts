@@ -47,6 +47,13 @@ describe('spec-template YAML frontmatter migration contract', () => {
       expect(template).toContain('schema_version:');
     });
 
+    it('starts the spec at the draft lifecycle status with the vocabulary comment', () => {
+      expect(template).toContain(
+        'status: draft  # draft | ready | planned | in_progress | blocked | done | cancelled | archived\n',
+      );
+      expect(template).not.toContain('status: Draft');
+    });
+
     it('includes schema_version: 1', () => {
       expect(template).toContain('schema_version: 1');
     });

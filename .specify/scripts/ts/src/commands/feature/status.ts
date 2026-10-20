@@ -12,13 +12,14 @@ import {
   type FeatureEnv, type GitMap, type MilestoneState } from '../../utils/index';
 import { parsePhasesTable, type PhaseRow } from '../util/phases-table-parser';
 import { extractFrontmatter } from '../util/parse-plan-frontmatter';
+import {
+  deriveFeatureLifecycleStatus, readOptionalFile, readStoredStatuses, statusMismatchWarnings,
+  type FeatureStatus,
+} from './feature-lifecycle-status';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-
-/** Feature-level status derived from ## Phases table rows per derivation table (Phase 05). */
-export type FeatureStatus = 'empty' | 'specified' | 'planned' | 'in_progress' | 'complete' | 'blocked';
 
 export interface PhasesStatus {
   total: number;
@@ -67,55 +68,6 @@ function readPlanTestMode(planFile: string, fallbackTaskId: string): TestMode {
   const frontmatter = extractFrontmatter(planFile, fallbackTaskId);
   const value = frontmatter?.parsed['test_mode'];
   return value === 'tdd' || value === 'ut_backfill' ? value : 'none';
-}
-
-// ---------------------------------------------------------------------------
-// Feature status derivation helper (locked contract — Phase 05 derivation table)
-// ---------------------------------------------------------------------------
-
-/**
- * Derive feature-level status from ## Phases rows and artifact presence flags.
- * Implements the 8-row derivation table (Phase 05 spec, §Feature Status Derivation).
- *
- * Percent formula: done / (total - skipped) * 100 — skipped excluded from denominator.
- * F14: skipped satisfies dependency (consistent with Phase 04 executor semantics).
- */
-export function deriveFeatureStatus(
-  hasSpec: boolean,
-  hasPlan: boolean,
-  phases: PhaseRow[],
-): FeatureStatus {
-  // Row 1: No spec.md
-  if (!hasSpec) return 'empty';
-
-  // Row 2: Has spec.md, no plan.md or no ## Phases section
-  if (!hasPlan) return 'specified';
-
-  // Row 3: Has ## Phases but zero rows
-  if (phases.length === 0) return 'specified';
-
-  // Rows with ≥1 phase
-  const hasBlocked = phases.some(p => p.status === 'blocked');
-  const hasInProgress = phases.some(p => p.status === 'in_progress');
-  const doneCount = phases.filter(p => p.status === 'done').length;
-  const skippedCount = phases.filter(p => p.status === 'skipped').length;
-  const todoCount = phases.filter(p => p.status === 'todo').length;
-  const total = phases.length;
-
-  // Row 4: any blocked
-  if (hasBlocked) return 'blocked';
-
-  // Row 5: any in_progress
-  if (hasInProgress) return 'in_progress';
-
-  // Row 6: all done/skipped with at least 1 done
-  if (doneCount + skippedCount === total && doneCount >= 1) return 'complete';
-
-  // Row 7: all todo
-  if (todoCount === total) return 'planned';
-
-  // Row 8: mix todo + done/skipped, no in_progress/blocked
-  return 'in_progress';
 }
 
 // ---------------------------------------------------------------------------
@@ -173,7 +125,7 @@ export function parsePhasesStatus(planFile: string): PhasesStatus {
     todo,
     blocked,
     percent,
-    feature_status: 'specified', // caller overrides after computing with deriveFeatureStatus
+    feature_status: 'empty', // caller overrides with deriveFeatureLifecycleStatus
     currentPhase: currentPhaseRow?.file ?? '',
     nextPhase: nextPhaseRow?.file ?? '',
     rows,
@@ -196,29 +148,27 @@ function listFeatures(featuresDir: string): void {
     const id = entry.name;
     const dir = join(featuresDir, id);
 
-    const hasSpec = existsSync(join(dir, 'spec.md'));
-    const planFile = join(dir, 'plan.md');
-    const hasPlan = existsSync(planFile);
+    const specMd = readOptionalFile(join(dir, 'spec.md'));
+    const planMd = readOptionalFile(join(dir, 'plan.md'));
 
     let phases: PhaseRow[] = [];
     let phasesParseOk = false;
 
-    if (hasPlan) {
-      try {
-        const md = readFileSync(planFile, 'utf-8');
-        const { phases: parsedPhases, errors } = parsePhasesTable(md);
-        const fatal = errors.filter(e =>
-          e.message.includes('## Phases section not found') ||
-          e.message.includes('ambiguous: multiple ## Phases'),
-        );
-        if (fatal.length === 0) {
-          phases = parsedPhases;
-          phasesParseOk = true;
-        }
-      } catch { /* plan.md unreadable — treat as no phases */ }
+    if (planMd !== null) {
+      const { phases: parsedPhases, errors } = parsePhasesTable(planMd);
+      const fatal = errors.filter(e =>
+        e.message.includes('## Phases section not found') ||
+        e.message.includes('ambiguous: multiple ## Phases'),
+      );
+      if (fatal.length === 0) {
+        phases = parsedPhases;
+        phasesParseOk = true;
+      }
     }
 
-    const feature_status = deriveFeatureStatus(hasSpec, hasPlan && phasesParseOk, phases);
+    const { status: feature_status } = deriveFeatureLifecycleStatus({
+      featureDir: dir, specMd, planMd, phases, phasesParseOk,
+    });
 
     const done = phases.filter(p => p.status === 'done').length;
     const skipped = phases.filter(p => p.status === 'skipped').length;
@@ -226,12 +176,7 @@ function listFeatures(featuresDir: string): void {
     const denominator = total - skipped;
     const percent = denominator > 0 ? Math.floor(done * 100 / denominator) : 0;
 
-    let title = id;
-    try {
-      const specContent = readFileSync(join(dir, 'spec.md'), 'utf-8');
-      const m = specContent.match(/^# (.+)$/m);
-      if (m) title = m[1]!.trim();
-    } catch { /* no spec */ }
+    const title = specMd?.match(/^# (.+)$/m)?.[1]?.trim() ?? id;
 
     features.push({ id, title, feature_status, total, done, percent });
   }
@@ -423,9 +368,14 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
     }
   }
 
-  // Derive feature_status
-  const feature_status = deriveFeatureStatus(hasSpec, hasPlan && phasesParseError === null, phases);
+  // Derive feature_status (same derivation as the plan root write path; pre-plan uses the live gate)
+  const specMd = hasSpec ? readOptionalFile(join(featureDir, 'spec.md')) : null;
+  const planMd = hasPlan ? readOptionalFile(planFile) : null;
+  const phasesParseOk = hasPlan && phasesParseError === null;
+  const derived = deriveFeatureLifecycleStatus({ featureDir, specMd, planMd, phases, phasesParseOk });
+  const feature_status = derived.status;
   phasesData.feature_status = feature_status;
+  const stored_status = readStoredStatuses(specMd, planMd);
 
   // UT state
   let utState = 'none';
@@ -446,31 +396,47 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
     case 'empty':
       rec.primary = { command: `/tdk-specify ${id}`, reason: 'No artifacts yet, start with specification' };
       break;
-    case 'specified':
-      rec.primary = { command: `/tdk-plan ${id}`, reason: 'Spec complete, create implementation plan' };
+    case 'draft':
+      rec.primary = { command: `/tdk-clarify ${id}`, reason: 'Spec not ready, resolve quality gate issues' };
+      break;
+    case 'ready':
+      rec.primary = { command: `/tdk-plan ${id}`, reason: 'Spec ready, create implementation plan' };
       rec.alternative = { command: `/tdk-plan ${id} --tdd`, reason: 'TDD: write tests first' };
       break;
     case 'planned':
       rec.primary = { command: `/tdk-implement ${id}`, reason: 'Plan ready, start implementing from plan' };
       break;
     case 'in_progress':
-      rec.primary = {
-        command: `/tdk-implement ${id}`,
-        reason: `${phasesData.percent}% done, next phase: ${phasesData.nextPhase || phasesData.currentPhase || 'see phases'}`,
-      };
+      // Done work plus only blocked rows stays in_progress, but has no runnable phase for tdk-implement.
+      rec.primary = phasesData.nextPhase || phasesData.currentPhase
+        ? {
+          command: `/tdk-implement ${id}`,
+          reason: `${phasesData.percent}% done, next phase: ${phasesData.nextPhase || phasesData.currentPhase}`,
+        }
+        : { command: `/tdk-plan ${id}`, reason: `${phasesData.percent}% done, remaining phases blocked — re-evaluate dependencies in plan` };
       break;
     case 'blocked':
       rec.primary = { command: `/tdk-plan ${id}`, reason: 'Phases blocked — re-evaluate dependencies in plan' };
       break;
-    case 'complete':
+    case 'done':
       rec.primary = hasUt
-        ? { command: '', reason: 'All workflows complete' }
+        ? { command: `(cd .specify/scripts/ts && bun src/commands/feature/archive.ts ${id})`, reason: 'All phases done, archive the feature' }
         : { command: `/tdk-plan ${id} --ut-backfill`, reason: 'Implementation done, add tests' };
+      break;
+    case 'cancelled':
+      rec.primary = { command: `(cd .specify/scripts/ts && bun src/commands/feature/archive.ts ${id})`, reason: 'All phases cancelled, archive the feature' };
+      break;
+    case 'archived':
+      rec.primary = { command: '', reason: 'Feature archived' };
       break;
   }
 
   // Staleness warnings — spec.md, plan.md, ut artifacts (tasks.md removed, Phase 05)
-  const warnings: object[] = [];
+  const warnings: object[] = derived.warnings.map(message => ({ level: 'status_fallback', message }));
+  warnings.push(...statusMismatchWarnings({
+    featureId: id, planPath: planFile, stored: stored_status, derived: feature_status,
+    hasPlan, phasesParseOk,
+  }));
   for (const artifact of ['spec.md', 'plan.md', 'ut-spec.md', 'ut-plan.md']) {
     const f = join(featureDir, artifact);
     if (existsSync(f)) {
@@ -512,6 +478,7 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
     location: featureDir.replace(repoRoot + '/', ''),
     workflows: { ercspec: hasErcspec, ut: hasUt },
     feature_status,
+    stored_status,
     testMode,
     utState,
     artifacts,

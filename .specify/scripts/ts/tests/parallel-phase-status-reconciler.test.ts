@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from 'bun:test';
+import { afterEach, describe, expect, it, spyOn } from 'bun:test';
+import * as fs from 'node:fs';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -69,5 +70,90 @@ describe('parallel phase status transitions (lease-free)', () => {
     // Simulate a partial write left behind by a real process crash: frontmatter moved, plan.md did not.
     writeFileSync(value.phasePath, readFileSync(value.phasePath, 'utf8').replace('status: todo', 'status: in_progress'));
     expect(inspectParallelPhaseStatuses(value.root, value.planPath, value.root).mismatches).toEqual([1]);
+  });
+});
+
+function lifecycleFixture(root = 'planned', rows: Array<'todo' | 'in_progress' | 'done'> = ['in_progress', 'in_progress']) {
+  const dir = mkdtempSync(join(tmpdir(), 'tdk-lifecycle-')); roots.push(dir);
+  const planPath = join(dir, 'plan.md'); const specPath = join(dir, 'spec.md');
+  rows.forEach((status, index) => writeFileSync(join(dir, `phase-0${index + 1}-p.md`), `---\nphase: ${index + 1}\nstatus: ${status}\n---\n# P\n`));
+  writeFileSync(planPath, `---\ntitle: "Sample"\nstatus: ${root}\n---\n\n## Phases\n\n| # | File | Status | Blocks | BlockedBy |\n|---|------|--------|--------|-----------|\n`
+    + rows.map((status, index) => `| 0${index + 1} | [P](phase-0${index + 1}-p.md) | ${status} | — | — |\n`).join(''));
+  writeFileSync(specPath, `---\nfeature: sample\nstatus: ${root}  # lifecycle\n---\n# Spec\n`);
+  return { dir, planPath, specPath };
+}
+
+describe('parallel transitions keep plan root and spec lifecycle in sync', () => {
+  it('moves plan root and spec to in_progress on the first single transition', () => {
+    const value = lifecycleFixture('planned', ['todo', 'todo']);
+    const result = transitionParallelPhaseStatuses({ projectRoot: value.dir, planPath: value.planPath, featureDir: value.dir,
+      transitions: [{ phase: 1, from: 'todo', to: 'in_progress' }] });
+    expect(result).toEqual({ status: 'in_progress', changed: true, warnings: [] });
+    expect(readFileSync(value.planPath, 'utf8')).toContain('status: in_progress\n');
+    expect(readFileSync(value.specPath, 'utf8')).toContain('status: in_progress  # lifecycle\n');
+  });
+
+  it('moves plan root and spec to done when the last wave completes', () => {
+    const value = lifecycleFixture('in_progress');
+    transitionParallelPhaseStatuses({ projectRoot: value.dir, planPath: value.planPath, featureDir: value.dir, waveId: 'w1',
+      transitions: [{ phase: 1, from: 'in_progress', to: 'done' }, { phase: 2, from: 'in_progress', to: 'done' }] });
+    expect(readFileSync(value.planPath, 'utf8')).toContain('status: done\n');
+    expect(readFileSync(value.specPath, 'utf8')).toContain('status: done  # lifecycle\n');
+  });
+
+  it('leaves spec untouched when the root status does not change', () => {
+    const value = lifecycleFixture('in_progress', ['in_progress', 'todo']);
+    writeFileSync(value.specPath, '---\nstatus: in_progress\n---\nspec bytes\n');
+    const result = transitionParallelPhaseStatuses({ projectRoot: value.dir, planPath: value.planPath, featureDir: value.dir,
+      transitions: [{ phase: 1, from: 'in_progress', to: 'done' }] });
+    expect(result.changed).toBe(false);
+    expect(readFileSync(value.specPath, 'utf8')).toBe('---\nstatus: in_progress\n---\nspec bytes\n');
+  });
+
+  it('refuses a wave transition when spec bytes drift before the write', () => {
+    const value = lifecycleFixture('in_progress');
+    const planBefore = readFileSync(value.planPath, 'utf8');
+    const realRead = fs.readFileSync;
+    let specReads = 0;
+    // Drift the spec between the payload read and the pre-write byte check.
+    const spy = spyOn(fs, 'readFileSync').mockImplementation(((path: string, encoding: BufferEncoding) => {
+      if (path === value.specPath && ++specReads === 2) writeFileSync(value.specPath, '---\nstatus: draft\n---\nedited\n');
+      return realRead(path, encoding);
+    }) as typeof fs.readFileSync);
+    try {
+      expect(() => transitionParallelPhaseStatuses({ projectRoot: value.dir, planPath: value.planPath, featureDir: value.dir, waveId: 'w1',
+        transitions: [{ phase: 1, from: 'in_progress', to: 'done' }, { phase: 2, from: 'in_progress', to: 'done' }] }))
+        .toThrow('status bytes drifted before write');
+    } finally { spy.mockRestore(); }
+    expect(readFileSync(value.planPath, 'utf8')).toBe(planBefore);
+    expect(readFileSync(join(value.dir, 'phase-01-p.md'), 'utf8')).toContain('status: in_progress');
+  });
+
+  it('refuses any transition on an archived plan without writing', () => {
+    const value = lifecycleFixture('archived', ['todo']);
+    const planBefore = readFileSync(value.planPath, 'utf8'); const specBefore = readFileSync(value.specPath, 'utf8');
+    expect(() => transitionParallelPhaseStatuses({ projectRoot: value.dir, planPath: value.planPath, featureDir: value.dir,
+      transitions: [{ phase: 1, from: 'todo', to: 'in_progress' }] })).toThrow('plan is archived');
+    expect(readFileSync(value.planPath, 'utf8')).toBe(planBefore);
+    expect(readFileSync(value.specPath, 'utf8')).toBe(specBefore);
+    expect(readFileSync(join(value.dir, 'phase-01-p.md'), 'utf8')).toContain('status: todo');
+  });
+
+  it('refuses a from-plan reconcile on an archived plan without writing', () => {
+    const value = lifecycleFixture('archived', ['done']);
+    const phasePath = join(value.dir, 'phase-01-p.md');
+    writeFileSync(phasePath, readFileSync(phasePath, 'utf8').replace('status: done', 'status: todo'));
+    expect(() => reconcileParallelPhaseStatusesFromPlan({ projectRoot: value.dir, planPath: value.planPath, featureDir: value.dir }))
+      .toThrow('plan is archived');
+    expect(readFileSync(phasePath, 'utf8')).toContain('status: todo');
+  });
+
+  it('warns and still writes the plan when spec.md is missing', () => {
+    const value = lifecycleFixture('planned', ['todo']);
+    rmSync(value.specPath);
+    const result = transitionParallelPhaseStatuses({ projectRoot: value.dir, planPath: value.planPath, featureDir: value.dir,
+      transitions: [{ phase: 1, from: 'todo', to: 'in_progress' }] });
+    expect(result.warnings).toEqual([`spec.md not found in ${value.dir}; spec status not mirrored`]);
+    expect(readFileSync(value.planPath, 'utf8')).toContain('status: in_progress\n');
   });
 });

@@ -189,6 +189,50 @@ describe('status JSON contract drift', () => {
   });
 });
 
+describe('lifecycle status contract', () => {
+  /** A single-repo feature whose stored spec status disagrees with the derived one. */
+  function makeDriftedFeature(): Record<string, any> {
+    const root = realpathSync.native(mkdtempSync(join(tmpdir(), 'tdk-status-lifecycle-')));
+    roots.push(root);
+    makeRepo(root, 'epic-1');
+    mkdirSync(join(root, '.specify'), { recursive: true });
+    writeFileSync(join(root, '.specify/.specify.json'), JSON.stringify({ name: 'sample-single' }));
+
+    const featureDir = join(root, '.specify/feature/sample-003');
+    mkdirSync(featureDir, { recursive: true });
+    writeFileSync(join(featureDir, 'spec.md'), '---\nstatus: draft\n---\n\n# Sample\n');
+    writeFileSync(join(featureDir, 'plan.md'), [
+      '---', 'status: planned', '---', '', '# Plan', '', '## Phases', '',
+      '| # | File | Status | Blocks | BlockedBy |', '|---|---|---|---|---|',
+      '| 01 | [phase-01-sample](phase-01-sample.md) | done | — | — |', '',
+    ].join('\n'));
+    return runStatus(root, 'sample-003');
+  }
+
+  const status = makeDriftedFeature();
+
+  it('documents every stored_status.* field it emits, and emits every one it documents', () => {
+    expect(Object.keys(status['stored_status']).sort()).toEqual(parseContractSection('stored_status.'));
+  });
+
+  it('documents every warnings[].* field a status_mismatch warning emits', () => {
+    const mismatch = (status['warnings'] as Record<string, unknown>[]).find(w => w['level'] === 'status_mismatch');
+    expect(mismatch).toBeDefined();
+    const documented = parseContractSection('warnings[].');
+    expect(Object.keys(mismatch!).filter(key => !documented.includes(key))).toEqual([]);
+  });
+
+  it('documents the feature_status value it emits in the lifecycle vocabulary', () => {
+    const skill = readFileSync(STATUS_SKILL, 'utf-8');
+    const line = skill.split('\n').find(l => l.startsWith('- `feature_status`:'))!;
+    const vocabulary = [...line.split('Computed')[0]!.matchAll(/`([a-z_]+)`/g)].map(m => m[1]!);
+    expect(vocabulary).toEqual([
+      'feature_status', 'empty', 'draft', 'ready', 'planned', 'in_progress', 'blocked', 'done', 'cancelled', 'archived',
+    ]);
+    expect(vocabulary).toContain(status['feature_status']);
+  });
+});
+
 describe('duplicate sub-workspace status guard', () => {
   it('returns duplicate diagnostics instead of probing per-repository status', () => {
     const root = makeWorkspace();

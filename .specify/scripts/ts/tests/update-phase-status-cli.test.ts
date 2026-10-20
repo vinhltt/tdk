@@ -120,3 +120,103 @@ describe('update-phase-status CLI', () => {
     expect(after).toBe(legacyMd);
   });
 });
+
+function writeFeature(root: string, rows: string[], spec: string | null = 'Draft'): { planPath: string; specPath: string } {
+  const dir = makeTmp();
+  const planPath = join(dir, 'plan.md');
+  const specPath = join(dir, 'spec.md');
+  const table = rows.map((status, index) => `| 0${index + 1} | [phase-0${index + 1}-sample](phase-0${index + 1}-sample.md) | ${status} | — | — |`);
+  writeFileSync(planPath, ['---', 'title: "Sample plan"', `status: ${root}`, '---', '', '## Phases', '',
+    '| # | File | Status | Blocks | BlockedBy |', '|---|------|--------|--------|-----------|', ...table, ''].join('\n'));
+  if (spec !== null) writeFileSync(specPath, `---\nfeature: sample\nstatus: ${spec}\n---\n# Spec\n`);
+  return { planPath, specPath };
+}
+
+describe('update-phase-status lifecycle sync', () => {
+  it('serial transitions move plan root and spec through in_progress to done', async () => {
+    const { planPath, specPath } = writeFeature('planned', ['todo', 'todo'], 'planned');
+
+    let out = await runCli([planPath, '1', 'in_progress']);
+    expect(out.stdout).toBe('✓ phase 01 → in_progress\n✓ status → in_progress (plan, spec)\n');
+    expect(readFileSync(specPath, 'utf-8')).toContain('status: in_progress\n');
+
+    out = await runCli([planPath, '1', 'done']);
+    expect(out.stdout).toBe('✓ phase 01 → done\n');
+    expect(readFileSync(planPath, 'utf-8')).toContain('status: in_progress\n');
+
+    out = await runCli([planPath, '2', 'done']);
+    expect(out.exitCode).toBe(0);
+    expect(out.stdout).toBe('✓ phase 02 → done\n✓ status → done (plan, spec)\n');
+    expect(readFileSync(planPath, 'utf-8')).toContain('status: done\n');
+    expect(readFileSync(specPath, 'utf-8')).toContain('status: done\n');
+  });
+
+  it('--reconcile-root moves a done plan with an appended todo row back to in_progress', async () => {
+    const { planPath, specPath } = writeFeature('done', ['done', 'todo'], 'done');
+    const out = await runCli(['--reconcile-root', planPath]);
+    expect(out.exitCode).toBe(0);
+    expect(out.stdout).toBe('✓ status → in_progress (plan, spec)\n');
+    expect(readFileSync(planPath, 'utf-8')).toContain('status: in_progress\n');
+    expect(readFileSync(specPath, 'utf-8')).toContain('status: in_progress\n');
+  });
+
+  it('--reconcile-root fixes a legacy finished plan, then is a no-op', async () => {
+    const { planPath, specPath } = writeFeature('todo', ['done', 'done'], 'Draft');
+    const first = await runCli(['--reconcile-root', planPath]);
+    expect(first.stdout).toBe('✓ status → done (plan, spec)\n');
+    expect(readFileSync(planPath, 'utf-8')).toContain('status: done\n');
+    expect(readFileSync(specPath, 'utf-8')).toContain('status: done\n');
+
+    const planBytes = readFileSync(planPath, 'utf-8'); const specBytes = readFileSync(specPath, 'utf-8');
+    const second = await runCli(['--reconcile-root', planPath]);
+    expect(second.stdout).toBe('— status already done\n');
+    expect(readFileSync(planPath, 'utf-8')).toBe(planBytes);
+    expect(readFileSync(specPath, 'utf-8')).toBe(specBytes);
+  });
+
+  it('--reconcile-root aligns a drifted spec when the plan root is already correct', async () => {
+    const { planPath, specPath } = writeFeature('done', ['done'], 'Draft');
+    const out = await runCli(['--reconcile-root', planPath]);
+    expect(out.stdout).toBe('✓ status → done (spec)\n');
+    expect(readFileSync(specPath, 'utf-8')).toContain('status: done\n');
+  });
+
+  it('refuses phase updates and reconcile on an archived plan without writing', async () => {
+    const { planPath, specPath } = writeFeature('archived', ['done'], 'archived');
+    const planBytes = readFileSync(planPath, 'utf-8'); const specBytes = readFileSync(specPath, 'utf-8');
+    for (const args of [[planPath, '1', 'todo'], ['--reconcile-root', planPath]]) {
+      const out = await runCli(args);
+      expect(out.exitCode).toBe(1);
+      expect(out.stderr).toContain('✗ plan is archived');
+    }
+    expect(readFileSync(planPath, 'utf-8')).toBe(planBytes);
+    expect(readFileSync(specPath, 'utf-8')).toBe(specBytes);
+  });
+
+  it('warns when spec.md is missing and still writes the plan', async () => {
+    const { planPath } = writeFeature('planned', ['todo'], null);
+    const out = await runCli([planPath, '1', 'in_progress']);
+    expect(out.exitCode).toBe(0);
+    expect(out.stderr).toContain('spec.md not found');
+    expect(out.stdout).toBe('✓ phase 01 → in_progress\n✓ status → in_progress (plan)\n');
+    expect(readFileSync(planPath, 'utf-8')).toContain('status: in_progress\n');
+  });
+
+  it('leaves spec untouched when the plan has no root status key', async () => {
+    const { planPath, specPath } = writeFeature('done', ['done'], 'Draft');
+    writeFileSync(planPath, readFileSync(planPath, 'utf-8').replace('status: done\n', ''));
+    const planBytes = readFileSync(planPath, 'utf-8'); const specBytes = readFileSync(specPath, 'utf-8');
+    const out = await runCli(['--reconcile-root', planPath]);
+    expect(out.exitCode).toBe(0);
+    expect(out.stderr).toContain('has no frontmatter status: key');
+    expect(out.stdout).toBe('— status already done\n');
+    expect(readFileSync(planPath, 'utf-8')).toBe(planBytes);
+    expect(readFileSync(specPath, 'utf-8')).toBe(specBytes);
+  });
+
+  it('rejects --reconcile-root mixed with positional arguments', async () => {
+    const { planPath } = writeFeature('planned', ['todo']);
+    expect((await runCli(['--reconcile-root', planPath, '1'])).exitCode).toBe(1);
+    expect((await runCli([planPath, '1', '--reconcile-root'])).exitCode).toBe(1);
+  });
+});

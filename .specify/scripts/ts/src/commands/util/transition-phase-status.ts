@@ -33,10 +33,11 @@ const program = new Command().name('transition-phase-status')
       if (!VALID_STATUSES.has(to)) throw new Error(`invalid status '${to}' — expected one of: ${[...VALID_STATUSES].join(', ')}`);
       return { phase, from: row.planStatus, to: to as PhaseStatus };
     });
-    transitionParallelPhaseStatuses({
+    const { warnings } = transitionParallelPhaseStatuses({
       projectRoot: options.projectRoot, planPath: options.plan, featureDir: options.featureDir,
       waveId: options.waveId, transitions,
     });
+    for (const warning of warnings) process.stderr.write(`Warning: ${warning}\n`);
     return { ok: true, phases: transitions.map(({ phase }) => phase) };
   }));
 

@@ -3,7 +3,7 @@ name: tdk-specify
 description: "Create spec.md from a feature or child-slice description, or replay --interview against existing spec.md. Supports --fast, memory, and an embedded quality gate."
 argument-hint: "<id> [<desc>] [--fast] [--interview]"
 metadata:
-  version: "14.0.1"
+  version: "14.2.1"
 ---
 
 # tdk-specify
@@ -223,6 +223,10 @@ Follow `references/spec-generation-and-validation-workflow.md` Step 5.
 Validate against `references/spec-quality-guidelines.md`, write or replace only
 the heading-bounded `## Specification Quality Gate` block in `spec.md`, fix and
 re-run up to 3 iterations, then list any remaining blockers in that block.
+Then set the spec frontmatter `status:` to `ready` when the gate validator
+returns `allowed: true`, else `draft` (exit 1 with `allowed: false` is a
+verdict, not an error) — only while the current value is
+`draft`/`ready` (case-insensitive); later lifecycle values stay unchanged.
 
 ### Step 6: Report Completion
 

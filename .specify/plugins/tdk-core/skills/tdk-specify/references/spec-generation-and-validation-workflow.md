@@ -185,6 +185,21 @@ After writing the spec and resolving unresolved questions:
    block using the contract in `references/spec-quality-guidelines.md`. Set
    `Source` to `tdk-specify`; do not create `checklists/requirements.md` for a
    new spec.
+7. Set the spec lifecycle status from the gate verdict. After the final gate
+   write, run the same read-only check `/tdk-plan` Step 0.9 uses:
+
+   ```bash
+   (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-specification-quality-gate.ts "{SPEC_FILE}" --legacy-checklist "{FEATURE_DIR}/checklists/requirements.md" --json)
+   ```
+
+   Exit 1 with JSON `allowed: false` is the gate verdict, not a script failure;
+   only missing or unparseable JSON is an error.
+
+   Read the frontmatter `status:` of `spec.md` case-insensitively. Only when it
+   is `draft` or `ready` (legacy `Draft` included), replace the value on that
+   line: `allowed: true` → `ready`, otherwise `draft`. Keep the trailing
+   vocabulary comment. Any other value (`planned` and later) is script-owned:
+   leave it unchanged.
 
 ## Step 6: Report Completion
 

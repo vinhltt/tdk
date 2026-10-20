@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "14.1.0"
+  version: "14.2.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -29,7 +29,7 @@ This skill reads plan.md and executes phases using the `## Phases` table as the 
 - **Primary implementation path**: executes all phases in row order, updating Status cells in the `## Phases` table
 - **Selected phase path**: optional `--phase NN` / `--phase=NN` executes one numeric phase only
 - **Parallel path**: `--parallel` executes agent-selected `auto` waves gated by the write-disjointness checker
-- **Status tracking**: reads/writes Status column via `updatePhaseStatus` - no HTML comment markers
+- **Status tracking**: reads/writes the Status column via `update-phase-status.ts` (parallel waves via the status reconciler), which also syncs the plan root and `spec.md` lifecycle status - no HTML comment markers
 - **Dependency enforcement**: validates BlockedBy before each phase; aborts on unsatisfied deps
 - **Phase validation**: validates every phase contract before status mutation;
   spike phases require executable evidence and a user decision gate

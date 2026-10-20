@@ -93,6 +93,11 @@ parent bắt buộc bạn demote child trước bằng cách clear `parent_spec`
 generate plan trên broken link. Resolution được guard path-traversal — `parent_spec`
 được craft không thể thoát khỏi specs root.
 
+Archive parent bằng `bun src/commands/feature/archive.ts <feature-id>` sẽ move directory
+của nó vào `<specsRoot>/archive/`, nên mọi child có `parent_spec` trỏ tới nó thành
+dangling. Archive command report các child này trước khi move nhưng không rewrite;
+demote chúng trước lần `/tdk-plan` tiếp theo.
+
 ---
 
 ## Demote / Unlink

@@ -2,7 +2,7 @@
 name: tdk-clarify
 description: "Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec."
 metadata:
-  version: "14.0.1"
+  version: "14.2.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -318,6 +318,25 @@ only the heading-bounded `## Specification Quality Gate` block, set `Source` to
 For a legacy spec without the embedded gate, create the block in `spec.md`.
 Do not rewrite or delete an existing `checklists/requirements.md`; it remains a
 read-only compatibility artifact until explicit migration.
+
+Then set the spec lifecycle status from the gate verdict, using the same
+read-only check `/tdk-plan` Step 0.9 uses:
+
+```bash
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-specification-quality-gate.ts "{FEATURE_SPEC}" --legacy-checklist "{FEATURE_DIR}/checklists/requirements.md" --json)
+```
+
+Exit 1 with JSON `allowed: false` is the gate verdict, not a script failure;
+only missing or unparseable JSON is an error.
+
+Read the frontmatter `status:` of `spec.md` case-insensitively:
+- `draft` or `ready` (legacy `Draft` included): replace the value on that line
+  with `ready` when `allowed: true`, else `draft`. Keep the trailing vocabulary
+  comment.
+- `planned` or later: keep the value; it is derived from plan phase rows. When
+  `allowed` is not `true`, warn: "Specification Quality Gate is not accepted;
+  spec status stays `<status>` because a plan exists — resolve the blockers
+  before further implementation."
 
 8. Report completion (after questioning loop ends or early termination):
    - Number of questions asked & answered.

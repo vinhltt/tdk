@@ -2,8 +2,11 @@
 // Usage: bun src/commands/util/plan-status-validator.ts <plan-path> [--json]
 
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { writeAgentJson } from '../../utils/index';
+import { isStoredStatusMismatch, readOptionalFile, readStoredStatuses } from '../feature/feature-lifecycle-status';
 import { parsePhasesTable, VALID_STATUSES } from './phases-table-parser';
+import { derivePlanRootStatus, normalizeLifecycleStatus } from './plan-root-status';
 
 const args = process.argv.slice(2);
 const jsonFlag = args.includes('--json');
@@ -32,10 +35,28 @@ const invalidStatuses = result.phases.flatMap(row => {
     ? []
     : [{ phaseNumber: row.number, line: row.rowLineNumber, raw, expected }];
 });
+
+// Report-only drift between stored spec/plan status and the value the rows derive. A partial table
+// never drives the root, so any parse error leaves `derived` null and `mismatch` false.
+const stored = readStoredStatuses(readOptionalFile(join(dirname(filePath), 'spec.md')), md);
+const derived = result.errors.length > 0
+  ? null
+  : derivePlanRootStatus(
+      result.phases,
+      stored.plan === null ? null : normalizeLifecycleStatus(stored.plan, 'plan').status,
+    );
+const lifecycle = {
+  plan: stored.plan,
+  spec: stored.spec,
+  derived,
+  mismatch: derived !== null
+    && (isStoredStatusMismatch(stored.plan, 'plan', derived) || isStoredStatusMismatch(stored.spec, 'spec', derived)),
+};
 const output = {
   ok: result.errors.length === 0 && invalidStatuses.length === 0,
   errors: result.errors,
   invalidStatuses,
+  lifecycle,
 };
 
 if (jsonFlag) {
@@ -47,6 +68,12 @@ if (jsonFlag) {
   for (const invalid of output.invalidStatuses) {
     const phase = String(invalid.phaseNumber).padStart(2, '0');
     console.error(`invalid status line ${invalid.line} phase ${phase}: '${invalid.raw}'`);
+  }
+  if (lifecycle.mismatch) {
+    process.stderr.write(
+      `warning: lifecycle mismatch: plan status '${lifecycle.plan ?? '-'}', spec status '${lifecycle.spec ?? '-'}', `
+      + `derived '${lifecycle.derived}'; fix: (cd .specify/scripts/ts && bun src/commands/util/update-phase-status.ts --reconcile-root "${filePath}")\n`,
+    );
   }
 }
 
