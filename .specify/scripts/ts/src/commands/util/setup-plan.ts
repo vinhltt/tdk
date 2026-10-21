@@ -11,6 +11,7 @@ import {
 } from '../../utils/index';
 import { isWithin } from '../../utils/path-within';
 import { extractFrontmatter } from './parse-plan-frontmatter';
+import { ARCHIVE_DIR } from '../feature/archive-incoming-references';
 
 /**
  * Where `path` will physically live once created.
@@ -76,7 +77,17 @@ const program = new Command()
     // `<root>/.specify/../../elsewhere`. The same guard already protected `parent_spec` below;
     // the task being created was the one path that skipped it.
     const id = taskId.toLowerCase();
-    const featureDirPath = parseFeatureId(id, repoRoot, env.specsRoot, env.defaultFolder).featureDir;
+    const parsedId = parseFeatureId(id, repoRoot, env.specsRoot, env.defaultFolder);
+    // `archive` holds closed-out specs; planning there would write into a frozen record.
+    // Only read-only consumers (retro skills, /tdk-archive) may address it, via check-prerequisites --allow-archived.
+    if (parsedId.folder === ARCHIVE_DIR) {
+      process.stderr.write(
+        `ERROR: Folder '${ARCHIVE_DIR}' is reserved for archived specs and cannot be planned: ${taskId}. ` +
+        `--allow-archived is for read-only consumers of archived specs (retro skills, /tdk-archive) and does not apply to setup-plan.\n`,
+      );
+      process.exit(1);
+    }
+    const featureDirPath = parsedId.featureDir;
 
     const paths = getFeaturePaths(featureDirPath, repoRoot, taskId) as Record<string, string | boolean>;
     const featureDir = paths['featureDir'] as string;

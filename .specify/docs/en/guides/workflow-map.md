@@ -14,7 +14,7 @@ split across plugins:
 
 | Workflow lane | Owning plugin |
 |---|---|
-| Child spec, clarify, plan, implement, analyze, and status | `tdk-core` |
+| Child spec, clarify, plan, implement, analyze, status, and archive | `tdk-core` |
 | Project inception, constitution, architecture, workspace layout/config, dependency policy, and sub-workspace docs | `tdk-inception` |
 | Parent epic discovery, PRD, HLD, and task breakdown | `tdk-epic` |
 | Generic research/scout/context/problem-solving helpers | `tdk-utils` |
@@ -91,6 +91,9 @@ flowchart TD
     PLAN -->|/tdk-implement<br/>or --phase NN| CODE_BE[backend/src/<br/>Backend Code]
     PLAN -->|/tdk-implement<br/>or --phase NN| CODE_FE[frontend/pages/<br/>Frontend Code]
 
+    %% Phase 3: Close-out
+    PLAN -.->|/tdk-archive<br/>done or cancelled| ARCHIVED[archive/folder/id/<br/>+ close-out.md]
+
     %% Styling
     classDef phase0 fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#0f172a
     classDef phase1 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#0f172a
@@ -106,6 +109,7 @@ flowchart TD
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES phase1
     class CONSTITUTION,MEMORY_CONTROL,TYPED_MEMORY,ARC42,UIUX,REF_DATAMODEL,REF_STATE reference
     class CODE_BE,CODE_FE,TESTS code
+    class ARCHIVED phase3
 ```
 
 ---
@@ -228,6 +232,24 @@ flowchart TD
 
 `/tdk-implement <id>` runs all runnable rows from `plan.md ## Phases`.
 `/tdk-implement <id> --phase NN` runs one selected phase while still honoring dependencies and global stale `in_progress` recovery.
+
+### Phase 3: Close-out And Archive
+
+```mermaid
+flowchart LR
+    DONE[spec.md + plan.md<br/>status done or cancelled]
+    CLOSE[close-out.md]
+    ARCH["archive/folder/id/<br/>status archived"]
+    MEM[project memory<br/>via /tdk-memory-update]
+    RETRO[retro-feedback.md<br/>learning-delta.md]
+
+    DONE -->|"/tdk-archive id"| CLOSE
+    CLOSE -->|archive.ts| ARCH
+    ARCH -.->|"--auto-upmem or<br/>/tdk-archive --ingest"| MEM
+    ARCH -.->|"/tdk-retro-collect<br/>propose, apply"| RETRO
+```
+
+`/tdk-archive` writes `close-out.md`, then moves the feature directory to `<specsRoot>/archive/<folder>/<id>/`. Memory ingest is opt-in. Retro commands still run on the archived id. Manual restore steps live in [manual-restore.md](../../../plugins/tdk-core/skills/tdk-archive/references/manual-restore.md).
 
 ### Unit Testing Pipeline
 
@@ -365,6 +387,8 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `phases/*.md` owner sections | `/tdk-plan` | `spec.md`, plan graph | `/tdk-implement` | Required; data model, prose interfaces, and runbook live with owning work |
 | `research/`, `reports/` | `/tdk-plan` | Unresolved external question or declared durable evidence consumer | Indexed supporting evidence | Conditional only |
 | `contracts/*.{json,yaml,yml,graphql,proto}` | `/tdk-plan` | Declared machine consumer plus validation command | Generator, validator, runtime, or downstream integration | Conditional only |
+| `close-out.md` | `/tdk-archive` | `spec.md`, `plan.md`, phases, reviews, retro files | `/tdk-archive --ingest`; project memory candidates | Once per archive; row statuses update on ingest |
+| `<specsRoot>/archive/<folder>/<id>/` | `/tdk-archive` (via `archive.ts`) | Feature directory with status `done` or `cancelled` | `/tdk-status archive/<folder>/<id>`, `/tdk-retro-*` | On archive; not read by plan or specify |
 | `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
 | `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), test/domain routing (TDD) or test routing only (backfill) | `/tdk-implement` with readiness and `Test Quality Gate` before done | Feature UT |
@@ -484,4 +508,5 @@ flowchart TD
 ├── page-designs/                       # Phase 1: Screen specifications
 │   └── {category}/
 │       └── {screen}.md
+└── close-out.md                        # Written by /tdk-archive, moves with the folder
 ```

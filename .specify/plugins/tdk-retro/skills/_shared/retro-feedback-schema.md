@@ -4,6 +4,8 @@
 
 ## Required Header
 
+`{task-id}` is the canonical `taskId` from `check-prerequisites.ts --allow-archived`, not the raw argument (see `archived-spec-handling.md`). `{feature-dir}` is the resolved feature directory.
+
 ```markdown
 # Retro Feedback - {task-id}
 

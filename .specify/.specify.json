@@ -14,7 +14,7 @@
     "prefixList": "tdk"
   },
   "changelog": {
-    "exclude": [".specify/specs/**"]
+    "exclude": [".specify/specs/**", ".specify/archive/**"]
   },
   "specs": {
     "root": ".specify",

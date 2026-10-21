@@ -230,14 +230,15 @@ describe('feature archive', () => {
       .toEqual(['feature/child-c', 'feature/child-d']);
   });
 
-  it('leaves the git index untouched in a git repo with tracked and untracked files', async () => {
+  it('leaves the git index untouched in a git repo with tracked and ignored files', async () => {
     const root = makeRepo();
     const dir = addFeature(root, 'sample-12', planMd(['done']), specMd());
     const git = (...args: string[]) => Bun.spawnSync(
       ['git', '-c', 'user.name=t', '-c', 'user.email=t@example.com', ...args], { cwd: root },
     );
     git('init', '-q');
-    git('add', '.specify/feature/sample-12/plan.md', '.specify/feature/sample-12/spec.md');
+    writeFileSync(join(root, '.gitignore'), 'untracked.txt\n');
+    git('add', '.gitignore', '.specify/feature/sample-12/plan.md', '.specify/feature/sample-12/spec.md');
     git('commit', '-q', '-m', 'init');
     writeFileSync(join(dir, 'untracked.txt'), 'x');
     const indexBefore = readFileSync(join(root, '.git', 'index'));

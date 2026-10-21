@@ -102,7 +102,6 @@ try {
       });
     }
 
-    const specsRoot = path.posix.join(config.specs.root, config.specs.defaultFolder);
     // One git probe per hook invocation, whatever the association count, and
     // none at all when every association dedups.
     let branchProbed = false;
@@ -126,7 +125,8 @@ try {
     for (const association of resolution.associations || []) {
       try {
         const tracking = record({
-          specsRoot,
+          specsRoot: config.specs.root,
+          defaultFolder: config.specs.defaultFolder,
           ticketId: association.ticketId,
           sessionId: payload.sessionId,
           cwd: workspaceRoot,

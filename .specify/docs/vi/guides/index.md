@@ -29,6 +29,8 @@
 
 Nếu công việc đã là một feature nhỏ và rõ, bỏ qua epic commands và bắt đầu tại `/tdk-specify`.
 
+Khi feature `done` hoặc `cancelled`, đóng nó bằng `/tdk-archive`. Xem [Close-out và Archive](skills-guide.md#close-out-và-archive).
+
 ## Chọn Đường Đi
 
 | Tôi cần... | Đi tới |

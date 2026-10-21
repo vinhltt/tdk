@@ -141,6 +141,8 @@ Sau đó verify:
 - Không còn unresolved questions.
 - Không đổi unrelated files.
 
+Khi mọi phase đã `done`, `/tdk-status` gợi ý bước tiếp theo. Đóng feature bằng `/tdk-archive feat-001` sau khi công việc đã được commit.
+
 ## Lỗi Thường Gặp
 
 | Mistake | Fix |

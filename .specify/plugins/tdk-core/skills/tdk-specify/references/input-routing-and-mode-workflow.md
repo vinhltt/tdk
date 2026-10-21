@@ -21,6 +21,12 @@ Determine paths from PROJECT_CONTEXT:
 - `FEATURE_DIR` = `$SPECS_ROOT/$FOLDER/$TICKET_ID`
 - `SPEC_FILE` = `$FEATURE_DIR/spec.md`
 
+If `FOLDER` == `archive`, STOP before any read or write (no `mkdir`, no duplicate-spec check):
+
+```text
+Folder `archive` is reserved for archived specs and cannot be specified into. Use a different folder prefix.
+```
+
 Route missing-description and replay cases before duplicate-spec handling:
 
 - If cleaned description is exactly `interview`, STOP before creation or replay routing:

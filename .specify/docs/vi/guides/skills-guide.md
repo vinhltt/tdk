@@ -92,7 +92,7 @@ tạo; nó không đổi tên command `/tdk-*` hoặc thay đổi đường dẫ
 
 | Plugin | Phạm vi sở hữu |
 |---|---|
-| `tdk-core` | Bàn giao child feature (`specify`, `clarify`, `plan`, `implement`, analysis/status) cùng cổng hook/runtime dùng chung |
+| `tdk-core` | Bàn giao child feature (`specify`, `clarify`, `plan`, `implement`, analysis/status, `archive`) cùng cổng hook/runtime dùng chung |
 | `tdk-inception` | Nền tảng project/workspace: greenfield/brownfield intake, constitution, architecture, layout/config, dependency policy, và sub-workspace docs |
 | `tdk-epic` | Discovery, PRD, HLD, và task breakdown ở cấp parent epic |
 | `tdk-utils` | Các tiện ích dùng chung cho scout, research, tra cứu docs, context, brainstorm, và giải quyết vấn đề |
@@ -141,7 +141,8 @@ Excluded:
 | `/tdk-implement` | Execute runnable rows từ `plan.md ## Phases`. | `<id>`, `--phase NN` | Plan đã tồn tại và một hoặc nhiều implementation phases đã ready. |
 | `/tdk-consistency-check` | Cross-artifact consistency check trên spec, plan, và constitution. | `<id>`, `--deep` | Bạn cần read-only verification trên spec, plan, và phases; thêm `--deep` để verify claim của plan so với source. |
 | `/tdk-review` | Review một task đã implement: diff so với spec và success criteria của phase, kèm fix-phase seed cho `/tdk-plan`. | `<id>`, `--phase NN`, `--quick`, `--deep`, `[focus]` | Các phase đã `done` và bạn muốn review code so với spec trước khi ship; ghi một report trong `reviews/`. |
-| `/tdk-status` | Hiển thị workflow progress. | `<id>` | Bạn cần read-only status snapshot. |
+| `/tdk-status` | Hiển thị workflow progress, branch state theo từng repository, retro status và command tiếp theo. | `<id>`, `archive/<folder>/<id>` | Bạn cần read-only status snapshot. Spec đã archive vẫn đọc được. |
+| `/tdk-archive` | Close-out spec `done` hoặc `cancelled`: ghi `close-out.md` từ artifact của spec, archive folder, có thể ingest memory candidate. | `<id>`, `--auto-upmem`, `--ingest [id]`; [cách dùng](#close-out-và-archive) | Feature đã xong và nên rời danh sách specs đang hoạt động; cũng dùng để ingest hoặc retry memory row của spec đã archive. |
 
 > **Đã đổi tên:** `/tdk-analyze` trở thành `/tdk-consistency-check` từ tdk-core v13.0.0. Tên cũ không còn resolve — tên mới nói đúng thứ skill kiểm tra (artifact consistency), và `--deep` thêm bước verify có giới hạn các claim của plan so với source.
 
@@ -315,8 +316,9 @@ Các helper này tồn tại trong source nhưng không được catalog như di
 | 5 | `/tdk-task-breakdown <epic-id> [--force]` | Generate child spec seed Markdown từ epic PRD + HLD |
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan với design artifacts |
 | 10 | `/tdk-consistency-check <id> [--deep]` | Cross-artifact consistency check; `--deep` verify claim của plan so với source |
-| 11 | `/tdk-status <id>` | Hiển thị workflow progress, read-only, bất cứ lúc nào |
+| 11 | `/tdk-status <id>` | Hiển thị workflow progress, branch state theo repository và retro status, read-only, bất cứ lúc nào |
 | 12 | `/tdk-review <id> [--phase NN] [--quick\|--deep] [focus]` | Review code đã implement so với spec; ghi report kèm fix-phase seed cho `/tdk-plan` |
+| 12a | `/tdk-archive <id> [--auto-upmem]` \| `/tdk-archive --ingest [id]` | Close-out và archive spec `done`/`cancelled`; ingest memory là tùy chọn |
 | 13 | `/tdk-constitution` (update) hoặc `/tdk-constitution --init <brief\|file>` | Update project authority hoặc initialize constitution và Memory v3 artifacts |
 | 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake và routing report |
 | 15 | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | Existing-repo onboarding và safe setup recommendations |
@@ -380,6 +382,7 @@ Dùng file này để tra cứu command. Nếu cần workflow từng bước đ�
 | consistency-check | `/tdk-consistency-check <id>` | `--deep` | `spec.md`, `plan.md ## Phases` | Report, không tạo file | plan |
 | review | `/tdk-review <id> [--phase NN]` | `--quick`, `--deep` | `spec.md`, `plan.md ## Phases`, git diff của các phase done | Một report mới `reviews/<timestamp>-<slug>.md` | implement |
 | status | `/tdk-status <id>` | — | Feature directory | Progress report, không tạo file | specify |
+| archive | `/tdk-archive <id>` | `--auto-upmem`, `--ingest [id]` | Feature directory có status `done` hoặc `cancelled`, artifact đã commit | `close-out.md`; feature được move sang `<specsRoot>/archive/<folder>/<id>/` | implement |
 
 `/tdk-plan` nhận freeform content sau `<id>` trong mọi mode. Default, `--fast`, và `--hard` xem content là planning instruction; `--red-team` xem là review focus; `--validate` xem là validation focus. Mode flags có thể đứng sau `<id>` trước hoặc sau content.
 `--tdd` và `--ut-backfill` là test-mode flags độc lập, kết hợp với default hoặc `--hard`, không kết hợp `--fast`. `--refresh-routing` và `--migrate-artifacts` là action độc lập: không nhận thêm speed, test, targeting hoặc action flag, và không kết hợp với nhau.
@@ -715,7 +718,22 @@ Command giờ là `/tdk-delegate-routing` với ba action — `diff`, `register`
 
 - Khi đã có plan, mỗi lần ghi phase status sẽ tính lại giá trị từ các row `## Phases` và mirror sang `spec.md`. Sửa tay root sẽ bị ghi đè; muốn cancel hoặc hold cả plan, set mọi row thành `cancelled` hoặc `blocked`. Rule derivation nằm ở [plan-output-contract.md](../../../plugins/tdk-core/skills/tdk-plan/references/plan-output-contract.md#plan-root-lifecycle-status).
 - Sửa drift (ví dụ plan legacy có root `todo` và các phase đã xong) bằng `bun src/commands/util/update-phase-status.ts --reconcile-root <plan>` từ `.specify/scripts/ts`. `/tdk-status` hiển thị giá trị đang lưu ở `stored_status` và in fix line này khi lệch.
-- Archive feature `done` hoặc `cancelled` bằng `bun src/commands/feature/archive.ts <feature-id>` từ `.specify/scripts/ts`. Lệnh ghi `status: archived` và `archived_from` vào cả hai file, rồi move feature directory sang `<specsRoot>/archive/<folder>/<id>/`. Reference `blocks`/`blockedBy` và `parent_spec` trỏ tới feature chỉ được report, không rewrite. Plan đã archive từ chối mọi lần ghi phase status và vẫn đọc được qua `/tdk-status archive/<folder>/<id>`.
+- Archive feature `done` hoặc `cancelled` bằng `/tdk-archive <id>` (xem [Close-out và Archive](#close-out-và-archive)). Skill chạy `bun src/commands/feature/archive.ts` từ `.specify/scripts/ts`: lệnh này ghi `status: archived` và `archived_from` vào cả hai file, rồi move feature directory sang `<specsRoot>/archive/<folder>/<id>/`. Reference `blocks`/`blockedBy` và `parent_spec` trỏ tới feature chỉ được report, không rewrite. Plan đã archive từ chối mọi lần ghi phase status và vẫn đọc được qua `/tdk-status archive/<folder>/<id>`.
+
+### Close-out và Archive
+
+```text
+/tdk-archive <id> [--auto-upmem]
+/tdk-archive --ingest [id]
+```
+
+- Preflight chạy `archive.ts --check` và không ghi gì. Nó dừng khi: lifecycle status khác `done`/`cancelled`, có thay đổi chưa commit trong feature directory (`close-out.md` và `sessions.jsonl` được miễn), có lock file, artifact migration chưa xong, task worktree còn sống, red-team session chưa xong, hoặc archive target đã tồn tại. Mỗi blocker in kèm cách sửa.
+- Khi thành công, skill ghi `close-out.md` (outcome, what shipped, decisions, review results, debt, kết quả success criteria và memory candidates, tất cả soạn từ artifact của chính spec), archive folder, rồi in các dòng `git add` và `git commit` để bạn tự chạy. Skill không bao giờ chạy git.
+- Memory ingest tách riêng và tùy chọn. `--auto-upmem` (hoặc `/tdk-archive --ingest` chạy sau) gửi từng candidate đang pending qua `/tdk-memory-update`, tối đa một lần confirm gộp cho các conflict. Row đã `ingested` hoặc `skipped` không bao giờ bị động tới nữa.
+- Retro vẫn hoạt động: `/tdk-retro-collect`, `/tdk-retro-propose` và `/tdk-retro-apply` nhận id đã archive và chỉ ghi `retro-feedback.md` và `learning-delta.md` bên trong archive. `/tdk-status` đánh dấu spec đã archive và báo `retro_status`.
+- Mặc định: `<specsRoot>/archive/` được git-track ở repository consumer; ticket id có thể dùng lại sau khi spec của nó đã archive; archive cùng một id lần thứ hai sẽ dừng vì archive target đã tồn tại.
+- Không có lệnh un-archive. Restore thủ công theo các bước trong [manual-restore.md](../../../plugins/tdk-core/skills/tdk-archive/references/manual-restore.md).
+- `<specsRoot>/archive/**` bị loại khỏi changelog qua `changelog.exclude`.
 
 ## Workflow Map
 
@@ -747,6 +765,7 @@ Walkthrough chi tiết nằm trong [Scenario Catalog](scenarios/scenario-catalog
 - **Luôn chạy `clarify`** trước `plan` — nó bắt ambiguities sớm, giảm rework trong implementation.
 - **Chạy `analyze` trước `implement`** — nó bắt spec-plan-tasks inconsistencies có thể tạo bug.
 - **Dùng `status` thoải mái** — nó read-only và hiển thị phần đã xong vs. còn lại.
+- **Đóng spec đã xong bằng `/tdk-archive`** — giữ danh sách specs đang hoạt động gọn và ghi decisions vào `close-out.md`.
 
 ### Các Flag Thường Gặp
 
@@ -788,6 +807,8 @@ Walkthrough chi tiết nằm trong [Scenario Catalog](scenarios/scenario-catalog
 | "No UT skill found" | Chạy UT commands khi chưa có consumer UT skill | Tạo skill trong `.claude/skills/{name}/SKILL.md` với UT conventions |
 | Script execution fails | Windows không có Git Bash | Cài Git for Windows, có Git Bash |
 | "Feature not found" | Sai task ID hoặc folder | Check `.specify/specs/` để xem existing features; verify prefix trong `.specify.env` |
+| "archive target already exists" | Cùng id đã được archive trước đó | Chọn id khác cho công việc mới, hoặc tự di chuyển archive cũ đi chỗ khác |
+| Command từ chối folder `archive` | `archive` là tên folder được reserve | Dùng tên folder khác; để đọc spec đã archive dùng `/tdk-status archive/<folder>/<id>` hoặc command retro |
 | Checklist gate blocks implement | Checklist items chưa complete | Complete checklist items hoặc confirm proceed khi được hỏi |
 
 ### Thứ Tự Command Nhanh
@@ -795,7 +816,7 @@ Walkthrough chi tiết nằm trong [Scenario Catalog](scenarios/scenario-catalog
 Nếu một command báo thiếu prerequisite, dùng [Workflow Map](workflow-map.md) để xem file inputs/outputs và dùng [Scenario Catalog](scenarios/scenario-catalog.md) để chọn đúng runnable workflow. Short path cho feature-sized work là:
 
 ```text
-specify [--fast] -> clarify -> plan -> implement -> status
+specify [--fast] -> clarify -> plan -> implement -> status -> archive
 ```
 
 Với broad epic, bắt đầu bằng [Epic Start Guide](scenarios/00-epic-start-guide.md) thay vì plan parent epic trực tiếp.

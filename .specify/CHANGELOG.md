@@ -6,6 +6,18 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.125.0] - 2026-10-21
+
+### Added
+- **[tdk-core]** `/tdk-archive` closes out a `done` or `cancelled` spec: preflight blockers, a `close-out.md` report, then a move to `<specsRoot>/archive/<folder>/<id>/`. `--auto-upmem` and `--ingest` send the report's memory candidates to `/tdk-memory-update`; git commands are printed, never run
+- **[Memory]** tdk-memory 4.1.1: `/tdk-memory-update` accepts a preconfirmed structured candidate
+
+### Changed
+- **[tdk-core]** Workflows are archive-aware: `/tdk-status` lists archived specs with retro progress and recommends `/tdk-archive` for finished ones, `/tdk-implement` suggests it on completion, and session hooks keep logging after the move
+- **[tdk-retro]** Retro skills run on archived specs
+- **[Scripts]** `feature/archive.ts --check` and `check-prerequisites.ts --allow-archived` back these flows; `archive` is a reserved folder name
+- **[Guides]** Routing rule and en/vi guides cover `/tdk-archive`, including manual restore; `changelog.exclude` covers `.specify/archive/**`
+
 ## [1.124.0] - 2026-10-20
 
 ### Added

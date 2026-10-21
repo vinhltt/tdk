@@ -2,7 +2,7 @@
 name: tdk-retro-collect
 description: "Create or update retrospective feedback after a TDK spec: reviews, phase drift, UT results, Langfuse traces when available, and user feedback. Writes retro-feedback.md and supports adding or removing user feedback entries across repeated collection runs."
 metadata:
-  version: "1.0.6"
+  version: "1.2.0"
   category: "TDK Retro"
   requires:
     - tdk-implement
@@ -25,12 +25,13 @@ Collect evidence-backed signals after a spec implementation. This skill creates 
 - `../_shared/retro-feedback-schema.md`
 - `../_shared/consumer-skill-discovery.md`
 - `../_shared/script-command-contract.md`
+- `../_shared/archived-spec-handling.md`
 - `references/phase-drift-detection.md`
 - `references/langfuse-trace-analysis.md`
 
 ## Step 1: Resolve Feature Directory
 
-Parse `$ARGUMENTS` as `TASK_ID`.
+Parse `$ARGUMENTS` as the raw task id (`{task_id}`). The canonical `TASK_ID` comes from the script output below.
 
 Run the prerequisite check using the shared script command contract:
 
@@ -41,12 +42,22 @@ if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
   exit 1
 fi
-(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --json)
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --json --allow-archived)
 ```
 
-Store `FEATURE_DIR` from the JSON output.
+Store `FEATURE_DIR`, `TASK_ID` (the JSON `taskId`), and `ARCHIVED` (the JSON `archived`) from the output. Follow `../_shared/archived-spec-handling.md`: use `TASK_ID`, never the raw argument, in the `retro-feedback.md` heading and every command printed to the user. When `ARCHIVED` is `true`, write only `retro-feedback.md`.
 
-Fixture fallback: if the script fails and `$PROJECT_DIR/.specify/examples/specs/{TASK_ID}/plan.md` exists, use that path as `FEATURE_DIR` and mark the run as `example-fixture`.
+Fixture fallback: if the script fails and `$PROJECT_DIR/.specify/examples/specs/{raw argument}/plan.md` exists, use that path as `FEATURE_DIR`, use the raw argument as `TASK_ID`, and mark the run as `example-fixture`.
+
+### Re-collect guard
+
+Read `retro_status` from the retro status lookup in `../_shared/archived-spec-handling.md` (skip it for an `example-fixture` run). When `retro_status` is `done`, the retro cycle for this spec is finished; ask before collecting again:
+
+- Header: `Retro`
+- Question: `Retro for {TASK_ID} is already complete. Collect again?`
+- Options: `Collect again` - continue and refresh `retro-feedback.md`; `Stop` - end the run and write nothing.
+
+On `Stop`, report that nothing was written.
 
 ## Step 2: Parse Plan Phases
 

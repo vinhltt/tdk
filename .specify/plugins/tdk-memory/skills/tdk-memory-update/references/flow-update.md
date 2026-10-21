@@ -3,6 +3,111 @@
 All paths are disk paths under the resolved memory root. Use Read, Glob, Grep,
 Edit, and Write after the shared root/runtime/YAML preflight.
 
+## Dispatch: preconfirmed candidate mode
+
+Dispatch order after the shared preflight: `--deprecate`, then
+`--finalize-written`, then this mode, then the interactive flow below. The mode is
+entered only when `$ARGUMENTS` carries one complete candidate block; it adds no
+flag and changes no default. Natural-language callers and manual use keep every
+confirmation. The block is NOT the `===TDK-MEMORY-CONTROL===` header: that header
+belongs to the read-only `tdk-memory-agent`.
+
+### Block
+
+```text
+===TDK-MEMORY-CANDIDATE===
+type: business-rule
+domain: sample-billing
+action: merge
+name: invoice-approval
+sourceFiles:
+- specs/sample/close-out.md
+content:
+Invoices above the credit limit require approval. Source: specs/sample/close-out.md#rules
+===END-CANDIDATE===
+```
+
+- Header lines before `content:` are `key: value`; `sourceFiles:` is followed by
+  `- <path>` lines. Everything after the `content:` line up to the line
+  `===END-CANDIDATE===` is the entry body, verbatim Markdown.
+- Required: `type`, `domain`, `sourceFiles` (at least one path), `content`
+  (non-blank), `action` (`merge` or `replace`). Optional: `name` (target file name
+  for name-addressed types).
+- `type` is one of `business-rule`, `service`, `flow`, `data-model`,
+  `decision-record`, `risk-debt`.
+
+### Detection rule (complete candidate)
+
+After removing `--memory-root [path]` and `--allow-external-root`, the first
+non-blank line of `$ARGUMENTS` is exactly `===TDK-MEMORY-CANDIDATE===`. Do not scan
+prose for the marker. The input is a complete candidate only if all hold:
+
+1. exactly one opening marker and one closing `===END-CANDIDATE===`, with nothing
+   but blank lines after the closing marker;
+2. every required field is present once, and no unknown or duplicate header key;
+3. `type`, `domain`, `action` and every `sourceFiles` entry are non-blank, `action`
+   is `merge` or `replace`, and `content` has non-blank text.
+
+Anything else (missing or blank field, malformed block, a second block, prose
+before the block) is NOT preconfirmed: ignore the block rules and run the
+interactive flow below exactly as written, treating `$ARGUMENTS` as the request.
+
+### Behaviour
+
+Run Steps 1, 3, 5, 5.1, 5.2, 6 and 7 unchanged (routing through `memory-index.md`,
+template materialization, heading patch, new-file enrichment with block IDs and
+wikilinks, index regeneration, `memory.yaml` checksums). Step 5.1 runs without a
+prompt whenever Step 5 creates a new file. Differences, with
+no `AskUserQuestion` anywhere in this mode:
+
+1. **Step 2 routing:** resolve the target from `type` + `domain` (+ `name`),
+   not from prose:
+
+   | `type` | Target | Domain validated (Step 4) |
+   |---|---|---|
+   | `business-rule` | `domains/{domain}/business-rules.md` | yes |
+   | `service` | `domains/{domain}/services.md` | yes |
+   | `flow` | `domains/{domain}/flows/{name}-flow.md` | yes |
+   | `data-model` | `data-model/{name}.md` | no |
+   | `decision-record` | `decisions/{name}.md` | no |
+   | `risk-debt` | `risks-and-debt/{name}.md` | no |
+
+   `{name}` is `name` when given, else the kebab-case of the first Markdown
+   heading in `content`; neither available is `error: cannot derive target name`.
+   Reject a `name` or `sourceFiles` path containing `..`, a leading `/`, or a
+   path separator in `name` as `error: invalid path`. Set
+   `RESOLVED_TARGET_PATH`; any other `type` is `error: unsupported type`.
+2. **Step 2.5 skipped:** `sourceFiles` are provenance only. No Domain Source
+   Files prompt, no file read, no domain confirm or mismatch check.
+3. **Step 4 domain validation:** unknown domain is `error: unknown domain
+   {name}` and writes nothing.
+4. **Step 4.5 skipped:** `action` decides. `merge` follows the additive strategy.
+   `replace` swaps the existing entry in the target section whose first line
+   (heading or bullet label) equals the candidate's first line, without a
+   confirmation; no matching entry appends; more than one match is
+   `error: ambiguous replace target`. If the target file does not exist both
+   actions create it from the template.
+5. **Idempotency (before Step 5):** compare `content` with the target section body
+   after normalising (trim each line, collapse internal whitespace, drop blank
+   lines). If the normalised candidate already appears there as a contiguous
+   run, make no write, no index regeneration and no `memory.yaml` change: the
+   result is `already present`.
+6. **Errors:** `memory-index.md` or `memory.yaml` missing in Step 1 is
+   `error: memory not initialised`. Any other preflight, template, anchor or write
+   failure also ends with `error: <reason>`. Do not prompt, retry or partially
+   write; this result replaces the STOP-and-ask rule of the interactive flow.
+
+### Result
+
+Print the usual Step 7 report for a write, then end the output with exactly one
+line:
+
+```text
+Result: written | already present | error: <reason>
+```
+
+---
+
 ## Step 1: Guard checks + Read memory-index.md
 
 1. `Glob("<memoryRoot>/memory-index.md")` → must return a result

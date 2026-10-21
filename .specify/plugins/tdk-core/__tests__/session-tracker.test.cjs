@@ -8,14 +8,16 @@ const { recordSession } = require('../lib/session-tracker.cjs');
 
 function makeFixture({ withTaskFolder = true, ticketId = 'CD-001' } = {}) {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'session-tracker-'));
-  const specsRoot = path.join('.specify', 'specs');
+  const specsRoot = '.specify';
+  const defaultFolder = 'specs';
   if (withTaskFolder) {
-    fs.mkdirSync(path.join(cwd, specsRoot, ticketId), { recursive: true });
+    fs.mkdirSync(path.join(cwd, specsRoot, defaultFolder, ticketId), { recursive: true });
   }
-  const folder = path.join(cwd, specsRoot, ticketId);
+  const folder = path.join(cwd, specsRoot, defaultFolder, ticketId);
   return {
     cwd,
     specsRoot,
+    defaultFolder,
     ticketId,
     folder,
     file: path.join(folder, 'sessions.jsonl'),
@@ -49,28 +51,92 @@ function readLines(file) {
 }
 
 test('skip when ticketId is null', () => {
-  const { cwd, specsRoot } = makeFixture();
-  const result = recordSession({ specsRoot, ticketId: null, sessionId: 'abc', cwd });
+  const { cwd, specsRoot, defaultFolder } = makeFixture();
+  const result = recordSession({ specsRoot, defaultFolder, ticketId: null, sessionId: 'abc', cwd });
   assert.deepEqual(result, { skipped: 'missing-id' });
 });
 
 test('skip when sessionId is empty', () => {
-  const { cwd, specsRoot, ticketId } = makeFixture();
-  const result = recordSession({ specsRoot, ticketId, sessionId: '', cwd });
+  const { cwd, specsRoot, defaultFolder, ticketId } = makeFixture();
+  const result = recordSession({ specsRoot, defaultFolder, ticketId, sessionId: '', cwd });
   assert.deepEqual(result, { skipped: 'missing-id' });
 });
 
 test('skip when task folder missing', () => {
-  const { cwd, specsRoot, ticketId } = makeFixture({ withTaskFolder: false });
-  const result = recordSession({ specsRoot, ticketId, sessionId: 'abc', cwd });
+  const { cwd, specsRoot, defaultFolder, ticketId } = makeFixture({ withTaskFolder: false });
+  const result = recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'abc', cwd });
   assert.deepEqual(result, { skipped: 'no-task-folder' });
 });
 
+test('archived task folder receives the record when the active folder is gone', () => {
+  const { cwd, specsRoot, defaultFolder, ticketId, file } = makeFixture({ withTaskFolder: false });
+  const archived = path.join(cwd, '.specify', 'archive', 'specs', ticketId);
+  fs.mkdirSync(archived, { recursive: true });
+
+  const result = recordSession({
+    specsRoot, defaultFolder, ticketId, sessionId: 'session-arch', cwd, provenance: spyProvenance('session-arch')
+  });
+
+  assert.deepEqual(result, { recorded: true, isNew: true });
+  assert.equal(fs.existsSync(path.dirname(file)), false, 'active folder must not be created');
+  const lines = readLines(path.join(archived, 'sessions.jsonl'));
+  assert.equal(JSON.parse(lines[0]).session, 'session-arch');
+  assert.equal(fs.existsSync(path.join(archived, 'sessions.jsonl.lock')), false);
+});
+
+test('active folder wins when both active and archived folders exist', () => {
+  const { cwd, specsRoot, defaultFolder, ticketId, file } = makeFixture();
+  const archived = path.join(cwd, '.specify', 'archive', 'specs', ticketId);
+  fs.mkdirSync(archived, { recursive: true });
+
+  recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'session-both', cwd, provenance: spyProvenance('session-both') });
+
+  assert.equal(readLines(file).length, 1);
+  assert.equal(fs.existsSync(path.join(archived, 'sessions.jsonl')), false);
+});
+
+test('skip and create nothing when neither active nor archived folder exists', () => {
+  const { cwd, specsRoot, defaultFolder, ticketId } = makeFixture({ withTaskFolder: false });
+  const result = recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'abc', cwd });
+  assert.deepEqual(result, { skipped: 'no-task-folder' });
+  assert.equal(fs.existsSync(path.join(cwd, '.specify')), false);
+});
+
+test('a nested defaultFolder falls back to <root>/archive/<defaultFolder>/<ticket>', () => {
+  const { cwd, specsRoot, ticketId } = makeFixture({ withTaskFolder: false });
+  const archived = path.join(cwd, '.specify', 'archive', 'specs', 'team', ticketId);
+  fs.mkdirSync(archived, { recursive: true });
+
+  const result = recordSession({ specsRoot, defaultFolder: 'specs/team', ticketId, sessionId: 'nested', cwd });
+
+  assert.deepEqual(result, { recorded: true, isNew: true });
+  assert.equal(readLines(path.join(archived, 'sessions.jsonl')).length, 1);
+  assert.equal(fs.existsSync(path.join(cwd, '.specify', 'specs')), false);
+});
+
+test('a "." or ".." defaultFolder never falls back, even when the target directory exists', () => {
+  // Directories the archive layout would pick for that defaultFolder, none of them the active folder.
+  const archiveTargets = {
+    '.': [['.specify', 'archive'], ['archive', '.specify']],
+    '..': [['.specify']]
+  };
+  for (const [defaultFolder, targets] of Object.entries(archiveTargets)) {
+    const { cwd, specsRoot, ticketId } = makeFixture({ withTaskFolder: false });
+    const dirs = targets.map((segments) => path.join(cwd, ...segments, ticketId));
+    for (const dir of dirs) fs.mkdirSync(dir, { recursive: true });
+
+    const result = recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'esc', cwd });
+
+    assert.deepEqual(result, { skipped: 'no-task-folder' }, `defaultFolder ${defaultFolder}`);
+    for (const dir of dirs) assert.equal(fs.existsSync(path.join(dir, 'sessions.jsonl')), false);
+  }
+});
+
 test('T1 first association writes one provenance record', () => {
-  const { cwd, specsRoot, ticketId, file, legacyFile } = makeFixture();
+  const { cwd, specsRoot, defaultFolder, ticketId, file, legacyFile } = makeFixture();
   const provenance = spyProvenance('session-001');
 
-  const result = recordSession({ specsRoot, ticketId, sessionId: 'session-001', cwd, provenance });
+  const result = recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'session-001', cwd, provenance });
   assert.deepEqual(result, { recorded: true, isNew: true });
 
   const lines = readLines(file);
@@ -89,33 +155,33 @@ test('T1 first association writes one provenance record', () => {
 });
 
 test('appends a second association to an existing record file', () => {
-  const { cwd, specsRoot, ticketId, file } = makeFixture();
-  recordSession({ specsRoot, ticketId, sessionId: 'session-a', cwd, provenance: spyProvenance('session-a') });
-  recordSession({ specsRoot, ticketId, sessionId: 'session-b', cwd, provenance: spyProvenance('session-b') });
+  const { cwd, specsRoot, defaultFolder, ticketId, file } = makeFixture();
+  recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'session-a', cwd, provenance: spyProvenance('session-a') });
+  recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'session-b', cwd, provenance: spyProvenance('session-b') });
 
   const sessions = readLines(file).map((line) => JSON.parse(line).session);
   assert.deepEqual(sessions, ['session-a', 'session-b']);
 });
 
 test('T2 same session twice leaves the file byte-identical and skips provenance', () => {
-  const { cwd, specsRoot, ticketId, file } = makeFixture();
+  const { cwd, specsRoot, defaultFolder, ticketId, file } = makeFixture();
   const provenance = spyProvenance('session-001');
 
-  recordSession({ specsRoot, ticketId, sessionId: 'session-001', cwd, provenance });
+  recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'session-001', cwd, provenance });
   const before = fs.readFileSync(file);
 
-  const result = recordSession({ specsRoot, ticketId, sessionId: 'session-001', cwd, provenance });
+  const result = recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'session-001', cwd, provenance });
   assert.deepEqual(result, { recorded: false, isNew: false });
   assert.deepEqual(fs.readFileSync(file), before);
   assert.equal(provenance.calls, 1, 'no provenance collection on a dedup hit');
 });
 
 test('T3 legacy sessions.txt entry suppresses the append and stays untouched', () => {
-  const { cwd, specsRoot, ticketId, file, legacyFile } = makeFixture();
+  const { cwd, specsRoot, defaultFolder, ticketId, file, legacyFile } = makeFixture();
   fs.writeFileSync(legacyFile, 'session-legacy\n');
   const provenance = spyProvenance('session-legacy');
 
-  const result = recordSession({ specsRoot, ticketId, sessionId: 'session-legacy', cwd, provenance });
+  const result = recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'session-legacy', cwd, provenance });
 
   assert.deepEqual(result, { recorded: false, isNew: false });
   assert.equal(fs.existsSync(file), false);
@@ -124,12 +190,12 @@ test('T3 legacy sessions.txt entry suppresses the append and stays untouched', (
 });
 
 test('T4 corrupt line mid-file is preserved and does not block the append', () => {
-  const { cwd, specsRoot, ticketId, file } = makeFixture();
+  const { cwd, specsRoot, defaultFolder, ticketId, file } = makeFixture();
   const corrupt = '{"v":1,"session":"session-trunc"';
   fs.writeFileSync(file, `${JSON.stringify({ v: 1, session: 'session-old' })}\n${corrupt}\n`);
 
   const result = recordSession({
-    specsRoot, ticketId, sessionId: 'session-new', cwd, provenance: spyProvenance('session-new')
+    specsRoot, defaultFolder, ticketId, sessionId: 'session-new', cwd, provenance: spyProvenance('session-new')
   });
 
   assert.deepEqual(result, { recorded: true, isNew: true });
@@ -141,11 +207,11 @@ test('T4 corrupt line mid-file is preserved and does not block the append', () =
 });
 
 test('T5 truncated final line does not fuse with the new record', () => {
-  const { cwd, specsRoot, ticketId, file } = makeFixture();
+  const { cwd, specsRoot, defaultFolder, ticketId, file } = makeFixture();
   fs.writeFileSync(file, '{"v":1,"session":"session-cut"');
 
   recordSession({
-    specsRoot, ticketId, sessionId: 'session-new', cwd, provenance: spyProvenance('session-new')
+    specsRoot, defaultFolder, ticketId, sessionId: 'session-new', cwd, provenance: spyProvenance('session-new')
   });
 
   const lines = readLines(file);
@@ -155,7 +221,7 @@ test('T5 truncated final line does not fuse with the new record', () => {
 });
 
 test('T6 null, array, session-less and unknown-version lines are skipped for dedup', () => {
-  const { cwd, specsRoot, ticketId, file } = makeFixture();
+  const { cwd, specsRoot, defaultFolder, ticketId, file } = makeFixture();
   fs.writeFileSync(file, [
     'null',
     '["session-001"]',
@@ -166,7 +232,7 @@ test('T6 null, array, session-less and unknown-version lines are skipped for ded
   ].join('\n') + '\n');
 
   const result = recordSession({
-    specsRoot, ticketId, sessionId: 'session-001', cwd, provenance: spyProvenance('session-001')
+    specsRoot, defaultFolder, ticketId, sessionId: 'session-001', cwd, provenance: spyProvenance('session-001')
   });
 
   assert.deepEqual(result, { recorded: true, isNew: true }, 'none of those lines claims session-001');
@@ -175,12 +241,12 @@ test('T6 null, array, session-less and unknown-version lines are skipped for ded
 });
 
 test('T7 lock contention returns lock-timeout without appending', () => {
-  const { cwd, specsRoot, ticketId, file, lockPath } = makeFixture();
+  const { cwd, specsRoot, defaultFolder, ticketId, file, lockPath } = makeFixture();
   fs.writeFileSync(lockPath, '');
   const provenance = spyProvenance('session-001');
 
   const start = Date.now();
-  const result = recordSession({ specsRoot, ticketId, sessionId: 'session-001', cwd, provenance });
+  const result = recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'session-001', cwd, provenance });
   const elapsed = Date.now() - start;
 
   assert.deepEqual(result, { skipped: 'lock-timeout' });
@@ -191,7 +257,7 @@ test('T7 lock contention returns lock-timeout without appending', () => {
 });
 
 test('T8 append failure throws to the caller and still unlinks the lock', () => {
-  const { cwd, specsRoot, ticketId, lockPath } = makeFixture();
+  const { cwd, specsRoot, defaultFolder, ticketId, lockPath } = makeFixture();
 
   const original = fs.appendFileSync;
   fs.appendFileSync = () => { throw new Error('disk-full'); };
@@ -199,7 +265,7 @@ test('T8 append failure throws to the caller and still unlinks the lock', () => 
   try {
     assert.throws(
       () => recordSession({
-        specsRoot, ticketId, sessionId: 'session-001', cwd, provenance: spyProvenance('session-001')
+        specsRoot, defaultFolder, ticketId, sessionId: 'session-001', cwd, provenance: spyProvenance('session-001')
       }),
       /disk-full/
     );
@@ -211,18 +277,18 @@ test('T8 append failure throws to the caller and still unlinks the lock', () => 
 });
 
 test('lock cleanup on happy path', () => {
-  const { cwd, specsRoot, ticketId, lockPath } = makeFixture();
+  const { cwd, specsRoot, defaultFolder, ticketId, lockPath } = makeFixture();
   recordSession({
-    specsRoot, ticketId, sessionId: 'session-001', cwd, provenance: spyProvenance('session-001')
+    specsRoot, defaultFolder, ticketId, sessionId: 'session-001', cwd, provenance: spyProvenance('session-001')
   });
 
   assert.equal(fs.existsSync(lockPath), false);
 });
 
 test('records a minimal valid line when no provenance factory is supplied', () => {
-  const { cwd, specsRoot, ticketId, file } = makeFixture();
+  const { cwd, specsRoot, defaultFolder, ticketId, file } = makeFixture();
 
-  const result = recordSession({ specsRoot, ticketId, sessionId: 'session-bare', cwd });
+  const result = recordSession({ specsRoot, defaultFolder, ticketId, sessionId: 'session-bare', cwd });
 
   assert.deepEqual(result, { recorded: true, isNew: true });
   assert.deepEqual(JSON.parse(readLines(file)[0]), { v: 1, session: 'session-bare' });

@@ -29,6 +29,8 @@
 
 If the work is already one small clear feature, skip the epic commands and start at `/tdk-specify`.
 
+When a feature is `done` or `cancelled`, close it out with `/tdk-archive`. See [Close-out And Archive](skills-guide.md#close-out-and-archive).
+
 ## Choose Your Path
 
 | I need to... | Go to |

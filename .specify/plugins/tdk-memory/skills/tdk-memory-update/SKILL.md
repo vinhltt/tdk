@@ -1,19 +1,21 @@
 ---
 name: tdk-memory-update
-description: "Update project memory: add services, business rules, data models, or domain knowledge; modify section anchors; deprecate a memory file. Routes natural language updates through memory-index.md and maintains memory.yaml checksums. Supports --deprecate [path] and --memory-root [path]."
+description: "Update project memory: add services, business rules, data models, or domain knowledge; modify section anchors; deprecate a memory file. Routes natural language updates through memory-index.md and maintains memory.yaml checksums. Also accepts a complete preconfirmed candidate block that writes without prompts. Supports --deprecate [path] and --memory-root [path]."
 metadata:
-  version: 4.0.0
+  version: 4.1.1
   category: "Context & Memory"
   requires:
     - tdk-memory-query
     - tdk-memory-changelog
-  input_format: "Natural language update with optional --deprecate flag"
-  output_format: "Success or error message"
+  input_format: "Natural language update with optional --deprecate flag, or a complete ===TDK-MEMORY-CANDIDATE=== block"
+  output_format: "Success or error message; candidate block ends with a Result line (written | already present | error: <reason>)"
   examples:
     - input: "Add a new service to the authentication domain: AuthService with login(email, password) method. Update memory."
       output: "Memory updated successfully. Added AuthService to authentication domain. Updated memory-index.md and checksums."
     - input: "Deprecate domains/payment/business-rules.md. Run /tdk-memory-update --deprecate domains/payment/business-rules.md"
       output: "Memory file domains/payment/business-rules.md marked as deprecated. Updated memory-index.md and checksums."
+    - input: "===TDK-MEMORY-CANDIDATE===\ntype: business-rule\ndomain: sample-billing\naction: merge\nsourceFiles:\n- specs/sample/close-out.md\ncontent:\nInvoices above the credit limit require approval.\n===END-CANDIDATE==="
+      output: "Result: written"
 ---
 
 ## Memory root resolution
@@ -29,7 +31,8 @@ SKILL.md. Resolve sibling runtime assets the same way, never from cwd.
 
 ## Error Handling
 
-**If ANY operation fails:**
+**If ANY operation fails** (preconfirmed candidate mode instead ends with
+`Result: error: <reason>` and never prompts):
 1. **STOP immediately** — do NOT attempt workarounds or auto-fixes
 2. **Report the error** — show exact error message to user
 3. **Wait for user** — ask how to proceed before taking any action
@@ -67,6 +70,38 @@ After root/runtime/YAML preflight, `--deprecate` follows
 `references/deprecation-flow.md`. `--finalize-written` follows
 `references/finalize-written-files.md`. These modes are mutually exclusive and
 return without the normal editing/template steps.
+
+### Preconfirmed candidate mode
+
+When neither `--deprecate` nor `--finalize-written` is present and `$ARGUMENTS`
+holds one complete candidate block, `references/flow-update.md` ("Dispatch:
+preconfirmed candidate mode") runs the normal routing, write, index and checksum
+steps with no question to the user. No flag enables it and the default flow is
+unchanged. This is not the `===TDK-MEMORY-CONTROL===` header of `tdk-memory-agent`.
+
+```text
+===TDK-MEMORY-CANDIDATE===
+type: business-rule|service|flow|data-model|decision-record|risk-debt
+domain: <domain name>
+action: merge|replace
+name: <optional target file name>
+sourceFiles:
+- <path>
+content:
+<entry Markdown, verbatim, up to the closing marker>
+===END-CANDIDATE===
+```
+
+Complete means: the block is the first non-blank input (after `--memory-root` and
+`--allow-external-root`); one opening and one closing marker; `type`, `domain`,
+`action` (`merge` or `replace`), at least one `sourceFiles` path and non-blank
+`content` are all present exactly once; no unknown or duplicate key; nothing but
+blank lines after the closing marker. Any gap runs the interactive flow unchanged.
+
+Skipped in this mode: Domain Source Files prompt, domain confirm/mismatch, Merge vs
+Replace (`action` decides). An entry already in the target section is a no-op.
+Ends with one line: `Result: written`, `Result: already present`, or
+`Result: error: <reason>` (unknown domain, memory not initialised, ...).
 
 ---
 

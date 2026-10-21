@@ -2,7 +2,7 @@
 name: tdk-status
 description: "This skill should be used when the user asks to 'check status', 'tdk-status', 'what's the progress of <task-id>', 'which branch is each repo on', or needs a read-only report of a TDK feature's artifacts, phase progress, and per-repository branch state. Never modifies files."
 metadata:
-  version: "14.2.1"
+  version: "14.3.0"
 ---
 
 # /tdk-status - Track Workflow Progress
@@ -40,6 +40,14 @@ Use structured JSON fields, not this skill's formatted report or recommendation 
   Computed, not read: before a plan exists it is the live specification quality gate verdict (`ready` when
   `/tdk-plan` would accept the spec, else `draft`); once `plan.md` has a parseable `## Phases` table it is the
   same value the plan root `status:` is written with; a stored `archived` always wins
+- `archived`: `true` when the spec was resolved under `<specsRoot>/archive/`, else `false`. In list mode,
+  archived specs of the default folder are listed too, flagged `archived: true`; archived specs of other
+  folders are not listed but resolve in detail mode (`archive/<folder>/<id>`, or a bare id missing from the
+  active folder). Archived specs never get a `status_mismatch` warning
+- `retro_status`: `none` | `collected` | `proposed` | `done`, derived from `retro-feedback.md` and
+  `learning-delta.md` (no frontmatter field): `none` = no feedback, `collected` = feedback and no delta,
+  `proposed` = delta has an entry that is not yet applied/rejected/blocked, `done` = every entry is
+  applied/rejected/blocked. `retro_blocked`: number of `blocked` delta entries
 - `stored_status.spec`, `stored_status.plan`: raw frontmatter `status:` of `spec.md` / `plan.md` as stored on disk,
   or `null` when the file or key is absent. Never branch on these; use `feature_status`
 - `phases.total`, `phases.done`, `phases.skipped`, `phases.inProgress`, `phases.todo`, `phases.blocked`, `phases.percent`
@@ -165,6 +173,7 @@ Show `actualBranch` as the branch column, or `—` when it is `null`. When `work
 ```
 - Artifact checklist: ✅/❌ for spec.md, plan.md with `modified` dates
 - Feature status badge from `feature_status` field: `empty` | `draft` | `ready` | `planned` | `in_progress` | `blocked` | `done` | `cancelled` | `archived`
+- Retro line from `retro_status` (add `retro_blocked` blocked entries when above 0); show it for `done` and `archived` features
 
 **Phase Progress (from `phases.rows[]`):**
 - Progress: `Phases: {phases.done}/{phases.total - phases.skipped} ({phases.percent}%)`
@@ -192,6 +201,20 @@ Show `actualBranch` as the branch column, or `—` when it is `null`. When `work
 Why: {recommendation.primary.reason}
 ```
 If `recommendation.alternative` exists and `recommendation.alternative.command` is non-empty, show as 🔀 Alternative section.
+If `recommendation.primary.command` is empty, show only the reason (nothing left to do).
+
+Recommendations come from the collector; render them, never recompute them. Commands always use the
+canonical id `<folder>/<ticket>`, never an `archive/...` path:
+
+| `feature_status` | Primary | Alternative |
+|---|---|---|
+| `done`, no UT artifacts | `/tdk-plan <id> --ut-backfill` | `/tdk-archive <id>` |
+| `done`, UT artifacts | `/tdk-archive <id>` | `/tdk-retro-collect <id>` when `retro_status` is not `done` |
+| `cancelled` | `/tdk-archive <id>` | — |
+| `archived`, `retro_status` `none` | `/tdk-retro-collect <id>` | — |
+| `archived`, `collected` | `/tdk-retro-propose <id>` | — |
+| `archived`, `proposed` | `/tdk-retro-apply <id>` | — |
+| `archived`, `done` | none (retro complete) | — |
 
 ### Warnings
 If `warnings[]` is non-empty, show each with ⚠️ icon:

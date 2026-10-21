@@ -39,6 +39,7 @@ const RETAINED_CORE_SKILLS = [
   'tdk-consistency-check',
   'tdk-review',
   'tdk-status',
+  'tdk-archive',
 ];
 const DOCS_WRITER_AGENT = 'tdk-docs-writer';
 

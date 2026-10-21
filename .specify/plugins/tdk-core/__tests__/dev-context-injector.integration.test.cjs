@@ -273,6 +273,27 @@ test('a later prompt adds another association instead of blocking a rebind', (t)
   ));
 });
 
+test('a mention of an archived spec appends to its archive sessions.jsonl and creates no active folder', (t) => {
+  const root = makeWorkspace(t, { ticketIds: [] });
+  const archivedDir = path.join(root, '.specify', 'archive', 'specs', 'cd-001');
+  fs.mkdirSync(archivedDir, { recursive: true });
+  const transcript = makeTranscript(t, root);
+
+  const result = runHook(projectRoot, {
+    session_id: 'archived-session',
+    transcript_path: transcript,
+    cwd: root,
+    hook_event_name: 'UserPromptSubmit',
+    prompt: 'ingest memory for cd-001'
+  }, { logRoot: root });
+
+  assert.equal(result.status, 0);
+  const lines = fs.readFileSync(path.join(archivedDir, 'sessions.jsonl'), 'utf-8').split('\n').filter(Boolean);
+  assert.deepEqual(lines.map((line) => JSON.parse(line).session), ['archived-session']);
+  assert.equal(fs.existsSync(path.join(root, '.specify', 'specs', 'cd-001')), false);
+  assert.ok(trackerEntries(root).some((entry) => entry.status === 'ok' && entry.ticketId === 'cd-001'));
+});
+
 test('a mention without a spec folder is logged while valid mentions still record', (t) => {
   const root = makeWorkspace(t, { ticketIds: ['mrr-2836'] });
   const transcript = makeTranscript(t, root);

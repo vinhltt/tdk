@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { classifySessionLine } = require('./session-provenance.cjs');
+const { taskFolderCandidates } = require('./session-ticket-resolver.cjs');
 
 const LOCK_RETRIES = 5;
 const LOCK_BACKOFF_MS = 20;
@@ -32,6 +33,17 @@ function containsSession(content, sessionId) {
 }
 
 /**
+ * Directory that receives `sessions.jsonl` for a ticket, or `null` when there is none.
+ * The active dir wins; the archived copy is used only when the active one is gone.
+ * Never creates a directory.
+ */
+function resolveTaskFolder(cwd, specsRoot, defaultFolder, ticketId) {
+  const { active, archived } = taskFolderCandidates({ workspaceRoot: cwd, specsRoot, defaultFolder }, ticketId);
+  if (fs.existsSync(active)) return active;
+  return archived !== null && fs.existsSync(archived) ? archived : null;
+}
+
+/**
  * Record one `(session, ticket)` first association in `sessions.jsonl`.
  *
  * Single writer: the legacy `sessions.txt` is read for dedup and never
@@ -39,15 +51,15 @@ function containsSession(content, sessionId) {
  * `provenance` factory, invoked only when an append will actually happen and
  * always outside the lock, so the 100 ms lock budget never spans a git call.
  *
- * @param {{specsRoot:string, ticketId:string, sessionId:string, cwd:string,
+ * @param {{specsRoot:string, defaultFolder:string, ticketId:string, sessionId:string, cwd:string,
  *          provenance?:() => Object}} args
  * @returns {{skipped:string}|{recorded:boolean, isNew:boolean}}
  */
-function recordSession({ specsRoot, ticketId, sessionId, cwd, provenance }) {
+function recordSession({ specsRoot, defaultFolder, ticketId, sessionId, cwd, provenance }) {
   if (!ticketId || !sessionId) return { skipped: 'missing-id' };
 
-  const folder = path.join(cwd, specsRoot, ticketId);
-  if (!fs.existsSync(folder)) return { skipped: 'no-task-folder' };
+  const folder = resolveTaskFolder(cwd, specsRoot, defaultFolder, ticketId);
+  if (folder === null) return { skipped: 'no-task-folder' };
 
   const file = path.join(folder, 'sessions.jsonl');
   const legacyFile = path.join(folder, 'sessions.txt');

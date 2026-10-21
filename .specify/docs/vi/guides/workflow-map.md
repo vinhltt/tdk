@@ -14,7 +14,7 @@ Workflow vẫn là một đồ thị command/artifact thống nhất dù trách 
 
 | Workflow lane | Plugin sở hữu |
 |---|---|
-| Child spec, clarify, plan, implement, analyze, và status | `tdk-core` |
+| Child spec, clarify, plan, implement, analyze, status, và archive | `tdk-core` |
 | Project inception, constitution, architecture, workspace layout/config, dependency policy, và sub-workspace docs | `tdk-inception` |
 | Parent epic discovery, PRD, HLD, và task breakdown | `tdk-epic` |
 | Generic research/scout/context/problem-solving helpers | `tdk-utils` |
@@ -91,6 +91,9 @@ flowchart TD
     PLAN -->|/tdk-implement<br/>or --phase NN| CODE_BE[backend/src/<br/>Backend Code]
     PLAN -->|/tdk-implement<br/>or --phase NN| CODE_FE[frontend/pages/<br/>Frontend Code]
 
+    %% Phase 3: Close-out
+    PLAN -.->|/tdk-archive<br/>done or cancelled| ARCHIVED[archive/folder/id/<br/>+ close-out.md]
+
     classDef phase0 fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#0f172a
     classDef phase1 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#0f172a
     classDef phase2 fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#0f172a
@@ -105,6 +108,7 @@ flowchart TD
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES phase1
     class CONSTITUTION,MEMORY_CONTROL,TYPED_MEMORY,ARC42,UIUX,REF_DATAMODEL,REF_STATE reference
     class CODE_BE,CODE_FE,TESTS code
+    class ARCHIVED phase3
 ```
 
 ---
@@ -228,6 +232,24 @@ flowchart TD
 
 `/tdk-implement <id>` chạy toàn bộ runnable rows từ `plan.md ## Phases`.
 `/tdk-implement <id> --phase NN` chạy một selected phase, đồng thời vẫn tôn trọng dependencies và global stale `in_progress` recovery.
+
+### Phase 3: Close-out và Archive
+
+```mermaid
+flowchart LR
+    DONE[spec.md + plan.md<br/>status done or cancelled]
+    CLOSE[close-out.md]
+    ARCH["archive/folder/id/<br/>status archived"]
+    MEM[project memory<br/>via /tdk-memory-update]
+    RETRO[retro-feedback.md<br/>learning-delta.md]
+
+    DONE -->|"/tdk-archive id"| CLOSE
+    CLOSE -->|archive.ts| ARCH
+    ARCH -.->|"--auto-upmem or<br/>/tdk-archive --ingest"| MEM
+    ARCH -.->|"/tdk-retro-collect<br/>propose, apply"| RETRO
+```
+
+`/tdk-archive` ghi `close-out.md`, rồi move feature directory sang `<specsRoot>/archive/<folder>/<id>/`. Memory ingest là opt-in. Các command retro vẫn chạy trên id đã archive. Các bước restore thủ công nằm ở [manual-restore.md](../../../plugins/tdk-core/skills/tdk-archive/references/manual-restore.md).
 
 ### Unit Testing Pipeline
 
@@ -365,6 +387,8 @@ Luôn chạy `config:diff` trước `config:sync` để preview changes. Dùng `
 | `phases/*.md` owner sections | `/tdk-plan` | `spec.md`, plan graph | `/tdk-implement` | Required; data model, prose interface, và runbook nằm cùng owning work |
 | `research/`, `reports/` | `/tdk-plan` | Unresolved external question hoặc declared durable evidence consumer | Indexed supporting evidence | Chỉ conditional |
 | `contracts/*.{json,yaml,yml,graphql,proto}` | `/tdk-plan` | Declared machine consumer cộng validation command | Generator, validator, runtime, hoặc downstream integration | Chỉ conditional |
+| `close-out.md` | `/tdk-archive` | `spec.md`, `plan.md`, phases, reviews, retro files | `/tdk-archive --ingest`; project memory candidates | Một lần cho mỗi archive; row status cập nhật khi ingest |
+| `<specsRoot>/archive/<folder>/<id>/` | `/tdk-archive` (qua `archive.ts`) | Feature directory có status `done` hoặc `cancelled` | `/tdk-status archive/<folder>/<id>`, `/tdk-retro-*` | Khi archive; plan và specify không đọc |
 | `backend/src/**` | `/tdk-implement` | `plan.md ## Phases` | Testing | Implementation |
 | `frontend/pages/**` | `/tdk-implement` | `plan.md ## Phases`, `page-designs/` | Testing, review | Implementation |
 | `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), test/domain routing (TDD) hoặc chỉ test routing (backfill) | `/tdk-implement` với readiness và `Test Quality Gate` trước khi done | Feature UT |
@@ -484,4 +508,5 @@ flowchart TD
 ├── page-designs/                       # Phase 1: Screen specifications
 │   └── {category}/
 │       └── {screen}.md
+└── close-out.md                        # Ghi bởi /tdk-archive, đi cùng folder khi archive
 ```

@@ -29,7 +29,7 @@
   },
 
   "changelog": {
-    "exclude": [".specify/specs/**"]
+    "exclude": [".specify/specs/**", ".specify/archive/**"]
   },
 
   "subWorkspaces": [

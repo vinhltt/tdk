@@ -2,7 +2,7 @@
 name: tdk-retro-apply
 description: "Review learning-delta.md entries with the user, apply approved technical edits, delegate approved memory edits to tdk-memory-update, and update entry statuses."
 metadata:
-  version: "0.1.1"
+  version: "1.2.0"
   category: "TDK Retro"
   requires:
     - tdk-retro-propose
@@ -25,13 +25,14 @@ Apply only user-approved learning deltas. Technical targets are edited directly.
 
 - `../_shared/learning-delta-schema.md`
 - `../_shared/script-command-contract.md`
+- `../_shared/archived-spec-handling.md`
 - `references/apply-flow-technical.md`
 - `references/apply-flow-memory.md`
 - `references/memory-delegate-contract.md`
 
 ## Step 1: Resolve Feature Directory
 
-Parse `$ARGUMENTS` as `TASK_ID`.
+Parse `$ARGUMENTS` as the raw task id (`{task_id}`). The canonical `TASK_ID` comes from the script output below.
 
 ```bash
 PROJECT_DIR="$1"
@@ -40,12 +41,12 @@ if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
   exit 1
 fi
-(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --paths-only --json)
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --paths-only --json --allow-archived)
 ```
 
-Store `FEATURE_DIR` from the JSON output.
+Store `FEATURE_DIR`, `TASK_ID` (the JSON `taskId`), and `ARCHIVED` (the JSON `archived`) from the output. Follow `../_shared/archived-spec-handling.md`: use `TASK_ID`, never the raw argument, in delegated memory text, reports, and the suggested commit message. When `ARCHIVED` is `true`, the only file written inside the feature directory is `learning-delta.md` (status updates); approved targets outside it are applied as usual.
 
-Fixture fallback: if path resolution fails and `$PROJECT_DIR/.specify/examples/specs/{TASK_ID}/` exists, use that path as `FEATURE_DIR`. Do not require `plan.md`; this skill only requires `learning-delta.md`.
+Fixture fallback: if path resolution fails and `$PROJECT_DIR/.specify/examples/specs/{raw argument}/` exists, use that path as `FEATURE_DIR` and the raw argument as `TASK_ID`. Do not require `plan.md`; this skill only requires `learning-delta.md`.
 
 ## Step 2: Read Delta
 

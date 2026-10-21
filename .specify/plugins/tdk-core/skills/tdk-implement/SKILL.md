@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "14.2.1"
+  version: "14.3.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -208,7 +208,7 @@ until approval or a replan updates the graph.
 
 ### Step 8: Completion Summary
 
-After all phases, report executed/skipped counts and suggest `/tdk-status {task_id}` and `/tdk-review {task_id}`.
+After all phases, report executed/skipped counts and suggest `/tdk-status {task_id}` and `/tdk-review {task_id}`; when the derived `feature_status` is `done`, also suggest `/tdk-archive {task_id}`.
 
 ## Required Reference Load Contract
 

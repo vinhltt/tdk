@@ -148,6 +148,60 @@ test('a mentioned ticket without a spec folder is skipped and blocks branch fall
   );
 });
 
+test('a ticket whose spec is archived is an association; the active folder wins; nothing is created', (t) => {
+  const fixture = makeFixture(t);
+  const archivedDir = path.join(path.dirname(fixture.specsDir), 'archive', 'specs');
+  fs.mkdirSync(path.join(archivedDir, 'cd-002'), { recursive: true });
+  fs.mkdirSync(path.join(archivedDir, 'cd-003'), { recursive: true });
+  addTaskFolder(fixture.specsDir, 'cd-003');
+
+  assert.deepEqual(
+    resolve(fixture, { payload: { prompt: 'cd-002 cd-003 cd-999' } }),
+    recorded(['cd-002', 'cd-003'], 'prompt-mention', [{ ticketId: 'cd-999', reason: 'no-task-folder' }])
+  );
+  assert.equal(fs.existsSync(path.join(fixture.specsDir, 'cd-002')), false, 'no active folder is created');
+  assert.equal(fs.existsSync(path.join(archivedDir, 'cd-999')), false);
+});
+
+test('an archived ticket is also accepted from the branch fallback', (t) => {
+  const fixture = makeFixture(t);
+  fs.mkdirSync(path.join(path.dirname(fixture.specsDir), 'archive', 'specs', 'cd-002'), { recursive: true });
+  initRepo(fixture.workspaceRoot, 'feature/CD-002');
+
+  assert.deepEqual(resolve(fixture, { payload: { cwd: fixture.workspaceRoot } }), recorded(['cd-002'], 'cwd-branch'));
+});
+
+test('a nested defaultFolder uses <root>/archive/<defaultFolder>/<ticket>', (t) => {
+  const fixture = makeFixture(t);
+  const config = { ...fixture.config, specs: { ...fixture.config.specs, defaultFolder: 'specs/team' } };
+  fs.mkdirSync(path.join(fixture.workspaceRoot, '.specify', 'archive', 'specs', 'team', 'cd-002'), { recursive: true });
+  // the old dirname/basename formula would have looked here
+  fs.mkdirSync(path.join(fixture.workspaceRoot, '.specify', 'specs', 'archive', 'team', 'cd-004'), { recursive: true });
+
+  assert.deepEqual(
+    resolve(fixture, { config, payload: { prompt: 'cd-002 cd-004' } }),
+    recorded(['cd-002'], 'prompt-mention', [{ ticketId: 'cd-004', reason: 'no-task-folder' }])
+  );
+});
+
+test('a "." or ".." defaultFolder never resolves an archive fallback, even when the target exists', (t) => {
+  for (const defaultFolder of ['.', '..', 'specs/../..', '/abs']) {
+    const fixture = makeFixture(t);
+    const config = { ...fixture.config, specs: { ...fixture.config.specs, defaultFolder } };
+    for (const dir of [
+      path.join(fixture.workspaceRoot, 'archive', '.specify', 'cd-002'),
+      path.join(fixture.workspaceRoot, '.specify', 'archive', 'cd-002'),
+      path.join(fixture.workspaceRoot, 'archive', 'cd-002')
+    ]) fs.mkdirSync(dir, { recursive: true });
+
+    assert.deepEqual(
+      resolve(fixture, { config, payload: { prompt: 'cd-002' } }),
+      { associations: [], skipped: [{ ticketId: 'cd-002', reason: 'no-task-folder' }], reason: null },
+      `defaultFolder ${defaultFolder}`
+    );
+  }
+});
+
 test('configured syntax and literal prefixes are alternatives', (t) => {
   const fixture = makeFixture(t);
   addTaskFolder(fixture.specsDir, 'cd-001');

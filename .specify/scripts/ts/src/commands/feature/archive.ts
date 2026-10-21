@@ -1,38 +1,41 @@
 // CLI: feature/archive — archive a done/cancelled feature.
-// Usage: bun src/commands/feature/archive.ts <feature-id>
+// Usage: bun src/commands/feature/archive.ts <feature-id> [--check]
+// `--check` runs the same preconditions as apply, writes nothing, and exits 1 when any blocker
+// is found (see archive-blockers.ts).
 // Writes `status: archived` + `archived_from` into plan.md and spec.md, then moves the whole
-// feature dir to <specsRoot>/archive/<folder>/<id>/ with fs.renameSync (no git commands, the
-// index is untouched). A failed move restores both files byte-for-byte.
+// feature dir to <specsRoot>/archive/<folder>/<id>/ with fs.renameSync. The only git calls are the
+// read-only dirty check in archive-blockers.ts; the index is never written or staged here. A failed
+// move restores both files byte-for-byte.
 // Incoming references (plans blocked by / blocking it, child specs) are reported, never blocking.
 
-import { existsSync, mkdirSync, readFileSync, renameSync, rmdirSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { mkdirSync, renameSync, rmdirSync } from 'node:fs';
+import { dirname, relative } from 'node:path';
 import { Command } from 'commander';
-import { findConfigFile, getRepoRoot, loadFeatureEnv, writeAgentJson } from '../../utils/index';
-import { parseFeatureId } from '../../utils/feature';
+import { findConfigFile, formatAgentJson, getRepoRoot, loadFeatureEnv, writeAgentJson } from '../../utils/index';
 import { durableAtomicWriteFileSync } from '../util/durable-atomic-file';
-import { extractFrontmatter } from '../util/parse-plan-frontmatter';
-import { parsePhasesTable } from '../util/phases-table-parser';
-import {
-  derivePlanRootStatus, normalizeLifecycleStatus, readFrontmatterStatus,
-} from '../util/plan-root-status';
+import { readFrontmatterStatus } from '../util/plan-root-status';
 import { replaceFrontmatterStatusLine } from '../util/phase-frontmatter';
+import { type IncomingReferences } from './archive-incoming-references';
 import {
-  ARCHIVE_DIR, collectIncomingReferences, type IncomingReferences,
-} from './archive-incoming-references';
+  collectArchivePreconditions, type ArchivedFrom, type ArchiveInput,
+} from './archive-blockers';
 
-export type ArchivedFrom = 'done' | 'cancelled';
-
-export interface ArchiveInput {
-  featureId: string;
-  repoRoot: string;
-  specsRoot: string;
-  defaultFolder: string;
-}
+export type { ArchivedFrom, ArchiveInput } from './archive-blockers';
 
 export type ArchiveResult =
   | { ok: true; from: string; to: string; archived_from: ArchivedFrom; references: IncomingReferences }
   | { ok: false; error: string; references?: IncomingReferences };
+
+/** `--check` output: the same preconditions as apply, nothing written. `warnings` only when non-empty. */
+export interface ArchiveCheckResult {
+  ok: boolean;
+  from: string | null;
+  to: string | null;
+  archived_from: ArchivedFrom | null;
+  references: IncomingReferences;
+  blockers: string[];
+  warnings?: string[];
+}
 
 export type DirMover = (from: string, to: string) => void;
 
@@ -74,49 +77,28 @@ function restoreSnapshots(snapshots: Array<{ path: string; bytes: Buffer }>): st
   });
 }
 
+export function checkArchiveFeature(input: ArchiveInput): ArchiveCheckResult {
+  const pre = collectArchivePreconditions(input);
+  return {
+    ok: pre.blockers.length === 0,
+    from: pre.from, to: pre.to, archived_from: pre.archivedFrom,
+    references: pre.references, blockers: pre.blockers,
+    ...(pre.warnings.length > 0 ? { warnings: pre.warnings } : {}),
+  };
+}
+
 export function archiveFeature(input: ArchiveInput, move: DirMover = renameSync): ArchiveResult {
-  const { featureId, repoRoot, specsRoot, defaultFolder } = input;
-  let resolved: ReturnType<typeof parseFeatureId>;
-  try {
-    resolved = parseFeatureId(featureId, repoRoot, specsRoot, defaultFolder);
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  const { featureId, repoRoot } = input;
+  const pre = collectArchivePreconditions(input);
+  const { facts, references } = pre;
+  if (!facts) {
+    const [only] = pre.blockers;
+    const error = pre.blockers.length === 1 && only ? only : `${pre.blockers.length} blockers:\n- ${pre.blockers.join('\n- ')}`;
+    return { ok: false, error, references };
   }
-  const { folder, ticket, featureDir } = resolved;
-  if (folder === ARCHIVE_DIR) return { ok: false, error: `feature '${featureId}' is already under ${ARCHIVE_DIR}/` };
-  if (!existsSync(featureDir)) return { ok: false, error: `feature dir not found: ${featureDir}` };
-
-  const planPath = join(featureDir, 'plan.md');
-  const specPath = join(featureDir, 'spec.md');
-  if (!existsSync(planPath)) return { ok: false, error: `plan.md not found: ${planPath}` };
-  if (!existsSync(specPath)) return { ok: false, error: `spec.md not found: ${specPath}` };
-
-  const planBytes = readFileSync(planPath);
-  const specBytes = readFileSync(specPath);
-  const planMd = planBytes.toString('utf-8');
-  const specMd = specBytes.toString('utf-8');
-  for (const [name, md] of [['plan.md', planMd], ['spec.md', specMd]] as const) {
-    if (readFrontmatterStatus(md) === null) return { ok: false, error: `${name} has no frontmatter 'status:' key` };
-  }
-
-  const stored = normalizeLifecycleStatus(readFrontmatterStatus(planMd) ?? '', 'plan').status;
-  if (stored === 'archived') return { ok: false, error: `feature '${featureId}' is already archived` };
-  const parsed = parsePhasesTable(planMd);
-  if (parsed.errors.length > 0) {
-    return { ok: false, error: `plan.md ## Phases not parseable: ${parsed.errors.map((e) => e.message).join('; ')}` };
-  }
-  const derived = derivePlanRootStatus(parsed.phases, stored);
-  if (derived !== 'done' && derived !== 'cancelled') {
-    return { ok: false, error: `only done or cancelled features can be archived (derived status: ${derived})` };
-  }
-
-  const target = resolve(repoRoot, specsRoot, ARCHIVE_DIR, folder, ticket);
-  if (existsSync(target)) return { ok: false, error: `archive target already exists: ${target}` };
-
-  const references = collectIncomingReferences({
-    repoRoot, specsRoot, defaultFolder, featureDir,
-    taskId: extractFrontmatter(planPath, ticket)?.canonical.task_id ?? null,
-  });
+  for (const warning of pre.warnings) process.stderr.write(`[tdk-archive] WARNING: ${warning}\n`);
+  const { featureDir, target, planPath, specPath, planBytes, specBytes, derived } = facts;
+  const [planMd, specMd] = [planBytes.toString('utf-8'), specBytes.toString('utf-8')];
   if (references.plans.length + references.children.length > 0) {
     process.stderr.write(
       `[tdk-archive] WARNING: ${references.plans.length} plan ref(s), ${references.children.length} child spec(s) point to '${featureId}'\n`,
@@ -166,10 +148,26 @@ if (import.meta.main) {
     .name('feature-archive')
     .description('Archive a done/cancelled feature: mark plan + spec archived and move the dir under archive/.')
     .argument('<feature-id>', 'Feature ID (e.g., aa-001, hotfix/aa-123)')
-    .action((featureId: string) => {
+    .option('--check', 'Report blockers only; write nothing, exit 1 when any blocker exists', false)
+    .action((featureId: string, opts: { check: boolean }) => {
       const repoRoot = getRepoRoot();
-      const env = loadFeatureEnv(findConfigFile(repoRoot));
-      const result = archiveFeature({ featureId, repoRoot, specsRoot: env.specsRoot, defaultFolder: env.defaultFolder });
+      const configPath = findConfigFile(repoRoot);
+      const env = loadFeatureEnv(configPath);
+      const input = {
+        featureId, repoRoot, specsRoot: env.specsRoot, defaultFolder: env.defaultFolder,
+        workspaceRoot: configPath ? dirname(dirname(configPath)) : repoRoot,
+      };
+      if (opts.check) {
+        const check = checkArchiveFeature(input);
+        if (check.ok) writeAgentJson(check);
+        else {
+          for (const blocker of check.blockers) process.stderr.write(`✗ ${blocker}\n`);
+          process.stdout.write(formatAgentJson(check));
+          process.exit(1);
+        }
+        return;
+      }
+      const result = archiveFeature(input);
       if (!result.ok) {
         process.stderr.write(`✗ ${result.error}\n`);
         process.exit(1);

@@ -4,6 +4,16 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.1.1] - 2026-10-21
+
+### Fixed
+- `tdk-memory-update` preconfirmed candidate mode now runs Step 5.1 enrichment (block IDs, wikilinks) when it creates a new file, matching the new-file branch of Step 5. Step 5.1 runs without any prompt; no other behaviour changes.
+
+## [4.1.0] - 2026-10-21
+
+### Added
+- `tdk-memory-update` preconfirmed candidate mode: a complete `===TDK-MEMORY-CANDIDATE===` block (`type`, `domain`, `action`, `sourceFiles`, `content`) is auto-detected in the skill input and written with no prompts. `action` (`merge` or `replace`) replaces the Merge vs Replace question; Domain Source Files and domain confirm/mismatch prompts are skipped. An identical entry is a no-op (`already present`); unknown domain or uninitialised memory returns `error: <reason>`. Any missing field falls back to the unchanged interactive flow. Routing, index regeneration and `memory.yaml` checksums are unchanged. No flag, no default change.
+
 ## [4.0.0] - 2026-10-04
 
 ### Changed

@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.2.0] - 2026-10-21
+
+### Changed
+- tdk-retro-collect, tdk-retro-propose, tdk-retro-apply: run on archived specs with the canonical task id; collect never overwrites existing feedback
+
 ## [1.1.0] - 2026-09-20
 
 ### Changed

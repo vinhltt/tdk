@@ -65,6 +65,8 @@ FEATURE-SIZED LANE, default for small/clear work
 tdk-specify -> tdk-clarify -> tdk-plan -> [tdk-consistency-check] -> tdk-implement
                                                                           |
                                                        [tdk-review] -> tdk-plan (append fix phases)
+                                                                          |
+                                             done/cancelled -> tdk-archive [--auto-upmem]
 
 tdk-status                               track progress at any point
 ```
@@ -146,6 +148,7 @@ legacy-layout guidance instead of auto-migrating them.
 | Build / execute plan phases | `tdk-implement` | `tdk-plan` |
 | Review implemented code against the spec | `tdk-review` | `tdk-consistency-check`, `tdk-plan --red-team` |
 | Plan & route unit-test coverage | `tdk-plan --tdd` / `tdk-plan --ut-backfill` | `tdk-plan` (without test mode) |
+| Close out a done/cancelled spec (close-out report, archive, optional memory ingest) | `tdk-archive` | `tdk-retro-collect` |
 | Track workflow progress/status | `tdk-status` | — |
 
 ## Decision tree
@@ -169,6 +172,7 @@ Plan + spec exist, verify they agree           -> tdk-consistency-check
 Need unit-test coverage planned                -> tdk-plan --tdd or tdk-plan --ut-backfill
 Plan approved, time to build                   -> tdk-implement
 Phases done, review code vs the spec           -> tdk-review
+Spec done or cancelled, close it out           -> tdk-archive
 "Where are we?" / progress                     -> tdk-status
 ```
 

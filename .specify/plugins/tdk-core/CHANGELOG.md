@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.3.0] - 2026-10-21
+
+### Added
+- tdk-archive: new skill that closes out a done or cancelled spec (preflight, close-out.md, archive move, optional memory ingest via --auto-upmem / --ingest); prints git commands instead of running them
+
+### Changed
+- tdk-status, tdk-implement, tdk-specify: archive-aware (archived list with retro status, /tdk-archive suggestions, reserved archive folder)
+- Session hooks: keep logging sessions.jsonl after a spec is archived
+
 ## [14.2.1] - 2026-10-20
 
 ### Added

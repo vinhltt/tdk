@@ -2,7 +2,7 @@
 name: tdk-retro-propose
 description: "Read retro-feedback.md and propose concrete technical or memory learning deltas. Writes learning-delta.md."
 metadata:
-  version: "0.1.1"
+  version: "1.2.0"
   category: "TDK Retro"
   requires:
     - tdk-retro-collect
@@ -27,10 +27,11 @@ Transform collected feedback into up to 10 reviewable learning delta entries. Th
 - `../_shared/signal-target-routing.md`
 - `../_shared/consumer-skill-discovery.md`
 - `../_shared/script-command-contract.md`
+- `../_shared/archived-spec-handling.md`
 
 ## Step 1: Resolve Feature Directory
 
-Parse `$ARGUMENTS` as `TASK_ID`.
+Parse `$ARGUMENTS` as the raw task id (`{task_id}`). The canonical `TASK_ID` comes from the script output below.
 
 ```bash
 PROJECT_DIR="$1"
@@ -39,12 +40,12 @@ if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
   exit 1
 fi
-(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --paths-only --json)
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/check-prerequisites.ts {task_id} --paths-only --json --allow-archived)
 ```
 
-Store `FEATURE_DIR` from the JSON output.
+Store `FEATURE_DIR`, `TASK_ID` (the JSON `taskId`), and `ARCHIVED` (the JSON `archived`) from the output. Follow `../_shared/archived-spec-handling.md`: use `TASK_ID`, never the raw argument, in the `learning-delta.md` heading and every command printed to the user; `Source feedback` is `{FEATURE_DIR}/retro-feedback.md`. When `ARCHIVED` is `true`, write only `learning-delta.md`.
 
-Fixture fallback: if path resolution fails and `$PROJECT_DIR/.specify/examples/specs/{TASK_ID}/` exists, use that path as `FEATURE_DIR`. Do not require `plan.md`; this skill only requires `retro-feedback.md`.
+Fixture fallback: if path resolution fails and `$PROJECT_DIR/.specify/examples/specs/{raw argument}/` exists, use that path as `FEATURE_DIR` and the raw argument as `TASK_ID`. Do not require `plan.md`; this skill only requires `retro-feedback.md`.
 
 ## Step 2: Read Feedback
 
@@ -91,7 +92,7 @@ For each feedback signal:
 
 ## Step 6: Write learning-delta.md
 
-Write `{FEATURE_DIR}/learning-delta.md` using `../_shared/learning-delta-schema.md`.
+Write `{FEATURE_DIR}/learning-delta.md` using `../_shared/learning-delta-schema.md`, with the canonical `TASK_ID` in the heading.
 
 Required fields per entry:
 - status

@@ -5,6 +5,8 @@ const { execFileSync } = require('child_process');
 const GIT_TIMEOUT_MS = 3000;
 const PROMPT_LEXEME_PATTERN = /[\p{L}\p{M}\p{N}_-]+/gu;
 const UNSAFE_TICKET_PATTERN = /[\\/\u0000\r\n]/;
+// Closed-out specs live at `<specs.root>/archive/<defaultFolder>/<ticket>`.
+const ARCHIVE_DIR = 'archive';
 
 /**
  * @typedef {Object} SessionTicketResolution
@@ -116,23 +118,51 @@ function extractBranchTickets(branch, matchers) {
   return sortedCanonicalIds(ticketIds);
 }
 
-function getSpecsDir(config, workspaceRoot) {
+/** Where task folders live: the pieces `taskFolderCandidates` needs, or null when config lacks them. */
+function getSpecsLocation(config, workspaceRoot) {
   const specsRoot = config?.specs?.root;
   const defaultFolder = config?.specs?.defaultFolder;
   if (typeof specsRoot !== 'string' || specsRoot.length === 0) return null;
   if (typeof defaultFolder !== 'string' || defaultFolder.length === 0) return null;
+  return { workspaceRoot, specsRoot, defaultFolder };
+}
 
-  try {
-    return path.resolve(workspaceRoot, specsRoot, defaultFolder);
-  } catch (_) {
-    return null;
-  }
+/** True when `folder` is a plain relative path: no empty, `.` or `..` segment, not absolute. */
+function isPlainRelativeFolder(folder) {
+  if (typeof folder !== 'string' || folder.length === 0) return false;
+  if (path.isAbsolute(folder) || path.win32.isAbsolute(folder)) return false;
+  return folder.split(/[\\/]+/).every(segment => segment !== '' && segment !== '.' && segment !== '..');
+}
+
+/**
+ * Candidate directories of a ticket. Pure path math: nothing is read or created.
+ *
+ * - `active`   = `<specs.root>/<defaultFolder>/<ticket>`
+ * - `archived` = `<specs.root>/archive/<defaultFolder>/<ticket>` (the archive CLI layout), or `null`
+ *   when `defaultFolder` or the ticket would place it outside `<specs.root>/archive/`.
+ *
+ * Callers prefer the active dir and use the archived one only once the active one is gone.
+ *
+ * @param {{workspaceRoot: string, specsRoot: string, defaultFolder: string}} location
+ * @param {string} ticketId
+ * @returns {{active: string, archived: string|null}}
+ */
+function taskFolderCandidates({ workspaceRoot, specsRoot, defaultFolder }, ticketId) {
+  const active = path.resolve(workspaceRoot, specsRoot, defaultFolder, ticketId);
+  if (!isPlainRelativeFolder(defaultFolder)) return { active, archived: null };
+
+  const archiveRoot = path.resolve(workspaceRoot, specsRoot, ARCHIVE_DIR);
+  const archived = path.resolve(archiveRoot, defaultFolder, ticketId);
+  const relative = path.relative(archiveRoot, archived);
+  const contained = relative !== '' && relative !== '..'
+    && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+  return { active, archived: contained ? archived : null };
 }
 
 /** @returns {null|'no-task-folder'|'task-folder-error'} */
-function inspectTaskFolder(specsDir, ticketId) {
+function inspectDirectory(dir) {
   try {
-    return fs.statSync(path.join(specsDir, ticketId)).isDirectory() ? null : 'no-task-folder';
+    return fs.statSync(dir).isDirectory() ? null : 'no-task-folder';
   } catch (error) {
     return error?.code === 'ENOENT' || error?.code === 'ENOTDIR'
       ? 'no-task-folder'
@@ -140,13 +170,26 @@ function inspectTaskFolder(specsDir, ticketId) {
   }
 }
 
+/**
+ * The active task folder wins; an archived copy only counts when the active one is absent.
+ * An unreadable active folder stays an error rather than falling through to the archive.
+ *
+ * @returns {null|'no-task-folder'|'task-folder-error'}
+ */
+function inspectTaskFolder(location, ticketId) {
+  const { active, archived } = taskFolderCandidates(location, ticketId);
+  const reason = inspectDirectory(active);
+  if (reason !== 'no-task-folder' || archived === null) return reason;
+  return inspectDirectory(archived) === null ? null : reason;
+}
+
 /** Split canonical candidates into recordable associations and per-candidate skips. */
-function partitionCandidates(ticketIds, specsDir, source) {
+function partitionCandidates(ticketIds, location, source) {
   const associations = [];
   const skipped = [];
 
   for (const ticketId of ticketIds) {
-    const reason = inspectTaskFolder(specsDir, ticketId);
+    const reason = inspectTaskFolder(location, ticketId);
     if (reason) skipped.push({ ticketId, reason });
     else associations.push({ ticketId, source });
   }
@@ -189,7 +232,7 @@ function isApprovedRepository(topLevel, workspaceRoot, config) {
   return false;
 }
 
-function resolveBranchAssociation({ payload, config, specsDir, workspaceRoot, matchers }) {
+function resolveBranchAssociation({ payload, config, location, workspaceRoot, matchers }) {
   const cwd = canonicalizeDirectory(payload?.cwd);
   if (!cwd) return result([], [], 'invalid-cwd');
   if (!isInside(workspaceRoot, cwd)) return result([], [], 'cwd-outside-workspace');
@@ -217,7 +260,7 @@ function resolveBranchAssociation({ payload, config, specsDir, workspaceRoot, ma
   if (ticketIds.length > 1) return result([], [], 'ambiguous-branch-ticket');
   if (ticketIds.length === 0) return result([], [], 'no-ticket');
 
-  return partitionCandidates(ticketIds, specsDir, 'cwd-branch');
+  return partitionCandidates(ticketIds, location, 'cwd-branch');
 }
 
 /**
@@ -238,9 +281,9 @@ function resolveSessionTickets(input = {}) {
   const canonicalRoot = canonicalizeDirectory(workspaceRoot);
   if (!canonicalRoot) return result([], [], 'invalid-workspace-root');
 
-  const specsDir = getSpecsDir(config, canonicalRoot);
+  const location = getSpecsLocation(config, canonicalRoot);
   const matchers = buildTicketMatchers(config);
-  if (!specsDir || !matchers) return result([], [], 'invalid-config');
+  if (!location || !matchers) return result([], [], 'invalid-config');
 
   const prompt = payload?.prompt;
   if (prompt !== null && prompt !== undefined && typeof prompt !== 'string') {
@@ -249,10 +292,10 @@ function resolveSessionTickets(input = {}) {
 
   const promptTickets = typeof prompt === 'string' ? extractPromptTickets(prompt, matchers) : [];
   if (promptTickets.length > 0) {
-    return partitionCandidates(promptTickets, specsDir, 'prompt-mention');
+    return partitionCandidates(promptTickets, location, 'prompt-mention');
   }
 
-  return resolveBranchAssociation({ payload, config, specsDir, workspaceRoot: canonicalRoot, matchers });
+  return resolveBranchAssociation({ payload, config, location, workspaceRoot: canonicalRoot, matchers });
 }
 
-module.exports = { resolveSessionTickets };
+module.exports = { resolveSessionTickets, taskFolderCandidates };

@@ -82,6 +82,8 @@ Workflow/distribution assets that ship to consumers belong under `.specify/`.
 
 Standalone setup CLI source belongs under `packages/tdk-setup/`. Keep harness install, Codex package convert, and convert-flat migration code there when that package exists. Do not put setup CLI source under `.specify/`, because `.specify/` is copied to consumer projects.
 
+Workflow steps are prompt-first. Add a script only when the step needs determinism a prompt cannot give: exact repeated transforms, machine-readable output other steps parse, or logic that must be unit-tested. Put a justified script in the owning skill's `scripts/` folder by default; use `.specify/scripts/ts/` only when several skills/workflows or the `@tdk/tdk` CLI share the logic.
+
 ## Language Conventions
 
 English is the default for every file in this repo. Vietnamese belongs only under a `vi/` path segment such as `.specify/docs/vi/`. Never mix Vietnamese into `.specify/docs/en/` or any non-`vi/` path.

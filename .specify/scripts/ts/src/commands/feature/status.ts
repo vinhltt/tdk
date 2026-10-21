@@ -16,6 +16,8 @@ import {
   deriveFeatureLifecycleStatus, readOptionalFile, readStoredStatuses, statusMismatchWarnings,
   type FeatureStatus,
 } from './feature-lifecycle-status';
+import { deriveRetroStatus, type RetroStatus } from './feature-retro-status';
+import { ARCHIVE_DIR } from './archive-incoming-references';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -136,49 +138,56 @@ export function parsePhasesStatus(planFile: string): PhasesStatus {
 // List all features mode
 // ---------------------------------------------------------------------------
 
-function listFeatures(featuresDir: string): void {
-  if (!existsSync(featuresDir)) {
-    writeAgentJson({ features: [] });
-    return;
-  }
-
+/**
+ * List the active features, then the archived ones under `archive/<defaultFolder>/`.
+ * Archived specs from other folders are not listed (same single-folder scope as the active list);
+ * detail mode still resolves them.
+ */
+function listFeatures(activeDir: string, archivedDir: string): void {
   const features: object[] = [];
-  for (const entry of readdirSync(featuresDir, { withFileTypes: true })) {
-    if (!entry.isDirectory()) continue;
-    const id = entry.name;
-    const dir = join(featuresDir, id);
+  for (const [featuresDir, archived] of [[activeDir, false], [archivedDir, true]] as const) {
+    if (!existsSync(featuresDir)) continue;
+    for (const entry of readdirSync(featuresDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const id = entry.name;
+      const dir = join(featuresDir, id);
 
-    const specMd = readOptionalFile(join(dir, 'spec.md'));
-    const planMd = readOptionalFile(join(dir, 'plan.md'));
+      const specMd = readOptionalFile(join(dir, 'spec.md'));
+      const planMd = readOptionalFile(join(dir, 'plan.md'));
 
-    let phases: PhaseRow[] = [];
-    let phasesParseOk = false;
+      let phases: PhaseRow[] = [];
+      let phasesParseOk = false;
 
-    if (planMd !== null) {
-      const { phases: parsedPhases, errors } = parsePhasesTable(planMd);
-      const fatal = errors.filter(e =>
-        e.message.includes('## Phases section not found') ||
-        e.message.includes('ambiguous: multiple ## Phases'),
-      );
-      if (fatal.length === 0) {
-        phases = parsedPhases;
-        phasesParseOk = true;
+      if (planMd !== null) {
+        const { phases: parsedPhases, errors } = parsePhasesTable(planMd);
+        const fatal = errors.filter(e =>
+          e.message.includes('## Phases section not found') ||
+          e.message.includes('ambiguous: multiple ## Phases'),
+        );
+        if (fatal.length === 0) {
+          phases = parsedPhases;
+          phasesParseOk = true;
+        }
       }
+
+      const { status: feature_status } = deriveFeatureLifecycleStatus({
+        featureDir: dir, specMd, planMd, phases, phasesParseOk,
+      });
+
+      const done = phases.filter(p => p.status === 'done').length;
+      const skipped = phases.filter(p => p.status === 'skipped').length;
+      const total = phases.length;
+      const denominator = total - skipped;
+      const percent = denominator > 0 ? Math.floor(done * 100 / denominator) : 0;
+
+      const title = specMd?.match(/^# (.+)$/m)?.[1]?.trim() ?? id;
+      const retro = deriveRetroStatus(dir);
+
+      features.push({
+        id, title, feature_status, total, done, percent,
+        archived, retro_status: retro.retro_status, retro_blocked: retro.blocked,
+      });
     }
-
-    const { status: feature_status } = deriveFeatureLifecycleStatus({
-      featureDir: dir, specMd, planMd, phases, phasesParseOk,
-    });
-
-    const done = phases.filter(p => p.status === 'done').length;
-    const skipped = phases.filter(p => p.status === 'skipped').length;
-    const total = phases.length;
-    const denominator = total - skipped;
-    const percent = denominator > 0 ? Math.floor(done * 100 / denominator) : 0;
-
-    const title = specMd?.match(/^# (.+)$/m)?.[1]?.trim() ?? id;
-
-    features.push({ id, title, feature_status, total, done, percent });
   }
   writeAgentJson({ features });
 }
@@ -292,18 +301,55 @@ function resolveEffectiveMilestones(
   return resolved;
 }
 
-function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): void {
-  const id = featureId.toLowerCase();
-  let folder: string, ticket: string;
+/** Next retro step for an archived spec; an empty command means nothing is left to do. */
+function archivedRecommendation(taskId: string, retroStatus: RetroStatus): { command: string; reason: string } {
+  switch (retroStatus) {
+    case 'none':
+      return { command: `/tdk-retro-collect ${taskId}`, reason: 'Feature archived, no retro feedback collected yet' };
+    case 'collected':
+      return { command: `/tdk-retro-propose ${taskId}`, reason: 'Feature archived, retro feedback collected, propose learning changes' };
+    case 'proposed':
+      return { command: `/tdk-retro-apply ${taskId}`, reason: 'Feature archived, learning changes awaiting review' };
+    case 'done':
+      return { command: '', reason: 'Feature archived, retro complete' };
+  }
+}
+
+/**
+ * Resolve a detail-mode id to its directory. `archive/<folder>/<ticket>` resolves as written; a bare
+ * id missing from the active folder falls back, read-only, to `archive/<defaultFolder>/<id>`.
+ * `folder`/`ticket` always describe the canonical `<folder>/<ticket>` identity, never the archive path.
+ */
+function resolveFeatureLocation(id: string, repoRoot: string, env: FeatureEnv): {
+  folder: string; ticket: string; featureDir: string; archived: boolean;
+} {
+  let folder = env.defaultFolder;
+  let ticket = id;
   if (id.includes('/')) {
     folder = id.slice(0, id.indexOf('/'));
     ticket = id.slice(id.indexOf('/') + 1);
-  } else {
-    folder = env.defaultFolder;
-    ticket = id;
+  }
+
+  const archiveRoot = join(repoRoot, env.specsRoot, ARCHIVE_DIR);
+  if (folder === ARCHIVE_DIR && ticket.includes('/')) {
+    const inner = ticket.slice(0, ticket.indexOf('/'));
+    const innerTicket = ticket.slice(ticket.indexOf('/') + 1);
+    return { folder: inner, ticket: innerTicket, featureDir: join(archiveRoot, inner, innerTicket), archived: true };
   }
 
   const featureDir = join(repoRoot, env.specsRoot, folder, ticket);
+  const archivedDir = join(archiveRoot, env.defaultFolder, ticket);
+  if (!id.includes('/') && !existsSync(featureDir) && existsSync(archivedDir)) {
+    return { folder, ticket, featureDir: archivedDir, archived: true };
+  }
+  return { folder, ticket, featureDir, archived: false };
+}
+
+function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): void {
+  const id = featureId.toLowerCase();
+  const { folder, ticket, featureDir, archived } = resolveFeatureLocation(id, repoRoot, env);
+  // Recommendations never carry the archive path: `archive/<folder>/<ticket>` is not a valid task id.
+  const taskId = archived ? `${folder}/${ticket}` : id;
   const featuresDir = join(repoRoot, env.specsRoot, env.defaultFolder);
 
   if (!existsSync(featureDir)) {
@@ -376,6 +422,7 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
   const feature_status = derived.status;
   phasesData.feature_status = feature_status;
   const stored_status = readStoredStatuses(specMd, planMd);
+  const retro = deriveRetroStatus(featureDir);
 
   // UT state
   let utState = 'none';
@@ -392,7 +439,7 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
   const rec: { primary: { command: string; reason: string }; alternative?: { command: string; reason: string } } = {
     primary: { command: '', reason: '' },
   };
-  switch (feature_status) {
+  switch (archived ? 'archived' : feature_status) {
     case 'empty':
       rec.primary = { command: `/tdk-specify ${id}`, reason: 'No artifacts yet, start with specification' };
       break;
@@ -419,24 +466,33 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
       rec.primary = { command: `/tdk-plan ${id}`, reason: 'Phases blocked — re-evaluate dependencies in plan' };
       break;
     case 'done':
-      rec.primary = hasUt
-        ? { command: `(cd .specify/scripts/ts && bun src/commands/feature/archive.ts ${id})`, reason: 'All phases done, archive the feature' }
-        : { command: `/tdk-plan ${id} --ut-backfill`, reason: 'Implementation done, add tests' };
+      if (hasUt) {
+        rec.primary = { command: `/tdk-archive ${taskId}`, reason: 'All phases done, archive the feature' };
+        if (retro.retro_status !== 'done') {
+          rec.alternative = { command: `/tdk-retro-collect ${taskId}`, reason: 'Collect retro feedback before archiving' };
+        }
+      } else {
+        rec.primary = { command: `/tdk-plan ${id} --ut-backfill`, reason: 'Implementation done, add tests' };
+        rec.alternative = { command: `/tdk-archive ${taskId}`, reason: 'Archive without adding tests' };
+      }
       break;
     case 'cancelled':
-      rec.primary = { command: `(cd .specify/scripts/ts && bun src/commands/feature/archive.ts ${id})`, reason: 'All phases cancelled, archive the feature' };
+      rec.primary = { command: `/tdk-archive ${taskId}`, reason: 'All phases cancelled, archive the feature' };
       break;
     case 'archived':
-      rec.primary = { command: '', reason: 'Feature archived' };
+      rec.primary = archivedRecommendation(taskId, retro.retro_status);
       break;
   }
 
   // Staleness warnings — spec.md, plan.md, ut artifacts (tasks.md removed, Phase 05)
   const warnings: object[] = derived.warnings.map(message => ({ level: 'status_fallback', message }));
-  warnings.push(...statusMismatchWarnings({
-    featureId: id, planPath: planFile, stored: stored_status, derived: feature_status,
-    hasPlan, phasesParseOk,
-  }));
+  // Archived specs are frozen: their stored status is the archive command's own output, not drift.
+  if (!archived) {
+    warnings.push(...statusMismatchWarnings({
+      featureId: id, planPath: planFile, stored: stored_status, derived: feature_status,
+      hasPlan, phasesParseOk,
+    }));
+  }
   for (const artifact of ['spec.md', 'plan.md', 'ut-spec.md', 'ut-plan.md']) {
     const f = join(featureDir, artifact);
     if (existsSync(f)) {
@@ -478,6 +534,9 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
     location: featureDir.replace(repoRoot + '/', ''),
     workflows: { ercspec: hasErcspec, ut: hasUt },
     feature_status,
+    archived,
+    retro_status: retro.retro_status,
+    retro_blocked: retro.blocked,
     stored_status,
     testMode,
     utState,
@@ -518,10 +577,11 @@ const program = new Command()
   .action((featureId?: string) => {
     const repoRoot = getRepoRoot();
     const env = loadFeatureEnv(findConfigFile(repoRoot));
-    const featuresDir = join(repoRoot, env.specsRoot, env.defaultFolder);
-
     if (!featureId) {
-      listFeatures(featuresDir);
+      listFeatures(
+        join(repoRoot, env.specsRoot, env.defaultFolder),
+        join(repoRoot, env.specsRoot, ARCHIVE_DIR, env.defaultFolder),
+      );
     } else {
       detailFeature(featureId, repoRoot, env);
     }

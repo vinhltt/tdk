@@ -249,13 +249,13 @@ describe('status collector lifecycle output', () => {
     const cancelled = runStatus(root, 'sample-002');
 
     expect(done['feature_status']).toBe('done');
-    expect(done['recommendation']['primary']['command']).toBe('(cd .specify/scripts/ts && bun src/commands/feature/archive.ts sample-001)');
+    expect(done['recommendation']['primary']['command']).toBe('/tdk-archive sample-001');
     expect(done['warnings'].some((w: Record<string, unknown>) => w['level'] === 'status_mismatch')).toBe(false);
     expect(cancelled['feature_status']).toBe('cancelled');
-    expect(cancelled['recommendation']['primary']['command']).toBe('(cd .specify/scripts/ts && bun src/commands/feature/archive.ts sample-002)');
+    expect(cancelled['recommendation']['primary']['command']).toBe('/tdk-archive sample-002');
   });
 
-  it('resolves archive/<folder>/<id> and reports archived with no recommendation', () => {
+  it('resolves archive/<folder>/<id> and recommends the next retro step with the canonical id', () => {
     const root = makeWorkspace();
     writeFeature(root, '.specify/archive/feature/sample-009', {
       'spec.md': spec('archived'), 'plan.md': plan(['done'], 'archived'),
@@ -264,7 +264,8 @@ describe('status collector lifecycle output', () => {
 
     expect(status['error']).toBeUndefined();
     expect(status['feature_status']).toBe('archived');
-    expect(status['recommendation']['primary']).toEqual({ command: '', reason: 'Feature archived' });
+    expect(status['archived']).toBe(true);
+    expect(status['recommendation']['primary']['command']).toBe('/tdk-retro-collect feature/sample-009');
   });
 
   it('uses the same derivation in list mode, including the gate for spec-only features', () => {

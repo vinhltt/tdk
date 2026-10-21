@@ -1,7 +1,7 @@
 // Tests for collect-diff-data.ts — config loading (JSON-only) + pure helpers.
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -161,6 +161,18 @@ describe("pure helpers", () => {
   test("isExcluded exact file match", () => {
     expect(isExcluded(".specify/CHANGELOG.md", [".specify/CHANGELOG.md"])).toBe(true);
     expect(isExcluded(".specify/CHANGELOG.mdx", [".specify/CHANGELOG.md"])).toBe(false);
+  });
+
+  test("shipped changelog.exclude covers active and archived spec paths", () => {
+    const root = resolve(import.meta.dir, "..", "..", "..", "..", "..");
+    for (const file of [".specify/.specify.json", ".specify/.specify.json.example"]) {
+      const config = JSON.parse(readFileSync(join(root, file), "utf8"));
+      const excludes: string[] = config.changelog.exclude;
+      expect(isExcluded(".specify/specs/sample-001/spec.md", excludes)).toBe(true);
+      expect(isExcluded(".specify/archive/specs/sample-001/close-out.md", excludes)).toBe(true);
+      expect(isExcluded(".specify/archive/specs/sample-001/sessions.jsonl", excludes)).toBe(true);
+      expect(isExcluded(".specify/plugins/tdk-core/CHANGELOG.md", excludes)).toBe(false);
+    }
   });
 
   test("isTracked prefixes", () => {
