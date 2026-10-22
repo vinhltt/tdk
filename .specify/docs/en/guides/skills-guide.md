@@ -140,7 +140,7 @@ Excluded:
 | `/tdk-implement` | Execute runnable rows from `plan.md ## Phases`. | `<id>`, `--phase NN`, `--no-branch` | A plan exists and one or more implementation phases are ready. |
 | `/tdk-consistency-check` | Cross-artifact consistency check across spec, plan, and constitution. | `<id>`, `--deep` | You need read-only verification across spec, plan, and phases; add `--deep` to verify plan claims against source. |
 | `/tdk-review` | Review an implemented task: diff against spec and phase success criteria, with fix-phase seeds for `/tdk-plan`. | `<id>`, `--phase NN`, `--quick`, `--deep`, `[focus]` | Phases are `done` and you want a code-versus-spec review before shipping; writes one report under `reviews/`. |
-| `/tdk-status` | Show workflow progress, per-repository branch state, retro status, and the next command. | `<id>`, `archive/<folder>/<id>` | You need a read-only status snapshot, or need to see which branch each repository is on. Archived specs stay readable. |
+| `/tdk-status` | Show workflow progress, per-repository branch state, test and review evidence, retro and memory status, and the next command chosen from that evidence. | `<id>`, `archive/<folder>/<id>` | You need a read-only status snapshot, or need to see which branch each repository is on. Archived specs stay readable. |
 | `/tdk-archive` | Close out a `done` or `cancelled` spec: write `close-out.md` from its artifacts, archive the folder, optionally ingest memory candidates. | `<id>`, `--auto-upmem`, `--ingest [id]`; [usage](#close-out-and-archive) | A feature is finished and should leave the active specs list; also to ingest or retry memory rows of an already archived spec. |
 
 > **Renamed:** `/tdk-analyze` became `/tdk-consistency-check` in tdk-core v13.0.0. The old name no longer resolves — the new name states what the skill actually checks (artifact consistency), and `--deep` adds bounded verification of plan claims against source.
@@ -316,7 +316,7 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 5 | `/tdk-task-breakdown <epic-id> [--force]` | Generate child spec seed Markdown from epic PRD + HLD |
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
 | 10 | `/tdk-consistency-check <id> [--deep]` | Cross-artifact consistency check; `--deep` verifies plan claims against source |
-| 11 | `/tdk-status <id>` | Show workflow progress, per-repository branch state, and retro status (read-only, any time) |
+| 11 | `/tdk-status <id>` | Show workflow progress, per-repository branch state, test and review evidence, and retro status; recommends the first unmet step (read-only, any time) |
 | 12 | `/tdk-review <id> [--phase NN] [--quick\|--deep] [focus]` | Review implemented code against the spec; writes a report with `/tdk-plan` fix-phase seeds |
 | 12a | `/tdk-archive <id> [--auto-upmem]` \| `/tdk-archive --ingest [id]` | Close out and archive a `done`/`cancelled` spec; optional memory ingest |
 | 13 | `/tdk-constitution` (update) or `/tdk-constitution --init <brief\|file>` | Update project authority or initialize constitution and Memory v3 artifacts |
@@ -773,10 +773,11 @@ actions were removed.
 /tdk-archive --ingest [id]
 ```
 
+- Order for a `done` feature: tests → full review → archive → retro → memory ingest. `/tdk-status <id>` recommends the first unmet step from evidence on disk: `/tdk-plan <id> --ut-backfill` when no test evidence exists; `/tdk-review <id>` when the latest `scope: full` review is missing, blocked, or older than the newest `plan.md`/phase file change; the fix-phase seed from that review on `changes_requested`; `/tdk-archive <id>` on `pass` or `pass_with_concerns`. A `cancelled` feature goes straight to `/tdk-archive`.
 - Preflight runs `archive.ts --check` and writes nothing. It stops on: lifecycle status other than `done`/`cancelled`, uncommitted changes in the feature directory (`close-out.md` and `sessions.jsonl` are exempt), lock files, unfinished artifact migration, live task worktrees, unfinished red-team sessions, and an existing archive target. Each blocker prints its fix.
 - On success the skill writes `close-out.md` (outcome, what shipped, decisions, review results, debt, success-criteria results, and memory candidates, all drafted from the spec's own artifacts), archives the folder, and prints the `git add` and `git commit` lines for you to run. It never runs git.
 - Memory ingest is separate and optional. `--auto-upmem` (or a later `/tdk-archive --ingest`) sends each pending candidate through `/tdk-memory-update`, with at most one batched confirmation for conflicts. Rows already `ingested` or `skipped` are never touched again.
-- Retro keeps working: `/tdk-retro-collect`, `/tdk-retro-propose`, and `/tdk-retro-apply` accept an archived id and write only `retro-feedback.md` and `learning-delta.md` inside the archive. `/tdk-status` flags archived specs and reports `retro_status`.
+- Retro keeps working: `/tdk-retro-collect`, `/tdk-retro-propose`, and `/tdk-retro-apply` accept an archived id and write only `retro-feedback.md` and `learning-delta.md` inside the archive. `/tdk-status` flags archived specs, reports `retro_status` and the `close-out.md` `memory_status`, and recommends `/tdk-archive --ingest <id>` once retro is done and memory rows are still `pending` or `partial`.
 - Defaults: `<specsRoot>/archive/` is git-tracked in consumer repositories; a ticket id may be reused after its spec is archived; archiving the same id a second time stops on the existing archive target.
 - There is no un-archive command. Restore by hand with the steps in [manual-restore.md](../../../plugins/tdk-core/skills/tdk-archive/references/manual-restore.md).
 - `<specsRoot>/archive/**` is excluded from changelog generation through `changelog.exclude`.

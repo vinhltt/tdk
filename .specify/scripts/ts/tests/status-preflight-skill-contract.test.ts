@@ -14,6 +14,8 @@ const STATUS_SKILL = resolve(
 );
 
 const STATUS_SOURCE = resolve(import.meta.dir, '../src/commands/feature/status.ts');
+const LADDER_SOURCE = resolve(import.meta.dir, '../src/commands/feature/next-action-recommendation.ts');
+const EVIDENCE_SOURCE = resolve(import.meta.dir, '../src/commands/feature/next-action-evidence.ts');
 
 function read(path: string): string {
   return readFileSync(path, 'utf-8');
@@ -92,19 +94,25 @@ describe('status preflight skill contract', () => {
   });
 
   it('status recommendations point to /tdk-plan test-mode flags, not the retired /tdk-ut-backfill-plan skill', () => {
-    const statusSource = read(STATUS_SOURCE);
-    expect(statusSource).not.toContain('/tdk-ut-backfill-plan');
-    expect(statusSource).toContain('`/tdk-plan ${id} --tdd`');
-    expect(statusSource).toContain('`/tdk-plan ${id} --ut-backfill`');
+    const ladderSource = read(LADDER_SOURCE);
+    expect(read(STATUS_SOURCE)).not.toContain('/tdk-ut-backfill-plan');
+    expect(ladderSource).not.toContain('/tdk-ut-backfill-plan');
+    expect(ladderSource).toContain('`/tdk-plan ${taskId} --tdd`');
+    expect(ladderSource).toContain('`/tdk-plan ${taskId} --ut-backfill`');
   });
 
   it('status treats canonical plan test modes as UT workflow presence', () => {
     const statusSource = read(STATUS_SOURCE);
+    const evidenceSource = read(EVIDENCE_SOURCE);
     expect(statusSource).toContain('extractFrontmatter');
     expect(statusSource).toContain('readPlanTestMode');
     expect(statusSource).toContain("frontmatter?.parsed['test_mode']");
     expect(statusSource).toContain("value === 'tdd' || value === 'ut_backfill'");
-    expect(statusSource).toContain('const hasUt = hasPlanTestMode ||');
     expect(statusSource).toContain('testMode,');
+    expect(statusSource).toContain('collectTestEvidence(featureDir, testMode, phasesData.rows)');
+    expect(statusSource).toContain("testEvidence.strength !== 'none'");
+    expect(evidenceSource).toContain("testMode !== 'none'");
+    expect(evidenceSource).toContain("'plan_test_mode'");
+    expect(evidenceSource).toContain('TEST_SHAPED_HEADINGS');
   });
 });

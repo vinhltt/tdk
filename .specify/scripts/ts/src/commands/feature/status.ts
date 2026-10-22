@@ -16,8 +16,12 @@ import {
   deriveFeatureLifecycleStatus, readOptionalFile, readStoredStatuses, statusMismatchWarnings,
   type FeatureStatus,
 } from './feature-lifecycle-status';
-import { deriveRetroStatus, type RetroStatus } from './feature-retro-status';
+import { deriveRetroStatus } from './feature-retro-status';
 import { ARCHIVE_DIR } from './archive-incoming-references';
+import {
+  collectReviewSummary, collectTestEvidence, readMemoryStatus, type TestMode,
+} from './next-action-evidence';
+import { recommendNextAction } from './next-action-recommendation';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -36,8 +40,6 @@ export interface PhasesStatus {
   nextPhase: string;     // file of first todo row, or ''
   rows: Array<{ number: number; file: string; fileLabel: string; phase_status: string }>;
 }
-
-type TestMode = 'none' | 'tdd' | 'ut_backfill';
 
 // ---------------------------------------------------------------------------
 // Artifact helpers
@@ -202,7 +204,7 @@ function getGitInfo(
   repoRoot: string,
   env: FeatureEnv,
   isMonolith: boolean,
-): object {
+): Record<string, unknown> {
   // Anchor every command to repoRoot. An unanchored git call resolves against whatever CWD the
   // caller happened to have, which reports a different repository's branch as this feature's.
   // runGit also strips GIT_DIR/GIT_WORK_TREE, which would otherwise override the anchor.
@@ -301,20 +303,6 @@ function resolveEffectiveMilestones(
   return resolved;
 }
 
-/** Next retro step for an archived spec; an empty command means nothing is left to do. */
-function archivedRecommendation(taskId: string, retroStatus: RetroStatus): { command: string; reason: string } {
-  switch (retroStatus) {
-    case 'none':
-      return { command: `/tdk-retro-collect ${taskId}`, reason: 'Feature archived, no retro feedback collected yet' };
-    case 'collected':
-      return { command: `/tdk-retro-propose ${taskId}`, reason: 'Feature archived, retro feedback collected, propose learning changes' };
-    case 'proposed':
-      return { command: `/tdk-retro-apply ${taskId}`, reason: 'Feature archived, learning changes awaiting review' };
-    case 'done':
-      return { command: '', reason: 'Feature archived, retro complete' };
-  }
-}
-
 /**
  * Resolve a detail-mode id to its directory. `archive/<folder>/<ticket>` resolves as written; a bare
  * id missing from the active folder falls back, read-only, to `archive/<defaultFolder>/<id>`.
@@ -377,7 +365,6 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
   const planFile = join(featureDir, 'plan.md');
   const hasPlan = existsSync(planFile);
   const testMode = hasPlan ? readPlanTestMode(planFile, ticket) : 'none';
-  const hasPlanTestMode = testMode !== 'none';
 
   // Artifacts — plan.md is the primary SoT; tasks.md entry removed (Phase 05)
   const artifacts = {
@@ -392,7 +379,6 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
 
   // ErcSpec workflow presence: spec.md or plan.md
   const hasErcspec = hasSpec || hasPlan;
-  const hasUt = hasPlanTestMode || existsSync(join(featureDir, 'ut-spec.md')) || existsSync(join(featureDir, 'coverage-report.json')) || existsSync(join(featureDir, 'ut-plan.md'));
 
   // Parse plan.md ## Phases table
   let phasesData: PhasesStatus = {
@@ -424,10 +410,16 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
   const stored_status = readStoredStatuses(specMd, planMd);
   const retro = deriveRetroStatus(featureDir);
 
+  // Evidence behind both the UT display and the recommendation ladder (single source).
+  const testEvidence = collectTestEvidence(featureDir, testMode, phasesData.rows);
+  const reviews = collectReviewSummary(featureDir, taskId, phasesData.rows);
+  const memory_status = readMemoryStatus(featureDir);
+  const hasTestEvidence = testEvidence.strength !== 'none';
+
   // UT state
   let utState = 'none';
-  if (hasUt) {
-    if (hasPlanTestMode) utState = 'planned';
+  if (hasTestEvidence) {
+    utState = 'planned';
     if (existsSync(join(featureDir, 'ut-spec.md'))) utState = 'specified';
     if (existsSync(join(featureDir, 'coverage-report.json'))) utState = 'analyzed';
     if (existsSync(join(featureDir, 'ut-plan.md'))) utState = 'planned';
@@ -435,54 +427,23 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
     if (existsSync(join(featureDir, 'test-results.md'))) utState = 'executed';
   }
 
-  // Recommendation — mapped to new feature_status vocab
-  const rec: { primary: { command: string; reason: string }; alternative?: { command: string; reason: string } } = {
-    primary: { command: '', reason: '' },
-  };
-  switch (archived ? 'archived' : feature_status) {
-    case 'empty':
-      rec.primary = { command: `/tdk-specify ${id}`, reason: 'No artifacts yet, start with specification' };
-      break;
-    case 'draft':
-      rec.primary = { command: `/tdk-clarify ${id}`, reason: 'Spec not ready, resolve quality gate issues' };
-      break;
-    case 'ready':
-      rec.primary = { command: `/tdk-plan ${id}`, reason: 'Spec ready, create implementation plan' };
-      rec.alternative = { command: `/tdk-plan ${id} --tdd`, reason: 'TDD: write tests first' };
-      break;
-    case 'planned':
-      rec.primary = { command: `/tdk-implement ${id}`, reason: 'Plan ready, start implementing from plan' };
-      break;
-    case 'in_progress':
-      // Done work plus only blocked rows stays in_progress, but has no runnable phase for tdk-implement.
-      rec.primary = phasesData.nextPhase || phasesData.currentPhase
-        ? {
-          command: `/tdk-implement ${id}`,
-          reason: `${phasesData.percent}% done, next phase: ${phasesData.nextPhase || phasesData.currentPhase}`,
-        }
-        : { command: `/tdk-plan ${id}`, reason: `${phasesData.percent}% done, remaining phases blocked — re-evaluate dependencies in plan` };
-      break;
-    case 'blocked':
-      rec.primary = { command: `/tdk-plan ${id}`, reason: 'Phases blocked — re-evaluate dependencies in plan' };
-      break;
-    case 'done':
-      if (hasUt) {
-        rec.primary = { command: `/tdk-archive ${taskId}`, reason: 'All phases done, archive the feature' };
-        if (retro.retro_status !== 'done') {
-          rec.alternative = { command: `/tdk-retro-collect ${taskId}`, reason: 'Collect retro feedback before archiving' };
-        }
-      } else {
-        rec.primary = { command: `/tdk-plan ${id} --ut-backfill`, reason: 'Implementation done, add tests' };
-        rec.alternative = { command: `/tdk-archive ${taskId}`, reason: 'Archive without adding tests' };
-      }
-      break;
-    case 'cancelled':
-      rec.primary = { command: `/tdk-archive ${taskId}`, reason: 'All phases cancelled, archive the feature' };
-      break;
-    case 'archived':
-      rec.primary = archivedRecommendation(taskId, retro.retro_status);
-      break;
-  }
+  const git = getGitInfo(featureDir, ticket, repoRoot, env, config.subWorkspaces.length === 0);
+  const rec = recommendNextAction({
+    taskId,
+    feature_status,
+    archived,
+    phases: {
+      rows: phasesData.rows,
+      currentPhase: phasesData.currentPhase,
+      nextPhase: phasesData.nextPhase,
+      percent: phasesData.percent,
+    },
+    testEvidence,
+    reviews,
+    retro_status: retro.retro_status,
+    memoryStatus: memory_status,
+    gitUncommitted: typeof git['uncommitted'] === 'number' ? git['uncommitted'] : 0,
+  });
 
   // Staleness warnings — spec.md, plan.md, ut artifacts (tasks.md removed, Phase 05)
   const warnings: object[] = derived.warnings.map(message => ({ level: 'status_fallback', message }));
@@ -532,14 +493,17 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
     featureId: id,
     title,
     location: featureDir.replace(repoRoot + '/', ''),
-    workflows: { ercspec: hasErcspec, ut: hasUt },
+    workflows: { ercspec: hasErcspec, ut: hasTestEvidence },
     feature_status,
     archived,
     retro_status: retro.retro_status,
     retro_blocked: retro.blocked,
+    memory_status,
     stored_status,
     testMode,
     utState,
+    testEvidence,
+    reviews,
     artifacts,
     phases: {
       total: phasesData.total,
@@ -553,7 +517,7 @@ function detailFeature(featureId: string, repoRoot: string, env: FeatureEnv): vo
       nextPhase: phasesData.nextPhase,
       rows: phasesData.rows,
     },
-    git: getGitInfo(featureDir, ticket, repoRoot, env, config.subWorkspaces.length === 0),
+    git,
     ...(subWorkspaces.length > 0 ? { subWorkspaces } : {}),
     recommendation: rec,
     warnings,

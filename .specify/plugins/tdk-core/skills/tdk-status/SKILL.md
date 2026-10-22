@@ -2,7 +2,7 @@
 name: tdk-status
 description: "This skill should be used when the user asks to 'check status', 'tdk-status', 'what's the progress of <task-id>', 'which branch is each repo on', or needs a read-only report of a TDK feature's artifacts, phase progress, and per-repository branch state. Never modifies files."
 metadata:
-  version: "14.3.0"
+  version: "14.3.1"
 ---
 
 # /tdk-status - Track Workflow Progress
@@ -48,6 +48,29 @@ Use structured JSON fields, not this skill's formatted report or recommendation 
   `learning-delta.md` (no frontmatter field): `none` = no feedback, `collected` = feedback and no delta,
   `proposed` = delta has an entry that is not yet applied/rejected/blocked, `done` = every entry is
   applied/rejected/blocked. `retro_blocked`: number of `blocked` delta entries
+- `memory_status`: `pending` | `partial` | `ingested` | `skipped`, read from the `close-out.md` frontmatter;
+  `null` when there is no `close-out.md` (always present, including on active specs)
+- `testEvidence.strength`: `strong` | `weak` | `none`. `strong` = plan `test_mode` is `tdd` / `ut_backfill`, a `done`
+  phase has a test-shaped heading (`## Test Matrix`, `## Tests Before`, `## Tests After`, `## Regression Gate`), or a
+  UT artifact exists (`ut-spec.md`, `ut/plan.md`, `coverage-analysis.md`, `ut-plan.md`, `coverage-report.json`).
+  `weak` = no strong signal, but a `done` phase references a test path. `workflows.ut` is `true` when the strength is
+  not `none`, and `utState` is derived from the same evidence
+- `testEvidence.sources`: list of `plan_test_mode` | `test_phase` | `ut_artifact` | `phase_test_file_ref`
+- `testEvidence.testPhases`: phases with a test-shaped heading, each `{ file, phase_status }`
+- `testEvidence.skippedTestPhases`: test-shaped phases marked `skipped`; they are not evidence
+- `reviews.count`: `reviews/*.md` reports whose frontmatter has a `verdict` (other files are listed in
+  `reviews.ignored`); `reviews.fullCount`: how many of them have `scope: full`
+- `reviews.latestFull`: newest `scope: full` report, or `null`; `reviews.latestAny`: newest report of any scope, or
+  `null`. Both have the same shape: `reviews.latestFull.file`, `reviews.latestFull.verdict`
+  (`pass` | `pass_with_concerns` | `changes_requested` | `blocked` | `unknown`), `reviews.latestFull.scope`,
+  `reviews.latestFull.generatedAt`, `reviews.latestFull.blockedReason` (empty unless `blocked`),
+  `reviews.latestFull.seedCount` (Ready lines under `## Proposed Fix Phases`), `reviews.latestFull.seedReady`
+  (that line when there is exactly one, else `null`) and `reviews.latestFull.stale` (`plan.md` or a phase file
+  changed after the report was generated)
+- `reviews.ignored`: `reviews/*.md` files without a usable `verdict`, such as `analyze-report.md`
+- `recommendation.primary` and `recommendation.alternative` (optional): each `{ command, reason }`;
+  `recommendation.rule`: id of the ladder rule that produced them (for example `review-missing`, `archive-ready`,
+  `archived-memory`)
 - `stored_status.spec`, `stored_status.plan`: raw frontmatter `status:` of `spec.md` / `plan.md` as stored on disk,
   or `null` when the file or key is absent. Never branch on these; use `feature_status`
 - `phases.total`, `phases.done`, `phases.skipped`, `phases.inProgress`, `phases.todo`, `phases.blocked`, `phases.percent`
@@ -173,7 +196,6 @@ Show `actualBranch` as the branch column, or `—` when it is `null`. When `work
 ```
 - Artifact checklist: ✅/❌ for spec.md, plan.md with `modified` dates
 - Feature status badge from `feature_status` field: `empty` | `draft` | `ready` | `planned` | `in_progress` | `blocked` | `done` | `cancelled` | `archived`
-- Retro line from `retro_status` (add `retro_blocked` blocked entries when above 0); show it for `done` and `archived` features
 
 **Phase Progress (from `phases.rows[]`):**
 - Progress: `Phases: {phases.done}/{phases.total - phases.skipped} ({phases.percent}%)`
@@ -188,7 +210,23 @@ Show `actualBranch` as the branch column, or `—` when it is `null`. When `work
 - Current phase: `phases.currentPhase` (first in_progress)
 - Next phase: `phases.nextPhase` (first todo)
 
+### Review & Close-out
+Show for `done`, `cancelled`, and `archived` features:
+```
+Tests:   strong (plan_test_mode, test_phase · 2 test phases)
+Reviews: 2 (latest full: pass_with_concerns · 2026-10-19)
+Retro:   none
+Memory:  pending
+```
+- `Tests:` `testEvidence.strength`, then `testEvidence.sources` and the `testEvidence.testPhases` count; append
+  `N skipped` when `testEvidence.skippedTestPhases` is above 0
+- `Reviews:` `reviews.count`, then the verdict and `generatedAt` date of `reviews.latestFull`; `no full review`
+  when it is `null`; append `stale` when `reviews.latestFull.stale` is `true`
+- `Retro:` `retro_status`, adding `retro_blocked` blocked entries when above 0; `Memory:` `memory_status`, archived
+  features only
+
 ### UT Workflow (if `workflows.ut` is true)
+`workflows.ut` and `utState` follow `testEvidence`, so test phases in the plan count as UT work too.
 - Show 6 pipeline steps with status from `utState`
 - Progress bar
 
@@ -204,17 +242,42 @@ If `recommendation.alternative` exists and `recommendation.alternative.command` 
 If `recommendation.primary.command` is empty, show only the reason (nothing left to do).
 
 Recommendations come from the collector; render them, never recompute them. Commands always use the
-canonical id `<folder>/<ticket>`, never an `archive/...` path:
+canonical id `<folder>/<ticket>`, never an `archive/...` path. The collector walks the lifecycle
+implement → test → review → archive → retro → memory update and stops at the first unmet step; the first
+matching row wins, in this order. `recommendation.rule` names the row:
 
-| `feature_status` | Primary | Alternative |
-|---|---|---|
-| `done`, no UT artifacts | `/tdk-plan <id> --ut-backfill` | `/tdk-archive <id>` |
-| `done`, UT artifacts | `/tdk-archive <id>` | `/tdk-retro-collect <id>` when `retro_status` is not `done` |
-| `cancelled` | `/tdk-archive <id>` | — |
-| `archived`, `retro_status` `none` | `/tdk-retro-collect <id>` | — |
-| `archived`, `collected` | `/tdk-retro-propose <id>` | — |
-| `archived`, `proposed` | `/tdk-retro-apply <id>` | — |
-| `archived`, `done` | none (retro complete) | — |
+| `rule` | When | Primary | Alternative |
+|---|---|---|---|
+| `archived-retro` | archived, `retro_status` not `done` | `/tdk-retro-collect` / `-propose` / `-apply <id>` by `retro_status` | `/tdk-archive --ingest <id>` when `memory_status` is `pending` or `partial` |
+| `archived-memory` | archived, retro `done`, `memory_status` `pending` or `partial` | `/tdk-archive --ingest <id>` | — |
+| `archived-complete` | archived, retro `done`, memory `ingested`, `skipped`, or `null` | none (retro and memory complete) | — |
+| `pre-plan` | `empty` / `draft` / `ready` | `/tdk-specify` / `/tdk-clarify` / `/tdk-plan <id>` | `/tdk-plan <id> --tdd` when `ready` |
+| `impl-none` | `blocked`, or no `todo` / `in_progress` phase left | `/tdk-plan <id>` (re-evaluate) | — |
+| `impl-all` | 2+ runnable phases | `/tdk-implement <id>` | `/tdk-implement <id> --phase NN` |
+| `impl-next` | exactly 1 runnable phase | `/tdk-implement <id> --phase NN` | — |
+| `cancelled` | `cancelled` | `/tdk-archive <id>` | — |
+| `ut-missing` | `done`, `testEvidence.strength` `none` | `/tdk-plan <id> --ut-backfill` | `/tdk-review <id>` |
+| `review-missing` | `done`, no full review | `/tdk-review <id>` | `/tdk-plan <id> --ut-backfill` when test evidence is `weak` |
+| `review-blocked` | latest full verdict `blocked` | `/tdk-review <id>` | — |
+| `review-unknown` | latest full verdict `unknown` | `/tdk-review <id>` | — |
+| `review-stale` | latest full review older than `plan.md` / phase files | `/tdk-review <id>` | — |
+| `review-changes` | latest full verdict `changes_requested` | the fix seed: its Ready line, or `/tdk-plan <id>` | `/tdk-review <id>` |
+| `archive-ready` | latest full verdict `pass` / `pass_with_concerns` | `/tdk-archive <id>` | the fix seed when `pass_with_concerns` left seeds |
+
+### 💭 Agent Insight (optional)
+After the Recommendation, add this section only when something material is worth saying; omit it otherwise.
+- At most 3 bullets. Each cites the JSON field or file path it rests on.
+- Suggest existing TDK commands only, and never run them; this skill stays read-only.
+- Never rewrite or replace the primary line. To disagree, write `differs from primary because <evidence>`.
+- Skill availability: when the primary or alternative names a skill missing from your live skill catalog
+  (for example `/tdk-retro-collect` without the `tdk-retro` plugin), say so and point at installing it or at the
+  other option.
+- UT judgment: when the ladder has moved past tests but a phase changed logic or data with no matching test file,
+  you may suggest `/tdk-plan <id> --ut-backfill`, citing the phase file and the missing test path.
+- Other signals worth a bullet: fix seeds not yet in the phase list, `git.uncommitted` above 0 before review or
+  archive, `stale` / `outdated` warnings, drifted sub-workspaces, `/tdk-review <id> --phase NN` after a risky
+  phase mid-implementation, and `reviews.latestAny` differing from `reviews.latestFull` (`/tdk-archive` close-out
+  reads the newest review of any scope, the ladder the newest full one).
 
 ### Warnings
 If `warnings[]` is non-empty, show each with ⚠️ icon:

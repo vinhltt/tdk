@@ -96,11 +96,8 @@ function runStatus(root: string, featureId: string): Record<string, any> {
   return JSON.parse(stdout);
 }
 
-/**
- * Collect the field names documented under `Use structured JSON fields` in tdk-status/SKILL.md
- * that belong to `prefix`, e.g. `git.` or `subWorkspaces[].`.
- */
-function parseContractSection(prefix: string): string[] {
+/** Every backticked token under `Use structured JSON fields` in tdk-status/SKILL.md. */
+function contractTokens(): string[] {
   const skill = readFileSync(STATUS_SKILL, 'utf-8');
   const start = skill.indexOf('Use structured JSON fields');
   expect(start).toBeGreaterThan(-1);
@@ -108,10 +105,16 @@ function parseContractSection(prefix: string): string[] {
   const rest = skill.slice(start);
   const end = rest.indexOf('\n## ');
   const section = end === -1 ? rest : rest.slice(0, end);
+  return [...section.matchAll(/`([^`]+)`/g)].map(match => match[1]!);
+}
 
+/**
+ * Collect the field names documented under `Use structured JSON fields` in tdk-status/SKILL.md
+ * that belong to `prefix`, e.g. `git.` or `subWorkspaces[].`.
+ */
+function parseContractSection(prefix: string): string[] {
   const documented = new Set<string>();
-  for (const match of section.matchAll(/`([^`]+)`/g)) {
-    const token = match[1]!;
+  for (const token of contractTokens()) {
     if (token.startsWith(prefix)) documented.add(token.slice(prefix.length));
   }
   return [...documented].sort();
@@ -230,6 +233,59 @@ describe('lifecycle status contract', () => {
       'feature_status', 'empty', 'draft', 'ready', 'planned', 'in_progress', 'blocked', 'done', 'cancelled', 'archived',
     ]);
     expect(vocabulary).toContain(status['feature_status']);
+  });
+});
+
+describe('next-action evidence contract', () => {
+  /** A done single-repo feature with one full review, so every nested review key is emitted. */
+  function makeReviewedFeature(): Record<string, any> {
+    const root = realpathSync.native(mkdtempSync(join(tmpdir(), 'tdk-status-evidence-')));
+    roots.push(root);
+    makeRepo(root, 'epic-1');
+    mkdirSync(join(root, '.specify'), { recursive: true });
+    writeFileSync(join(root, '.specify/.specify.json'), JSON.stringify({ name: 'sample-single' }));
+
+    const featureDir = join(root, '.specify/feature/sample-004');
+    mkdirSync(join(featureDir, 'reviews'), { recursive: true });
+    writeFileSync(join(featureDir, 'spec.md'), '---\nstatus: done\n---\n\n# Sample\n');
+    writeFileSync(join(featureDir, 'plan.md'), [
+      '---', 'status: done', '---', '', '# Plan', '', '## Phases', '',
+      '| # | File | Status | Blocks | BlockedBy |', '|---|---|---|---|---|',
+      '| 01 | [phase-01-sample](phase-01-sample.md) | done | — | — |', '',
+    ].join('\n'));
+    writeFileSync(join(featureDir, 'phase-01-sample.md'), '# Phase\n\n## Test Matrix\n');
+    writeFileSync(join(featureDir, 'reviews/20990101-000000-full-standard.md'), [
+      '---', 'task_id: sample-004', 'generated_at: 2099-01-01T00:00:00+00:00', 'scope: full', 'verdict: pass', '---', '',
+      '# Review', '', '## Proposed Fix Phases', '', 'None.', '',
+    ].join('\n'));
+    return runStatus(root, 'sample-004');
+  }
+
+  const status = makeReviewedFeature();
+
+  it('documents every testEvidence.* field it emits, and emits every one it documents', () => {
+    expect(Object.keys(status['testEvidence']).sort()).toEqual(parseContractSection('testEvidence.'));
+  });
+
+  it('documents every reviews.* field it emits, and emits every one it documents', () => {
+    const documented = parseContractSection('reviews.');
+    expect(Object.keys(status['reviews']).sort()).toEqual(documented.filter(key => !key.includes('.')));
+  });
+
+  it('documents every reviews.latestFull.* field it emits, for both full and any-scope references', () => {
+    expect(status['reviews']['latestFull']).not.toBeNull();
+    expect(status['reviews']['latestAny']).toEqual(status['reviews']['latestFull']);
+    const documented = parseContractSection('reviews.latestFull.');
+    expect(Object.keys(status['reviews']['latestFull']).sort()).toEqual(documented);
+  });
+
+  it('documents memory_status and recommendation.rule, and emits them', () => {
+    expect(contractTokens()).toContain('memory_status');
+    expect(status).toHaveProperty('memory_status');
+    expect(parseContractSection('recommendation.')).toContain('rule');
+    expect(Object.keys(status['recommendation']).filter(key => !parseContractSection('recommendation.').includes(key)))
+      .toEqual([]);
+    expect(typeof status['recommendation']['rule']).toBe('string');
   });
 });
 

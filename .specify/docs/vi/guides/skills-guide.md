@@ -141,7 +141,7 @@ Excluded:
 | `/tdk-implement` | Execute runnable rows từ `plan.md ## Phases`. | `<id>`, `--phase NN` | Plan đã tồn tại và một hoặc nhiều implementation phases đã ready. |
 | `/tdk-consistency-check` | Cross-artifact consistency check trên spec, plan, và constitution. | `<id>`, `--deep` | Bạn cần read-only verification trên spec, plan, và phases; thêm `--deep` để verify claim của plan so với source. |
 | `/tdk-review` | Review một task đã implement: diff so với spec và success criteria của phase, kèm fix-phase seed cho `/tdk-plan`. | `<id>`, `--phase NN`, `--quick`, `--deep`, `[focus]` | Các phase đã `done` và bạn muốn review code so với spec trước khi ship; ghi một report trong `reviews/`. |
-| `/tdk-status` | Hiển thị workflow progress, branch state theo từng repository, retro status và command tiếp theo. | `<id>`, `archive/<folder>/<id>` | Bạn cần read-only status snapshot. Spec đã archive vẫn đọc được. |
+| `/tdk-status` | Hiển thị workflow progress, branch state theo từng repository, evidence về test và review, retro và memory status, cùng command tiếp theo chọn từ evidence đó. | `<id>`, `archive/<folder>/<id>` | Bạn cần read-only status snapshot. Spec đã archive vẫn đọc được. |
 | `/tdk-archive` | Close-out spec `done` hoặc `cancelled`: ghi `close-out.md` từ artifact của spec, archive folder, có thể ingest memory candidate. | `<id>`, `--auto-upmem`, `--ingest [id]`; [cách dùng](#close-out-và-archive) | Feature đã xong và nên rời danh sách specs đang hoạt động; cũng dùng để ingest hoặc retry memory row của spec đã archive. |
 
 > **Đã đổi tên:** `/tdk-analyze` trở thành `/tdk-consistency-check` từ tdk-core v13.0.0. Tên cũ không còn resolve — tên mới nói đúng thứ skill kiểm tra (artifact consistency), và `--deep` thêm bước verify có giới hạn các claim của plan so với source.
@@ -316,7 +316,7 @@ Các helper này tồn tại trong source nhưng không được catalog như di
 | 5 | `/tdk-task-breakdown <epic-id> [--force]` | Generate child spec seed Markdown từ epic PRD + HLD |
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan với design artifacts |
 | 10 | `/tdk-consistency-check <id> [--deep]` | Cross-artifact consistency check; `--deep` verify claim của plan so với source |
-| 11 | `/tdk-status <id>` | Hiển thị workflow progress, branch state theo repository và retro status, read-only, bất cứ lúc nào |
+| 11 | `/tdk-status <id>` | Hiển thị workflow progress, branch state theo repository, evidence về test và review, retro status; khuyên bước đầu tiên chưa xong, read-only, bất cứ lúc nào |
 | 12 | `/tdk-review <id> [--phase NN] [--quick\|--deep] [focus]` | Review code đã implement so với spec; ghi report kèm fix-phase seed cho `/tdk-plan` |
 | 12a | `/tdk-archive <id> [--auto-upmem]` \| `/tdk-archive --ingest [id]` | Close-out và archive spec `done`/`cancelled`; ingest memory là tùy chọn |
 | 13 | `/tdk-constitution` (update) hoặc `/tdk-constitution --init <brief\|file>` | Update project authority hoặc initialize constitution và Memory v3 artifacts |
@@ -727,10 +727,11 @@ Command giờ là `/tdk-delegate-routing` với ba action — `diff`, `register`
 /tdk-archive --ingest [id]
 ```
 
+- Thứ tự cho feature `done`: tests → full review → archive → retro → memory ingest. `/tdk-status <id>` khuyên bước đầu tiên chưa xong dựa trên evidence trên disk: `/tdk-plan <id> --ut-backfill` khi chưa có evidence về test; `/tdk-review <id>` khi review `scope: full` mới nhất chưa có, bị `blocked`, hoặc cũ hơn lần sửa `plan.md`/phase file gần nhất; fix-phase seed của review đó khi `changes_requested`; `/tdk-archive <id>` khi `pass` hoặc `pass_with_concerns`. Feature `cancelled` đi thẳng tới `/tdk-archive`.
 - Preflight chạy `archive.ts --check` và không ghi gì. Nó dừng khi: lifecycle status khác `done`/`cancelled`, có thay đổi chưa commit trong feature directory (`close-out.md` và `sessions.jsonl` được miễn), có lock file, artifact migration chưa xong, task worktree còn sống, red-team session chưa xong, hoặc archive target đã tồn tại. Mỗi blocker in kèm cách sửa.
 - Khi thành công, skill ghi `close-out.md` (outcome, what shipped, decisions, review results, debt, kết quả success criteria và memory candidates, tất cả soạn từ artifact của chính spec), archive folder, rồi in các dòng `git add` và `git commit` để bạn tự chạy. Skill không bao giờ chạy git.
 - Memory ingest tách riêng và tùy chọn. `--auto-upmem` (hoặc `/tdk-archive --ingest` chạy sau) gửi từng candidate đang pending qua `/tdk-memory-update`, tối đa một lần confirm gộp cho các conflict. Row đã `ingested` hoặc `skipped` không bao giờ bị động tới nữa.
-- Retro vẫn hoạt động: `/tdk-retro-collect`, `/tdk-retro-propose` và `/tdk-retro-apply` nhận id đã archive và chỉ ghi `retro-feedback.md` và `learning-delta.md` bên trong archive. `/tdk-status` đánh dấu spec đã archive và báo `retro_status`.
+- Retro vẫn hoạt động: `/tdk-retro-collect`, `/tdk-retro-propose` và `/tdk-retro-apply` nhận id đã archive và chỉ ghi `retro-feedback.md` và `learning-delta.md` bên trong archive. `/tdk-status` đánh dấu spec đã archive, báo `retro_status` và `memory_status` của `close-out.md`, và khuyên `/tdk-archive --ingest <id>` khi retro đã xong mà memory row vẫn `pending` hoặc `partial`.
 - Mặc định: `<specsRoot>/archive/` được git-track ở repository consumer; ticket id có thể dùng lại sau khi spec của nó đã archive; archive cùng một id lần thứ hai sẽ dừng vì archive target đã tồn tại.
 - Không có lệnh un-archive. Restore thủ công theo các bước trong [manual-restore.md](../../../plugins/tdk-core/skills/tdk-archive/references/manual-restore.md).
 - `<specsRoot>/archive/**` bị loại khỏi changelog qua `changelog.exclude`.

@@ -92,7 +92,7 @@ flowchart TD
     PLAN -->|/tdk-implement<br/>or --phase NN| CODE_FE[frontend/pages/<br/>Frontend Code]
 
     %% Phase 3: Close-out
-    PLAN -.->|/tdk-archive<br/>done or cancelled| ARCHIVED[archive/folder/id/<br/>+ close-out.md]
+    PLAN -.->|done: /tdk-review then /tdk-archive<br/>cancelled: /tdk-archive| ARCHIVED[archive/folder/id/<br/>+ close-out.md]
 
     classDef phase0 fill:#e1f5ff,stroke:#01579b,stroke-width:2px,color:#0f172a
     classDef phase1 fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#0f172a
@@ -242,14 +242,18 @@ flowchart LR
     ARCH["archive/folder/id/<br/>status archived"]
     MEM[project memory<br/>via /tdk-memory-update]
     RETRO[retro-feedback.md<br/>learning-delta.md]
+    REVIEW[reviews/*.md<br/>latest full review]
 
-    DONE -->|"/tdk-archive id"| CLOSE
+    DONE -->|"done: /tdk-review id"| REVIEW
+    REVIEW -->|"pass: /tdk-archive id"| CLOSE
+    DONE -.->|"cancelled: /tdk-archive id"| CLOSE
     CLOSE -->|archive.ts| ARCH
-    ARCH -.->|"--auto-upmem or<br/>/tdk-archive --ingest"| MEM
     ARCH -.->|"/tdk-retro-collect<br/>propose, apply"| RETRO
+    RETRO -.->|"/tdk-archive --ingest"| MEM
+    ARCH -.->|"--auto-upmem"| MEM
 ```
 
-`/tdk-archive` ghi `close-out.md`, rồi move feature directory sang `<specsRoot>/archive/<folder>/<id>/`. Memory ingest là opt-in. Các command retro vẫn chạy trên id đã archive. Các bước restore thủ công nằm ở [manual-restore.md](../../../plugins/tdk-core/skills/tdk-archive/references/manual-restore.md).
+`/tdk-status` chỉ ra bước close-out đầu tiên chưa xong dựa trên evidence trên disk: tests → full review còn hiệu lực → `/tdk-archive` → retro → `/tdk-archive --ingest`. `/tdk-archive` ghi `close-out.md`, rồi move feature directory sang `<specsRoot>/archive/<folder>/<id>/`. Memory ingest là opt-in. Các command retro vẫn chạy trên id đã archive. Các bước restore thủ công nằm ở [manual-restore.md](../../../plugins/tdk-core/skills/tdk-archive/references/manual-restore.md).
 
 ### Unit Testing Pipeline
 

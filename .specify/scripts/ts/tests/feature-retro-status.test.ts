@@ -124,22 +124,22 @@ describe('status recommendations and archived specs', () => {
   const done = (extra: Record<string, string> = {}) => ({ 'spec.md': spec('done'), 'plan.md': plan(['done'], 'done'), ...extra });
   const command = (s: Record<string, any>, key = 'primary'): string | undefined => s['recommendation'][key]?.['command'];
 
-  it('done without UT: ut-backfill first, archive second', () => {
+  it('done without UT: ut-backfill first, review second', () => {
     feature('sample-001', done());
     const s = runStatus(root, 'sample-001');
     expect(command(s)).toBe('/tdk-plan sample-001 --ut-backfill');
-    expect(command(s, 'alternative')).toBe('/tdk-archive sample-001');
+    expect(command(s, 'alternative')).toBe('/tdk-review sample-001');
   });
 
-  it('done with UT: archive first, retro-collect second until retro is done', () => {
+  it('done with UT: review before archive, and no retro alternative before archive', () => {
     feature('sample-002', done({ 'ut-spec.md': '# UT\n' }));
     const s = runStatus(root, 'sample-002');
-    expect(command(s)).toBe('/tdk-archive sample-002');
-    expect(command(s, 'alternative')).toBe('/tdk-retro-collect sample-002');
+    expect(command(s)).toBe('/tdk-review sample-002');
+    expect(s['recommendation']['alternative']).toBeUndefined();
 
     feature('sample-003', done({ 'ut-spec.md': '# UT\n', 'retro-feedback.md': '#\n', 'learning-delta.md': delta('applied') }));
     const finished = runStatus(root, 'sample-003');
-    expect(command(finished)).toBe('/tdk-archive sample-003');
+    expect(command(finished)).toBe('/tdk-review sample-003');
     expect(finished['recommendation']['alternative']).toBeUndefined();
   });
 
@@ -175,7 +175,7 @@ describe('status recommendations and archived specs', () => {
   }
 
   it('says retro is complete when nothing is left to do', () => {
-    expect(runStatus(root, 'sample-013')['recommendation']['primary']['reason']).toBe('Feature archived, retro complete');
+    expect(runStatus(root, 'sample-013')['recommendation']['primary']['reason']).toBe('Feature archived, retro and memory complete');
   });
 
   it('resolves an archived spec by bare id without a status mismatch warning', () => {

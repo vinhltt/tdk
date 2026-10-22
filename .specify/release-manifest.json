@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-10-21T10:36:57.508Z",
+  "generatedAt": "2026-10-21T15:36:00.351Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -135,13 +135,13 @@
       "mode": "0644"
     },
     ".specify/docs/en/guides/skills-guide.md": {
-      "sha256": "927e6e1e9d9a252cf2305020dde2f32a290e1c2c16a71c6a5dec33b01f53f091",
-      "size": 77972,
+      "sha256": "18657c76f0229b81548a1d1642f4cdf5ade68d4e27c59448d91bf5f9b09ca5df",
+      "size": 78772,
       "mode": "0644"
     },
     ".specify/docs/en/guides/workflow-map.md": {
-      "sha256": "c594ede952c26b5379b89441edbb6210c528faa05b61ad3d3ca06c503a7cbfb1",
-      "size": 31384,
+      "sha256": "6f9971489615e9723f1fb65d82fa9417cc770d89e032316d5e68b4fc4858c4ae",
+      "size": 31746,
       "mode": "0644"
     },
     ".specify/docs/tdk-memory-subtree.md": {
@@ -200,17 +200,17 @@
       "mode": "0644"
     },
     ".specify/docs/vi/guides/skills-guide.md": {
-      "sha256": "efd91379eac2cf26a481487c490df0b229e66193c84be9c507f39cd800b45607",
-      "size": 81192,
+      "sha256": "7b5aea753818c0b249399490f22e8b1d5f5c1270d165a20701e0743dee480ed3",
+      "size": 82052,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/workflow-map.md": {
-      "sha256": "7672954d46316a4a646d4224a4c7462f0670c22ef1cea43eb5d24f024fdb398a",
-      "size": 31793,
+      "sha256": "0fbaf2e63e9cbd6fa88bd4ce53e8a760617450882cbef9decfb9409c6238349f",
+      "size": 32183,
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "62a69c5cd733f334ac55ea9213c69afc2192a954811f96a177b2ad4a0cde30ee",
+      "sha256": "2485ca011413768b81e91141b622d84287649ab0cbe2e295510c2f59d5432843",
       "size": 49897,
       "mode": "0644"
     },
@@ -225,23 +225,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "27b6c2a5450ad23da3327c714c73f36d1eb4380a7ab62ddbfe9827ab7c0cb138",
+      "sha256": "55f3f8a7b6cc4827f9563a9eca3997448f3b53f0c29d32e7006fd9b02978a9a3",
       "size": 191,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "ff03fcac9bac9be61b0177f46b3681b35e2d61089f5e5e730fe4917de2221fc1",
+      "sha256": "beffeb769a81637d0aeae08fe4ed474e34e79a3117431f80e8f5c29e37d0dd2e",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "ff03fcac9bac9be61b0177f46b3681b35e2d61089f5e5e730fe4917de2221fc1",
+      "sha256": "beffeb769a81637d0aeae08fe4ed474e34e79a3117431f80e8f5c29e37d0dd2e",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "606332099c7c3364fc697618f5d18a3b4dc50ccab7c7a347f22a72b130d0e7dc",
-      "size": 48149,
+      "sha256": "3b3d11721d1c07303e4540b766db61c4170784794750f9150905dd6aee405538",
+      "size": 48430,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/hooks/destructive-command-block.cjs": {
@@ -550,8 +550,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-status/SKILL.md": {
-      "sha256": "1fd20caeacb71cfdc40ab45c5516dbf506119f007f62f7b875d1e66f15861132",
-      "size": 12879,
+      "sha256": "85952293be472e89115466e8a6f2c0e8ba322ceab14708fe20a066f408b68c88",
+      "size": 18530,
       "mode": "0644"
     },
     ".specify/plugins/tdk-epic/.claude-plugin/interface.json": {
@@ -2039,9 +2039,19 @@
       "size": 2440,
       "mode": "0644"
     },
+    ".specify/scripts/ts/src/commands/feature/next-action-evidence.ts": {
+      "sha256": "e03181129151aa4110b8cbaa376a90273a1159e5f3100c8c86d4e96a586d0222",
+      "size": 9489,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/feature/next-action-recommendation.ts": {
+      "sha256": "14571c54cf9e13b44e99d78528db16c3bec221ff51e5710930590491c8aea8e2",
+      "size": 9340,
+      "mode": "0644"
+    },
     ".specify/scripts/ts/src/commands/feature/status.ts": {
-      "sha256": "d1a90899a33d66530364cf4a802dbc9d79442a3a0d83b511429f742844c99309",
-      "size": 24189,
+      "sha256": "a11d87297b626d52827444fbd22d4430a9a21b0919b9fd5dc1e08f386795811f",
+      "size": 21767,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/manifest/compare.ts": {

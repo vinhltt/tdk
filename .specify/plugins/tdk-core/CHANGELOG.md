@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.3.1] - 2026-10-21
+
+### Changed
+- /tdk-status recommends the first unmet lifecycle step from evidence: tests, a current full review, archive, retro, then memory ingest
+- /tdk-status report adds a Review & Close-out block and an optional evidence-cited Agent Insight section
+
 ## [14.3.0] - 2026-10-21
 
 ### Added

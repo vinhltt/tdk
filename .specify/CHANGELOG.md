@@ -6,6 +6,20 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.126.0] - 2026-10-21
+
+### Added
+- **[Scripts]** `feature/next-action-evidence.ts` reads test evidence (plan `test_mode`, done test-shaped phases, UT artifacts, test-path references), `reviews/*.md` reports (verdict, scope, fix seeds, staleness against `plan.md` and phase files), and the `close-out.md` `memory_status`; `feature/next-action-recommendation.ts` turns them into an ordered, unit-tested next-action ladder
+
+### Changed
+- **[tdk-core]** `/tdk-status` points at the first unmet lifecycle step: implement → test → review → archive → retro → memory ingest
+  - A `done` feature with tests now goes to `/tdk-review` before `/tdk-archive`; blocked, stale, or unrecognised full reviews ask for a re-review, and `changes_requested` offers the report's fix seed
+  - Implement steps choose between all remaining phases and `--phase NN`, with resume wording for an `in_progress` phase
+  - An archived spec with retro done and memory rows still `pending` or `partial` recommends `/tdk-archive --ingest`
+  - The report adds a Review & Close-out block and an optional, evidence-cited `💭 Agent Insight` section that never replaces the primary line
+- **[Scripts]** Status JSON gains `testEvidence`, `reviews`, `memory_status`, and `recommendation.rule` (additive); `workflows.ut` and `utState` now follow `testEvidence`
+- **[Guides]** en/vi skills guide and workflow map add the review step before `/tdk-archive` and memory ingest after retro
+
 ## [1.125.0] - 2026-10-21
 
 ### Added

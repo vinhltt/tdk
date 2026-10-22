@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-10-21T10:36:57Z",
+  "generated_at": "2026-10-21T15:36:00Z",
   "plugins": {
     "tdk-core": {
-      "version": "14.3.0",
+      "version": "14.3.1",
       "components": {
         "skills": {
           "tdk-archive": {
@@ -28,7 +28,7 @@
             "version": "14.3.0"
           },
           "tdk-status": {
-            "version": "14.3.0"
+            "version": "14.3.1"
           }
         },
         "agents": {},
@@ -41,10 +41,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e94fd7a0f43ccf93767b3eb6c87adec554f4846b89f5e62f6caa22f700a68c31",
-        ".claude-plugin/plugin.json": "27b6c2a5450ad23da3327c714c73f36d1eb4380a7ab62ddbfe9827ab7c0cb138",
-        ".codex-plugin/plugin.json": "ff03fcac9bac9be61b0177f46b3681b35e2d61089f5e5e730fe4917de2221fc1",
-        ".cursor-plugin/plugin.json": "ff03fcac9bac9be61b0177f46b3681b35e2d61089f5e5e730fe4917de2221fc1",
-        "CHANGELOG.md": "606332099c7c3364fc697618f5d18a3b4dc50ccab7c7a347f22a72b130d0e7dc",
+        ".claude-plugin/plugin.json": "55f3f8a7b6cc4827f9563a9eca3997448f3b53f0c29d32e7006fd9b02978a9a3",
+        ".codex-plugin/plugin.json": "beffeb769a81637d0aeae08fe4ed474e34e79a3117431f80e8f5c29e37d0dd2e",
+        ".cursor-plugin/plugin.json": "beffeb769a81637d0aeae08fe4ed474e34e79a3117431f80e8f5c29e37d0dd2e",
+        "CHANGELOG.md": "3b3d11721d1c07303e4540b766db61c4170784794750f9150905dd6aee405538",
         "hooks/destructive-command-block.cjs": "8973b014c2f2eb59a481c1747b5395572dcc630029b4434f151843bea6b4cb8a",
         "hooks/dev-context-injector.cjs": "755a4fc0ffa941c8165f27b38c619d1030f68b16782ac2d6ca04047895162c2c",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
@@ -106,7 +106,7 @@
         "skills/tdk-specify/references/spec-generation-and-validation-workflow.md": "52ef1f540f6cbd7b8100a671ae76c05b3cf6eeb5dbb991c95a702cb90195c6f0",
         "skills/tdk-specify/references/spec-quality-guidelines.md": "62a9bb7514dc2e720d222882ad64b9f4074a910bdbf31e3c158e5e04b9edd1a1",
         "skills/tdk-specify/references/spec-writing-principles.md": "6d8b472745116c8bc9a6c09d7f1bd759fa3cac2a2c3e9fbe401da914202a6158",
-        "skills/tdk-status/SKILL.md": "1fd20caeacb71cfdc40ab45c5516dbf506119f007f62f7b875d1e66f15861132"
+        "skills/tdk-status/SKILL.md": "85952293be472e89115466e8a6f2c0e8ba322ceab14708fe20a066f408b68c88"
       }
     },
     "tdk-epic": {

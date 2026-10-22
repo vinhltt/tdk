@@ -213,7 +213,7 @@ describe('status collector lifecycle output', () => {
       'spec.md': spec('in_progress'),
       'plan.md': plan(['done', 'blocked', 'todo'], 'in_progress'),
     });
-    expect(runStatus(root, 'sample-002')['recommendation']['primary']['command']).toBe('/tdk-implement sample-002');
+    expect(runStatus(root, 'sample-002')['recommendation']['primary']['command']).toBe('/tdk-implement sample-002 --phase 03');
   });
 
   it('derives post-plan status from rows and warns with the reconcile fix line on stored drift', () => {
@@ -228,6 +228,7 @@ describe('status collector lifecycle output', () => {
     expect(status['phases']['rows']).toHaveLength(2);
     expect(status['stored_status']).toEqual({ spec: 'draft', plan: 'planned' });
     expect(status['recommendation']['primary']['command']).toBe('/tdk-plan sample-001 --ut-backfill');
+    expect(status['recommendation']['alternative']['command']).toBe('/tdk-review sample-001');
     const fixes = status['warnings']
       .filter((w: Record<string, unknown>) => w['level'] === 'status_mismatch')
       .map((w: Record<string, unknown>) => w['fix']);
@@ -237,7 +238,7 @@ describe('status collector lifecycle output', () => {
     ]);
   });
 
-  it('recommends archiving a done feature that already has UT artifacts, and a cancelled one', () => {
+  it('recommends review before archive for a done feature that has UT artifacts, and archive for a cancelled one', () => {
     const root = makeWorkspace();
     writeFeature(root, '.specify/feature/sample-001', {
       'spec.md': spec('done'), 'plan.md': plan(['done'], 'done'), 'ut-spec.md': '# UT\n',
@@ -249,7 +250,7 @@ describe('status collector lifecycle output', () => {
     const cancelled = runStatus(root, 'sample-002');
 
     expect(done['feature_status']).toBe('done');
-    expect(done['recommendation']['primary']['command']).toBe('/tdk-archive sample-001');
+    expect(done['recommendation']['primary']['command']).toBe('/tdk-review sample-001');
     expect(done['warnings'].some((w: Record<string, unknown>) => w['level'] === 'status_mismatch')).toBe(false);
     expect(cancelled['feature_status']).toBe('cancelled');
     expect(cancelled['recommendation']['primary']['command']).toBe('/tdk-archive sample-002');
@@ -266,6 +267,53 @@ describe('status collector lifecycle output', () => {
     expect(status['feature_status']).toBe('archived');
     expect(status['archived']).toBe(true);
     expect(status['recommendation']['primary']['command']).toBe('/tdk-retro-collect feature/sample-009');
+  });
+
+  it('recommends review for a done feature with a done test phase and no review, and reports the evidence', () => {
+    const root = makeWorkspace();
+    writeFeature(root, '.specify/feature/sample-001', {
+      'spec.md': spec('done'), 'plan.md': plan(['done'], 'done'),
+      'phase-01-sample.md': '# Phase\n\n## Test Matrix\n\n| case |\n',
+    });
+    const status = runStatus(root, 'sample-001');
+
+    expect(status['recommendation']['rule']).toBe('review-missing');
+    expect(status['recommendation']['primary']['command']).toBe('/tdk-review sample-001');
+    expect(status['testEvidence']).toMatchObject({ strength: 'strong', sources: ['test_phase'] });
+    expect(status['workflows']['ut']).toBe(true);
+    expect(status['utState']).toBe('planned');
+    expect(status['reviews']).toMatchObject({ count: 0, latestFull: null });
+    expect(status['memory_status']).toBeNull();
+  });
+
+  it('recommends archive for a done feature once a current full review passed', () => {
+    const root = makeWorkspace();
+    writeFeature(root, '.specify/feature/sample-001', {
+      'spec.md': spec('done'), 'plan.md': plan(['done'], 'done'), 'ut-spec.md': '# UT\n',
+      'reviews/20990101-000000-full-standard.md':
+        '---\ntask_id: sample-001\ngenerated_at: 2099-01-01T00:00:00+00:00\nscope: full\nverdict: pass\n---\n\n# Review\n',
+    });
+    const status = runStatus(root, 'sample-001');
+
+    expect(status['recommendation']['rule']).toBe('archive-ready');
+    expect(status['recommendation']['primary']['command']).toBe('/tdk-archive sample-001');
+    expect(status['reviews']['latestFull']).toMatchObject({ verdict: 'pass', stale: false });
+  });
+
+  it('recommends memory ingest for an archived feature whose retro is done and close-out memory is pending', () => {
+    const root = makeWorkspace();
+    writeFeature(root, '.specify/archive/feature/sample-010', {
+      'spec.md': spec('archived'), 'plan.md': plan(['done'], 'archived'),
+      'retro-feedback.md': '#\n',
+      'learning-delta.md': '# Learning Delta\n\n### Entry 1\n- status: applied\n',
+      'close-out.md': '---\ntask_id: feature/sample-010\nmemory_status: pending\n---\n\n# Close-out\n',
+    });
+    const status = runStatus(root, 'sample-010');
+
+    expect(status['retro_status']).toBe('done');
+    expect(status['memory_status']).toBe('pending');
+    expect(status['recommendation']['rule']).toBe('archived-memory');
+    expect(status['recommendation']['primary']['command']).toBe('/tdk-archive --ingest feature/sample-010');
   });
 
   it('uses the same derivation in list mode, including the gate for spec-only features', () => {
