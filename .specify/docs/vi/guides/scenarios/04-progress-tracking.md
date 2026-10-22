@@ -54,4 +54,4 @@ Next: Continue with /tdk-implement feat-001
 - Chạy sau khi nghỉ hoặc đổi context để nhanh chóng nhớ bạn đã dừng ở đâu.
 - Stale warnings trên 7 ngày gợi ý feature có thể cần attention hoặc cleanup.
 - Không có task ID? Claude sẽ thử infer từ conversation context.
-- Feature `done` hoặc `cancelled` được gợi ý `/tdk-archive <id>`. Spec đã archive của default folder vẫn nằm trong danh sách (gắn cờ `archived`) và đọc được bằng `/tdk-status archive/<folder>/<id>`; report cũng hiển thị retro status (`none`, `collected`, `proposed`, `done`).
+- Feature `done` được gợi ý bước close-out đầu tiên chưa xong: test (`/tdk-plan <id> --ut-backfill`), rồi `/tdk-review <id>`, rồi `/tdk-archive <id>` khi review pass. Feature `cancelled` được gợi ý thẳng `/tdk-archive <id>`. Spec đã archive của default folder vẫn nằm trong danh sách (gắn cờ `archived`) và đọc được bằng `/tdk-status archive/<folder>/<id>`; report cũng hiển thị retro status (`none`, `collected`, `proposed`, `done`).

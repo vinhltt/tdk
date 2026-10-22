@@ -121,7 +121,7 @@ If any worker in the wave fails, blocks, or asks for context, mark no sibling `d
 `in_progress` and STOP. The F3 recovery gate in `project-and-phase-contract.md` handles those rows on the
 next run.
 
-After a fully successful wave, reparse `plan.md` and restart at step 1. Stop when no candidate remains. When that final stop leaves every phase done or skipped, end with the same suggestions as the serial completion summary: `/tdk-status {task_id}` and `/tdk-review {task_id}`.
+After a fully successful wave, reparse `plan.md` and restart at step 1. Stop when no candidate remains. When that final stop leaves every phase done or skipped, end with the same next step as the serial completion summary (`phase-execution.md` Completion Summary): the `src/commands/feature/status.ts` collector runs after the last wave's status writes, and its `recommendation.primary` / `recommendation.alternative` are printed verbatim, with `/tdk-status {task_id}` as the only fallback.
 
 ## Worker Boundary
 

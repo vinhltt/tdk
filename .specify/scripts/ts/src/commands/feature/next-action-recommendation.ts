@@ -137,7 +137,7 @@ function doneRule({ taskId, testEvidence, reviews, gitUncommitted }: NextActionI
   }
 
   const hint = gitUncommitted > 0
-    ? `; ${gitUncommitted} uncommitted file(s) under feature dir — /tdk-archive may block; check with /tdk-archive --check`
+    ? `; ${gitUncommitted} uncommitted file(s) under feature dir — commit them first, /tdk-archive blocks on uncommitted changes`
     : '';
   const seeds = latest.seedCount;
   const unapplied = latest.verdict === 'pass_with_concerns' && seeds >= 1

@@ -261,7 +261,7 @@ describe('done rules', () => {
 
     const dirty = recommendNextAction(input({ reviews: reviews(ref()), gitUncommitted: 3 }));
     expect(dirty.primary.reason).toBe(
-      'Reviewed 1× (latest: pass, 2026-10-19); 3 uncommitted file(s) under feature dir — /tdk-archive may block; check with /tdk-archive --check',
+      'Reviewed 1× (latest: pass, 2026-10-19); 3 uncommitted file(s) under feature dir — commit them first, /tdk-archive blocks on uncommitted changes',
     );
   });
 

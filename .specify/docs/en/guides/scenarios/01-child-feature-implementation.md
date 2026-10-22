@@ -141,7 +141,7 @@ Then verify:
 - No unresolved questions remain.
 - No unrelated files were changed.
 
-When every phase is `done`, `/tdk-status` suggests the next step. Close the feature out with `/tdk-archive feat-001` once the work is committed.
+When every phase is `done`, `/tdk-implement` ends with the next step from `/tdk-status`: tests first (`/tdk-plan feat-001 --ut-backfill` when none exist), then `/tdk-review feat-001`, and `/tdk-archive feat-001` only after the review passes and the work is committed.
 
 ## Common Mistakes
 

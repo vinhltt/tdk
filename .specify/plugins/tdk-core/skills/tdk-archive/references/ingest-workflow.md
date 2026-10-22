@@ -35,7 +35,7 @@ Run `tdk-load-project-context` with `require_feature_dir` false for `featureEnv.
   ' -- "<agent-resolved-project-root>"
   ```
 
-  STOP when `archived` is not `true` (tell the user to run `/tdk-archive <id>` first) or when `close-out.md` is missing in the returned `featureDir`.
+  STOP when `archived` is not `true` (tell the user to run `/tdk-archive <id>` first) or when `close-out.md` is missing in the returned `featureDir`. From here on the task id is the JSON `taskId` (canonical `<folder>/<ticket>`), never the raw argument; the [Next step](../SKILL.md#next-step) query uses it.
 - Without an id: every `<specs.root>/archive/**/close-out.md` whose frontmatter `memory_status` is `pending` or `partial`. None found -> print `No archived close-out has open memory rows.` and stop.
 
 `<close-out path>` below means the repo-relative POSIX path of each file in scope.
@@ -50,7 +50,7 @@ All three must hold, checked silently and without writing:
 2. `<memoryRoot>/memory.yaml` exists.
 3. `/tdk-memory-update` is available in the live skill catalog.
 
-The check itself writes nothing. If any is missing: change nothing except the reason of each `pending (not ingested yet)` row to `pending (memory not initialised)` or `pending (tdk-memory not installed)` (a more specific reason stays), print the reason and the hint `run /tdk-memory-init, then /tdk-archive --ingest`, and stop. Archiving never depends on this check.
+The check itself writes nothing. If any is missing: change nothing except the reason of each `pending (not ingested yet)` row to `pending (memory not initialised)` or `pending (tdk-memory not installed)` (a more specific reason stays), print the reason and the hint `run /tdk-memory-init, then /tdk-archive --ingest`; a single-spec run then prints the [Next step](../SKILL.md#next-step) as in §6, and stops. Archiving never depends on this check.
 
 Read the Domain Map of `<memoryRoot>/memory-index.md` once for step 3.
 
@@ -131,6 +131,8 @@ git diff -- <memoryRoot> <close-out path>
 New memory files and an archived `close-out.md` are untracked, so a plain `git diff` omits them; `git add -N` records them as intent-to-add so the diff shows them. Alternatively, open the new files directly. List every `<close-out path>` in scope.
 
 Hint for rows still `pending (unknown domain <d>)` or `pending (domain not chosen)`: set the domain in the table (or add the domain with `/tdk-memory-init`) and rerun. Rows left pending by a conflict are asked again on the next ingest. Print, never run, any `git add` or commit suggestion.
+
+Last, after `memory_status` is written: a single-spec run (`--ingest <task-id>`, or `--auto-upmem` from an archive run) prints the next step per SKILL.md [Next step](../SKILL.md#next-step), queried as `archive/<canonical task id>`. A multi-spec `--ingest` (no task id) prints the summary only, with no next-step line.
 
 ## Crash safety
 

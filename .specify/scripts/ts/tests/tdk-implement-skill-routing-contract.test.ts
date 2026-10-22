@@ -238,7 +238,7 @@ describe('tdk-implement skill routing contract', () => {
     }
   });
 
-  it('suggests /tdk-review at every way an implement run ends: both serial summaries and the parallel ending (AC9)', () => {
+  it('ends every way an implement run ends with the status collector next step, not a hard-coded lifecycle step', () => {
     const skill = read(IMPLEMENT_SKILL);
     const serialSummary = skill.slice(skill.indexOf('### Step 8: Completion Summary'));
     const phaseExecution = read(IMPLEMENT_PHASE_REFERENCE);
@@ -246,8 +246,12 @@ describe('tdk-implement skill routing contract', () => {
     const parallel = read(resolve(IMPLEMENT_REFERENCES_DIR, 'parallel-phase-orchestration.md'));
     const finalStop = parallel.slice(parallel.indexOf('Stop when no candidate remains.'));
     for (const [name, text] of [['SKILL.md step 8', serialSummary], ['phase-execution completion block', completion], ['parallel final stop', finalStop]] as const) {
-      expect({ name, status: text.includes('/tdk-status {task_id}'), review: text.includes('/tdk-review {task_id}') })
-        .toEqual({ name, status: true, review: true });
+      expect({
+        name,
+        collector: text.includes('src/commands/feature/status.ts'),
+        primary: text.includes('recommendation.primary'),
+        fallback: text.includes('/tdk-status {task_id}'),
+      }).toEqual({ name, collector: true, primary: true, fallback: true });
     }
   });
 });

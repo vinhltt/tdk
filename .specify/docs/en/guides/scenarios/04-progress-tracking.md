@@ -72,4 +72,4 @@ with other work. `/tdk-repo-worktree create` gives the task its own working root
 - Run it after breaks to quickly recall where you stopped.
 - Stale warnings (>7 days) suggest the feature may need attention or cleanup.
 - No task ID? Claude will try to infer it from conversation context.
-- A `done` or `cancelled` feature gets `/tdk-archive <id>` as a recommendation. Archived specs of the default folder stay in the list (flagged `archived`) and readable with `/tdk-status archive/<folder>/<id>`; the report also shows the retro status (`none`, `collected`, `proposed`, `done`).
+- A `done` feature gets the first unmet close-out step: tests (`/tdk-plan <id> --ut-backfill`), then `/tdk-review <id>`, then `/tdk-archive <id>` once the review passes. A `cancelled` feature gets `/tdk-archive <id>` directly. Archived specs of the default folder stay in the list (flagged `archived`) and readable with `/tdk-status archive/<folder>/<id>`; the report also shows the retro status (`none`, `collected`, `proposed`, `done`).

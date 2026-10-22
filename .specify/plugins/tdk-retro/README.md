@@ -20,7 +20,7 @@
 
 ## Basic Flow
 
-1. Finish or pause a TDK spec implementation.
+1. Run after `/tdk-archive` (retro also works on an active spec when needed).
 2. Run `/tdk-retro-collect {TASK_ID}` to write or update `retro-feedback.md`.
 3. Run `/tdk-retro-propose {TASK_ID}` to generate up to 10 proposed deltas in `learning-delta.md`.
 4. Run `/tdk-retro-apply {TASK_ID}` to approve, reject, skip, or apply each delta.
@@ -30,7 +30,7 @@
 
 ```mermaid
 flowchart TD
-    A[Spec implementation reaches review point] --> B["/tdk-retro-collect {TASK_ID}"]
+    A[Spec archived with /tdk-archive] --> B["/tdk-retro-collect {TASK_ID}"]
     B --> C{Signal sources}
     C --> C1[Reviews]
     C --> C2[Phase drift]

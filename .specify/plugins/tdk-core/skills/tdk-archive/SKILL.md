@@ -6,7 +6,7 @@ compatibility: "Requires a spec whose derived status is done or cancelled and a 
 user-invocable: true
 license: MIT
 metadata:
-  version: "14.3.0"
+  version: "14.3.2"
   category: "Lifecycle"
   requires:
     - tdk-validate-task-id, tdk-load-project-context (tdk-utils)
@@ -15,9 +15,9 @@ metadata:
   output_format: "close-out.md in the archived feature dir; prints the archived path, git commands to run by hand, and the ingest summary."
   examples:
     - input: "/tdk-archive sample-001"
-      output: "Archives the spec, prints git add and commit lines, suggests /tdk-archive --ingest <canonical id>"
+      output: "Archives the spec, prints git add and commit lines, then the next step from /tdk-status (retro first)"
     - input: "/tdk-archive sample-001 --auto-upmem"
-      output: "Archives the spec, then ingests its memory candidates in the same run"
+      output: "Archives the spec, then ingests its memory candidates in the same run and prints the next step from /tdk-status"
     - input: "/tdk-archive --ingest"
       output: "Ingests open memory rows of every archived close-out"
 ---
@@ -54,7 +54,7 @@ Accepted: `<task-id> [--auto-upmem]` (archive) or `--ingest [task-id]` (ingest).
 
 1. `tdk-validate-task-id` with host `/tdk-archive` -> `TASK_ID`.
 2. Fix the project root before running any script: the workspace directory of the active harness/session that holds `.specify/.specify.json` (it also has `.specify/scripts/ts`). Ask the user when it cannot be identified confidently; never guess it and never pass the placeholder literally. This is `<agent-resolved-project-root>` in the wrapper of Step 3, used by every script in this skill.
-3. Resolve before loading any context: `check-prerequisites.ts {TASK_ID} --paths-only --json --allow-archived`, run through the project-root wrapper shown in Step 3 with the root from sub-step 2. An error (not found, ambiguous, reserved folder) -> STOP. `archived: true` -> STOP and point to `/tdk-archive --ingest <taskId>`. Otherwise keep `featureDir` as `FEATURE_DIR` and `taskId` (canonical `<folder>/<ticket>`) as the canonical task id used everywhere below.
+3. Resolve before loading any context: `check-prerequisites.ts {TASK_ID} --paths-only --json --allow-archived`, run through the project-root wrapper shown in Step 3 with the root from sub-step 2. An error (not found, ambiguous, reserved folder) -> STOP. `archived: true` -> STOP; print the next step per [Next step](#next-step) for this spec (`STATUS_ID="archive/<taskId>"`). Otherwise keep `featureDir` as `FEATURE_DIR` and `taskId` (canonical `<folder>/<ticket>`) as the canonical task id used everywhere below.
 4. `tdk-load-project-context` with `require_feature_dir=false` (sub-step 3 already resolved the directory, and the default would fail an archived id before the hint above) -> `featureEnv.specsRoot`, `featureEnv.mainBranch`; the project root stays the one from sub-step 2.
 
 ## Step 3: Preflight with `--check`
@@ -98,12 +98,39 @@ Run the same wrapper with `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/com
    ```
 
 3. Warn when the current branch of the project root repository (where `.specify/.specify.json` lives) differs from `mainBranch`. Read `<project-root>/.git/HEAD` (`ref: refs/heads/<branch>`) instead of running git; when `.git` is a file (`gitdir: <path>`, a worktree), read `<path>/HEAD`. Skip the warning only when neither can be read. The archive commit belongs on the branch your team archives from.
-4. Without `--auto-upmem`: touch nothing under the memory root, ask no memory question, and print `/tdk-archive --ingest <canonical task id>`.
-5. With `--auto-upmem`: continue with [Ingest](#ingest) for this spec. The flag is the consent to write memory.
+4. Without `--auto-upmem`: touch nothing under the memory root, ask no memory question; print the next step per [Next step](#next-step), after the git lines above.
+5. With `--auto-upmem`: continue with [Ingest](#ingest) for this spec. The flag is the consent to write memory. Ingest ends with the next step.
 
 ## Ingest
 
-Load: references/ingest-workflow.md and follow it end to end: scope, memory preflight, classify every pending row before any write, at most one batched confirmation for conflicts (none when there is no conflict), per-row `/tdk-memory-update` calls, immediate row updates, `memory_status`, summary. Rows already `ingested` or `skipped` are skipped. Memory is optional: when it is not initialised the rows stay `pending (<reason>)` and the archive is unaffected.
+Load: references/ingest-workflow.md and follow it end to end: scope, memory preflight, classify every pending row before any write, at most one batched confirmation for conflicts (none when there is no conflict), per-row `/tdk-memory-update` calls, immediate row updates, `memory_status`, summary. Rows already `ingested` or `skipped` are skipped. Memory is optional: when it is not initialised the rows stay `pending (<reason>)` and the archive is unaffected. A single-spec run (`--ingest <task-id>` or `--auto-upmem`) ends with the [Next step](#next-step); `--ingest` without a task id prints its summary only.
+
+## Next step
+
+The next step comes from the `/tdk-status` ladder, never from this skill. Every call site runs on an archived spec, so query it as `STATUS_ID="archive/<canonical task id>"` (`{TASK_ID}` = the JSON `taskId` of Step 2 or ingest §1, never the raw argument): the canonical `<folder>/<ticket>` alone does not resolve an archived spec. Run the read-only collector **last**, after every write of the run (archive move, `close-out.md` row statuses, `memory_status`), through the Step 3 project-root wrapper:
+
+```bash
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+STATUS_ID="archive/{TASK_ID}"
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/feature/status.ts "$STATUS_ID")
+' -- "<agent-resolved-project-root>"
+```
+
+Print from the JSON `recommendation`, verbatim, without re-deriving or rewording; an empty `recommendation.primary.command` prints the reason only (for example `Feature archived, retro and memory complete`):
+
+```text
+Next: <recommendation.primary.command>
+Why: <recommendation.primary.reason>
+Or: <recommendation.alternative.command>   — only when it is non-empty
+Why: <recommendation.alternative.reason>
+```
+
+- Collector error (not a STOP: the run's work is done), non-JSON output, or no `recommendation`: print `Next: /tdk-status archive/<canonical task id>` only, never a hard-coded lifecycle step such as `--ingest`. A printed command whose skill is missing from the live skill catalog (for example `/tdk-retro-collect` without the `tdk-retro` plugin): say so, and point at the alternative or the plugin that provides it.
 
 ## Restore
 

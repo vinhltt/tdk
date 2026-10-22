@@ -493,15 +493,39 @@ skipped, and Cancel at the F3 gate.
 
 ## Completion Summary
 
-After all phases:
+After all phases, report the counts:
 
 ```text
 ✅ Implementation complete: {task_id}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Phases executed: {N}
 Phases skipped: {skipped_count}
-
-Next steps:
-→ /tdk-status {task_id}   — check artifact status
-→ /tdk-review {task_id}   — review the implemented code against the spec
 ```
+
+### Next step
+
+The next step comes from the `/tdk-status` ladder, never from this skill. Run the same read-only collector as the Step 2 status preflight (`project-and-phase-contract.md`) **last**, after every phase status write of the run, with the same project root:
+
+```bash
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/feature/status.ts {TASK_ID})
+' -- "<agent-resolved-project-root>"
+```
+
+Print from the JSON `recommendation`, verbatim, without re-deriving or rewording:
+
+```text
+Next: <recommendation.primary.command>
+Why: <recommendation.primary.reason>
+Or: <recommendation.alternative.command>   — only when it is non-empty
+Why: <recommendation.alternative.reason>
+```
+
+- Empty `recommendation.primary.command`: print the reason only.
+- Collector error (not a STOP: the run's work is done), non-JSON output, or no `recommendation`: print `Next: /tdk-status {task_id}` only. Never fall back to a hard-coded lifecycle step.
+- The printed command names a skill missing from the live skill catalog: say so, and point at the alternative or the plugin that provides it.

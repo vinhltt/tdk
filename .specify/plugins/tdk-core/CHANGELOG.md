@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.3.2] - 2026-10-22
+
+### Changed
+- tdk-implement, tdk-review, tdk-archive: end with the /tdk-status ladder next step (collector after own writes, recommendation.primary/alternative verbatim, /tdk-status fallback) instead of hard-coded hints
+- tdk-archive: archived specs queried as archive/<canonical id>; suggests retro before --ingest; multi-spec --ingest prints summary only
+
 ## [14.3.1] - 2026-10-21
 
 ### Changed

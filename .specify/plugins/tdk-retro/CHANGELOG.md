@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.2.1] - 2026-10-22
+
+### Changed
+- tdk-retro-apply: ends with the /tdk-status ladder next step for active and archived specs (STATUS_ID rule, /tdk-status fallback)
+- README: retro runs after /tdk-archive
+
 ## [1.2.0] - 2026-10-21
 
 ### Changed

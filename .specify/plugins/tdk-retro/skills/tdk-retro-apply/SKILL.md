@@ -2,7 +2,7 @@
 name: tdk-retro-apply
 description: "Review learning-delta.md entries with the user, apply approved technical edits, delegate approved memory edits to tdk-memory-update, and update entry statuses."
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   category: "TDK Retro"
   requires:
     - tdk-retro-propose
@@ -105,3 +105,30 @@ Report:
 - Blocked count
 - Remaining proposed count
 - Suggested commit message: `feat(retro): apply learnings from {TASK_ID}`
+
+Then print the next step. It comes from the `/tdk-status` ladder, never from this skill. Run the status lookup from `../_shared/archived-spec-handling.md` (Retro Status Lookup) **last**, after the Step 6 writes, with the same project root as Step 1:
+
+```bash
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR"
+  echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
+  exit 1
+fi
+STATUS_ID="{TASK_ID}"
+[ "{ARCHIVED}" = "true" ] && STATUS_ID="archive/{TASK_ID}"
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/feature/status.ts "$STATUS_ID")
+```
+
+Print from the JSON `recommendation`, verbatim, without re-deriving or rewording:
+
+```text
+Next: <recommendation.primary.command>
+Why: <recommendation.primary.reason>
+Or: <recommendation.alternative.command>   — only when it is non-empty
+Why: <recommendation.alternative.reason>
+```
+
+- Empty `recommendation.primary.command`: print the reason only.
+- Collector error (not a STOP: the run's work is done), non-JSON output, or no `recommendation`: print `Next: /tdk-status $STATUS_ID` only. Never fall back to a hard-coded lifecycle step. A fixture-fallback run (`.specify/examples/specs/...`) has no resolvable spec, so it always ends here.
+- The printed command names a skill missing from the live skill catalog: say so, and point at the alternative or the plugin that provides it.

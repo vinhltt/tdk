@@ -6,13 +6,13 @@ compatibility: "Requires a task with plan.md and at least one phase with status 
 user-invocable: true
 license: MIT
 metadata:
-  version: "14.2.0"
+  version: "14.3.2"
   category: "Analysis & Review"
   requires:
     - tdk-implement (phases marked done)
     - tdk-code-reviewer agent (tdk-utils)
   input_format: "<task-id> [--phase NN] [--quick|--deep] [focus...]"
-  output_format: "Markdown report at <FEATURE_DIR>/reviews/<yyyyMMdd-HHmmss>-<slug>.md; prints path, verdict, and /tdk-plan seed lines."
+  output_format: "Markdown report at <FEATURE_DIR>/reviews/<yyyyMMdd-HHmmss>-<slug>.md; prints path, verdict, /tdk-plan seed lines, and the /tdk-status next step."
   examples:
     - input: "/tdk-review pref-001"
       output: "Standard review report with verdict and proposed fix phases"
@@ -65,7 +65,35 @@ Follow [references/report-contract.md](references/report-contract.md): frontmatt
 
 ## Step 5: Report to the user
 
-Print the report path, the verdict, severity counts, any reviewer that was skipped or failed with its reason, any unreviewed slice or spec coverage gap, and each `/tdk-plan <id> "<description>"` seed line. Then stop. Do not run the seeds.
+Print the report path, the verdict, severity counts, any reviewer that was skipped or failed with its reason, any unreviewed slice or spec coverage gap, and each `/tdk-plan <id> "<description>"` seed line. Do not run the seeds.
+
+Then print the next step. It comes from the `/tdk-status` ladder, never from this skill. Run the read-only collector **after** the Step 4 report write, with the project root from Step 2:
+
+```bash
+bash -lc '
+PROJECT_DIR="$1"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR" >&2
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/feature/status.ts {TASK_ID})
+' -- "<agent-resolved-project-root>"
+```
+
+Print from the JSON `recommendation`, verbatim, without re-deriving or rewording:
+
+```text
+Next: <recommendation.primary.command>
+Why: <recommendation.primary.reason>
+Or: <recommendation.alternative.command>   — only when it is non-empty
+Why: <recommendation.alternative.reason>
+```
+
+- Empty `recommendation.primary.command`: print the reason only.
+- Collector error (not a STOP: the run's work is done), non-JSON output, or no `recommendation`: print `Next: /tdk-status {TASK_ID}` only. Never fall back to a hard-coded lifecycle step.
+- The printed command names a skill missing from the live skill catalog: say so, and point at the alternative or the plugin that provides it.
+
+Then stop. The report file is unchanged by this step.
 
 ## Bundled helpers
 

@@ -6,6 +6,20 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.127.0] - 2026-10-22
+
+### Added
+- **[Scripts]** `next-step-skill-contract.test.ts` locks the closing step of `/tdk-implement`, `/tdk-review`, `/tdk-archive` and `/tdk-retro-apply`: status collector call, `recommendation.primary`/`.alternative`, per-skill `/tdk-status` fallback, `archive/<id>` for archived specs, and no hard-coded lifecycle step
+
+### Changed
+- **[tdk-core]** Lifecycle skills end with the `/tdk-status` ladder next step instead of hard-coded hints: each runs the read-only status collector after its own writes and prints `Next:`/`Why:`/`Or:` verbatim, falling back to `/tdk-status <id>`
+  - `/tdk-implement` (serial and parallel completion) no longer suggests `/tdk-archive` directly; a `done` feature goes to tests, then review, as the ladder says
+  - `/tdk-review` prints the next step after the report write; the report file is unchanged
+  - `/tdk-archive` (archive, `--auto-upmem`, `--ingest <id>`, already-archived stop, memory-not-initialised stop) queries `archive/<canonical id>` and suggests retro before `--ingest`; multi-spec `--ingest` prints its summary only
+- **[tdk-retro]** `/tdk-retro-apply` ends with the ladder next step for active and archived specs; README places retro after `/tdk-archive`
+- **[Scripts]** The archive-ready reason for uncommitted feature-dir files says to commit them first instead of suggesting `/tdk-archive --check`, a flag the skill rejects
+- **[Guides]** en/vi skills guide states that lifecycle skills share the `/tdk-status` next step; scenario guides 01 and 04 follow the ladder (tests, then review, before `/tdk-archive`)
+
 ## [1.126.0] - 2026-10-21
 
 ### Added

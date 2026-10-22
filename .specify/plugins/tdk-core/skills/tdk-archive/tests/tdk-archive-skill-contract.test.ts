@@ -60,11 +60,12 @@ describe('tdk-archive skill contract', () => {
     expect(step2.slice(root, resolve)).toContain('Ask the user');
     expect(step2.slice(root, resolve)).not.toContain('tdk-load-project-context');
     expect(step2.slice(load)).toContain('require_feature_dir=false');
-    // An archived id stops here with the ingest hint, before any context load.
+    // An archived id stops here with the ladder next step (archive/<taskId>), before any context load.
     const archivedStop = step2.slice(resolve, load);
     expect(archivedStop).toContain('`archived: true`');
     expect(archivedStop).toContain('STOP');
-    expect(archivedStop).toContain('/tdk-archive --ingest <taskId>');
+    expect(archivedStop).toContain('[Next step](#next-step)');
+    expect(archivedStop).toContain('archive/<taskId>');
     expect(archivedStop).toContain('`featureDir`');
   });
 
