@@ -77,7 +77,7 @@ describe('tdk-review skill contract', () => {
     expect(ORCHESTRATION).toMatch(/every dispatched invocation failed or was skipped \(`all_reviewers_failed`\)/);
     expect(REPORT).toContain('Spec coverage gaps');
     expect(REPORT).toContain('Unreviewed slices');
-    expect(REPORT).toMatch(/blocked_reason: ""\s+# empty_scope \| working_tree_changed \| all_reviewers_failed;/);
+    expect(REPORT).toMatch(/blocked_reason: ""\s+# scope_incomplete \| empty_scope \| working_tree_changed \| all_reviewers_failed;/);
   });
 
   it('keeps the review domain read-only and never mutates routing, plans, or status', () => {
@@ -94,6 +94,16 @@ describe('tdk-review skill contract', () => {
     expect(ORCHESTRATION).toContain('empty_scope');
     expect(REPORT).toContain('empty_scope');
     expect(ORCHESTRATION).toMatch(/\|\s*`blocked`\s*\|[^\n]*empty scope/);
+  });
+
+  it('blocks on an incomplete scope before the empty-scope check, and lists the blocking rows', () => {
+    expect(ORCHESTRATION).toContain('scope_incomplete');
+    expect(REPORT).toContain('scope_incomplete');
+    expect(ORCHESTRATION).toMatch(/\|\s*`blocked`\s*\|[^\n]*could not be diffed \(`scope_incomplete`\)/);
+    const incomplete = ORCHESTRATION.indexOf('- `incomplete: true`: spawn nothing.');
+    expect(incomplete).toBeGreaterThan(-1);
+    expect(incomplete).toBeLessThan(ORCHESTRATION.indexOf('- `empty: true`: spawn nothing.'));
+    expect(ORCHESTRATION).toMatch(/`incomplete: true`[^\n]*every `notReviewed\[\]` row with `blocking: true` under Scope/);
   });
 
   it('stops on a same-second collision and never retries', () => {

@@ -10,7 +10,7 @@ import { autoDetectSubWorkspace, parseConfig } from '../../../../../scripts/ts/s
 import { isWithin } from '../../../../../scripts/ts/src/utils/path-within';
 import type { SpecifyConfig } from '../../../../../scripts/ts/src/utils/types';
 import { runGit } from '../../../../../scripts/ts/src/utils/git-env';
-import { baseCommitIssue, commonDirOf, isRegisteredWorktree, readGitMap, rowStateOf, type GitMap } from '../../../../../scripts/ts/src/utils/git-map';
+import { baseCommitIssue, classifySubWorkspaceRepo, commonDirOf, isRegisteredWorktree, readGitMap, rowStateOf, type GitMap, type GitMapRow } from '../../../../../scripts/ts/src/utils/git-map';
 import { extractPhaseRoutingInput } from '../../../../../scripts/ts/src/utils/phase-delegates';
 import { parsePhasesTable } from '../../../../../scripts/ts/src/commands/util/phases-table-parser';
 
@@ -22,7 +22,11 @@ const MAX_TEXT_BYTES = 1024 * 1024;
 const MAX_BUFFER = 512 * 1024 * 1024;
 
 export interface TruncatedFile { path: string; reason: 'binary' | 'oversize' | 'directory' | 'unreadable' }
-/** The physical repository: base commit, working root and integrity. Its diff text lives only in `slices[].pieces[]`. */
+/**
+ * The physical repository: base commit, working root and integrity. Its diff text lives only in `slices[].pieces[]`.
+ * `files` are relative to `repoPath`: the configured path for a git-map row (which may be a directory inside its
+ * repository), the git toplevel for a fallback repo.
+ */
 export interface ReviewRepo {
   subWorkspace: string | null;
   repoPath: string;
@@ -34,7 +38,7 @@ export interface ReviewRepo {
   diffLines: number;
   truncated: TruncatedFile[];
 }
-/** `index` is 1-based. `files` are repo-relative and whole: a file is never split across pieces, and a file with no content is in none. */
+/** `index` is 1-based. `files` are `repoPath`-relative and whole: a file is never split across pieces, and a file with no content is in none. */
 export interface ReviewPiece { index: number; files: string[]; diff: string; diffLines: number; oversized: boolean }
 /**
  * The files of one repository owned by one logical sub-workspace. Reviewers are dispatched per slice and piece,
@@ -46,7 +50,7 @@ export interface ReviewSlice {
   repoPath: string;
   /** Deepest configured sub-workspace owning the files, or null when no configured path owns them. */
   subWorkspace: string | null;
-  /** Repo-relative, in diff order: the evidence coordinates findings are validated against. */
+  /** Relative to `repoPath`, in diff order: the evidence coordinates findings are validated against. */
   files: string[];
   /** Project-relative in configured coordinates, same order as `files`: the routing resolver's `--path` input. */
   routingPaths: string[];
@@ -55,8 +59,11 @@ export interface ReviewSlice {
   /** Empty when no file of the slice has content: such a slice is listed as stat only and never dispatched. */
   pieces: ReviewPiece[];
 }
-/** `subWorkspace` is the row name, or the Related Code Files path when that path could not be placed in any repository. */
-export interface NotReviewed { subWorkspace: string; state: string; reason: string }
+/**
+ * `subWorkspace` is the row name, or the Related Code Files path when that path could not be placed in any repository.
+ * `blocking` marks a row with recorded work (a branch and a recorded base) that could not be diffed: it forces `incomplete`.
+ */
+export interface NotReviewed { subWorkspace: string; state: string; reason: string; blocking?: true }
 export interface ReviewScope {
   ok: true;
   repos: ReviewRepo[];
@@ -67,7 +74,12 @@ export interface ReviewScope {
   porcelain: Record<string, string[]>;
   porcelainArgs: string[];
   warnings: string[];
-  /** True only when nothing was skipped AND no repo has a changed file. Skipped rows are never "empty". */
+  /** True when any `notReviewed` entry is `blocking`: the review must stop with `scope_incomplete` instead of passing a partial diff. */
+  incomplete: boolean;
+  /**
+   * True only when no repo has a changed file AND nothing was skipped, except `unmapped_in_mapped_repo` notes: those
+   * paths were diffed against HEAD, so an empty scope with them still stops the review instead of passing it.
+   */
   empty: boolean;
 }
 
@@ -84,6 +96,8 @@ const git = (cwd: string, args: string[]): string =>
 
 /** Repo-relative pathspecs. `.` stays bare; everything else is literal so plan-authored text cannot glob. */
 const literal = (path: string): string => (path === '.' ? '.' : `:(literal)${path}`);
+/** Excludes every path under `path` but not `path` itself, so a submodule gitlink named `path` keeps its own diff. */
+const excludeBelow = (path: string): string => `:(exclude,glob)${path.replace(/[\\*?[\]]/g, '\\$&')}/**`;
 
 const countLines = (text: string): number => (text === '' ? 0 : text.split('\n').length - (text.endsWith('\n') ? 1 : 0));
 
@@ -96,16 +110,21 @@ interface RepoDiff extends Pick<ReviewRepo, 'files' | 'diffLines' | 'truncated'>
  * One repo's tracked diff against `base` plus untracked file content rendered as new-file diffs, one segment per file.
  * Every file is rendered by its own git call: headers are never parsed, because git still quotes some paths under
  * `quotePath=false` and a combined `--stat` abbreviates long paths.
+ *
+ * Paths are relative to `workingRoot`: the configured sub path for a git-map row, a toplevel for a fallback repo.
+ * `--relative` keeps tracked paths there when the sub path is a directory inside its repository; at a toplevel it
+ * changes nothing. `ls-files` is already cwd-relative and `--no-index` compares filesystem paths, so neither takes it.
+ * `excludes` are `workingRoot`-relative directories another row already owns.
  */
-function diffRepo(workingRoot: string, base: string, specs: string[] | undefined): RepoDiff {
-  const pathspec = specs ? specs.map(literal) : ['.'];
-  const common = ['--no-ext-diff', '--no-textconv', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/'];
+function diffRepo(workingRoot: string, base: string, specs: string[] | undefined, excludes: string[] = []): RepoDiff {
+  const pathspec = [...(specs ? specs.map(literal) : ['.']), ...excludes.map((path) => `:(exclude,literal)${path}`)];
+  const common = ['--no-ext-diff', '--no-textconv', '--no-color', '--no-renames', '--submodule=short', '--src-prefix=a/', '--dst-prefix=b/'];
   const truncated: TruncatedFile[] = [];
   const files: string[] = [];
   const segments = new Map<string, string>();
 
   // `-z --numstat` is `<added>\t<deleted>\t<path>\0`; binary files report `-`.
-  const stats = git(workingRoot, ['diff', ...common, '-z', '--numstat', base, '--', ...pathspec]).split('\0').filter(Boolean);
+  const stats = git(workingRoot, ['diff', ...common, '--relative', '-z', '--numstat', base, '--', ...pathspec]).split('\0').filter(Boolean);
   for (const entry of stats) {
     const [added, deleted, ...rest] = entry.split('\t');
     const path = rest.join('\t');
@@ -114,9 +133,9 @@ function diffRepo(workingRoot: string, base: string, specs: string[] | undefined
     if (added === '-') truncated.push({ path, reason: 'binary' });
     else if (Number(added) + Number(deleted) > PER_FILE_LINE_CAP) truncated.push({ path, reason: 'oversize' });
     else statOnly = false;
-    const args = statOnly ? ['diff', '--no-ext-diff', '--no-color', '--stat', base] : ['diff', ...common, base];
-    // A literal pathspec also matches `<path>/...`, which a file replaced by a directory would pull in twice.
-    segments.set(path, git(workingRoot, [...args, '--', literal(path), `:(exclude,literal)${path}/`]));
+    const args = statOnly ? ['diff', '--no-ext-diff', '--no-color', '--submodule=short', '--relative', '--stat', base] : ['diff', ...common, '--relative', base];
+    // A literal pathspec also matches `<path>/...`, which a file or gitlink swapped with a directory would pull in twice.
+    segments.set(path, git(workingRoot, [...args, '--', literal(path), excludeBelow(path)]));
   }
 
   // Implement output is mostly new, untracked files; without their content the review would pass unread code.
@@ -296,56 +315,126 @@ export function computeReviewScope(options: ReviewScopeOptions): ReviewScope {
   const usable = map !== null && map.layout !== 'malformed' && map.featureBranch !== null ? map : null;
   const repos: ReviewRepo[] = [];
   const diffs: { repo: ReviewRepo; base: RoutingBase; segments: Map<string, string> }[] = [];
-  const pushRepo = (fields: Omit<ReviewRepo, 'files' | 'diffLines' | 'truncated'>, base: RoutingBase, specs: string[] | undefined): void => {
-    const { segments, ...rendered } = diffRepo(fields.workingRoot, fields.baseCommit, specs);
+  const pushRepo = (fields: Omit<ReviewRepo, 'files' | 'diffLines' | 'truncated'>, base: RoutingBase, specs: string[] | undefined, excludes: string[] = []): void => {
+    const { segments, ...rendered } = diffRepo(fields.workingRoot, fields.baseCommit, specs, excludes);
     const repo: ReviewRepo = { ...fields, ...rendered };
     repos.push(repo);
     diffs.push({ repo, base, segments });
   };
+  const skip = (subWorkspace: string, state: string, reason: string, blocking: boolean): void => {
+    notReviewed.push(blocking ? { subWorkspace, state, reason, blocking: true } : { subWorkspace, state, reason });
+  };
   const claimed = new Set<string>();
+  /** Realpaths of own repositories whose row was handled: every path inside them belongs to that row. */
   const handled = new Set<string>();
+  /** Realpaths of directory sub-workspaces (inner or plain) whose row claimed its paths. Their repository stays unhandled. */
+  const handledSubs = new Set<string>();
+  /** Toplevels of own repositories diffed in this run. */
+  const reviewedTops = new Set<string>();
+  /** Toplevels of inner rows with a recorded base: a fallback path there is only diffed against HEAD, which the report must say. */
+  const mappedTops = new Set<string>();
   const projectReal = realpathSync(projectRoot);
+  /**
+   * `root`-relative pathspecs for the claimed sub paths and own repositories strictly inside `root`, so no file is diffed
+   * by two rows, and an own repository's gitlink or nested clone never shows up as a file of an enclosing row or fallback diff.
+   */
+  const excludesUnder = (root: string): string[] =>
+    [...handledSubs, ...handled].filter((sub) => sub !== root && isWithin(root, sub)).map((sub) => relative(root, sub).replace(/\\/g, '/'));
 
-  if (usable) for (const row of usable.rows) {
-    const sub = subs.find((candidate) => candidate.name === row.subWorkspace);
-    if (!sub) { notReviewed.push({ subWorkspace: row.subWorkspace, state: 'not_in_config', reason: 'row has no matching subWorkspaces entry' }); continue; }
-    const prefix = posix.normalize(sub.path.replace(/\\/g, '/')).replace(/\/$/, '');
-    if (prefix === '.') continue; // artifact host or root: the fallback below owns it
-    const owned = [...related].filter((path) => path === prefix || path.startsWith(`${prefix}/`));
-    // `--phase` narrows to that phase's files; a repository the phase never touches is not part of this review.
-    if (target && owned.length === 0) continue;
-    const repositoryRoot = join(projectRoot, sub.path);
-    if (!existsSync(repositoryRoot)) { owned.forEach((path) => claimed.add(path)); notReviewed.push({ subWorkspace: sub.name, state: 'missing_repository', reason: `${sub.path} does not exist` }); continue; }
-    const repoReal = realpathSync(repositoryRoot);
-    if (!isWithin(projectReal, repoReal) || repoReal === projectReal) {
+  if (usable) {
+    // Recorded work: the row has a branch and a recorded base and is not being cleaned. Decided from the map alone, so it is
+    // safe for a directory that is missing or outside the workspace. Such a row that cannot be diffed blocks the review.
+    const recordedWork = (row: GitMapRow): boolean =>
+      row.branch !== null && usable.baseCommitByRepo[row.subWorkspace] !== undefined
+      && usable.cleaningByRepo[row.subWorkspace] === undefined && usable.cleanedByRepo[row.subWorkspace] === undefined;
+    /** A row this run does not diff still marks its repository as mapped when it is inner and has a recorded base. */
+    const noteMappedTop = (name: string, repositoryRoot: string): void => {
+      if (typeof usable.baseCommitByRepo[name] !== 'string' || !existsSync(repositoryRoot)) return;
+      const repoReal = realpathSync(repositoryRoot);
+      if (!isWithin(projectReal, repoReal) || repoReal === projectReal) return;
+      const repo = classifySubWorkspaceRepo(projectRoot, repositoryRoot);
+      if (repo.kind === 'inner') mappedTops.add(repo.top);
+    };
+    interface DirectoryRow { row: GitMapRow; name: string; prefix: string; owned: string[]; specs: string[] | undefined; repositoryRoot: string; subReal: string; kind: 'inner' | 'plain'; top: string }
+    const directoryRows: DirectoryRow[] = [];
+    /** Row diffs (own rows, then directory rows) run after every claim is known, so no row re-diffs a deeper row's files. */
+    const rowDiffs: { fields: Omit<ReviewRepo, 'files' | 'diffLines' | 'truncated'>; prefix: string; specs: string[] | undefined; root: string }[] = [];
+
+    for (const row of usable.rows) {
+      const sub = subs.find((candidate) => candidate.name === row.subWorkspace);
+      if (!sub) { notReviewed.push({ subWorkspace: row.subWorkspace, state: 'not_in_config', reason: 'row has no matching subWorkspaces entry' }); continue; }
+      const prefix = posix.normalize(sub.path.replace(/\\/g, '/')).replace(/\/$/, '');
+      if (prefix === '.') continue; // artifact host or root: the fallback below owns it
+      const owned = [...related].filter((path) => path === prefix || path.startsWith(`${prefix}/`));
+      // An entry naming an ancestor directory (or `.`) puts the whole sub path in scope. The row does not claim it: the
+      // fallback still owns that entry for the files no row covers.
+      const covered = [...related].some((path) => path === '.' || prefix.startsWith(`${path}/`));
+      const repositoryRoot = join(projectRoot, sub.path);
+      // `--phase` narrows to that phase's files; a repository the phase never touches is not part of this review.
+      if (target && owned.length === 0 && !covered) { noteMappedTop(sub.name, repositoryRoot); continue; }
+      const specs = target && !covered ? owned.map((path) => (path === prefix ? '.' : path.slice(prefix.length + 1))) : undefined;
+      if (!existsSync(repositoryRoot)) { owned.forEach((path) => claimed.add(path)); skip(sub.name, 'missing_repository', `${sub.path} does not exist`, recordedWork(row)); continue; }
+      const repoReal = realpathSync(repositoryRoot);
+      if (!isWithin(projectReal, repoReal) || repoReal === projectReal) {
+        owned.forEach((path) => claimed.add(path));
+        skip(sub.name, 'identity_failed', 'repository root escapes or equals the workspace', recordedWork(row));
+        continue;
+      }
+
+      // Repository identity (git-map-contract.md, repository classes; classifySubWorkspaceRepo): an own repository is
+      // handled here; a directory inside a nested repository (inner) or of the workspace's repository (plain) is handled
+      // after every own row, so an own row that already covers it is known.
+      const repo = classifySubWorkspaceRepo(projectRoot, repositoryRoot);
+      if (repo.kind === 'inner' || repo.kind === 'plain') { directoryRows.push({ row, name: sub.name, prefix, owned, specs, repositoryRoot, subReal: repoReal, kind: repo.kind, top: repo.top }); continue; }
       owned.forEach((path) => claimed.add(path));
-      notReviewed.push({ subWorkspace: sub.name, state: 'identity_failed', reason: 'repository root escapes or equals the workspace' });
-      continue;
+      handled.add(repoReal);
+
+      const state = rowStateOf(usable, sub.name, repositoryRoot);
+      if (state !== 'realized') { skip(sub.name, state, stateReason(usable, sub.name, repositoryRoot, state), state === 'invalid-base-commit' && recordedWork(row)); continue; }
+      if (repo.kind === 'none') { skip(sub.name, 'identity_failed', 'not a git working tree', recordedWork(row)); continue; }
+      const baseCommit = usable.baseCommitByRepo[sub.name];
+      if (typeof baseCommit !== 'string') { notReviewed.push({ subWorkspace: sub.name, state: 'invalid-base-commit', reason: 'no usable base commit' }); continue; }
+
+      const recorded = row.worktreePath === null ? null : join(projectRoot, row.worktreePath);
+      const workingRoot = recorded !== null && existsSync(recorded) ? recorded : repositoryRoot;
+      if (workingRoot !== repositoryRoot) {
+        let registered = false;
+        try { registered = isRegisteredWorktree(repositoryRoot, workingRoot, commonDirOf(repositoryRoot)); } catch { /* treated as unregistered */ }
+        if (!registered) { skip(sub.name, 'identity_failed', 'worktree path is not a worktree of this repository', recordedWork(row)); continue; }
+      }
+
+      rowDiffs.push({ fields: { subWorkspace: sub.name, repoPath: row.repoPath, workingRoot, baseCommit, includesUncommitted: true, source: 'git-map' }, prefix, specs, root: repoReal });
+      reviewedTops.add(repoReal);
     }
 
-    // Repository identity gate (git-map-contract.md): the directory must be its own toplevel.
-    let top: string | null = null;
-    try { top = realpathSync(runGit(['-C', repositoryRoot, 'rev-parse', '--show-toplevel'])); } catch { /* not a working tree: reported below */ }
-    if (top !== null && top !== repoReal) continue; // plain monorepo directory: the fallback diffs its paths against HEAD
-    owned.forEach((path) => claimed.add(path));
-    handled.add(repoReal);
-
-    const state = rowStateOf(usable, sub.name, repositoryRoot);
-    if (state !== 'realized') { notReviewed.push({ subWorkspace: sub.name, state, reason: stateReason(usable, sub.name, repositoryRoot, state) }); continue; }
-    if (top === null) { notReviewed.push({ subWorkspace: sub.name, state: 'identity_failed', reason: 'not a git working tree' }); continue; }
-    const baseCommit = usable.baseCommitByRepo[sub.name];
-    if (typeof baseCommit !== 'string') { notReviewed.push({ subWorkspace: sub.name, state: 'invalid-base-commit', reason: 'no usable base commit' }); continue; }
-
-    const recorded = row.worktreePath === null ? null : join(projectRoot, row.worktreePath);
-    const workingRoot = recorded !== null && existsSync(recorded) ? recorded : repositoryRoot;
-    if (workingRoot !== repositoryRoot) {
-      let registered = false;
-      try { registered = isRegisteredWorktree(repositoryRoot, workingRoot, commonDirOf(repositoryRoot)); } catch { /* treated as unregistered */ }
-      if (!registered) { notReviewed.push({ subWorkspace: sub.name, state: 'identity_failed', reason: 'worktree path is not a worktree of this repository' }); continue; }
+    // Directory rows are diffed from their recorded base at the sub path.
+    for (const { row, name, prefix, owned, specs, repositoryRoot, subReal, kind, top } of directoryRows) {
+      if (kind === 'inner' && typeof usable.baseCommitByRepo[name] === 'string') mappedTops.add(top);
+      // The contract defines `Worktree path` only for an own repository. A recorded worktree that is gone falls back to the
+      // sub path, as it does for own rows; one that exists cannot be placed, so the row blocks. No other diff reads it either.
+      const recorded = row.worktreePath === null ? null : join(projectRoot, row.worktreePath);
+      const stranded = recorded !== null && existsSync(recorded);
+      const strand = (): void => skip(name, 'identity_failed', 'nested worktree layout undefined', recordedWork(row));
+      // An own row of the same repository was diffed: its diff holds these files, and slicing routes each to the deepest owner.
+      if (reviewedTops.has(top)) { owned.forEach((path) => claimed.add(path)); if (stranded) strand(); continue; }
+      const state = rowStateOf(usable, name, repositoryRoot);
+      const blocking = state === 'invalid-base-commit' && recordedWork(row);
+      // A plain directory with no recorded work to diff stays with the fallback, which diffs its paths against HEAD.
+      if (kind === 'plain' && state !== 'realized' && !blocking) continue;
+      owned.forEach((path) => claimed.add(path));
+      handledSubs.add(subReal);
+      if (state !== 'realized') {
+        const reason = stateReason(usable, name, repositoryRoot, state);
+        // A plain sub path may be an own repository that lost its `.git`: say so, or the reason points only at the base.
+        skip(name, state, kind === 'plain' ? `${reason}; ${prefix} is not a separate git repository` : reason, blocking);
+        continue;
+      }
+      const baseCommit = usable.baseCommitByRepo[name];
+      if (typeof baseCommit !== 'string') { notReviewed.push({ subWorkspace: name, state: 'invalid-base-commit', reason: 'no usable base commit' }); continue; }
+      if (stranded) { strand(); continue; }
+      rowDiffs.push({ fields: { subWorkspace: name, repoPath: row.repoPath, workingRoot: repositoryRoot, baseCommit, includesUncommitted: true, source: 'git-map' }, prefix, specs, root: subReal });
     }
-
-    const specs = target ? owned.map((path) => (path === prefix ? '.' : path.slice(prefix.length + 1))) : undefined;
-    pushRepo({ subWorkspace: sub.name, repoPath: row.repoPath, workingRoot, baseCommit, includesUncommitted: true, source: 'git-map' }, { kind: 'prefix', prefix }, specs);
+    for (const { fields, prefix, specs, root } of rowDiffs) pushRepo(fields, { kind: 'prefix', prefix }, specs, excludesUnder(root));
   }
 
   // Everything no row claimed: monolith, root, artifact-host and plain-monorepo paths, diffed against HEAD.
@@ -362,10 +451,12 @@ export function computeReviewScope(options: ReviewScopeOptions): ReviewScope {
       notReviewed.push({ subWorkspace: path, state: 'outside_project', reason: 'path resolves outside the project through a symlink' });
       continue;
     }
+    if ([...handledSubs].some((sub) => isWithin(sub, realStart))) continue; // a claimed directory row, reached by another spelling
     let top: string;
     try { top = realpathSync(runGit(['-C', realStart, 'rev-parse', '--show-toplevel'])); }
     catch { notReviewed.push({ subWorkspace: path, state: 'no_repository', reason: 'path is not inside a git repository' }); continue; }
     if (handled.has(top)) continue; // already diffed through its git-map row, reached here by another spelling
+    if (mappedTops.has(top)) notReviewed.push({ subWorkspace: path, state: 'unmapped_in_mapped_repo', reason: 'repository has a git-map row with a recorded base; only changes since HEAD were reviewed for this path' });
     const spec = relative(top, join(realStart, relative(start, absolute))).replace(/\\/g, '/') || '.';
     groups.set(top, [...(groups.get(top) ?? []), spec]);
   }
@@ -373,7 +464,8 @@ export function computeReviewScope(options: ReviewScopeOptions): ReviewScope {
     let base: string;
     try { base = runGit(['-C', top, 'rev-parse', '--verify', 'HEAD^{commit}']); }
     catch { notReviewed.push({ subWorkspace: relative(projectReal, top) || '.', state: 'no_head', reason: 'repository has no commit to diff against' }); continue; }
-    pushRepo({ subWorkspace: null, repoPath: relative(projectReal, top).replace(/\\/g, '/') || '.', workingRoot: top, baseCommit: base, includesUncommitted: true, source: 'fallback' }, { kind: 'top', top }, specs);
+    // An entry naming an ancestor directory of a claimed directory row or an own repository must not diff its files again.
+    pushRepo({ subWorkspace: null, repoPath: relative(projectReal, top).replace(/\\/g, '/') || '.', workingRoot: top, baseCommit: base, includesUncommitted: true, source: 'fallback' }, { kind: 'top', top }, specs, excludesUnder(top));
   }
 
   // The orchestrator replays exactly `git -C <key's repo> <porcelainArgs>` before and after; `-uall` lists files inside new directories.
@@ -386,7 +478,12 @@ export function computeReviewScope(options: ReviewScopeOptions): ReviewScope {
     if (!Object.hasOwn(porcelain, key)) porcelain[key] = git(hostTop, PORCELAIN_ARGS).split('\0').filter(Boolean);
   } catch { warnings.push('feature dir is not inside a git repository; reviewer writes there cannot be detected'); }
   const slices = buildSlices(diffs, config, projectRoot, projectReal);
-  return { ok: true, repos, slices, notReviewed, phases, porcelain, porcelainArgs: PORCELAIN_ARGS, warnings, empty: notReviewed.length === 0 && repos.every((repo) => repo.files.length === 0) };
+  return {
+    ok: true, repos, slices, notReviewed, phases, porcelain, porcelainArgs: PORCELAIN_ARGS, warnings,
+    incomplete: notReviewed.some((entry) => entry.blocking === true),
+    // An unmapped path in a mapped repository was diffed against HEAD: its note alone leaves nothing unreviewed.
+    empty: notReviewed.every((entry) => entry.state === 'unmapped_in_mapped_repo') && repos.every((repo) => repo.files.length === 0),
+  };
 }
 
 /** Runs the CLI: `--project-root`, `--feature-dir`, optional `--phase`. Exit 1 = refusal or bad arguments, 2 = unexpected failure. */

@@ -104,6 +104,7 @@ const BLOCKED_HINTS: Record<string, string> = {
   working_tree_changed: 'working tree changed, commit or stash then re-review',
   all_reviewers_failed: 'all reviewers failed, re-review',
   empty_scope: 'empty scope, check the base commit then re-review',
+  scope_incomplete: 'scope incomplete, fix the sub-workspace listed under Scope then re-review',
 };
 
 const blockedReason = (ref: ReviewRef): string =>

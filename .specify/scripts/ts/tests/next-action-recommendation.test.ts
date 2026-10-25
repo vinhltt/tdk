@@ -182,6 +182,7 @@ describe('done rules', () => {
       ['working_tree_changed', 'commit or stash then re-review'],
       ['all_reviewers_failed', 'all reviewers failed, re-review'],
       ['empty_scope', 'check the base commit'],
+      ['scope_incomplete', 'scope incomplete'],
       ['', 'no reason recorded'],
     ];
     for (const [blockedReason, text] of cases) {

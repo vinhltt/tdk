@@ -190,7 +190,7 @@ describe('collectReviewSummary', () => {
   });
 
   it('reports blocked_reason only for blocked reviews', () => {
-    for (const reason of ['empty_scope', 'working_tree_changed', 'all_reviewers_failed']) {
+    for (const reason of ['empty_scope', 'working_tree_changed', 'all_reviewers_failed', 'scope_incomplete']) {
       const dir = makeFeature({ 'reviews/20261010-090000-full.md': review({ verdict: 'blocked', blocked_reason: reason, generated_at: '2026-10-10T09:00:00+07:00' }) });
       expect(summarize(dir).latestFull?.blockedReason).toBe(reason);
     }

@@ -14,7 +14,7 @@ mode: standard            # quick | standard | deep
 scope: full               # full | phase-NN
 focus: ""                 # the user's focus text, redacted; empty when none
 verdict: changes_requested   # pass | pass_with_concerns | changes_requested | blocked
-blocked_reason: ""        # empty_scope | working_tree_changed | all_reviewers_failed; empty unless blocked
+blocked_reason: ""        # scope_incomplete | empty_scope | working_tree_changed | all_reviewers_failed; empty unless blocked
 repos:
   - sub_workspace: api    # null when the repo is not a sub-workspace
     repo_path: apps/api

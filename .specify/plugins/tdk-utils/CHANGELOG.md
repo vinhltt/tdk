@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.5.3] - 2026-10-25
+
+### Changed
+- tdk-branch-preflight: git-map contract defines repository classes (own, inner, plain, none) shared by /tdk-status and /tdk-review; `Worktree path` is defined only for own rows and the identity gate still covers every worktree operation
+
 ## [4.5.2] - 2026-10-25
 
 ### Changed

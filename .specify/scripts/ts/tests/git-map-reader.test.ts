@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { readGitMap, probeSubWorkspaces } from '../src/utils/git-map';
+import { classifySubWorkspaceRepo, readGitMap, probeSubWorkspaces } from '../src/utils/git-map';
 import type { SubWorkspace } from '../src/utils/types';
 
 const roots: string[] = [];
@@ -63,6 +63,26 @@ created: 2026-08-24
 | api | apps/api | - | origin/develop | - |
 `;
 
+/** Row for `core`, a plain directory inside the nested repo at `apps/be`. */
+function innerMap(worktreePath = '-'): string {
+  return REALIZED_MAP.replace(
+    '| api | apps/api | feature/sample-001 | origin/main | - |',
+    `| core | apps/be/core | feature/sample-001 | origin/main | ${worktreePath} |`,
+  );
+}
+
+const INNER_SUBS: SubWorkspace[] = [{ name: 'core', path: 'apps/be/core' }];
+
+/** A nested clone at `apps/be` holding a `core` directory, checked out on `branch`. */
+function makeInnerRepo(root: string, branch: string): string {
+  const be = makeRepo(root, 'apps/be', branch);
+  mkdirSync(join(be, 'core'), { recursive: true });
+  writeFileSync(join(be, 'core', 'index.ts'), 'export {};\n');
+  execFileSync('git', ['add', '.'], { cwd: be });
+  execFileSync('git', ['commit', '-qm', 'core'], { cwd: be });
+  return be;
+}
+
 describe('readGitMap', () => {
   it('returns null when git-map.md is absent', () => {
     expect(readGitMap(makeWorkspace())).toBeNull();
@@ -101,6 +121,59 @@ describe('readGitMap', () => {
     const featureDir = join(makeWorkspace(), 'feature');
     writeGitMap(featureDir, REALIZED_MAP.replace('feature/sample-001\nmilestone', 'bad branch!\nmilestone'));
     expect(readGitMap(featureDir)!.featureBranch).toBeNull();
+  });
+});
+
+describe('classifySubWorkspaceRepo', () => {
+  it('classifies a repository root as own', () => {
+    const root = makeWorkspace();
+    const api = makeRepo(root, 'apps/api', 'develop');
+
+    expect(classifySubWorkspaceRepo(root, api)).toEqual({ kind: 'own', top: api });
+  });
+
+  it('classifies a directory inside a nested clone as inner', () => {
+    const root = makeWorkspace();
+    const be = makeInnerRepo(root, 'develop');
+
+    expect(classifySubWorkspaceRepo(root, join(be, 'core'))).toEqual({ kind: 'inner', top: be });
+  });
+
+  it('classifies a directory inside a submodule as inner', () => {
+    const root = makeWorkspace();
+    execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: root });
+    const upstream = makeInnerRepo(makeWorkspace(), 'main');
+    // Local file transport is blocked by default; allow it for this one command only.
+    execFileSync('git', ['-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', upstream, 'apps/be'], { cwd: root });
+
+    expect(classifySubWorkspaceRepo(root, join(root, 'apps/be/core'))).toEqual({ kind: 'inner', top: join(root, 'apps/be') });
+  });
+
+  it('classifies a directory of the workspace repo as plain', () => {
+    const root = makeWorkspace();
+    execFileSync('git', ['init', '-q', '-b', 'epic-1'], { cwd: root });
+    const api = join(root, 'apps/api');
+    mkdirSync(api, { recursive: true });
+
+    expect(classifySubWorkspaceRepo(root, api)).toEqual({ kind: 'plain', top: root });
+  });
+
+  it('classifies a directory of a repo enclosing the workspace as plain', () => {
+    const outer = makeWorkspace();
+    execFileSync('git', ['init', '-q', '-b', 'outer-main'], { cwd: outer });
+    const workspaceRoot = join(outer, 'nested/workspace');
+    const api = join(workspaceRoot, 'apps/api');
+    mkdirSync(api, { recursive: true });
+
+    expect(classifySubWorkspaceRepo(workspaceRoot, api)).toEqual({ kind: 'plain', top: outer });
+  });
+
+  it('classifies a directory outside any git repository as none', () => {
+    const root = makeWorkspace();
+    const api = join(root, 'apps/api');
+    mkdirSync(api, { recursive: true });
+
+    expect(classifySubWorkspaceRepo(root, api)).toEqual({ kind: 'none', top: null });
   });
 });
 
@@ -273,6 +346,59 @@ describe('probeSubWorkspaces', () => {
     expect(api!.state).toBe('unknown');
     expect(api!.actualBranch).toBeNull();
     expect(api!.note).toBe('not a separate git repository');
+  });
+
+  it('reports the nested repo branch for a directory inside it', () => {
+    const root = makeWorkspace();
+    makeInnerRepo(root, 'feature/sample-001');
+    const featureDir = join(root, 'feature');
+    writeGitMap(featureDir, innerMap());
+
+    const [core] = probeSubWorkspaces(root, INNER_SUBS, readGitMap(featureDir));
+    expect(core!.state).toBe('matched');
+    expect(core!.actualBranch).toBe('feature/sample-001');
+    expect(core!.note).toBeUndefined();
+  });
+
+  it('reports drifted for an inner directory whose repo sits on another branch', () => {
+    const root = makeWorkspace();
+    makeInnerRepo(root, 'develop');
+    const featureDir = join(root, 'feature');
+    writeGitMap(featureDir, innerMap());
+
+    const [core] = probeSubWorkspaces(root, INNER_SUBS, readGitMap(featureDir));
+    expect(core!.state).toBe('drifted');
+    expect(core!.actualBranch).toBe('develop');
+    expect(core!.expectedBranch).toBe('feature/sample-001');
+  });
+
+  it('leaves the branch unknown for an inner directory with a recorded worktree', () => {
+    const root = makeWorkspace();
+    const be = makeInnerRepo(root, 'develop');
+    const worktree = join(root, '_worktrees/be/feature-sample-001');
+    execFileSync('git', ['worktree', 'add', '-q', '-b', 'feature/sample-001', worktree], { cwd: be });
+    const featureDir = join(root, 'feature');
+    writeGitMap(featureDir, innerMap('_worktrees/be/feature-sample-001'));
+
+    const [core] = probeSubWorkspaces(root, INNER_SUBS, readGitMap(featureDir));
+    expect(core!.state).toBe('unknown');
+    expect(core!.actualBranch).toBeNull();
+    expect(core!.note).toBe('nested worktree layout undefined');
+  });
+
+  it('reads the nested repo branch when an inner directory\'s recorded worktree is gone', () => {
+    const root = makeWorkspace();
+    const be = makeInnerRepo(root, 'feature/sample-001');
+    const worktree = join(root, '_worktrees/be/feature-sample-001');
+    execFileSync('git', ['worktree', 'add', '-q', '-b', 'feature/sample-002', worktree], { cwd: be });
+    rmSync(worktree, { recursive: true, force: true });
+    const featureDir = join(root, 'feature');
+    writeGitMap(featureDir, innerMap('_worktrees/be/feature-sample-001'));
+
+    const [core] = probeSubWorkspaces(root, INNER_SUBS, readGitMap(featureDir));
+    expect(core!.state).toBe('matched');
+    expect(core!.actualBranch).toBe('feature/sample-001');
+    expect(core!.note).toBe('recorded worktree is missing');
   });
 
   it('reports not-created for a configured sub-workspace the task never touched', () => {

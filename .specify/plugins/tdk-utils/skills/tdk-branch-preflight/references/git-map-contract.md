@@ -470,6 +470,13 @@ impossible: every `git -C <missing>` fails, so nothing can tell whether the bran
 the `worktree list`/`prune` that the re-attach path depends on. `workingRoot` falls back to
 `repositoryRoot`, the guard reports that the worktree is gone, and re-attach proceeds.
 
+`repositoryRoot` stays `$PROJECT_DIR/<sub-path>` for every repository class (below). For an `inner` row it is a
+directory inside the enclosing repository, and git answers branch metadata for that repository through it. A
+`Worktree path` is defined only for an `own` row. On an `inner` or `plain` row the layout is not defined yet: never
+create a worktree for it or dispatch into one. A recorded worktree that exists is never used: `/tdk-status` reports an
+`inner` row with one as `nested worktree layout undefined`, and `/tdk-review` blocks when the row has recorded work (a
+branch and a recorded base, not cleaning or cleaned). One that no longer exists falls back to `repositoryRoot` as above.
+
 ### Repository identity gate
 
 Applied before every create, checkout, worktree operation, cleanup and phase dispatch.
@@ -484,6 +491,21 @@ Applied before every create, checkout, worktree operation, cleanup and phase dis
 
 `--git-common-dir` answers relative to the repository, so it must be resolved against the root it was
 read from rather than against the caller's working directory.
+
+#### Repository classes
+
+`git -C <repositoryRoot> rev-parse --show-toplevel`, compared by real path, puts every row in one class. One shared
+helper decides it for `/tdk-status` and `/tdk-review`; neither restates the rule.
+
+| Class | Toplevel of `repositoryRoot` | `/tdk-status` | `/tdk-review` |
+|---|---|---|---|
+| `own` | `repositoryRoot` itself | branch read at `workingRoot`, worktree checks above | diff from the recorded base at `workingRoot` |
+| `inner` | a nested clone or submodule strictly inside the workspace | that repository's branch, which preflight created there | diff from the recorded base at `repositoryRoot`, in sub-path coordinates |
+| `plain` | the workspace's own repository, or one enclosing the workspace | `unknown`: `not a separate git repository` | realized: diff from the recorded base at `repositoryRoot`; a recorded base that is not in the repository blocks a row with recorded work; otherwise its paths are diffed against `HEAD` |
+| none | not a working tree | `unknown`: `not a git working tree` | lifecycle state decides |
+
+The identity gate above still applies to every worktree operation, whatever the class. Only an `own` row has a defined
+`Worktree path` (see Two roots), so its `workingRoot` checks are the only ones that ever pass for a worktree.
 
 ## Worktree name derivation
 

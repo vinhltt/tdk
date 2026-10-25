@@ -6,7 +6,7 @@ compatibility: "Requires a task with plan.md and at least one phase with status 
 user-invocable: true
 license: MIT
 metadata:
-  version: "14.3.3"
+  version: "14.3.4"
   category: "Analysis & Review"
   requires:
     - tdk-implement (phases marked done)

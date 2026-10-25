@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-10-25T11:00:35Z",
+  "generated_at": "2026-10-25T12:34:45Z",
   "plugins": {
     "tdk-core": {
-      "version": "14.3.3",
+      "version": "14.3.4",
       "components": {
         "skills": {
           "tdk-archive": {
@@ -22,13 +22,13 @@
             "version": "14.2.1"
           },
           "tdk-review": {
-            "version": "14.3.3"
+            "version": "14.3.4"
           },
           "tdk-specify": {
             "version": "14.3.0"
           },
           "tdk-status": {
-            "version": "14.3.1"
+            "version": "14.3.4"
           }
         },
         "agents": {},
@@ -41,10 +41,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e94fd7a0f43ccf93767b3eb6c87adec554f4846b89f5e62f6caa22f700a68c31",
-        ".claude-plugin/plugin.json": "b966ef1a9a669c4ea7a538f187b6c45b9597e83de47186bd8de404056c09c667",
-        ".codex-plugin/plugin.json": "70ceeb162a7cb7ee979a6bec75998215b0a97bb661279492661ed7db0751bbd2",
-        ".cursor-plugin/plugin.json": "70ceeb162a7cb7ee979a6bec75998215b0a97bb661279492661ed7db0751bbd2",
-        "CHANGELOG.md": "aceb6ae3a8952d884ac74dce1a46d516cc9d384771e565d0641ab0639c3740e7",
+        ".claude-plugin/plugin.json": "071458ab48ea045aff7b275ae919fc18d7bce98f1f76c9d5df017eec7bf1fcc3",
+        ".codex-plugin/plugin.json": "f424a97ac8feb7d0b439d3297bd38917dda69f6aa8c64d64418cbf9e0986bcbd",
+        ".cursor-plugin/plugin.json": "f424a97ac8feb7d0b439d3297bd38917dda69f6aa8c64d64418cbf9e0986bcbd",
+        "CHANGELOG.md": "4fe05f8d3c8a4bd879bcf1277252873839c7557d2f0551b7f8fe086d79f6ac91",
         "hooks/destructive-command-block.cjs": "8973b014c2f2eb59a481c1747b5395572dcc630029b4434f151843bea6b4cb8a",
         "hooks/dev-context-injector.cjs": "755a4fc0ffa941c8165f27b38c619d1030f68b16782ac2d6ca04047895162c2c",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
@@ -87,16 +87,16 @@
         "skills/tdk-plan/references/scope-challenge.md": "9f341caed80d5e83989c2e83efc24e8aec7ffcaf84d512919990b0e75dbc1913",
         "skills/tdk-plan/references/validate-question-framework.md": "78e4736f6462c4901c3ed30f0bc0226aa7cbf19ec4543fae8a50a94fddbfd897",
         "skills/tdk-plan/references/validate-workflow.md": "55062a02fb20504b7e281b65e00a353e9e7654dfd9a1f7ea8028d9aa4976b4d5",
-        "skills/tdk-review/SKILL.md": "e2fc717ee923c5c0e83db7de4714cf4e1ebf269491c290692fc86d7d8c8403a5",
-        "skills/tdk-review/references/report-contract.md": "9b2563aef60e578821c6477840c81c4176a09de3f6137e6876b34a3aab77a772",
-        "skills/tdk-review/references/review-orchestration.md": "0c1ed7ae1943ec5194609b4fe5482cd5d4af78d2ad535a7e3542b5a20cf93b4d",
+        "skills/tdk-review/SKILL.md": "7f26c384a94464e91c1c2cd1d766010b22e24db39794cd9c8f18be511042adf7",
+        "skills/tdk-review/references/report-contract.md": "502c7506dd049a0af44ca30a7399b061f5c1f425bff356585958a2ef90bb5de8",
+        "skills/tdk-review/references/review-orchestration.md": "16c7872550aa40ac75e224d7f834a18919cd3b43bf9c210a573a12282373d66e",
         "skills/tdk-review/scripts/RUNTIME-LICENSE.txt": "546f141bc7c20ed1fd339d905c922ecc36295a61bd74627b9449a18282c9714a",
         "skills/tdk-review/scripts/build.ts": "e4555c1ae5416131ae79da507deca92647cd4be4a7984956cf963dbb1bef9810",
         "skills/tdk-review/scripts/bun.lock": "40a5341c6099a3d8b62d971603ac430b8ba6a89052663defa7bc4d1ad7e580df",
         "skills/tdk-review/scripts/package.json": "530e18265171560cf285ecfa20aa5cc7ba1c75805f9909a3df277eb697d02195",
         "skills/tdk-review/scripts/review-redaction.ts": "fad41196851b052157071aaba3a2427df74836093606736f4bf066068b36c11f",
-        "skills/tdk-review/scripts/review-scope.js": "e409f7fb8c2a4e86ffd408589e9293a2fb2abd5d092dd199b496151568aed332",
-        "skills/tdk-review/scripts/review-scope.ts": "3e4c58ad81264572ad14c78c84ec51ca4c4d1b15a685c296c5109fe035ef2fae",
+        "skills/tdk-review/scripts/review-scope.js": "9aa93b3b4673dadf3065380debf1eb03d786cc6edcc1c0f71264afd1b7d5911a",
+        "skills/tdk-review/scripts/review-scope.ts": "9d905784858b39c0ef70a771be8a86ef6d6e57b1654b377b9ca21cd2513bea8f",
         "skills/tdk-review/scripts/review-write-report.js": "1cb76fec601b6ca5945ec7cf993707a448a0162dbd47a3dd8550b5576102f84a",
         "skills/tdk-review/scripts/review-write-report.ts": "4b2f477b821e329ec959756c4df83f21520a1caa04e6b1fb8afefaa91fbeca98",
         "skills/tdk-review/scripts/tsconfig.json": "2825ddd3e39b6cf920d5e61f7e57e4efcd597874ee9e8e8ee128f559d242b79c",
@@ -107,7 +107,7 @@
         "skills/tdk-specify/references/spec-generation-and-validation-workflow.md": "52ef1f540f6cbd7b8100a671ae76c05b3cf6eeb5dbb991c95a702cb90195c6f0",
         "skills/tdk-specify/references/spec-quality-guidelines.md": "62a9bb7514dc2e720d222882ad64b9f4074a910bdbf31e3c158e5e04b9edd1a1",
         "skills/tdk-specify/references/spec-writing-principles.md": "6d8b472745116c8bc9a6c09d7f1bd759fa3cac2a2c3e9fbe401da914202a6158",
-        "skills/tdk-status/SKILL.md": "85952293be472e89115466e8a6f2c0e8ba322ceab14708fe20a066f408b68c88"
+        "skills/tdk-status/SKILL.md": "5c0469b9aa4ef0402306d53324e7dd08d6a0e732793f4a47dded3626585a8d55"
       }
     },
     "tdk-epic": {
@@ -493,7 +493,7 @@
       }
     },
     "tdk-utils": {
-      "version": "4.5.2",
+      "version": "4.5.3",
       "components": {
         "skills": {
           "brainstorming": {
@@ -521,7 +521,7 @@
             "version": "1.11.3"
           },
           "tdk-branch-preflight": {
-            "version": "4.2.2"
+            "version": "4.5.3"
           },
           "tdk-handoff": {
             "version": "4.5.2"
@@ -573,10 +573,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e68f07c43a122d63dbd44fafbd978b0adb4f5f18bb95537f80014e859846f8b4",
-        ".claude-plugin/plugin.json": "c5d1a52b1339c296c28fbf170054959457f69f604d03ae0c86493d555d51f4b5",
-        ".codex-plugin/plugin.json": "c5d1a52b1339c296c28fbf170054959457f69f604d03ae0c86493d555d51f4b5",
-        ".cursor-plugin/plugin.json": "c5d1a52b1339c296c28fbf170054959457f69f604d03ae0c86493d555d51f4b5",
-        "CHANGELOG.md": "7d4d9911a811bfe39fa74b3737931ef534785c274239fea238ce2308bede75ca",
+        ".claude-plugin/plugin.json": "f1ece046c737d616317db50bb03115a53115a4dea3b2ce41571be92ec8f47fe9",
+        ".codex-plugin/plugin.json": "f1ece046c737d616317db50bb03115a53115a4dea3b2ce41571be92ec8f47fe9",
+        ".cursor-plugin/plugin.json": "f1ece046c737d616317db50bb03115a53115a4dea3b2ce41571be92ec8f47fe9",
+        "CHANGELOG.md": "353dd75355656bbf034c07f5c180e8dfa0863a78f66b9a0ef5f660119aeadc1b",
         "agents/researcher.md": "239051264f41b129ef5c59adb573b7e762a528bb58d0ff8dd1e32eee243baaaf",
         "agents/tdk-code-reviewer.md": "84af7c3fa4785bc6e78bc9026ed6ee704c6bc70e3d1d146789138b2a299e83fe",
         "agents/tdk-counsel.md": "13965ba125b16a201b0fb1b412532447ca1279fd0217bc8977b19858ff86456f",
@@ -622,8 +622,8 @@
         "skills/shard-doc/scripts/engine.py": "bed943baa1c0ef1bb1f473a96ef8364fa7be59b4fd2b9350cbd6fd71dbb2c895",
         "skills/shard-doc/scripts/rewriter.py": "207f8720d64941ad7a7db65f8319109c9b80628aa2fda52062edb03c9155e36d",
         "skills/shard-doc/scripts/shard_doc.py": "e53a901abdc383f8458245fce9fa739bb19dac07eb60455dd004d31be33f3b08",
-        "skills/tdk-branch-preflight/SKILL.md": "ce8d39adac847a56029c4400c90ad877ed5fef52194ba6dfe1078bd9f8f839a0",
-        "skills/tdk-branch-preflight/references/git-map-contract.md": "bc14c517be382195f1ea4a56921ff656a85a47099f58ceccc823fb3f7e0df6e0",
+        "skills/tdk-branch-preflight/SKILL.md": "e782edd472cc89916a29182f61991268e62dda40f199b630ce249b76c7330037",
+        "skills/tdk-branch-preflight/references/git-map-contract.md": "5ec4e7e35af658a5f01fbc71b038002c522461bcc799c0f29d89cc9b08a02f4a",
         "skills/tdk-handoff/LICENSE.txt": "1bd321a3b9cfa8d4af2105e20edd69d830df0b28e83a1b0255558f888e493981",
         "skills/tdk-handoff/SKILL.md": "31cdbfb997e61c980e119aa7643a3e56d3f54300425b395f19eb48688ee6eda8",
         "skills/tdk-handoff/references/artifact-schema.md": "b5086ac6464958d27784dc166db2b19d7dd29a56ca81066fabe1add40a3a61f8",

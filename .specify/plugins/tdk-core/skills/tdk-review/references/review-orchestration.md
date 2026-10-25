@@ -8,15 +8,16 @@ Algorithms for `/tdk-review`. The TS helpers own scope and routing decisions; th
 bun --no-install "<loaded-skill-root>/scripts/review-scope.js" --project-root <project-root> --feature-dir <FEATURE_DIR> [--phase NN]
 ```
 
-Success JSON: `repos[]` (`subWorkspace`, `repoPath`, `workingRoot`, `baseCommit`, `includesUncommitted`, `source`, `files`, `diffLines`, `truncated`), `slices[]` (`id`, `repoPath`, `subWorkspace`, `files`, `routingPaths`, `diffLines`, `truncated`, `pieces[]` with `index`, `files`, `diff`, `diffLines`, `oversized`), `notReviewed[]`, `phases` (`reviewed`, `skipped`), `porcelain`, `porcelainArgs`, `warnings`, `empty`.
+Success JSON: `repos[]` (`subWorkspace`, `repoPath`, `workingRoot`, `baseCommit`, `includesUncommitted`, `source`, `files`, `diffLines`, `truncated`), `slices[]` (`id`, `repoPath`, `subWorkspace`, `files`, `routingPaths`, `diffLines`, `truncated`, `pieces[]` with `index`, `files`, `diff`, `diffLines`, `oversized`), `notReviewed[]` (`subWorkspace`, `state`, `reason`, optional `blocking`), `phases` (`reviewed`, `skipped`), `porcelain`, `porcelainArgs`, `warnings`, `incomplete`, `empty`.
 
 - `repos[]` is the physical repository: base commit, working root, integrity, `files`, `diffLines`, `truncated`. It carries no diff text.
-- `slices[]` is the unit of review: the files of one repo owned by one sub-workspace (`subWorkspace: null` when no configured path owns them). `files` are repo-relative evidence coordinates; `routingPaths` are the same files in project coordinates, for routing only. The diff text lives only in `pieces[].diff`: whole files packed to a 1500-line target, one file per piece when it alone is larger (`oversized: true`). A file with no content (a `truncated` directory or unreadable entry) is in no piece; a slice whose `pieces` is empty is listed as stat only and is never dispatched, counted, or treated as unreviewed. Slice identity, ownership, coordinates and packing belong to the helper. Never re-derive, merge, re-split or re-pack them.
+- `slices[]` is the unit of review: the files of one repo owned by one sub-workspace (`subWorkspace: null` when no configured path owns them). `files` are `repoPath`-relative evidence coordinates; `routingPaths` are the same files in project coordinates, for routing only. The diff text lives only in `pieces[].diff`: whole files packed to a 1500-line target, one file per piece when it alone is larger (`oversized: true`). A file with no content (a `truncated` directory or unreadable entry) is in no piece; a slice whose `pieces` is empty is listed as stat only and is never dispatched, counted, or treated as unreviewed. Slice identity, ownership, coordinates and packing belong to the helper. Never re-derive, merge, re-split or re-pack them.
 
 - Exit 1 with `ok:false`: STOP and report `error`/`message`. `phase_in_progress` and `phase_not_done` mean the user must finish or pick a done phase; do not narrow the scope yourself to get past them.
+- `incomplete: true`: spawn nothing. Go to the write step with `verdict: blocked` and reason `scope_incomplete`, and list every `notReviewed[]` row with `blocking: true` under Scope with its reason.
 - `empty: true`: spawn nothing. Go to the write step with `verdict: blocked` and reason `empty_scope`.
 - `pieces[].diff` already contains the content of untracked files as new-file diffs, and `diffLines` counts it. Entries in `truncated` have `--stat` only: list them in the report under Scope as "stat only" and never claim they were reviewed.
-- `notReviewed[]` rows are listed in the report under Scope, with their reason. Never treat them as an empty diff.
+- `notReviewed[]` rows are listed in the report under Scope, with their reason. Never treat them as an empty diff. The one exception is `unmapped_in_mapped_repo`, which is a note, not a skipped row. Its path was diffed against `HEAD` only, so its committed changes since the row's base are out of scope. It never blocks, and it does not stop the helper from reporting `empty: true`.
 - Surface every `warnings[]` entry in the report.
 
 ## 2. Integrity snapshot
@@ -27,7 +28,7 @@ Before dispatching anything, run for every key in `porcelain` (a repo path relat
 git -C <project-root>/<key> <porcelainArgs...>
 ```
 
-and compare with the `porcelain[key]` the scope helper recorded. Keep the "before" result. Re-run after all reviewers return (step 7). Any difference other than the one pending report file sets `verdict: blocked` with reason `working_tree_changed` and names the reviewers that were running. This is detection only: never revert anything.
+and compare with the `porcelain[key]` the scope helper recorded. Two keys can snapshot the same repository (a directory sub-workspace and the host `.`, or two directory sub-workspaces of one repository): compare each key on its own, and apply the report-file exemption per key. Keep the "before" result. Re-run after all reviewers return (step 7). Any difference other than the one pending report file sets `verdict: blocked` with reason `working_tree_changed` and names the reviewers that were running. This is detection only: never revert anything.
 
 ## 3. Routing
 
@@ -110,7 +111,7 @@ Union the verified findings and dedupe by `(repoPath, file, line ±2, lens-agnos
 
 | Verdict | When |
 |---|---|
-| `blocked` | empty scope, a working-tree change during review, or (standard and deep) every dispatched invocation failed or was skipped (`all_reviewers_failed`) |
+| `blocked` | a git-map row with a branch and a recorded base that could not be diffed (`scope_incomplete`), empty scope, a working-tree change during review, or (standard and deep) every dispatched invocation failed or was skipped (`all_reviewers_failed`) |
 | `changes_requested` | any `critical` or `high` finding, or any criterion `missing` after spec synthesis |
 | `pass_with_concerns` | only `medium` or `low` findings, any spec coverage gap, or any unreviewed slice |
 | `pass` | none of the above |
