@@ -1,5 +1,5 @@
 import type { ExistingIssue } from "./osv-issue-sync-planner";
-import { issueIdentity, object, parseGithubIssuePage, text, tokenRemediation, type SyncConfig } from "./osv-issue-sync-input";
+import { issueNumber, object, parseGithubIssuePage, tokenRemediation, type SyncConfig } from "./osv-issue-sync-input";
 export { loadSyncConfig, parseExistingIssues } from "./osv-issue-sync-input";
 
 export interface IssuePatch { title?: string; body?: string; labels?: string[]; state?: "open" }
@@ -25,12 +25,6 @@ export class GithubIssueClient {
     return this.request(`${this.config.apiUrl}${path}`, method, body);
   }
 
-  async validateToken(): Promise<void> {
-    const result = await this.rest("/user");
-    try { text(object(result).login); }
-    catch { throw new Error(`GitHub token validation returned unexpected user data. ${tokenRemediation}`); }
-  }
-
   async listSecurityIssues(): Promise<ExistingIssue[]> {
     const issues: ExistingIssue[] = [];
     for (let page = 1; ; page++) {
@@ -40,39 +34,16 @@ export class GithubIssueClient {
     }
   }
 
-  async createIssue(payload: { title: string; body: string; labels: string[] }): Promise<{ number: number; nodeId: string }> {
-    return issueIdentity(await this.rest(`/repos/${this.config.repo}/issues`, "POST", payload));
+  async createIssue(payload: { title: string; body: string; labels: string[] }): Promise<void> {
+    issueNumber(object(await this.rest(`/repos/${this.config.repo}/issues`, "POST", payload)).number);
   }
 
   async updateIssue(number: number, payload: IssuePatch): Promise<void> {
-    issueIdentity(await this.rest(`/repos/${this.config.repo}/issues/${number}`, "PATCH", payload));
+    issueNumber(object(await this.rest(`/repos/${this.config.repo}/issues/${number}`, "PATCH", payload)).number);
   }
 
   async addComment(number: number, body: string): Promise<void> {
     const result = object(await this.rest(`/repos/${this.config.repo}/issues/${number}/comments`, "POST", { body }));
     if (typeof result.id !== "number" || !Number.isSafeInteger(result.id) || result.id < 1) throw new Error("GitHub returned a malformed comment response");
-  }
-
-  private async graphql(query: string, variables: Record<string, string>): Promise<Record<string, unknown>> {
-    const response = object(await this.request(this.config.graphqlUrl, "POST", { query, variables }));
-    if (response.errors !== undefined && (!Array.isArray(response.errors) || response.errors.length)) throw new Error("GitHub GraphQL returned errors");
-    return object(response.data);
-  }
-
-  async addToProjectWithStatus(nodeId: string): Promise<void> {
-    try {
-      const added = await this.graphql(
-        "mutation($projectId: ID!, $contentId: ID!) { addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) { item { id } } }",
-        { projectId: this.config.projectId, contentId: nodeId },
-      );
-      const itemId = text(object(object(added.addProjectV2ItemById).item).id);
-      const updated = await this.graphql(
-        "mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) { updateProjectV2ItemFieldValue(input: {projectId: $projectId, itemId: $itemId, fieldId: $fieldId, value: {singleSelectOptionId: $optionId}}) { projectV2Item { id } } }",
-        { projectId: this.config.projectId, itemId, fieldId: this.config.statusFieldId, optionId: this.config.todoOptionId },
-      );
-      text(object(object(updated.updateProjectV2ItemFieldValue).projectV2Item).id);
-    } catch {
-      console.warn("::warning::Issue saved, but Project Todo placement failed. Add it to the board manually and check TDK_BUILDER_PROJECT_ID, TDK_BUILDER_STATUS_FIELD_ID, TDK_BUILDER_TODO_OPTION_ID and the PAT project scope.");
-    }
   }
 }

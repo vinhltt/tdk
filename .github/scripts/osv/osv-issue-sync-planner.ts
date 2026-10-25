@@ -3,7 +3,6 @@ import { issueMarkerKey, packageMarkerKey, renderIssueBody, storedGroupIds } fro
 
 export interface ExistingIssue {
   number: number;
-  nodeId: string;
   title: string;
   body: string;
   labels: string[];

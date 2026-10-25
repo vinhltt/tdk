@@ -9,7 +9,7 @@ Every PR to `main` runs `dependency-pr-gate` without secrets or path filters. Ba
 
 Introduced CVSS >= 7 blocks; >= 9 is critical, >= 4 moderate, lower positive scores low. If unscored, GHSA database severity HIGH/CRITICAL also blocks; MODERATE/MEDIUM and LOW warn. Unrated findings warn. Existing base advisories do not fail unrelated PRs. The summary lists introduced findings and the pre-existing count. Scanner errors, empty/missing output, no packages, and malformed data fail closed, not as a clean scan.
 
-Pushes to `main`, Monday 03:17 UTC, and `workflow_dispatch` on `main` sync all severities to `vinhltt/tdk-builder`. Findings do not fail sync; invalid configuration/token/API access does. Non-main dispatch cannot run the sync job. The sync job uses Environment `dependency-security`, restricted to `main`, and serializes writes across triggers. Public-repo schedules can disable after 60 days of inactivity; re-enable in Actions and check recent runs after a long idle period.
+Pushes to `main`, Monday 03:17 UTC, and `workflow_dispatch` on `main` sync all severities to issues in the current repository (`vinhltt/tdk`). Findings do not fail sync; invalid configuration/token/API access does. Non-main dispatch cannot run the sync job. The sync job uses Environment `dependency-security`, restricted to `main`, and serializes writes across triggers. Public-repo schedules can disable after 60 days of inactivity; re-enable in Actions and check recent runs after a long idle period.
 
 ## Issue lifecycle
 
@@ -19,42 +19,22 @@ Do not edit the first-line invisible marker `<!-- osv:tdk:<ecosystem>:<package> 
 
 Comments and label updates are separate GitHub API calls. If a run fails after posting the no-longer-detected comment but before adding its label, rerunning can duplicate that comment; successful repeated scans remain quiet.
 
-- Fixed: close manually after the fix lands on `main` (`gh issue close <number> -R vinhltt/tdk-builder`). Re-detection reopens that same completed issue with a regression comment.
-- Accepted risk: `gh issue close <number> --reason 'not planned' -R vinhltt/tdk-builder`. Re-detection leaves it closed without creating another issue.
+- Fixed: close manually after the fix lands on `main` (`gh issue close <number> -R vinhltt/tdk`). Re-detection reopens that same completed issue with a regression comment.
+- Accepted risk: `gh issue close <number> --reason 'not planned' -R vinhltt/tdk`. Re-detection leaves it closed without creating another issue.
 - Duplicate: GitHub `state_reason=duplicate` is a valid manual closure. Keep that thread closed without recreating or reopening it; an existing open matching issue takes precedence.
 - Use `/vwrap-done` only when a plan was created for the fix.
 
-New issues are added to Project #10, Status Todo. A configured board operation failing emits `::warning::` but preserves the issue and successful sync. Missing required vars fail before mutation with remediation text; this differs from an inaccessible/stale configured board ID.
+Issues stay in this repository. Sync does not add them to a GitHub Project or change any Project status.
 
-## Credentials and variables
+## Authentication and permissions
 
-| Setting | Scope | Source |
-|---|---|---|
-| `TDK_BUILDER_ISSUES_TOKEN` | Environment `dependency-security` secret | Owner `vinhltt` classic PAT, `repo` + `project`, expiry <= 90 days |
-| `TDK_BUILDER_REPO` | tdk Actions var | `vinhltt/tdk-builder` |
-| `TDK_BUILDER_PROJECT_ID` | tdk Actions var | builder `vwrap-settings.json`: `github.project.id` |
-| `TDK_BUILDER_STATUS_FIELD_ID` | tdk Actions var | `github.project.statusFieldId` |
-| `TDK_BUILDER_TODO_OPTION_ID` | tdk Actions var | `github.project.statuses.todo` |
+No personal access token, custom secret, or repository variable is required. The workflow passes the built-in `github.token` as `GH_TOKEN`; the script takes its destination from Actions' `GITHUB_REPOSITORY`, not a separate target-repository setting.
 
-The personal PAT can access the owner's private repos: this is an accepted trade-off, not a fine-grained repo-scoped credential. Never paste its value into issues, source, chat, command arguments, or logs. Set it directly:
+The workflow defaults to `contents: read`. Only the main-only `dependency-issue-sync` job grants `contents: read` and `issues: write`; the PR gate remains read-only. Keep Environment `dependency-security` restricted to the branch `main`, not tags. The environment is a deployment boundary, not a credential store for this workflow.
 
-```bash
-gh secret set TDK_BUILDER_ISSUES_TOKEN --env dependency-security -R vinhltt/tdk
-gh secret list --env dependency-security -R vinhltt/tdk
-```
+GitHub Actions uses a repository installation token, not a user PAT. The script therefore does not call `/user`. It first lists the repository's security issues; a failed list stops before issue mutations, and any failed REST write fails the job. For missing-token or HTTP 401/403 failures, check the `GH_TOKEN` mapping, the sync job's `issues: write` permission, enabled repository Issues, and applicable Actions policies. Never copy a token into source, issues, command arguments, logs, or chat.
 
-PAT expiry is not exposed by the secret metadata API. Record the issuance/expiry date in the owner's credential inventory when provisioning; deployment verification must record the supplied expiry before rollout is complete. Rotate before that date: issue a new classic PAT with the same scopes and <=90-day lifetime, replace the Environment secret using the command above, dispatch a scan and observe successful issue access, then revoke the old PAT. Never substitute the local `gh` OAuth login token.
-
-Reset vars from the builder workspace (IDs are not secret):
-
-```bash
-gh variable set TDK_BUILDER_REPO -R vinhltt/tdk --body vinhltt/tdk-builder
-gh variable set TDK_BUILDER_PROJECT_ID -R vinhltt/tdk --body "$(jq -r .github.project.id vwrap-settings.json)"
-gh variable set TDK_BUILDER_STATUS_FIELD_ID -R vinhltt/tdk --body "$(jq -r .github.project.statusFieldId vwrap-settings.json)"
-gh variable set TDK_BUILDER_TODO_OPTION_ID -R vinhltt/tdk --body "$(jq -r .github.project.statuses.todo vwrap-settings.json)"
-```
-
-Create all severity labels plus `security`, `dependencies`, and `no-longer-detected` on the destination before rollout. Environment deployment branch policies must allow only the branch `main`, not tags.
+Before rollout, create these labels in `vinhltt/tdk`: `security`, `dependencies`, `severity:critical`, `severity:high`, `severity:moderate`, `severity:low`, `severity:unrated`, and `no-longer-detected`. The REST client applies existing labels; it does not provision them.
 
 ## Verification and rollout
 
@@ -66,4 +46,4 @@ The rollout plan configures `main dependency gate` requiring the exact `dependen
 
 Actions are pinned to immutable commit SHAs with release comments. Scanner Linux amd64 version and SHA are workflow env values. On scanner upgrade, download the release checksum manifest, verify the binary, and repeat the proof: all lockfiles return nonzero package counts, transitive packages present, known-vulnerable sample exit 1, clean sample exit 0, empty dir exit 128, bad flag error. Update parser and sanitized fixtures together if output changed. Wrapper accepts scanner 0/1 only and requires a nonempty result file.
 
-Rollback: disable/delete the workflow, remove the dependency ruleset (or fallback protection), remove the Environment secret and revoke its PAT, then remove the four Actions vars. Existing issues remain for manual triage/close. Keep unrelated branch protections. The builder writable-zone rule can remain.
+Rollback: disable/delete the workflow and remove only its dependency ruleset (or fallback protection). There is no personal token to revoke or custom secret/variable to remove. Existing issues and labels remain for manual triage. Keep unrelated branch protections. The builder writable-zone rule can remain.

@@ -61,6 +61,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: dependency-security
+    permissions:
+      contents: read
+      issues: write
     concurrency:
       group: dep-issue-sync
       cancel-in-progress: false
@@ -78,11 +81,7 @@ jobs:
         run: bash .github/scripts/osv/run-osv-scan.sh . "$RUNNER_TEMP/osv-scan.json"
       - name: Sync dependency issues
         env:
-          GH_TOKEN: ${{ secrets.TDK_BUILDER_ISSUES_TOKEN }}
-          TDK_BUILDER_REPO: ${{ vars.TDK_BUILDER_REPO }}
-          TDK_BUILDER_PROJECT_ID: ${{ vars.TDK_BUILDER_PROJECT_ID }}
-          TDK_BUILDER_STATUS_FIELD_ID: ${{ vars.TDK_BUILDER_STATUS_FIELD_ID }}
-          TDK_BUILDER_TODO_OPTION_ID: ${{ vars.TDK_BUILDER_TODO_OPTION_ID }}
+          GH_TOKEN: ${{ github.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           if [[ "$FIXTURE" == 'none' ]]; then

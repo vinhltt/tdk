@@ -14,7 +14,7 @@ const create = (findings = [finding()]) => {
   return action;
 };
 const issue = (overrides: Partial<ExistingIssue> = {}): ExistingIssue => ({
-  number: 1, nodeId: "I_1", title: "Existing", body: create().body,
+  number: 1, title: "Existing", body: create().body,
   labels: ["security", "dependencies", "severity:high", "team-owned"],
   state: "open", stateReason: null, ...overrides,
 });

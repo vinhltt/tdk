@@ -46,8 +46,7 @@ async function applyActions(client: GithubIssueClient, actions: IssueAction[], e
   for (const action of actions) {
     if (action.kind === "noop") continue;
     if (action.kind === "create") {
-      const created = await client.createIssue({ title: action.title, body: action.body, labels: action.labels });
-      await client.addToProjectWithStatus(created.nodeId);
+      await client.createIssue({ title: action.title, body: action.body, labels: action.labels });
     } else if (action.kind === "mark-not-detected") {
       const issue = existing.find((candidate) => candidate.number === action.issue);
       if (!issue) throw new Error("Cannot mark an issue absent from the validated security issue list");
@@ -75,7 +74,6 @@ export async function runIssueSync(
     return actions;
   }
   const client = new GithubIssueClient(config!, fetcher);
-  await client.validateToken();
   const existing = await client.listSecurityIssues();
   const actions = planIssueActions(findings, existing, ctx);
   await applyActions(client, actions, existing);

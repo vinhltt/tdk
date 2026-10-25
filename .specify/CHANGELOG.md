@@ -9,8 +9,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ## [1.127.1] - 2026-10-25
 
 ### Added
-- **[GitHub Config]** OSV dependency security CI scans all Bun lockfiles, gates newly introduced high/critical advisories on PRs, and syncs deduplicated package issues with manual-close lifecycle and Project Todo placement
-- **[Docs]** Maintainer guide covers credential setup, severity policy, issue lifecycle, scanner upgrades, rollout, and rollback
+- **[GitHub Config]** OSV dependency security CI scans all Bun lockfiles, gates newly introduced high/critical advisories on PRs, and syncs deduplicated issues in the current repository with the built-in GitHub Actions token and manual-close lifecycle; no personal token or Project integration
+- **[Docs]** Maintainer guide covers job-level token permissions, severity policy, issue lifecycle, scanner upgrades, rollout, and rollback
 
 ### Removed
 - **[GitHub Config]** Empty Dependabot version-update placeholder; dependency alerts remain independent
