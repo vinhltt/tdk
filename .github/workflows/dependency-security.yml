@@ -1,0 +1,92 @@
+name: dependency-security
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      fixture:
+        description: 'Use the isolated issue-sync verification fixture'
+        type: choice
+        options: [none, dispatch-sample]
+        default: none
+
+permissions:
+  contents: read
+
+env:
+  OSV_SCANNER_VERSION: '2.7.0'
+  OSV_SCANNER_SHA256: '160c6253e2922e9e0a6a9771c5c4c40a4b3c6090b34a3cdd5e80c96cc2e4218b'
+
+jobs:
+  pr-gate:
+    name: dependency-pr-gate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: dep-pr-gate-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+      - name: Test scan model and issue lifecycle
+        run: bun test ./.github/scripts/osv
+      - name: Scan base and head
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/dependency-base" "$BASE_SHA"
+          bash .github/scripts/osv/run-osv-scan.sh "$RUNNER_TEMP/dependency-base" "$RUNNER_TEMP/osv-old.json"
+          bash .github/scripts/osv/run-osv-scan.sh . "$RUNNER_TEMP/osv-new.json"
+          test -s "$RUNNER_TEMP/osv-old.json" && test -s "$RUNNER_TEMP/osv-new.json"
+      - name: Gate newly introduced advisories
+        run: >-
+          bun .github/scripts/osv/osv-pr-gate.ts
+          --old "$RUNNER_TEMP/osv-old.json" --old-root "$RUNNER_TEMP/dependency-base"
+          --new "$RUNNER_TEMP/osv-new.json" --new-root .
+
+  issue-sync:
+    name: dependency-issue-sync
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: dependency-security
+    concurrency:
+      group: dep-issue-sync
+      cancel-in-progress: false
+    env:
+      FIXTURE: ${{ inputs.fixture || 'none' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+      - name: Scan all lockfiles
+        if: env.FIXTURE == 'none'
+        run: bash .github/scripts/osv/run-osv-scan.sh . "$RUNNER_TEMP/osv-scan.json"
+      - name: Sync dependency issues
+        env:
+          GH_TOKEN: ${{ secrets.TDK_BUILDER_ISSUES_TOKEN }}
+          TDK_BUILDER_REPO: ${{ vars.TDK_BUILDER_REPO }}
+          TDK_BUILDER_PROJECT_ID: ${{ vars.TDK_BUILDER_PROJECT_ID }}
+          TDK_BUILDER_STATUS_FIELD_ID: ${{ vars.TDK_BUILDER_STATUS_FIELD_ID }}
+          TDK_BUILDER_TODO_OPTION_ID: ${{ vars.TDK_BUILDER_TODO_OPTION_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [[ "$FIXTURE" == 'none' ]]; then
+            bun .github/scripts/osv/osv-issue-sync.ts --scan "$RUNNER_TEMP/osv-scan.json"
+          else
+            bun .github/scripts/osv/osv-issue-sync.ts --scan .github/scripts/osv/fixtures/osv-scan-dispatch-sample.json --fixture-mode
+          fi

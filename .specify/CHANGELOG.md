@@ -6,6 +6,15 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.127.1] - 2026-10-25
+
+### Added
+- **[GitHub Config]** OSV dependency security CI scans all Bun lockfiles, gates newly introduced high/critical advisories on PRs, and syncs deduplicated package issues with manual-close lifecycle and Project Todo placement
+- **[Docs]** Maintainer guide covers credential setup, severity policy, issue lifecycle, scanner upgrades, rollout, and rollback
+
+### Removed
+- **[GitHub Config]** Empty Dependabot version-update placeholder; dependency alerts remain independent
+
 ## [1.127.0] - 2026-10-22
 
 ### Added

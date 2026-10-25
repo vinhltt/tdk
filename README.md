@@ -182,3 +182,4 @@ validation, Bun test runner, `.specify.json` config, setup CLI in `packages/tdk-
 | Command catalog and tips | [Skills Guide](.specify/docs/en/guides/skills-guide.md) |
 | All guides and scenarios | [Docs Index](.specify/docs/README.md) · [Scenario Catalog](.specify/docs/en/guides/scenarios/scenario-catalog.md) |
 | Shipping a payload (maintainers) | [Maintainer Distribution Notes](docs/maintainer-distribution.md) |
+| Dependency security CI (maintainers) | [Dependency Security CI](docs/dependency-security-ci.md) |
