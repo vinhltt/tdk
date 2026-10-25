@@ -76,6 +76,7 @@ test('release generation ships the review report-writer and scope sources, bundl
   const shippable = [
     `${skill}scripts/review-write-report.ts`,
     `${skill}scripts/review-write-report.js`,
+    `${skill}scripts/review-redaction.ts`,
     `${skill}scripts/review-scope.ts`,
     `${skill}scripts/review-scope.js`,
     `${skill}scripts/build.ts`,
@@ -84,7 +85,7 @@ test('release generation ships the review report-writer and scope sources, bundl
     `${skill}scripts/bun.lock`,
     `${skill}scripts/RUNTIME-LICENSE.txt`,
   ];
-  const excluded = [`${skill}scripts/node_modules/x/index.js`, `${skill}tests/review-scope.test.ts`, `${skill}tests/review-write-report.test.ts`];
+  const excluded = [`${skill}scripts/node_modules/x/index.js`, `${skill}tests/review-scope.test.ts`, `${skill}tests/review-write-report.test.ts`, `${skill}tests/review-redaction.test.ts`, `${skill}tests/review-redaction-parity.test.ts`];
   for (const path of [...shippable, ...excluded]) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     writeFileSync(join(root, path), `fixture bytes for ${path}\n`);

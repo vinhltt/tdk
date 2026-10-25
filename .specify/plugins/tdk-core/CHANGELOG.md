@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.3.3] - 2026-10-25
+
+### Fixed
+- tdk-review: reports keep slash-command seeds, skill locators, URL routes and HTML tags; the skill now owns its sanitizer (`review-redaction.ts`) instead of importing the handoff one, and it redacts only secrets and machine paths, so /tdk-status counts the fix seeds again; `tests/review-redaction-parity.test.ts` keeps its secret detectors identical to the handoff sanitizer's
+
 ## [14.3.2] - 2026-10-22
 
 ### Changed

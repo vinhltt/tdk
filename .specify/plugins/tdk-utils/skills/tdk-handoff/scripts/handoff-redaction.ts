@@ -6,10 +6,6 @@ const TOKEN_SOURCE = String.raw`(?:AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{
 const ONLY_MARKERS = new RegExp(`^(?:\\s*${MARKER_SOURCE})+\\s*$`);
 const EXACT_TOKEN = new RegExp(`^(?:${TOKEN_SOURCE})$`, 'i');
 const URL_TOKEN = new RegExp(`(?<!\\w)(?:${TOKEN_SOURCE})(?![\\w-])`, 'i');
-// Branding rewrites the literal tdk- prefix in distributed payloads. Only this
-// public token is exempt: a root file with this exact name is indistinguishable
-// from the command, but descendants and other slash-prefixed strings are paths.
-const PUBLIC_SPECIFY_COMMAND = '/tdk-specify';
 
 function tokenCategory(value: string): string | null {
   if (!EXACT_TOKEN.test(value)) return null;
@@ -299,12 +295,12 @@ export function sanitizeHandoffText(value: string): { text: string; redactions: 
     return isInternalHost(host.replace(/:\d+$/, '')) ? redact('internal-host') : host;
   });
 
-  const quotedPath = String.raw`(["'\x60])(?!${PUBLIC_SPECIFY_COMMAND}(?=[ \t"'\x60]))((?:[a-z]:[\\/]|\\\\|\/)[^"'\x60\r\n]+)\1`;
+  const quotedPath = String.raw`(["'\x60])((?:[a-z]:[\\/]|\\\\|\/)[^"'\x60\r\n]+)\1`;
   const pathCharacter = String.raw`(?:\\[ \t]|[^\s<>"'\x60()\[\]{},;])`;
   const barePath = String.raw`(?<![\p{L}\p{M}\p{N}_./\\:])(?:[a-z]:[\\/]${pathCharacter}*|\\\\[^\\\s<>"'\x60]+\\${pathCharacter}+|\/\/[a-z0-9._-]+\/${pathCharacter}+|\/[^\s<>"'\x60()\[\]{},;/\\]${pathCharacter}*)`;
   text = text.replace(new RegExp(`${URL_SOURCE}|${MARKER_SOURCE}|${quotedPath}|${barePath}`, 'giu'), (path: string, quote?: string, quoted?: string) => {
     if ((/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(path) && EXACT_URL.test(path))
-      || path.startsWith('[REDACTED:') || path === PUBLIC_SPECIFY_COMMAND) return path;
+      || path.startsWith('[REDACTED:')) return path;
     if (quote && quoted) {
       if (EXACT_URL.test(quoted) && !urlCategory(quoted)) return path;
       return quote + redact('absolute-path') + quote;

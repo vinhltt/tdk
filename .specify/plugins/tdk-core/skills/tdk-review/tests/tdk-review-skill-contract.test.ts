@@ -109,8 +109,13 @@ describe('tdk-review skill contract', () => {
 
   it('keeps a seed description free of `--`, which /tdk-plan would parse as a flag, and states the helper redacts', () => {
     expect(REPORT).toMatch(/MUST NOT contain any `--` token/);
-    expect(REPORT).toMatch(/runs the report through the shared sanitizer/);
+    expect(REPORT).toMatch(/runs the report through the skill's own sanitizer/);
     expect(REPORT).not.toMatch(/do not build a second sanitizer[^\n]*Replace any secret/);
+  });
+
+  it('sanitizes reports with the skill-owned sanitizer and names no other skill as its owner', () => {
+    expect(REPORT).toContain('`scripts/review-redaction.ts`');
+    expect(REPORT).not.toMatch(/tdk-handoff/);
   });
 
   it('caps subagents per run and tells the user to narrow with --phase', () => {

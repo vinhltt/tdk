@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   containsSensitiveHandoffText,
   sanitizeHandoffText,
-} from '../../../plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-redaction';
+} from '../scripts/handoff-redaction';
 
 const awsId = `AKIA${'Q'.repeat(16)}`;
 const awsSecret = 'fabricatedAWSsecretMaterial0123456789abcd/';
@@ -383,37 +383,24 @@ describe('sanitizeHandoffText', () => {
     expect(result.text).toContain('[REDACTED:absolute-path]');
   });
 
-  it('preserves the public specify command without exempting other absolute paths', () => {
+  it('exempts no slash command: a command token is redacted like any other absolute path', () => {
     const input = [
       'Run /tdk-specify 172 seed after verifying live state.',
       'Run `/tdk-specify 172 seed` after verifying live state.',
-      'Run "/tdk-specify 172 seed" after verifying live state.',
       '/tdk-specify',
-      '`/tdk-specify`',
-      '/tdk-specify 172 seed /home/fake-person/project',
-      '`/tdk-specify 172 seed /home/fake-person/project`',
-      String.raw`/tdk-specify 172 seed C:\Users\FakePerson\project`,
-      '/private /tdk-private /tdk-specify/private /tdk-specify.exe /unknown-specify',
-      '"/private path" `/tdk-specify/private path`',
+      '/private /tdk-private /tdk-specify/private',
     ].join('\n');
     const result = sanitizeHandoffText(input);
     expect(result).toEqual({
       text: [
-        'Run /tdk-specify 172 seed after verifying live state.',
-        'Run `/tdk-specify 172 seed` after verifying live state.',
-        'Run "/tdk-specify 172 seed" after verifying live state.',
-        '/tdk-specify',
-        '`/tdk-specify`',
-        '/tdk-specify 172 seed [REDACTED:absolute-path]',
-        '`/tdk-specify 172 seed [REDACTED:absolute-path]`',
-        '/tdk-specify 172 seed [REDACTED:absolute-path]',
-        Array(5).fill('[REDACTED:absolute-path]').join(' '),
-        '"[REDACTED:absolute-path]" `[REDACTED:absolute-path]`',
+        'Run [REDACTED:absolute-path] 172 seed after verifying live state.',
+        'Run `[REDACTED:absolute-path]` after verifying live state.',
+        '[REDACTED:absolute-path]',
+        Array(3).fill('[REDACTED:absolute-path]').join(' '),
       ].join('\n'),
-      redactions: 10,
+      redactions: 6,
     });
-    expectSecretAbsent(result.text, 'fake-person', 'FakePerson', '/private', '/tdk-private',
-      '/tdk-specify/private', '/tdk-specify.exe', '/unknown-specify');
+    expectSecretAbsent(result.text, '/tdk-specify', '/private', '/tdk-private');
     expect(sanitizeHandoffText(result.text)).toEqual({ text: result.text, redactions: 0 });
   });
 
@@ -472,21 +459,22 @@ describe('sanitizeHandoffText', () => {
   });
 
   it('redacts Unicode absolute paths from their first component and preserves relative Unicode paths', () => {
-    const result = sanitizeHandoffText('/秘密/fake-person/project and 秘密/relative.ts and /tdk-specify 172 seed');
+    const result = sanitizeHandoffText('/秘密/fake-person/project and 秘密/relative.ts');
     expectSecretAbsent(result.text, '/秘密', 'fake-person', '/project');
     expect(result.text).toContain('秘密/relative.ts');
-    expect(result.text).toContain('/tdk-specify 172 seed');
     expect(sanitizeHandoffText(result.text)).toEqual({ text: result.text, redactions: 0 });
     expect(sanitizeHandoffText('cafe\u0301/relative.ts')).toEqual({ text: 'cafe\u0301/relative.ts', redactions: 0 });
   });
 });
 
 describe('containsSensitiveHandoffText', () => {
-  it('accepts a safe public command focus but refuses sensitive command arguments', () => {
-    for (const focus of ['/tdk-specify 172 seed', '`/tdk-specify 172 seed`']) {
+  it('accepts a plain focus but refuses a slash-command focus like any absolute path', () => {
+    for (const focus of ['Prepare CSV export seed', '`csv-export` seed 172']) {
       expect(containsSensitiveHandoffText(focus)).toBe(false);
     }
     for (const focus of [
+      '/tdk-specify 172 seed',
+      '`/tdk-specify 172 seed`',
       '/tdk-specify 172 /home/fake-person/project',
       '`/tdk-specify 172 /home/fake-person/project`',
       String.raw`/tdk-specify 172 C:\Users\FakePerson\project`,

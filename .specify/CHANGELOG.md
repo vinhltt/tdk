@@ -6,6 +6,15 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.127.1] - 2026-10-25
+
+### Changed
+- **[Scripts]** A test pins the seed count `/tdk-status` reads from a written review report; the handoff tests move into the `tdk-handoff` skill (`bun run test` in its `scripts/`)
+- **[tdk-utils]** `/tdk-handoff` names no other skill: the `spec` kind leaves the recipient's specification workflow unnamed and the sanitizer no longer exempts a `/tdk-specify` token
+
+### Fixed
+- **[tdk-core]** `/tdk-review` reports keep slash-command seeds, skill locators, URL routes and HTML tags; the skill owns its sanitizer and redacts only machine paths and secrets, so `/tdk-status` counts the report's fix seeds again; a skill test keeps its secret detectors identical to the handoff sanitizer's
+
 ## [1.127.0] - 2026-10-22
 
 ### Added

@@ -62,7 +62,7 @@ function isWithin(ancestor, descendant) {
   return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
 }
 
-// ../../../../tdk-utils/skills/tdk-handoff/scripts/handoff-redaction.ts
+// review-redaction.ts
 var MARKER_SOURCE = String.raw`\[REDACTED:[a-z][a-z0-9-]*\]`;
 var URL_SOURCE = String.raw`(?:\b[a-z][a-z0-9+.-]*:\/\/|(?<![\w/])\/\/(?=[^/\s<>"\x60]*(?:\.|@|\[)))[^\s<>"\x60]+`;
 var URL_IN_VALUE = new RegExp(URL_SOURCE, "i");
@@ -71,7 +71,32 @@ var TOKEN_SOURCE = String.raw`(?:AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{36
 var ONLY_MARKERS = new RegExp(`^(?:\\s*${MARKER_SOURCE})+\\s*$`);
 var EXACT_TOKEN = new RegExp(`^(?:${TOKEN_SOURCE})$`, "i");
 var URL_TOKEN = new RegExp(`(?<!\\w)(?:${TOKEN_SOURCE})(?![\\w-])`, "i");
-var PUBLIC_SPECIFY_COMMAND = "/tdk-specify";
+var MACHINE_ROOTS = [
+  "home",
+  "Users",
+  "root",
+  "tmp",
+  "var",
+  "etc",
+  "opt",
+  "mnt",
+  "private",
+  "srv",
+  "workspace",
+  "usr",
+  "Volumes",
+  "media",
+  "run",
+  "workspaces",
+  "github",
+  "builds",
+  "proc",
+  "nix"
+];
+var MACHINE_ROOT_PATH = new RegExp(String.raw`(?<![\p{L}\p{M}\p{N}_])\/(?:${MACHINE_ROOTS.join("|")})(?![\p{L}\p{N}_-])|(?<![\p{L}\p{N}_/.-])[A-Za-z]:[\\/]|\\\\|(?<![\w:/])\/\/[\w.-]+\/|(?<![\p{L}\p{M}\p{N}_])\/[A-Za-z]:[\\/]|(?<![\p{L}\p{N}_])[A-Za-z]:\\|(?<![\p{L}\p{M}\p{N}_])\/(?:cygdrive\/[A-Za-z]|[A-Za-z]\/(?:Users|home))(?![\p{L}\p{N}_-])|(?<![\p{L}\p{N}_])[Ff][Ii][Ll][Ee]:\/\/`, "u");
+function keepsRepoPath(candidate) {
+  return candidate.startsWith("/") && !candidate.startsWith("//") && !MACHINE_ROOT_PATH.test(candidate) && !urlCategory(candidate);
+}
 function tokenCategory(value) {
   if (!EXACT_TOKEN.test(value))
     return null;
@@ -329,7 +354,7 @@ function assignmentValue(value, start, keyStart, shell) {
   }
   return { end, raw: value.slice(start, end), opening: "", closing: "" };
 }
-function sanitizeHandoffText(value) {
+function sanitizeReviewText(value) {
   let redactions = 0;
   const redact = (category) => {
     redactions++;
@@ -379,17 +404,21 @@ function sanitizeHandoffText(value) {
     }
     return isInternalHost(host.replace(/:\d+$/, "")) ? redact("internal-host") : host;
   });
-  const quotedPath = String.raw`(["'\x60])(?!${PUBLIC_SPECIFY_COMMAND}(?=[ \t"'\x60]))((?:[a-z]:[\\/]|\\\\|\/)[^"'\x60\r\n]+)\1`;
+  const quotedPath = String.raw`(["'\x60])((?:[a-z]:[\\/]|\\\\|\/)[^"'\x60\r\n]+)\1`;
   const pathCharacter = String.raw`(?:\\[ \t]|[^\s<>"'\x60()\[\]{},;])`;
   const barePath = String.raw`(?<![\p{L}\p{M}\p{N}_./\\:])(?:[a-z]:[\\/]${pathCharacter}*|\\\\[^\\\s<>"'\x60]+\\${pathCharacter}+|\/\/[a-z0-9._-]+\/${pathCharacter}+|\/[^\s<>"'\x60()\[\]{},;/\\]${pathCharacter}*)`;
   text = text.replace(new RegExp(`${URL_SOURCE}|${MARKER_SOURCE}|${quotedPath}|${barePath}`, "giu"), (path, quote, quoted) => {
-    if (/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(path) && EXACT_URL.test(path) || path.startsWith("[REDACTED:") || path === PUBLIC_SPECIFY_COMMAND)
+    if (/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(path) && EXACT_URL.test(path) || path.startsWith("[REDACTED:"))
       return path;
     if (quote && quoted) {
       if (EXACT_URL.test(quoted) && !urlCategory(quoted))
         return path;
+      if (keepsRepoPath(quoted))
+        return path;
       return quote + redact("absolute-path") + quote;
     }
+    if (keepsRepoPath(path))
+      return path;
     const suffix = /[.!?]+$/.exec(path)?.[0] ?? "";
     return redact("absolute-path") + suffix;
   });
@@ -434,7 +463,7 @@ function writeReviewReport(projectRoot, featureDirectory, slug, body, now = new 
   if (!insideProject || !prepareReviewsDir(featureDir, reviews))
     return { ok: false, error: "unsafe_output_path" };
   const path = join(reviews, `${stamp(now)}-${slug}.md`);
-  const { text, redactions } = sanitizeHandoffText(body);
+  const { text, redactions } = sanitizeReviewText(body);
   const failure = createNewFile(path, text, 420);
   return failure ? { ok: false, error: failure } : { ok: true, path, redactions };
 }

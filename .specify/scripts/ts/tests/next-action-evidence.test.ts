@@ -1,7 +1,8 @@
 import { afterAll, describe, expect, it } from 'bun:test';
-import { mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { writeReviewReport } from '../../../plugins/tdk-core/skills/tdk-review/scripts/review-write-report';
 import {
   collectReviewSummary, collectTestEvidence, readMemoryStatus, type PhaseRowLite,
 } from '../src/commands/feature/next-action-evidence';
@@ -340,6 +341,57 @@ describe('collectReviewSummary', () => {
         expect(summarize(dir).latestFull?.verdict).toBe('pass');
       });
     });
+  });
+});
+
+describe('written review report', () => {
+  const seedLine = (text: string) => `/tdk-plan sample-001 "${text}"`;
+  // The writer sanitizes the body; the collector then reads exactly what reached disk.
+  const roundTrip = (body: string) => {
+    const dir = makeFeature();
+    const written = writeReviewReport(dir, dir, 'full-standard',
+      review({ verdict: 'changes_requested', generated_at: '2026-10-10T09:00:00+07:00' }, body));
+    if (!written.ok) throw new Error(`writer refused: ${written.error}`);
+    return { written, summary: collectReviewSummary(dir, 'sample-001', []).latestFull };
+  };
+
+  it('keeps one bare seed readable as the Ready line', () => {
+    const seed = seedLine('Fix the retry loop in the client');
+    const { written, summary } = roundTrip(fixPhases(seed));
+    expect(written.redactions).toBe(0);
+    expect(summary).toMatchObject({ seedCount: 1, seedReady: seed });
+  });
+
+  it('counts a bare, a bullet and a backticked seed', () => {
+    const body = fixPhases(
+      seedLine('bare'),
+      `- **Ready line**: \`${seedLine('bullet')}\``,
+      `\`${seedLine('backticked')}\``,
+    );
+    const { written, summary } = roundTrip(body);
+    expect(written.redactions).toBe(0);
+    expect(summary).toMatchObject({ seedCount: 3, seedReady: null });
+  });
+
+  it('redacts a machine path inside a seed description and still parses the seed', () => {
+    const { written, summary } = roundTrip(fixPhases(seedLine('fix /home/fake-person/x')));
+    expect(written.redactions).toBe(1);
+    expect(summary).toMatchObject({ seedCount: 1, seedReady: seedLine('fix [REDACTED:absolute-path]') });
+  });
+
+  it('redacts only the machine path in a body of slash commands, routes and locators', () => {
+    const body = fixPhases(
+      seedLine('first fix'),
+      seedLine('second fix'),
+      'Re-run `/tdk-review`, then `/tdk-status`, then `/tdk-archive`.',
+      'GET /health',
+      'skill: /backend-checks',
+      'evidence: /home/fake/x',
+    );
+    const { written, summary } = roundTrip(body);
+    expect(written.redactions).toBe(1);
+    expect(readFileSync(written.path, 'utf-8')).toContain(body.replace('/home/fake/x', '[REDACTED:absolute-path]'));
+    expect(summary).toMatchObject({ seedCount: 2, seedReady: null });
   });
 });
 

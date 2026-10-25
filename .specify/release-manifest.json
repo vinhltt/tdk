@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-10-22T11:12:21.292Z",
+  "generatedAt": "2026-10-25T11:00:35.318Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -210,8 +210,8 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "e1ecfea3a8184f306d2e3599cd787a41cc1335fc49fb47c2de1a7a34080b380b",
-      "size": 49897,
+      "sha256": "09ed8a56726ce380421eb0320b75ca7ed3b0a31b2cf9dd9d6ca21347cac62e17",
+      "size": 50022,
       "mode": "0644"
     },
     ".specify/plugins/plugin-dependencies.json": {
@@ -225,23 +225,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "d23ac374362679451eb4c0fd31ad9f8eb4c72d05e03250bd9ecacbbbc9c9c0b3",
+      "sha256": "b966ef1a9a669c4ea7a538f187b6c45b9597e83de47186bd8de404056c09c667",
       "size": 191,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "42ffc30a95adaaecc2331468a335cd9d86aca2453664a89c2c533d05cfbec79b",
+      "sha256": "70ceeb162a7cb7ee979a6bec75998215b0a97bb661279492661ed7db0751bbd2",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "42ffc30a95adaaecc2331468a335cd9d86aca2453664a89c2c533d05cfbec79b",
+      "sha256": "70ceeb162a7cb7ee979a6bec75998215b0a97bb661279492661ed7db0751bbd2",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "7f21a0ffab3df8f1e8b22b635da76e7799609f5646a0599985e15d979f7c6602",
-      "size": 48814,
+      "sha256": "aceb6ae3a8952d884ac74dce1a46d516cc9d384771e565d0641ab0639c3740e7",
+      "size": 49230,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/hooks/destructive-command-block.cjs": {
@@ -455,13 +455,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/SKILL.md": {
-      "sha256": "89c4086da6e465818e2ae99f5cca80615f54192431225ef6bb3b5abe0eed6bc3",
+      "sha256": "e2fc717ee923c5c0e83db7de4714cf4e1ebf269491c290692fc86d7d8c8403a5",
       "size": 5468,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/references/report-contract.md": {
-      "sha256": "dbcd9d065ea0f25b41eb08e7af6afd827850552efabeeb21fb73670a0a866d08",
-      "size": 6247,
+      "sha256": "9b2563aef60e578821c6477840c81c4176a09de3f6137e6876b34a3aab77a772",
+      "size": 6685,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/references/review-orchestration.md": {
@@ -489,6 +489,11 @@
       "size": 329,
       "mode": "0644"
     },
+    ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-redaction.ts": {
+      "sha256": "fad41196851b052157071aaba3a2427df74836093606736f4bf066068b36c11f",
+      "size": 16624,
+      "mode": "0644"
+    },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-scope.js": {
       "sha256": "e409f7fb8c2a4e86ffd408589e9293a2fb2abd5d092dd199b496151568aed332",
       "size": 390725,
@@ -500,13 +505,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-write-report.js": {
-      "sha256": "d19a6f2d261f4a2debe2eee1ec2ebff29a7de2c4bc88e6dcf9ad6441f76b8b6f",
-      "size": 17966,
+      "sha256": "1cb76fec601b6ca5945ec7cf993707a448a0162dbd47a3dd8550b5576102f84a",
+      "size": 18695,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-write-report.ts": {
-      "sha256": "ab84f4d16e92876180669bc668fdf34b3e4adc29f71418e0b1ec39fe5a82263e",
-      "size": 3910,
+      "sha256": "4b2f477b821e329ec959756c4df83f21520a1caa04e6b1fb8afefaa91fbeca98",
+      "size": 3930,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/tsconfig.json": {
@@ -1550,23 +1555,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.claude-plugin/plugin.json": {
-      "sha256": "ed0951712e54afa8b65d11963b23362e2996fb11aeef03c026fffedda885e508",
+      "sha256": "c5d1a52b1339c296c28fbf170054959457f69f604d03ae0c86493d555d51f4b5",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.codex-plugin/plugin.json": {
-      "sha256": "ed0951712e54afa8b65d11963b23362e2996fb11aeef03c026fffedda885e508",
+      "sha256": "c5d1a52b1339c296c28fbf170054959457f69f604d03ae0c86493d555d51f4b5",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.cursor-plugin/plugin.json": {
-      "sha256": "ed0951712e54afa8b65d11963b23362e2996fb11aeef03c026fffedda885e508",
+      "sha256": "c5d1a52b1339c296c28fbf170054959457f69f604d03ae0c86493d555d51f4b5",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/CHANGELOG.md": {
-      "sha256": "31e32ca629a65d31c58492492831936d6c9d93d90f85369603d9ca51cfad6026",
-      "size": 10847,
+      "sha256": "7d4d9911a811bfe39fa74b3737931ef534785c274239fea238ce2308bede75ca",
+      "size": 11069,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/researcher.md": {
@@ -1810,18 +1815,18 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-handoff/SKILL.md": {
-      "sha256": "bad1b27721fd77558fff0faf83bfb3ac9057e54aeecabf68ef952e512a5f2273",
+      "sha256": "31cdbfb997e61c980e119aa7643a3e56d3f54300425b395f19eb48688ee6eda8",
       "size": 20194,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-handoff/references/artifact-schema.md": {
-      "sha256": "78a8dcde46d3b6ae6111aca4b45c035f466b0730a3a19765b0c7dda740c983ad",
-      "size": 19605,
+      "sha256": "b5086ac6464958d27784dc166db2b19d7dd29a56ca81066fabe1add40a3a61f8",
+      "size": 19631,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-handoff/references/redaction-patterns.md": {
-      "sha256": "98830a7ad664cbaf75e7b2974bfc47f4606714b78e0e1c320a4787c9c1c4a0c8",
-      "size": 5898,
+      "sha256": "4f6640798f983ca84f74ad83e10e9f9bd1a25a6e95ceacd977bbec3f4902214d",
+      "size": 5803,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-handoff/references/upstream-owner.txt": {
@@ -1850,8 +1855,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-export.js": {
-      "sha256": "5db4c12837f00dbd8b8945b31dc22eb6c556d330b6c8f520a9d565df8d3e8a7a",
-      "size": 464743,
+      "sha256": "b98b11d960034652d930de365c845952be25299842423590694e57e157690cfb",
+      "size": 464619,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-export.ts": {
@@ -1860,13 +1865,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-redaction.ts": {
-      "sha256": "0a3c8022ac1b1b9072d2e4d84e08493218772acdef257d6ccb19654636bfa0af",
-      "size": 15336,
+      "sha256": "eb6e02f58460a44be0b3af59835299cc102e4c84c7a5302cd7abe3093720ac0b",
+      "size": 14968,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/package.json": {
-      "sha256": "8d1d3bb7f74e064f6971834ee9adbfacbcd202ae65fc39554cd7522111a47ed4",
-      "size": 339,
+      "sha256": "f717a7d679e7c2209f8455e082c20f28d046066bbb56519e32cdbeaf1b52ee77",
+      "size": 372,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/skills/tdk-handoff/scripts/tsconfig.json": {
