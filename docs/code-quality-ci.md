@@ -15,7 +15,7 @@ Both existing typecheck commands use `tsc --noEmit` with their package tsconfig.
 
 ## Runner preparation
 
-The checkout contains the full repository/history and does not persist credentials. Bun comes from the repo's `.bun-version`; third-party actions are pinned by full commit SHA. Tests expect Linux tools such as Bash, Git and Node provided by the Ubuntu runner. No PAT, Environment secret or external service is needed; workflow token permissions are `contents: read`.
+The checkout contains the full TDK repository/history and does not persist credentials. Bun comes from the repo's `.bun-version`; third-party actions are pinned by full commit SHA. Tests expect Linux tools such as Bash, Git and Node provided by the Ubuntu runner. No PAT or Environment secret is needed; workflow token permissions are `contents: read`. Runner preparation also fetches a pinned public upstream Git object, as described below.
 
 Every runner installs the same three prerequisite packages with `--frozen-lockfile` before its selected package checks:
 
@@ -24,6 +24,10 @@ Every runner installs the same three prerequisite packages with `--frozen-lockfi
 - `.specify/plugins/tdk-utils/skills/tdk-handoff/scripts`
 
 This is intentional cross-package preparation, not a workspace-root install. Scripts distribution tests use setup's `node_modules`, setup e2e runs the scripts manifest CLI, and `tests/handoff-export.test.ts` imports handoff TypeScript that resolves its own `commander` dependency. Installing only the selected main package is insufficient. Lockfiles must not be regenerated during CI.
+
+The scripts check also needs the upstream commit recorded in `.specify/plugins/tdk-memory.upstream-pin` in its Git object database. Full TDK history alone is insufficient because the memory subtree is imported with squashed upstream history. Before checking scripts, the workflow uses the existing subtree guard to validate/read the pin, permits only the expected `missing-object` preparation diagnostic, then fetches that exact commit from the fixed public `https://github.com/vinhltt/tdk-memory` repository. Other guard diagnostics remain hard failures. The test still verifies subtree contents against the real upstream object; it is not skipped or weakened.
+
+This preparation requires network access to that public upstream and availability of the pinned commit there. If the repository becomes private/unreachable or the pinned object is no longer served, the scripts check fails even for an otherwise unrelated PR. It does not substitute another revision or skip the guard.
 
 Scout tests substitute external Repomix through dependency injection; they do not require a global Repomix install. The workflow does not add one.
 
@@ -35,6 +39,16 @@ From a complete source checkout, using the Bun version in `.bun-version`:
 (cd .specify/scripts/ts && bun install --frozen-lockfile)
 (cd packages/tdk-setup && bun install --frozen-lockfile)
 (cd .specify/plugins/tdk-utils/skills/tdk-handoff/scripts && bun install --frozen-lockfile)
+
+commit="$(bun -e '
+  import { checkMemorySubtreePin, formatMemorySubtreeGuardResult } from "./.specify/scripts/ts/src/commands/util/check-memory-subtree.ts";
+  const result = checkMemorySubtreePin({ projectRoot: process.cwd() });
+  if (!result.commit || result.diagnostics.some(({ kind }) => kind !== "missing-object")) {
+    throw new Error(formatMemorySubtreeGuardResult(result));
+  }
+  console.log(result.commit);
+')"
+git fetch --no-tags https://github.com/vinhltt/tdk-memory "$commit"
 
 (cd .specify/scripts/ts && bun run typecheck && bun run test)
 (cd packages/tdk-setup && bun run typecheck && bun run test)

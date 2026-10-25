@@ -44,6 +44,18 @@ jobs:
       - name: Install handoff source-test dependencies
         working-directory: .specify/plugins/tdk-utils/skills/tdk-handoff/scripts
         run: bun install --frozen-lockfile
+      - name: Fetch pinned memory upstream object
+        if: matrix.package == 'scripts'
+        run: |
+          commit="$(bun -e '
+            import { checkMemorySubtreePin, formatMemorySubtreeGuardResult } from "./.specify/scripts/ts/src/commands/util/check-memory-subtree.ts";
+            const result = checkMemorySubtreePin({ projectRoot: process.cwd() });
+            if (!result.commit || result.diagnostics.some(({ kind }) => kind !== "missing-object")) {
+              throw new Error(formatMemorySubtreeGuardResult(result));
+            }
+            console.log(result.commit);
+          ')"
+          git fetch --no-tags https://github.com/vinhltt/tdk-memory "$commit"
       - name: Typecheck package source
         working-directory: ${{ matrix.directory }}
         run: bun run typecheck
