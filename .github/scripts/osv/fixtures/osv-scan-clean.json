@@ -1,0 +1,22 @@
+{
+  "results": [
+    {
+      "source": {
+        "path": "bun.lock",
+        "type": "lockfile"
+      },
+      "packages": [
+        {
+          "package": {
+            "name": "yaml",
+            "version": "2.9.0",
+            "ecosystem": "npm",
+            "purl": "pkg:npm/yaml@2.9.0"
+          },
+          "groups": [],
+          "vulnerabilities": []
+        }
+      ]
+    }
+  ]
+}

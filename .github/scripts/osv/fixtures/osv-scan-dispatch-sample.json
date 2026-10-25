@@ -1,0 +1,62 @@
+{
+  "results": [
+    {
+      "source": {
+        "path": "bun.lock",
+        "type": "lockfile"
+      },
+      "packages": [
+        {
+          "package": {
+            "name": "tdk-osv-sync-fixture",
+            "version": "1.0.0",
+            "ecosystem": "npm"
+          },
+          "groups": [
+            {
+              "ids": [
+                "GHSA-synthetic-dispatch-sample"
+              ],
+              "aliases": [
+                "CVE-2099-10002"
+              ],
+              "max_severity": "7.5"
+            }
+          ],
+          "vulnerabilities": [
+            {
+              "id": "GHSA-synthetic-dispatch-sample",
+              "aliases": [
+                "CVE-2099-10002"
+              ],
+              "database_specific": {
+                "severity": "HIGH"
+              },
+              "affected": [
+                {
+                  "package": {
+                    "name": "tdk-osv-sync-fixture",
+                    "ecosystem": "npm"
+                  },
+                  "ranges": [
+                    {
+                      "type": "SEMVER",
+                      "events": [
+                        {
+                          "introduced": "0"
+                        },
+                        {
+                          "fixed": "1.0.1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
