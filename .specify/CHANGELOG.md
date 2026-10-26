@@ -6,6 +6,15 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.128.1] - 2026-10-26
+
+### Added
+- **[GitHub Config]** OSV dependency security CI scans all Bun lockfiles, gates newly introduced high/critical advisories on PRs, and syncs deduplicated issues in the current repository with the built-in GitHub Actions token and manual-close lifecycle; no personal token or Project integration
+- **[Docs]** Maintainer guide covers job-level token permissions, severity policy, issue lifecycle, native Bun update limits, scanner upgrades, rollout, and rollback
+
+### Fixed
+- **[GitHub Config]** Replace the empty Dependabot placeholder with weekly native Bun version updates and a nonzero PR limit for TDK-owned packages; document retaining alerts while disabling incompatible automatic security fixes, and keep the memory subtree upstream-owned
+
 ## [1.128.0] - 2026-10-25
 
 ### Changed

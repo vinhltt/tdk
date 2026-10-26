@@ -1,0 +1,62 @@
+{
+  "results": [
+    {
+      "source": {
+        "path": "bun.lock",
+        "type": "lockfile"
+      },
+      "packages": [
+        {
+          "package": {
+            "name": "unscored-ghsa-sample",
+            "version": "1.0.0",
+            "ecosystem": "npm"
+          },
+          "groups": [
+            {
+              "ids": [
+                "GHSA-synthetic-unscored-high"
+              ],
+              "aliases": [
+                "CVE-2099-10001"
+              ],
+              "max_severity": ""
+            }
+          ],
+          "vulnerabilities": [
+            {
+              "id": "GHSA-synthetic-unscored-high",
+              "aliases": [
+                "CVE-2099-10001"
+              ],
+              "database_specific": {
+                "severity": "HIGH"
+              },
+              "affected": [
+                {
+                  "package": {
+                    "name": "unscored-ghsa-sample",
+                    "ecosystem": "npm"
+                  },
+                  "ranges": [
+                    {
+                      "type": "SEMVER",
+                      "events": [
+                        {
+                          "introduced": "0"
+                        },
+                        {
+                          "fixed": "1.0.1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
