@@ -2,11 +2,13 @@ import { afterEach, expect, test } from 'bun:test';
 import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { parse } from 'yaml';
-import { renderHandoffArtifact } from '../../../plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-artifact';
-import { exportHandoff } from '../../../plugins/tdk-utils/skills/tdk-handoff/scripts/handoff-export';
+import { renderHandoffArtifact } from '../scripts/handoff-artifact';
+import { exportHandoff } from '../scripts/handoff-export';
 
-const skillScripts = resolve(import.meta.dir, '../../../plugins/tdk-utils/skills/tdk-handoff/scripts');
+const skillScripts = resolve(import.meta.dir, '../scripts');
+// Bun's built-in parser: the skill's npm dependencies are installed under scripts/, not beside its tests.
+// Typed `any` like the `yaml` package's parse it replaces.
+const parse = (source: string): any => Bun.YAML.parse(source);
 const command = join(skillScripts, 'handoff-export.js');
 const sourceCommand = join(skillScripts, 'handoff-export.ts');
 const temporary: string[] = [];

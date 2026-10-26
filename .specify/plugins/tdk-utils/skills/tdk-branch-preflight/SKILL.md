@@ -7,7 +7,7 @@ description: "Ensure every affected sub-workspace repository stands on the agree
   NOT user-invocable."
 user-invocable: false
 metadata:
-  version: "4.2.2"
+  version: "4.5.3"
   category: "Git"
   input_format: "PROJECT_DIR (agent-resolved absolute project root), TASK_ID (validated), FEATURE_DIR, PROJECT_CONTEXT, TARGET_ROWS, host skill name"
   output_format: "GIT_MAP (sub-workspace to branch/worktree records) or STOP with a per-repository status report"

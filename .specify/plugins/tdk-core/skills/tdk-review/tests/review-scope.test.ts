@@ -55,6 +55,14 @@ function writePlan(feature: string, phases: PhaseSpec[]): void {
   }
 }
 
+interface MapRow { name: string; path: string; branch?: string; worktree?: string }
+/** A realized git-map: one row per entry (branch `feat/x` unless given) and the given base commits. */
+function mapOf(rows: MapRow[], bases: Record<string, string>, extra = ''): string {
+  const baseLines = Object.entries(bases).map(([name, sha]) => `  ${name}: ${sha}`).join('\n');
+  const table = rows.map((row) => `| ${row.name} | ${row.path} | main | ${row.branch ?? 'feat/x'} | refs/heads/main | ${row.worktree ?? '-'} |`).join('\n');
+  return `---\ntask_id: task-1\nfeature_branch: feat/x\nbase_commit_by_repo:\n${baseLines}\n${extra}---\n\n| Sub-workspace | Repo path | Milestone | Branch | Base ref | Worktree path |\n|---|---|---|---|---|---|\n${table}\n`;
+}
+
 /** All diff text the scope hands reviewers for one repo, in slice and piece order. */
 function repoDiff(result: Pick<ReviewScope, 'slices'>, repoPath: string): string {
   return result.slices.filter((slice) => slice.repoPath === repoPath).flatMap((slice) => slice.pieces.map((piece) => piece.diff)).join('');
@@ -173,8 +181,65 @@ describe('review scope: rows that are not reviewed', () => {
     put(join(fx.api, 'src', 'a.ts'), 'changed\n');
     const result = scope(fx);
     expect(result.repos).toEqual([]);
-    expect(result.notReviewed).toEqual([{ subWorkspace: 'api', state: 'invalid-base-commit', reason: 'does not name a commit in this repository' }]);
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'api', state: 'invalid-base-commit', reason: 'does not name a commit in this repository', blocking: true }]);
+    expect(result.incomplete).toBe(true);
     expect(result.empty).toBe(false);
+  });
+
+  it('an invalid base commit blocks only a row with recorded work: no branch, or a cleaned row, never blocks', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    const bad = '0123456789abcdef0123456789abcdef01234567';
+    put(join(fx.feature, 'git-map.md'), mapOf([{ name: 'api', path: 'apps/api', branch: '-' }], { api: bad }));
+    const noBranch = scope(fx);
+    expect(noBranch.notReviewed).toEqual([{ subWorkspace: 'api', state: 'invalid-base-commit', reason: 'does not name a commit in this repository' }]);
+    expect(noBranch.incomplete).toBe(false);
+
+    put(join(fx.feature, 'git-map.md'), mapOf([{ name: 'api', path: 'apps/api' }], { api: bad }, 'cleaned_by_repo:\n  api: 2026-10-01T00:00:00Z\n'));
+    const cleaned = scope(fx);
+    expect(cleaned.notReviewed).toMatchObject([{ subWorkspace: 'api', state: 'invalid-base-commit' }]);
+    expect(cleaned.notReviewed[0]).not.toHaveProperty('blocking');
+    expect(cleaned.incomplete).toBe(false);
+  });
+
+  it('a realized row whose repository directory was removed is missing_repository and blocks the review', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    rmSync(fx.api, { recursive: true, force: true });
+    const result = scope(fx);
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'api', state: 'missing_repository', reason: 'apps/api does not exist', blocking: true }]);
+    expect(result.incomplete).toBe(true);
+    expect(result.repos).toEqual([]);
+  });
+
+  it('a pending row whose directory does not exist yet is listed but never blocks', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }], 'pending');
+    rmSync(fx.api, { recursive: true, force: true });
+    const result = scope(fx);
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'api', state: 'missing_repository', reason: 'apps/api does not exist' }]);
+    expect(result.incomplete).toBe(false);
+  });
+
+  it('a repository replaced by a bare clone that still holds the base is not a working tree, and blocks', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    const bare = join(fx.root, 'bare.git');
+    git(fx.root, 'clone', '-q', '--bare', fx.api, bare);
+    rmSync(fx.api, { recursive: true, force: true });
+    cpSync(bare, fx.api, { recursive: true });
+    const result = scope(fx);
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'api', state: 'identity_failed', reason: 'not a git working tree', blocking: true }]);
+    expect(result.incomplete).toBe(true);
+  });
+
+  it('a sub path that resolves outside the workspace through a symlink fails the identity gate and blocks', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    const outside = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-outside-')));
+    roots.push(outside);
+    cpSync(fx.api, join(outside, 'api'), { recursive: true });
+    rmSync(fx.api, { recursive: true, force: true });
+    symlinkSync(join(outside, 'api'), fx.api);
+    const result = scope(fx);
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'api', state: 'identity_failed', reason: 'repository root escapes or equals the workspace', blocking: true }]);
+    expect(result.incomplete).toBe(true);
+    expect(result.repos).toEqual([]);
   });
 
   it('a pending row (no branch yet) is not reviewed, and its paths are not silently re-routed to the HEAD fallback', () => {
@@ -193,7 +258,9 @@ describe('review scope: rows that are not reviewed', () => {
     mkdirSync(dirname(dir), { recursive: true });
     git(fx.root, 'clone', '-q', fx.api, dir);
     put(join(fx.feature, 'git-map.md'), mapWith('_worktrees/api/feat-x'));
-    expect(scope(fx).notReviewed).toEqual([{ subWorkspace: 'api', state: 'identity_failed', reason: 'worktree path is not a worktree of this repository' }]);
+    const clone = scope(fx);
+    expect(clone.notReviewed).toEqual([{ subWorkspace: 'api', state: 'identity_failed', reason: 'worktree path is not a worktree of this repository', blocking: true }]);
+    expect(clone.incomplete).toBe(true);
 
     rmSync(dir, { recursive: true, force: true });
     git(fx.api, 'worktree', 'add', '-q', '-b', 'feat/x', dir);
@@ -205,6 +272,7 @@ describe('review scope: rows that are not reviewed', () => {
     expect(repo.workingRoot).toBe(dir);
     expect(diff).toContain('in-worktree');
     expect(diff).not.toContain('main-checkout');
+    expect(scoped.incomplete).toBe(false);
   });
 
   it('a recorded worktree that no longer exists falls back to the repository itself', () => {
@@ -405,6 +473,14 @@ describe('review scope: --phase and non-realized rows', () => {
   it('--phase does not list a repository the phase never touched as not reviewed', () => {
     const fx = fixture([{ n: 1, paths: ['docs/readme.md'] }], 'pending');
     expect(scope(fx, 1).notReviewed.some((entry) => entry.subWorkspace === 'api')).toBe(false);
+  });
+
+  it('--phase with an entry naming an ancestor directory reviews the committed work of the row under it', () => {
+    const fx = fixture([{ n: 1, paths: ['docs/x.md'] }, { n: 2, paths: ['apps'] }]);
+    put(join(fx.api, 'src', 'committed.ts'), 'export const committed = 1;\n');
+    git(fx.api, 'add', '-A'); git(fx.api, 'commit', '-q', '-m', 'work');
+    const result = scope(fx, 2);
+    expect(result.repos).toMatchObject([{ subWorkspace: 'api', source: 'git-map', baseCommit: fx.base, files: ['src/committed.ts'] }]);
   });
 
   it('a narrowed run whose phase repo is unchanged is empty with nothing to report', () => {
@@ -630,6 +706,396 @@ describe('review scope: slices feed the routing resolver', () => {
     const web = await resolveSlice(fx.root, fx.web);
     expect(web.skills.sort()).toEqual(['/root-checks', '/web-checks']);
     expect(web.agents).toEqual([]);
+  });
+});
+
+type InnerKind = 'submodule' | 'clone';
+interface InnerFx extends Fx { be: string; core: string; auth: string }
+const INNER_SUBS = [{ name: 'core', path: 'src/be/core' }, { name: 'auth', path: 'src/be/auth' }];
+
+/**
+ * Sub-workspaces that are directories inside one repository `src/be`, mounted as a real submodule of a root repo or as a
+ * nested clone. Both rows are realized from the same base; the feature is committed in `src/be`, plus one untracked file.
+ */
+function innerFixture(kind: InnerKind, phases: PhaseSpec[], rows: MapRow[] = INNER_SUBS, subWorkspaces = INNER_SUBS): InnerFx {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-inner-')));
+  const upstream = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-upstream-')));
+  roots.push(root, upstream);
+  const base = initRepo(upstream, { 'core/a.ts': 'export const a = 1;\n', 'auth/i.ts': 'export const i = 1;\n', 'shared/s.ts': 'export const s = 1;\n' });
+  put(join(root, '.specify', '.specify.json'), JSON.stringify({ version: '1.0', name: 'inner', subWorkspaces }));
+  const be = join(root, 'src', 'be');
+  if (kind === 'submodule') {
+    git(root, 'init', '-q', '-b', 'main');
+    git(root, 'add', '-A'); git(root, 'commit', '-q', '-m', 'host');
+    git(root, '-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', upstream, 'src/be');
+    git(root, 'commit', '-q', '-m', 'mount');
+  } else {
+    mkdirSync(dirname(be), { recursive: true });
+    git(root, 'clone', '-q', upstream, be);
+  }
+  git(be, 'checkout', '-q', '-b', 'feat/x');
+  put(join(be, 'core', 'a.ts'), 'export const a = 2;\n');
+  put(join(be, 'core', 'n.ts'), 'export const n = 1;\n');
+  put(join(be, 'auth', 'i.ts'), 'export const i = 2;\n');
+  git(be, 'add', '-A'); git(be, 'commit', '-q', '-m', 'feature');
+  put(join(be, 'core', 'u.ts'), 'export const u = 1;\n');
+  const feature = join(root, 'specs', 'task-1');
+  writePlan(feature, phases);
+  put(join(feature, 'git-map.md'), mapOf(rows, Object.fromEntries(rows.map((row) => [row.name, base]))));
+  return { root, feature, api: be, base, be, core: join(be, 'core'), auth: join(be, 'auth') };
+}
+
+/** Every routed path appears in exactly one slice, and slice ids are unique. */
+function expectDisjointSlices(result: ReviewScope): void {
+  const routed = result.slices.flatMap((slice) => slice.routingPaths);
+  expect(new Set(routed).size).toBe(routed.length);
+  expect(new Set(result.slices.map((slice) => slice.id)).size).toBe(result.slices.length);
+}
+
+describe('review scope: sub-workspaces inside a nested repository', () => {
+  const ALL = [{ n: 1, paths: ['src/be/core/a.ts', 'src/be/auth/i.ts'] }];
+
+  for (const kind of ['submodule', 'clone'] as const) {
+    it(`${kind}: a committed feature is diffed from the recorded base at the sub path, in sub-path coordinates`, () => {
+      const fx = innerFixture(kind, ALL);
+      const result = scope(fx);
+      expect(result.empty).toBe(false);
+      expect(result.incomplete).toBe(false);
+      expect(result.notReviewed).toEqual([]);
+      const core = result.repos.find((repo) => repo.subWorkspace === 'core')!;
+      expect(core).toMatchObject({ repoPath: 'src/be/core', workingRoot: fx.core, baseCommit: fx.base, source: 'git-map', files: ['a.ts', 'n.ts', 'u.ts'] });
+      expect(result.slices.find((slice) => slice.id === 'src/be/core#core')).toMatchObject({
+        subWorkspace: 'core', files: ['a.ts', 'n.ts', 'u.ts'], routingPaths: ['src/be/core/a.ts', 'src/be/core/n.ts', 'src/be/core/u.ts'],
+      });
+      const diff = repoDiff(result, 'src/be/core');
+      expect(diff).toContain('diff --git a/a.ts b/a.ts');
+      expect(diff).toContain('+export const a = 2;');
+      expect(diff).toContain('+++ b/u.ts');
+      expect(diff).toContain('+export const u = 1;');
+    });
+
+    it(`${kind}: two rows in one repository see only their own files`, () => {
+      const result = scope(innerFixture(kind, ALL));
+      expect(result.slices.map((slice) => [slice.id, slice.files])).toEqual([['src/be/core#core', ['a.ts', 'n.ts', 'u.ts']], ['src/be/auth#auth', ['i.ts']]]);
+      expect(repoDiff(result, 'src/be/auth')).not.toContain('export const a');
+      expectDisjointSlices(result);
+    });
+
+    it(`${kind}: --phase narrows within the sub path and leaves a row the phase never touches out`, () => {
+      const fx = innerFixture(kind, [{ n: 1, paths: ['src/be/core/a.ts'] }, { n: 2, paths: ['src/be/auth/i.ts'] }]);
+      const result = scope(fx, 1);
+      expect(result.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['src/be/core', ['a.ts']]]);
+    });
+  }
+
+  it('an own row of the same repository covers its inner rows: one repo, one slice per deepest owner', () => {
+    const subs = [{ name: 'be', path: 'src/be' }, ...INNER_SUBS];
+    const result = scope(innerFixture('submodule', ALL, subs, subs));
+    expect(result.repos.map((repo) => repo.repoPath)).toEqual(['src/be']);
+    expect(result.slices.map((slice) => slice.id)).toEqual(['src/be#auth', 'src/be#core']);
+    expectDisjointSlices(result);
+  });
+
+  it('a recorded worktree that exists cannot be placed for an inner row and blocks; a missing one falls back to the sub path', () => {
+    const rows = (worktree: string): MapRow[] => [{ ...INNER_SUBS[0]!, worktree }, INNER_SUBS[1]!];
+    const fx = innerFixture('clone', ALL, rows('_worktrees/core/feat-x'));
+    mkdirSync(join(fx.root, '_worktrees', 'core', 'feat-x'), { recursive: true });
+    const blocked = scope(fx);
+    expect(blocked.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'nested worktree layout undefined', blocking: true }]);
+    expect(blocked.incomplete).toBe(true);
+
+    put(join(fx.feature, 'git-map.md'), mapOf(rows('_worktrees/core/gone'), { core: fx.base, auth: fx.base }));
+    const fallback = scope(fx);
+    expect(fallback.repos.find((repo) => repo.subWorkspace === 'core')).toMatchObject({ workingRoot: fx.core, source: 'git-map' });
+    expect(fallback.incomplete).toBe(false);
+  });
+
+  it('an existing recorded worktree of an inner row blocks even when an own row of the same repository is diffed', () => {
+    const subs = [{ name: 'be', path: 'src/be' }, ...INNER_SUBS];
+    const fx = innerFixture('clone', ALL, [subs[0]!, { ...INNER_SUBS[0]!, worktree: '_worktrees/core/feat-x' }, INNER_SUBS[1]!], subs);
+    mkdirSync(join(fx.root, '_worktrees', 'core', 'feat-x'), { recursive: true });
+    const result = scope(fx);
+    expect(result.repos.map((repo) => repo.repoPath)).toEqual(['src/be']);
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'nested worktree layout undefined', blocking: true }]);
+    expect(result.incomplete).toBe(true);
+  });
+
+  it('an inner row with no branch yet is listed as pending and its paths are not re-diffed against HEAD', () => {
+    const fx = innerFixture('clone', ALL, [{ ...INNER_SUBS[0]!, branch: '-' }, INNER_SUBS[1]!]);
+    const result = scope(fx);
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'core', state: 'pending', reason: 'repository has no branch yet' }]);
+    expect(result.repos.map((repo) => repo.repoPath)).toEqual(['src/be/auth']);
+  });
+
+  it('a path no row owns in a mapped repository is diffed against HEAD and reported, without blocking', () => {
+    const fx = innerFixture('clone', [{ n: 1, paths: ['src/be/core/a.ts', 'src/be/auth/i.ts', 'src/be/shared/s.ts'] }]);
+    put(join(fx.be, 'shared', 's.ts'), 'export const s = 2;\n');
+    const result = scope(fx);
+    expect(result.repos.find((repo) => repo.repoPath === 'src/be')).toMatchObject({ source: 'fallback', files: ['shared/s.ts'] });
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'src/be/shared/s.ts', state: 'unmapped_in_mapped_repo', reason: 'repository has a git-map row with a recorded base; only changes since HEAD were reviewed for this path' }]);
+    expect(result.incomplete).toBe(false);
+  });
+
+  it('an unmapped path note does not hide an empty scope: nothing changed since the base or HEAD is still empty', () => {
+    const fx = innerFixture('clone', [{ n: 1, paths: ['src/be/core/a.ts', 'src/be/shared/s.ts'] }]);
+    rmSync(join(fx.core, 'u.ts'));
+    const head = git(fx.be, 'rev-parse', 'HEAD');
+    put(join(fx.feature, 'git-map.md'), mapOf(INNER_SUBS, { core: head, auth: head }));
+    const result = scope(fx);
+    expect(result.notReviewed).toMatchObject([{ subWorkspace: 'src/be/shared/s.ts', state: 'unmapped_in_mapped_repo' }]);
+    expect(result.empty).toBe(true);
+    expect(result.incomplete).toBe(false);
+  });
+
+  it('a claimed sub path reached through a symlink is not diffed a second time, also while its row is pending', () => {
+    const fx = innerFixture('clone', [{ n: 1, paths: ['src/be/core/a.ts', 'src/be/auth/i.ts', 'alias/a.ts', 'alias2/i.ts'] }], [INNER_SUBS[0]!, { ...INNER_SUBS[1]!, branch: '-' }]);
+    symlinkSync(fx.core, join(fx.root, 'alias'));
+    symlinkSync(fx.auth, join(fx.root, 'alias2'));
+    const result = scope(fx);
+    expect(result.repos.map((repo) => repo.repoPath)).toEqual(['src/be/core']);
+    expect(result.notReviewed).toMatchObject([{ subWorkspace: 'auth', state: 'pending' }]);
+  });
+
+  for (const phase of [undefined, 1]) {
+    it(`an entry naming an ancestor directory reviews the rows under it from their base and never re-diffs their files (${phase === undefined ? 'full run' : '--phase'})`, () => {
+      // The file entry under `core` must not narrow the row: the ancestor entry already puts all of `core` in scope.
+      const fx = innerFixture('clone', [{ n: 1, paths: ['src/be', 'src/be/core/a.ts'] }]);
+      put(join(fx.be, 'shared', 's.ts'), 'export const s = 2;\n');
+      put(join(fx.core, 'a.ts'), 'export const a = 3; // uncommitted\n');
+      const result = scope(fx, phase);
+      expect(result.repos.map((repo) => [repo.repoPath, repo.source, repo.files])).toEqual([
+        ['src/be/core', 'git-map', ['a.ts', 'n.ts', 'u.ts']],
+        ['src/be/auth', 'git-map', ['i.ts']],
+        ['src/be', 'fallback', ['shared/s.ts']],
+      ]);
+      expect(result.notReviewed).toMatchObject([{ subWorkspace: 'src/be', state: 'unmapped_in_mapped_repo' }]);
+      expectDisjointSlices(result);
+    });
+  }
+
+  it('--phase on a path no row owns still reports the mapped repository, although no row is diffed in this run', () => {
+    const fx = innerFixture('clone', [{ n: 1, paths: ['src/be/core/a.ts'] }, { n: 2, paths: ['src/be/shared/s.ts'] }]);
+    put(join(fx.be, 'shared', 's.ts'), 'export const s = 2;\n');
+    const result = scope(fx, 2);
+    expect(result.repos.map((repo) => [repo.repoPath, repo.source, repo.files])).toEqual([['src/be', 'fallback', ['shared/s.ts']]]);
+    expect(result.notReviewed).toMatchObject([{ subWorkspace: 'src/be/shared/s.ts', state: 'unmapped_in_mapped_repo' }]);
+    expect(result.incomplete).toBe(false);
+  });
+
+  it('an inner row with a branch and a base missing from its repository blocks the review', () => {
+    const fx = innerFixture('clone', ALL);
+    put(join(fx.feature, 'git-map.md'), mapOf(INNER_SUBS, { core: '0123456789abcdef0123456789abcdef01234567', auth: fx.base }));
+    const result = scope(fx);
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'core', state: 'invalid-base-commit', reason: 'does not name a commit in this repository', blocking: true }]);
+    expect(result.incomplete).toBe(true);
+    expect(result.repos.map((repo) => repo.repoPath)).toEqual(['src/be/auth']);
+  });
+});
+
+/** A root repository with a plain directory sub-workspace `apps/web`, its row realized from the root's first commit. */
+function plainFixture(paths: string[], subWorkspaces = [{ name: 'web', path: 'apps/web' }]): Fx {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-plain-')));
+  roots.push(root);
+  const base = initRepo(root, { 'apps/web/index.ts': 'old\n', 'apps/other.ts': 'old\n', '.specify/.specify.json': JSON.stringify({ version: '1.0', name: 'plain', subWorkspaces }) });
+  const feature = join(root, 'specs', 'task-1');
+  writePlan(feature, [{ n: 1, paths }]);
+  put(join(feature, 'git-map.md'), mapOf(subWorkspaces, Object.fromEntries(subWorkspaces.map((sub) => [sub.name, base]))));
+  put(join(root, 'apps', 'web', 'index.ts'), 'new\n');
+  git(root, 'add', '-A'); git(root, 'commit', '-q', '-m', 'feature');
+  return { root, feature, api: join(root, 'apps', 'web'), base };
+}
+
+/**
+ * A root repository whose plain directory sub-workspace `apps` holds the own repository `apps/api`, mounted as a
+ * submodule or as a nested clone, with or without its own row. Feature work is committed in both repositories; a
+ * submodule's new gitlink is committed in the root.
+ */
+function plainHostFixture(kind: InnerKind, withApiRow: boolean): Fx {
+  const subWorkspaces = [{ name: 'apps', path: 'apps' }, ...(withApiRow ? [{ name: 'api', path: 'apps/api' }] : [])];
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-host-')));
+  const upstream = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-upstream-')));
+  roots.push(root, upstream);
+  const apiBase = initRepo(upstream);
+  const base = initRepo(root, { 'apps/other.ts': 'old\n', '.specify/.specify.json': JSON.stringify({ version: '1.0', name: 'host', subWorkspaces }) });
+  const api = join(root, 'apps', 'api');
+  if (kind === 'submodule') {
+    git(root, '-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', upstream, 'apps/api');
+    git(root, 'commit', '-q', '-m', 'mount');
+  } else {
+    git(root, 'clone', '-q', upstream, api);
+  }
+  git(api, 'checkout', '-q', '-b', 'feat/x');
+  put(join(api, 'src', 'a.ts'), 'export const a = 2;\n');
+  git(api, 'commit', '-qam', 'feature');
+  put(join(root, 'apps', 'other.ts'), 'new\n');
+  git(root, 'add', 'apps/other.ts', ...(kind === 'submodule' ? ['apps/api'] : []));
+  git(root, 'commit', '-q', '-m', 'feature');
+  const feature = join(root, 'specs', 'task-1');
+  writePlan(feature, [{ n: 1, paths: ['apps/other.ts', 'apps/api/src/a.ts'] }]);
+  put(join(feature, 'git-map.md'), mapOf(subWorkspaces, withApiRow ? { apps: base, api: apiBase } : { apps: base }));
+  return { root, feature, api, base };
+}
+
+describe('review scope: own repositories inside another row', () => {
+  for (const kind of ['submodule', 'clone'] as const) {
+    it(`${kind}: an own repository inside another own repository is diffed by its own row only`, () => {
+      const root = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-own-')));
+      const upstream = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-upstream-')));
+      roots.push(root, upstream);
+      const libBase = initRepo(upstream);
+      const subWorkspaces = [{ name: 'be', path: 'src/be' }, { name: 'lib', path: 'src/be/lib' }];
+      put(join(root, '.specify', '.specify.json'), JSON.stringify({ version: '1.0', name: 'own', subWorkspaces }));
+      const be = join(root, 'src', 'be');
+      initRepo(be);
+      const lib = join(be, 'lib');
+      if (kind === 'submodule') {
+        git(be, '-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', upstream, 'lib');
+        git(be, 'commit', '-q', '-m', 'mount');
+      } else {
+        git(be, 'clone', '-q', upstream, 'lib');
+        put(join(be, '.gitignore'), 'lib/\n');
+        git(be, 'add', '.gitignore'); git(be, 'commit', '-q', '-m', 'ignore');
+      }
+      const beBase = git(be, 'rev-parse', 'HEAD');
+      git(lib, 'checkout', '-q', '-b', 'feat/x');
+      put(join(lib, 'src', 'a.ts'), 'export const lib = 2;\n');
+      git(lib, 'commit', '-qam', 'feature');
+      put(join(be, 'src', 'a.ts'), 'export const be = 2;\n');
+      git(be, 'add', 'src/a.ts', ...(kind === 'submodule' ? ['lib'] : []));
+      git(be, 'commit', '-q', '-m', 'feature');
+      const feature = join(root, 'specs', 'task-1');
+      writePlan(feature, [{ n: 1, paths: ['src/be/src/a.ts', 'src/be/lib/src/a.ts'] }]);
+      put(join(feature, 'git-map.md'), mapOf(subWorkspaces, { be: beBase, lib: libBase }));
+      const result = computeReviewScope({ projectRoot: root, featureDir: feature });
+      expect(result.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['src/be', ['src/a.ts']], ['src/be/lib', ['src/a.ts']]]);
+      expect(result.slices.map((slice) => slice.id)).toEqual(['src/be#be', 'src/be/lib#lib']);
+    });
+
+    it(`${kind}: an inner row never diffs an own nested clone inside its directory`, () => {
+      const subs = [...INNER_SUBS, { name: 'lib', path: 'src/be/core/lib' }];
+      const fx = innerFixture(kind, [{ n: 1, paths: ['src/be/core/a.ts', 'src/be/core/lib/src/a.ts'] }], INNER_SUBS, subs);
+      const libBase = initRepo(join(fx.core, 'lib'));
+      put(join(fx.core, 'lib', 'src', 'a.ts'), 'export const lib = 2;\n');
+      put(join(fx.feature, 'git-map.md'), mapOf([...INNER_SUBS, { name: 'lib', path: 'src/be/core/lib' }], { core: fx.base, auth: fx.base, lib: libBase }));
+      const result = scope(fx);
+      expect(result.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['src/be/core/lib', ['src/a.ts']], ['src/be/core', ['a.ts', 'n.ts', 'u.ts']], ['src/be/auth', ['i.ts']]]);
+      expectDisjointSlices(result);
+    });
+  }
+});
+
+describe('review scope: plain directory rows and lost repositories', () => {
+  it('a realized plain directory row is diffed from its recorded base, and its porcelain key matches the host\'s', () => {
+    const fx = plainFixture(['apps/web/index.ts']);
+    const result = scope(fx);
+    expect(result.repos).toMatchObject([{ subWorkspace: 'web', repoPath: 'apps/web', workingRoot: fx.api, baseCommit: fx.base, source: 'git-map', files: ['index.ts'] }]);
+    expect(result.slices).toMatchObject([{ id: 'apps/web#web', routingPaths: ['apps/web/index.ts'] }]);
+    expect(Object.keys(result.porcelain).sort()).toEqual(['.', 'apps/web']);
+    expect(result.porcelain['apps/web']).toEqual(result.porcelain['.']);
+  });
+
+  it('a plain row with a branch and a base that is not in the repository blocks the review', () => {
+    const fx = plainFixture(['apps/web/index.ts']);
+    put(join(fx.feature, 'git-map.md'), mapOf([{ name: 'web', path: 'apps/web' }], { web: '0123456789abcdef0123456789abcdef01234567' }));
+    const result = scope(fx);
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'web', state: 'invalid-base-commit', reason: 'does not name a commit in this repository; apps/web is not a separate git repository', blocking: true }]);
+    expect(result.incomplete).toBe(true);
+    expect(result.repos).toEqual([]);
+  });
+
+  it('a plain row with an existing recorded worktree blocks; a missing one is diffed at the sub path', () => {
+    const fx = plainFixture(['apps/web/index.ts']);
+    mkdirSync(join(fx.root, '_worktrees', 'web', 'feat-x'), { recursive: true });
+    put(join(fx.feature, 'git-map.md'), mapOf([{ name: 'web', path: 'apps/web', worktree: '_worktrees/web/feat-x' }], { web: fx.base }));
+    const blocked = scope(fx);
+    expect(blocked.notReviewed).toEqual([{ subWorkspace: 'web', state: 'identity_failed', reason: 'nested worktree layout undefined', blocking: true }]);
+    expect(blocked.incomplete).toBe(true);
+
+    put(join(fx.feature, 'git-map.md'), mapOf([{ name: 'web', path: 'apps/web', worktree: '_worktrees/web/gone' }], { web: fx.base }));
+    expect(scope(fx).repos).toMatchObject([{ subWorkspace: 'web', workingRoot: fx.api, source: 'git-map', files: ['index.ts'] }]);
+  });
+
+  it('an ancestor directory entry next to a realized plain row leaves that row\'s files to the row', () => {
+    const fx = plainFixture(['apps/web/index.ts', 'apps']);
+    put(join(fx.api, 'extra.ts'), 'extra\n');
+    put(join(fx.root, 'apps', 'other.ts'), 'new\n');
+    const result = scope(fx);
+    expect(result.repos.map((repo) => [repo.repoPath, repo.source, repo.files])).toEqual([['apps/web', 'git-map', ['index.ts', 'extra.ts']], ['.', 'fallback', ['apps/other.ts']]]);
+    expect(result.notReviewed).toEqual([]);
+    expectDisjointSlices(result);
+  });
+
+  it('nested directory rows split their files: the outer row never re-diffs the inner row\'s', () => {
+    const fx = plainFixture(['apps/web/index.ts', 'apps/other.ts'], [{ name: 'apps', path: 'apps' }, { name: 'web', path: 'apps/web' }]);
+    put(join(fx.root, 'apps', 'other.ts'), 'new\n');
+    const result = scope(fx);
+    expect(result.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['apps', ['other.ts']], ['apps/web', ['index.ts']]]);
+    expectDisjointSlices(result);
+  });
+
+  it('an own repository that lost its .git inside a git workspace blocks instead of being skipped', () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-lost-')));
+    roots.push(root);
+    put(join(root, '.specify', '.specify.json'), JSON.stringify({ version: '1.0', name: 'lost', subWorkspaces: [{ name: 'api', path: 'apps/api' }] }));
+    const feature = join(root, 'specs', 'task-1');
+    writePlan(feature, [{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    git(root, 'init', '-q', '-b', 'main'); git(root, 'add', '-A'); git(root, 'commit', '-q', '-m', 'host');
+    const base = initRepo(join(root, 'apps', 'api'));
+    put(join(feature, 'git-map.md'), mapOf([{ name: 'api', path: 'apps/api' }], { api: base }));
+    put(join(root, 'apps', 'api', 'src', 'a.ts'), 'changed\n');
+    rmSync(join(root, 'apps', 'api', '.git'), { recursive: true, force: true });
+    const result = computeReviewScope({ projectRoot: root, featureDir: feature });
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'api', state: 'invalid-base-commit', reason: 'does not name a commit in this repository; apps/api is not a separate git repository', blocking: true }]);
+    expect(result.incomplete).toBe(true);
+    expect(result.repos).toEqual([]);
+  });
+
+  for (const kind of ['submodule', 'clone'] as const) {
+    it(`${kind}: an own repository inside a realized plain row is diffed by its own row only`, () => {
+      const fx = plainHostFixture(kind, true);
+      const result = scope(fx);
+      expect(result.repos.map((repo) => [repo.repoPath, repo.source, repo.files])).toEqual([['apps/api', 'git-map', ['src/a.ts']], ['apps', 'git-map', ['other.ts']]]);
+      expect(result.notReviewed).toEqual([]);
+      expectDisjointSlices(result);
+    });
+  }
+
+  it('a submodule no row maps is diffed as its gitlink inside the enclosing row, whatever `diff.submodule` says', () => {
+    const fx = plainHostFixture('submodule', false);
+    git(fx.root, 'config', 'diff.submodule', 'diff');
+    const result = scope(fx);
+    expect(result.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['apps', ['api', 'other.ts']]]);
+    expect(repoDiff(result, 'apps')).toContain('+Subproject commit ');
+  });
+
+  it('a directory replaced by a submodule keeps both the gitlink and the removed files', () => {
+    const root = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-swap-')));
+    const upstream = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-upstream-')));
+    roots.push(root, upstream);
+    initRepo(upstream);
+    const subWorkspaces = [{ name: 'apps', path: 'apps' }];
+    const base = initRepo(root, { 'apps/api/x.ts': 'vendored\n', '.specify/.specify.json': JSON.stringify({ version: '1.0', name: 'swap', subWorkspaces }) });
+    git(root, 'rm', '-rq', 'apps/api');
+    git(root, '-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', upstream, 'apps/api');
+    git(root, 'commit', '-q', '-m', 'swap');
+    const feature = join(root, 'specs', 'task-1');
+    writePlan(feature, [{ n: 1, paths: ['apps/api'] }]);
+    put(join(feature, 'git-map.md'), mapOf(subWorkspaces, { apps: base }));
+    const result = computeReviewScope({ projectRoot: root, featureDir: feature });
+    expect(result.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['apps', ['api', 'api/x.ts']]]);
+    const diff = repoDiff(result, 'apps');
+    expect(diff).toContain('+Subproject commit ');
+    expect(diff.match(/-vendored/g)).toHaveLength(1);
+  });
+
+  it('an own repository keeps repo-root diff coordinates for tracked and untracked files', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts', 'apps/api/src/new.ts'] }]);
+    put(join(fx.api, 'src', 'a.ts'), 'changed\n');
+    put(join(fx.api, 'src', 'new.ts'), 'created\n');
+    const diff = repoDiff(scope(fx), 'apps/api');
+    expect(diff).toContain('diff --git a/src/a.ts b/src/a.ts');
+    expect(diff).toContain('diff --git a/src/new.ts b/src/new.ts');
+    expect(diff).toContain('+++ b/src/new.ts');
   });
 });
 

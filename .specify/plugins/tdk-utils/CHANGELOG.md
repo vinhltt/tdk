@@ -4,10 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
-## [Unreleased]
+## [4.5.3] - 2026-10-25
 
-### Fixed
-- `tdk-handoff`: restore the branding-safe upstream identity resource and pinned adapted-source MIT notice so linked resources accompany default and branded installed skills.
+### Changed
+- tdk-branch-preflight: git-map contract defines repository classes (own, inner, plain, none) shared by /tdk-status and /tdk-review; `Worktree path` is defined only for own rows and the identity gate still covers every worktree operation
+
+## [4.5.2] - 2026-10-25
+
+### Changed
+- tdk-handoff: names no other skill; the `spec` kind leaves the recipient's specification workflow unnamed, capture never invokes another skill, and the sanitizer no longer exempts a `/tdk-specify` token, so a slash command is redacted like any other absolute path
 
 ## [4.5.1] - 2026-10-18
 
@@ -27,7 +32,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 ## [4.4.0] - 2026-10-04
 
 ### Added
-- tdk-handoff: capture five portable handoff kinds with explicit host ownership, bounded redaction and manual receiver re-verification; never publish, dispatch or create tasks. Ships as a self-contained skill: bundled Bun exporter, no consumer shared scripts or npm dependencies.
+- tdk-handoff: capture five portable handoff kinds with explicit host ownership, bounded redaction and manual receiver re-verification; never publish, dispatch or create tasks. Ships as a self-contained skill: bundled Bun exporter, no consumer shared scripts or npm dependencies; default and branded installs carry the branding-safe upstream identity resource and the pinned adapted-source MIT notice.
 
 ## [4.3.1] - 2026-10-02
 

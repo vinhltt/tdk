@@ -36,6 +36,27 @@ GitHub Actions uses a repository installation token, not a user PAT. The script 
 
 Before rollout, create these labels in `vinhltt/tdk`: `security`, `dependencies`, `severity:critical`, `severity:high`, `severity:moderate`, `severity:low`, `severity:unrated`, and `no-longer-detected`. The REST client applies existing labels; it does not provision them.
 
+## Dependabot version updates
+
+[dependabot.yml](../.github/dependabot.yml) selects the native `bun` ecosystem for weekly version-update PRs, with `open-pull-requests-limit: 2`. It does not enable auto-merge or claim security-only PRs. Updates may include major versions and require review and checks.
+
+The configuration lists the TDK-owned package directories explicitly. OSV still scans every tracked Bun lockfile, including the `tdk-memory` subtree; that subtree is deliberately excluded from Dependabot writes because its fixes belong upstream in `vinhltt/tdk-memory`.
+
+[GitHub's support matrix](https://docs.github.com/en/code-security/reference/supply-chain-security/supported-ecosystems-and-repositories#bun) supports Bun version updates, not Bun security updates. Keep Dependabot alerts enabled, but disable repository automatic security fixes: the automatic `npm_and_yarn` security updater cannot update a Bun-only lockfile. Setting the version-update PR limit to zero would disable the supported Bun update path, not fix that security updater.
+
+Maintainer setup and verification (repository admin access required):
+
+```bash
+gh api -X DELETE repos/vinhltt/tdk/automated-security-fixes
+gh api repos/vinhltt/tdk/automated-security-fixes
+gh api repos/vinhltt/tdk/vulnerability-alerts
+```
+
+The settings readback must show `enabled: false`; the alerts endpoint succeeds with no body when alerts remain enabled. Do not disable alerts or add an npm lockfile alongside `bun.lock` to satisfy the wrong updater.
+
+Dependabot reads this configuration from the default branch. PR checks and local config/lockfile validation cannot prove that a scheduled updater has opened a real PR. Verify the first native Bun update after the configuration is merged; an already-failed historical security-update run will not turn green merely because settings changed.
+
+
 ## Verification and rollout
 
 Run `bun test ./.github/scripts/osv` (`./` matters for Bun dot-directory discovery). Use CLI `--dry-run` with a fixture for offline action inspection; no credentials are needed. Dispatch `fixture=dispatch-sample` twice to prove create/dedup on the synthetic `tdk-osv-sync-fixture` package. Fixture mode must not mark real issues as missing. Then prove completed/reopen and not-planned/noop and leave the fixture closed as not planned.
@@ -46,4 +67,4 @@ The rollout plan configures `main dependency gate` requiring the exact `dependen
 
 Actions are pinned to immutable commit SHAs with release comments. Scanner Linux amd64 version and SHA are workflow env values. On scanner upgrade, download the release checksum manifest, verify the binary, and repeat the proof: all lockfiles return nonzero package counts, transitive packages present, known-vulnerable sample exit 1, clean sample exit 0, empty dir exit 128, bad flag error. Update parser and sanitized fixtures together if output changed. Wrapper accepts scanner 0/1 only and requires a nonempty result file.
 
-Rollback: disable/delete the workflow and remove only its dependency ruleset (or fallback protection). There is no personal token to revoke or custom secret/variable to remove. Existing issues and labels remain for manual triage. Keep unrelated branch protections. The builder writable-zone rule can remain.
+Rollback: disable/delete the OSV workflow and remove only its dependency ruleset (or fallback protection). To stop scheduled Bun PRs, remove its Dependabot entry or set its version-update limit to zero. Do not re-enable automatic security fixes for Bun unless GitHub adds support and a real update is verified. There is no personal token to revoke or custom secret/variable to remove. Existing issues and labels remain for manual triage. Keep alerts and unrelated branch protections. The builder writable-zone rule can remain.

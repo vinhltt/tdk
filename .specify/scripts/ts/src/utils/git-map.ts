@@ -12,6 +12,7 @@ import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { runGit } from './git-env';
+import { isWithin } from './path-within';
 import type { SubWorkspace } from './types';
 
 const FRONTMATTER_RE = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/;
@@ -343,6 +344,33 @@ export function rowStateOf(map: GitMap, sub: string, repositoryRoot?: string): G
 /** Outcome of probing one path: a branch, or the reason there is none to report. */
 type BranchProbe = { branch: string; note?: undefined } | { branch: null; note: string };
 
+/** Where a sub-workspace path sits relative to the repository git reports for it. `top` exists unless `none`. */
+export type SubWorkspaceRepo =
+  | { kind: 'none'; top: null }
+  | { kind: 'own' | 'inner' | 'plain'; top: string };
+
+/**
+ * Classify the repository git answers with for `repositoryRoot` (a sub-workspace path).
+ *
+ * - `own`: `repositoryRoot` is itself a repository root.
+ * - `inner`: a directory inside a nested clone or submodule that sits strictly inside the workspace
+ *   and owns it, so git answers with that repository.
+ * - `plain`: a directory of the workspace's own repository, of a repository enclosing the workspace,
+ *   or (through an escaping symlink) of an unrelated one.
+ * - `none`: not inside any working tree.
+ *
+ * Both sides are realpath'd before comparing: git prints `C:/...` on Windows and resolves symlinks.
+ */
+export function classifySubWorkspaceRepo(workspaceRoot: string, repositoryRoot: string): SubWorkspaceRepo {
+  try {
+    const top = realpathSync(runGit(['-C', repositoryRoot, 'rev-parse', '--show-toplevel']));
+    if (top === realpathSync(repositoryRoot)) return { kind: 'own', top };
+    const workspaceReal = realpathSync(workspaceRoot);
+    if (top !== workspaceReal && isWithin(workspaceReal, top)) return { kind: 'inner', top };
+    return { kind: 'plain', top };
+  } catch { return { kind: 'none', top: null }; }
+}
+
 /**
  * Live branch of the repository rooted at `repositoryRoot`, read through `workingRoot`.
  *
@@ -354,10 +382,14 @@ type BranchProbe = { branch: string; note?: undefined } | { branch: null; note: 
  * - `workingRoot` is where HEAD is read: the recorded worktree when it exists, otherwise the
  *   repository itself.
  *
- * `repositoryRoot` must be the repository's own root. Git answers happily for any directory
- * *inside* a repository and reports the enclosing repository's branch — so on a monorepo, where a
- * sub-workspace is a plain directory of the root repo, an unguarded probe hands back the root's
- * branch as if it belonged to that sub-workspace.
+ * Git answers happily for any directory *inside* a repository and reports the enclosing
+ * repository's branch, so `repositoryRoot` is classified against `workspaceRoot` first:
+ *
+ * - `plain` is the monorepo hazard: a sub-workspace that is just a directory of the workspace's repo
+ *   would be handed the root's branch as if it were its own. No branch is reported.
+ * - `inner` is a directory inside a nested clone or submodule. The enclosing repository's branch IS
+ *   the sub-workspace's branch, because preflight created the branch there. Only the shared checkout
+ *   is defined: a recorded worktree has no layout for an inner directory, so it reads as unknown.
  *
  * A `workingRoot` that is a *different* repository is the subtler failure: `--show-toplevel`
  * matching itself is true for any independent clone, and a clone of the same upstream has the same
@@ -365,19 +397,21 @@ type BranchProbe = { branch: string; note?: undefined } | { branch: null; note: 
  * Identity is therefore established by shared object store (`--git-common-dir`) plus registered
  * membership in `worktree list`, never by agreement about branches.
  */
-function probeBranch(repositoryRoot: string, workingRoot: string = repositoryRoot): BranchProbe {
-  let repoCommonDir: string;
-  try {
-    const top = runGit(['-C', repositoryRoot, 'rev-parse', '--show-toplevel']);
-    if (realpathSync(top) !== realpathSync(repositoryRoot)) {
-      return { branch: null, note: 'not a separate git repository' };
-    }
-    repoCommonDir = commonDirOf(repositoryRoot);
-  } catch { return { branch: null, note: 'not a git working tree' }; }
+function probeBranch(workspaceRoot: string, repositoryRoot: string, workingRoot: string = repositoryRoot): BranchProbe {
+  const { kind } = classifySubWorkspaceRepo(workspaceRoot, repositoryRoot);
+  if (kind === 'none') return { branch: null, note: 'not a git working tree' };
+  if (kind === 'plain') return { branch: null, note: 'not a separate git repository' };
 
-  if (workingRoot !== repositoryRoot) {
-    if (!isRegisteredWorktree(repositoryRoot, workingRoot, repoCommonDir)) {
-      return { branch: null, note: 'worktree path is not a worktree of this repository' };
+  if (kind === 'inner') {
+    if (workingRoot !== repositoryRoot) return { branch: null, note: 'nested worktree layout undefined' };
+  } else {
+    let repoCommonDir: string;
+    try { repoCommonDir = commonDirOf(repositoryRoot); } catch { return { branch: null, note: 'not a git working tree' }; }
+
+    if (workingRoot !== repositoryRoot) {
+      if (!isRegisteredWorktree(repositoryRoot, workingRoot, repoCommonDir)) {
+        return { branch: null, note: 'worktree path is not a worktree of this repository' };
+      }
     }
   }
 
@@ -475,7 +509,7 @@ export function probeSubWorkspaces(
     const worktreeMissing = recordedWorktree !== null && !existsSync(recordedWorktree);
     const workingRoot = worktreeMissing || recordedWorktree === null ? repositoryRoot : recordedWorktree;
 
-    const probe = probeBranch(repositoryRoot, workingRoot);
+    const probe = probeBranch(workspaceRoot, repositoryRoot, workingRoot);
 
     let state: SubWorkspaceBranchState;
     if (probe.branch === null) state = 'unknown';

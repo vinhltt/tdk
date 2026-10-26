@@ -11324,6 +11324,19 @@ function rowStateOf(map, sub, repositoryRoot) {
     return "pending";
   return base === undefined ? "realized-unverified" : "realized";
 }
+function classifySubWorkspaceRepo(workspaceRoot, repositoryRoot) {
+  try {
+    const top = realpathSync2(runGit(["-C", repositoryRoot, "rev-parse", "--show-toplevel"]));
+    if (top === realpathSync2(repositoryRoot))
+      return { kind: "own", top };
+    const workspaceReal = realpathSync2(workspaceRoot);
+    if (top !== workspaceReal && isWithin(workspaceReal, top))
+      return { kind: "inner", top };
+    return { kind: "plain", top };
+  } catch {
+    return { kind: "none", top: null };
+  }
+}
 function isRegisteredWorktree(repositoryRoot, workingRoot, repoCommonDir) {
   let workingCommonDir;
   try {
@@ -11615,16 +11628,17 @@ class ReviewScopeError extends Error {
 var PORCELAIN_ARGS = ["status", "--porcelain=v1", "-z", "--untracked-files=all"];
 var git = (cwd, args) => runGit(["-C", cwd, "-c", "core.quotePath=false", ...args], { raw: true, maxBuffer: MAX_BUFFER, env: { GIT_OPTIONAL_LOCKS: "0" } });
 var literal = (path) => path === "." ? "." : `:(literal)${path}`;
+var excludeBelow = (path) => `:(exclude,glob)${path.replace(/[\\*?[\]]/g, "\\$&")}/**`;
 var countLines = (text) => text === "" ? 0 : text.split(`
 `).length - (text.endsWith(`
 `) ? 1 : 0);
-function diffRepo(workingRoot, base, specs) {
-  const pathspec = specs ? specs.map(literal) : ["."];
-  const common = ["--no-ext-diff", "--no-textconv", "--no-color", "--no-renames", "--src-prefix=a/", "--dst-prefix=b/"];
+function diffRepo(workingRoot, base, specs, excludes = []) {
+  const pathspec = [...specs ? specs.map(literal) : ["."], ...excludes.map((path) => `:(exclude,literal)${path}`)];
+  const common = ["--no-ext-diff", "--no-textconv", "--no-color", "--no-renames", "--submodule=short", "--src-prefix=a/", "--dst-prefix=b/"];
   const truncated = [];
   const files = [];
   const segments = new Map;
-  const stats = git(workingRoot, ["diff", ...common, "-z", "--numstat", base, "--", ...pathspec]).split("\x00").filter(Boolean);
+  const stats = git(workingRoot, ["diff", ...common, "--relative", "-z", "--numstat", base, "--", ...pathspec]).split("\x00").filter(Boolean);
   for (const entry of stats) {
     const [added, deleted, ...rest] = entry.split("\t");
     const path = rest.join("\t");
@@ -11636,8 +11650,8 @@ function diffRepo(workingRoot, base, specs) {
       truncated.push({ path, reason: "oversize" });
     else
       statOnly = false;
-    const args = statOnly ? ["diff", "--no-ext-diff", "--no-color", "--stat", base] : ["diff", ...common, base];
-    segments.set(path, git(workingRoot, [...args, "--", literal(path), `:(exclude,literal)${path}/`]));
+    const args = statOnly ? ["diff", "--no-ext-diff", "--no-color", "--submodule=short", "--relative", "--stat", base] : ["diff", ...common, "--relative", base];
+    segments.set(path, git(workingRoot, [...args, "--", literal(path), excludeBelow(path)]));
   }
   const untracked = git(workingRoot, ["ls-files", "--others", "--exclude-standard", "-z", "--", ...pathspec]).split("\x00").filter(Boolean).sort();
   for (const path of untracked) {
@@ -11817,16 +11831,36 @@ function computeReviewScope(options) {
   const usable = map !== null && map.layout !== "malformed" && map.featureBranch !== null ? map : null;
   const repos = [];
   const diffs = [];
-  const pushRepo = (fields, base, specs) => {
-    const { segments, ...rendered } = diffRepo(fields.workingRoot, fields.baseCommit, specs);
+  const pushRepo = (fields, base, specs, excludes = []) => {
+    const { segments, ...rendered } = diffRepo(fields.workingRoot, fields.baseCommit, specs, excludes);
     const repo = { ...fields, ...rendered };
     repos.push(repo);
     diffs.push({ repo, base, segments });
   };
+  const skip = (subWorkspace, state, reason, blocking2) => {
+    notReviewed.push(blocking2 ? { subWorkspace, state, reason, blocking: true } : { subWorkspace, state, reason });
+  };
   const claimed = new Set;
   const handled = new Set;
+  const handledSubs = new Set;
+  const reviewedTops = new Set;
+  const mappedTops = new Set;
   const projectReal = realpathSync3(projectRoot);
-  if (usable)
+  const excludesUnder = (root) => [...handledSubs, ...handled].filter((sub) => sub !== root && isWithin(root, sub)).map((sub) => relative3(root, sub).replace(/\\/g, "/"));
+  if (usable) {
+    const recordedWork = (row) => row.branch !== null && usable.baseCommitByRepo[row.subWorkspace] !== undefined && usable.cleaningByRepo[row.subWorkspace] === undefined && usable.cleanedByRepo[row.subWorkspace] === undefined;
+    const noteMappedTop = (name, repositoryRoot) => {
+      if (typeof usable.baseCommitByRepo[name] !== "string" || !existsSync3(repositoryRoot))
+        return;
+      const repoReal = realpathSync3(repositoryRoot);
+      if (!isWithin(projectReal, repoReal) || repoReal === projectReal)
+        return;
+      const repo = classifySubWorkspaceRepo(projectRoot, repositoryRoot);
+      if (repo.kind === "inner")
+        mappedTops.add(repo.top);
+    };
+    const directoryRows = [];
+    const rowDiffs = [];
     for (const row of usable.rows) {
       const sub = subs.find((candidate) => candidate.name === row.subWorkspace);
       if (!sub) {
@@ -11837,35 +11871,38 @@ function computeReviewScope(options) {
       if (prefix === ".")
         continue;
       const owned = [...related].filter((path) => path === prefix || path.startsWith(`${prefix}/`));
-      if (target && owned.length === 0)
-        continue;
+      const covered = [...related].some((path) => path === "." || prefix.startsWith(`${path}/`));
       const repositoryRoot = join3(projectRoot, sub.path);
+      if (target && owned.length === 0 && !covered) {
+        noteMappedTop(sub.name, repositoryRoot);
+        continue;
+      }
+      const specs = target && !covered ? owned.map((path) => path === prefix ? "." : path.slice(prefix.length + 1)) : undefined;
       if (!existsSync3(repositoryRoot)) {
         owned.forEach((path) => claimed.add(path));
-        notReviewed.push({ subWorkspace: sub.name, state: "missing_repository", reason: `${sub.path} does not exist` });
+        skip(sub.name, "missing_repository", `${sub.path} does not exist`, recordedWork(row));
         continue;
       }
       const repoReal = realpathSync3(repositoryRoot);
       if (!isWithin(projectReal, repoReal) || repoReal === projectReal) {
         owned.forEach((path) => claimed.add(path));
-        notReviewed.push({ subWorkspace: sub.name, state: "identity_failed", reason: "repository root escapes or equals the workspace" });
+        skip(sub.name, "identity_failed", "repository root escapes or equals the workspace", recordedWork(row));
         continue;
       }
-      let top = null;
-      try {
-        top = realpathSync3(runGit(["-C", repositoryRoot, "rev-parse", "--show-toplevel"]));
-      } catch {}
-      if (top !== null && top !== repoReal)
+      const repo = classifySubWorkspaceRepo(projectRoot, repositoryRoot);
+      if (repo.kind === "inner" || repo.kind === "plain") {
+        directoryRows.push({ row, name: sub.name, prefix, owned, specs, repositoryRoot, subReal: repoReal, kind: repo.kind, top: repo.top });
         continue;
+      }
       owned.forEach((path) => claimed.add(path));
       handled.add(repoReal);
       const state = rowStateOf(usable, sub.name, repositoryRoot);
       if (state !== "realized") {
-        notReviewed.push({ subWorkspace: sub.name, state, reason: stateReason(usable, sub.name, repositoryRoot, state) });
+        skip(sub.name, state, stateReason(usable, sub.name, repositoryRoot, state), state === "invalid-base-commit" && recordedWork(row));
         continue;
       }
-      if (top === null) {
-        notReviewed.push({ subWorkspace: sub.name, state: "identity_failed", reason: "not a git working tree" });
+      if (repo.kind === "none") {
+        skip(sub.name, "identity_failed", "not a git working tree", recordedWork(row));
         continue;
       }
       const baseCommit = usable.baseCommitByRepo[sub.name];
@@ -11881,13 +11918,50 @@ function computeReviewScope(options) {
           registered = isRegisteredWorktree(repositoryRoot, workingRoot, commonDirOf(repositoryRoot));
         } catch {}
         if (!registered) {
-          notReviewed.push({ subWorkspace: sub.name, state: "identity_failed", reason: "worktree path is not a worktree of this repository" });
+          skip(sub.name, "identity_failed", "worktree path is not a worktree of this repository", recordedWork(row));
           continue;
         }
       }
-      const specs = target ? owned.map((path) => path === prefix ? "." : path.slice(prefix.length + 1)) : undefined;
-      pushRepo({ subWorkspace: sub.name, repoPath: row.repoPath, workingRoot, baseCommit, includesUncommitted: true, source: "git-map" }, { kind: "prefix", prefix }, specs);
+      rowDiffs.push({ fields: { subWorkspace: sub.name, repoPath: row.repoPath, workingRoot, baseCommit, includesUncommitted: true, source: "git-map" }, prefix, specs, root: repoReal });
+      reviewedTops.add(repoReal);
     }
+    for (const { row, name, prefix, owned, specs, repositoryRoot, subReal, kind, top } of directoryRows) {
+      if (kind === "inner" && typeof usable.baseCommitByRepo[name] === "string")
+        mappedTops.add(top);
+      const recorded = row.worktreePath === null ? null : join3(projectRoot, row.worktreePath);
+      const stranded = recorded !== null && existsSync3(recorded);
+      const strand = () => skip(name, "identity_failed", "nested worktree layout undefined", recordedWork(row));
+      if (reviewedTops.has(top)) {
+        owned.forEach((path) => claimed.add(path));
+        if (stranded)
+          strand();
+        continue;
+      }
+      const state = rowStateOf(usable, name, repositoryRoot);
+      const blocking2 = state === "invalid-base-commit" && recordedWork(row);
+      if (kind === "plain" && state !== "realized" && !blocking2)
+        continue;
+      owned.forEach((path) => claimed.add(path));
+      handledSubs.add(subReal);
+      if (state !== "realized") {
+        const reason = stateReason(usable, name, repositoryRoot, state);
+        skip(name, state, kind === "plain" ? `${reason}; ${prefix} is not a separate git repository` : reason, blocking2);
+        continue;
+      }
+      const baseCommit = usable.baseCommitByRepo[name];
+      if (typeof baseCommit !== "string") {
+        notReviewed.push({ subWorkspace: name, state: "invalid-base-commit", reason: "no usable base commit" });
+        continue;
+      }
+      if (stranded) {
+        strand();
+        continue;
+      }
+      rowDiffs.push({ fields: { subWorkspace: name, repoPath: row.repoPath, workingRoot: repositoryRoot, baseCommit, includesUncommitted: true, source: "git-map" }, prefix, specs, root: subReal });
+    }
+    for (const { fields, prefix, specs, root } of rowDiffs)
+      pushRepo(fields, { kind: "prefix", prefix }, specs, excludesUnder(root));
+  }
   const groups = new Map;
   for (const path of related) {
     if (claimed.has(path))
@@ -11905,6 +11979,8 @@ function computeReviewScope(options) {
       notReviewed.push({ subWorkspace: path, state: "outside_project", reason: "path resolves outside the project through a symlink" });
       continue;
     }
+    if ([...handledSubs].some((sub) => isWithin(sub, realStart)))
+      continue;
     let top;
     try {
       top = realpathSync3(runGit(["-C", realStart, "rev-parse", "--show-toplevel"]));
@@ -11914,6 +11990,8 @@ function computeReviewScope(options) {
     }
     if (handled.has(top))
       continue;
+    if (mappedTops.has(top))
+      notReviewed.push({ subWorkspace: path, state: "unmapped_in_mapped_repo", reason: "repository has a git-map row with a recorded base; only changes since HEAD were reviewed for this path" });
     const spec = relative3(top, join3(realStart, relative3(start, absolute))).replace(/\\/g, "/") || ".";
     groups.set(top, [...groups.get(top) ?? [], spec]);
   }
@@ -11925,7 +12003,7 @@ function computeReviewScope(options) {
       notReviewed.push({ subWorkspace: relative3(projectReal, top) || ".", state: "no_head", reason: "repository has no commit to diff against" });
       continue;
     }
-    pushRepo({ subWorkspace: null, repoPath: relative3(projectReal, top).replace(/\\/g, "/") || ".", workingRoot: top, baseCommit: base, includesUncommitted: true, source: "fallback" }, { kind: "top", top }, specs);
+    pushRepo({ subWorkspace: null, repoPath: relative3(projectReal, top).replace(/\\/g, "/") || ".", workingRoot: top, baseCommit: base, includesUncommitted: true, source: "fallback" }, { kind: "top", top }, specs, excludesUnder(top));
   }
   const porcelain = {};
   for (const repo of repos)
@@ -11939,7 +12017,18 @@ function computeReviewScope(options) {
     warnings.push("feature dir is not inside a git repository; reviewer writes there cannot be detected");
   }
   const slices = buildSlices(diffs, config, projectRoot, projectReal);
-  return { ok: true, repos, slices, notReviewed, phases, porcelain, porcelainArgs: PORCELAIN_ARGS, warnings, empty: notReviewed.length === 0 && repos.every((repo) => repo.files.length === 0) };
+  return {
+    ok: true,
+    repos,
+    slices,
+    notReviewed,
+    phases,
+    porcelain,
+    porcelainArgs: PORCELAIN_ARGS,
+    warnings,
+    incomplete: notReviewed.some((entry) => entry.blocking === true),
+    empty: notReviewed.every((entry) => entry.state === "unmapped_in_mapped_repo") && repos.every((repo) => repo.files.length === 0)
+  };
 }
 function main(argv) {
   let values;

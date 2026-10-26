@@ -31,6 +31,8 @@ The consumer-local `handoff-redaction.ts` helper owns the executable patterns. T
 | Internal/corporate/staging hosts, private URL hosts or private CIDRs | `internal-host` |
 | Remaining absolute POSIX/Windows/UNC/file paths | `absolute-path` |
 
+Any other slash-prefixed token, including a command name or URL route, counts as an absolute path and is redacted; describe such a step in words. A focus containing one is refused like any other path.
+
 Markers have the form `[REDACTED:category]`. Never retain a secret prefix, suffix, length or hash as a substitute. Existing markers are safe to scan again. Specific credential categories take precedence where patterns overlap; do not demand a particular category when several apply.
 
 Quoted, concatenated shell and supported multiline YAML assignment values are processed as whole sensitive values, including valid YAML scalar indicators and doubled single quotes. Apostrophes in URL credentials/query values are credential material, not proof that the URL ended. Unknown encodings and arbitrary new formats are not guaranteed detectable: omit them before export.
@@ -43,7 +45,6 @@ The helper sanitizes all emitted metadata and sections before writing. It report
 - Preserve a seed's unresolved assumptions and blocked readiness. Removing an inaccessible link must not remove the conditions it represented.
 - Distinguish user-reported/unverified observations from timed live observations and earlier command results. Missing trustworthy evidence is exactly `Not captured in this session`.
 - Public URLs and verified relative pointers are retained. Never treat a URL as authorization to fetch or publish.
-- The exact public `/tdk-specify` token is retained for the recipient's later manual workflow; arguments still pass through redaction. An identically named single-component absolute path is lexically ambiguous, so the agent must replace any such real machine path with a safe alias before export.
 - Unquoted paths containing whitespace and arbitrary personal/business identifiers cannot be universally separated from prose. Prefer explicit verified relative pointers and safe aliases rather than relying on regex to infer intent.
 
 ## Safe output structure

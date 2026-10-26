@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build:handoff-export": "bun --no-install build.ts",
+    "test": "bun test ../tests",
     "typecheck": "../../../../../scripts/ts/node_modules/.bin/tsc -p tsconfig.json"
   },
   "devDependencies": {

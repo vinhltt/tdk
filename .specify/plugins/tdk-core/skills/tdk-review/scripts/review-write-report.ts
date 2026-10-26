@@ -8,7 +8,7 @@ import { parseArgs } from 'node:util';
 import { writeAgentJson } from '../../../../../scripts/ts/src/utils/agent-output';
 import { createNewFile } from '../../../../../scripts/ts/src/utils/create-new-file';
 import { isWithin } from '../../../../../scripts/ts/src/utils/path-within';
-import { sanitizeHandoffText } from '../../../../tdk-utils/skills/tdk-handoff/scripts/handoff-redaction';
+import { sanitizeReviewText } from './review-redaction';
 
 export type WriteReportResult =
   | { ok: true; path: string; redactions: number }
@@ -43,8 +43,9 @@ export function writeReviewReport(projectRoot: string, featureDirectory: string,
   try { insideProject = isWithin(realpathSync(projectRoot), realpathSync(featureDir)); } catch { /* unresolved paths are unsafe */ }
   if (!insideProject || !prepareReviewsDir(featureDir, reviews)) return { ok: false, error: 'unsafe_output_path' };
   const path = join(reviews, `${stamp(now)}-${slug}.md`);
-  // Diff evidence can carry secrets; the one executable sanitizer is shared with /tdk-handoff.
-  const { text, redactions } = sanitizeHandoffText(body);
+  // Diff evidence can carry secrets. The report stays in the repo, so slash commands, routes and HTML are kept
+  // and only secrets and machine paths are redacted.
+  const { text, redactions } = sanitizeReviewText(body);
   const failure = createNewFile(path, text, 0o644);
   return failure ? { ok: false, error: failure } : { ok: true, path, redactions };
 }

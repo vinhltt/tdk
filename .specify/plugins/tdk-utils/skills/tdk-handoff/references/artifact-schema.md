@@ -55,7 +55,7 @@ This complete base supplies shared unavailable fields for the examples below:
   inject H1/H2 headings (including setext/HTML forms). Close code fences and
   avoid raw HTML or hidden content.
 - Do not submit `handoff_version`, `generated_at`, workspace paths, session
-  records, `parent_spec`, slug or output path as packet fields.
+  records, parent links, slug or output path as packet fields.
 - Read destination defaults from intent: clear consumer destination for
   feature/spec/investigation, explicitly named destination when provided.
   Recipient metadata never selects the capture host or assigns work.
@@ -111,8 +111,8 @@ workarounds, stopping conditions, approvals or a root cause to fill a field.
 | Kind | Required details and destination boundary |
 |---|---|
 | `continuation` | Current goal, phase/blocker, Done/Remaining per relevant repo, decisions, distinct bounded repo state and outstanding local changes not bundled. Recipient first verifies actual worktrees and missing modifications, then continues the named work. |
-| `spec` | Meaningful self-contained seed: outcome, scope/non-goals, measurable acceptance, source-work boundary, dependencies/interfaces, recipient if known, source summary/pointers, assumptions, risks, clarifications and readiness conditions. Recipient first verifies project and readiness; only later may they choose a new ID and run `/tdk-specify <new-id> "<seed>"`. No existing-ID reuse, `--source`, automatic `parent_spec` or implied readiness from a title/link. |
-| `investigation` | Question; expected versus actual behavior, observed versus user-reported; hypotheses separate from conclusions; prior experiments/outcomes; impact; unknowns; stopping/exit conditions. Recipient revalidates evidence and chooses the next safe observation; specify is not a default transition. |
+| `spec` | Meaningful self-contained seed: outcome, scope/non-goals, measurable acceptance, source-work boundary, dependencies/interfaces, recipient if known, source summary/pointers, assumptions, risks, clarifications and readiness conditions. Recipient first verifies project and readiness; only later may they choose a new ID and start their own specification workflow. No existing-ID reuse, invented source or parent link, or implied readiness from a title/link. |
+| `investigation` | Question; expected versus actual behavior, observed versus user-reported; hypotheses separate from conclusions; prior experiments/outcomes; impact; unknowns; stopping/exit conditions. Recipient revalidates evidence and chooses the next safe observation; starting a specification is not a default transition. |
 | `feature` | Who needs it, problem, expected value, use case, scope, acceptance, constraints/rationale and unknowns. Proposal is not approved scope. Default to the clear consumer destination; recipient confirms need/constraints before selecting that project's normal feature workflow. |
 | `upstream-bug` | Sanitized expected/actual, known minimal reproduction, failing command, impact, confirmed workaround if any, OS/runtime/harness and TDK component. Distinguish source-plugin and installed-harness version/hash and their evidence classes. Read canonical destination, suggested tracker and release repository from [upstream-owner.txt](upstream-owner.txt), never branded Markdown or the consumer. Recipient rechecks source-versus-installed state/behavior; maintainer decides triage/issue creation manually. Capture remains in the consumer host. |
 
@@ -163,7 +163,7 @@ remaining null provenance; no new verification is implied.
     "mission": "Sender-provided seed summary (user-reported, unverified): add a CSV adapter for existing report rows. Acceptance: emit id,label columns in that order; output row count equals supplied input row count. Status: blocked until the report API owner approves the row interface. Authoritative source summary: Not captured in this session.",
     "scope": "Source/destination: consumer-app. Boundary: adapter only, not the source report implementation. Non-goals: API/schema changes and scheduling. Dependency/interface: read-only report rows with id and label; approval required before relying on that contract. Source task and intended recipient: Not captured in this session.",
     "risks": "Type: blocker; owner: report API owner (sender-reported); impact: seed cannot be treated as ready until interface approval. Assumption: report rows may be read by the adapter, unconfirmed. Clarification: confirm access and row contract. Other risks: Not captured in this session. Source link unread; readiness remains blocked/unverified.",
-    "next_actions": "1. **First safe step**: Reverify the intended consumer project, obtain the authoritative seed and confirm interface approval plus the unconfirmed access assumption; keep the seed blocked until those gates resolve.\n2. Only after readiness is confirmed may the recipient choose a new ID and its normal specify workflow.",
+    "next_actions": "1. **First safe step**: Reverify the intended consumer project, obtain the authoritative seed and confirm interface approval plus the unconfirmed access assumption; keep the seed blocked until those gates resolve.\n2. Only after readiness is confirmed may the recipient choose a new ID and its normal specification workflow.",
     "sources": "https://example.com/issues/42 — sender-provided pointer, unread/inaccessible in this session; source content: Not captured in this session."
   }
 }
@@ -183,7 +183,7 @@ remaining null provenance; no new verification is implied.
     "current_state": "User-reported behavior only, not reproduced during capture. Hypothesis: refresh may append rather than replace rows. Conclusion/root cause: Not captured in this session. Repo state and observation time: Not captured in this session.",
     "work_performed": "Prior experiment (user-reported, unverified): clearing the cache did not remove duplicates. Exact command and when: Not captured in this session.",
     "risks": "Unknown: whether duplicates originate in the data source or client. Owner: Not captured in this session. Exit condition (sender-provided): stop when the duplication path is supported by evidence or the data-source owner confirms upstream duplication.",
-    "next_actions": "1. **First safe step**: Reverify the report and current data-source/client state, then choose a safe observation that distinguishes the hypothesis from upstream duplication.\n2. Record evidence against the stated exit condition; do not assume a specify transition."
+    "next_actions": "1. **First safe step**: Reverify the report and current data-source/client state, then choose a safe observation that distinguishes the hypothesis from upstream duplication.\n2. Record evidence against the stated exit condition; do not assume a specification transition."
   }
 }
 ```

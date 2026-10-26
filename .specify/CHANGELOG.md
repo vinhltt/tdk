@@ -6,14 +6,37 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
-## [1.127.1] - 2026-10-25
+## [1.128.1] - 2026-10-26
 
 ### Added
 - **[GitHub Config]** OSV dependency security CI scans all Bun lockfiles, gates newly introduced high/critical advisories on PRs, and syncs deduplicated issues in the current repository with the built-in GitHub Actions token and manual-close lifecycle; no personal token or Project integration
-- **[Docs]** Maintainer guide covers job-level token permissions, severity policy, issue lifecycle, scanner upgrades, rollout, and rollback
+- **[Docs]** Maintainer guide covers job-level token permissions, severity policy, issue lifecycle, native Bun update limits, scanner upgrades, rollout, and rollback
 
-### Removed
-- **[GitHub Config]** Empty Dependabot version-update placeholder; dependency alerts remain independent
+### Fixed
+- **[GitHub Config]** Replace the empty Dependabot placeholder with weekly native Bun version updates and a nonzero PR limit for TDK-owned packages; document retaining alerts while disabling incompatible automatic security fixes, and keep the memory subtree upstream-owned
+
+## [1.128.0] - 2026-10-25
+
+### Changed
+- **[tdk-core]** `/tdk-review` blocks with `blocked_reason: scope_incomplete` when a git-map row with a branch and a recorded base cannot be diffed (missing repository, unregistered worktree, not a working tree, base commit no longer in the repository, a directory sub-workspace with an existing recorded worktree); the scope helper marks those `notReviewed[]` rows `blocking: true` and reports `incomplete: true`
+- **[tdk-utils]** The git-map contract defines repository classes (`own`, `inner`, `plain`, none) shared by `/tdk-status` and `/tdk-review`; `Worktree path` is defined only for `own` rows, and the identity gate still covers every worktree operation
+- **[Scripts]** `classifySubWorkspaceRepo` in `utils/git-map.ts` classifies a sub-workspace path for both skills; the next-action ladder asks to fix the listed sub-workspace and re-review after a `scope_incomplete` review
+
+### Fixed
+- **[tdk-core]** `/tdk-review` scope for directory sub-workspaces
+  - Git-map rows whose path is a directory inside a nested repository or submodule are diffed from their recorded base commit; previously they silently fell back to `HEAD` and a committed feature could report an empty scope. A realized plain directory row is diffed from its base too
+  - `--phase` with an entry naming an ancestor directory reviews the rows under it instead of skipping them
+  - A submodule inside a reviewed directory is diffed as its gitlink, whatever `diff.submodule` says, instead of failing with `scope_failed`; an own repository nested in another row's directory is diffed by its own row only
+- **[tdk-core]** `/tdk-status` reports the real branch (`matched`/`drifted`) for a directory inside a nested repository or submodule instead of `unknown`
+
+## [1.127.1] - 2026-10-25
+
+### Changed
+- **[Scripts]** A test pins the seed count `/tdk-status` reads from a written review report; the handoff tests move into the `tdk-handoff` skill (`bun run test` in its `scripts/`)
+- **[tdk-utils]** `/tdk-handoff` names no other skill: the `spec` kind leaves the recipient's specification workflow unnamed and the sanitizer no longer exempts a `/tdk-specify` token
+
+### Fixed
+- **[tdk-core]** `/tdk-review` reports keep slash-command seeds, skill locators, URL routes and HTML tags; the skill owns its sanitizer and redacts only machine paths and secrets, so `/tdk-status` counts the report's fix seeds again; a skill test keeps its secret detectors identical to the handoff sanitizer's
 
 ## [1.127.0] - 2026-10-22
 

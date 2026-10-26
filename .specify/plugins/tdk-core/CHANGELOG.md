@@ -4,6 +4,20 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.3.4] - 2026-10-25
+
+### Changed
+- tdk-review: blocks with `blocked_reason: scope_incomplete` when a git-map row with a branch and a recorded base cannot be diffed; such `notReviewed[]` rows carry `blocking: true` and the scope reports `incomplete: true`
+
+### Fixed
+- tdk-review: rows whose path is a directory inside a nested repository or submodule, and realized plain directory rows, are diffed from their recorded base instead of silently falling back to HEAD; `--phase` with an ancestor directory entry reviews the rows under it; a submodule inside a reviewed directory is diffed as its gitlink instead of failing with scope_failed
+- tdk-status: a directory inside a nested repository or submodule reports that repository's branch (matched/drifted) instead of unknown
+
+## [14.3.3] - 2026-10-25
+
+### Fixed
+- tdk-review: reports keep slash-command seeds, skill locators, URL routes and HTML tags; the skill now owns its sanitizer (`review-redaction.ts`) instead of importing the handoff one, and it redacts only secrets and machine paths, so /tdk-status counts the fix seeds again; `tests/review-redaction-parity.test.ts` keeps its secret detectors identical to the handoff sanitizer's
+
 ## [14.3.2] - 2026-10-22
 
 ### Changed

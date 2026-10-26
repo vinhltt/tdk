@@ -13278,7 +13278,6 @@ var TOKEN_SOURCE = String.raw`(?:AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{36
 var ONLY_MARKERS = new RegExp(`^(?:\\s*${MARKER_SOURCE})+\\s*$`);
 var EXACT_TOKEN = new RegExp(`^(?:${TOKEN_SOURCE})$`, "i");
 var URL_TOKEN = new RegExp(`(?<!\\w)(?:${TOKEN_SOURCE})(?![\\w-])`, "i");
-var PUBLIC_SPECIFY_COMMAND = "/tdk-specify";
 function tokenCategory(value) {
   if (!EXACT_TOKEN.test(value))
     return null;
@@ -13586,11 +13585,11 @@ function sanitizeHandoffText(value) {
     }
     return isInternalHost(host.replace(/:\d+$/, "")) ? redact("internal-host") : host;
   });
-  const quotedPath = String.raw`(["'\x60])(?!${PUBLIC_SPECIFY_COMMAND}(?=[ \t"'\x60]))((?:[a-z]:[\\/]|\\\\|\/)[^"'\x60\r\n]+)\1`;
+  const quotedPath = String.raw`(["'\x60])((?:[a-z]:[\\/]|\\\\|\/)[^"'\x60\r\n]+)\1`;
   const pathCharacter = String.raw`(?:\\[ \t]|[^\s<>"'\x60()\[\]{},;])`;
   const barePath = String.raw`(?<![\p{L}\p{M}\p{N}_./\\:])(?:[a-z]:[\\/]${pathCharacter}*|\\\\[^\\\s<>"'\x60]+\\${pathCharacter}+|\/\/[a-z0-9._-]+\/${pathCharacter}+|\/[^\s<>"'\x60()\[\]{},;/\\]${pathCharacter}*)`;
   text = text.replace(new RegExp(`${URL_SOURCE}|${MARKER_SOURCE}|${quotedPath}|${barePath}`, "giu"), (path, quote, quoted) => {
-    if (/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(path) && EXACT_URL.test(path) || path.startsWith("[REDACTED:") || path === PUBLIC_SPECIFY_COMMAND)
+    if (/^(?:[a-z][a-z0-9+.-]*:)?\/\//i.test(path) && EXACT_URL.test(path) || path.startsWith("[REDACTED:"))
       return path;
     if (quote && quoted) {
       if (EXACT_URL.test(quoted) && !urlCategory(quoted))

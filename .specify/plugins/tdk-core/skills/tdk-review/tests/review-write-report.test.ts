@@ -177,6 +177,62 @@ describe('review-write-report bundle', () => {
     expect(written).toContain('FR-001 missing');
   });
 
+  const KEPT_BODY = [
+    '## Proposed Fix Phases',
+    '/tdk-plan sample-001 "fix the retry loop"',
+    'skill: /backend-checks',
+    'route: GET /health',
+    'html: <span>a</span>',
+    'skills_loaded: [/backend-checks]',
+  ].join('\n');
+
+  it('keeps slash-command seeds, skill locators, routes and closing tags through the bundle', async () => {
+    const { root, feature } = project();
+    const result = await run(root, feature, 'kept-case', KEPT_BODY, isolatedBundle());
+    expect(result.exitCode).toBe(0);
+    expect(result.payload.redactions).toBe(0);
+    expect(readFileSync(result.payload.path, 'utf-8')).toBe(KEPT_BODY);
+  });
+
+  it('redacts a machine path, a Windows drive path and a token through the bundle while the seed survives', async () => {
+    const { root, feature } = project();
+    const token = `ghp_${'b'.repeat(36)}`;
+    const body = [KEPT_BODY, 'path: /home/fake-person/x', String.raw`drive: C:\Users\FakePerson\x`, `evidence: const t = "${token}";`].join('\n');
+    const result = await run(root, feature, 'mixed-case', body, isolatedBundle());
+    expect(result.exitCode).toBe(0);
+    expect(result.payload.redactions).toBe(3);
+    const written = readFileSync(result.payload.path, 'utf-8');
+    for (const secret of ['/home/fake-person', 'FakePerson', token]) expect(written).not.toContain(secret);
+    expect(written).toContain('/tdk-plan sample-001 "fix the retry loop"');
+    expect(written).toContain('skill: /backend-checks');
+  });
+
+  it('redacts only the machine path in a body of slash commands and routes through the bundle', async () => {
+    const { root, feature } = project();
+    const body = [
+      '## Proposed Fix Phases',
+      '/tdk-plan sample-001 "first fix"',
+      '- **Ready line**: `/tdk-plan sample-001 "second fix"`',
+      'Re-run `/tdk-review`, then `/tdk-status`, then `/tdk-archive`.',
+      'GET /health',
+      'skill: /backend-checks',
+      'evidence: /home/fake/x',
+    ].join('\n');
+    const result = await run(root, feature, 'commands-case', body, isolatedBundle());
+    expect(result.exitCode).toBe(0);
+    expect(result.payload.redactions).toBe(1);
+    expect(readFileSync(result.payload.path, 'utf-8')).toBe(body.replace('/home/fake/x', '[REDACTED:absolute-path]'));
+  });
+
+  it('redacts only the Git Bash home path inside a seed description through the bundle', async () => {
+    const { root, feature } = project();
+    const body = '## Proposed Fix Phases\n/tdk-plan sample-001 "fix /c/Users/fake-person/x"';
+    const result = await run(root, feature, 'seed-path-case', body, isolatedBundle());
+    expect(result.exitCode).toBe(0);
+    expect(result.payload.redactions).toBe(1);
+    expect(readFileSync(result.payload.path, 'utf-8')).toBe('## Proposed Fix Phases\n/tdk-plan sample-001 "fix [REDACTED:absolute-path]"');
+  });
+
   it('exits 1 with invalid_arguments for an unknown flag or a missing option', async () => {
     const { root, feature } = project();
     const unknown = await run(root, feature, 'x', 'x', BUNDLE, ['--bogus']);

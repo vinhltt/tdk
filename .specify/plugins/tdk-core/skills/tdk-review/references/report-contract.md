@@ -14,7 +14,7 @@ mode: standard            # quick | standard | deep
 scope: full               # full | phase-NN
 focus: ""                 # the user's focus text, redacted; empty when none
 verdict: changes_requested   # pass | pass_with_concerns | changes_requested | blocked
-blocked_reason: ""        # empty_scope | working_tree_changed | all_reviewers_failed; empty unless blocked
+blocked_reason: ""        # scope_incomplete | empty_scope | working_tree_changed | all_reviewers_failed; empty unless blocked
 repos:
   - sub_workspace: api    # null when the repo is not a sub-workspace
     repo_path: apps/api
@@ -61,7 +61,7 @@ The seed is a suggestion. `/tdk-plan` Append shows it as a pre-filled descriptio
 
 ## Redaction
 
-The sanitizer runs once, on the final rendered report inside `review-write-report.js`, after findings validation has finished, so it never alters the `file:line` evidence that validation relies on. `review-write-report.js` runs the report through the shared sanitizer (the same one `/tdk-handoff` uses) before it writes, replaces secrets with `[REDACTED:<category>]`, and returns the count as `redactions`. Do not build a second sanitizer. Before piping, still keep absolute machine paths out (repo-relative only) and do not copy raw diff or status dumps beyond the ≤5-line evidence excerpts; the category list is in `tdk-handoff/references/redaction-patterns.md`. Mention a non-zero `redactions` in the summary you print.
+The sanitizer runs once, on the final rendered report inside `review-write-report.js`, after findings validation has finished, so it never alters the `file:line` evidence that validation relies on. `review-write-report.js` runs the report through the skill's own sanitizer (`scripts/review-redaction.ts`) before it writes and returns the count as `redactions`. Secrets, credential URLs, internal hosts and machine paths (home, temp, system and CI roots, Windows drive, Cygwin `/cygdrive/<drive>`, Git Bash `/<drive>/Users` or `/<drive>/home`, UNC and `file://` paths) become `[REDACTED:<category>]`, as do root-relative URLs whose query carries a signed-URL or credential key. Slash commands, skill locators, URL routes and HTML tags stay unless they contain a machine-root segment (for example `/media/123`), so the fix-phase seeds remain copy-pasteable. Do not build a second sanitizer. Before piping, still keep absolute machine paths out (repo-relative only) and do not copy raw diff or status dumps beyond the ≤5-line evidence excerpts; the marker categories are those `review-redaction.ts` emits. Mention a non-zero `redactions` in the summary you print.
 
 ## Slug and write
 

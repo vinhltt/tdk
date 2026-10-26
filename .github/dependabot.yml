@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: bun
+    directories:
+      - /.specify/scripts/ts
+      - /packages/tdk-setup
+      - /.specify/plugins/tdk-core/skills/tdk-review/scripts
+      - /.specify/plugins/tdk-utils/skills/tdk-handoff/scripts
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 2
