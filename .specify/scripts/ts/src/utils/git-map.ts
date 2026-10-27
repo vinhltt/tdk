@@ -9,7 +9,7 @@
 //      joined at probe time and never written back; the file is committed and travels between machines.
 
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import { join, isAbsolute } from 'node:path';
+import { join, isAbsolute, relative } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { runGit } from './git-env';
 import { isWithin } from './path-within';
@@ -388,8 +388,9 @@ export function classifySubWorkspaceRepo(workspaceRoot: string, repositoryRoot: 
  * - `plain` is the monorepo hazard: a sub-workspace that is just a directory of the workspace's repo
  *   would be handed the root's branch as if it were its own. No branch is reported.
  * - `inner` is a directory inside a nested clone or submodule. The enclosing repository's branch IS
- *   the sub-workspace's branch, because preflight created the branch there. Only the shared checkout
- *   is defined: a recorded worktree has no layout for an inner directory, so it reads as unknown.
+ *   the sub-workspace's branch, because preflight created the branch there. A recorded worktree is the
+ *   repository group's: it is read at its root once `innerWorktreeRoot` proves it belongs to the enclosing
+ *   repository, and reads as unknown otherwise.
  *
  * A `workingRoot` that is a *different* repository is the subtler failure: `--show-toplevel`
  * matching itself is true for any independent clone, and a clone of the same upstream has the same
@@ -397,13 +398,21 @@ export function classifySubWorkspaceRepo(workspaceRoot: string, repositoryRoot: 
  * Identity is therefore established by shared object store (`--git-common-dir`) plus registered
  * membership in `worktree list`, never by agreement about branches.
  */
-function probeBranch(workspaceRoot: string, repositoryRoot: string, workingRoot: string = repositoryRoot): BranchProbe {
-  const { kind } = classifySubWorkspaceRepo(workspaceRoot, repositoryRoot);
-  if (kind === 'none') return { branch: null, note: 'not a git working tree' };
-  if (kind === 'plain') return { branch: null, note: 'not a separate git repository' };
+function probeBranch(
+  workspaceRoot: string,
+  subWorkspaces: SubWorkspace[],
+  repositoryRoot: string,
+  workingRoot: string = repositoryRoot,
+): BranchProbe {
+  const repo = classifySubWorkspaceRepo(workspaceRoot, repositoryRoot);
+  if (repo.kind === 'none') return { branch: null, note: 'not a git working tree' };
+  if (repo.kind === 'plain') return { branch: null, note: 'not a separate git repository' };
 
-  if (kind === 'inner') {
-    if (workingRoot !== repositoryRoot) return { branch: null, note: 'nested worktree layout undefined' };
+  if (repo.kind === 'inner') {
+    if (workingRoot !== repositoryRoot) {
+      const group = innerWorktreeRoot(workspaceRoot, subWorkspaces, repo.top, repositoryRoot, workingRoot);
+      if (!group.ok) return { branch: null, note: INNER_WORKTREE_NOTES[group.reason] };
+    }
   } else {
     let repoCommonDir: string;
     try { repoCommonDir = commonDirOf(repositoryRoot); } catch { return { branch: null, note: 'not a git working tree' }; }
@@ -449,6 +458,56 @@ export function isRegisteredWorktree(repositoryRoot: string, workingRoot: string
     .some(line => {
       try { return realpathSync(line.slice('worktree '.length)) === target; } catch { return false; }
     });
+}
+
+/** Why an `inner` row's recorded worktree cannot be used. */
+export type InnerWorktreeResult =
+  | { ok: true; top: string; prefix: string }
+  | { ok: false; reason: 'no-own-sub' | 'not-registered' };
+
+/** `/tdk-status` note for each way `innerWorktreeRoot` refuses; `/tdk-review` uses the same text as its reason. */
+export const INNER_WORKTREE_NOTES = {
+  'no-own-sub': 'nested worktree without a repo-level sub-workspace',
+  'not-registered': 'worktree path is not a worktree of this repository',
+} as const;
+
+/**
+ * Whether the recorded worktree of an `inner` row is the group worktree of its enclosing repository `top`.
+ *
+ * - `no-own-sub`: no configured sub-workspace has `top` itself as its path, so nothing anchors the group.
+ * - `not-registered`: `worktreeRoot` does not share `top`'s object store or is not in `worktree list`. Registration
+ *   is checked with the worktree root, never with a prefixed member path, and never by matching the main checkout
+ *   (a submodule's main entry is under `.git/modules`).
+ * - `ok`: `prefix` is the sub path's position inside `top` (`/`-separated, no trailing slash, empty at the toplevel);
+ *   the member's diff and probe root is `<worktreeRoot>/<prefix>`.
+ *
+ * `subRoot` is the member's own sub-workspace directory in the main checkout; it must lie inside `top`.
+ */
+export function innerWorktreeRoot(
+  workspaceRoot: string,
+  subWorkspaces: SubWorkspace[],
+  top: string,
+  subRoot: string,
+  worktreeRoot: string,
+): InnerWorktreeResult {
+  const realTop = realpathSync(top);
+  const hasOwnSub = subWorkspaces.some(sub => {
+    try { return realpathSync(join(workspaceRoot, sub.path)) === realTop; } catch { return false; }
+  });
+  if (!hasOwnSub) return { ok: false, reason: 'no-own-sub' };
+
+  // The main checkout of a nested clone is listed in `worktree list` like any linked worktree. It is never a group
+  // worktree: it may stand on another task's branch.
+  let realWorktree: string;
+  try { realWorktree = realpathSync(worktreeRoot); } catch { return { ok: false, reason: 'not-registered' }; }
+  if (realWorktree === realTop) return { ok: false, reason: 'not-registered' };
+
+  let registered = false;
+  try { registered = isRegisteredWorktree(realTop, worktreeRoot, commonDirOf(realTop)); } catch { /* unregistered */ }
+  if (!registered) return { ok: false, reason: 'not-registered' };
+
+  const prefix = relative(realTop, realpathSync(subRoot)).replace(/\\/g, '/');
+  return { ok: true, top: realTop, prefix };
 }
 
 /**
@@ -509,7 +568,7 @@ export function probeSubWorkspaces(
     const worktreeMissing = recordedWorktree !== null && !existsSync(recordedWorktree);
     const workingRoot = worktreeMissing || recordedWorktree === null ? repositoryRoot : recordedWorktree;
 
-    const probe = probeBranch(workspaceRoot, repositoryRoot, workingRoot);
+    const probe = probeBranch(workspaceRoot, subWorkspaces, repositoryRoot, workingRoot);
 
     let state: SubWorkspaceBranchState;
     if (probe.branch === null) state = 'unknown';

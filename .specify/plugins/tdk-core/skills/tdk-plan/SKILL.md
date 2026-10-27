@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "14.2.1"
+  version: "14.3.5"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -232,9 +232,15 @@ Otherwise seed `{FEATURE_DIR}/git-map.md` so the branching picture is reviewable
 appearing for the first time at implement time. Runs after Step 3d, because it reads the
 `## Related Code Files` bullets that gate has just validated.
 
-1. Collect every path under `## Related Code Files` across the generated phases and prefix-match them against
-   `PROJECT_CONTEXT.subWorkspaces[].path`. Paths matching none belong to the root repo — skip them. Skip a
-   sub-workspace whose directory is not its own repository.
+1. Collect every path under `## Related Code Files` across the generated phases and map each to a
+   sub-workspace with the deepest segment-bounded match in
+   `tdk-branch-preflight/references/git-map-contract.md` → *Repositories holding several sub-workspaces*.
+   Paths matching none belong to the root repo — skip them; a path inside a nested repository that has
+   sub-workspaces but no repo-level sub-workspace prints the contract's
+   `path <p> is inside repository <T>, …` text as a warning for the Step 4 report. Classify each matched
+   sub-workspace by the contract's *Repository classes* and skip only a `plain` one: `inner` sub-workspaces
+   are seeded like `own` ones, so preflight creates their branch. Group the `own` and `inner` ones into
+   repository groups by toplevel `T`.
 2. Resolve each affected repository's fetch remote before dispatch, then seed its base ref. A confirmed
    milestone with an upstream uses that upstream's remote even when it is not the first remote; a local-only
    milestone needs no fetch. Without a milestone, use the sole remote, or leave the remote unresolved and
@@ -242,8 +248,8 @@ appearing for the first time at implement time. Runs after Step 3d, because it r
    by hand at every implement run.
 
    ```bash
-   AFFECTED_SUBS=(...)        # workspace-relative paths of the repos matched in step 1
-   AFFECTED_MILESTONES=(...)  # same order; empty string means this repo has no confirmed milestone
+   AFFECTED_SUBS=(...)        # one anchor path per repository group from step 1, workspace-relative
+   AFFECTED_MILESTONES=(...)  # same order: the group's shared milestone; empty when none is confirmed or members disagree
    FETCH_TMP=$(mktemp -d)
 
    # `timeout` is absent from a stock macOS. Resolve it once, then prove it can actually enforce a
@@ -384,6 +390,11 @@ appearing for the first time at implement time. Runs after Step 3d, because it r
    only: it creates nothing, and fetches read-only to seed base refs. For every resolved triple, write its
    commit into `base_commit_by_repo[<sub>]`; when a base cannot resolve, omit that key entirely — **never
    serialize `-` as a base commit**.
+
+   A repository group's single result applies to **every** member: each member gets its own row with the
+   group's `Base ref`, and its own `base_commit_by_repo` key with the group's commit. When the members'
+   effective milestones disagree, omit the base key for every member of that group and carry the contract's
+   `repository group <T> disagrees on …` text into the Step 4 report as a warning.
 
    **Reseeding is idempotent per repository.** Step 3e is a `git-map.md` writer and runs again on every
    rewrite and on every phase append, so it must not undo an implement run. Read the existing file

@@ -313,6 +313,17 @@ Rules:
   there** — without repeating completed work, recreating what was removed, or claiming something is gone
   while it is still live.
 
+**A repository group is cleaned as one unit**, because its members share one worktree and one branch (see
+*Repositories holding several sub-workspaces*):
+
+- `cleaning_by_repo` is written for every member in one write, with the same `intent` and `worktree_path`.
+- One dirty check, one `worktree remove`, one empty-branch check and one `branch -d` run, all at the repo-level
+  sub-workspace's path.
+- Each verified result is written to `cleaned_by_repo` for every member in one write.
+- Members that disagree — some `cleaned` and some not, or different `intent` values — STOP with the steps to
+  reconcile them. A rerun continues from any member's `cleaning_by_repo` entry, since they all name the same
+  worktree.
+
 `cleaning_by_repo[<sub>]` is removed at exactly two moments:
 
 | Moment | Condition | Result |
@@ -344,8 +355,9 @@ not a name in prose. It is the fourth mode of `tdk-repo-worktree`, prompt-driven
 |---|---|
 | Entrypoint | `tdk-repo-worktree` mode `reset <task-id> [--repo <sub-name>]` |
 | Default scope | **per repository**: remove `cleaned_by_repo[<sub>]` / `cleaning_by_repo[<sub>]`, return the row to `pending`, keep `Milestone`, keep `feature_branch` |
+| Repository group | `--repo <member>` resets every member of that member's group together, in one write: they share one branch and one worktree |
 | `feature_branch` (task-level scalar) | removed **only** when every row of the task is `seed`, `pending` or `cleaned` — no `realized` or `realized-unverified` row remains. Checked across the whole task before writing |
-| Confirmation | one `AskUserQuestion` naming the repository, the resulting row state, and whether `feature_branch` is removed |
+| Confirmation | one `AskUserQuestion` naming the repository (every member, for a group), the resulting row state, and whether `feature_branch` is removed |
 | Refusal | resetting one repository while a sibling is still `realized` does not remove the scalar |
 
 The whole-task precondition exists because every repository in a task shares one `feature_branch`, and the
@@ -471,11 +483,20 @@ the `worktree list`/`prune` that the re-attach path depends on. `workingRoot` fa
 `repositoryRoot`, the guard reports that the worktree is gone, and re-attach proceeds.
 
 `repositoryRoot` stays `$PROJECT_DIR/<sub-path>` for every repository class (below). For an `inner` row it is a
-directory inside the enclosing repository, and git answers branch metadata for that repository through it. A
-`Worktree path` is defined only for an `own` row. On an `inner` or `plain` row the layout is not defined yet: never
-create a worktree for it or dispatch into one. A recorded worktree that exists is never used: `/tdk-status` reports an
-`inner` row with one as `nested worktree layout undefined`, and `/tdk-review` blocks when the row has recorded work (a
-branch and a recorded base, not cleaning or cleaned). One that no longer exists falls back to `repositoryRoot` as above.
+directory inside the enclosing repository `T`, and git answers branch metadata for `T` through it. An `inner` row
+gets its `Worktree path` through its repository group (see *Worktrees for a repository group*), so it has three
+roots rather than two:
+
+| Root | `inner` row with a group worktree |
+|---|---|
+| metadata | `T`, reached through the repo-level sub-workspace's path for group commands |
+| HEAD and writes | the worktree root |
+| diff and probe | `<worktree root>/<prefix>`, where `<prefix>` is the row's `--show-prefix` in `T` |
+
+An `own` row's prefix is empty, so its three roots collapse into the two above. A `plain` row has no defined
+`Worktree path`: never create a worktree for it or dispatch into one, and `/tdk-review` blocks one that has recorded
+work (a branch and a recorded base, not cleaning or cleaned). A recorded worktree that no longer exists falls back to
+`repositoryRoot` as above, for every class.
 
 ### Repository identity gate
 
@@ -500,12 +521,180 @@ helper decides it for `/tdk-status` and `/tdk-review`; neither restates the rule
 | Class | Toplevel of `repositoryRoot` | `/tdk-status` | `/tdk-review` |
 |---|---|---|---|
 | `own` | `repositoryRoot` itself | branch read at `workingRoot`, worktree checks above | diff from the recorded base at `workingRoot` |
-| `inner` | a nested clone or submodule strictly inside the workspace | that repository's branch, which preflight created there | diff from the recorded base at `repositoryRoot`, in sub-path coordinates |
+| `inner` | a nested clone or submodule strictly inside the workspace | that repository's branch, which preflight created there; with an existing group worktree, the branch read at the worktree root once it is proven a worktree of `T` | diff from the recorded base at `repositoryRoot`, or at `<worktree root>/<prefix>` with an existing group worktree, in sub-path coordinates |
 | `plain` | the workspace's own repository, or one enclosing the workspace | `unknown`: `not a separate git repository` | realized: diff from the recorded base at `repositoryRoot`; a recorded base that is not in the repository blocks a row with recorded work; otherwise its paths are diffed against `HEAD` |
 | none | not a working tree | `unknown`: `not a git working tree` | lifecycle state decides |
 
-The identity gate above still applies to every worktree operation, whatever the class. Only an `own` row has a defined
-`Worktree path` (see Two roots), so its `workingRoot` checks are the only ones that ever pass for a worktree.
+The identity gate above still applies to every worktree operation, whatever the class. An `own` row has a
+`Worktree path` of its own, and an `inner` row has its group's; for an `inner` row the gate runs at the group level
+(see *Worktrees for a repository group*). A `plain` row never has a defined `Worktree path` (see Two roots), so its
+`workingRoot` checks never pass for a worktree.
+
+An `inner` row whose recorded worktree exists is read only when the configuration has a repo-level sub-workspace
+for `T` **and** the worktree is registered in `git -C <T> worktree list --porcelain`. Otherwise `/tdk-status`
+reports it `unknown` — `nested worktree without a repo-level sub-workspace`, or the existing
+`worktree path is not a worktree of this repository` — and `/tdk-review` blocks it with the same reason.
+
+## Repositories holding several sub-workspaces
+
+One repository can hold several configured sub-workspaces: a submodule or nested clone at `src/be` with
+`core → src/be/core` and `auth → src/be/auth`. A sub-workspace is a service — the unit of routing, review and
+status. A repository is the unit git branches. Rows stay per sub-workspace, with no extra column, and the rules
+below group them by repository. `tdk-branch-preflight`, `/tdk-plan` Step 3e and `/tdk-implement` link here and do
+not restate them.
+
+### Mapping a declared path
+
+A declared path maps to the configured sub-workspace with the **deepest segment-bounded match**: the path equals
+`sub.path`, or starts with `sub.path + "/"`. A plain string prefix is wrong, because `src/be/Shared.Data/X.cs`
+starts with `src/be/Shared` too:
+
+| Declared path | Configured | Maps to |
+|---|---|---|
+| `src/be/Shared.Data/X.cs` | `shared → src/be/Shared`, `shared-data → src/be/Shared.Data` | `shared-data`, never `shared` |
+| `src/be/core/X.cs` | `be → src/be`, `core → src/be/core` | `core` (deepest) |
+| `src/be/App.sln` | `be → src/be`, `core → src/be/core` | `be` |
+
+A path matching no sub-workspace belongs to the root and is skipped, except for the case in *A path in a
+repository without a repo-level sub-workspace* below.
+
+### Repository groups
+
+Each matched sub-workspace takes its class from *Repository classes*, with `T` = the real path of
+`git -C "$PROJECT_DIR/<sub-path>" rev-parse --show-toplevel`. A `plain` sub-workspace is skipped for branching.
+
+A **repository group** is the `own` and `inner` rows of one task that share `T`.
+
+| Term | Meaning |
+|---|---|
+| Repo-level sub-workspace of `T` | The configured sub-workspace whose path is `T` itself. Read from config, never from git-map |
+| Anchor path | The repo-level sub-workspace's path when one is configured; otherwise the first `inner` member in config order |
+| Member | A row of the task whose sub-workspace is in `T`. The repo-level row is a member only when a declared path maps to it; it is never added to git-map just because it anchors the group |
+
+Every git command that acts on the group's branch — the four step 7 checks, `branch`, `checkout`, the fetch at plan
+time — runs **once per group**, at `git -C "$PROJECT_DIR/<anchor path>"`. Its result is then written to **every**
+member row in the same git-map write. Running it per member fails on the second one: `git branch` reports that the
+branch already exists, and the run STOPs.
+
+An own-only layout — one sub-workspace per repository — gives groups of one, so each rule here reduces to the
+per-row behaviour above.
+
+### Group invariant
+
+Every member of a group shares `Branch`, `Base ref`, its `base_commit_by_repo` value, its effective `Milestone`
+(resolved per *Milestone resolution*) and `Worktree path`. One repository has one branch per task; two members that
+disagree describe a state git cannot hold. The usual cause is a per-sub `spec.milestone_branch` that differs inside
+one repository.
+
+A mismatch reads:
+
+```
+repository group <T> disagrees on <field>: <member>=<value>, <member>=<value>; give every sub-workspace in <T> the same value
+```
+
+| Writer | On a mismatch |
+|---|---|
+| `tdk-branch-preflight` | STOP before the intent publish in step 6, naming every field and member. Nothing is mutated |
+| `/tdk-plan` Step 3e | omit `base_commit_by_repo` for every member of that group and print the text as a warning. Plan time records intent only, so it does not STOP |
+
+### A path in a repository without a repo-level sub-workspace
+
+A declared path STOPs when all of the following hold:
+
+- it matches no sub-workspace;
+- the toplevel of its nearest existing ancestor directory is a nested repository `T`, strictly inside the workspace;
+- `T` holds at least one configured `inner` sub-workspace, and no repo-level sub-workspace for `T` is configured.
+
+No row can carry a branch for such a file, so writing it would land on whatever branch the main checkout of `T`
+holds — another task's branch, possibly. The STOP reads:
+
+```
+path <p> is inside repository <T>, which has sub-workspaces but no repo-level sub-workspace; add one for <T>
+```
+
+`tdk-branch-preflight` step 3 STOPs on the main-checkout route and on the worktree route alike, and
+`/tdk-implement` dispatch STOPs before the phase writes. `/tdk-plan` Step 3e prints the same text as a warning. A
+nested repository that holds no configured sub-workspace keeps the plain "root, skip" rule.
+
+### Configuring a repo-level sub-workspace
+
+Declare the repository itself next to the services inside it:
+
+```json
+"subWorkspaces": [
+  { "name": "be", "path": "src/be" },
+  { "name": "core", "path": "src/be/core" },
+  { "name": "auth", "path": "src/be/auth" }
+]
+```
+
+`be` makes repository-root files (`src/be/App.sln`, `src/be/Directory.Build.props`) mappable, and it anchors the
+group's worktree. It does not take `core` or `auth` files away from them: the deepest match wins.
+
+### Worktrees for a repository group
+
+**Precondition.** A group with an `inner` member takes the worktree route only when the configuration declares a
+repo-level sub-workspace for `T`. Without one there is no name to place the worktree under and no path to run
+group commands at, so `tdk-branch-preflight` step 8, `tdk-repo-worktree create` and `/tdk-implement` dispatch
+STOP with:
+
+```
+add a repo-level sub-workspace for <T> to use worktrees
+```
+
+The main-checkout route needs no repo-level sub-workspace.
+
+**One worktree per group.**
+
+- Path: `_worktrees/<repo-level-sub>/<worktree-name>/`, from *Worktree name derivation*.
+- Created once, at the repo-level sub-workspace's path, with `-b` only when the group branch does not exist yet:
+  `git -C "$PROJECT_DIR/<repo-level-sub-path>" worktree add "$PROJECT_DIR/_worktrees/<repo-level-sub>/<worktree-name>" …`.
+- Written to the `Worktree path` of **every** member in one git-map write.
+- A member that joins later — a new phase, a resume with a new row — attaches by writing the same value. It never
+  runs a second `worktree add`, which fails with "already checked out".
+
+**Path translation.** This is the one definition; `/tdk-implement`, `/tdk-status` and `/tdk-review` link here. For
+a member with `Repo path` `P` and a declared path `P/<rest>`:
+
+```bash
+PREFIX=$(git -C "$PROJECT_DIR/P" rev-parse --show-prefix)   # read at the main checkout; empty for a repo-level or own row
+# translated path = <Worktree path>/<PREFIX><rest>
+```
+
+`--show-prefix` prints `/`-separated text with a trailing `/`, and an empty string at a toplevel, on every OS.
+Never join with `\`.
+
+| Declared path | Row (prefix) | Worktree path | Translated |
+|---|---|---|---|
+| `src/be/core/X.cs` | `core` (`core/`) | `_worktrees/be/feature-sample-001` | `_worktrees/be/feature-sample-001/core/X.cs` |
+| `src/be/App.sln` | `be` (empty) | `_worktrees/be/feature-sample-001` | `_worktrees/be/feature-sample-001/App.sln` |
+| `apps/web/src/foo.ts` | `web`, own (empty) | `_worktrees/web/feature-sample-001` | `_worktrees/web/feature-sample-001/src/foo.ts` |
+
+The working root of every member — HEAD re-verify and writes — is the worktree root.
+
+**Group identity gate.**
+
+- `repositoryRoot` for group commands is `$PROJECT_DIR/<repo-level-sub-path>`, whose toplevel is `T`.
+- `workingRoot` is the worktree root. The common-dir check and the `worktree list --porcelain` membership check
+  both run with the worktree root, never with a prefixed member path: `<worktree root>/core` is not a worktree
+  entry.
+- Never realpath-match the main checkout against the list entries. For a submodule, git lists the main worktree
+  as `<super>/.git/modules/<path>`, not as `<path>`. The first porcelain entry is always the main worktree: report
+  it as "the main checkout of `<T>`", for example when `worktree add` says "already checked out".
+
+**Group consistency.** Before `worktree add`, at resume and at dispatch, the members must satisfy the group
+invariant. A member whose `Worktree path` differs from the group's — after a hand edit, say — STOPs with the
+group-mismatch text, naming each row and its value.
+
+**Concurrent git commands.** Two tasks in one repository share its common directory. A ref-lock error
+(`cannot lock ref`, `Unable to create '….lock': File exists`) from a concurrent `worktree add` or `fetch` STOPs with
+`rerun when the other task's git command finishes`. There is no retry loop.
+
+### Committing the enclosing repository
+
+While another task is active in a sub-repository, a commit in the enclosing repository stages its feature paths by
+pathspec only (`git add -- <paths>`), never the sub-repository's gitlink. `git add -A` or `git commit -a` records
+whatever commit that repository's main checkout holds at that moment, which can belong to the other task.
 
 ## Worktree name derivation
 
@@ -527,7 +716,8 @@ WORKTREE_NAME=$(printf '%s' "$BRANCH" | sed -E 's/[^A-Za-z0-9]+/-/g; s/^-+//; s/
 | `fix/ABC_123.v2` | `fix-ABC-123-v2` |
 
 Full path: `_worktrees/<sub-workspace-name>/<worktree-name>/`, under the workspace root and outside every
-`subWorkspaces[].path` so it does not disturb path mapping.
+`subWorkspaces[].path` so it does not disturb path mapping. For a repository group, `<sub-workspace-name>` is the
+repo-level sub-workspace's name, never a member's (see *Worktrees for a repository group*).
 
 Constraints:
 
@@ -545,4 +735,4 @@ Constraints:
 - **Collisions fail loud.** Two different branches can sanitize to the same name (`feature/task-1` and
   `feature.task-1`). Within one task a single branch name is shared by every repository, so a collision only
   arises across tasks in the same sub-workspace — where `git worktree add` fails with "already exists". Never
-  overwrite, and do not add anti-collision suffixes.
+  overwrite, and do not add anti-collision suffixes. The same holds for a repository group.

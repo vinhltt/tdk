@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
 metadata:
-  version: "14.3.2"
+  version: "14.3.5"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -35,8 +35,8 @@ This skill reads plan.md and executes phases using the `## Phases` table as the 
   spike phases require executable evidence and a user decision gate
 - **F3 crash recovery**: detects stale `in_progress` rows at startup and requires explicit recovery choice before any status mutation
 - **Counsel on failure**: when a phase fails during execution, consults the `tdk-counsel` agent once and folds its diagnosis into the failure report before handing the recovery decision back to the user; never blocks recovery when the consult is unavailable
-- **Branch preflight**: on polyrepo projects, `tdk-branch-preflight` places every affected sub-workspace repository on the agreed feature branch at Step 6A; `--no-branch` skips every Git step
-- **Serial by default**: default and selected modes remain serial, and no invocation locks the repository — do not run two TDK commands on the same `TASK_ID` concurrently, and two different `TASK_ID`s touching the same sub-workspace repository are equally unsupported as a concurrent run
+- **Branch preflight**: on polyrepo projects, `tdk-branch-preflight` places every affected sub-workspace repository on the agreed feature branch at Step 6A; `--no-branch` skips every Git step, and `--worktree` asks for a worktree even when the main checkout is free
+- **Serial by default**: default and selected modes remain serial, and no invocation locks the repository — do not run two TDK commands on the same `TASK_ID` concurrently, and two different `TASK_ID`s sharing one working root of a sub-workspace repository are equally unsupported as a concurrent run — give the second task a worktree (`--worktree`, or the busy-repository route)
 
 ## Core Contract
 
@@ -160,9 +160,12 @@ Display compact status + phase list from parsed rows. Do not read phase files be
 ### Step 6A: Branch Preflight
 
 Skip when `--no-branch` was passed, when `PROJECT_CONTEXT.subWorkspaces` is empty
-or absent, or when no target row is runnable after Step 5.
+or absent, or when no target row is runnable after Step 5. Exception: when `WORKTREE_MODE` is true and
+`PROJECT_CONTEXT.subWorkspaces` is empty or absent, STOP before any status mutation with
+`--worktree needs a sub-workspace repository; root-repository worktrees are not supported` — never run the
+task on the main checkout the user asked to avoid.
 Invoke `tdk-branch-preflight` with `PROJECT_DIR`, `TASK_ID`, `FEATURE_DIR`,
-`PROJECT_CONTEXT`, `TARGET_ROWS`.
+`PROJECT_CONTEXT`, `TARGET_ROWS`, `WORKTREE_MODE`.
 Passing `TARGET_ROWS` keeps preflight scoped to the phases this run executes, so `--phase NN` does not create
 branches in repositories it never touches.
 If STOP -> halt execution before any status mutation.

@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { classifySubWorkspaceRepo, readGitMap, probeSubWorkspaces } from '../src/utils/git-map';
+import { classifySubWorkspaceRepo, commonDirOf, innerWorktreeRoot, isRegisteredWorktree, readGitMap, probeSubWorkspaces } from '../src/utils/git-map';
 import type { SubWorkspace } from '../src/utils/types';
 
 const roots: string[] = [];
@@ -72,6 +72,8 @@ function innerMap(worktreePath = '-'): string {
 }
 
 const INNER_SUBS: SubWorkspace[] = [{ name: 'core', path: 'apps/be/core' }];
+/** `INNER_SUBS` plus the repo-level sub-workspace that anchors the group worktree. */
+const GROUPED_SUBS: SubWorkspace[] = [{ name: 'be', path: 'apps/be' }, ...INNER_SUBS];
 
 /** A nested clone at `apps/be` holding a `core` directory, checked out on `branch`. */
 function makeInnerRepo(root: string, branch: string): string {
@@ -372,18 +374,74 @@ describe('probeSubWorkspaces', () => {
     expect(core!.expectedBranch).toBe('feature/sample-001');
   });
 
-  it('leaves the branch unknown for an inner directory with a recorded worktree', () => {
+  it('reads the branch at the group worktree for an inner directory, while the main checkout stays elsewhere', () => {
+    const root = makeWorkspace();
+    const be = makeInnerRepo(root, 'feature/sample-014');
+    const worktree = join(root, '_worktrees/be/feature-sample-001');
+    execFileSync('git', ['worktree', 'add', '-q', '-b', 'feature/sample-001', worktree, 'HEAD'], { cwd: be });
+    const featureDir = join(root, 'feature');
+    writeGitMap(featureDir, innerMap('_worktrees/be/feature-sample-001'));
+
+    const core = probeSubWorkspaces(root, GROUPED_SUBS, readGitMap(featureDir)).find(entry => entry.name === 'core');
+    expect(core!.state).toBe('matched');
+    expect(core!.actualBranch).toBe('feature/sample-001');
+    expect(core!.note).toBeUndefined();
+  });
+
+  it('reports drifted when the group worktree sits on another branch than the row records', () => {
     const root = makeWorkspace();
     const be = makeInnerRepo(root, 'develop');
     const worktree = join(root, '_worktrees/be/feature-sample-001');
-    execFileSync('git', ['worktree', 'add', '-q', '-b', 'feature/sample-001', worktree], { cwd: be });
+    execFileSync('git', ['worktree', 'add', '-q', '-b', 'feature/sample-002', worktree, 'HEAD'], { cwd: be });
+    const featureDir = join(root, 'feature');
+    writeGitMap(featureDir, innerMap('_worktrees/be/feature-sample-001'));
+
+    const core = probeSubWorkspaces(root, GROUPED_SUBS, readGitMap(featureDir)).find(entry => entry.name === 'core');
+    expect(core!.state).toBe('drifted');
+    expect(core!.actualBranch).toBe('feature/sample-002');
+  });
+
+  it('reports unknown for an inner directory worktree when no repo-level sub-workspace is configured', () => {
+    const root = makeWorkspace();
+    const be = makeInnerRepo(root, 'develop');
+    const worktree = join(root, '_worktrees/be/feature-sample-001');
+    execFileSync('git', ['worktree', 'add', '-q', '-b', 'feature/sample-001', worktree, 'HEAD'], { cwd: be });
     const featureDir = join(root, 'feature');
     writeGitMap(featureDir, innerMap('_worktrees/be/feature-sample-001'));
 
     const [core] = probeSubWorkspaces(root, INNER_SUBS, readGitMap(featureDir));
     expect(core!.state).toBe('unknown');
     expect(core!.actualBranch).toBeNull();
-    expect(core!.note).toBe('nested worktree layout undefined');
+    expect(core!.note).toBe('nested worktree without a repo-level sub-workspace');
+  });
+
+  it('refuses an inner directory worktree that is an independent clone', () => {
+    const root = makeWorkspace();
+    const be = makeInnerRepo(root, 'feature/sample-001');
+    const clone = join(root, '_worktrees/be/feature-sample-001');
+    execFileSync('git', ['clone', '-q', be, clone]);
+    const featureDir = join(root, 'feature');
+    writeGitMap(featureDir, innerMap('_worktrees/be/feature-sample-001'));
+
+    const core = probeSubWorkspaces(root, GROUPED_SUBS, readGitMap(featureDir)).find(entry => entry.name === 'core');
+    expect(core!.state).toBe('unknown');
+    expect(core!.note).toBe('worktree path is not a worktree of this repository');
+  });
+
+  it('leaves own-repository worktree probing and the plain case unchanged beside grouped subs', () => {
+    const root = makeWorkspace();
+    const be = makeInnerRepo(root, 'develop');
+    const worktree = join(root, '_worktrees/be/feature-sample-001');
+    execFileSync('git', ['worktree', 'add', '-q', '-b', 'feature/sample-001', worktree, 'HEAD'], { cwd: be });
+    const featureDir = join(root, 'feature');
+    writeGitMap(featureDir, REALIZED_MAP.replace(
+      '| api | apps/api | feature/sample-001 | origin/main | - |',
+      '| be | apps/be | feature/sample-001 | origin/main | _worktrees/be/feature-sample-001 |',
+    ));
+
+    const [ownRow] = probeSubWorkspaces(root, GROUPED_SUBS, readGitMap(featureDir));
+    expect(ownRow!.name).toBe('be');
+    expect(ownRow!.state).toBe('matched');
   });
 
   it('reads the nested repo branch when an inner directory\'s recorded worktree is gone', () => {
@@ -512,5 +570,87 @@ describe('probeSubWorkspaces', () => {
     const subs: SubWorkspace[] = [{ name: 'api', path: 'apps/api' }];
     expect(probeSubWorkspaces(workspaceRoot, subs, readGitMap(featureDir))[0]!.state).toBe('matched');
     expect(probeSubWorkspaces(outer, subs, readGitMap(featureDir))[0]!.state).toBe('unknown');
+  });
+});
+
+describe('innerWorktreeRoot', () => {
+  function groupedClone(): { root: string; be: string; worktree: string } {
+    const root = makeWorkspace();
+    const be = makeInnerRepo(root, 'feature/sample-014');
+    const worktree = join(root, '_worktrees/be/feature-sample-001');
+    execFileSync('git', ['worktree', 'add', '-q', '-b', 'feature/sample-001', worktree, 'HEAD'], { cwd: be });
+    return { root, be, worktree };
+  }
+
+  it('returns the toplevel and the sub path prefix for a registered group worktree', () => {
+    const { root, be, worktree } = groupedClone();
+    expect(innerWorktreeRoot(root, GROUPED_SUBS, be, join(be, 'core'), worktree)).toEqual({ ok: true, top: be, prefix: 'core' });
+  });
+
+  it('keeps nested prefixes `/`-separated', () => {
+    const { root, be, worktree } = groupedClone();
+    mkdirSync(join(be, 'Shared/Data'), { recursive: true });
+    expect(innerWorktreeRoot(root, GROUPED_SUBS, be, join(be, 'Shared/Data'), worktree)).toEqual({ ok: true, top: be, prefix: 'Shared/Data' });
+  });
+
+  it('reports no-own-sub when no configured path is the enclosing repository', () => {
+    const { root, be, worktree } = groupedClone();
+    expect(innerWorktreeRoot(root, INNER_SUBS, be, join(be, 'core'), worktree)).toEqual({ ok: false, reason: 'no-own-sub' });
+  });
+
+  it('matches the repo-level sub-workspace by real path', () => {
+    const { root, be, worktree } = groupedClone();
+    const subs: SubWorkspace[] = [{ name: 'be', path: './apps/be/' }, ...INNER_SUBS];
+    expect(innerWorktreeRoot(root, subs, be, join(be, 'core'), worktree)).toEqual({ ok: true, top: be, prefix: 'core' });
+  });
+
+  it('reports not-registered for a prefixed member path, an independent clone and the main checkout of another repo', () => {
+    const { root, be, worktree } = groupedClone();
+    expect(innerWorktreeRoot(root, GROUPED_SUBS, be, join(be, 'core'), join(worktree, 'core'))).toEqual({ ok: false, reason: 'not-registered' });
+    const clone = join(root, 'clone');
+    execFileSync('git', ['clone', '-q', be, clone]);
+    expect(innerWorktreeRoot(root, GROUPED_SUBS, be, join(be, 'core'), clone)).toEqual({ ok: false, reason: 'not-registered' });
+    const other = makeRepo(root, 'apps/other', 'main');
+    expect(innerWorktreeRoot(root, GROUPED_SUBS, be, join(be, 'core'), other)).toEqual({ ok: false, reason: 'not-registered' });
+  });
+
+  it('never accepts the main checkout of the enclosing repository as its group worktree', () => {
+    const { root, be } = groupedClone();
+    expect(innerWorktreeRoot(root, GROUPED_SUBS, be, join(be, 'core'), be)).toEqual({ ok: false, reason: 'not-registered' });
+  });
+
+  describe('in a submodule', () => {
+    function groupedSubmodule(): { root: string; be: string; worktree: string } {
+      const root = makeWorkspace();
+      execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: root });
+      execFileSync('git', ['config', 'user.email', 'sample@example.test'], { cwd: root });
+      execFileSync('git', ['config', 'user.name', 'Sample'], { cwd: root });
+      const upstream = makeInnerRepo(makeWorkspace(), 'main');
+      execFileSync('git', ['-c', 'protocol.file.allow=always', 'submodule', 'add', '-q', upstream, 'apps/be'], { cwd: root });
+      const be = join(root, 'apps/be');
+      const worktree = join(root, '_worktrees/be/feature-sample-001');
+      execFileSync('git', ['worktree', 'add', '-q', '-b', 'feature/sample-001', worktree, 'HEAD'], { cwd: be });
+      return { root, be, worktree };
+    }
+
+    it('lists the main entry under .git/modules and the linked worktree at its own path', () => {
+      const { be, worktree } = groupedSubmodule();
+      const listed = execFileSync('git', ['-C', be, 'worktree', 'list', '--porcelain'], { encoding: 'utf-8' })
+        .split('\n').filter(line => line.startsWith('worktree ')).map(line => line.slice('worktree '.length));
+      expect(listed[0]).toContain('.git/modules');
+      expect(realpathSync(listed[1]!)).toBe(realpathSync(worktree));
+      expect(isRegisteredWorktree(be, worktree, commonDirOf(be))).toBe(true);
+      expect(isRegisteredWorktree(be, join(worktree, 'core'), commonDirOf(be))).toBe(false);
+    });
+
+    it('accepts the linked worktree and reads its branch through probeSubWorkspaces', () => {
+      const { root, be, worktree } = groupedSubmodule();
+      expect(innerWorktreeRoot(root, GROUPED_SUBS, be, join(be, 'core'), worktree)).toEqual({ ok: true, top: be, prefix: 'core' });
+      const featureDir = join(root, 'feature');
+      writeGitMap(featureDir, innerMap('_worktrees/be/feature-sample-001'));
+      const core = probeSubWorkspaces(root, GROUPED_SUBS, readGitMap(featureDir)).find(entry => entry.name === 'core');
+      expect(core!.state).toBe('matched');
+      expect(core!.actualBranch).toBe('feature/sample-001');
+    });
   });
 });

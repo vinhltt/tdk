@@ -82,13 +82,27 @@ export function resolveExpected(
   domains: string[],
   testMode: PlanTestMode,
 ): DelegateGroups {
-  const matchedNames = new Set(subWorkspaces.filter((workspace) => {
+  // A declared path is owned by the deepest matching sub-workspace (a sub at `.` is the shallowest). A matched sub that
+  // owns none of the paths only encloses a deeper one: it routes by its own section and never adds global defaults.
+  const depthOf = (workspace: SubWorkspace): number => {
     const prefix = normalizedPath(workspace.path);
-    return paths.some((path) => {
-      const candidate = normalizedPath(path);
-      return prefix === '.' || candidate === prefix || candidate.startsWith(`${prefix}/`);
-    });
-  }).map((workspace) => workspace.name.toLowerCase()));
+    return prefix === '.' ? 0 : prefix.split('/').length;
+  };
+  const matches = (workspace: SubWorkspace, path: string): boolean => {
+    const prefix = normalizedPath(workspace.path);
+    const candidate = normalizedPath(path);
+    return prefix === '.' || candidate === prefix || candidate.startsWith(`${prefix}/`);
+  };
+  const matchedNames = new Set<string>();
+  const ownerNames = new Set<string>();
+  for (const path of paths) {
+    const matching = subWorkspaces.filter((workspace) => matches(workspace, path));
+    const deepest = Math.max(...matching.map(depthOf));
+    for (const workspace of matching) {
+      matchedNames.add(workspace.name.toLowerCase());
+      if (depthOf(workspace) === deepest) ownerNames.add(workspace.name.toLowerCase());
+    }
+  }
   // Section order, not the order of file declarations or config entries, is routing order.
   const matchedSectionNames = new Set<string>();
   const matchedSections = document.sections.filter((section) => {
@@ -104,11 +118,11 @@ export function resolveExpected(
   for (const domain of new Set(orderedDomains)) {
     for (const section of sections) {
       const localRoute = findRoute(section, domain);
-      const route = localRoute?.delegates.length ? localRoute : findRoute(global, domain);
+      const route = localRoute?.delegates.length || !ownerNames.has(section?.name.toLowerCase() ?? '') ? localRoute : findRoute(global, domain);
       for (const delegate of route?.delegates ?? []) if (!delegates.includes(delegate)) delegates.push(delegate);
     }
-    // A matched workspace with no routing section still receives the per-domain fallback.
-    if (matchedSectionNames.size > 0 && matchedSectionNames.size < matchedNames.size) {
+    // An owning workspace with no routing section still receives the per-domain fallback.
+    if (matchedSectionNames.size > 0 && [...ownerNames].some((name) => !matchedSectionNames.has(name))) {
       for (const delegate of findRoute(global, domain)?.delegates ?? []) if (!delegates.includes(delegate)) delegates.push(delegate);
     }
   }

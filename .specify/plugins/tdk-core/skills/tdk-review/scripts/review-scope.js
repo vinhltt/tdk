@@ -6959,7 +6959,7 @@ var require_public_api = __commonJS((exports) => {
 
 // review-scope.ts
 import { existsSync as existsSync3, lstatSync, readFileSync as readFileSync3, realpathSync as realpathSync3 } from "fs";
-import { dirname as dirname2, isAbsolute as isAbsolute3, join as join3, posix, relative as relative3, resolve as resolve2 } from "path";
+import { dirname as dirname2, isAbsolute as isAbsolute3, join as join3, posix, relative as relative4, resolve as resolve2 } from "path";
 import { parseArgs } from "util";
 
 // ../../../../../scripts/ts/src/utils/agent-output.ts
@@ -11095,7 +11095,7 @@ function runGit(args, opts = {}) {
 
 // ../../../../../scripts/ts/src/utils/git-map.ts
 import { existsSync as existsSync2, readFileSync as readFileSync2, realpathSync as realpathSync2 } from "fs";
-import { join as join2, isAbsolute as isAbsolute2 } from "path";
+import { join as join2, isAbsolute as isAbsolute2, relative as relative3 } from "path";
 
 // node_modules/yaml/dist/index.js
 var composer = require_composer();
@@ -11361,6 +11361,38 @@ function isRegisteredWorktree(repositoryRoot, workingRoot, repoCommonDir) {
       return false;
     }
   });
+}
+var INNER_WORKTREE_NOTES = {
+  "no-own-sub": "nested worktree without a repo-level sub-workspace",
+  "not-registered": "worktree path is not a worktree of this repository"
+};
+function innerWorktreeRoot(workspaceRoot, subWorkspaces, top, subRoot, worktreeRoot) {
+  const realTop = realpathSync2(top);
+  const hasOwnSub = subWorkspaces.some((sub) => {
+    try {
+      return realpathSync2(join2(workspaceRoot, sub.path)) === realTop;
+    } catch {
+      return false;
+    }
+  });
+  if (!hasOwnSub)
+    return { ok: false, reason: "no-own-sub" };
+  let realWorktree;
+  try {
+    realWorktree = realpathSync2(worktreeRoot);
+  } catch {
+    return { ok: false, reason: "not-registered" };
+  }
+  if (realWorktree === realTop)
+    return { ok: false, reason: "not-registered" };
+  let registered = false;
+  try {
+    registered = isRegisteredWorktree(realTop, worktreeRoot, commonDirOf(realTop));
+  } catch {}
+  if (!registered)
+    return { ok: false, reason: "not-registered" };
+  const prefix = relative3(realTop, realpathSync2(subRoot)).replace(/\\/g, "/");
+  return { ok: true, top: realTop, prefix };
 }
 function commonDirOf(root) {
   const reported = runGit(["-C", root, "rev-parse", "--git-common-dir"]);
@@ -11733,7 +11765,7 @@ function buildSlices(diffs, config, projectRoot, projectReal) {
   for (const { repo, base, segments } of diffs) {
     const owned = new Map;
     for (const file of repo.files) {
-      const routingPath = base.kind === "prefix" ? posix.join(base.prefix, file) : relative3(projectReal, join3(base.top, file)).replace(/\\/g, "/");
+      const routingPath = base.kind === "prefix" ? posix.join(base.prefix, file) : relative4(projectReal, join3(base.top, file)).replace(/\\/g, "/");
       const owner = autoDetectSubWorkspace(config, projectRoot, join3(projectRoot, routingPath));
       const group = owned.get(owner) ?? { files: [], routingPaths: [] };
       group.files.push(file);
@@ -11843,10 +11875,10 @@ function computeReviewScope(options) {
   const claimed = new Set;
   const handled = new Set;
   const handledSubs = new Set;
-  const reviewedTops = new Set;
+  const reviewedTops = new Map;
   const mappedTops = new Set;
   const projectReal = realpathSync3(projectRoot);
-  const excludesUnder = (root) => [...handledSubs, ...handled].filter((sub) => sub !== root && isWithin(root, sub)).map((sub) => relative3(root, sub).replace(/\\/g, "/"));
+  const excludesUnder = (root) => [...handledSubs, ...handled].filter((sub) => sub !== root && isWithin(root, sub)).map((sub) => relative4(root, sub).replace(/\\/g, "/"));
   if (usable) {
     const recordedWork = (row) => row.branch !== null && usable.baseCommitByRepo[row.subWorkspace] !== undefined && usable.cleaningByRepo[row.subWorkspace] === undefined && usable.cleanedByRepo[row.subWorkspace] === undefined;
     const noteMappedTop = (name, repositoryRoot) => {
@@ -11923,18 +11955,23 @@ function computeReviewScope(options) {
         }
       }
       rowDiffs.push({ fields: { subWorkspace: sub.name, repoPath: row.repoPath, workingRoot, baseCommit, includesUncommitted: true, source: "git-map" }, prefix, specs, root: repoReal });
-      reviewedTops.add(repoReal);
+      reviewedTops.set(repoReal, row.worktreePath);
     }
     for (const { row, name, prefix, owned, specs, repositoryRoot, subReal, kind, top } of directoryRows) {
       if (kind === "inner" && typeof usable.baseCommitByRepo[name] === "string")
         mappedTops.add(top);
       const recorded = row.worktreePath === null ? null : join3(projectRoot, row.worktreePath);
-      const stranded = recorded !== null && existsSync3(recorded);
-      const strand = () => skip(name, "identity_failed", "nested worktree layout undefined", recordedWork(row));
-      if (reviewedTops.has(top)) {
+      const hasWorktree = recorded !== null && existsSync3(recorded);
+      const group = hasWorktree && kind === "inner" ? innerWorktreeRoot(projectRoot, subs, top, repositoryRoot, recorded) : null;
+      const strand = (reason) => skip(name, "identity_failed", reason, recordedWork(row));
+      const strandReason = group === null ? hasWorktree ? "nested worktree layout undefined" : null : group.ok ? null : INNER_WORKTREE_NOTES[group.reason];
+      const ownWorktreePath = reviewedTops.get(top);
+      if (ownWorktreePath !== undefined) {
         owned.forEach((path) => claimed.add(path));
-        if (stranded)
-          strand();
+        if (strandReason !== null)
+          strand(strandReason);
+        else if (recordedWork(row) && row.worktreePath !== ownWorktreePath)
+          strand("group worktree mismatch");
         continue;
       }
       const state = rowStateOf(usable, name, repositoryRoot);
@@ -11953,11 +11990,19 @@ function computeReviewScope(options) {
         notReviewed.push({ subWorkspace: name, state: "invalid-base-commit", reason: "no usable base commit" });
         continue;
       }
-      if (stranded) {
-        strand();
+      if (strandReason !== null) {
+        strand(strandReason);
         continue;
       }
-      rowDiffs.push({ fields: { subWorkspace: name, repoPath: row.repoPath, workingRoot: repositoryRoot, baseCommit, includesUncommitted: true, source: "git-map" }, prefix, specs, root: subReal });
+      let workingRoot = repositoryRoot;
+      if (group?.ok) {
+        workingRoot = join3(recorded, group.prefix);
+        if (!existsSync3(workingRoot)) {
+          strand(`worktree has no ${group.prefix} directory`);
+          continue;
+        }
+      }
+      rowDiffs.push({ fields: { subWorkspace: name, repoPath: row.repoPath, workingRoot, baseCommit, includesUncommitted: true, source: "git-map" }, prefix, specs, root: subReal });
     }
     for (const { fields, prefix, specs, root } of rowDiffs)
       pushRepo(fields, { kind: "prefix", prefix }, specs, excludesUnder(root));
@@ -11992,7 +12037,7 @@ function computeReviewScope(options) {
       continue;
     if (mappedTops.has(top))
       notReviewed.push({ subWorkspace: path, state: "unmapped_in_mapped_repo", reason: "repository has a git-map row with a recorded base; only changes since HEAD were reviewed for this path" });
-    const spec = relative3(top, join3(realStart, relative3(start, absolute))).replace(/\\/g, "/") || ".";
+    const spec = relative4(top, join3(realStart, relative4(start, absolute))).replace(/\\/g, "/") || ".";
     groups.set(top, [...groups.get(top) ?? [], spec]);
   }
   for (const [top, specs] of groups) {
@@ -12000,17 +12045,17 @@ function computeReviewScope(options) {
     try {
       base = runGit(["-C", top, "rev-parse", "--verify", "HEAD^{commit}"]);
     } catch {
-      notReviewed.push({ subWorkspace: relative3(projectReal, top) || ".", state: "no_head", reason: "repository has no commit to diff against" });
+      notReviewed.push({ subWorkspace: relative4(projectReal, top) || ".", state: "no_head", reason: "repository has no commit to diff against" });
       continue;
     }
-    pushRepo({ subWorkspace: null, repoPath: relative3(projectReal, top).replace(/\\/g, "/") || ".", workingRoot: top, baseCommit: base, includesUncommitted: true, source: "fallback" }, { kind: "top", top }, specs, excludesUnder(top));
+    pushRepo({ subWorkspace: null, repoPath: relative4(projectReal, top).replace(/\\/g, "/") || ".", workingRoot: top, baseCommit: base, includesUncommitted: true, source: "fallback" }, { kind: "top", top }, specs, excludesUnder(top));
   }
   const porcelain = {};
   for (const repo of repos)
     porcelain[repo.repoPath] = git(repo.workingRoot, PORCELAIN_ARGS).split("\x00").filter(Boolean);
   try {
     const hostTop = realpathSync3(runGit(["-C", canonicalFeature, "rev-parse", "--show-toplevel"]));
-    const key = relative3(projectReal, hostTop).replace(/\\/g, "/") || ".";
+    const key = relative4(projectReal, hostTop).replace(/\\/g, "/") || ".";
     if (!Object.hasOwn(porcelain, key))
       porcelain[key] = git(hostTop, PORCELAIN_ARGS).split("\x00").filter(Boolean);
   } catch {

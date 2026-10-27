@@ -62,14 +62,30 @@ sub-workspace repository: per repository, its milestone, branch, base commit and
 artifact host's own branch is **not** injected as milestone context — a milestone belongs to a code
 repository, and the artifact host is not one of them.
 
+Each row has one **working root**, the directory where its HEAD is read and its files are written:
+
+```bash
+WORKING_ROOT="$PROJECT_DIR/<Worktree path>"   # when the row's Worktree path column holds a value
+WORKING_ROOT="$PROJECT_DIR/<Repo path>"       # otherwise: the main checkout
+```
+
 Before the phase writes anything, re-verify that the repository still stands where the record says:
 
 ```bash
-git -C "$PROJECT_DIR/$SUB_PATH" rev-parse --abbrev-ref HEAD
+git -C "$WORKING_ROOT" rev-parse --abbrev-ref HEAD
 ```
 
 A mismatch STOPs with the F3-style recovery reminder — another task may have moved `HEAD` in the meantime.
-Paths in `GIT_MAP` are workspace-relative, so join `PROJECT_DIR` at execution time.
+Reading HEAD at `Repo path` while the row records a worktree checks the main checkout, which another task may
+hold, and STOPs a healthy run. A recorded worktree that no longer exists makes this command fail: that is a STOP
+with the same reminder, and the next run's preflight re-attaches it. Never fall back to writing in the main
+checkout. Paths in `GIT_MAP` are workspace-relative, so join `PROJECT_DIR` at execution time.
+
+Before dispatch, also STOP on any declared path that lies in a nested repository with sub-workspaces but no
+repo-level sub-workspace, using the text from `tdk-branch-preflight/references/git-map-contract.md` →
+*Repositories holding several sub-workspaces*:
+`path <p> is inside repository <T>, which has sub-workspaces but no repo-level sub-workspace; add one for <T>`.
+Map declared paths to rows with that section's deepest segment-bounded match.
 
 ### Working-Root Override
 
@@ -82,13 +98,23 @@ Paths declared under `## Related Code Files` stay workspace-logical. A phase dec
 against a worktree at `_worktrees/web/feature-sample-001` reads and writes
 `_worktrees/web/feature-sample-001/src/foo.ts`.
 
+A row of a repository group — several sub-workspaces inside one nested repository — shares its group's worktree
+and translates through its `--show-prefix`, as defined once in
+`tdk-branch-preflight/references/git-map-contract.md` → *Worktrees for a repository group*. With the group worktree
+at `_worktrees/be/feature-sample-001`, `src/be/core/X.cs` is read and written at
+`_worktrees/be/feature-sample-001/core/X.cs`, and `src/be/App.sln` at `_worktrees/be/feature-sample-001/App.sln`.
+`WORKING_ROOT` is the worktree root for every member. Before dispatching an `inner` row that has a `Worktree path`,
+STOP with `add a repo-level sub-workspace for <T> to use worktrees` when the configuration has no repo-level
+sub-workspace for its repository, and with the contract's `repository group <T> disagrees on …` text when the
+members break the contract's group invariant, `Worktree path` included.
+
 Phase files never declare `_worktrees/...` themselves: `/tdk-plan` runs the write-disjointness check in
 validate-only mode, that mode includes the gitignore step, and `_worktrees/` must be gitignored — so such a
 path is rejected as an ignored write path. A phase file is also written at plan time, while whether a
 repository is busy is implementation-time state.
 
-Both the re-verify command above and the final `git diff` review point at the **translated** root, not at the
-declared one.
+Both the re-verify command above and the final review diff, `git -C "$WORKING_ROOT" diff`, point at the
+**translated** root, not at the declared one.
 
 The write-disjointness checker validates declared paths, not the paths actually written. It is a cooperative
 policy backed by report review rather than a filesystem sandbox, so this override depends on agent

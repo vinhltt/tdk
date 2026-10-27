@@ -89,3 +89,46 @@ describe('tdk-implement parallel orchestration contract', () => {
     expect(project).toContain('writes every status through the single `transition-phase-status` call defined in');
   });
 });
+
+describe('tdk-implement working root', () => {
+  const flat = (path: string): string => read(path).replace(/\s+/g, ' ');
+
+  it('re-verifies HEAD at the working root in serial dispatch and in workers', () => {
+    const execution = flat(executionPath); const parallel = flat(referencePath);
+    expect(execution).toContain('WORKING_ROOT="$PROJECT_DIR/<Worktree path>"');
+    expect(execution).toContain('WORKING_ROOT="$PROJECT_DIR/<Repo path>"');
+    for (const text of [execution, parallel]) {
+      expect(text).toContain('git -C "$WORKING_ROOT" rev-parse --abbrev-ref HEAD');
+      expect(text).not.toContain('"$PROJECT_DIR/$SUB_PATH" rev-parse --abbrev-ref');
+    }
+    expect(execution).toContain('git -C "$WORKING_ROOT" diff');
+    expect(execution).toContain('Never fall back to writing in the main checkout');
+  });
+
+  it('stops dispatch on a path inside a repository without a repo-level sub-workspace', () => {
+    expect(flat(executionPath)).toContain(
+      'path <p> is inside repository <T>, which has sub-workspaces but no repo-level sub-workspace; add one for <T>',
+    );
+  });
+
+  it('parses --worktree as a per-run flag that rejects duplicates, values and --no-branch', () => {
+    const project = flat(projectPath); const skill = flat(skillPath);
+    expect(project).toContain('WORKTREE_MODE = true only when one --worktree token is provided');
+    expect(project).toContain('/tdk-implement <TASK_ID> --parallel --worktree');
+    expect(project).toContain('- duplicate `--worktree`');
+    expect(project).toContain('- a value attached to `--worktree`');
+    expect(project).toContain('- `--worktree` together with `--no-branch`');
+    expect(project).toContain('there is no config field for it');
+    expect(skill).toContain('`PROJECT_CONTEXT`, `TARGET_ROWS`, `WORKTREE_MODE`');
+    // A single-repository project skips preflight, so the flag must stop here rather than be ignored.
+    expect(skill).toContain('when `WORKTREE_MODE` is true and `PROJECT_CONTEXT.subWorkspaces` is empty or absent, STOP');
+    expect(skill).toContain('`--worktree needs a sub-workspace repository; root-repository worktrees are not supported`');
+  });
+
+  it('separates --parallel from concurrent tasks', () => {
+    const parallel = flat(referencePath);
+    expect(parallel).toContain('`--parallel` runs phases concurrently inside **one** working root per repository');
+    expect(parallel).toContain('isolation from worktrees — one task per worktree — never from `--parallel`');
+  });
+});
+

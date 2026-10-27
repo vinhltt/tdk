@@ -6,6 +6,27 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.129.0] - 2026-10-27
+
+### Added
+- **[tdk-utils]** Sub-workspaces inside a nested repository or submodule can use worktrees when the repository has a repo-level sub-workspace
+  - The repository's sub-workspaces form one group: one branch and at most one worktree per task, at `_worktrees/<repo-level-sub>/<worktree-name>/`, recorded on every member row
+  - The git-map contract defines deepest segment-bounded path mapping, the group invariant (branch, base ref, base commit, milestone, worktree path), `--show-prefix` path translation into the group worktree, a group identity gate, and pathspec-only commits in the enclosing repository
+  - New STOPs: a path inside a repository that has sub-workspaces but no repo-level sub-workspace; group members that disagree; the worktree route without a repo-level sub-workspace; a ref lock held by another task's git command
+- **[tdk-core]** `/tdk-implement --worktree` starts a task on a worktree even when the checkout is free; it is rejected when duplicated, given a value, combined with `--no-branch`, or used on a project without sub-workspaces
+
+### Changed
+- **[tdk-utils]** Repository groups are handled as one unit
+  - `tdk-branch-preflight` creates the branch once per group at its anchor path and writes a row for every member in the same git-map write; cleanup state is verified and reconciled once per group
+  - `/tdk-repo-worktree` creates, lists, cleans and resets a group as one unit; the `_worktrees/` gitignore check runs from the project root
+- **[tdk-core]** Group-aware planning, execution and review
+  - `/tdk-plan` seeds inner sub-workspaces with one fetch per repository group and skips only plain directories
+  - `/tdk-implement` runs every phase in its working root (the row's worktree or repository path), translates group paths into the worktree, and never falls back to writing in the main checkout
+  - `/tdk-status` and `/tdk-review` probe and diff inner rows through their group worktree; a member whose worktree path disagrees with its group is left unreviewed
+  - Delegate routing: a sub-workspace that only encloses a phase's paths (a parent such as `be → src/be` of a phase touching `src/be/core/...`) adds its own routes but never the `## global` fallback; the nested sub-workspace that owns the paths keeps its own routing
+- **[Scripts]** `innerWorktreeRoot` in `utils/git-map.ts` resolves an inner row's group worktree and never accepts the enclosing repository's main checkout; `phase-delegates.ts` resolves the owning and parent-only sub-workspaces of each path
+- **[Guides]** The skills guide lists `/tdk-implement --worktree` and repository group worktrees
+
 ## [1.128.0] - 2026-10-25
 
 ### Changed

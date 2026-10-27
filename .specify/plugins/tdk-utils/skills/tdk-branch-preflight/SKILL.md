@@ -7,9 +7,9 @@ description: "Ensure every affected sub-workspace repository stands on the agree
   NOT user-invocable."
 user-invocable: false
 metadata:
-  version: "4.5.3"
+  version: "4.5.4"
   category: "Git"
-  input_format: "PROJECT_DIR (agent-resolved absolute project root), TASK_ID (validated), FEATURE_DIR, PROJECT_CONTEXT, TARGET_ROWS, host skill name"
+  input_format: "PROJECT_DIR (agent-resolved absolute project root), TASK_ID (validated), FEATURE_DIR, PROJECT_CONTEXT, TARGET_ROWS, WORKTREE_MODE (boolean, default false), host skill name"
   output_format: "GIT_MAP (sub-workspace to branch/worktree records) or STOP with a per-repository status report"
 ---
 
@@ -43,6 +43,7 @@ Receive from the calling skill:
 | `FEATURE_DIR` | Resolved feature directory (output of `tdk-load-project-context`) |
 | `PROJECT_CONTEXT` | Loaded config; read `subWorkspaces[]`, `featureEnv.mainBranch`, `featureEnv.defaultFolder` |
 | `TARGET_ROWS` | The phase rows this run will execute; step 3 maps only these |
+| `WORKTREE_MODE` | `true` when the host was run with `--worktree`: step 7 routes every repository group that is not yet realized to a worktree. Absent means `false` |
 | host skill name | For error messages |
 
 `PROJECT_CONTEXT` has no `git.*` key. Branch-related defaults live under `featureEnv.*`.
@@ -142,6 +143,11 @@ If the file exists:
   are read at the **working root** — the recorded worktree when it still exists, otherwise the repository.
   A recorded worktree that has been deleted is a recoverable state, not a dead end.
 
+  The members of one repository group (see `references/git-map-contract.md` → *Repositories holding several
+  sub-workspaces*) are verified together, with the same per-row checks: they share one branch in one
+  repository, so a divergence in one member is a divergence of the group, and recovery runs once at the
+  group's anchor path.
+
   If every record matches and no intent has changed, reuse it, ask nothing, and return.
 
   **Reconciling a changed intent** has exactly three outcomes, and each one writes something, so the
@@ -155,6 +161,10 @@ If the file exists:
 
   There is no "accept the difference and write nothing": that leaves a state the file cannot express
   and asks the same question forever.
+
+  For a repository group the effective milestone is a group field, so the question is asked once per group
+  and the chosen write covers every member in one write. Members whose spec intents still differ STOP with
+  the contract's `repository group <T> disagrees on Milestone …` text.
 
 **A partial record locks the branch name.** When git-map carries `feature_branch` in its frontmatter — the
 mid-run crash case — repositories without a row continue through steps 4 to 7, but the branch name is no
@@ -173,7 +183,7 @@ keys on "matches the expected name" and the branch left by the crash no longer m
 |---|---|
 | Branch exists, repository sits elsewhere | Check the branch out again. Do not create. |
 | Branch is genuinely gone | Offer to recreate it from the recorded **base commit**, warning that any history it held is lost. Never from the milestone's current ref. |
-| Worktree gone, branch still present | Re-attach with `git -C "$PROJECT_DIR/<path>" worktree add "$PROJECT_DIR/<worktree-path>" "$BRANCH"` — **without** `-b`. |
+| Worktree gone, branch still present | Re-attach with `git -C "$PROJECT_DIR/<path>" worktree add "$PROJECT_DIR/<worktree-path>" "$BRANCH"` — **without** `-b`. For a repository group, re-attach once, with `<path>` = the repo-level sub-workspace's path, and keep the same `Worktree path` on every member |
 
 When the re-attach fails with "already checked out", run `git -C "$PROJECT_DIR/<path>" worktree list` to
 locate it. A stale entry (directory deleted by hand, git still tracking it) warrants an offer to run
@@ -196,12 +206,17 @@ To derive: read `plan.md` and the phase files — valid at this point, because t
 its confirmation step. **Read only the phase files for the rows this run will actually execute** (the host's
 resolved target rows), not every phase in the plan. Under `--phase NN` the two differ, and mapping the whole
 plan would create branches in repositories this run never touches. Collect every path under
-`## Related Code Files` (Create/Modify/Delete) and match each
-against `subWorkspaces[].path` by prefix. A path matching no sub-workspace belongs to the root; skip it.
+`## Related Code Files` (Create/Modify/Delete) and map each
+to a sub-workspace with the deepest segment-bounded match defined in `references/git-map-contract.md` →
+*Repositories holding several sub-workspaces*. A path matching no sub-workspace belongs to the root; skip it —
+unless it lies in a nested repository that has sub-workspaces but no repo-level sub-workspace. That case STOPs on
+the main-checkout and the worktree route alike, with the contract's text:
+`path <p> is inside repository <T>, which has sub-workspaces but no repo-level sub-workspace; add one for <T>`.
 
-Where a sub-workspace path is not a separate repository — its `git -C "$PROJECT_DIR/<path>" rev-parse
---show-toplevel` resolves to the same toplevel as `"$PROJECT_DIR"` — skip it and note it as a plain monorepo
-directory.
+Classify each matched sub-workspace by the contract's *Repository classes*. Skip a `plain` one and note it as a
+plain monorepo directory. Group the `own` and `inner` ones into **repository groups** by toplevel `T`. Steps 5-9
+work per group at its anchor path, and the group invariant is checked before step 6 publishes anything: a mismatch
+STOPs with the contract's `repository group <T> disagrees on …` text.
 
 **Sanitize before use:**
 
@@ -263,9 +278,11 @@ Ask **one** `AskUserQuestion` covering:
    never checks it out and never treats it as a child repository's milestone.
 2. The branch name suggestion — freely editable, with no format enforcement beyond the three validation
    layers. Keep it read-only when an existing git-map record locks it.
-3. Every affected repository, named by sub-workspace and path, with its milestone and its source choice
-   (upstream, local-only branch, selected remote, or no-remote local `mainBranch`). Include a correction
-   path for the derived repository set and an exit path for the whole batch.
+3. Every affected repository group on one line, naming `T` and every member sub-workspace with its path,
+   with the group's milestone and its source choice (upstream, local-only branch, selected remote, or
+   no-remote local `mainBranch`). Under `WORKTREE_MODE`, the line also shows the group's route: worktree, or
+   the main checkout it is already realized on. A group has one base triple, confirmed once for all its members. Include a
+   correction path for the derived repository set and an exit path for the whole batch.
 
 Do not ask per repository. Do not create anything silently. A no-remote repository whose local `mainBranch`
 does not resolve has no selectable canonical base: require the user to resolve it in this batch or STOP.
@@ -314,7 +331,7 @@ Check all four conditions across the whole set before creating anything anywhere
    The Base commit must be a commit of the Base ref resolved from the **current** intent. Step 6 already
    discarded every pre-prompt candidate, re-resolved the triple after confirmation, and atomically published
    it before this check. A missing base is a STOP, not a fallback or a `-` value.
-4. **Busy repository** — the repository's current branch is none of `mainBranch`, the target branch, or
+4. **Busy repository** — checked once per repository group, at its anchor path: the repository's current branch is none of `mainBranch`, the target branch, or
    **its own confirmed milestone**. A repository sitting on the milestone this task branches from is in
    the expected state, not a busy one; classifying it as busy stops the normal case. Anything else means
    it sits on some other feature branch: route it to step 8 *before* any create or checkout command.
@@ -324,31 +341,53 @@ Check all four conditions across the whole set before creating anything anywhere
    still blocks — a repository on the right milestone with uncommitted changes is still not safe to
    branch from.
 
-Once all four pass, create per repository. The start point is the **base commit**, never the ref name: a
-ref can move, and a bare name can resolve to a tag.
+**With `WORKTREE_MODE`**, every repository group that is not yet realized takes the worktree route in step 8,
+whether or not its main checkout is busy or dirty. The batched prompt in step 6 shows the route of each group, and
+the user still confirms it; nothing is created silently. A group with an `inner` member still needs a repo-level
+sub-workspace (step 8). A realized group keeps its recorded working root: for one on the main checkout, print
+`<T> is already on the main checkout for this task; --worktree does not move it` and continue. When no target
+row maps to a sub-workspace repository, STOP with
+`--worktree needs a sub-workspace repository; root-repository worktrees are not supported`.
+
+Run the four checks once per repository group, at its anchor path. Once all four pass, create once per
+group at the anchor path — never once per member, because the second `git branch` in the same repository fails
+with "a branch named … already exists". The start point is the **base commit**, never the ref name: a ref can
+move, and a bare name can resolve to a tag.
 
 ```bash
-git -C "$PROJECT_DIR/$SUB_PATH" branch -- "$BRANCH" "$BASE_COMMIT"
-git -C "$PROJECT_DIR/$SUB_PATH" checkout "$BRANCH" --
+git -C "$PROJECT_DIR/$ANCHOR_PATH" branch -- "$BRANCH" "$BASE_COMMIT"
+git -C "$PROJECT_DIR/$ANCHOR_PATH" checkout "$BRANCH" --
 ```
 
-**Append the git-map row immediately after each repository succeeds.** Incremental rows are what make a
+For an own-only layout the anchor path is the sub-workspace path, so this is one create per repository.
+
+**Append the git-map rows immediately after each group succeeds** — one row for every member, in the same
+write. Incremental rows are what make a
 mid-run crash recoverable: the finished repositories carry records, and the next run resumes the remainder
 instead of deadlocking. When repository *k* fails, STOP and report the state of each one — which have records,
 which were never reached. Do not roll back automatically.
 
 #### 8. Repository busy on another feature branch
 
-Offer to delegate that repository to `tdk-repo-worktree`. Worktrees are opt-in. If the user declines both the
-worktree and the switch, STOP.
+Offer to delegate that repository group to `tdk-repo-worktree`, once per group: pass the repo-level
+sub-workspace and the member list. Worktrees are opt-in. If the user declines both the worktree and the switch,
+STOP.
+
+A group with an `inner` member takes this route only when the configuration declares a repo-level sub-workspace
+for its repository. Otherwise STOP with `add a repo-level sub-workspace for <T> to use worktrees` — the
+precondition, the single `worktree add`, path translation and the group identity gate are defined in
+`references/git-map-contract.md` → *Worktrees for a repository group*. A ref-lock error from another task's git
+command in the same repository STOPs with `rerun when the other task's git command finishes`.
 
 **A worktree is a replacement working root, not a second declared path.** When sub-workspace `<sub>` has a
 worktree, the paths declared in the phase file's `## Related Code Files` **stay workspace-logical**
 (`apps/web/src/foo.ts`). Record the worktree in git-map's `Worktree path` column; the host injects it at
 dispatch as a working-root override — "for sub-workspace `web`, the working root is
 `_worktrees/web/feature-task-1/`" — and the agent translates `apps/web/src/foo.ts` to
-`_worktrees/web/feature-task-1/src/foo.ts` when reading and writing. See
-`references/git-map-contract.md` for how `<worktree-name>` is derived.
+`_worktrees/web/feature-task-1/src/foo.ts` when reading and writing. A member of a repository group translates
+through its `--show-prefix` instead (`src/be/core/X.cs` → `_worktrees/be/feature-task-1/core/X.cs`), as the
+contract's *Worktrees for a repository group* defines. See `references/git-map-contract.md` for how
+`<worktree-name>` is derived.
 
 Worktree paths are not declared in phase files, for two independent reasons. A phase file is written at plan
 time, while "is this repository busy" is implementation-time state, so the plan cannot know. And the plan
@@ -364,12 +403,13 @@ sandbox. The override therefore relies on agent compliance; nothing enforces it.
 #### 9. Close the record
 
 The frontmatter was written in step 6 and the rows were appended in step 7. Verify the file matches live git
-state and fill the `Worktree path` column for any repository using an override.
+state and fill the `Worktree path` column for any repository using an override — for a repository group, the
+same value on every member, in one write.
 
 ### Delegation
 
-Invoke `tdk-repo-worktree` with `PROJECT_DIR`, the task ID, the target sub-workspace, the agreed branch name,
-and the already-confirmed base ref. A delegated call must not re-ask for the base ref — each base ref is
+Invoke `tdk-repo-worktree` with `PROJECT_DIR`, the task ID, the target sub-workspace — for a repository group,
+the repo-level sub-workspace plus the member list — the agreed branch name, and the already-confirmed base ref. A delegated call must not re-ask for the base ref — each base ref is
 confirmed exactly once, either here or in the standalone worktree flow.
 
 ### Additional Resources

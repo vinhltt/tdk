@@ -66,7 +66,7 @@ The resolver selects the `test` route for TDD/backfill phases from the plan-leve
 
 ## Sub-workspace Matching
 
-The resolver matches phase `## Related Code Files` paths against configured sub-workspace paths, then uses the matched sub-workspace names for case-insensitive routing-section lookup. The first section for each workspace name wins, including when a later section supplies a domain the first lacks. Distinct matched workspaces merge in routing order with delegate deduplication. Unmatched paths and monolith projects use `## global`; a missing sub-workspace/domain entry falls back to the global entry for that domain. Duplicate sections do not suppress fallback for a different workspace without a section. Domain detection lives only in the TS resolver.
+The resolver matches phase `## Related Code Files` paths against configured sub-workspace paths, then uses the matched sub-workspace names for case-insensitive routing-section lookup. The first section for each workspace name wins, including when a later section supplies a domain the first lacks. Distinct matched workspaces merge in routing order with delegate deduplication. Unmatched paths and monolith projects use `## global`; a missing sub-workspace/domain entry falls back to the global entry for that domain. Duplicate sections do not suppress fallback for a different workspace without a section. A path matches every sub-workspace whose path segment-prefixes it, and its owner is the deepest one; a matched sub-workspace that owns none of the phase's paths — a parent such as `be → src/be` of a phase touching only `src/be/Identity/...` — is parent-only: it contributes its own non-empty route for the domain, in section order, and never the `## global` fallback. Domain detection lives only in the TS resolver.
 
 ## Injection Format
 
@@ -124,6 +124,11 @@ After parsing, compare `PROJECT_CONTEXT.subWorkspaces[].name` against `## headin
 For each sub-workspace with no corresponding section → emit advisory warning:
 ```
 Warning: Sub-workspace '{name}' has no skill routing section - using global defaults.
+```
+
+For a sub-workspace whose path holds other configured sub-workspaces, word it instead:
+```
+Warning: Sub-workspace '{name}' has no skill routing section - its own files use global defaults; nested sub-workspaces keep their own routing.
 ```
 
 Non-blocking — plan generation continues. Emitted once per plan (not per phase).

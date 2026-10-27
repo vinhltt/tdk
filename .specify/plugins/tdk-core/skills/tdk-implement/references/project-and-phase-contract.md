@@ -13,6 +13,10 @@ Accepted forms:
 - `/tdk-implement <TASK_ID> --phase NN --no-branch`
 - `/tdk-implement <TASK_ID> --phase=NN --no-branch`
 - `/tdk-implement <TASK_ID> --parallel --no-branch`
+- `/tdk-implement <TASK_ID> --worktree`
+- `/tdk-implement <TASK_ID> --phase NN --worktree`
+- `/tdk-implement <TASK_ID> --phase=NN --worktree`
+- `/tdk-implement <TASK_ID> --parallel --worktree`
 
 Contract:
 
@@ -23,10 +27,16 @@ PHASE_FILTER = optional numeric value from --phase NN or --phase=NN
 PHASE_FILTER_PRESENT = true when --phase is provided
 PARALLEL_MODE = true only when one --parallel token is provided
 NO_BRANCH = true only when one --no-branch token is provided
+WORKTREE_MODE = true only when one --worktree token is provided
 ```
 
 `--no-branch` takes no value. It is valid on its own and in combination with either `--phase` form or with
 `--parallel`, in any token order — `--no-branch --parallel` and `--parallel --no-branch` parse identically.
+
+`--worktree` takes no value either. It asks branch preflight to put this task on a worktree even when the
+repository's main checkout is free, for this run only — there is no config field for it. It combines with either
+`--phase` form and with `--parallel`, in any token order, but never with `--no-branch`: a worktree is a branch
+step.
 
 Reject and STOP before task-id validation if any of these are present:
 - missing `TASK_ID`
@@ -39,8 +49,11 @@ Reject and STOP before task-id validation if any of these are present:
 - duplicate `--parallel`
 - duplicate `--no-branch`
 - a value attached to `--no-branch`
-- any unknown value or positional after `--parallel`, where `--no-branch` is a known flag rather than an
-  unknown token and is therefore accepted in that position
+- duplicate `--worktree`
+- a value attached to `--worktree`
+- `--worktree` together with `--no-branch`
+- any unknown value or positional after `--parallel`, where `--no-branch` and `--worktree` are known flags
+  rather than unknown tokens and are therefore accepted in that position
 
 Also reject `--parallel` with either `--phase` form before task-id validation, prerequisite collection,
 capability probes, or project mutation. Do not infer a harness from environment variables,

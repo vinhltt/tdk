@@ -7,7 +7,7 @@ description: "Manage Git worktrees for sub-workspace repositories of a polyrepo 
   Also invoked by tdk-branch-preflight when it finds a busy repository.
   Operates on sub-workspace repositories only, never on the root workspace repository."
 metadata:
-  version: "4.1.1"
+  version: "4.5.4"
   category: "Git"
   input_format: "Mode (create|list|cleanup|reset), task ID, optional --repo <sub-workspace-name>; PROJECT_DIR from the caller when delegated"
   output_format: "Worktree records written to git-map.md, or a status report per repository"
@@ -91,7 +91,9 @@ Three properties of that rule are what `list` and `cleanup` depend on:
 
 ### Gitignore Enforcement
 
-In `create`, run `git -C "$PROJECT_DIR" check-ignore _worktrees` before creating anything. When it is
+In `create`, run `git -C "$PROJECT_DIR" check-ignore -q _worktrees/` before creating anything — with the
+trailing `/`: before the directory exists, a `_worktrees/` pattern does not match the bare name, so the check would
+report it as not ignored on the first create. When it is
 not ignored, offer to add `_worktrees/` to the root `.gitignore` (a confirmed write) or STOP. A passive
 reminder is not enough: the same workflow commits feature artifacts from the root, and a `git add -A` would
 swallow an entire sub-repository checkout.
@@ -104,6 +106,13 @@ swallow an entire sub-repository checkout.
    (`subWorkspaces[]`, `featureEnv.*`) and `FEATURE_DIR`. When delegated, both arrive from the caller.
 3. **Pick the target repository** from `--repo`, or ask the user to choose among `subWorkspaces[]`. The root
    repository is excluded from the choice.
+
+   `--repo <member>` resolves to that member's **repository group**: every sub-workspace of the task in the same
+   repository `T` (see `../tdk-branch-preflight/references/git-map-contract.md` → *Repositories holding several
+   sub-workspaces*). A group with an `inner` member needs a repo-level sub-workspace for `T` in the
+   configuration; without one, STOP with `add a repo-level sub-workspace for <T> to use worktrees`. With one,
+   `SUB` and `SUB_PATH` below are the repo-level sub-workspace's name and path, and the group gets exactly one
+   worktree. When delegated, preflight passes the repo-level sub-workspace and the member list.
 4. **Resolve the branch name** using the same source of truth as `tdk-branch-preflight`: the spec's
    `feature_branch` frontmatter (legacy key `branch` when absent), falling back to
    `<featureEnv.defaultFolder>/<task-id>`. Validate with the three layers above.
@@ -139,8 +148,12 @@ swallow an entire sub-repository checkout.
    `git -C "$PROJECT_DIR/$SUB_PATH" worktree list` to locate it. A stale entry — directory deleted by hand
    while git still tracks it — warrants an offer to run `git -C "$PROJECT_DIR/$SUB_PATH" worktree prune` and retry. A live checkout
    elsewhere means reporting its location and offering to use it instead. Never force.
+   A ref-lock error from another task's `worktree add` or `fetch` in the same repository STOPs with
+   `rerun when the other task's git command finishes`. Do not retry.
 7. **Record it.** Append or update the row in `{FEATURE_DIR}/git-map.md`, writing the path derived in step 5
-   in workspace-relative form, immediately after the worktree is created.
+   in workspace-relative form, immediately after the worktree is created. For a repository group, write the
+   same `Worktree path` on every member in one write. A member that joins the group later attaches by writing
+   that value; it never runs a second `worktree add`.
 
    That column is a **working-root override, not a second declared path.** Phase files keep declaring
    `apps/web/...`; `tdk-implement` reads this column at dispatch and tells the agent that the working root
@@ -148,6 +161,17 @@ swallow an entire sub-repository checkout.
    `_worktrees/...`: `/tdk-plan` runs the write-disjointness check in validate-only mode, that mode includes
    the gitignore step, and `_worktrees/` must be gitignored — so such a path is rejected as an ignored write
    path.
+
+### After create
+
+A new worktree holds tracked files only. Tell the user, in the create report:
+
+- Ignored files are absent: `.env`, local `appsettings.*.json`, `bin/` and `obj/`, `node_modules/`. Builds and
+  runs that depend on them fail until they exist in the worktree.
+- Nested submodules are not checked out. Run `git -C "$PROJECT_DIR/<worktree-path>" submodule update --init`
+  when the repository has any.
+- Never copy secrets automatically. List the ignored files the user must provide, and let them do it.
+- On Windows, deep paths need `git config core.longpaths true` in the repository.
 
 ### Worked example: delegated from preflight
 
@@ -174,11 +198,37 @@ The resulting git-map row, with the path stored workspace-relative:
 Phase files still declare `apps/web/src/...`; the agent translates those onto
 `_worktrees/web/feature-sample-001/src/...` when it reads and writes.
 
+### Worked example: a repository group
+
+Task `sample-001` declares `src/be/core/X.cs` and `src/be/App.sln`. Config has `be → src/be` (the repo-level
+sub-workspace of the submodule at `src/be`), `core → src/be/core` and `auth → src/be/auth`. The main checkout of
+`src/be` sits on `feature/sample-014`. Preflight delegates the group once: repo-level `be`, members `be` and
+`core`. `auth` is not a member, because no declared path maps to it.
+
+```bash
+# SUB_PATH=src/be  SUB=be  BRANCH=feature/sample-001  WORKTREE_NAME=feature-sample-001
+git -C "$PROJECT_DIR/$SUB_PATH" worktree add \
+  "$PROJECT_DIR/_worktrees/$SUB/$WORKTREE_NAME" -b "$BRANCH" "$BASE_COMMIT"
+```
+
+One write records both members, sharing one `Worktree path`:
+
+```markdown
+| be | src/be | epic-1 | feature/sample-001 | refs/remotes/origin/epic-1 | _worktrees/be/feature-sample-001 |
+| core | src/be/core | epic-1 | feature/sample-001 | refs/remotes/origin/epic-1 | _worktrees/be/feature-sample-001 |
+```
+
+Translation goes through `--show-prefix`, as the contract's *Worktrees for a repository group* defines: `src/be/core/X.cs` → `_worktrees/be/feature-sample-001/core/X.cs`,
+and `src/be/App.sln` → `_worktrees/be/feature-sample-001/App.sln`.
+
 ## list
 
 Read `git-map.md` from the relevant feature directories and reconcile each record against
 `git -C "$PROJECT_DIR/<repo>" worktree list`. Report divergence — a missing worktree, a branch deleted by
 hand — rather than failing.
+
+A repository group is one entry: its worktree, with its members listed, reconciled once at the repo-level
+sub-workspace's path, under the contract's group identity gate (*Worktrees for a repository group*).
 
 ## cleanup
 
@@ -198,6 +248,9 @@ cleaning_by_repo:
     intent: worktree+branch
     worktree_path: _worktrees/web/feature-sample-001
 ```
+
+**A repository group is cleaned as one unit**, as the contract's *Cleanup state* defines: every map write
+covers all members at once, and each step below runs once, with `SUB_PATH` = the repo-level sub-workspace's path.
 
 1. **Worktree absent locally** — report it and do nothing. The record was made on another machine.
 2. **Worktree present** — check for a dirty tree first. Dirty means STOP for that repository, with a report
@@ -231,11 +284,11 @@ row is a dead end for the user.
 
 | Item | Behaviour |
 |---|---|
-| Scope | per repository by default; `--repo <sub-name>` narrows it further |
+| Scope | per repository by default; `--repo <sub-name>` narrows it further. For a member of a repository group, `--repo` resets the whole group in one write |
 | `cleaned` row | remove `cleaned_by_repo[<sub>]`, return the row to `pending`, keep `Milestone` |
 | `cleaning` row | cancel: remove `cleaning_by_repo[<sub>]`, and remove `cleaned_by_repo[<sub>]` when it holds only a partial result. Report which removals cannot be undone |
 | `feature_branch` | released **only** when every row of the task is `seed`, `pending` or `cleaned`. Checked across the whole task before writing |
-| Confirmation | one `AskUserQuestion` naming the repository, the resulting row state, and whether `feature_branch` is released |
+| Confirmation | one `AskUserQuestion` naming the repository — every member, for a group — the resulting row state, and whether `feature_branch` is released |
 
 Resetting one repository while a sibling is still `realized` does not release the task-level
 `feature_branch`: every repository in a task shares one branch name, and the guard stops when a row

@@ -4,6 +4,16 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.5.4] - 2026-10-27
+
+### Added
+- Sub-workspaces inside a nested repository or submodule can use worktrees when the repository has a repo-level sub-workspace: one branch and at most one worktree per repository group and task
+
+### Changed
+- git-map contract: deepest segment-bounded mapping, repository group invariant, --show-prefix translation, group identity gate, pathspec-only commits in the enclosing repository
+- tdk-branch-preflight creates the branch once per group and records every member in one write; accepts WORKTREE_MODE
+- tdk-repo-worktree creates, lists, cleans and resets a repository group as one unit; the _worktrees/ gitignore check runs from the project root
+
 ## [4.5.3] - 2026-10-25
 
 ### Changed

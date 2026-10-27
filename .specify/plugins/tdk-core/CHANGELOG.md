@@ -4,6 +4,17 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.3.5] - 2026-10-27
+
+### Added
+- /tdk-implement --worktree starts a task on a worktree even when the checkout is free
+
+### Changed
+- /tdk-plan seeds inner sub-workspaces with one fetch per repository group and skips only plain directories
+- /tdk-implement runs each phase in its working root and translates group paths into the worktree; never falls back to the main checkout
+- /tdk-status and /tdk-review probe and diff inner rows through their group worktree
+- Delegate routing: a parent-only sub-workspace adds its own routes but never the ## global fallback
+
 ## [14.3.4] - 2026-10-25
 
 ### Changed

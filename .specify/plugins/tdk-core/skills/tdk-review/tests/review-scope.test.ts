@@ -716,13 +716,20 @@ const INNER_SUBS = [{ name: 'core', path: 'src/be/core' }, { name: 'auth', path:
 /**
  * Sub-workspaces that are directories inside one repository `src/be`, mounted as a real submodule of a root repo or as a
  * nested clone. Both rows are realized from the same base; the feature is committed in `src/be`, plus one untracked file.
+ *
+ * `grouped` swaps the upstream for a repository with `Shared`, `Shared.Data` and `App.sln` next to `core` and `auth`,
+ * ignores `_worktrees/` in the root, and leaves the main checkout on another task's branch holding another task's commits.
+ * The feature work then lives in worktrees added with `addTaskWorktree`.
  */
-function innerFixture(kind: InnerKind, phases: PhaseSpec[], rows: MapRow[] = INNER_SUBS, subWorkspaces = INNER_SUBS): InnerFx {
+function innerFixture(kind: InnerKind, phases: PhaseSpec[], rows: MapRow[] = INNER_SUBS, subWorkspaces = INNER_SUBS, options: { grouped?: boolean } = {}): InnerFx {
   const root = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-inner-')));
   const upstream = realpathSync(mkdtempSync(join(tmpdir(), 'review-scope-upstream-')));
   roots.push(root, upstream);
-  const base = initRepo(upstream, { 'core/a.ts': 'export const a = 1;\n', 'auth/i.ts': 'export const i = 1;\n', 'shared/s.ts': 'export const s = 1;\n' });
+  const base = initRepo(upstream, options.grouped
+    ? { 'core/a.ts': 'export const a = 1;\n', 'auth/i.ts': 'export const i = 1;\n', 'Shared/s.ts': 'export const s = 1;\n', 'Shared.Data/d.ts': 'export const d = 1;\n', 'App.sln': 'sln 1\n' }
+    : { 'core/a.ts': 'export const a = 1;\n', 'auth/i.ts': 'export const i = 1;\n', 'shared/s.ts': 'export const s = 1;\n' });
   put(join(root, '.specify', '.specify.json'), JSON.stringify({ version: '1.0', name: 'inner', subWorkspaces }));
+  if (options.grouped) put(join(root, '.gitignore'), '_worktrees/\n');
   const be = join(root, 'src', 'be');
   if (kind === 'submodule') {
     git(root, 'init', '-q', '-b', 'main');
@@ -733,16 +740,36 @@ function innerFixture(kind: InnerKind, phases: PhaseSpec[], rows: MapRow[] = INN
     mkdirSync(dirname(be), { recursive: true });
     git(root, 'clone', '-q', upstream, be);
   }
-  git(be, 'checkout', '-q', '-b', 'feat/x');
-  put(join(be, 'core', 'a.ts'), 'export const a = 2;\n');
-  put(join(be, 'core', 'n.ts'), 'export const n = 1;\n');
-  put(join(be, 'auth', 'i.ts'), 'export const i = 2;\n');
-  git(be, 'add', '-A'); git(be, 'commit', '-q', '-m', 'feature');
-  put(join(be, 'core', 'u.ts'), 'export const u = 1;\n');
+  if (options.grouped) {
+    git(be, 'checkout', '-q', '-b', 'feature/sample-014');
+    put(join(be, 'core', 'other-task.ts'), 'export const other = 1;\n');
+    put(join(be, 'App.sln'), 'sln other\n');
+    git(be, 'add', '-A'); git(be, 'commit', '-q', '-m', 'other task');
+  } else {
+    git(be, 'checkout', '-q', '-b', 'feat/x');
+    put(join(be, 'core', 'a.ts'), 'export const a = 2;\n');
+    put(join(be, 'core', 'n.ts'), 'export const n = 1;\n');
+    put(join(be, 'auth', 'i.ts'), 'export const i = 2;\n');
+    git(be, 'add', '-A'); git(be, 'commit', '-q', '-m', 'feature');
+    put(join(be, 'core', 'u.ts'), 'export const u = 1;\n');
+  }
   const feature = join(root, 'specs', 'task-1');
   writePlan(feature, phases);
   put(join(feature, 'git-map.md'), mapOf(rows, Object.fromEntries(rows.map((row) => [row.name, base]))));
   return { root, feature, api: be, base, be, core: join(be, 'core'), auth: join(be, 'auth') };
+}
+
+/**
+ * A linked worktree of the grouped repository at `_worktrees/be/<name>`, on `feature/<rest of name>` from the recorded base.
+ * `files` are committed there; `untracked` are left uncommitted. Returns the worktree root.
+ */
+function addTaskWorktree(fx: InnerFx, name: string, files: Record<string, string>, untracked: Record<string, string> = {}): string {
+  const worktree = join(fx.root, '_worktrees', 'be', name);
+  git(fx.be, 'worktree', 'add', '-q', '-b', name.replace('feature-', 'feature/'), worktree, fx.base);
+  for (const [path, body] of Object.entries(files)) put(join(worktree, path), body);
+  git(worktree, 'add', '-A'); git(worktree, 'commit', '-q', '-m', 'task work');
+  for (const [path, body] of Object.entries(untracked)) put(join(worktree, path), body);
+  return worktree;
 }
 
 /** Every routed path appears in exactly one slice, and slice ids are unique. */
@@ -796,12 +823,12 @@ describe('review scope: sub-workspaces inside a nested repository', () => {
     expectDisjointSlices(result);
   });
 
-  it('a recorded worktree that exists cannot be placed for an inner row and blocks; a missing one falls back to the sub path', () => {
+  it('a recorded worktree that exists blocks an inner row with no repo-level sub-workspace; a missing one falls back to the sub path', () => {
     const rows = (worktree: string): MapRow[] => [{ ...INNER_SUBS[0]!, worktree }, INNER_SUBS[1]!];
     const fx = innerFixture('clone', ALL, rows('_worktrees/core/feat-x'));
     mkdirSync(join(fx.root, '_worktrees', 'core', 'feat-x'), { recursive: true });
     const blocked = scope(fx);
-    expect(blocked.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'nested worktree layout undefined', blocking: true }]);
+    expect(blocked.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'nested worktree without a repo-level sub-workspace', blocking: true }]);
     expect(blocked.incomplete).toBe(true);
 
     put(join(fx.feature, 'git-map.md'), mapOf(rows('_worktrees/core/gone'), { core: fx.base, auth: fx.base }));
@@ -810,13 +837,13 @@ describe('review scope: sub-workspaces inside a nested repository', () => {
     expect(fallback.incomplete).toBe(false);
   });
 
-  it('an existing recorded worktree of an inner row blocks even when an own row of the same repository is diffed', () => {
+  it('an existing recorded worktree of an inner row that is not a registered worktree blocks even when an own row of the same repository is diffed', () => {
     const subs = [{ name: 'be', path: 'src/be' }, ...INNER_SUBS];
     const fx = innerFixture('clone', ALL, [subs[0]!, { ...INNER_SUBS[0]!, worktree: '_worktrees/core/feat-x' }, INNER_SUBS[1]!], subs);
     mkdirSync(join(fx.root, '_worktrees', 'core', 'feat-x'), { recursive: true });
     const result = scope(fx);
     expect(result.repos.map((repo) => repo.repoPath)).toEqual(['src/be']);
-    expect(result.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'nested worktree layout undefined', blocking: true }]);
+    expect(result.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'worktree path is not a worktree of this repository', blocking: true }]);
     expect(result.incomplete).toBe(true);
   });
 
@@ -890,6 +917,163 @@ describe('review scope: sub-workspaces inside a nested repository', () => {
     expect(result.incomplete).toBe(true);
     expect(result.repos.map((repo) => repo.repoPath)).toEqual(['src/be/auth']);
   });
+});
+
+const GROUP_PATHS: Record<string, string> = {
+  be: 'src/be', core: 'src/be/core', auth: 'src/be/auth', shared: 'src/be/Shared', 'shared-data': 'src/be/Shared.Data',
+};
+const GROUP_SUBS = Object.entries(GROUP_PATHS).map(([name, path]) => ({ name, path }));
+const WT1 = '_worktrees/be/feature-sample-001';
+const WT2 = '_worktrees/be/feature-sample-002';
+/** Map rows for the named sub-workspaces of the grouped repository, all recorded at `worktree`. */
+const groupRows = (names: string[], worktree: string = WT1): MapRow[] => names.map((name) => ({ name, path: GROUP_PATHS[name]!, branch: 'feature/sample-001', worktree }));
+const writeGroupMap = (fx: InnerFx, rows: MapRow[], feature = fx.feature): void =>
+  put(join(feature, 'git-map.md'), mapOf(rows, Object.fromEntries(rows.map((row) => [row.name, fx.base]))));
+const GROUP_WORK = {
+  'core/a.ts': 'export const a = 2;\n', 'core/n.ts': 'export const n = 1;\n', 'auth/i.ts': 'export const i = 2;\n',
+  'Shared/s.ts': 'export const s = 2;\n', 'Shared.Data/d.ts': 'export const d = 2;\n', 'App.sln': 'sln 2\n',
+};
+const GROUP_ALL = [{ n: 1, paths: ['src/be/core/a.ts', 'src/be/auth/i.ts', 'src/be/Shared/s.ts', 'src/be/Shared.Data/d.ts', 'src/be/App.sln'] }];
+
+describe('review scope: sub-workspaces inside a repository group worktree', () => {
+  for (const kind of ['submodule', 'clone'] as const) {
+    const grouped = (rows: MapRow[], phases: PhaseSpec[] = GROUP_ALL, subs = GROUP_SUBS): InnerFx =>
+      innerFixture(kind, phases, rows, subs, { grouped: true });
+
+    it(`${kind}: without an own row each inner row is diffed at <worktree>/<prefix> from the base, never from the main checkout's branch`, () => {
+      const fx = grouped(groupRows(['core', 'auth']), [{ n: 1, paths: ['src/be/core/a.ts', 'src/be/auth/i.ts'] }]);
+      const wt = addTaskWorktree(fx, 'feature-sample-001', GROUP_WORK, { 'core/u.ts': 'export const u = 1;\n' });
+      const result = scope(fx);
+      expect(result.repos.map((repo) => [repo.repoPath, repo.workingRoot, repo.baseCommit, repo.files])).toEqual([
+        ['src/be/core', join(wt, 'core'), fx.base, ['a.ts', 'n.ts', 'u.ts']],
+        ['src/be/auth', join(wt, 'auth'), fx.base, ['i.ts']],
+      ]);
+      expect(result.slices.map((slice) => slice.id)).toEqual(['src/be/core#core', 'src/be/auth#auth']);
+      expect(result.slices[0]!.routingPaths).toEqual(['src/be/core/a.ts', 'src/be/core/n.ts', 'src/be/core/u.ts']);
+      const diff = result.slices.flatMap((slice) => slice.pieces.map((piece) => piece.diff)).join('');
+      expect(diff).toContain('+export const u = 1;');
+      expect(diff).toContain('+export const i = 2;');
+      expect(diff).not.toContain('other-task');
+      expect(result.notReviewed).toEqual([]);
+      expect(result.incomplete).toBe(false);
+      expectDisjointSlices(result);
+    });
+
+    it(`${kind}: Shared.Data routes to shared-data and Shared to shared, whether or not an own row exists`, () => {
+      const absent = grouped(groupRows(['shared', 'shared-data']), [{ n: 1, paths: ['src/be/Shared/s.ts', 'src/be/Shared.Data/d.ts'] }]);
+      addTaskWorktree(absent, 'feature-sample-001', GROUP_WORK);
+      const result = scope(absent);
+      expect(result.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['src/be/Shared', ['s.ts']], ['src/be/Shared.Data', ['d.ts']]]);
+      expect(result.slices.map((slice) => [slice.id, slice.routingPaths])).toEqual([
+        ['src/be/Shared#shared', ['src/be/Shared/s.ts']], ['src/be/Shared.Data#shared-data', ['src/be/Shared.Data/d.ts']],
+      ]);
+
+      const present = grouped(groupRows(['be', 'shared', 'shared-data']));
+      addTaskWorktree(present, 'feature-sample-001', GROUP_WORK);
+      const covered = scope(present);
+      expect(covered.slices.find((slice) => slice.subWorkspace === 'shared-data')!.routingPaths).toEqual(['src/be/Shared.Data/d.ts']);
+      expect(covered.slices.find((slice) => slice.subWorkspace === 'shared')!.routingPaths).toEqual(['src/be/Shared/s.ts']);
+    });
+
+    it(`${kind}: an own row covers rows sharing its worktree: one diff at the worktree root, no file in two slices, App.sln to the repo-level row`, () => {
+      const fx = grouped(groupRows(['be', 'core', 'auth', 'shared', 'shared-data']));
+      const wt = addTaskWorktree(fx, 'feature-sample-001', GROUP_WORK, { 'core/u.ts': 'export const u = 1;\n' });
+      const result = scope(fx);
+      expect(result.repos.map((repo) => [repo.repoPath, repo.workingRoot])).toEqual([['src/be', wt]]);
+      expect(result.notReviewed).toEqual([]);
+      expect(result.incomplete).toBe(false);
+      expect(result.slices.map((slice) => slice.id)).toEqual(['src/be#auth', 'src/be#be', 'src/be#core', 'src/be#shared', 'src/be#shared-data']);
+      expect(result.slices.find((slice) => slice.subWorkspace === 'be')!.files).toEqual(['App.sln']);
+      expect(result.slices.find((slice) => slice.subWorkspace === 'core')!.files).toEqual(['core/a.ts', 'core/n.ts', 'core/u.ts']);
+      expect(repoDiff(result, 'src/be')).not.toContain('other-task');
+      expectDisjointSlices(result);
+    });
+
+    it(`${kind}: a member recorded at a different registered worktree, or at none, blocks as a group mismatch`, () => {
+      const fx = grouped([...groupRows(['be']), ...groupRows(['core', 'auth'], WT2)]);
+      addTaskWorktree(fx, 'feature-sample-001', GROUP_WORK);
+      addTaskWorktree(fx, 'feature-sample-002', { 'core/t2.ts': 'export const t = 1;\n' });
+      const mismatch = scope(fx);
+      expect(mismatch.repos.map((repo) => repo.repoPath)).toEqual(['src/be']);
+      expect(mismatch.notReviewed).toEqual([
+        { subWorkspace: 'core', state: 'identity_failed', reason: 'group worktree mismatch', blocking: true },
+        { subWorkspace: 'auth', state: 'identity_failed', reason: 'group worktree mismatch', blocking: true },
+      ]);
+      expect(mismatch.incomplete).toBe(true);
+
+      writeGroupMap(fx, [{ name: 'be', path: 'src/be', branch: 'feature/sample-001' }, ...groupRows(['core'])]);
+      const mainOwn = scope(fx);
+      expect(mainOwn.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'group worktree mismatch', blocking: true }]);
+
+      writeGroupMap(fx, [...groupRows(['be']), ...groupRows(['core'], '-')]);
+      const memberOnMain = scope(fx);
+      expect(memberOnMain.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'group worktree mismatch', blocking: true }]);
+    });
+
+    it(`${kind}: two tasks in one repository each review only their own worktree`, () => {
+      const fx = grouped(groupRows(['core', 'auth']), [{ n: 1, paths: ['src/be/core/a.ts', 'src/be/auth/i.ts'] }]);
+      addTaskWorktree(fx, 'feature-sample-001', { 'core/a.ts': GROUP_WORK['core/a.ts'], 'auth/i.ts': GROUP_WORK['auth/i.ts'] });
+      addTaskWorktree(fx, 'feature-sample-002', { 'core/t2.ts': 'export const t = 1;\n', 'Shared/s.ts': GROUP_WORK['Shared/s.ts'] });
+      const second = join(fx.root, 'specs', 'task-2');
+      writePlan(second, [{ n: 1, paths: ['src/be/core/t2.ts', 'src/be/Shared/s.ts'] }]);
+      writeGroupMap(fx, groupRows(['core', 'shared'], WT2), second);
+
+      const first = scope(fx);
+      expect(first.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['src/be/core', ['a.ts']], ['src/be/auth', ['i.ts']]]);
+      const other = computeReviewScope({ projectRoot: fx.root, featureDir: second });
+      expect(other.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['src/be/core', ['t2.ts']], ['src/be/Shared', ['s.ts']]]);
+      for (const result of [first, other]) {
+        expect(result.incomplete).toBe(false);
+        expect(result.slices.map((slice) => slice.pieces.map((piece) => piece.diff).join('')).join('')).not.toContain('other-task');
+      }
+      expect(repoDiff(first, 'src/be/core')).not.toContain('t2.ts');
+      expect(repoDiff(other, 'src/be/core')).not.toContain('a.ts');
+    });
+
+    it(`${kind}: --phase narrows the worktree diff to that phase's files`, () => {
+      const fx = grouped(groupRows(['core', 'auth']), [{ n: 1, paths: ['src/be/core/a.ts'] }, { n: 2, paths: ['src/be/auth/i.ts'] }]);
+      addTaskWorktree(fx, 'feature-sample-001', GROUP_WORK, { 'core/u.ts': 'export const u = 1;\n' });
+      expect(scope(fx, 1).repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['src/be/core', ['a.ts']]]);
+    });
+
+    it(`${kind}: no repo-level sub-workspace configured blocks the row as an incomplete scope`, () => {
+      const fx = grouped(groupRows(['core']), [{ n: 1, paths: ['src/be/core/a.ts'] }], GROUP_SUBS.filter((sub) => sub.name !== 'be'));
+      addTaskWorktree(fx, 'feature-sample-001', GROUP_WORK);
+      const result = scope(fx);
+      expect(result.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'nested worktree without a repo-level sub-workspace', blocking: true }]);
+      expect(result.incomplete).toBe(true);
+      expect(result.repos).toEqual([]);
+    });
+
+    it(`${kind}: a recorded directory that is neither a registered worktree nor shares the object store blocks with the worktree reason`, () => {
+      const fx = grouped(groupRows(['core'], '_worktrees/be/feature-sample-009'), [{ n: 1, paths: ['src/be/core/a.ts'] }]);
+      mkdirSync(join(fx.root, '_worktrees', 'be', 'feature-sample-009'), { recursive: true });
+      const bare = scope(fx);
+      expect(bare.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'worktree path is not a worktree of this repository', blocking: true }]);
+
+      rmSync(join(fx.root, '_worktrees', 'be', 'feature-sample-009'), { recursive: true });
+      git(fx.root, 'clone', '-q', fx.be, join(fx.root, '_worktrees', 'be', 'feature-sample-009'));
+      const clone = scope(fx);
+      expect(clone.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'worktree path is not a worktree of this repository', blocking: true }]);
+      expect(clone.incomplete).toBe(true);
+    });
+
+    it(`${kind}: a worktree without the sub-workspace directory blocks instead of diffing the main checkout`, () => {
+      const fx = grouped(groupRows(['core']), [{ n: 1, paths: ['src/be/core/a.ts'] }]);
+      const wt = addTaskWorktree(fx, 'feature-sample-001', { 'App.sln': 'sln 2\n' });
+      rmSync(join(wt, 'core'), { recursive: true });
+      const result = scope(fx);
+      expect(result.notReviewed).toEqual([{ subWorkspace: 'core', state: 'identity_failed', reason: 'worktree has no core directory', blocking: true }]);
+      expect(result.repos).toEqual([]);
+    });
+
+    it(`${kind}: a recorded worktree that is gone falls back to the main checkout`, () => {
+      const fx = grouped(groupRows(['core'], '_worktrees/be/feature-sample-gone'), [{ n: 1, paths: ['src/be/core/other-task.ts'] }]);
+      const result = scope(fx);
+      expect(result.repos).toMatchObject([{ subWorkspace: 'core', workingRoot: fx.core, files: ['other-task.ts'] }]);
+      expect(result.incomplete).toBe(false);
+    });
+  }
 });
 
 /** A root repository with a plain directory sub-workspace `apps/web`, its row realized from the root's first commit. */
@@ -1116,6 +1300,14 @@ describe('review-scope bundle', () => {
     const result = await run(fx, [], join(dir, 'tdk-review', 'scripts', 'review-scope.js'));
     expect(result.exitCode).toBe(0);
     expect(result.payload).toMatchObject({ ok: true, empty: false, repos: [{ subWorkspace: 'api', source: 'git-map' }] });
+  });
+
+  it('diffs an inner row at its group worktree', async () => {
+    const fx = innerFixture('clone', [{ n: 1, paths: ['src/be/core/a.ts'] }], groupRows(['core']), GROUP_SUBS, { grouped: true });
+    const wt = addTaskWorktree(fx, 'feature-sample-001', GROUP_WORK);
+    const result = await run(fx);
+    expect(result.exitCode).toBe(0);
+    expect(result.payload).toMatchObject({ ok: true, incomplete: false, repos: [{ subWorkspace: 'core', workingRoot: join(wt, 'core'), files: ['a.ts', 'n.ts'] }] });
   });
 
   it('exits 1 with invalid_arguments for a missing option or an unknown flag', async () => {

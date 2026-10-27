@@ -146,6 +146,76 @@ describe('phase delegates expected routes', () => {
   });
 });
 
+describe('phase delegates for nested sub-workspaces', () => {
+  const subs = [{ name: 'be', path: 'src/be' }, { name: 'identity', path: 'src/be/Identity' }];
+  const global = '## global\n- implement: /global-impl\n- database: /global-db\n';
+  const identity = '\n## identity\n- implement: /identity-impl, @identity-exec\n';
+  const be = '\n## be\n- implement: /be-impl\n';
+  const identityFile = ['src/be/Identity/X.cs'];
+
+  it('gives a parent-only sub no global delegates when it has no section', () => {
+    expect(resolveExpected(parseDelegateRouting(global + identity), subs, identityFile, ['implement'], 'none'))
+      .toEqual({ skills: ['/identity-impl'], agents: ['@identity-exec'] });
+  });
+
+  it('gives a parent-only sub no global fallback for a domain it has no route for', () => {
+    const doc = parseDelegateRouting(global + identity + '\n## be\n- design: /be-design\n');
+    expect(resolveExpected(doc, subs, identityFile, ['implement'], 'none')).toEqual({ skills: ['/identity-impl'], agents: ['@identity-exec'] });
+    const placeholder = parseDelegateRouting(global + identity + '\n## be\n- implement: (default - no delegate)\n');
+    expect(resolveExpected(placeholder, subs, identityFile, ['implement'], 'none')).toEqual({ skills: ['/identity-impl'], agents: ['@identity-exec'] });
+  });
+
+  it('merges a parent-only sub own route with the owner in section order', () => {
+    expect(resolveExpected(parseDelegateRouting(global + identity + be), subs, identityFile, ['implement'], 'none'))
+      .toEqual({ skills: ['/identity-impl', '/be-impl'], agents: ['@identity-exec'] });
+    expect(resolveExpected(parseDelegateRouting(global + be + identity), subs, identityFile, ['implement'], 'none'))
+      .toEqual({ skills: ['/be-impl', '/identity-impl'], agents: ['@identity-exec'] });
+  });
+
+  it('keeps the owner global fallback: a repo-level file takes the repo route, else global', () => {
+    expect(resolveExpected(parseDelegateRouting(global + identity + be), subs, ['src/be/App.sln'], ['implement'], 'none'))
+      .toEqual({ skills: ['/be-impl'], agents: [] });
+    expect(resolveExpected(parseDelegateRouting(global + identity), subs, ['src/be/App.sln'], ['implement'], 'none'))
+      .toEqual({ skills: ['/global-impl'], agents: [] });
+  });
+
+  it('treats the parent as an owner when it owns one of several paths', () => {
+    expect(resolveExpected(parseDelegateRouting(global + identity + be), subs, ['src/be/App.sln', ...identityFile], ['implement'], 'none'))
+      .toEqual({ skills: ['/identity-impl', '/be-impl'], agents: ['@identity-exec'] });
+    expect(resolveExpected(parseDelegateRouting(global + identity), subs, ['src/be/App.sln', ...identityFile], ['implement'], 'none'))
+      .toEqual({ skills: ['/identity-impl', '/global-impl'], agents: ['@identity-exec'] });
+  });
+
+  it('keeps sibling nested subs as owners of their own paths', () => {
+    const three = [...subs, { name: 'billing', path: 'src/be/Billing' }];
+    const doc = parseDelegateRouting(global + identity + '\n## billing\n- implement: /billing-impl\n');
+    expect(resolveExpected(doc, three, ['src/be/Identity/X.cs', 'src/be/Billing/Y.cs'], ['implement'], 'none'))
+      .toEqual({ skills: ['/identity-impl', '/billing-impl'], agents: ['@identity-exec'] });
+    // Segment-bounded: Identity2 is not under Identity.
+    expect(resolveExpected(parseDelegateRouting(global + identity), subs, ['src/be/Identity2/X.cs'], ['implement'], 'none'))
+      .toEqual({ skills: ['/global-impl'], agents: [] });
+  });
+
+  it('treats a sub at the project root as parent-only for every path owned by a deeper sub', () => {
+    const rooted = [{ name: 'root', path: '.' }, ...subs];
+    const root = '\n## root\n- implement: /root-impl\n';
+    expect(resolveExpected(parseDelegateRouting(global + identity), rooted, identityFile, ['implement'], 'none'))
+      .toEqual({ skills: ['/identity-impl'], agents: ['@identity-exec'] });
+    expect(resolveExpected(parseDelegateRouting(global + root + identity), rooted, identityFile, ['implement'], 'none'))
+      .toEqual({ skills: ['/root-impl', '/identity-impl'], agents: ['@identity-exec'] });
+    // A path no deeper sub owns still belongs to the root sub, which then falls back to global.
+    expect(resolveExpected(parseDelegateRouting(global + identity), rooted, ['docs/readme.md'], ['implement'], 'none'))
+      .toEqual({ skills: ['/global-impl'], agents: [] });
+    expect(resolveExpected(parseDelegateRouting(global + root + identity), rooted, ['docs/readme.md'], ['implement'], 'none'))
+      .toEqual({ skills: ['/root-impl'], agents: [] });
+  });
+
+  it('uses global when no sub-workspace matches', () => {
+    expect(resolveExpected(parseDelegateRouting(global + identity), subs, ['tools/x.ts'], ['implement'], 'none'))
+      .toEqual({ skills: ['/global-impl'], agents: [] });
+  });
+});
+
 describe('phase delegate parser and byte-preserving rewrite', () => {
   it('parses first quoted tokens, raw tokens, placeholders and unfamiliar bullets without losing their visibility', () => {
     expect(parsePhaseDelegates(`## Delegate Skills

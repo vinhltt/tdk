@@ -157,8 +157,9 @@ End routed reports with exactly one selected literal line: `Status: DONE`, `Stat
 Workers never write `plan.md`, phase frontmatter, routing or configuration authorities, or another phase's
 targets; never run Git index/ref commands, commit, stash, reset, checkout, or clean, with a single named
 exception — a worker may run exactly one read-only Git command,
-`git -C "$PROJECT_DIR/$SUB_PATH" rev-parse --abbrev-ref HEAD`, to confirm its sub-workspace repository still
-matches the injected branch record before it writes, and STOPs on a mismatch; and never spawn agents
+`git -C "$WORKING_ROOT" rev-parse --abbrev-ref HEAD`, with `WORKING_ROOT` as defined in `phase-execution.md`
+(the row's `Worktree path` when it holds a value, else its `Repo path`), to confirm its sub-workspace repository
+still matches the injected branch record before it writes, and STOPs on a mismatch; and never spawn agents
 of their own. This is cooperative policy plus your review of each report, not a filesystem sandbox: ignored
 writes, undeclared reads, and external side effects stay residual risks — review them with `git diff`.
 
@@ -167,3 +168,6 @@ writes, undeclared reads, and external side effects stay residual risks — revi
 No polling, sleeping, retry loop, background dispatch, worker timeout, or wait-state machine. Concurrency
 comes only from the harness synchronous batch primitive. Nothing fences two concurrent invocations against
 each other, so do not run two commands on the same `TASK_ID` at the same time.
+
+`--parallel` runs phases concurrently inside **one** working root per repository. Concurrent tasks get their
+isolation from worktrees — one task per worktree — never from `--parallel`.

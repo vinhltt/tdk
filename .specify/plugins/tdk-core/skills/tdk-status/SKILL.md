@@ -2,7 +2,7 @@
 name: tdk-status
 description: "This skill should be used when the user asks to 'check status', 'tdk-status', 'what's the progress of <task-id>', 'which branch is each repo on', or needs a read-only report of a TDK feature's artifacts, phase progress, and per-repository branch state. Never modifies files."
 metadata:
-  version: "14.3.4"
+  version: "14.3.5"
 ---
 
 # /tdk-status - Track Workflow Progress
@@ -101,7 +101,8 @@ Use structured JSON fields, not this skill's formatted report or recommendation 
   `unverified` means no base commit was recorded, so the base cannot be checked
 - `subWorkspaces[].note`: short explanation, present only on `unknown` rows — `detached HEAD`,
   `not a separate git repository`, `not a git working tree`, `recorded worktree is missing`,
-  `worktree path is not a worktree of this repository`, `nested worktree layout undefined`, or `not in config`
+  `worktree path is not a worktree of this repository`, `nested worktree without a repo-level sub-workspace`, or
+  `not in config`
 - `warnings[].level`: `stale` | `outdated` (with `warnings[].file` and `warnings[].days`), `status_mismatch`, or
   `status_fallback`. A `status_mismatch` warning carries `warnings[].file`, `warnings[].stored`,
   `warnings[].derived`, `warnings[].message`, and `warnings[].fix` (the command or step that repairs it). A
@@ -185,11 +186,14 @@ One line per entry, using `subWorkspaces[].state`:
 | `unknown` | ❔ | `{note}` | A sub-workspace that is a plain directory of the workspace repo (or of a repo
   enclosing the workspace) reports `not a separate git repository`; it shares that repo's branch and has none of its
   own. A directory inside a nested repo or submodule reports that repo's branch instead, as `matched` or `drifted`
-  (`not-created` while the git-map records no branch for it), and `nested worktree layout undefined` when its recorded
-  worktree exists |
+  (`not-created` while the git-map records no branch for it). When its recorded worktree exists, the branch is read at
+  that worktree once it is proven a worktree of the nested repo, which needs a repo-level sub-workspace for that repo in
+  config; otherwise it reports `nested worktree without a repo-level sub-workspace` or `worktree path is not a worktree
+  of this repository` |
 
 Show `actualBranch` as the branch column, or `—` when it is `null`. When `worktreePath` is set, append
-`@ {worktreePath}` so the reader knows which working root the branch was read from.
+`@ {worktreePath}` so the reader knows which working root the branch was read from. Members of one nested repository
+share one worktree, so several rows can show the same `@ {worktreePath}`.
 
 ### ErcSpec Workflow (if `workflows.ercspec` is true)
 ```

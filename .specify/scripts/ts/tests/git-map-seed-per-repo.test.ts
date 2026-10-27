@@ -11,7 +11,7 @@
 
 import { afterAll, describe, expect, it } from 'bun:test';
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
   breakRemote,
@@ -20,6 +20,7 @@ import {
   revParse,
   type PolyrepoFixture,
 } from './fixtures/polyrepo';
+import { classifySubWorkspaceRepo } from '../src/utils/git-map';
 
 const TDK_PLAN_SKILL = resolve(
   import.meta.dir,
@@ -365,6 +366,40 @@ describe('Step 3e seeds each repository from its own default branch', () => {
     });
 
     expect(readFileSync(log, 'utf-8').split('\n').filter(Boolean)).toHaveLength(2);
+  });
+
+  it('fetches a repository holding several sub-workspaces once, through its single anchor', () => {
+    const fx = createPolyrepo({
+      prefix: 'tdk-seed-inner-group-',
+      subs: [{ name: 'be', path: 'src/be', defaultBranch: 'main' }],
+      configOverrides: {
+        subWorkspaces: [
+          { name: 'core', path: 'src/be/core' },
+          { name: 'auth', path: 'src/be/auth' },
+        ],
+      },
+    });
+    const be = fx.subs['be']!;
+    for (const dir of ['core', 'auth']) {
+      mkdirSync(join(be.root, dir), { recursive: true });
+      writeFileSync(join(be.root, dir, 'README.md'), `# ${dir}\n`);
+    }
+
+    // Both members are directories inside one nested repository, so they share a single toplevel.
+    const members = ['core', 'auth'].map(dir => classifySubWorkspaceRepo(fx.host, join(be.root, dir)));
+    expect(members.map(m => m.kind)).toEqual(['inner', 'inner']);
+    expect(members.map(m => m.top)).toEqual([realpathSync(be.root), realpathSync(be.root)]);
+
+    // The group is represented by its first member in config order; the block never sees the second.
+    const log = join(fx.container, 'fetch.log');
+    writeFileSync(log, '');
+    const shimDir = makeFetchLogShim(fx, log, 'inner-group');
+    const outcomes = runStep3e(fx, ['src/be/core'], undefined, [], shimDir);
+
+    expect(readFileSync(log, 'utf-8').split('\n').filter(Boolean)).toHaveLength(1);
+    expect(outcomes).toHaveLength(1);
+    expect(outcomes[0]).toMatchObject({ sub: 'src/be/core', remote: 'origin', rc: 0, head: 'refs/remotes/origin/main' });
+    expect(seedFromOutcome(outcomes[0]!, 'main').baseRef).toBe('refs/remotes/origin/main');
   });
 });
 

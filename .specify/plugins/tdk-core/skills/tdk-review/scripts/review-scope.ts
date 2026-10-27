@@ -10,7 +10,7 @@ import { autoDetectSubWorkspace, parseConfig } from '../../../../../scripts/ts/s
 import { isWithin } from '../../../../../scripts/ts/src/utils/path-within';
 import type { SpecifyConfig } from '../../../../../scripts/ts/src/utils/types';
 import { runGit } from '../../../../../scripts/ts/src/utils/git-env';
-import { baseCommitIssue, classifySubWorkspaceRepo, commonDirOf, isRegisteredWorktree, readGitMap, rowStateOf, type GitMap, type GitMapRow } from '../../../../../scripts/ts/src/utils/git-map';
+import { baseCommitIssue, classifySubWorkspaceRepo, commonDirOf, INNER_WORKTREE_NOTES, innerWorktreeRoot, isRegisteredWorktree, readGitMap, rowStateOf, type GitMap, type GitMapRow } from '../../../../../scripts/ts/src/utils/git-map';
 import { extractPhaseRoutingInput } from '../../../../../scripts/ts/src/utils/phase-delegates';
 import { parsePhasesTable } from '../../../../../scripts/ts/src/commands/util/phases-table-parser';
 
@@ -329,8 +329,8 @@ export function computeReviewScope(options: ReviewScopeOptions): ReviewScope {
   const handled = new Set<string>();
   /** Realpaths of directory sub-workspaces (inner or plain) whose row claimed its paths. Their repository stays unhandled. */
   const handledSubs = new Set<string>();
-  /** Toplevels of own repositories diffed in this run. */
-  const reviewedTops = new Set<string>();
+  /** Own repositories diffed in this run: toplevel -> the working root that diff read. */
+  const reviewedTops = new Map<string, string | null>();
   /** Toplevels of inner rows with a recorded base: a fallback path there is only diffed against HEAD, which the report must say. */
   const mappedTops = new Set<string>();
   const projectReal = realpathSync(projectRoot);
@@ -404,19 +404,31 @@ export function computeReviewScope(options: ReviewScopeOptions): ReviewScope {
       }
 
       rowDiffs.push({ fields: { subWorkspace: sub.name, repoPath: row.repoPath, workingRoot, baseCommit, includesUncommitted: true, source: 'git-map' }, prefix, specs, root: repoReal });
-      reviewedTops.add(repoReal);
+      reviewedTops.set(repoReal, row.worktreePath);
     }
 
     // Directory rows are diffed from their recorded base at the sub path.
     for (const { row, name, prefix, owned, specs, repositoryRoot, subReal, kind, top } of directoryRows) {
       if (kind === 'inner' && typeof usable.baseCommitByRepo[name] === 'string') mappedTops.add(top);
-      // The contract defines `Worktree path` only for an own repository. A recorded worktree that is gone falls back to the
-      // sub path, as it does for own rows; one that exists cannot be placed, so the row blocks. No other diff reads it either.
+      // An inner row's `Worktree path` is its repository group's: usable once it is proven a registered worktree of the
+      // enclosing repository and a repo-level sub-workspace anchors it. A plain row never has one, so it blocks. A recorded
+      // worktree that is gone falls back to the sub path, as it does for own rows.
       const recorded = row.worktreePath === null ? null : join(projectRoot, row.worktreePath);
-      const stranded = recorded !== null && existsSync(recorded);
-      const strand = (): void => skip(name, 'identity_failed', 'nested worktree layout undefined', recordedWork(row));
+      const hasWorktree = recorded !== null && existsSync(recorded);
+      const group = hasWorktree && kind === 'inner' ? innerWorktreeRoot(projectRoot, subs, top, repositoryRoot, recorded) : null;
+      const strand = (reason: string): void => skip(name, 'identity_failed', reason, recordedWork(row));
+      /** The reason this row's existing worktree cannot be used, or null when it can. */
+      const strandReason = group === null ? (hasWorktree ? 'nested worktree layout undefined' : null) : group.ok ? null : INNER_WORKTREE_NOTES[group.reason];
       // An own row of the same repository was diffed: its diff holds these files, and slicing routes each to the deepest owner.
-      if (reviewedTops.has(top)) { owned.forEach((path) => claimed.add(path)); if (stranded) strand(); continue; }
+      // The row is covered only when it records that row's `Worktree path`, `-` included; a row with recorded work that
+      // records any other value is a group that disagrees with itself.
+      const ownWorktreePath = reviewedTops.get(top);
+      if (ownWorktreePath !== undefined) {
+        owned.forEach((path) => claimed.add(path));
+        if (strandReason !== null) strand(strandReason);
+        else if (recordedWork(row) && row.worktreePath !== ownWorktreePath) strand('group worktree mismatch');
+        continue;
+      }
       const state = rowStateOf(usable, name, repositoryRoot);
       const blocking = state === 'invalid-base-commit' && recordedWork(row);
       // A plain directory with no recorded work to diff stays with the fallback, which diffs its paths against HEAD.
@@ -431,8 +443,13 @@ export function computeReviewScope(options: ReviewScopeOptions): ReviewScope {
       }
       const baseCommit = usable.baseCommitByRepo[name];
       if (typeof baseCommit !== 'string') { notReviewed.push({ subWorkspace: name, state: 'invalid-base-commit', reason: 'no usable base commit' }); continue; }
-      if (stranded) { strand(); continue; }
-      rowDiffs.push({ fields: { subWorkspace: name, repoPath: row.repoPath, workingRoot: repositoryRoot, baseCommit, includesUncommitted: true, source: 'git-map' }, prefix, specs, root: subReal });
+      if (strandReason !== null) { strand(strandReason); continue; }
+      let workingRoot = repositoryRoot;
+      if (group?.ok) {
+        workingRoot = join(recorded!, group.prefix);
+        if (!existsSync(workingRoot)) { strand(`worktree has no ${group.prefix} directory`); continue; }
+      }
+      rowDiffs.push({ fields: { subWorkspace: name, repoPath: row.repoPath, workingRoot, baseCommit, includesUncommitted: true, source: 'git-map' }, prefix, specs, root: subReal });
     }
     for (const { fields, prefix, specs, root } of rowDiffs) pushRepo(fields, { kind: 'prefix', prefix }, specs, excludesUnder(root));
   }
