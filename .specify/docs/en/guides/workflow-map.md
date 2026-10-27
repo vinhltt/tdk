@@ -357,10 +357,10 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 
 | File | Created By | Input From | Used By | Update Frequency |
 |----------|-----------|------------|---------|-----------------|
-| `.specify/memory/constitution.md` | `/tdk-constitution --init <brief\|file>` or `/tdk-constitution` | Existing constitution/memory plus accepted project brief or update delta | Project governance authority for inception, discovery, specification, and planning | Project governance changes |
-| `.specify/memory/memory-index.md` + `.specify/memory/memory.yaml` | `/tdk-memory-init`; bootstrapped by constitution init when absent | Memory route and template metadata | Memory v3 control plane; `memory-index.md` is the route/template source of truth | Memory routing changes |
-| `.specify/memory/{decisions,risks-and-debt,quality-requirements,integrations,operations,glossary}/*.md` | `/tdk-memory-update`; `/tdk-constitution` when accepted evidence exists | Accepted durable project facts | Typed Memory v3 authority for agents and Guardian (`binding: true`) | Binding project facts change |
-| `.specify/memory/arc42/*.md` | `/tdk-constitution --init <brief\|file>` or `/tdk-constitution` | Constitution and typed Memory v3 facts | Architecture context/read-models (`binding: false`) that link to typed binding facts | Project knowledge summaries change |
+| `<memory root>/constitution.md` | `/tdk-constitution --init <brief\|file>` or `/tdk-constitution` | Existing constitution/memory plus accepted project brief or update delta | Project governance authority for inception, discovery, specification, and planning | Project governance changes |
+| `<memory root>/memory-index.md` + `<memory root>/memory.yaml` | `/tdk-memory-init`; bootstrapped by constitution init when absent | Memory route and template metadata | Memory v3 control plane; `memory-index.md` is the route/template source of truth | Memory routing changes |
+| `<memory root>/{decisions,risks-and-debt,quality-requirements,integrations,operations,glossary}/*.md` | `/tdk-memory-update`; `/tdk-constitution` when accepted evidence exists | Accepted durable project facts | Typed Memory v3 authority for agents and Guardian (`binding: true`) | Binding project facts change |
+| `<memory root>/arc42/*.md` | `/tdk-constitution --init <brief\|file>` or `/tdk-constitution` | Constitution and typed Memory v3 facts | Architecture context/read-models (`binding: false`) that link to typed binding facts | Project knowledge summaries change |
 | `.specify/configurations/inception/project-inception.md` | `/tdk-greenfield-start` | Project brief or workspace-local file plus project-inception questions | Readiness-aware recommended greenfield route | New-project intake |
 | `.specify/configurations/inception/brownfield-onboarding.md` | `/tdk-brownfield-start` | Existing repo evidence, optional scout output | Evidence/confidence-based brownfield onboarding route | Existing-repo intake |
 | `.specify/configurations/architecture/architecture-options.md` | `/tdk-architecture-advisor` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | Architecture decision review | Project architecture options |
@@ -412,7 +412,7 @@ and data-model templates are read-only references.
 ```mermaid
 flowchart LR
     subgraph PROJECT_KNOWLEDGE[Project Knowledge]
-        CONST[.specify/memory/<br/>constitution.md]
+        CONST[memory root/<br/>constitution.md]
         MEMORY_CONTROL[memory-index.md + memory.yaml<br/>Memory v3 Control Plane]
         TYPED_MEMORY[Typed Memory v3 Routes<br/>binding: true]
         ARC42[arc42/<br/>binding: false]

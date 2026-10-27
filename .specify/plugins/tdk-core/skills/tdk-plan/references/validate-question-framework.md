@@ -95,7 +95,7 @@ Each template defines: `question` body, 3 substantive options + 1 `Skip this que
     - { label: "Not run yet — Phase 0.guardian skipped",     action: revise }
     - { label: "Skip this question",                         action: no-op }
 - id: memory.business_rules
-  question: "Do the new business rules in this plan conflict with rules already in `.specify/memory/`?"
+  question: "Do the new business rules in this plan conflict with rules already in project memory?"
   options:
     - { label: "No conflicts — rules are net-new",           action: no-op }
     - { label: "Override — plan supersedes prior rules; documented", action: no-op }

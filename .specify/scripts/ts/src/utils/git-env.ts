@@ -48,6 +48,8 @@ export interface RunGitOptions {
   raw?: boolean;
   /** Raise the child-output cap (Node's default is 1 MiB) for diff-sized output. */
   maxBuffer?: number;
+  /** Kill the child after this many milliseconds; `execFileSync` then throws. */
+  timeout?: number;
 }
 
 /**
@@ -63,6 +65,7 @@ export function runGit(args: string[], opts: RunGitOptions = {}): string {
     env: sanitizedGitEnv(process.env, opts.env),
     ...(opts.cwd === undefined ? {} : { cwd: opts.cwd }),
     ...(opts.maxBuffer === undefined ? {} : { maxBuffer: opts.maxBuffer }),
+    ...(opts.timeout === undefined ? {} : { timeout: opts.timeout }),
   });
   return opts.raw ? out : out.trim();
 }

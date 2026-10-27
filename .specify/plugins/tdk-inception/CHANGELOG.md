@@ -4,6 +4,13 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.1.2] - 2026-10-27
+
+### Changed
+- tdk-constitution resolves the memory root from the `/tdk-memory-query --status` block and reads and writes `constitution.md` there, including an external root; it stops when tdk-memory is missing or the status is `error`
+- tdk-constitution keeps rejecting briefs and input files outside the workspace; only the constitution and memory targets under the status-block root may be outside it
+- Constitution template and its authority wording name the project memory root instead of a fixed path
+
 ## [1.1.1] - 2026-09-25
 
 ### Changed

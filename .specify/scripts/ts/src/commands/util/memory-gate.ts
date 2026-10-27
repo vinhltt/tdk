@@ -1,6 +1,9 @@
+import { existsSync, lstatSync, readFileSync, statSync, type Stats } from 'node:fs';
 import { readFile, realpath } from 'node:fs/promises';
-import { isAbsolute, relative, resolve, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { parse } from 'yaml';
+import { realpathOrSelf } from '../../utils/config';
+import { runGit } from '../../utils/git-env';
 
 export type GateState = 'clear' | 'review' | 'block-impl' | 'not-checked';
 export interface GateResult { state: GateState; reason: string }
@@ -44,6 +47,143 @@ export function memoryPrecondition(input: Preconditions): { action: 'skip' | 'as
 function contained(root: string, target: string): boolean {
   const rel = relative(root, target);
   return rel === '' || (!isAbsolute(rel) && rel !== '..' && !rel.startsWith(`..${sep}`));
+}
+
+const GIT_ENTRY = '.git';
+const DEFAULT_MEMORY_PATH = '.specify/memory';
+const MAX_CONFIG_BYTES = 1_048_576;
+// Mirrors the memory runtime. `memory.path` is screened with the strict set: C0/C1 controls,
+// line/paragraph separators, backslash, quotes, and shell metacharacters.
+export const FORBIDDEN_MEMORY_PATH_CHARS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\\`$"';&|<>]/;
+// Resolved locations (workspace, canonical root) are only ever placed inside double quotes, so only
+// the characters that stay active there matter; a backslash is a path separator on Windows.
+const FORBIDDEN_LOCATION_CHARS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029`$"]/;
+
+export function hasForbiddenLocationCharacter(value: string, platform: string = process.platform): boolean {
+  return FORBIDDEN_LOCATION_CHARS.test(value) || (platform !== 'win32' && value.includes('\\'));
+}
+
+function lstatOrUndefined(path: string): Stats | undefined {
+  try { return lstatSync(path); } catch { return undefined; }
+}
+
+function isDirectory(path: string): boolean {
+  try { return statSync(path).isDirectory(); } catch { return false; }
+}
+
+/** Nearest ancestor holding a git entry or `.specify/`; falls back to the start directory. */
+function discoverWorkspace(start: string): string {
+  const origin = realpathOrSelf(start);
+  for (let dir = origin; ; dir = dirname(dir)) {
+    if (lstatOrUndefined(join(dir, GIT_ENTRY)) || lstatOrUndefined(join(dir, '.specify'))) return dir;
+    if (dirname(dir) === dir) return origin;
+  }
+}
+
+/** The main worktree when `workspace` is a linked worktree; otherwise `workspace` itself. */
+function mainWorktreeRoot(workspace: string): string {
+  try {
+    if (!lstatSync(join(workspace, GIT_ENTRY)).isFile()) return workspace;
+    const listing = runGit(['worktree', 'list', '--porcelain'], { cwd: workspace, timeout: 10_000 });
+    const lines = (listing.split(/\r?\n\r?\n/)[0] ?? '').split(/\r?\n/);
+    const main = lines.find(line => line.startsWith('worktree '));
+    return main && !lines.includes('bare') ? realpathOrSelf(main.slice('worktree '.length)) : workspace;
+  } catch { return workspace; }
+}
+
+/**
+ * Relative `memory.path` values that leave the main worktree (for example `../team-memory`) resolve
+ * from the main worktree so every worktree reaches the same root. Paths that stay inside the
+ * repository resolve in the current workspace, where the branch's own memory lives.
+ */
+function configuredRootPath(workspace: string, memoryPath: string): string {
+  if (isAbsolute(memoryPath)) return resolve(memoryPath);
+  const base = mainWorktreeRoot(workspace);
+  const viaMainWorktree = resolve(base, memoryPath);
+  return contained(base, viaMainWorktree) ? resolve(workspace, memoryPath) : viaMainWorktree;
+}
+
+/** `realpath` of the nearest existing ancestor plus the not-yet-existing tail. */
+function canonicalFromNearestExisting(path: string): string {
+  let current = resolve(path);
+  const tail: string[] = [];
+  while (!existsSync(current) && dirname(current) !== current) {
+    tail.unshift(basename(current));
+    current = dirname(current);
+  }
+  return resolve(realpathOrSelf(current), ...tail);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+type GateConfig = { invalid: true; shown: string } | { invalid: false; path?: string; allowExternal: boolean };
+
+/** Reads `<workspace>/.specify/.specify.json` the way the memory runtime does: regular file, bounded size, no fallbacks. */
+function readGateConfig(workspace: string): GateConfig {
+  const configPath = join(workspace, '.specify', '.specify.json');
+  const info = lstatOrUndefined(configPath);
+  if (info === undefined) return { invalid: false, allowExternal: false };
+  const invalid = (shown = DEFAULT_MEMORY_PATH): GateConfig => ({ invalid: true, shown });
+  if (!info.isFile() || info.size > MAX_CONFIG_BYTES) return invalid();
+  let raw: unknown;
+  try { raw = JSON.parse(readFileSync(configPath, 'utf8')); } catch { return invalid(); }
+  if (!isRecord(raw) || (raw.memory !== undefined && !isRecord(raw.memory))) return invalid();
+  const memory = raw.memory ?? {};
+  let path: string | undefined;
+  if (memory.path !== undefined) {
+    if (typeof memory.path !== 'string' || memory.path.trim() === '') return invalid();
+    if (FORBIDDEN_MEMORY_PATH_CHARS.test(memory.path)) return invalid(memory.path);
+    path = memory.path;
+  }
+  if (memory.allowExternal !== undefined && typeof memory.allowExternal !== 'boolean') return invalid(path);
+  return { invalid: false, ...(path === undefined ? {} : { path }), allowExternal: memory.allowExternal === true };
+}
+
+/** A marker must be a regular file; a symlink is rejected like the runtime's contained-file check. */
+function markerKind(root: string, name: string): 'file' | 'other' | 'symlink' {
+  const info = lstatOrUndefined(join(root, name));
+  return info === undefined ? 'other' : info.isSymbolicLink() ? 'symlink' : info.isFile() ? 'file' : 'other';
+}
+
+/**
+ * Cross-check the memory root handed to `report` against the root the config selects, in the same
+ * order as the memory runtime. Returns a NOT CHECKED reason, or null when the root is the configured,
+ * initialized one. Reasons carry a code plus `memory.path` as configured.
+ */
+function memoryRootProblem(start: string, memoryRoot: string): string | null {
+  const workspace = discoverWorkspace(start);
+  const problem = (code: string, shown: string) => `${code} — ${shown.replace(new RegExp(FORBIDDEN_MEMORY_PATH_CHARS, 'g'), '?')}`;
+
+  const config = readGateConfig(workspace);
+  if (config.invalid) return problem('config-invalid', config.shown);
+  const configured = config.path;
+
+  let shown = configured ?? DEFAULT_MEMORY_PATH;
+  let root: string;
+  if (configured !== undefined) root = configuredRootPath(workspace, configured);
+  else {
+    const found = [DEFAULT_MEMORY_PATH, 'memory'].filter(candidate => isDirectory(join(workspace, candidate)));
+    if (found.length > 1) return problem('ambiguous-default', shown);
+    shown = found[0] ?? (lstatOrUndefined(join(workspace, '.specify')) ? DEFAULT_MEMORY_PATH : 'memory');
+    root = join(workspace, shown);
+  }
+
+  const canonical = canonicalFromNearestExisting(root);
+  if (hasForbiddenLocationCharacter(canonical) || hasForbiddenLocationCharacter(workspace)) return problem('containment', shown);
+  const lexicallyInside = contained(workspace, root);
+  const external = !(lexicallyInside && contained(workspace, canonical));
+  // A root equal to, or above, the workspace (including the filesystem root) is never a memory root.
+  if (contained(canonical, workspace)) return problem('containment', shown);
+  if (external && !(configured !== undefined && config.allowExternal)) {
+    return problem(lexicallyInside ? 'containment' : 'external-not-allowed', shown);
+  }
+  if (!isDirectory(root)) return problem('root-missing', shown);
+  const markers = [markerKind(canonical, 'memory.yaml'), markerKind(canonical, 'memory-index.md')];
+  if (markers.includes('symlink')) return problem('containment', shown);
+  if (markers.some(kind => kind !== 'file')) return problem('memory-incomplete', shown);
+  return canonicalFromNearestExisting(memoryRoot) === canonical ? null : problem('containment', shown);
 }
 
 const TYPES: Record<string, true> = {
@@ -102,9 +242,12 @@ async function evidenceExists(citation: string, memoryRoot: string): Promise<boo
 }
 
 /** Treat model output as untrusted. Only a complete, internally consistent report grants an action. */
-export async function validateGuardianReport(output: string, exitCode: number, memoryRoot: string): Promise<GateResult> {
+export async function validateGuardianReport(output: string, exitCode: number, memoryRoot: string, workspace?: string): Promise<GateResult> {
   const invalid = (reason: string): GateResult => ({ state: 'not-checked', reason });
   if (exitCode !== 0) return invalid(`agent exited ${exitCode}`);
+  // When the caller names its workspace, the root must be the one the config selects.
+  const rootProblem = workspace === undefined ? null : memoryRootProblem(workspace, memoryRoot);
+  if (rootProblem !== null) return invalid(rootProblem);
   const text = output.replace(/\r\n/g, '\n');
   const starts = [...text.matchAll(/^=== GUARDIAN REPORT ===$/gm)];
   const ends = [...text.matchAll(/^=== END GUARDIAN REPORT ===$/gm)];
@@ -181,7 +324,7 @@ if (import.meta.main) {
     if (!input) throw new Error('Usage: memory-gate.ts report <stdout-file> <memory-root> [agent-exit] | precondition <input.json> | implement <plan.md>');
     if (command === 'report') {
       if (!root || !/^-?\d+$/.test(rawExit)) throw new Error('report requires memory root and numeric agent exit');
-      const result = await validateGuardianReport(await readFile(input, 'utf8'), Number(rawExit), root);
+      const result = await validateGuardianReport(await readFile(input, 'utf8'), Number(rawExit), root, process.cwd());
       console.log(JSON.stringify(result));
       process.exitCode = result.state === 'not-checked' ? 1 : result.state === 'block-impl' ? 2 : 0;
     } else if (command === 'precondition') {

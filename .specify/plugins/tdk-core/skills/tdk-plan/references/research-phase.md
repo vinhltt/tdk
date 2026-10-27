@@ -40,20 +40,23 @@ Wait for all researcher reports before continuing to design. If any researcher r
 
 **Project memory** (file-backed knowledge):
 
-Read `.specify/memory/memory-index.md`, use its routing/domain tables to nominate
-contained paths, then scoped Glob/Grep and exact Read for evidence. Exclude
-template assets and deprecated files. Use `tdk-memory-query` for typed entities;
-search metadata never establishes identity or binding eligibility.
+When the carried Memory status block is `ready`, read memory through
+`/tdk-memory-query` in the main session, or through `tdk-memory-agent` with
+`mode: load` and `memory_root` set to the block's `root`. Never read memory
+files directly or name the memory path; the query returns the routing, domain,
+and typed-entity evidence. Search metadata never establishes identity or
+binding eligibility. Skip project memory research when the block is
+`uninitialized`, `error`, or absent.
 
-**AI Docs Manager** — `tdk-memory-query` skill OR ask `tdk-memory-agent` agent. Reads `.specify/memory/` based on feature domain.
+**AI Docs Manager** — `tdk-memory-query` skill OR ask `tdk-memory-agent` agent. Reads project memory based on feature domain.
 
 **Obsidian Brain** — modes:
 - Detective: semantic search → grep → infer relations
 - Writer: search → read context → draft with project terminology
 - Reviewer: verify consistency, warn on conflicts
 
-Before completing project-knowledge research, verify relevant `.specify/memory/`
-files were read, terminology conflicts were checked, and prior feature plans were
+Before completing project-knowledge research, verify relevant project memory
+was queried, terminology conflicts were checked, and prior feature plans were
 searched when the feature area overlaps existing work.
 
 ## Codebase Understanding

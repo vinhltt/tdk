@@ -2,7 +2,7 @@
 name: tdk-memory-changelog
 description: "Record staged project memory changes in CHANGELOG.md via git diff --staged. Stage the selected memory root first, then run this skill before committing. Supports --memory-root; requires initialized memory."
 metadata: 
-  version: 4.0.0
+  version: 4.2.0
   category: "Analysis & Review"
   requires:
     - tdk-memory-init
@@ -13,8 +13,14 @@ metadata:
 
 Before reading staged paths or writing anything, load
 `${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-init/references/memory-root-and-asset-contract.md`.
-Resolve `<memoryRoot>`, enforce both containment layers, and complete Node/YAML
-preflight. Preserve `templates[]`; template assets are not knowledge changes.
+Follow its section 1: step 1 is `memory-manifest.cjs resolve` (explicit `--memory-root`
+only if given, `--allow-external-root` if present in this invocation's arguments, typed or forwarded); `<memoryRoot>` is
+the JSON `root` and any `error` STOPs with its code. Complete Node/YAML preflight.
+Preserve `templates[]`; template assets are not knowledge changes. When `resolve`
+reports `external: true` with a root, forward `--allow-external-root` to every
+runtime call. Writing the CHANGELOG and receipts to an external root needs the
+contract's once-per-session write consent first, asked by the session running this
+skill.
 Flat installation: without a plugin root, resolve the contract through sibling
 `../tdk-memory-init/references/memory-root-and-asset-contract.md` from this SKILL.md.
 
@@ -67,6 +73,22 @@ git diff --staged --name-status -- "<memoryRoot>/" ":(exclude)<memoryRoot>/_temp
 ```
 
 Use workspace-relative POSIX paths in the pathspec; exclude assets before grouping.
+
+**Root outside the workspace.** Its git state belongs to the memory root's own
+repository. Run every git command as `git -C "<memoryRoot>"` and map paths with
+`git -C "<memoryRoot>" rev-parse --show-prefix` (the root's path inside that
+repository; empty at the top):
+
+```bash
+git -C "<memoryRoot>" diff --staged --name-status -- . ":(exclude)_templates/" ":(exclude)memory.yaml" ":(exclude)memory-index.md" ":(exclude)CHANGELOG.md"
+```
+
+Output paths are relative to the repository top: remove the `--show-prefix` value
+to get memory-root-relative paths before hashing or grouping. If
+`git -C "<memoryRoot>" rev-parse --show-toplevel` equals the workspace repository's
+top level, the memory is not a separate repository: warn once and use the
+workspace-relative commands above, exactly as for an internal root. A root outside
+any git repository is an error: STOP and report it.
 Generated control files are not staged knowledge entries: never group or create
 `files[]` receipts for `memory.yaml` or `memory-index.md`. The index has only
 `memory_index_sha256`; CHANGELOG's own receipt is updated explicitly after writing.
@@ -87,6 +109,8 @@ If zero memory files are staged:
 No staged knowledge changes in <memoryRoot>/.
 Stage edits first: git add "<memoryRoot>/"
 ```
+(For a root outside the workspace stage inside its repository:
+`git -C "<memoryRoot>" add .`.)
 
 ### Step 3: AskUserQuestion for descriptions
 
@@ -108,7 +132,7 @@ For each changed file:
 
 ```bash
 node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
-node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "{relative-file-path}"
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "{relative-file-path}" [--allow-external-root]
 ```
 
 ### Step 5: Write ONE combined CHANGELOG.md entry
@@ -150,6 +174,8 @@ and the changed root CHANGELOG receipt. Publish a validated temporary manifest.
    memory.yaml checksums updated.
 
 Ready to commit. Suggested: git commit -m "docs(memory): {description}"
+(For a root outside the workspace commit inside its repository:
+git -C "<memoryRoot>" commit -m "docs(memory): {description}")
 ```
 
 ## References

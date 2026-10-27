@@ -137,6 +137,24 @@ function getConfigurationsPath(config, cwd = process.cwd()) {
   return path.join(root, config.docs.path);
 }
 
+const DEFAULT_MEMORY_PATH = '.specify/memory';
+// Control characters (C0, C1, line/paragraph separators), backslash, quotes, and shell
+// metacharacters are never valid in memory.path.
+const FORBIDDEN_MEMORY_PATH_CHARS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\\`$"';&|<>]/;
+
+/**
+ * Returns `memory.path` exactly as configured, or the default when it is unset or unusable.
+ * @param {object} config - Speckit config object.
+ * @returns {string} Configured memory path, relative or absolute.
+ */
+function getConfiguredMemoryPath(config) {
+  const configured = config && config.memory && config.memory.path;
+  if (typeof configured !== 'string' || !configured.trim() || FORBIDDEN_MEMORY_PATH_CHARS.test(configured)) {
+    return DEFAULT_MEMORY_PATH;
+  }
+  return configured;
+}
+
 /**
  * Returns the absolute path to the memory directory.
  * @param {object} config - Speckit config object.
@@ -145,7 +163,7 @@ function getConfigurationsPath(config, cwd = process.cwd()) {
  */
 function getMemoryPath(config, cwd = process.cwd()) {
   const root = getWorkspaceRoot(config, cwd);
-  return path.join(root, config.specs.root, 'memory');
+  return path.resolve(root, getConfiguredMemoryPath(config));
 }
 
 /**
@@ -176,5 +194,7 @@ module.exports = {
   getSpecsPath,
   getConfigurationsPath,
   getMemoryPath,
+  getConfiguredMemoryPath,
+  FORBIDDEN_MEMORY_PATH_CHARS,
   getSubWorkspaceRulesPath
 };

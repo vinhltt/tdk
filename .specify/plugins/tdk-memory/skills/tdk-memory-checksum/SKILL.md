@@ -3,7 +3,7 @@ name: tdk-memory-checksum
 description: "Validate project memory integrity against memory.yaml using the shipped Node.js runtime. Detect changed, untracked, missing, index, and template files. Read-only by default; --fix offers explicitly approved repairs, including malformed manifest recovery."
 user-invocable: true
 metadata:
-  version: 4.0.0
+  version: 4.2.0
   category: "Context & Memory"
   requires:
     - tdk-memory-init
@@ -11,14 +11,22 @@ metadata:
 
 ## Memory root resolution
 
-Load `${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-init/references/memory-root-and-asset-contract.md`.
-Resolve `--memory-root`, enforce both containment layers, and probe Node.js >=18.
+Load `${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-init/references/memory-root-and-asset-contract.md`
+and follow its section 1: step 1 is `resolve` (explicit `--memory-root` only if given,
+`--allow-external-root` if present in this invocation's arguments, typed or forwarded); `<memoryRoot>` is the JSON `root`
+and any `error` STOPs with its code, except that `--fix` also accepts
+`memory-incomplete` with a non-null `root` for its recovery flow; without `--fix`,
+`memory-incomplete` STOPs with a message suggesting `/tdk-memory-checksum --fix`. Probe
+Node.js >=18.
 Apply read-only YAML preflight. With `--fix`, a malformed manifest enters the
 contract's dedicated diagnosis/approval/backup/temp-validation recovery path,
 not ordinary update dispatch. Without approval, perform no writes.
 Flat installation: without a plugin root, resolve the contract through sibling
 `../tdk-memory-init/references/memory-root-and-asset-contract.md` from this SKILL.md.
 Resolve this skill's runtime path from this directory, never from invocation cwd.
+When `resolve` reports `external: true` with a root, forward `--allow-external-root`
+to every runtime call. Validation only reads; `--fix` writes to an external root only
+after the contract's once-per-session write consent.
 
 ## ⛔ CRITICAL: Error Handling
 
@@ -69,7 +77,7 @@ with `--fix`, diagnose without writes, then follow the approval branch.
 
 ```bash
 node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
-node "${CLAUDE_SKILL_DIR}/scripts/memory-manifest.cjs" validate "<memoryRoot>"
+node "${CLAUDE_SKILL_DIR}/scripts/memory-manifest.cjs" validate "<memoryRoot>" [--allow-external-root]
 ```
 
 Parse JSON output: `mismatches[]`, `missing_from_manifest[]`, `missing_from_disk[]`,

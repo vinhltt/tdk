@@ -165,8 +165,10 @@ Follow `references/domain-source-extraction-flow.md`.
 ## Step 3: Read template
 
 Invoke `/tdk-memory-init --ensure-templates --memory-root <memoryRoot>` by name.
-Append `--allow-external-root` only if explicitly supplied by this invocation;
-carry that same permission to every hash/validate call, never infer it from config.
+Append `--allow-external-root` when `resolve` reported `external: true` with a root
+(contract section 1) and carry it to every hash/validate call. An external root
+also needs the once-per-session write consent from the contract before the first
+write; afterwards remind the user to commit inside the memory repository.
 `Read("<memoryRoot>/_templates/{type}-template.md.tpl")` based on content type.
 
 If missing: STOP "Template not found. Re-run /tdk-memory-init to restore templates."
@@ -323,7 +325,7 @@ Follow `references/regenerate-memory-index-flow.md`.
 1. Recompute SHA256:
 ```bash
 node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
-node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "{relative-file-path}"
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "{relative-file-path}" [--allow-external-root]
 ```
 
 2. Update `memory.yaml`: `sha256`, `updated_at`, `updated_by: "tdk-memory-update"`

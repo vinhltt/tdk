@@ -5,8 +5,10 @@ TDK embeds its regular files at `.specify/plugins/tdk-memory/` using Git subtree
 submodule. Consumers need Node.js >=18 for the shipped checksum bundle; Bun and package
 installation are maintainer-only build requirements. The consumer manifest remains
 `memory.yaml` version `"2"`. The file-only/control-header contract was released as
-plugin version `4.0.0`; the current embedded version is `4.1.1`; `4.1.0` added the
-preconfirmed structured-candidate input to `/tdk-memory-update`.
+plugin version `4.0.0`; the current embedded version is `4.2.0`; `4.1.0` added the
+preconfirmed structured-candidate input to `/tdk-memory-update`; `4.2.0` added the
+read-only `resolve` runtime subcommand, `/tdk-memory-query --status`, and opt-in external
+memory roots (`memory.allowExternal`).
 
 ## One-way synchronization: upstream to TDK
 
@@ -88,6 +90,6 @@ The #169 sync encountered a checkout with no `git-subtree-dir` history marker;
 `subtree pull --squash` failed with “was never added”. The release was still
 published upstream first. Its exact diff from pinned `ccb46d4` to published
 `8bfe2d6` was applied to the prefix, then the pin and inventories were updated.
-The `4.1.0` and `4.1.1` syncs hit the same condition and used the same path (exact
-diffs `8bfe2d6..0345296` and `0345296..e9e4b25` applied to the prefix). The full commit-derived guard described above
+The `4.1.0`, `4.1.1` and `4.2.0` syncs hit the same condition and used the same path (exact
+diffs `8bfe2d6..0345296`, `0345296..e9e4b25` and `e9e4b25..61efe1e` applied to the prefix). The full commit-derived guard described above
 proves the imported files, not a successful subtree merge. Do not fabricate ancestry markers or bypass a failed guard.

@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.5.5] - 2026-10-27
+
+### Changed
+- Brainstorming output-path guard, brainstorming scripts README, and `tdk-red-team-skeptic` refer to the project memory root instead of a fixed memory path
+- Bundled `tdk-handoff` export script rebuilt with the `memory.allowExternal` config schema
+
 ## [4.5.4] - 2026-10-27
 
 ### Added

@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.2.2] - 2026-10-27
+
+### Changed
+- tdk-retro-propose and tdk-retro-apply read the memory root through the `/tdk-memory-query --status` block instead of fixed memory paths; domain checks use the block `domains` field, and K1/K2 entries are skipped or blocked when memory is `uninitialized`, in `error`, or unavailable
+
 ## [1.2.1] - 2026-10-22
 
 ### Changed

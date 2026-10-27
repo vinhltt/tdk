@@ -106,6 +106,37 @@ test('buildPathsSection uses speckit conventions', () => {
   assert.match(lines, /\.specify\/memory\//);
 });
 
+test('buildPathsSection and buildRulesSection show the configured memory.path', () => {
+  const config = {
+    specs: { root: 'custom-root', defaultFolder: 'specs' },
+    docs: { path: '.specify/configurations' },
+    memory: { path: '../shared-memory/', allowExternal: true }
+  };
+  const paths = buildPathsSection(config).join('\n');
+  const rules = buildRulesSection(config, null).join('\n');
+  assert.match(paths, /^- Memory: \.\.\/shared-memory\/$/m);
+  assert.doesNotMatch(paths, /custom-root\/memory/);
+  assert.match(rules, /^- Constitution: \.\.\/shared-memory\/constitution\.md$/m);
+});
+
+test('memory display falls back to the default path for unusable memory.path', () => {
+  for (const memory of [undefined, { path: '' }, { path: 7 }, { path: 'a\nb' }, { path: 'x;rm' }]) {
+    const config = { specs: { root: '.specify', defaultFolder: 'specs' }, docs: { path: 'd' }, memory };
+    assert.match(buildPathsSection(config).join('\n'), /^- Memory: \.specify\/memory\/$/m);
+    assert.match(buildRulesSection(config, null).join('\n'), /^- Constitution: \.specify\/memory\/constitution\.md$/m);
+  }
+});
+
+test('buildSpeckitContext reads memory.path from .specify.json', () => {
+  const root = makeTempSpeckitRoot();
+  const configPath = path.join(root, '.specify', '.specify.json');
+  const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  fs.writeFileSync(configPath, JSON.stringify({ ...config, memory: { path: 'docs/brain' } }), 'utf-8');
+  const content = buildSpeckitContext({ cwd: root }).content;
+  assert.match(content, /^- Memory: docs\/brain\/$/m);
+  assert.match(content, /^- Constitution: docs\/brain\/constitution\.md$/m);
+});
+
 test('buildUserPromptContextSection returns empty when file missing', () => {
   const root = makeTempSpeckitRoot();
   const lines = buildUserPromptContextSection({ __workspaceRoot: root }, root);

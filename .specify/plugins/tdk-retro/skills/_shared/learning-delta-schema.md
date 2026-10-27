@@ -48,6 +48,6 @@
 
 - Maximum 10 entries. Prefer higher severity and repeated patterns.
 - One entry equals one reviewable change unit.
-- Memory entries must include `domain` and must not directly edit `.specify/memory/`.
+- Memory entries must include `domain` and must not directly edit the memory root.
 - Unknown memory domains must be `blocked`, not guessed.
 - Every entry needs evidence from `retro-feedback.md`.

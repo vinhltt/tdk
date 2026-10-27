@@ -58,7 +58,8 @@ Rebuild `memory-index.md` from current FS state using template in `references/me
 - Preserve existing file checksums (do not recompute existing files)
 - Recompute `memory_index_sha256` from regenerated memory-index.md
 - Preserve `templates[]` and unrelated metadata; use the shipped Node hash command
-  from the shared contract, then validate a temporary candidate before publishing
+  from the shared contract (forwarding `--allow-external-root` when permission was
+  granted), then validate a temporary candidate before publishing
 
 ---
 

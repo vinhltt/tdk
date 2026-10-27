@@ -190,8 +190,8 @@ Excluded:
 |-------|---------|--------------------|----------|
 | `/tdk-memory-init` | Initialize memory or materialize twenty owned templates without a domain interview. | `--memory-root`, `--ensure-templates`, `--refresh-templates` | A project needs file-backed memory or a template upgrade. |
 | `/tdk-memory-update` | Add or modify domain knowledge. | natural-language memory updates | Business rules, services, data models, flows, or decisions changed. |
-| `/tdk-memory-query` | Query project memory by natural language. | query text | Planning/implementation needs memory context. |
-| `/tdk-memory-changelog` | Record staged memory changes in `CHANGELOG.md`. | staged `.specify/memory/` diff | Memory edits are ready to document before commit. |
+| `/tdk-memory-query` | Query project memory by natural language, or print the memory Status Block. | query text, `--status` | Planning/implementation needs memory context. |
+| `/tdk-memory-changelog` | Record staged memory changes in `CHANGELOG.md`. | staged memory root diff | Memory edits are ready to document before commit. |
 | `/tdk-memory-checksum` | Read-only Node.js integrity validation; explicitly approved repair. | `--memory-root`, `--fix` | Detect drift or diagnose a malformed `memory.yaml` without silently accepting changed bytes. |
 | `/tdk-retro-collect` | Collect retrospective feedback after a TDK spec/session. | reviews, drift, UT results, traces, user feedback | A completed workflow should feed the learning loop. |
 | `/tdk-retro-propose` | Propose technical or memory learning deltas from feedback. | `retro-feedback.md` | Feedback needs reviewable learning changes. |
@@ -201,8 +201,52 @@ Memory skills require Node.js >=18, not Python or an external transport server.
 `memory.yaml` remains version `"2"`; optional template receipts are additive.
 Malformed manifests stop ordinary writers. TDK Guardian failures persist as NOT
 CHECKED and block implementation until validation succeeds or the user explicitly
-authorizes an unchecked run. Custom roots work within memory skills; upstream
-TDK existence gates still use `.specify/memory/`.
+authorizes an unchecked run. The memory root comes from one place: TDK
+skills run `/tdk-memory-query --status` and use the Status Block it prints
+(`root`, `memory_path`, `external`, `domains`, `constitution`); they never read
+`memory.path` or the index themselves. `/tdk-constitution` follows the same root,
+so the constitution lives at `<memory root>/constitution.md`.
+
+#### Memory root configuration
+
+Configure it in `.specify/.specify.json`:
+
+```json
+{ "memory": { "path": "../team-memory", "allowExternal": true } }
+```
+
+- **Default**: no `memory` setting keeps `.specify/memory/` (or an existing
+  `memory/`). Two cases now stop instead of guessing: a project with both
+  `.specify/memory/` and an unrelated `memory/` gets `error: ambiguous-default` (set
+  `memory.path` to pick one), and an older tdk-memory without the status handshake
+  gets `error: version-skew` (upgrade or resync tdk-memory). `allowExternal` must be a
+  JSON boolean; a string such as `"true"` invalidates the whole config.
+- **`memory.path`**: relative paths resolve from the workspace root. A relative
+  path that leaves the repository (for example `../team-memory`) resolves from the
+  main worktree, so every linked worktree of a project shares one root; a path that
+  stays inside the repository follows the current worktree. Keep paths relative: an
+  absolute path ends up in committed config and exposes a machine path (the status
+  block shows an `absolute-path` warning).
+- **`memory.allowExternal`**: required for a root outside the workspace, and it
+  applies only to the root named by `memory.path`. Without it the status is
+  `error: external-not-allowed`.
+- **Write consent**: the first write to an external root in a session (init,
+  update, constitution, ingest, retro apply) asks once; a session that cannot ask
+  stops instead of writing. Reads never ask.
+- **Commit the memory repo**: an external root is usually another repository.
+  Memory writes do not appear in the workspace diff; commit them there
+  (`git -C <memory root> ...`).
+- **Harness permission**: the agent harness must be allowed to touch the external
+  directory (Claude Code: `additionalDirectories` in the settings; Codex:
+  `--add-dir`; not verified for every harness version). Otherwise file access fails
+  even with `allowExternal`.
+- **Shared root**: several branches or sessions can share one root. Concurrent
+  ingest or update runs can stop midway on a changed manifest; rerun after the other
+  session finishes.
+- **Moving an existing memory**: there is no automatic migration. Move the
+  directory yourself with `git mv` (or copy it to the external repo), including
+  `constitution.md`, then set `memory.path`. A constitution left in `.specify/memory/`
+  after the move shows a `legacy-constitution` warning.
 
 ### Guide And Research Utilities
 

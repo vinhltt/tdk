@@ -82,7 +82,9 @@ describe('constitution-driven project init contract', () => {
 
     expect(skill).toContain('--init');
     expect(skill).toContain('create-if-missing');
-    expect(skill).toContain('.specify/memory/constitution.md');
+    expect(skill).toContain('<memoryRoot>/constitution.md');
+    expect(skill).toContain('/tdk-memory-query --status');
+    expect(skill).toContain('===TDK-MEMORY-STATUS===');
     expect(skill).toContain('memory-index.md');
     expect(skill).toContain('memory.yaml');
     expect(skill).toContain('tdk-memory-init');
@@ -90,6 +92,7 @@ describe('constitution-driven project init contract', () => {
     expect(skill).toContain('README conflicts');
     expect(skill).toContain('stop for confirmation');
     expect(skill).not.toContain('always operate on the existing `.specify/memory/constitution.md` file');
+    expect(skill).not.toContain('.specify/memory');
   });
 
   it('wires constitution init to arc42 summaries and typed memory templates', () => {

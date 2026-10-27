@@ -26,18 +26,18 @@ Delegate command:
 
 `tdk-retro-apply`:
 - Confirms user approval.
-- Confirms memory is initialized.
-- Confirms domain exists.
+- Confirms memory status is `ready`.
+- Confirms the domain is in the status block `domains`.
 - Composes the natural language update.
 - Updates `learning-delta.md` status.
 
 `tdk-memory-update`:
 - Routes the natural language to the correct memory file.
 - Applies section anchor updates.
-- Regenerates `memory-index.md`.
-- Updates `memory.yaml` checksums.
+- Regenerates the memory index.
+- Updates the memory checksums.
 
 ## Non-goals
 
-- No direct writes to `.specify/memory/`.
+- No direct writes to the memory root.
 - No domain creation. Unknown domains require `/tdk-memory-init`.

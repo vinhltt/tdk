@@ -4,6 +4,7 @@ const path = require('path');
 const {
   loadSpeckitConfig,
   detectActiveWorkspace,
+  getConfiguredMemoryPath,
   getSubWorkspaceRulesPath
 } = require('./speckit-config-reader.cjs');
 
@@ -70,6 +71,11 @@ function buildWorkspaceSection(config, activeWorkspace) {
   ];
 }
 
+// Configured memory path as shown to the agent: slash-normalized, no trailing slash.
+function displayMemoryPath(config) {
+  return normalizePath(getConfiguredMemoryPath(config)).replace(/\/+$/, '');
+}
+
 function buildRulesSection(config, activeWorkspace, cwd = process.cwd()) {
   const rulesPath = activeWorkspace ? getSubWorkspaceRulesPath(config, activeWorkspace, cwd) : null;
   const rulesPathDisplay = rulesPath ? normalizePath(path.relative(cwd, rulesPath)) : '(root workspace)';
@@ -77,7 +83,7 @@ function buildRulesSection(config, activeWorkspace, cwd = process.cwd()) {
 
   const lines = [
     '## Rules',
-    '- Constitution: .specify/memory/constitution.md',
+    `- Constitution: ${displayMemoryPath(config)}/constitution.md`,
     `- Workspace rules: ${rulesPathDisplay}`,
     `- Dev rules: ${devRulesPath}`
   ];
@@ -91,7 +97,7 @@ function buildPathsSection(config) {
     '## Paths',
     `- Specs: ${normalizePath(path.posix.join(config.specs.root, config.specs.defaultFolder))}/`,
     `- Configurations: ${normalizePath(config.docs.path)}/`,
-    `- Memory: ${normalizePath(path.posix.join(config.specs.root, 'memory'))}/`,
+    `- Memory: ${displayMemoryPath(config)}/`,
     `- Scripts: ${normalizePath(path.posix.join(config.specs.root, 'scripts'))}/`,
     ''
   ];

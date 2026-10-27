@@ -118,6 +118,30 @@ test('path helpers resolve expected speckit paths', () => {
   assert.equal(getMemoryPath(config, cwd).replace(/\\/g, '/'), '/project/.specify/memory');
 });
 
+test('getMemoryPath follows memory.path and ignores specs.root', () => {
+  const cwd = '/project';
+  const specs = { root: 'custom-root', defaultFolder: 'specs' };
+  const norm = (value) => value.replace(/\\/g, '/');
+  assert.equal(norm(getMemoryPath({ specs }, cwd)), '/project/.specify/memory');
+  assert.equal(norm(getMemoryPath({ specs, memory: { path: 'docs/brain' } }, cwd)), '/project/docs/brain');
+  assert.equal(norm(getMemoryPath({ specs, memory: { path: '../shared-memory', allowExternal: true } }, cwd)), '/shared-memory');
+  assert.equal(norm(getMemoryPath({ specs, memory: { path: '/mnt/memory' } }, cwd)), '/mnt/memory');
+});
+
+test('getMemoryPath falls back to the default for unusable memory.path', () => {
+  const cwd = '/project';
+  const specs = { root: '.specify', defaultFolder: 'specs' };
+  for (const memory of [{ path: '' }, { path: '  ' }, { path: 42 }, { path: 'a\nb' }, { path: 'a\\b' }, { path: 'a\u0085b' }, { path: 'docs/$(x)' }, 'docs', null]) {
+    assert.equal(getMemoryPath({ specs, memory }, cwd).replace(/\\/g, '/'), '/project/.specify/memory');
+  }
+});
+
+test('loadSpeckitConfig keeps memory.path so getMemoryPath can read it', () => {
+  const root = makeTempJsonRoot({ memory: { path: '../shared-memory', allowExternal: true } });
+  const config = loadSpeckitConfig(root);
+  assert.equal(getMemoryPath(config), path.resolve(root, '../shared-memory'));
+});
+
 // Nested path with name !== path: the directory is keyed by name, so a nested
 // sub-workspace still gets a flat docs directory.
 test('getSubWorkspaceRulesPath keys the rules directory by name, not path', () => {

@@ -3,6 +3,7 @@ var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 function __accessProp(key) {
   return this[key];
@@ -29,7 +30,37 @@ var __toESM = (mod, isNodeMode, target) => {
     cache.set(mod, to);
   return to;
 };
+var __toCommonJS = (from) => {
+  var entry = (__moduleCache ??= new WeakMap).get(from), desc;
+  if (entry)
+    return entry;
+  entry = __defProp({}, "__esModule", { value: true });
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (var key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(entry, key))
+        __defProp(entry, key, {
+          get: __accessProp.bind(from, key),
+          enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+        });
+  }
+  __moduleCache.set(from, entry);
+  return entry;
+};
+var __moduleCache;
 var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
+var __returnValue = (v) => v;
+function __exportSetter(name, newValue) {
+  this[name] = __returnValue.bind(null, newValue);
+}
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {
+      get: all[name],
+      enumerable: true,
+      configurable: true,
+      set: __exportSetter.bind(all, name)
+    });
+};
 
 // node_modules/yaml/dist/nodes/identity.js
 var require_identity = __commonJS((exports2) => {
@@ -7022,10 +7053,18 @@ var require_dist = __commonJS((exports2) => {
 });
 
 // memory-manifest.ts
+var exports_memory_manifest = {};
+__export(exports_memory_manifest, {
+  hasForbiddenLocationCharacter: () => hasForbiddenLocationCharacter
+});
+module.exports = __toCommonJS(exports_memory_manifest);
+var import_node_child_process = require("node:child_process");
 var import_node_crypto = require("node:crypto");
 var import_node_fs = require("node:fs");
 var import_node_path = require("node:path");
+var import_node_util = require("node:util");
 var import_yaml = __toESM(require_dist(), 1);
+var execFileAsync = import_node_util.promisify(import_node_child_process.execFile);
 var MANIFEST_VERSION = "2";
 var DEFAULT_MANIFEST_PATH = "memory.yaml";
 var INDEX_PATH = "memory-index.md";
@@ -7042,6 +7081,16 @@ var MAX_MANIFEST_BYTES = 1048576;
 var MAX_YAML_NODES = 20000;
 var MAX_YAML_DEPTH = 32;
 var MAX_INVENTORY_ENTRIES = 1e5;
+var CONFIG_RELATIVE_PATH = [".specify", ".specify.json"];
+var DEFAULT_MEMORY_PATH = ".specify/memory";
+var FALLBACK_MEMORY_PATH = "memory";
+var CONSTITUTION_PATH = "constitution.md";
+var MAX_CONFIG_BYTES = 1048576;
+var MAX_INDEX_BYTES = 4194304;
+var FORBIDDEN_MEMORY_PATH_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\\`$"';&|<>]/;
+var FORBIDDEN_LOCATION_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029`$"]/;
+var COVERAGE_PATTERN = /^Binding coverage: (\d+)(?: of |\/)(\d+) typed files[ \t\r]*$/m;
+var DOMAIN_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 var SHA256_PATTERN = /^[a-f0-9]{64}$/;
 var ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
@@ -7053,7 +7102,8 @@ function fail(message) {
 function usage() {
   fail(`Usage:
 ` + `  node memory-manifest.cjs hash <memoryRoot> <relPath> [--allow-external-root]
-` + "  node memory-manifest.cjs validate <memoryRoot> [--manifest <relativePath>] [--allow-external-root]");
+` + `  node memory-manifest.cjs validate <memoryRoot> [--manifest <relativePath>] [--allow-external-root]
+` + "  node memory-manifest.cjs resolve [--memory-root <path>] [--allow-external-root]");
 }
 function parseInvocation(argumentsAfterNode) {
   const [command, ...rest] = argumentsAfterNode;
@@ -7107,6 +7157,28 @@ function parseInvocation(argumentsAfterNode) {
     }
     return { command, memoryRootArgument, manifestRelativePath, allowExternalRoot };
   }
+  if (command === "resolve") {
+    let allowExternalRoot = false;
+    let memoryRootArgument;
+    for (let index = 0;index < rest.length; index += 1) {
+      const argument = rest[index];
+      if (argument === "--allow-external-root") {
+        if (allowExternalRoot)
+          fail("--allow-external-root may only be provided once");
+        allowExternalRoot = true;
+        continue;
+      }
+      if (argument === "--memory-root") {
+        if (memoryRootArgument !== undefined || index + 1 >= rest.length || rest[index + 1].startsWith("--"))
+          usage();
+        memoryRootArgument = rest[index + 1];
+        index += 1;
+        continue;
+      }
+      usage();
+    }
+    return { command, memoryRootArgument, allowExternalRoot };
+  }
   usage();
 }
 function errorCode(error) {
@@ -7145,9 +7217,12 @@ async function realpathFromNearestExisting(inputPath) {
     }
   }
 }
-function requireContained(parentPath, childPath, subject) {
+function isContained(parentPath, childPath) {
   const relation = import_node_path.relative(parentPath, childPath);
-  if (relation === "" || !relation.startsWith(`..${import_node_path.sep}`) && relation !== ".." && !import_node_path.isAbsolute(relation))
+  return relation === "" || !relation.startsWith(`..${import_node_path.sep}`) && relation !== ".." && !import_node_path.isAbsolute(relation);
+}
+function requireContained(parentPath, childPath, subject) {
+  if (isContained(parentPath, childPath))
     return;
   fail(`${subject} escapes containment: ${childPath} is not within ${parentPath}`);
 }
@@ -7563,17 +7638,289 @@ async function hash(memoryRootArgument, relativePath, allowExternalRoot) {
     fail(`file not found: ${import_node_path.join(memoryRoot, ...validateRelativePath(relativePath, "hash path"))}`);
   console.log(await hashRegularFile(target.path));
 }
+function hasForbiddenLocationCharacter(value, platform = process.platform) {
+  return FORBIDDEN_LOCATION_CHARACTERS.test(value) || platform !== "win32" && value.includes("\\");
+}
+function displayMemoryPath(value) {
+  return value.replace(new RegExp(FORBIDDEN_MEMORY_PATH_CHARACTERS.source, "g"), "?");
+}
+async function readRawConfig(workspaceRoot) {
+  const configPath = import_node_path.join(workspaceRoot, ...CONFIG_RELATIVE_PATH);
+  const info = await lstatOptional(configPath);
+  const absent = {
+    invalid: false,
+    displayPath: DEFAULT_MEMORY_PATH,
+    memoryPath: undefined,
+    allowExternal: false,
+    readerBackend: undefined
+  };
+  if (info === undefined)
+    return absent;
+  const invalid = { invalid: true, displayPath: DEFAULT_MEMORY_PATH };
+  if (!info.isFile() || info.size > MAX_CONFIG_BYTES)
+    return invalid;
+  let parsed;
+  try {
+    parsed = JSON.parse(await import_node_fs.promises.readFile(configPath, "utf8"));
+  } catch {
+    return invalid;
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
+    return invalid;
+  const memory = parsed.memory;
+  if (memory === undefined)
+    return absent;
+  if (typeof memory !== "object" || memory === null || Array.isArray(memory))
+    return invalid;
+  const { path, allowExternal, reader } = memory;
+  let memoryPath;
+  let displayPath = DEFAULT_MEMORY_PATH;
+  if (path !== undefined) {
+    if (typeof path !== "string" || path.trim().length === 0)
+      return invalid;
+    displayPath = displayMemoryPath(path);
+    if (FORBIDDEN_MEMORY_PATH_CHARACTERS.test(path))
+      return { invalid: true, displayPath };
+    memoryPath = path;
+  }
+  if (allowExternal !== undefined && typeof allowExternal !== "boolean")
+    return { invalid: true, displayPath };
+  let readerBackend;
+  if (reader !== undefined) {
+    if (typeof reader !== "object" || reader === null || Array.isArray(reader))
+      return { invalid: true, displayPath };
+    const backend = reader.backend;
+    if (backend !== undefined) {
+      if (typeof backend !== "string")
+        return { invalid: true, displayPath };
+      readerBackend = backend;
+    }
+  }
+  return { invalid: false, displayPath, memoryPath, allowExternal: allowExternal === true, readerBackend };
+}
+async function mainWorktreeRoot(workspaceRoot) {
+  const gitEntry = await lstatOptional(import_node_path.join(workspaceRoot, ".git"));
+  if (gitEntry === undefined || !gitEntry.isFile())
+    return workspaceRoot;
+  try {
+    const { stdout } = await execFileAsync("git", ["-C", workspaceRoot, "worktree", "list", "--porcelain"], {
+      encoding: "utf8",
+      timeout: 1e4
+    });
+    const lines = (stdout.split(/\r?\n\r?\n/)[0] ?? "").split(/\r?\n/);
+    if (lines.includes("bare"))
+      return workspaceRoot;
+    const pathLine = lines.find((line) => line.startsWith("worktree "));
+    if (pathLine === undefined)
+      return workspaceRoot;
+    return await import_node_fs.promises.realpath(pathLine.slice("worktree ".length));
+  } catch {
+    return workspaceRoot;
+  }
+}
+async function configuredRootPath(workspaceRoot, memoryPath) {
+  if (import_node_path.isAbsolute(memoryPath))
+    return import_node_path.resolve(memoryPath);
+  const base = await mainWorktreeRoot(workspaceRoot);
+  const viaMainWorktree = import_node_path.resolve(base, memoryPath);
+  return isContained(base, viaMainWorktree) ? import_node_path.resolve(workspaceRoot, memoryPath) : viaMainWorktree;
+}
+async function isDirectory(candidate) {
+  try {
+    return (await import_node_fs.promises.stat(candidate)).isDirectory();
+  } catch (error) {
+    if (errorCode(error) === "ENOENT" || errorCode(error) === "ENOTDIR")
+      return false;
+    fail(`cannot inspect ${candidate}: ${errorMessage(error)}`);
+  }
+}
+async function readContainedText(memoryRoot, relativePath, maxBytes) {
+  const target = await inspectContainedTarget(memoryRoot, relativePath, relativePath);
+  if (target.kind !== "file")
+    return;
+  let handle;
+  try {
+    handle = await import_node_fs.promises.open(target.path, import_node_fs.constants.O_RDONLY | (import_node_fs.constants.O_NOFOLLOW ?? 0));
+    const info = await handle.stat();
+    if (!info.isFile() || info.size > maxBytes)
+      return;
+    return await handle.readFile({ encoding: "utf8" });
+  } catch {
+    return;
+  } finally {
+    await handle?.close();
+  }
+}
+function parseBindingCoverage(indexSource) {
+  const match = COVERAGE_PATTERN.exec(indexSource);
+  if (match === null)
+    return "unknown";
+  const covered = Number(match[1]);
+  const total = Number(match[2]);
+  if (!Number.isSafeInteger(covered) || !Number.isSafeInteger(total) || covered > total)
+    return "unknown";
+  return `${covered} of ${total} typed files`;
+}
+function parseDomainMap(indexSource) {
+  const lines = indexSource.split(/\r?\n/);
+  const headingIndex = lines.findIndex((line) => line.trim() === "## Domain Map");
+  if (headingIndex < 0)
+    return "unknown";
+  const domains = [];
+  let rowCount = 0;
+  let inRows = false;
+  for (const line of lines.slice(headingIndex + 1)) {
+    if (line.startsWith("#"))
+      break;
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("|"))
+      continue;
+    if (!inRows) {
+      inRows = /^\|[\s:|-]+$/.test(trimmed) && trimmed.includes("-");
+      continue;
+    }
+    const name = (trimmed.slice(1).split("|")[0] ?? "").trim().replace(/^`|`$/g, "");
+    if (name.startsWith("_("))
+      continue;
+    rowCount += 1;
+    if (DOMAIN_NAME_PATTERN.test(name) && !domains.includes(name))
+      domains.push(name);
+  }
+  if (domains.length > 0)
+    return domains.join(", ");
+  return rowCount === 0 ? "none" : "unknown";
+}
+async function isRegularFileBelow(root, relativePath) {
+  try {
+    return (await inspectContainedTarget(root, relativePath, relativePath)).kind === "file";
+  } catch (error) {
+    if (error instanceof CliError)
+      return false;
+    throw error;
+  }
+}
+async function resolveStatus(explicitRoot, allowFlag) {
+  const workspaceRoot = await discoverWorkspaceRoot();
+  const config = await readRawConfig(workspaceRoot);
+  const configuredPath = config.invalid ? undefined : config.memoryPath;
+  const warnings = configuredPath !== undefined && import_node_path.isAbsolute(configuredPath) ? ["absolute-path"] : [];
+  const base = {
+    status: "error",
+    root: null,
+    memory_path: config.displayPath,
+    external: false,
+    reader: "file",
+    reader_fallback: "none",
+    binding_coverage: "n/a",
+    domains: "n/a",
+    constitution: "absent",
+    warnings,
+    error: null,
+    hint: null
+  };
+  const failure = (code, extra = {}) => ({ ...base, ...extra, error: code });
+  if (config.invalid)
+    return failure("config-invalid");
+  if (config.readerBackend !== undefined && config.readerBackend !== "file")
+    return failure("unsupported-reader");
+  if (explicitRoot !== undefined && explicitRoot.trim().length === 0)
+    return failure("config-invalid");
+  let lexicalRoot;
+  let freshInitRoot = false;
+  if (explicitRoot !== undefined) {
+    lexicalRoot = import_node_path.resolve(workspaceRoot, explicitRoot);
+  } else if (configuredPath !== undefined) {
+    lexicalRoot = await configuredRootPath(workspaceRoot, configuredPath);
+  } else {
+    const existing = [];
+    for (const candidate of [DEFAULT_MEMORY_PATH, FALLBACK_MEMORY_PATH]) {
+      const candidatePath = import_node_path.join(workspaceRoot, ...candidate.split("/"));
+      if (await isDirectory(candidatePath))
+        existing.push(candidatePath);
+    }
+    if (existing.length > 1)
+      return failure("ambiguous-default");
+    if (existing.length === 1) {
+      lexicalRoot = existing[0];
+    } else {
+      freshInitRoot = true;
+      const specifyPresent = await lstatOptional(import_node_path.join(workspaceRoot, ".specify")) !== undefined;
+      lexicalRoot = import_node_path.join(workspaceRoot, ...(specifyPresent ? DEFAULT_MEMORY_PATH : FALLBACK_MEMORY_PATH).split("/"));
+    }
+  }
+  const canonicalRoot = await realpathFromNearestExisting(lexicalRoot);
+  if (hasForbiddenLocationCharacter(canonicalRoot) || hasForbiddenLocationCharacter(workspaceRoot)) {
+    return failure("containment");
+  }
+  const lexicallyInside = isContained(workspaceRoot, lexicalRoot);
+  const external = !(lexicallyInside && isContained(workspaceRoot, canonicalRoot));
+  if (isContained(canonicalRoot, workspaceRoot))
+    return failure("containment", { external });
+  if (external && !allowFlag) {
+    let permittedByConfig = false;
+    if (config.allowExternal && configuredPath !== undefined) {
+      const configCanonical = await realpathFromNearestExisting(await configuredRootPath(workspaceRoot, configuredPath));
+      permittedByConfig = configCanonical === canonicalRoot;
+    }
+    if (!permittedByConfig) {
+      if (lexicallyInside)
+        return failure("containment", { external });
+      const hint = config.allowExternal && configuredPath !== undefined ? "explicit-root-differs" : "enable-allow-external";
+      return failure("external-not-allowed", { external, hint });
+    }
+  }
+  if (!freshInitRoot && !await isDirectory(lexicalRoot)) {
+    return failure("root-missing", { root: canonicalRoot, external });
+  }
+  const result = { ...base, root: canonicalRoot, external };
+  const legacyRoot = await realpathFromNearestExisting(import_node_path.join(workspaceRoot, ...DEFAULT_MEMORY_PATH.split("/")));
+  if (await isRegularFileBelow(canonicalRoot, CONSTITUTION_PATH))
+    result.constitution = "present";
+  if (canonicalRoot !== legacyRoot && await isRegularFileBelow(legacyRoot, CONSTITUTION_PATH)) {
+    result.warnings = [...warnings, "legacy-constitution"];
+  }
+  if (freshInitRoot)
+    return { ...result, status: "uninitialized" };
+  let hasIndex;
+  let hasManifest;
+  try {
+    hasIndex = (await inspectContainedTarget(canonicalRoot, INDEX_PATH, "memory index")).kind === "file";
+    hasManifest = (await inspectContainedTarget(canonicalRoot, DEFAULT_MANIFEST_PATH, "memory manifest")).kind === "file";
+  } catch (error) {
+    if (error instanceof CliError)
+      return failure("containment", { external, warnings: result.warnings });
+    throw error;
+  }
+  if (!hasIndex && !hasManifest)
+    return { ...result, status: "uninitialized" };
+  if (hasIndex !== hasManifest)
+    return failure("memory-incomplete", { root: canonicalRoot, external, warnings: result.warnings });
+  const indexSource = await readContainedText(canonicalRoot, INDEX_PATH, MAX_INDEX_BYTES);
+  return {
+    ...result,
+    status: "ready",
+    binding_coverage: indexSource === undefined ? "unknown" : parseBindingCoverage(indexSource),
+    domains: indexSource === undefined ? "unknown" : parseDomainMap(indexSource)
+  };
+}
+async function resolveCommand(explicitRoot, allowFlag) {
+  console.log(JSON.stringify(await resolveStatus(explicitRoot, allowFlag), null, 2));
+}
 async function main() {
   if (Number(process.versions.node.split(".")[0]) < 18)
     fail("Node.js >=18 is required");
   const invocation = parseInvocation(process.argv.slice(2));
   if (invocation.command === "hash") {
     await hash(invocation.memoryRootArgument, invocation.relativePath, invocation.allowExternalRoot);
-  } else {
+  } else if (invocation.command === "validate") {
     await validate(invocation.memoryRootArgument, invocation.manifestRelativePath, invocation.allowExternalRoot);
+  } else {
+    await resolveCommand(invocation.memoryRootArgument, invocation.allowExternalRoot);
   }
 }
-main().catch((error) => {
-  console.error(`ERROR: ${errorMessage(error)}`);
-  process.exitCode = 1;
-});
+if (require.main == module) {
+  main().catch((error) => {
+    console.error(`ERROR: ${errorMessage(error)}`);
+    process.exitCode = 1;
+  });
+}

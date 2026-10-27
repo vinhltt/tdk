@@ -8,7 +8,7 @@ description: "Query project memory knowledge by natural language. Returns
   'show data model for Z', or when other skills need memory context before implementing.
   Invocable by user (/tdk-memory-query) and by other skills/agents."
 metadata:
-  version: 4.0.0
+  version: 4.2.0
   category: "Context & Memory"
   requires:
     - tdk-memory-init
@@ -36,12 +36,25 @@ user-invocable: true
 argument-hint: "Natural language query with optional flags"
 ---
 
+## Status mode (`--status`)
+
+If `$ARGUMENTS` contains `--status`, handle it before anything below: load only
+`references/status-handshake.md` (flat installation: the same path relative to this
+SKILL.md), follow it, print the single Status Block it defines, and stop. This mode
+skips the preflight, the contract, and the query flow; it writes nothing and
+spawns no agent.
+
 ## Memory root resolution
 
 Before dispatch, load
-`${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-init/references/memory-root-and-asset-contract.md`.
-Resolve `<memoryRoot>`, enforce both containment layers, and run read-only YAML
-preflight using the shipped Node.js runtime. Never change a manifest during query.
+`${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-init/references/memory-root-and-asset-contract.md`
+and follow its section 1: step 1 is `memory-manifest.cjs resolve` (`--memory-root` only
+if the caller gave one, `--allow-external-root` if present in this invocation's arguments, typed or forwarded).
+`<memoryRoot>` is the JSON `root`; any `error` STOPs with its code, and
+`uninitialized` STOPs with initialization guidance. Then enforce both containment
+layers and run read-only YAML preflight using the shipped Node.js runtime. When
+`resolve` reports `external: true` with a root, forward `--allow-external-root` to
+every runtime call. Never change a manifest during query.
 Prune `_templates/**` and `_deprecated/**` before any nomination or ranking.
 Flat installation: without a plugin root, resolve the contract through sibling
 `../tdk-memory-init/references/memory-root-and-asset-contract.md` from this SKILL.md.
@@ -65,6 +78,8 @@ context. Never modifies files.
   - `--format {summary|full|list}` — output verbosity (default: summary)
   - `--for-agent` — marker-delimited inter-skill output; data-model results use the deterministic full-Markdown contract below
   - `--memory-root {path}` — select the root using the shared contract
+  - `--allow-external-root` — per-invocation permission for a root outside the workspace
+  - `--status` — print the Status Block (root, state, coverage, domains, constitution) and stop; see `references/status-handshake.md`
 
 ## Execution
 

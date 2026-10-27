@@ -16,7 +16,7 @@
 |---|---|---|
 | `retro-feedback.md` | `tdk-retro-collect` | Observation artifact only. No proposed fixes. |
 | `learning-delta.md` | `tdk-retro-propose` and `tdk-retro-apply` | Proposal + status tracking artifact. |
-| `.specify/memory/*` | `tdk-memory-update` | `tdk-retro-apply` delegates memory edits instead of editing memory files directly. |
+| Memory root files | `tdk-memory-update` | `tdk-retro-apply` delegates memory edits instead of editing memory files directly. |
 
 ## Basic Flow
 

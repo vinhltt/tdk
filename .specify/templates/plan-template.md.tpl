@@ -31,7 +31,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with [.specify/memory/constitution.md](../.specify/memory/constitution.md) principles:
+Verify compliance with the principles in `constitution.md` of the project memory root (read it from the memory status block; skip with a note when memory is unavailable):
 
 - [ ] **I. YAGNI-KISS-DRY**: Feature implements only required functionality, uses simplest solution, avoids duplication
 - [ ] **II. Coding Standards**: Follows sub-workspace `rules/coding/` conventions (PSR-12/strict types for BE, Composition API/TypeScript for FE, Ant Design Vue prioritized)

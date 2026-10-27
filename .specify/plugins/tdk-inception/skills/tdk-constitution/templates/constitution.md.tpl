@@ -66,7 +66,7 @@ INSTRUCTION: State the project knowledge authority order. Keep README and ad hoc
 -->
 ## Project Knowledge Authority
 
-The constitution and `.specify/memory/` are the project authority. Briefs, files,
+The constitution and the project memory root are the project authority. Briefs, files,
 README, and review notes are deltas or context until explicitly accepted.
 <!-- AUTO-GEN-END -->
 

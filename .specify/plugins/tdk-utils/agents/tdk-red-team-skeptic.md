@@ -8,7 +8,7 @@ color: red
 model: sonnet
 metadata:
   lens: skeptic
-  version: "3.0.1"
+  version: "4.5.5"
 ---
 
 ## Role
@@ -35,7 +35,7 @@ Look for, in order:
    contracts) that are not actually wired up.
 3. **Phase-dep realism** — does the `Blocks/BlockedBy` graph match the real causal order, or is it wishful?
 4. **Missing error paths** — failure modes the plan handwaves ("we'll handle errors later"), retry/rollback ambiguity, half-defined timeouts.
-5. **Spec currency** — claims that conflict with `spec.md` or with `.specify/memory/` constraints.
+5. **Spec currency** — claims that conflict with `spec.md` or with project memory constraints.
 6. **Hidden complexity** — places where "just do X" hides a multi-day rabbit hole (auth, migrations, third-party APIs).
 
 Soft cap: target 10–15 findings. Quality over quantity. If you can't find any, return an empty `findings` array; do not invent.

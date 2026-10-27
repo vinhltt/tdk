@@ -14,6 +14,6 @@ Technical entries target T1 through T6.
 ## Guards
 
 - Never edit files outside the current project.
-- Never edit `.specify/memory/` in this flow.
+- Never edit the memory root in this flow.
 - Do not apply entries without explicit user approval.
 - If the path does not exist and operation is not `add`, mark blocked.

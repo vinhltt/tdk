@@ -102,9 +102,19 @@ describe('config.test.ts', () => {
     const { config: parsed, error } = parseConfig(configPath);
     expect(error).toBeNull();
     expect(parsed?.memory?.path).toBe('.specify/project-memory');
+    expect(parsed?.memory?.allowExternal).toBe(false);
 
     const defaulted = SpecifyConfigSchema.parse({ name: 'default-memory' });
-    expect(defaulted.memory?.path).toBe('.specify/memory');
+    expect(defaulted.memory).toEqual({ path: '.specify/memory', allowExternal: false });
+  });
+
+  it('C-05b2: memory.allowExternal is opt-in and unknown memory keys are stripped', () => {
+    const allowed = SpecifyConfigSchema.parse({
+      name: 'external-memory',
+      memory: { path: '../shared-memory', allowExternal: true, reader: 'obsidian-cli' },
+    });
+    expect(allowed.memory).toEqual({ path: '../shared-memory', allowExternal: true });
+    expect(SpecifyConfigSchema.safeParse({ name: 'bad', memory: { allowExternal: 'yes' } }).success).toBe(false);
   });
 
   it('C-05c: parseConfig accepts current TDK config with rules.path', () => {

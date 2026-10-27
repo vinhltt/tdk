@@ -53,7 +53,8 @@ export const SpecifyConfigSchema = z.object({
   }).optional().describe('Documentation settings.'),
   memory: z.object({
     path: z.string().default('.specify/memory').describe('Memory storage path relative to the workspace root.'),
-  }).default({ path: '.specify/memory' }).describe('TDK memory settings.'),
+    allowExternal: z.boolean().default(false).describe('Allow memory.path to resolve outside the workspace root.'),
+  }).default({ path: '.specify/memory', allowExternal: false }).describe('TDK memory settings.'),
   git: z.object({
     mainBranch: z.string().default('master').describe('Main branch name used by TDK workflows.'),
     prefixList: z.string().default('feat').describe('Default ticket or branch prefix list.'),

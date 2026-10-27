@@ -4,7 +4,7 @@ description: Brainstorm solutions with trade-off analysis and brutal honesty. Us
 license: MIT
 user-invocable: false
 metadata:
-  version: "3.0.2"
+  version: "4.5.5"
 ---
 
 # Brainstorming Skill
@@ -101,7 +101,7 @@ When brainstorming concludes with agreement, create a detailed markdown summary 
 
 **Output Path**: ALWAYS use `full_path` from `brainstorm.py` script. NEVER use:
 - `.specify/reports/` ❌
-- `.specify/memory/` ❌
+- the project memory root ❌
 - Any manually constructed path ❌
 
 **IMPORTANT:** Sacrifice grammar for the sake of concision when writing outputs.

@@ -4,7 +4,7 @@ description: "This skill should be used when the user asks to hand off or preser
 user-invocable: true
 argument-hint: "[task-id | issue-url | focus] [--kind continuation|spec|investigation|feature|upstream-bug] [--slug <slug>]"
 metadata:
-  version: "4.5.2"
+  version: "4.5.5"
   author: "VinhLTT"
   category: utility
 ---

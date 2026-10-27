@@ -17,8 +17,8 @@ Use this table to classify feedback signals into update targets.
 
 | ID | Target | Use When |
 |---|---|---|
-| K1 | `.specify/memory/domains/` | Business rule, service, flow, screen, or data model knowledge is missing or stale. |
-| K2 | `.specify/memory/memory-index.md` | Domain routing or memory index is missing or stale. |
+| K1 | `domains/` under the memory root | Business rule, service, flow, screen, or data model knowledge is missing or stale. |
+| K2 | Memory index under the memory root | Domain routing or memory index is missing or stale. |
 
 ## Routing Rules
 
@@ -37,4 +37,4 @@ Use this table to classify feedback signals into update targets.
 - Prefer the narrowest target that will prevent recurrence.
 - Prefer consumer-owned test skills for consumer-specific test conventions.
 - Do not propose memory targets if memory is not initialized; mark the entry `blocked`.
-- Do not propose direct edits to `.specify/memory/`; `/tdk-memory-update` owns memory writes.
+- Do not propose direct edits to the memory root; `/tdk-memory-update` owns memory writes.

@@ -190,8 +190,8 @@ Excluded:
 |-------|---------|--------------------|----------|
 | `/tdk-memory-init` | Khởi tạo memory hoặc materialize 20 template mà không phỏng vấn domain. | `--memory-root`, `--ensure-templates`, `--refresh-templates` | Cần memory file-backed hoặc nâng cấp template. |
 | `/tdk-memory-update` | Add hoặc modify domain knowledge. | natural-language memory updates | Business rules, services, data models, flows, hoặc decisions thay đổi. |
-| `/tdk-memory-query` | Query project memory bằng natural language. | query text | Planning/implementation cần memory context. |
-| `/tdk-memory-changelog` | Record staged memory changes trong `CHANGELOG.md`. | staged `.specify/memory/` diff | Memory edits ready để document trước commit. |
+| `/tdk-memory-query` | Query project memory bằng natural language, hoặc in memory Status Block. | query text, `--status` | Planning/implementation cần memory context. |
+| `/tdk-memory-changelog` | Record staged memory changes trong `CHANGELOG.md`. | staged memory root diff | Memory edits ready để document trước commit. |
 | `/tdk-memory-checksum` | Kiểm tra integrity bằng Node.js; repair chỉ sau khi được duyệt. | `--memory-root`, `--fix` | Phát hiện drift hoặc chẩn đoán `memory.yaml` lỗi mà không tự chấp nhận byte bị sửa. |
 | `/tdk-retro-collect` | Collect retrospective feedback sau TDK spec/session. | reviews, drift, UT results, traces, user feedback | Completed workflow nên feed learning loop. |
 | `/tdk-retro-propose` | Propose technical hoặc memory learning deltas từ feedback. | `retro-feedback.md` | Feedback cần reviewable learning changes. |
@@ -201,8 +201,46 @@ Memory skills cần Node.js >=18, không cần Python hay máy chủ transport n
 `memory.yaml` giữ version `"2"`; receipt template là phần bổ sung tùy chọn.
 Manifest lỗi chặn writer trước mutation. Guardian lỗi được lưu là NOT CHECKED
 và chặn implement cho tới khi xác minh được hoặc user cho phép chạy không kiểm
-tra memory. Custom root áp dụng trong memory skills; existence gate phía TDK
-vẫn dùng `.specify/memory/`.
+tra memory. Memory root chỉ có một nguồn: skill TDK chạy
+`/tdk-memory-query --status` và dùng Status Block được in ra (`root`, `memory_path`,
+`external`, `domains`, `constitution`); chúng không tự đọc `memory.path` hay index.
+`/tdk-constitution` đi theo cùng root, nên constitution nằm ở
+`<memory root>/constitution.md`.
+
+#### Cấu hình memory root
+
+Cấu hình trong `.specify/.specify.json`:
+
+```json
+{ "memory": { "path": "../team-memory", "allowExternal": true } }
+```
+
+- **Mặc định**: không có `memory` thì giữ `.specify/memory/` (hoặc `memory/` đã có). Hai trường hợp giờ dừng thay vì đoán: project có cả
+  `.specify/memory/` và một `memory/` không liên quan nhận `error: ambiguous-default`
+  (set `memory.path` để chọn), và tdk-memory cũ chưa có status handshake nhận
+  `error: version-skew` (nâng cấp hoặc resync tdk-memory). `allowExternal` phải là JSON
+  boolean; chuỗi như `"true"` làm hỏng toàn bộ config.
+- **`memory.path`**: path tương đối tính từ workspace root. Path tương đối thoát khỏi
+  repo (ví dụ `../team-memory`) tính từ main worktree, nên mọi linked worktree của
+  project dùng chung một root; path nằm trong repo thì theo worktree hiện tại. Nên dùng
+  path tương đối: path tuyệt đối bị commit vào config và lộ đường dẫn máy (status block
+  hiện cảnh báo `absolute-path`).
+- **`memory.allowExternal`**: bắt buộc cho root nằm ngoài workspace, và chỉ áp dụng cho
+  root mà `memory.path` chỉ tới. Thiếu thì status là `error: external-not-allowed`.
+- **Consent khi ghi**: lần ghi đầu vào root external trong một session (init, update,
+  constitution, ingest, retro apply) hỏi một lần; session không hỏi được sẽ dừng thay vì
+  ghi. Đọc không hỏi.
+- **Commit repo memory**: root external thường là repo khác. Thay đổi memory không xuất
+  hiện trong diff của workspace; commit ở đó (`git -C <memory root> ...`).
+- **Quyền của harness**: harness phải được phép truy cập thư mục external (Claude Code:
+  `additionalDirectories` trong settings; Codex: `--add-dir`; chưa verify cho mọi phiên
+  bản harness). Nếu không, truy cập file lỗi dù đã bật `allowExternal`.
+- **Root dùng chung**: nhiều branch hoặc session có thể dùng chung một root. Ingest hoặc
+  update chạy đồng thời có thể dừng giữa chừng vì manifest đã đổi; chạy lại sau khi
+  session kia xong.
+- **Chuyển memory sẵn có**: không có auto-migrate. Tự chuyển thư mục bằng `git mv` (hoặc
+  copy sang repo external), gồm cả `constitution.md`, rồi đặt `memory.path`. Constitution
+  còn ở `.specify/memory/` sau khi chuyển sẽ hiện cảnh báo `legacy-constitution`.
 
 ### Guide And Research Utilities
 

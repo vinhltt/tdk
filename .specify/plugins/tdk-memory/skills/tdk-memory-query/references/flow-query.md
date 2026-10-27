@@ -71,7 +71,7 @@ Exclude `_templates/**` and `_deprecated/**` from the canonical inventory.
    full inventory. Do not use a blind top-K or ranked-search cutoff.
 2. **Known-path precedence.** A supplied `data-model/{name}.md`,
    or `<memoryRoot>/data-model/{name}.md` is
-   normalized to a canonical indexed repository-relative POSIX path. Canonical
+   normalized to a canonical indexed memory-root-relative POSIX path. Canonical
    path equality is the highest-precedence exact identity: select and exact-read
    only that path, without applying the text identity ranks. A path outside the
    indexed `data-model/*.md` inventory is not a data-model candidate.
@@ -170,14 +170,14 @@ If a resolved path does not exist on disk: skip with note `{file}: not found`.
 
 Step 3 resolves data-model candidates and, only for a requested domain, its
 nominated proof files. For each other file in CANDIDATE_FILES:
-- `Read("<memoryRoot>/{relative-path}")` — full disk path.
+- `Read("<memoryRoot>/{relative-path}")` — full path under the memory root.
 
 For a **resolved data-model in normal mode** (without `--for-agent`), extract its
 exact-read Markdown using `--format`:
 - `--format full`: include the complete exact-read data-model Markdown.
 - `--format summary` (default): include frontmatter `title` + `updated_at`, H2/H3
   headings, and the first 3-5 lines of each section.
-- `--format list`: include only the canonical resolved disk-relative path and
+- `--format list`: include only the canonical resolved memory-root-relative path and
   frontmatter `title`.
 
 Extract non-data-model content per `--format` flag:
@@ -207,7 +207,7 @@ agent envelope:
 ## Memory Query Results
 
 Query: "{query}"
-Resolved: {disk-relative file paths}
+Resolved: {memory-root-relative file paths}
 
 ### {Domain} — {Content Type} (updated: {date})
 
@@ -245,7 +245,7 @@ MEMORY_QUERY_RESULT_END
 ```
 
 `candidate_paths` and `files_read` are stable-sorted Markdown lists of canonical
-repository-relative POSIX paths. Use `[]` for an empty list and `null` for no
+memory-root-relative POSIX paths. Use `[]` for an empty list and `null` for no
 resolved path. `files_read` includes the index, each exact-read candidate, and
 only requested-domain proof files actually exact-read. Only `resolved` sets
 `binding: true` and includes the complete Markdown file after `---`;

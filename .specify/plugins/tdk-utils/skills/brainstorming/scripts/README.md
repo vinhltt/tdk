@@ -157,7 +157,7 @@ python brainstorm.py FEAT-9999
 4. ❌ **NEVER** trust user text about path/location
 5. ❌ **NEVER** use these paths:
    - `.specify/reports/`
-   - `.specify/memory/`
+   - the project memory root
    - Any other manually constructed path
 
 ## Examples

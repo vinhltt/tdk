@@ -357,10 +357,10 @@ Luôn chạy `config:diff` trước `config:sync` để preview changes. Dùng `
 
 | File | Created By | Input From | Used By | Update Frequency |
 |----------|-----------|------------|---------|-----------------|
-| `.specify/memory/constitution.md` | `/tdk-constitution --init <brief\|file>` hoặc `/tdk-constitution` | Existing constitution/memory cùng accepted project brief hoặc update delta | Project governance authority cho inception, discovery, specification, và planning | Khi project governance đổi |
-| `.specify/memory/memory-index.md` + `.specify/memory/memory.yaml` | `/tdk-memory-init`; được constitution init bootstrap khi còn thiếu | Memory route và template metadata | Memory v3 control plane; `memory-index.md` là source of truth cho route/template | Khi memory routing đổi |
-| `.specify/memory/{decisions,risks-and-debt,quality-requirements,integrations,operations,glossary}/*.md` | `/tdk-memory-update`; `/tdk-constitution` khi có accepted evidence | Accepted durable project facts | Typed Memory v3 authority cho agents và Guardian (`binding: true`) | Khi binding project facts đổi |
-| `.specify/memory/arc42/*.md` | `/tdk-constitution --init <brief\|file>` hoặc `/tdk-constitution` | Constitution và typed Memory v3 facts | Architecture context/read-models (`binding: false`) link tới typed binding facts | Khi project knowledge summaries đổi |
+| `<memory root>/constitution.md` | `/tdk-constitution --init <brief\|file>` hoặc `/tdk-constitution` | Existing constitution/memory cùng accepted project brief hoặc update delta | Project governance authority cho inception, discovery, specification, và planning | Khi project governance đổi |
+| `<memory root>/memory-index.md` + `<memory root>/memory.yaml` | `/tdk-memory-init`; được constitution init bootstrap khi còn thiếu | Memory route và template metadata | Memory v3 control plane; `memory-index.md` là source of truth cho route/template | Khi memory routing đổi |
+| `<memory root>/{decisions,risks-and-debt,quality-requirements,integrations,operations,glossary}/*.md` | `/tdk-memory-update`; `/tdk-constitution` khi có accepted evidence | Accepted durable project facts | Typed Memory v3 authority cho agents và Guardian (`binding: true`) | Khi binding project facts đổi |
+| `<memory root>/arc42/*.md` | `/tdk-constitution --init <brief\|file>` hoặc `/tdk-constitution` | Constitution và typed Memory v3 facts | Architecture context/read-models (`binding: false`) link tới typed binding facts | Khi project knowledge summaries đổi |
 | `.specify/configurations/inception/project-inception.md` | `/tdk-greenfield-start` | Project brief hoặc workspace-local file cộng với project-inception questions | Readiness-aware recommended greenfield route | New-project intake |
 | `.specify/configurations/inception/brownfield-onboarding.md` | `/tdk-brownfield-start` | Existing repo evidence, optional scout output | Evidence/confidence-based brownfield onboarding route | Existing-repo intake |
 | `.specify/configurations/architecture/architecture-options.md` | `/tdk-architecture-advisor` | Inception, onboarding, discovery, spec, scout, README, hoặc bounded repo evidence | Architecture decision review | Project architecture options |
@@ -412,7 +412,7 @@ data-model templates là read-only references.
 ```mermaid
 flowchart LR
     subgraph PROJECT_KNOWLEDGE[Project Knowledge]
-        CONST[.specify/memory/<br/>constitution.md]
+        CONST[memory root/<br/>constitution.md]
         MEMORY_CONTROL[memory-index.md + memory.yaml<br/>Memory v3 Control Plane]
         TYPED_MEMORY[Typed Memory v3 Routes<br/>binding: true]
         ARC42[arc42/<br/>binding: false]

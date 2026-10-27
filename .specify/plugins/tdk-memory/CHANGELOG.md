@@ -4,6 +4,27 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.2.0] - 2026-10-27
+
+### Added
+- `tdk-memory-query --status`: prints one `===TDK-MEMORY-STATUS===` block (state, root, `memory_path`, external flag, Binding coverage, domains, constitution, warnings, error) without writing or spawning an agent, so callers learn the memory root and state from one place instead of re-deriving it. The block is defined in `skills/tdk-memory-query/references/status-handshake.md`.
+- `memory-manifest.cjs resolve [--memory-root <path>] [--allow-external-root]`: read-only subcommand that applies root precedence, worktree base, path validation, containment, external-root permission, and state classification, and reports them as JSON. `hash` and `validate` are unchanged.
+- `memory.allowExternal` (boolean) in `.specify/.specify.json`, bound to `memory.path`.
+- `tdk-memory-agent` accepts an optional `reader: file` control field (absent means `file`; any other value is a configuration error) and echoes it in its output only when supplied.
+
+### Changed
+- **External-root permission can now come from configuration.** A root outside the workspace is allowed by `--allow-external-root` in the invocation, or by `memory.allowExternal: true` when the root is the one `memory.path` names. An explicit `--memory-root` that points elsewhere outside the workspace still needs the flag. This reverses the earlier rule that only the invocation could grant permission. Every runtime call within an operation forwards the flag when permission exists; `tdk-memory-agent` refuses an external root that exists only because of a caller flag.
+- The first write to an external root in a session (initialization, `--ensure-templates`, update, `--finalize-written`, `checksum --fix`, changelog) is confirmed once; sessions that cannot ask stop without writing. `--ensure-templates` on an uninitialized external root is treated as initialization.
+- Evidence and query paths for an external root are relative to the memory root (never absolute or `..`-prefixed); internal roots keep workspace-relative paths.
+- `resolve` is the single source for the root and permission in every skill: it returns the session `root` (also for a permitted root that does not exist yet, and for `memory-incomplete`), `external` (true for `external-not-allowed` too), and a `hint` that tells `enable-allow-external` from `explicit-root-differs`. A forwarded `--allow-external-root` is permission only, never write consent. Roots equal to, or above, the workspace are `containment`, as are resolved locations containing control characters, `` ` ``, `$`, `"` (or a backslash off Windows); `&`, `'`, `;` stay fine in a location such as `R&D/`; blank explicit roots and malformed `memory` blocks (including `null`) are `config-invalid`.
+- A relative `memory.path` that leaves the repository resolves from the main worktree of a linked worktree, so all worktrees reach one root. `memory.path` and `allowExternal` values containing control characters (C0, C1, U+2028/U+2029), backslash or shell metacharacters, or of the wrong type, are `config-invalid`.
+- Changelog on an external root runs git inside the memory root's repository (`git -C`); a memory root that is not its own repository warns and keeps the workspace-relative commands.
+- The `Binding coverage` label is `X of N typed files` everywhere (index regeneration previously wrote `N/M`); readers still accept the older form.
+
+### Notes
+- TDK consumers keep using `.specify/memory` until a TDK release that routes through `--status`; the README and root contract still say so.
+- Harness permission for directories outside the workspace (Claude `additionalDirectories`, Codex `--add-dir`/writable roots) is the user's setup; the Codex side has not been verified.
+
 ## [4.1.1] - 2026-10-21
 
 ### Fixed

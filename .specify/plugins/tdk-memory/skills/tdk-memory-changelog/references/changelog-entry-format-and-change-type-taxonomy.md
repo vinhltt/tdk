@@ -123,5 +123,6 @@ Always **prepend** new entries (newest at top). Do not sort or reorder existing 
 | `modified` | Working-tree file at its current path |
 | `deprecated` | Working-tree file at `_deprecated/{rel-path}` (already moved) |
 
-Use the shipped `memory-manifest.cjs hash` command from the shared root contract.
+Use the shipped `memory-manifest.cjs hash` command from the shared root contract,
+forwarding `--allow-external-root` whenever external-root permission exists.
 Never compute SHA256 inline in SKILL.md — always use the script.

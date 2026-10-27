@@ -13056,8 +13056,9 @@ var SpecifyConfigSchema = exports_external.object({
     rules: exports_external.array(exports_external.string()).optional().describe("Documentation rule file references.")
   }).optional().describe("Documentation settings."),
   memory: exports_external.object({
-    path: exports_external.string().default(".specify/memory").describe("Memory storage path relative to the workspace root.")
-  }).default({ path: ".specify/memory" }).describe("TDK memory settings."),
+    path: exports_external.string().default(".specify/memory").describe("Memory storage path relative to the workspace root."),
+    allowExternal: exports_external.boolean().default(false).describe("Allow memory.path to resolve outside the workspace root.")
+  }).default({ path: ".specify/memory", allowExternal: false }).describe("TDK memory settings."),
   git: exports_external.object({
     mainBranch: exports_external.string().default("master").describe("Main branch name used by TDK workflows."),
     prefixList: exports_external.string().default("feat").describe("Default ticket or branch prefix list.")

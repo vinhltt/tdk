@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "14.3.5"
+  version: "14.3.6"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -141,7 +141,7 @@ When `FLAGS` contains `--red-team` or `--validate`, do not run the interactive m
 
 ### Step 0.memory — Memory Pre-load
 Load: `references/gates.md`
-Run only if `.specify/memory/memory-index.md` exists. Pre-load Context Block; carry it forward to Phase 0.guardian. Non-blocking — continue on failure.
+Run the Memory status block of **Memory Pre-load** once per run; carry the block forward to Step 2 and Phase 0.guardian. When `status: ready`, pre-load the Context Block and carry it forward as well. Non-blocking — continue on failure.
 
 ### Step 0.scope — Scope Challenge
 Load: `references/scope-challenge.md`
@@ -184,7 +184,7 @@ Resolve `MODE` from `FLAGS`: `fast` | `hard` | `red-team` | `validate` | `defaul
 
 ### Step 2 — Load Context
 Load: `references/gates.md`
-Read `featureSpec` and `.specify/memory/constitution.md`. Apply Constitution Check + Skip Conditions. Choose UPDATE vs REGENERATE mode based on Step 1.5 outcome. Per-step skip rules under each mode are defined in `references/modes.md`.
+Read `featureSpec` and the constitution from the carried Memory status block (step 5). Apply Constitution Check + Skip Conditions. Choose UPDATE vs REGENERATE mode based on Step 1.5 outcome. Per-step skip rules under each mode are defined in `references/modes.md`.
 
 **New spec format sections to read**: ## 1. Problem Statement, ## 2. Scope Boundary, ## 3. Impact Surface, ## 5. User Requirements & Testing (with `[sw/module]` tags), ## 6. Functional Requirements (with tags), ## 7. Success Criteria, ## 8. Risks & Mitigations.
 

@@ -51,5 +51,6 @@ Shared logic for rebuilding `memory-index.md` from filesystem state.
    notes. Count only extracted `binding: true` outside `arc42/` in the numerator.
    Missing binding values never count in the numerator. Root control files,
    routing/template tables, `## Deprecated`, and `_templates/**` count in neither.
-   Keep the established `Binding coverage: N/M typed files` output label.
+   Write the label `Binding coverage: X of N typed files`, the same as the index
+   template. Readers still accept the older `X/N typed files` form.
 9. Write full `memory-index.md` (atomic overwrite)

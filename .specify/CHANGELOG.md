@@ -6,6 +6,31 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.130.0] - 2026-10-27
+
+### Added
+- **[Memory]** tdk-memory 4.2.0: memory roots outside the workspace and one status handshake
+  - `/tdk-memory-query --status` prints one `===TDK-MEMORY-STATUS===` block (state, root, `memory_path`, external flag, Binding coverage, domains, constitution, warnings, error) without writing
+  - `memory-manifest.cjs resolve` reports root precedence, path validation, containment, external-root permission, and state as JSON
+  - `memory.allowExternal` lets the root named by `memory.path` live outside the workspace; the first write to an external root in a session is confirmed once
+- **[Configurations]** `memory.allowExternal` (boolean, default `false`) in the `.specify/.specify.json` schema and config types
+- **[Scripts]** Memory-root guard tests
+  - `memory-root-literal-fitness.test.ts` fails when consumer skills, agents, templates, or scripts hard-code the default memory path, resolve the memory root themselves, or read the memory index or manifest directly
+  - `memory-gate-runtime-parity.test.ts` keeps the memory gate's and session hook's forbidden-character sets identical to the memory runtime's
+
+### Changed
+- **[tdk-core]** Memory-aware skills take the memory root from the `/tdk-memory-query --status` block
+  - `/tdk-specify`, `/tdk-clarify`, `/tdk-plan`, `/tdk-consistency-check`, and `/tdk-archive` get the root, readiness, binding coverage, domains, and constitution from the Status Block instead of naming the memory path or reading memory files; a missing or invalid block reports `version-skew` and the plan memory gate takes its NOT CHECKED path
+  - `/tdk-plan` verifies the Guardian report against the Status Block root, so an external memory root works with the memory gate; persisted gate reasons and Memory Constraints show only the block's `memory_path` plus an error code, never an absolute path
+  - `/tdk-archive --ingest` prints separate review git commands for the memory root and the close-out, and relays tdk-memory's one-time confirmation for an external root
+  - Session context names the constitution and memory directory from the configured `memory.path` instead of `.specify/memory`
+- **[tdk-inception]** `/tdk-constitution` takes the memory root from the status block, so the constitution follows a configured or external memory root; it stops when tdk-memory is missing or the status is `error`, and still refuses briefs and input files outside the workspace
+- **[tdk-retro]** `/tdk-retro-propose` and `/tdk-retro-apply` resolve memory targets through the status block; domain checks use its `domains` field, and K1/K2 entries are skipped or blocked when memory is `uninitialized`, in `error`, or unavailable
+- **[tdk-utils]** Brainstorming guard, brainstorming scripts README, and the `tdk-red-team-skeptic` agent no longer name a fixed memory path
+- **[Scripts]** `memory-gate.ts report` cross-checks the memory root against the one the workspace config selects (same order as the memory runtime) and reports NOT CHECKED with an error code on a mismatch; `runGit` accepts a `timeout`
+- **[Templates]** Plan template links the constitution of the project memory root instead of a fixed path
+- **[Guides]** en/vi skills guide, workflow map, and greenfield scenario describe `memory.path`, `memory.allowExternal`, relative-path rules, write consent, harness directory permission, and the constitution following the memory root; `tdk-memory-subtree.md` records the 4.2.0 sync
+
 ## [1.129.0] - 2026-10-27
 
 ### Added

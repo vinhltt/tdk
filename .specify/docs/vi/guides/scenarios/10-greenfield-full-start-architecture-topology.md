@@ -80,7 +80,7 @@ proposed layout.
 | Step | Command | Primary output | Writes runtime config? |
 |---|---|---|---|
 | 1 | `/tdk-greenfield-start --full` | `.specify/configurations/inception/project-inception.md` | No |
-| 2 | `/tdk-constitution --init` | `.specify/memory/constitution.md`, memory index/config, Arc42 summaries, typed memory files when evidence exists | No `.specify/.specify.json` mutation |
+| 2 | `/tdk-constitution --init` | `<memory root>/constitution.md`, memory index/config, Arc42 summaries, typed memory files when evidence exists | No `.specify/.specify.json` mutation |
 | 3 | `/tdk-discovery <id> <brief>` | `<feature-dir>/discovery.md`, `discovery/problem.md`, `discovery/personas.md`, `discovery/mvp-scope.md` | No |
 | 4 | `/tdk-specify <id> <description>` | `<feature-dir>/spec.md` với `## Specification Quality Gate` | No |
 | 5 | `/tdk-clarify <id>` | Updates `<feature-dir>/spec.md` and `## Clarifications` | No |
@@ -121,11 +121,11 @@ plans, source code, tracker issues, hoặc `.specify/.specify.json`.
 
 Command này tạo hoặc update project authority:
 
-- `.specify/memory/constitution.md`
-- `.specify/memory/memory-index.md`
-- `.specify/memory/memory.yaml`
-- `.specify/memory/arc42/README.md`
-- `.specify/memory/arc42/01-introduction-and-goals.md` through
+- `<memory root>/constitution.md`
+- `<memory root>/memory-index.md`
+- `<memory root>/memory.yaml`
+- `<memory root>/arc42/README.md`
+- `<memory root>/arc42/01-introduction-and-goals.md` through
   `12-glossary.md`
 - typed memory files dưới `decisions/`, `risks-and-debt/`,
   `quality-requirements/`, `integrations/`, `operations/`, và `glossary/`

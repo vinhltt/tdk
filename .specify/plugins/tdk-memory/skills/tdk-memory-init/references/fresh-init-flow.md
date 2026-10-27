@@ -145,25 +145,26 @@ Compute SHA256 of `memory-index.md`:
 
 ```bash
 node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
-node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "memory-index.md"
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "memory-index.md" [--allow-external-root]
 ```
 
 For each domain, compute SHA256 of `domains/{domain}/domain-overview.md`:
 
 ```bash
 node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
-node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "domains/{domain}/domain-overview.md"
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "domains/{domain}/domain-overview.md" [--allow-external-root]
 ```
 
 Compute SHA256 of `memory-map.canvas`:
 
 ```bash
 node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
-node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "memory-map.canvas"
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "memory-map.canvas" [--allow-external-root]
 ```
 
 Hash `README.md` and `CHANGELOG.md` with the same command (replace the relative
-path). Merge into `memory.yaml`, preserving `templates[]` from materialization
+path). Append `--allow-external-root` to each hash call only when the contract
+granted external-root permission. Merge into `memory.yaml`, preserving `templates[]` from materialization
 and all unrelated existing records. Validate a temporary YAML candidate before
 atomic publication under the shared contract. The knowledge fields are:
 Root `CHANGELOG.md` and `memory-map.canvas` are deliberately excluded from

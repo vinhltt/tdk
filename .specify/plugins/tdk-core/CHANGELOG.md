@@ -4,6 +4,16 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.3.6] - 2026-10-27
+
+### Changed
+- Memory-aware skills (/tdk-specify, /tdk-clarify, /tdk-plan, /tdk-consistency-check, /tdk-archive) get the memory root, readiness, binding coverage, domains, and constitution from the Status Block of `/tdk-memory-query --status` instead of naming the memory path or reading memory files; a missing or invalid block reports `version-skew` and the plan memory gate takes its NOT CHECKED path
+- /tdk-plan verifies the Guardian report against the Status Block root from the project root that ran `--status`, so a memory root outside the workspace works with the memory gate
+- Persisted memory gate reasons and Memory Constraints name the memory location only as the block's `memory_path` plus an error code, never an absolute path
+- /tdk-archive ingest prints separate review git commands for the memory root and the close-out, and relays tdk-memory's one-time confirmation for a root outside the workspace
+- Session context names the constitution and memory directory from the configured `memory.path` instead of `.specify/memory`
+- Bundled `tdk-review` scope helper rebuilt with the `memory.allowExternal` config schema and the `runGit` timeout option
+
 ## [14.3.5] - 2026-10-27
 
 ### Added

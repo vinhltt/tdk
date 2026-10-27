@@ -141,6 +141,11 @@
       "description": "TDK memory settings.",
       "type": "object",
       "properties": {
+        "allowExternal": {
+          "description": "Allow memory.path to resolve outside the workspace root.",
+          "type": "boolean",
+          "default": false
+        },
         "path": {
           "description": "Memory storage path relative to the workspace root.",
           "type": "string",
@@ -148,6 +153,7 @@
         }
       },
       "default": {
+        "allowExternal": false,
         "path": ".specify/memory"
       }
     },

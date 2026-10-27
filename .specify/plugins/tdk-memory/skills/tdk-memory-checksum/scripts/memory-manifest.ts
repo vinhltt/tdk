@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
+import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
 import { constants as fsConstants, promises as fs, type Dirent, type FileHandle, type Stats } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { promisify } from "node:util";
 import { isAlias, isMap, isScalar, isSeq, parseDocument, type Node } from "yaml";
+
+const execFileAsync = promisify(execFile);
 
 const MANIFEST_VERSION = "2";
 const DEFAULT_MANIFEST_PATH = "memory.yaml";
@@ -21,12 +25,28 @@ const MAX_MANIFEST_BYTES = 1_048_576;
 const MAX_YAML_NODES = 20_000;
 const MAX_YAML_DEPTH = 32;
 const MAX_INVENTORY_ENTRIES = 100_000;
+const CONFIG_RELATIVE_PATH = [".specify", ".specify.json"];
+const DEFAULT_MEMORY_PATH = ".specify/memory";
+const FALLBACK_MEMORY_PATH = "memory";
+const CONSTITUTION_PATH = "constitution.md";
+const MAX_CONFIG_BYTES = 1_048_576;
+const MAX_INDEX_BYTES = 4_194_304;
+// Characters that could break out of a quoted shell argument or a one-line status field:
+// C0/C1 controls, line/paragraph separators, backslash, and shell metacharacters.
+const FORBIDDEN_MEMORY_PATH_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\\`$"';&|<>]/;
+// A resolved location (canonical root, workspace) is only ever placed inside double
+// quotes, so only characters that stay active there matter. A backslash is a path
+// separator on Windows and an escape elsewhere.
+const FORBIDDEN_LOCATION_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029`$"]/;
+const COVERAGE_PATTERN = /^Binding coverage: (\d+)(?: of |\/)(\d+) typed files[ \t\r]*$/m;
+const DOMAIN_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 type Invocation =
   | { command: "hash"; memoryRootArgument: string; relativePath: string; allowExternalRoot: boolean }
-  | { command: "validate"; memoryRootArgument: string; manifestRelativePath: string; allowExternalRoot: boolean };
+  | { command: "validate"; memoryRootArgument: string; manifestRelativePath: string; allowExternalRoot: boolean }
+  | { command: "resolve"; memoryRootArgument: string | undefined; allowExternalRoot: boolean };
 
 type FileReceipt = {
   path: string;
@@ -64,7 +84,8 @@ function usage(): never {
   fail(
     "Usage:\n" +
       "  node memory-manifest.cjs hash <memoryRoot> <relPath> [--allow-external-root]\n" +
-      "  node memory-manifest.cjs validate <memoryRoot> [--manifest <relativePath>] [--allow-external-root]",
+      "  node memory-manifest.cjs validate <memoryRoot> [--manifest <relativePath>] [--allow-external-root]\n" +
+      "  node memory-manifest.cjs resolve [--memory-root <path>] [--allow-external-root]",
   );
 }
 
@@ -123,6 +144,29 @@ function parseInvocation(argumentsAfterNode: string[]): Invocation {
     return { command, memoryRootArgument, manifestRelativePath, allowExternalRoot };
   }
 
+  if (command === "resolve") {
+    let allowExternalRoot = false;
+    let memoryRootArgument: string | undefined;
+
+    for (let index = 0; index < rest.length; index += 1) {
+      const argument = rest[index];
+      if (argument === "--allow-external-root") {
+        if (allowExternalRoot) fail("--allow-external-root may only be provided once");
+        allowExternalRoot = true;
+        continue;
+      }
+      if (argument === "--memory-root") {
+        if (memoryRootArgument !== undefined || index + 1 >= rest.length || rest[index + 1].startsWith("--")) usage();
+        memoryRootArgument = rest[index + 1];
+        index += 1;
+        continue;
+      }
+      usage();
+    }
+
+    return { command, memoryRootArgument, allowExternalRoot };
+  }
+
   usage();
 }
 
@@ -165,9 +209,13 @@ async function realpathFromNearestExisting(inputPath: string): Promise<string> {
   }
 }
 
-function requireContained(parentPath: string, childPath: string, subject: string): void {
+function isContained(parentPath: string, childPath: string): boolean {
   const relation = relative(parentPath, childPath);
-  if (relation === "" || (!relation.startsWith(`..${sep}`) && relation !== ".." && !isAbsolute(relation))) return;
+  return relation === "" || (!relation.startsWith(`..${sep}`) && relation !== ".." && !isAbsolute(relation));
+}
+
+function requireContained(parentPath: string, childPath: string, subject: string): void {
+  if (isContained(parentPath, childPath)) return;
   fail(`${subject} escapes containment: ${childPath} is not within ${parentPath}`);
 }
 
@@ -607,17 +655,319 @@ async function hash(memoryRootArgument: string, relativePath: string, allowExter
   console.log(await hashRegularFile(target.path));
 }
 
+type StatusReport = {
+  status: "ready" | "uninitialized" | "error";
+  root: string | null;
+  memory_path: string;
+  external: boolean;
+  reader: "file";
+  reader_fallback: "none";
+  binding_coverage: string;
+  domains: string;
+  constitution: "present" | "absent";
+  warnings: string[];
+  error: string | null;
+  // Remediation selector for `external-not-allowed`; null for every other outcome.
+  hint: string | null;
+};
+
+type RawConfig =
+  | { invalid: true; displayPath: string }
+  | { invalid: false; displayPath: string; memoryPath: string | undefined; allowExternal: boolean; readerBackend: string | undefined };
+
+export function hasForbiddenLocationCharacter(value: string, platform: string = process.platform): boolean {
+  return FORBIDDEN_LOCATION_CHARACTERS.test(value) || (platform !== "win32" && value.includes("\\"));
+}
+
+function displayMemoryPath(value: string): string {
+  return value.replace(new RegExp(FORBIDDEN_MEMORY_PATH_CHARACTERS.source, "g"), "?");
+}
+
+// Reads `.specify/.specify.json` without schema coupling: only the keys this
+// runtime needs are inspected, and any structural surprise is `config-invalid`.
+async function readRawConfig(workspaceRoot: string): Promise<RawConfig> {
+  const configPath = join(workspaceRoot, ...CONFIG_RELATIVE_PATH);
+  const info = await lstatOptional(configPath);
+  const absent: RawConfig = {
+    invalid: false,
+    displayPath: DEFAULT_MEMORY_PATH,
+    memoryPath: undefined,
+    allowExternal: false,
+    readerBackend: undefined,
+  };
+  if (info === undefined) return absent;
+
+  const invalid: RawConfig = { invalid: true, displayPath: DEFAULT_MEMORY_PATH };
+  if (!info.isFile() || info.size > MAX_CONFIG_BYTES) return invalid;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(await fs.readFile(configPath, "utf8"));
+  } catch {
+    return invalid;
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return invalid;
+
+  const memory = (parsed as Record<string, unknown>).memory;
+  if (memory === undefined) return absent;
+  if (typeof memory !== "object" || memory === null || Array.isArray(memory)) return invalid;
+
+  const { path, allowExternal, reader } = memory as Record<string, unknown>;
+  let memoryPath: string | undefined;
+  let displayPath = DEFAULT_MEMORY_PATH;
+  if (path !== undefined) {
+    if (typeof path !== "string" || path.trim().length === 0) return invalid;
+    displayPath = displayMemoryPath(path);
+    if (FORBIDDEN_MEMORY_PATH_CHARACTERS.test(path)) return { invalid: true, displayPath };
+    memoryPath = path;
+  }
+  if (allowExternal !== undefined && typeof allowExternal !== "boolean") return { invalid: true, displayPath };
+
+  let readerBackend: string | undefined;
+  if (reader !== undefined) {
+    if (typeof reader !== "object" || reader === null || Array.isArray(reader)) return { invalid: true, displayPath };
+    const backend = (reader as Record<string, unknown>).backend;
+    if (backend !== undefined) {
+      if (typeof backend !== "string") return { invalid: true, displayPath };
+      readerBackend = backend;
+    }
+  }
+
+  return { invalid: false, displayPath, memoryPath, allowExternal: allowExternal === true, readerBackend };
+}
+
+// A linked worktree shares the repository's main worktree; a plain checkout or a
+// submodule (whose first listed worktree is itself) keeps its own root.
+async function mainWorktreeRoot(workspaceRoot: string): Promise<string> {
+  const gitEntry = await lstatOptional(join(workspaceRoot, ".git"));
+  if (gitEntry === undefined || !gitEntry.isFile()) return workspaceRoot;
+
+  try {
+    const { stdout } = await execFileAsync("git", ["-C", workspaceRoot, "worktree", "list", "--porcelain"], {
+      encoding: "utf8",
+      timeout: 10_000,
+    });
+    const lines = (stdout.split(/\r?\n\r?\n/)[0] ?? "").split(/\r?\n/);
+    if (lines.includes("bare")) return workspaceRoot;
+    const pathLine = lines.find((line) => line.startsWith("worktree "));
+    if (pathLine === undefined) return workspaceRoot;
+    return await fs.realpath(pathLine.slice("worktree ".length));
+  } catch {
+    return workspaceRoot;
+  }
+}
+
+// Relative `memory.path` values that leave the main worktree (for example
+// `../team-memory`) resolve from the main worktree so every worktree of a
+// repository reaches the same root. Paths that stay inside the repository keep
+// resolving in the current worktree, where the branch's own memory lives.
+async function configuredRootPath(workspaceRoot: string, memoryPath: string): Promise<string> {
+  if (isAbsolute(memoryPath)) return resolve(memoryPath);
+  const base = await mainWorktreeRoot(workspaceRoot);
+  const viaMainWorktree = resolve(base, memoryPath);
+  return isContained(base, viaMainWorktree) ? resolve(workspaceRoot, memoryPath) : viaMainWorktree;
+}
+
+async function isDirectory(candidate: string): Promise<boolean> {
+  try {
+    return (await fs.stat(candidate)).isDirectory();
+  } catch (error) {
+    if (errorCode(error) === "ENOENT" || errorCode(error) === "ENOTDIR") return false;
+    fail(`cannot inspect ${candidate}: ${errorMessage(error)}`);
+  }
+}
+
+async function readContainedText(memoryRoot: string, relativePath: string, maxBytes: number): Promise<string | undefined> {
+  const target = await inspectContainedTarget(memoryRoot, relativePath, relativePath);
+  if (target.kind !== "file") return undefined;
+  let handle: FileHandle | undefined;
+  try {
+    handle = await fs.open(target.path, fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0));
+    const info = await handle.stat();
+    if (!info.isFile() || info.size > maxBytes) return undefined;
+    return await handle.readFile({ encoding: "utf8" });
+  } catch {
+    return undefined;
+  } finally {
+    await handle?.close();
+  }
+}
+
+function parseBindingCoverage(indexSource: string): string {
+  const match = COVERAGE_PATTERN.exec(indexSource);
+  if (match === null) return "unknown";
+  const covered = Number(match[1]);
+  const total = Number(match[2]);
+  if (!Number.isSafeInteger(covered) || !Number.isSafeInteger(total) || covered > total) return "unknown";
+  return `${covered} of ${total} typed files`;
+}
+
+function parseDomainMap(indexSource: string): string {
+  const lines = indexSource.split(/\r?\n/);
+  const headingIndex = lines.findIndex((line) => line.trim() === "## Domain Map");
+  if (headingIndex < 0) return "unknown";
+
+  const domains: string[] = [];
+  let rowCount = 0;
+  let inRows = false;
+  for (const line of lines.slice(headingIndex + 1)) {
+    if (line.startsWith("#")) break;
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("|")) continue;
+    if (!inRows) {
+      // The table header precedes the `|---|---|` separator; rows follow it.
+      inRows = /^\|[\s:|-]+$/.test(trimmed) && trimmed.includes("-");
+      continue;
+    }
+    const name = (trimmed.slice(1).split("|")[0] ?? "").trim().replace(/^`|`$/g, "");
+    if (name.startsWith("_(")) continue; // empty-table placeholder row
+    rowCount += 1;
+    if (DOMAIN_NAME_PATTERN.test(name) && !domains.includes(name)) domains.push(name);
+  }
+  if (domains.length > 0) return domains.join(", ");
+  // Rows exist but none names a domain: the table is not understood, so do not claim "none".
+  return rowCount === 0 ? "none" : "unknown";
+}
+
+async function isRegularFileBelow(root: string, relativePath: string): Promise<boolean> {
+  try {
+    return (await inspectContainedTarget(root, relativePath, relativePath)).kind === "file";
+  } catch (error) {
+    if (error instanceof CliError) return false;
+    throw error;
+  }
+}
+
+async function resolveStatus(explicitRoot: string | undefined, allowFlag: boolean): Promise<StatusReport> {
+  const workspaceRoot = await discoverWorkspaceRoot();
+  const config = await readRawConfig(workspaceRoot);
+  const configuredPath = config.invalid ? undefined : config.memoryPath;
+  const warnings: string[] = configuredPath !== undefined && isAbsolute(configuredPath) ? ["absolute-path"] : [];
+  const base: StatusReport = {
+    status: "error",
+    root: null,
+    memory_path: config.displayPath,
+    external: false,
+    reader: "file",
+    reader_fallback: "none",
+    binding_coverage: "n/a",
+    domains: "n/a",
+    constitution: "absent",
+    warnings,
+    error: null,
+    hint: null,
+  };
+  const failure = (code: string, extra: Partial<StatusReport> = {}): StatusReport => ({ ...base, ...extra, error: code });
+
+  if (config.invalid) return failure("config-invalid");
+  if (config.readerBackend !== undefined && config.readerBackend !== "file") return failure("unsupported-reader");
+  if (explicitRoot !== undefined && explicitRoot.trim().length === 0) return failure("config-invalid");
+
+  let lexicalRoot: string;
+  let freshInitRoot = false;
+  if (explicitRoot !== undefined) {
+    lexicalRoot = resolve(workspaceRoot, explicitRoot);
+  } else if (configuredPath !== undefined) {
+    lexicalRoot = await configuredRootPath(workspaceRoot, configuredPath);
+  } else {
+    const existing: string[] = [];
+    for (const candidate of [DEFAULT_MEMORY_PATH, FALLBACK_MEMORY_PATH]) {
+      const candidatePath = join(workspaceRoot, ...candidate.split("/"));
+      if (await isDirectory(candidatePath)) existing.push(candidatePath);
+    }
+    if (existing.length > 1) return failure("ambiguous-default");
+    if (existing.length === 1) {
+      lexicalRoot = existing[0];
+    } else {
+      freshInitRoot = true;
+      const specifyPresent = (await lstatOptional(join(workspaceRoot, ".specify"))) !== undefined;
+      lexicalRoot = join(workspaceRoot, ...(specifyPresent ? DEFAULT_MEMORY_PATH : FALLBACK_MEMORY_PATH).split("/"));
+    }
+  }
+
+  const canonicalRoot = await realpathFromNearestExisting(lexicalRoot);
+  // `memory.path` was screened above with the strict set; the resolved locations are
+  // later placed inside double quotes in shell commands, so they get the narrower
+  // location set (a symlink target, directory name, or explicit root can carry them).
+  if (hasForbiddenLocationCharacter(canonicalRoot) || hasForbiddenLocationCharacter(workspaceRoot)) {
+    return failure("containment");
+  }
+  const lexicallyInside = isContained(workspaceRoot, lexicalRoot);
+  const external = !(lexicallyInside && isContained(workspaceRoot, canonicalRoot));
+  // A root equal to, or above, the workspace (including the filesystem root) is never a memory root.
+  if (isContained(canonicalRoot, workspaceRoot)) return failure("containment", { external });
+
+  // External roots need the per-invocation flag, or `allowExternal: true` for the
+  // root that `memory.path` itself names (never for an unrelated explicit root).
+  if (external && !allowFlag) {
+    let permittedByConfig = false;
+    if (config.allowExternal && configuredPath !== undefined) {
+      const configCanonical = await realpathFromNearestExisting(await configuredRootPath(workspaceRoot, configuredPath));
+      permittedByConfig = configCanonical === canonicalRoot;
+    }
+    if (!permittedByConfig) {
+      if (lexicallyInside) return failure("containment", { external });
+      const hint = config.allowExternal && configuredPath !== undefined ? "explicit-root-differs" : "enable-allow-external";
+      return failure("external-not-allowed", { external, hint });
+    }
+  }
+
+  // Permission checks passed: report the session root even when it does not exist yet
+  // so initialization can create it.
+  if (!freshInitRoot && !(await isDirectory(lexicalRoot))) {
+    return failure("root-missing", { root: canonicalRoot, external });
+  }
+
+  const result: StatusReport = { ...base, root: canonicalRoot, external };
+  const legacyRoot = await realpathFromNearestExisting(join(workspaceRoot, ...DEFAULT_MEMORY_PATH.split("/")));
+  if (await isRegularFileBelow(canonicalRoot, CONSTITUTION_PATH)) result.constitution = "present";
+  if (canonicalRoot !== legacyRoot && (await isRegularFileBelow(legacyRoot, CONSTITUTION_PATH))) {
+    result.warnings = [...warnings, "legacy-constitution"];
+  }
+
+  if (freshInitRoot) return { ...result, status: "uninitialized" };
+
+  let hasIndex: boolean;
+  let hasManifest: boolean;
+  try {
+    hasIndex = (await inspectContainedTarget(canonicalRoot, INDEX_PATH, "memory index")).kind === "file";
+    hasManifest = (await inspectContainedTarget(canonicalRoot, DEFAULT_MANIFEST_PATH, "memory manifest")).kind === "file";
+  } catch (error) {
+    if (error instanceof CliError) return failure("containment", { external, warnings: result.warnings });
+    throw error;
+  }
+  if (!hasIndex && !hasManifest) return { ...result, status: "uninitialized" };
+  if (hasIndex !== hasManifest) return failure("memory-incomplete", { root: canonicalRoot, external, warnings: result.warnings });
+
+  const indexSource = await readContainedText(canonicalRoot, INDEX_PATH, MAX_INDEX_BYTES);
+  return {
+    ...result,
+    status: "ready",
+    binding_coverage: indexSource === undefined ? "unknown" : parseBindingCoverage(indexSource),
+    domains: indexSource === undefined ? "unknown" : parseDomainMap(indexSource),
+  };
+}
+
+async function resolveCommand(explicitRoot: string | undefined, allowFlag: boolean): Promise<void> {
+  console.log(JSON.stringify(await resolveStatus(explicitRoot, allowFlag), null, 2));
+}
+
 async function main(): Promise<void> {
   if (Number(process.versions.node.split(".")[0]) < 18) fail("Node.js >=18 is required");
   const invocation = parseInvocation(process.argv.slice(2));
   if (invocation.command === "hash") {
     await hash(invocation.memoryRootArgument, invocation.relativePath, invocation.allowExternalRoot);
-  } else {
+  } else if (invocation.command === "validate") {
     await validate(invocation.memoryRootArgument, invocation.manifestRelativePath, invocation.allowExternalRoot);
+  } else {
+    await resolveCommand(invocation.memoryRootArgument, invocation.allowExternalRoot);
   }
 }
 
-void main().catch((error: unknown) => {
-  console.error(`ERROR: ${errorMessage(error)}`);
-  process.exitCode = 1;
-});
+// Importing the bundle (tests of the pure helpers) must not run the CLI.
+if (typeof require !== "undefined" && require.main === module) {
+  void main().catch((error: unknown) => {
+    console.error(`ERROR: ${errorMessage(error)}`);
+    process.exitCode = 1;
+  });
+}

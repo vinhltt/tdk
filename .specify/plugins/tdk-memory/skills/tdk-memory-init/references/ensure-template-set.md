@@ -7,8 +7,14 @@ domains, calls force-reinit, deletes domains, or changes existing knowledge.
 
 ## Preflight
 
-1. Resolve the root, canonicalize every destination, probe Node.js >=18, and run
-   YAML preflight before writing. STOP on malformed existing memory.yaml.
+1. Run `resolve` (contract section 1; `root-missing` with a root is acceptable here),
+   canonicalize every destination, probe Node.js >=18, and run
+   YAML preflight before writing. STOP on malformed existing memory.yaml. On a root
+   outside the workspace that has no `memory.yaml`, this run is an initialization:
+   confirm once with `AskUserQuestion` (state `memory.path` as configured and the
+   canonical root) before the first write, and STOP without writing when the
+   question cannot be asked. An already initialized external root follows the
+   once-per-session write consent in the contract.
 2. Locate exactly twenty `.md.tpl` seeds in this skill's
    `${CLAUDE_SKILL_DIR}/references/templates/memory/`. Their installation directory
    is a trusted read-only asset source, not a memory destination. Never read a
@@ -27,7 +33,8 @@ domains, calls force-reinit, deletes domains, or changes existing knowledge.
 ## Three-way state table
 
 Compute SHA256 from actual bytes using Node `node:crypto` (for the trusted seed)
-and the shipped `memory-manifest.cjs hash` command (for memory destinations).
+and the shipped `memory-manifest.cjs hash` command (for memory destinations;
+forward `--allow-external-root` when the contract granted external-root permission).
 The `hash` subcommand prints plain 64-hex text, not JSON. Only `validate` prints
 JSON. Do not feed a hash result into a JSON parser.
 `recorded` is the seed hash last installed, not permission to overwrite user edits.

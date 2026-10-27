@@ -20,7 +20,8 @@ containment checks. On failure STOP without moving or editing anything.
 3. **Regenerate memory-index.md**: follow `regenerate-memory-index-flow.md`
 4. **Update memory.yaml**: entry reflects new path in `_deprecated/`; preserve
    `templates[]` and unrelated entries. Hash actual deprecated bytes and the
-   regenerated index, then validate a temporary candidate before publication.
+   regenerated index (forwarding `--allow-external-root` whenever external-root
+   permission exists), then validate a temporary candidate before publication.
 
 ---
 
