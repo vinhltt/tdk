@@ -1,0 +1,64 @@
+name: code-quality
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: code-quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  codecheck:
+    name: codecheck-${{ matrix.package }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: scripts
+            directory: .specify/scripts/ts
+          - package: setup
+            directory: packages/tdk-setup
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: .bun-version
+      - name: Install scripts dependencies
+        working-directory: .specify/scripts/ts
+        run: bun install --frozen-lockfile
+      - name: Install setup dependencies
+        working-directory: packages/tdk-setup
+        run: bun install --frozen-lockfile
+      - name: Install handoff source-test dependencies
+        working-directory: .specify/plugins/tdk-utils/skills/tdk-handoff/scripts
+        run: bun install --frozen-lockfile
+      - name: Fetch pinned memory upstream object
+        if: matrix.package == 'scripts'
+        run: |
+          commit="$(bun -e '
+            import { checkMemorySubtreePin, formatMemorySubtreeGuardResult } from "./.specify/scripts/ts/src/commands/util/check-memory-subtree.ts";
+            const result = checkMemorySubtreePin({ projectRoot: process.cwd() });
+            if (!result.commit || result.diagnostics.some(({ kind }) => kind !== "missing-object")) {
+              throw new Error(formatMemorySubtreeGuardResult(result));
+            }
+            console.log(result.commit);
+          ')"
+          git fetch --no-tags https://github.com/vinhltt/tdk-memory "$commit"
+      - name: Typecheck package source
+        working-directory: ${{ matrix.directory }}
+        run: bun run typecheck
+      - name: Run full package test suite
+        working-directory: ${{ matrix.directory }}
+        run: bun run test
