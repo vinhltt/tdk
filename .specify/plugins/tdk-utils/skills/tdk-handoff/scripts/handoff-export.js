@@ -13057,7 +13057,17 @@ var SpecifyConfigSchema = exports_external.object({
   }).optional().describe("Documentation settings."),
   memory: exports_external.object({
     path: exports_external.string().default(".specify/memory").describe("Memory storage path relative to the workspace root."),
-    allowExternal: exports_external.boolean().default(false).describe("Allow memory.path to resolve outside the workspace root.")
+    allowExternal: exports_external.boolean().default(false).describe("Allow memory.path to resolve outside the workspace root."),
+    reader: exports_external.discriminatedUnion("backend", [
+      exports_external.object({
+        backend: exports_external.literal("file").describe("Read memory from files only.")
+      }),
+      exports_external.object({
+        backend: exports_external.literal("obsidian-cli").describe("Nominate free-text memory candidates with the Obsidian CLI."),
+        vault: exports_external.string().regex(/^[A-Za-z0-9 ._-]{1,64}$/).describe("Obsidian vault id or name whose root is the memory root."),
+        onUnavailable: exports_external.enum(["ask", "fallback", "fail"]).default("ask").describe("What to do when the Obsidian CLI is unavailable.")
+      })
+    ]).optional().catch(undefined).describe("Optional memory read backend. Absent means file.")
   }).default({ path: ".specify/memory", allowExternal: false }).describe("TDK memory settings."),
   git: exports_external.object({
     mainBranch: exports_external.string().default("master").describe("Main branch name used by TDK workflows."),

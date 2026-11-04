@@ -322,7 +322,7 @@ Follow `references/regenerate-memory-index-flow.md`.
 
 ## Step 7: Update memory.yaml + report
 
-1. Recompute SHA256:
+1. Recompute SHA256, after the note path check (root contract, section 1):
 ```bash
 node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&
 node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "{relative-file-path}" [--allow-external-root]

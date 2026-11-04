@@ -6,7 +6,7 @@ compatibility: "Requires a spec whose derived status is done or cancelled and a 
 user-invocable: true
 license: MIT
 metadata:
-  version: "14.3.6"
+  version: "14.3.7"
   category: "Lifecycle"
   requires:
     - tdk-validate-task-id, tdk-load-project-context (tdk-utils)

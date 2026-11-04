@@ -111,10 +111,51 @@ describe('config.test.ts', () => {
   it('C-05b2: memory.allowExternal is opt-in and unknown memory keys are stripped', () => {
     const allowed = SpecifyConfigSchema.parse({
       name: 'external-memory',
-      memory: { path: '../shared-memory', allowExternal: true, reader: 'obsidian-cli' },
+      memory: { path: '../shared-memory', allowExternal: true, somethingElse: 'x' },
     });
     expect(allowed.memory).toEqual({ path: '../shared-memory', allowExternal: true });
     expect(SpecifyConfigSchema.safeParse({ name: 'bad', memory: { allowExternal: 'yes' } }).success).toBe(false);
+  });
+
+  it('C-05b3: memory.reader keeps a valid backend and defaults onUnavailable to ask', () => {
+    const memoryOf = (reader: unknown) => SpecifyConfigSchema.parse({ name: 'reader', memory: { reader } }).memory;
+
+    expect(memoryOf({ backend: 'file' })?.reader).toEqual({ backend: 'file' });
+    expect(memoryOf({ backend: 'obsidian-cli', vault: 'Team Vault_1.0-a' })?.reader).toEqual({
+      backend: 'obsidian-cli',
+      vault: 'Team Vault_1.0-a',
+      onUnavailable: 'ask',
+    });
+    for (const onUnavailable of ['ask', 'fallback', 'fail']) {
+      expect(memoryOf({ backend: 'obsidian-cli', vault: 'v', onUnavailable })?.reader).toEqual({
+        backend: 'obsidian-cli',
+        vault: 'v',
+        onUnavailable,
+      });
+    }
+  });
+
+  it('C-05b4: a malformed memory.reader parses as absent and never fails the config', () => {
+    const malformed = [
+      'obsidian-cli',
+      5,
+      null,
+      ['file'],
+      {},
+      { backend: 'other-reader', vault: 'v' },
+      { backend: 'obsidian-cli' },
+      { backend: 'obsidian-cli', vault: 7 },
+      { backend: 'obsidian-cli', vault: '' },
+      { backend: 'obsidian-cli', vault: 'x'.repeat(65) },
+      { backend: 'obsidian-cli', vault: 'a"b' },
+      { backend: 'obsidian-cli', vault: 'v', onUnavailable: 'never' },
+    ];
+    for (const reader of malformed) {
+      const parsed = SpecifyConfigSchema.safeParse({ name: 'reader', memory: { path: 'memory', reader } });
+      expect(parsed.success).toBe(true);
+      expect(parsed.data?.memory?.reader).toBeUndefined();
+      expect(parsed.data?.memory?.path).toBe('memory');
+    }
   });
 
   it('C-05c: parseConfig accepts current TDK config with rules.path', () => {

@@ -208,7 +208,7 @@ async function evidenceExists(citation: string, memoryRoot: string): Promise<boo
   const path = await realpath(candidate);
   if (!contained(root, path)) return false;
   const parts = [...relative(root, candidate).split(sep), ...relative(root, path).split(sep)];
-  if (parts.some(part => ['_templates', '_deprecated', 'arc42', 'memory-architect', 'assets'].includes(part))) return false;
+  if (parts.some(part => ['_templates', '_deprecated', 'arc42', 'memory-architect', 'assets', '.obsidian', '.trash'].includes(part))) return false;
   const text = await readFile(path, 'utf8');
   const match = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/.exec(text);
   if (!match) return false;
@@ -235,7 +235,7 @@ async function evidenceExists(citation: string, memoryRoot: string): Promise<boo
       if (line.trimEnd().endsWith(` ${anchor}`) || line.trim() === anchor) return true;
     } else {
       const heading = /^ {0,3}#{1,6}[ \t]+(.+?)[ \t]*#*$/.exec(line);
-      if (heading && heading[1]!.toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').trim().replace(/\s/g, '-') === anchor) return true;
+      if (heading && heading[1]!.toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, '').trim().replace(/\s/g, '-') === anchor.toLowerCase()) return true;
     }
   }
   return false;

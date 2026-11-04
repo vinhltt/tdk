@@ -203,7 +203,7 @@ Malformed manifests stop ordinary writers. TDK Guardian failures persist as NOT
 CHECKED and block implementation until validation succeeds or the user explicitly
 authorizes an unchecked run. The memory root comes from one place: TDK
 skills run `/tdk-memory-query --status` and use the Status Block it prints
-(`root`, `memory_path`, `external`, `domains`, `constitution`); they never read
+(`root`, `memory_path`, `external`, `reader`, `domains`, `constitution`); they never read
 `memory.path` or the index themselves. `/tdk-constitution` follows the same root,
 so the constitution lives at `<memory root>/constitution.md`.
 
@@ -247,6 +247,33 @@ Configure it in `.specify/.specify.json`:
   directory yourself with `git mv` (or copy it to the external repo), including
   `constitution.md`, then set `memory.path`. A constitution left in `.specify/memory/`
   after the move shows a `legacy-constitution` warning.
+
+#### Optional Obsidian CLI reader
+
+Memory is read from files by default. To let a running Obsidian app nominate notes
+for free-text questions, open the memory root as a vault and add `memory.reader`:
+
+```json
+{ "memory": { "reader": { "backend": "obsidian-cli", "vault": "<vault id>", "onUnavailable": "ask" } } }
+```
+
+- **Scope**: the CLI only nominates paths for natural-language queries and free-text
+  Guardian evidence. Writes, checksum, exact identities, typed data models, and
+  evidence checks stay on files, and every path is verified on disk.
+- **`vault`**: prefer the id from Obsidian's `obsidian.json`, because names can
+  collide. The vault root must equal the memory root, one vault per project;
+  otherwise the status reports `vault-mismatch`.
+- **Side effect**: `--status` probes the CLI, which can launch the Obsidian app.
+- **`onUnavailable`** (`not-installed`, `not-running`, `vault-mismatch`): `ask`
+  (default) asks whether to read files, and a run that cannot ask falls back with a
+  warning; `fallback` reads files with a warning; `fail` reports `status: error`.
+- **Malformed `memory.reader`**: never breaks a TDK command. It parses as absent, the
+  status shows `reader-config-invalid`, and memory is read from files.
+- **Guardian output**: skills pass `reader` to `tdk-memory-agent` only when it is not
+  `file`. The report then shows `reader: obsidian-cli`, or
+  `reader: obsidian-cli (file nomination)` when a query fell back to files.
+- **Git**: in the memory repository, ignore `.obsidian/workspace*.json` and `.trash/`.
+  Both directories stay out of every memory inventory, whatever the reader.
 
 ### Guide And Research Utilities
 

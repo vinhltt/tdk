@@ -1,7 +1,8 @@
 # Memory Index Template
 
 Use this template when generating `memory-index.md`.
-Never include `_templates/**` or `_deprecated/**` in active tables or either
+Never include `_templates/**`, `_deprecated/**`, `.obsidian/**`, or `.trash/**` in
+active tables or either
 number of `Binding coverage`; template receipts belong only in the manifest.
 
 ---

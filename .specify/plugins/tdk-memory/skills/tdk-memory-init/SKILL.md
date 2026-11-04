@@ -2,7 +2,7 @@
 name: tdk-memory-init
 description: "Initialize a standalone project memory knowledge base, scaffold confirmed domains, and maintain memory-index.md and memory.yaml checksums. Use for 'initialize memory', 'set up project memory', 'create domain structure', or 'tdk-memory-init'. --ensure-templates materializes owned templates without an interview or domain reset."
 metadata: 
-  version: 4.2.0
+  version: 4.3.0
   category: "Context & Memory"
   requires: []
   input_format: "Natural language command with optional flags"

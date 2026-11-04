@@ -203,7 +203,7 @@ Manifest lỗi chặn writer trước mutation. Guardian lỗi được lưu là
 và chặn implement cho tới khi xác minh được hoặc user cho phép chạy không kiểm
 tra memory. Memory root chỉ có một nguồn: skill TDK chạy
 `/tdk-memory-query --status` và dùng Status Block được in ra (`root`, `memory_path`,
-`external`, `domains`, `constitution`); chúng không tự đọc `memory.path` hay index.
+`external`, `reader`, `domains`, `constitution`); chúng không tự đọc `memory.path` hay index.
 `/tdk-constitution` đi theo cùng root, nên constitution nằm ở
 `<memory root>/constitution.md`.
 
@@ -241,6 +241,33 @@ Cấu hình trong `.specify/.specify.json`:
 - **Chuyển memory sẵn có**: không có auto-migrate. Tự chuyển thư mục bằng `git mv` (hoặc
   copy sang repo external), gồm cả `constitution.md`, rồi đặt `memory.path`. Constitution
   còn ở `.specify/memory/` sau khi chuyển sẽ hiện cảnh báo `legacy-constitution`.
+
+#### Obsidian CLI reader (tùy chọn)
+
+Mặc định memory được đọc từ file. Để app Obsidian đang chạy nominate note cho câu hỏi
+dạng free-text, hãy mở memory root thành vault và thêm `memory.reader`:
+
+```json
+{ "memory": { "reader": { "backend": "obsidian-cli", "vault": "<vault id>", "onUnavailable": "ask" } } }
+```
+
+- **Phạm vi**: CLI chỉ nominate path cho query ngôn ngữ tự nhiên và evidence free-text
+  của Guardian. Ghi, checksum, định danh chính xác, data model theo type và kiểm tra
+  evidence vẫn đi qua file, và mọi path đều được xác minh trên đĩa.
+- **`vault`**: nên dùng id trong `obsidian.json` của Obsidian vì tên có thể trùng. Vault
+  root phải trùng memory root, mỗi project một vault; nếu không status báo
+  `vault-mismatch`.
+- **Side effect**: `--status` probe CLI, việc này có thể tự mở app Obsidian.
+- **`onUnavailable`** (`not-installed`, `not-running`, `vault-mismatch`): `ask` (mặc
+  định) hỏi có đọc file không, và lần chạy không hỏi được thì fallback kèm warning;
+  `fallback` đọc file kèm warning; `fail` báo `status: error`.
+- **`memory.reader` sai**: không làm lỗi lệnh TDK nào. Giá trị này được coi như không
+  có, status hiện `reader-config-invalid`, và memory được đọc từ file.
+- **Output Guardian**: skill chỉ truyền `reader` cho `tdk-memory-agent` khi khác `file`.
+  Report khi đó ghi `reader: obsidian-cli`, hoặc
+  `reader: obsidian-cli (file nomination)` khi có query fallback về file.
+- **Git**: trong repo memory, ignore `.obsidian/workspace*.json` và `.trash/`. Hai thư
+  mục này luôn nằm ngoài inventory memory, dù dùng reader nào.
 
 ### Guide And Research Utilities
 

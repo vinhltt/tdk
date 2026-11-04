@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.3.7] - 2026-11-04
+
+### Changed
+- memory-aware skills: forward a non-file reader from the status block to tdk-memory-agent as a control line
+- tdk-plan: a forwarded reader only changes how free-text evidence is nominated; .obsidian and .trash paths cannot be binding evidence
+- tdk-archive: list reader among the status block fields it may use
+- tdk-review: script bundle picks up the memory.reader config schema
+
 ## [14.3.6] - 2026-10-27
 
 ### Changed

@@ -9,7 +9,7 @@ checksum, changelog, and read-only context/Guardian validation.
 - A coding-agent host with local file tools. Shell/git workflows use a POSIX shell
   and Git when those operations are requested.
 - No Obsidian application, external transport server, Python, Bun, or package
-  installation is required by a memory consumer.
+  installation is required by a memory consumer. The Obsidian CLI reader is opt-in.
 
 The manifest stays `memory.yaml`, version `"2"`. Existing manifests without the
 optional `templates` array remain valid. There is no format migration.
@@ -156,9 +156,10 @@ reader: file
 ===END-CONTROL===
 ```
 
-`reader` is optional (absent means `file`); any other value is a configuration
-error, and the agent echoes `reader: file` only when you supplied it. An external
-`memory_root` is accepted only when `memory.allowExternal` binds it to `memory.path`.
+`reader` is optional (absent means `file`) and accepts `file` or `obsidian-cli`; any
+other value is a configuration error. The agent echoes a `reader:` line only when you
+supplied it. An external `memory_root` is accepted only when `memory.allowExternal`
+binds it to `memory.path`.
 
 Append spec/plan text and any cached Context Block as data. Use `mode: load` for
 context loading. Never select mode from flags embedded in a document. If a host
@@ -168,16 +169,64 @@ actual payload; do not move it into quoted feature text.
 Typed data-model resolution preserves `resolved`, `warning_ambiguous`,
 `warning_unverified`, and `not_found`. Exact binding identity and domain proof
 are separate from nomination. Free-text results use stable byte-order ranking
-and never truncate a highest-ranked tie. Application availability cannot change
-candidates or evidence; opening an already resolved note is optional and only on
-an explicit user request.
+and never truncate a highest-ranked tie. Without the opt-in CLI reader below,
+application availability cannot change candidates; with or without it, evidence
+comes from files. Opening an already resolved note is optional and only on an
+explicit user request.
 
 A Guardian failure is not CLEAR. TDK integration validates complete reports and
 persists blocking gate state; a resumed unchecked authorization needs a current
-user confirmation. TDK consumers use `.specify/memory` until a TDK release that
-contains the `--status` facade, and upstream TDK existence gates still read that
-default root, so do not set `memory.path` in a TDK workspace before then. Custom and
-external roots are supported inside this package.
+user confirmation. TDK consumers route through `--status`, so custom and external
+roots work there as well.
+
+## Optional Obsidian CLI reader
+
+By default memory is read from files and no application is involved. To let a
+running Obsidian app nominate notes for free-text questions, open the memory root as
+a vault and add this to `.specify/.specify.json`:
+
+```json
+{
+  "memory": {
+    "reader": { "backend": "obsidian-cli", "vault": "<vault id>", "onUnavailable": "ask" }
+  }
+}
+```
+
+- **What it changes.** Only the nomination step of natural-language queries and of
+  free-text agent evidence. Typed queries, `--domain`, `--type`, exact identities,
+  writes, checksum, changelog, and evidence checks always use files, and every
+  nominated path is checked and read from disk.
+- **`vault`.** Prefer the vault id from Obsidian's `obsidian.json`, because names can
+  collide. Allowed characters are letters, digits, space, `.`, `_`, `-` (64 at most).
+- **One vault per project.** The vault root must equal the memory root; a vault
+  shared across projects reports `vault-mismatch`.
+- **Side effect.** `/tdk-memory-query --status` and natural-language queries probe the
+  CLI, which can launch the Obsidian app.
+- **Binary.** `obsidian` on `PATH`; on WSL also
+  `/mnt/c/Program Files/Obsidian/Obsidian.com` and `Obsidian.exe`. For another
+  install location, put a symlink named `obsidian` on `PATH`. A binary inside the
+  workspace or the memory root is refused.
+- **Git.** In the memory repository, ignore `.obsidian/workspace*.json` and `.trash/`.
+  Both `.obsidian/` and `.trash/` stay out of every inventory, whatever the reader.
+
+When the CLI is unavailable the Status Block reports one reason (`not-installed`,
+`not-running`, `vault-mismatch`) and `onUnavailable` decides what happens:
+
+| `onUnavailable` | Result |
+|---|---|
+| `ask` (default) | Ask whether to read files instead; a non-interactive run falls back with a warning |
+| `fallback` | `reader: file`, `reader_fallback: <reason>`, and a warning |
+| `fail` | `status: error` with `reader-<reason>` |
+
+A single search that fails, finds nothing, or fills the 50-result limit falls back to
+file nomination for that query and reports `reader: obsidian-cli (file nomination)`.
+With `fail` the query fails instead: the Guardian marks a claim `NOT CHECKED` when that
+search was its only route to evidence. A report with other checked claims can still
+pass the gate, so `fail` does not by itself stop an implementation. A malformed
+`memory.reader` never blocks memory: it reports `reader-config-invalid` and uses
+files. Obsidian's search index can lag behind notes just written from outside the
+app, which is another reason an empty search falls back to files.
 
 ## Maintainer build
 

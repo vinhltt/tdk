@@ -2,7 +2,7 @@
 name: tdk-memory-changelog
 description: "Record staged project memory changes in CHANGELOG.md via git diff --staged. Stage the selected memory root first, then run this skill before committing. Supports --memory-root; requires initialized memory."
 metadata: 
-  version: 4.2.0
+  version: 4.3.0
   category: "Analysis & Review"
   requires:
     - tdk-memory-init
@@ -69,7 +69,7 @@ Optional: `--file [path]` to record a specific staged file only.
 ### Step 1: Parse staged memory changes
 
 ```bash
-git diff --staged --name-status -- "<memoryRoot>/" ":(exclude)<memoryRoot>/_templates/" ":(exclude)<memoryRoot>/memory.yaml" ":(exclude)<memoryRoot>/memory-index.md" ":(exclude)<memoryRoot>/CHANGELOG.md"
+git diff --staged --name-status -- "<memoryRoot>/" ":(exclude)<memoryRoot>/_templates/" ":(exclude)<memoryRoot>/memory.yaml" ":(exclude)<memoryRoot>/memory-index.md" ":(exclude)<memoryRoot>/CHANGELOG.md" ":(exclude,glob)**/.obsidian/**" ":(exclude,glob)**/.trash/**"
 ```
 
 Use workspace-relative POSIX paths in the pathspec; exclude assets before grouping.
@@ -80,7 +80,7 @@ repository. Run every git command as `git -C "<memoryRoot>"` and map paths with
 repository; empty at the top):
 
 ```bash
-git -C "<memoryRoot>" diff --staged --name-status -- . ":(exclude)_templates/" ":(exclude)memory.yaml" ":(exclude)memory-index.md" ":(exclude)CHANGELOG.md"
+git -C "<memoryRoot>" diff --staged --name-status -- . ":(exclude)_templates/" ":(exclude)memory.yaml" ":(exclude)memory-index.md" ":(exclude)CHANGELOG.md" ":(exclude,glob)**/.obsidian/**" ":(exclude,glob)**/.trash/**"
 ```
 
 Output paths are relative to the repository top: remove the `--show-prefix` value
@@ -129,6 +129,8 @@ Change type is auto-derived from git status — do NOT ask user to specify type.
 For each changed file:
 - Modified / Added: hash working-tree file at its current path
 - Deprecated (`D`): file was moved to `_deprecated/` — hash from `_deprecated/{rel-path}`
+
+Apply the note path check (root contract, section 1) to each path before the command.
 
 ```bash
 node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' &&

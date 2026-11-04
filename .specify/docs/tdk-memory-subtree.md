@@ -5,10 +5,11 @@ TDK embeds its regular files at `.specify/plugins/tdk-memory/` using Git subtree
 submodule. Consumers need Node.js >=18 for the shipped checksum bundle; Bun and package
 installation are maintainer-only build requirements. The consumer manifest remains
 `memory.yaml` version `"2"`. The file-only/control-header contract was released as
-plugin version `4.0.0`; the current embedded version is `4.2.0`; `4.1.0` added the
+plugin version `4.0.0`; the current embedded version is `4.3.0`; `4.1.0` added the
 preconfirmed structured-candidate input to `/tdk-memory-update`; `4.2.0` added the
 read-only `resolve` runtime subcommand, `/tdk-memory-query --status`, and opt-in external
-memory roots (`memory.allowExternal`).
+memory roots (`memory.allowExternal`); `4.3.0` added the opt-in Obsidian CLI reader
+(`memory.reader`).
 
 ## One-way synchronization: upstream to TDK
 

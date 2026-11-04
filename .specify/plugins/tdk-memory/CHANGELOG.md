@@ -4,6 +4,24 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.3.0] - 2026-11-04
+
+### Added
+- Opt-in Obsidian CLI reader: `memory.reader` accepts `{ "backend": "obsidian-cli", "vault": "<id>", "onUnavailable": "ask|fallback|fail" }`. The CLI only nominates paths for natural-language queries and free-text agent evidence; `references/obsidian-cli-reader.md` in `tdk-memory-query` owns the procedure. Writes, checksum, changelog, exact identities, typed data-model resolution, and evidence checks stay file-based.
+- `--status` probes the CLI when selected and reports `not-installed`, `not-running`, or `vault-mismatch` through `reader_fallback`, with warning or error codes `reader-not-installed`, `reader-not-running`, `reader-vault-mismatch`. The probe can launch the Obsidian app.
+- `resolve` reports `reader_cli` (`vault`, `on_unavailable`, `workspace`) when the CLI reader is selected. A file reader's JSON is unchanged.
+- `tdk-memory-agent` accepts `reader: obsidian-cli` in the control block and echoes `reader: obsidian-cli` or `reader: obsidian-cli (file nomination)`.
+
+### Changed
+- **`unsupported-reader` is gone.** A malformed `memory.reader`, including an unknown backend, no longer blocks memory: `resolve` reports `status` normally with `reader: file`, `reader_fallback: config-invalid`, and the warning `reader-config-invalid`.
+- `.obsidian/` and `.trash/` at any depth are excluded from the manifest inventory, template inventory, query nomination, index and coverage counts, and changelog staged paths for every reader, even when the directory itself is a symlink. A receipt already recorded under them is still checked: if `validate` reports one after you empty the trash, run `/tdk-memory-checksum --fix` to reconcile it.
+- Removed the note telling TDK consumers not to set `memory.path`; TDK routes through `--status` now.
+
+### Fixed
+- A note name such as `$(cmd).md` could run a command, because the root contract said double quotes were enough. Skills now check every note path before a shell command and STOP with `unsafe-note-path`. The characters are `$`, `` ` ``, `"`, a backslash, a control character, U+2028, and U+2029.
+- `validate` reports a path holding one of those characters under the new `unsafe_paths` list, masked, and leaves it out of every other list. `/tdk-memory-checksum` shows it as an error until the note is renamed. Reads, and writes that do not touch that note, keep working.
+- `tdk-memory-agent` now cites the lowercase heading slug, so a capitalized anchor such as `#Rounding` no longer turns a real conflict into an unverifiable citation.
+
 ## [4.2.0] - 2026-10-27
 
 ### Added

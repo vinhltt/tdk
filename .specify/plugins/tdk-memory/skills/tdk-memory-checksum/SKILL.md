@@ -3,7 +3,7 @@ name: tdk-memory-checksum
 description: "Validate project memory integrity against memory.yaml using the shipped Node.js runtime. Detect changed, untracked, missing, index, and template files. Read-only by default; --fix offers explicitly approved repairs, including malformed manifest recovery."
 user-invocable: true
 metadata:
-  version: 4.2.0
+  version: 4.3.0
   category: "Context & Memory"
   requires:
     - tdk-memory-init
@@ -81,8 +81,10 @@ node "${CLAUDE_SKILL_DIR}/scripts/memory-manifest.cjs" validate "<memoryRoot>" [
 ```
 
 Parse JSON output: `mismatches[]`, `missing_from_manifest[]`, `missing_from_disk[]`,
-`verified_count`, `index_mismatch`, and `templates_mismatches[]`. Exit zero alone
-does not mean CLEAN. Include index and template discrepancies in the report.
+`verified_count`, `index_mismatch`, `templates_mismatches[]`, and `unsafe_paths[]`.
+Exit zero alone does not mean CLEAN. Include index and template discrepancies in the
+report. An entry in `unsafe_paths[]` is an ERROR: its name can run as a command in a
+shell, so it has no receipt and `--fix` cannot baseline it until the user renames it.
 
 ### Step 3: Screen completeness check
 
@@ -118,7 +120,8 @@ Verify all `status: active` files appear in `memory-index.md` active tables:
 - All files in `state-machines/` appear in `## State Machines` table
 - Domain Map entries match actual `domains/` subdirectories on disk
 
-Verify no `_deprecated/` or `_templates/` files appear in any active table.
+Verify no `_deprecated/`, `_templates/`, `.obsidian/`, or `.trash/` files appear in any
+active table.
 Verify root control files (`README.md`, `memory-index.md`, `memory.yaml`,
 `memory-map.canvas`, `CHANGELOG.md`, `constitution.md`) are not required in
 active typed tables.
@@ -141,6 +144,9 @@ Untracked Files
 Missing Files
   ❌ {N} in manifest but deleted from disk: [list]
 
+Unsafe Names
+  ❌ {N} notes to rename, because the name can run as a shell command: [list]
+
 Screen Completeness
   ⚠️  {N} screens missing required section anchors: [list]
   Required: overview, scenarios, api-calls, ux-flow, components
@@ -158,7 +164,7 @@ Summary: {N} issues | Severity: CLEAN | WARNING | ERROR
 **Severity:**
 - `CLEAN` — zero issues
 - `WARNING` — mismatches or incomplete screens (fixable)
-- `ERROR` — files deleted from disk (data loss risk)
+- `ERROR` — files deleted from disk (data loss risk), or any `unsafe_paths[]` entry
 
 ### Step 6: Handle --fix flag
 

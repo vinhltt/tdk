@@ -7077,6 +7077,7 @@ var EXCLUDED_DIRECTORY_NAMES = {
   [TEMPLATE_DIRECTORY]: true,
   assets: true
 };
+var VAULT_STATE_DIRECTORY_NAMES = new Set([".obsidian", ".trash"]);
 var MAX_MANIFEST_BYTES = 1048576;
 var MAX_YAML_NODES = 20000;
 var MAX_YAML_DEPTH = 32;
@@ -7089,6 +7090,8 @@ var MAX_CONFIG_BYTES = 1048576;
 var MAX_INDEX_BYTES = 4194304;
 var FORBIDDEN_MEMORY_PATH_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\\`$"';&|<>]/;
 var FORBIDDEN_LOCATION_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029`$"]/;
+var READER_VAULT_PATTERN = /^[A-Za-z0-9 ._-]{1,64}$/;
+var READER_ON_UNAVAILABLE = ["ask", "fallback", "fail"];
 var COVERAGE_PATTERN = /^Binding coverage: (\d+)(?: of |\/)(\d+) typed files[ \t\r]*$/m;
 var DOMAIN_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 var SHA256_PATTERN = /^[a-f0-9]{64}$/;
@@ -7538,6 +7541,8 @@ async function scanFiles(memoryRoot, startingRelativePath, includeFile) {
       const info = await lstatOptional(absolutePath);
       if (info === undefined)
         fail(`memory inventory entry disappeared while scanning: ${absolutePath}`);
+      if (VAULT_STATE_DIRECTORY_NAMES.has(entry.name) && (info.isDirectory() || info.isSymbolicLink()))
+        continue;
       if (info.isSymbolicLink())
         await rejectSymlink(absolutePath, memoryRoot);
       if (info.isDirectory()) {
@@ -7587,14 +7592,23 @@ async function validate(memoryRootArgument, manifestRelativePath, allowExternalR
   if (manifestTarget.kind !== "file")
     fail(`manifest not found: ${import_node_path.join(memoryRoot, ...validateRelativePath(manifestRelativePath, "manifest path"))}`);
   const manifest = await readManifest(manifestTarget.path);
-  const diskFiles = new Set(await scanManifestFiles(memoryRoot));
-  const diskTemplates = new Set(await scanTemplateFiles(memoryRoot));
-  const manifestPaths = new Set(manifest.files.map((receipt) => receipt.path));
-  const templatePaths = new Set(manifest.templates.map((receipt) => receipt.path));
+  const unsafePaths = new Set;
+  const isShellSafe = (relativePath) => {
+    if (!hasForbiddenLocationCharacter(relativePath))
+      return true;
+    unsafePaths.add(displayMemoryPath(relativePath));
+    return false;
+  };
+  const diskFiles = new Set((await scanManifestFiles(memoryRoot)).filter(isShellSafe));
+  const diskTemplates = new Set((await scanTemplateFiles(memoryRoot)).filter(isShellSafe));
+  const fileReceipts = manifest.files.filter((receipt) => isShellSafe(receipt.path));
+  const templateReceipts = manifest.templates.filter((receipt) => isShellSafe(receipt.path));
+  const manifestPaths = new Set(fileReceipts.map((receipt) => receipt.path));
+  const templatePaths = new Set(templateReceipts.map((receipt) => receipt.path));
   const mismatches = [];
   const missingFromDisk = [];
   let verifiedCount = 0;
-  for (const receipt of [...manifest.files].sort((left, right) => left.path.localeCompare(right.path))) {
+  for (const receipt of [...fileReceipts].sort((left, right) => left.path.localeCompare(right.path))) {
     const actual = await hashContainedFile(memoryRoot, receipt.path, `manifest file ${receipt.path}`);
     if (actual === undefined) {
       missingFromDisk.push(receipt.path);
@@ -7607,7 +7621,7 @@ async function validate(memoryRootArgument, manifestRelativePath, allowExternalR
   const indexActual = await hashContainedFile(memoryRoot, INDEX_PATH, "memory index");
   const indexMismatch = indexActual === undefined || indexActual !== manifest.memoryIndexSha256;
   const templateMismatches = [];
-  for (const receipt of [...manifest.templates].sort((left, right) => left.path.localeCompare(right.path))) {
+  for (const receipt of [...templateReceipts].sort((left, right) => left.path.localeCompare(right.path))) {
     const actual = await hashContainedFile(memoryRoot, receipt.path, `template ${receipt.path}`);
     if (actual === undefined || actual !== receipt.sha256) {
       templateMismatches.push({ path: receipt.path, expected: receipt.sha256, actual: actual ?? null });
@@ -7627,7 +7641,8 @@ async function validate(memoryRootArgument, manifestRelativePath, allowExternalR
     missing_from_disk: missingFromDisk.sort((left, right) => left.localeCompare(right)),
     verified_count: verifiedCount,
     index_mismatch: indexMismatch,
-    templates_mismatches: templateMismatches.sort((left, right) => left.path.localeCompare(right.path))
+    templates_mismatches: templateMismatches.sort((left, right) => left.path.localeCompare(right.path)),
+    unsafe_paths: [...unsafePaths].sort((left, right) => left.localeCompare(right))
   };
   console.log(JSON.stringify(result, null, 2));
 }
@@ -7637,6 +7652,30 @@ async function hash(memoryRootArgument, relativePath, allowExternalRoot) {
   if (target.kind !== "file")
     fail(`file not found: ${import_node_path.join(memoryRoot, ...validateRelativePath(relativePath, "hash path"))}`);
   console.log(await hashRegularFile(target.path));
+}
+var FILE_READER = { backend: "file", invalid: false };
+var INVALID_READER = { backend: "file", invalid: true };
+function isReaderOnUnavailable(value) {
+  return READER_ON_UNAVAILABLE.includes(value);
+}
+function parseReaderConfig(reader) {
+  if (reader === undefined)
+    return FILE_READER;
+  if (typeof reader !== "object" || reader === null || Array.isArray(reader))
+    return INVALID_READER;
+  const { backend, vault, onUnavailable } = reader;
+  if (backend === "file")
+    return FILE_READER;
+  if (backend === undefined)
+    return vault === undefined && onUnavailable === undefined ? FILE_READER : INVALID_READER;
+  if (backend !== "obsidian-cli")
+    return INVALID_READER;
+  if (typeof vault !== "string" || !READER_VAULT_PATTERN.test(vault))
+    return INVALID_READER;
+  const policy = onUnavailable === undefined ? "ask" : onUnavailable;
+  if (!isReaderOnUnavailable(policy))
+    return INVALID_READER;
+  return { backend: "obsidian-cli", invalid: false, vault, onUnavailable: policy };
 }
 function hasForbiddenLocationCharacter(value, platform = process.platform) {
   return FORBIDDEN_LOCATION_CHARACTERS.test(value) || platform !== "win32" && value.includes("\\");
@@ -7652,7 +7691,7 @@ async function readRawConfig(workspaceRoot) {
     displayPath: DEFAULT_MEMORY_PATH,
     memoryPath: undefined,
     allowExternal: false,
-    readerBackend: undefined
+    reader: FILE_READER
   };
   if (info === undefined)
     return absent;
@@ -7685,18 +7724,7 @@ async function readRawConfig(workspaceRoot) {
   }
   if (allowExternal !== undefined && typeof allowExternal !== "boolean")
     return { invalid: true, displayPath };
-  let readerBackend;
-  if (reader !== undefined) {
-    if (typeof reader !== "object" || reader === null || Array.isArray(reader))
-      return { invalid: true, displayPath };
-    const backend = reader.backend;
-    if (backend !== undefined) {
-      if (typeof backend !== "string")
-        return { invalid: true, displayPath };
-      readerBackend = backend;
-    }
-  }
-  return { invalid: false, displayPath, memoryPath, allowExternal: allowExternal === true, readerBackend };
+  return { invalid: false, displayPath, memoryPath, allowExternal: allowExternal === true, reader: parseReaderConfig(reader) };
 }
 async function mainWorktreeRoot(workspaceRoot) {
   const gitEntry = await lstatOptional(import_node_path.join(workspaceRoot, ".git"));
@@ -7804,13 +7832,17 @@ async function resolveStatus(explicitRoot, allowFlag) {
   const config = await readRawConfig(workspaceRoot);
   const configuredPath = config.invalid ? undefined : config.memoryPath;
   const warnings = configuredPath !== undefined && import_node_path.isAbsolute(configuredPath) ? ["absolute-path"] : [];
+  const reader = config.invalid ? FILE_READER : config.reader;
+  if (reader.invalid)
+    warnings.push("reader-config-invalid");
   const base = {
     status: "error",
     root: null,
     memory_path: config.displayPath,
     external: false,
-    reader: "file",
-    reader_fallback: "none",
+    reader: reader.backend,
+    reader_fallback: reader.invalid ? "config-invalid" : "none",
+    ...reader.backend === "obsidian-cli" ? { reader_cli: { vault: reader.vault, on_unavailable: reader.onUnavailable, workspace: workspaceRoot } } : {},
     binding_coverage: "n/a",
     domains: "n/a",
     constitution: "absent",
@@ -7821,8 +7853,6 @@ async function resolveStatus(explicitRoot, allowFlag) {
   const failure = (code, extra = {}) => ({ ...base, ...extra, error: code });
   if (config.invalid)
     return failure("config-invalid");
-  if (config.readerBackend !== undefined && config.readerBackend !== "file")
-    return failure("unsupported-reader");
   if (explicitRoot !== undefined && explicitRoot.trim().length === 0)
     return failure("config-invalid");
   let lexicalRoot;

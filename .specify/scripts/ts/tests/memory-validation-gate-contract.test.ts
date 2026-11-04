@@ -56,9 +56,18 @@ describe('Guardian report boundary', () => {
     expect((await validateGuardianReport(text, 0, root)).state).toBe('not-checked');
   });
 
-  it('never treats template or deprecated assets as conflict evidence', async () => {
+  it('compares a heading anchor without case and a block id exactly', async () => {
+    const { root, path, note } = await fixture();
+    const text = await report('valid-block', path);
+    expect((await validateGuardianReport(text.replace('#fields', '#Fields'), 0, root)).state).toBe('block-impl');
+    await writeFile(path, `${note}\nid rule. ^id-rule\n`);
+    expect((await validateGuardianReport(text.replace('#fields', '#^id-rule'), 0, root)).state).toBe('block-impl');
+    expect((await validateGuardianReport(text.replace('#fields', '#^ID-Rule'), 0, root)).state).toBe('not-checked');
+  });
+
+  it('never treats template, deprecated, or vault-state files as conflict evidence', async () => {
     const { root, note } = await fixture();
-    for (const directory of ['_templates', '_deprecated']) {
+    for (const directory of ['_templates', '_deprecated', '.obsidian', '.trash']) {
       await mkdir(join(root, directory));
       const path = join(root, directory, 'account.md');
       await writeFile(path, note);
@@ -81,6 +90,14 @@ describe('Guardian report boundary', () => {
     expect((await validateGuardianReport(clear.replace('Total claims checked: 1', 'Total claims checked: 2'), 0, root)).state).toBe('not-checked');
     expect((await validateGuardianReport(clear.replace('- account.id is not nullable, matching memory', 'None found'), 0, root)).state).toBe('not-checked');
   });
+
+  it.each(['file', 'obsidian-cli', 'obsidian-cli (file nomination)'])(
+    'reads a report echoing reader %s like one without the line', async reader => {
+      const { root, path } = await fixture();
+      const withReader = (text: string) => text.replace(/^(Date: .+)$/m, `$1\nreader: ${reader}`);
+      expect((await validateGuardianReport(withReader(await report('valid-clear')), 0, root)).state).toBe('clear');
+      expect((await validateGuardianReport(withReader(await report('valid-block', path)), 0, root)).state).toBe('block-impl');
+    });
 
   it('rejects duplicate reports and an action moved outside Summary', async () => {
     const { root } = await fixture();

@@ -42,7 +42,8 @@ Wait for all researcher reports before continuing to design. If any researcher r
 
 When the carried Memory status block is `ready`, read memory through
 `/tdk-memory-query` in the main session, or through `tdk-memory-agent` with
-`mode: load` and `memory_root` set to the block's `root`. Never read memory
+`mode: load` and `memory_root` set to the block's `root`. When the block's `reader` is not `file`, also pass `reader: <that value>` as a control line before `===END-CONTROL===`.
+Never read memory
 files directly or name the memory path; the query returns the routing, domain,
 and typed-entity evidence. Search metadata never establishes identity or
 binding eligibility. Skip project memory research when the block is

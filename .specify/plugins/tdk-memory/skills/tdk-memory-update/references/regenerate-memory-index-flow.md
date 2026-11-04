@@ -14,7 +14,8 @@ Shared logic for rebuilding `memory-index.md` from filesystem state.
 
 ## Regeneration Logic
 
-1. Scan `<memoryRoot>/` recursively for all `.md` files; prune `_templates/**`
+1. Scan `<memoryRoot>/` recursively for all `.md` files; prune `_templates/**`,
+   `.obsidian/**`, and `.trash/**`
 2. Exclude root control files: `README.md`, `memory-index.md`, `memory.yaml`,
    `memory-map.canvas`, `CHANGELOG.md`, `constitution.md`
 3. Categorize by path prefix:

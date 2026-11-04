@@ -21,6 +21,9 @@ const EXCLUDED_DIRECTORY_NAMES: Record<string, true> = {
   [TEMPLATE_DIRECTORY]: true,
   assets: true,
 };
+// Obsidian vault state when the root is opened as a vault: deleted notes and app
+// settings are not knowledge, and `.obsidian` may legitimately hold symlinks.
+const VAULT_STATE_DIRECTORY_NAMES = new Set([".obsidian", ".trash"]);
 const MAX_MANIFEST_BYTES = 1_048_576;
 const MAX_YAML_NODES = 20_000;
 const MAX_YAML_DEPTH = 32;
@@ -38,6 +41,9 @@ const FORBIDDEN_MEMORY_PATH_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u2028\u202
 // quotes, so only characters that stay active there matter. A backslash is a path
 // separator on Windows and an escape elsewhere.
 const FORBIDDEN_LOCATION_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029`$"]/;
+// The vault is placed inside a double-quoted CLI argument, so only inert characters pass.
+const READER_VAULT_PATTERN = /^[A-Za-z0-9 ._-]{1,64}$/;
+const READER_ON_UNAVAILABLE = ["ask", "fallback", "fail"] as const;
 const COVERAGE_PATTERN = /^Binding coverage: (\d+)(?: of |\/)(\d+) typed files[ \t\r]*$/m;
 const DOMAIN_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
@@ -550,6 +556,8 @@ async function scanFiles(
       const relativePath = current.relativePath === "" ? entry.name : `${current.relativePath}/${entry.name}`;
       const info = await lstatOptional(absolutePath);
       if (info === undefined) fail(`memory inventory entry disappeared while scanning: ${absolutePath}`);
+      // Vault state is skipped whole, even when the directory itself is a symlink.
+      if (VAULT_STATE_DIRECTORY_NAMES.has(entry.name) && (info.isDirectory() || info.isSymbolicLink())) continue;
       if (info.isSymbolicLink()) await rejectSymlink(absolutePath, memoryRoot);
 
       if (info.isDirectory()) {
@@ -600,16 +608,27 @@ async function validate(memoryRootArgument: string, manifestRelativePath: string
   if (manifestTarget.kind !== "file") fail(`manifest not found: ${join(memoryRoot, ...validateRelativePath(manifestRelativePath, "manifest path"))}`);
 
   const manifest = await readManifest(manifestTarget.path);
-  const diskFiles = new Set(await scanManifestFiles(memoryRoot));
-  const diskTemplates = new Set(await scanTemplateFiles(memoryRoot));
-  const manifestPaths = new Set(manifest.files.map((receipt) => receipt.path));
-  const templatePaths = new Set(manifest.templates.map((receipt) => receipt.path));
+  // Skills loop over these lists and pass each path to a shell command, where double
+  // quotes leave the forbidden characters active. Such a path is only ever reported,
+  // masked, so reads keep working and no loop can reach it.
+  const unsafePaths = new Set<string>();
+  const isShellSafe = (relativePath: string): boolean => {
+    if (!hasForbiddenLocationCharacter(relativePath)) return true;
+    unsafePaths.add(displayMemoryPath(relativePath));
+    return false;
+  };
+  const diskFiles = new Set((await scanManifestFiles(memoryRoot)).filter(isShellSafe));
+  const diskTemplates = new Set((await scanTemplateFiles(memoryRoot)).filter(isShellSafe));
+  const fileReceipts = manifest.files.filter((receipt) => isShellSafe(receipt.path));
+  const templateReceipts = manifest.templates.filter((receipt) => isShellSafe(receipt.path));
+  const manifestPaths = new Set(fileReceipts.map((receipt) => receipt.path));
+  const templatePaths = new Set(templateReceipts.map((receipt) => receipt.path));
 
   const mismatches: HashMismatch[] = [];
   const missingFromDisk: string[] = [];
   let verifiedCount = 0;
 
-  for (const receipt of [...manifest.files].sort((left, right) => left.path.localeCompare(right.path))) {
+  for (const receipt of [...fileReceipts].sort((left, right) => left.path.localeCompare(right.path))) {
     const actual = await hashContainedFile(memoryRoot, receipt.path, `manifest file ${receipt.path}`);
     if (actual === undefined) {
       missingFromDisk.push(receipt.path);
@@ -624,7 +643,7 @@ async function validate(memoryRootArgument: string, manifestRelativePath: string
   const indexMismatch = indexActual === undefined || indexActual !== manifest.memoryIndexSha256;
 
   const templateMismatches: HashMismatch[] = [];
-  for (const receipt of [...manifest.templates].sort((left, right) => left.path.localeCompare(right.path))) {
+  for (const receipt of [...templateReceipts].sort((left, right) => left.path.localeCompare(right.path))) {
     const actual = await hashContainedFile(memoryRoot, receipt.path, `template ${receipt.path}`);
     if (actual === undefined || actual !== receipt.sha256) {
       templateMismatches.push({ path: receipt.path, expected: receipt.sha256, actual: actual ?? null });
@@ -644,6 +663,7 @@ async function validate(memoryRootArgument: string, manifestRelativePath: string
     verified_count: verifiedCount,
     index_mismatch: indexMismatch,
     templates_mismatches: templateMismatches.sort((left, right) => left.path.localeCompare(right.path)),
+    unsafe_paths: [...unsafePaths].sort((left, right) => left.localeCompare(right)),
   };
   console.log(JSON.stringify(result, null, 2));
 }
@@ -655,13 +675,21 @@ async function hash(memoryRootArgument: string, relativePath: string, allowExter
   console.log(await hashRegularFile(target.path));
 }
 
+type ReaderOnUnavailable = (typeof READER_ON_UNAVAILABLE)[number];
+
+type ReaderConfig =
+  | { backend: "file"; invalid: boolean }
+  | { backend: "obsidian-cli"; invalid: false; vault: string; onUnavailable: ReaderOnUnavailable };
+
 type StatusReport = {
   status: "ready" | "uninitialized" | "error";
   root: string | null;
   memory_path: string;
   external: boolean;
-  reader: "file";
-  reader_fallback: "none";
+  reader: ReaderConfig["backend"];
+  reader_fallback: "none" | "config-invalid";
+  // Present only for the opt-in CLI reader, so a file reader's report never changes.
+  reader_cli?: { vault: string; on_unavailable: ReaderOnUnavailable; workspace: string };
   binding_coverage: string;
   domains: string;
   constitution: "present" | "absent";
@@ -673,7 +701,29 @@ type StatusReport = {
 
 type RawConfig =
   | { invalid: true; displayPath: string }
-  | { invalid: false; displayPath: string; memoryPath: string | undefined; allowExternal: boolean; readerBackend: string | undefined };
+  | { invalid: false; displayPath: string; memoryPath: string | undefined; allowExternal: boolean; reader: ReaderConfig };
+
+const FILE_READER: ReaderConfig = { backend: "file", invalid: false };
+const INVALID_READER: ReaderConfig = { backend: "file", invalid: true };
+
+function isReaderOnUnavailable(value: unknown): value is ReaderOnUnavailable {
+  return (READER_ON_UNAVAILABLE as readonly unknown[]).includes(value);
+}
+
+// A malformed reader must never block memory: the reader is an optional nomination
+// aid, so it degrades to the file reader with a warning instead of `config-invalid`.
+function parseReaderConfig(reader: unknown): ReaderConfig {
+  if (reader === undefined) return FILE_READER;
+  if (typeof reader !== "object" || reader === null || Array.isArray(reader)) return INVALID_READER;
+  const { backend, vault, onUnavailable } = reader as Record<string, unknown>;
+  if (backend === "file") return FILE_READER;
+  if (backend === undefined) return vault === undefined && onUnavailable === undefined ? FILE_READER : INVALID_READER;
+  if (backend !== "obsidian-cli") return INVALID_READER;
+  if (typeof vault !== "string" || !READER_VAULT_PATTERN.test(vault)) return INVALID_READER;
+  const policy = onUnavailable === undefined ? "ask" : onUnavailable;
+  if (!isReaderOnUnavailable(policy)) return INVALID_READER;
+  return { backend: "obsidian-cli", invalid: false, vault, onUnavailable: policy };
+}
 
 export function hasForbiddenLocationCharacter(value: string, platform: string = process.platform): boolean {
   return FORBIDDEN_LOCATION_CHARACTERS.test(value) || (platform !== "win32" && value.includes("\\"));
@@ -693,7 +743,7 @@ async function readRawConfig(workspaceRoot: string): Promise<RawConfig> {
     displayPath: DEFAULT_MEMORY_PATH,
     memoryPath: undefined,
     allowExternal: false,
-    readerBackend: undefined,
+    reader: FILE_READER,
   };
   if (info === undefined) return absent;
 
@@ -723,17 +773,7 @@ async function readRawConfig(workspaceRoot: string): Promise<RawConfig> {
   }
   if (allowExternal !== undefined && typeof allowExternal !== "boolean") return { invalid: true, displayPath };
 
-  let readerBackend: string | undefined;
-  if (reader !== undefined) {
-    if (typeof reader !== "object" || reader === null || Array.isArray(reader)) return { invalid: true, displayPath };
-    const backend = (reader as Record<string, unknown>).backend;
-    if (backend !== undefined) {
-      if (typeof backend !== "string") return { invalid: true, displayPath };
-      readerBackend = backend;
-    }
-  }
-
-  return { invalid: false, displayPath, memoryPath, allowExternal: allowExternal === true, readerBackend };
+  return { invalid: false, displayPath, memoryPath, allowExternal: allowExternal === true, reader: parseReaderConfig(reader) };
 }
 
 // A linked worktree shares the repository's main worktree; a plain checkout or a
@@ -843,13 +883,18 @@ async function resolveStatus(explicitRoot: string | undefined, allowFlag: boolea
   const config = await readRawConfig(workspaceRoot);
   const configuredPath = config.invalid ? undefined : config.memoryPath;
   const warnings: string[] = configuredPath !== undefined && isAbsolute(configuredPath) ? ["absolute-path"] : [];
+  const reader: ReaderConfig = config.invalid ? FILE_READER : config.reader;
+  if (reader.invalid) warnings.push("reader-config-invalid");
   const base: StatusReport = {
     status: "error",
     root: null,
     memory_path: config.displayPath,
     external: false,
-    reader: "file",
-    reader_fallback: "none",
+    reader: reader.backend,
+    reader_fallback: reader.invalid ? "config-invalid" : "none",
+    ...(reader.backend === "obsidian-cli"
+      ? { reader_cli: { vault: reader.vault, on_unavailable: reader.onUnavailable, workspace: workspaceRoot } }
+      : {}),
     binding_coverage: "n/a",
     domains: "n/a",
     constitution: "absent",
@@ -860,7 +905,6 @@ async function resolveStatus(explicitRoot: string | undefined, allowFlag: boolea
   const failure = (code: string, extra: Partial<StatusReport> = {}): StatusReport => ({ ...base, ...extra, error: code });
 
   if (config.invalid) return failure("config-invalid");
-  if (config.readerBackend !== undefined && config.readerBackend !== "file") return failure("unsupported-reader");
   if (explicitRoot !== undefined && explicitRoot.trim().length === 0) return failure("config-invalid");
 
   let lexicalRoot: string;

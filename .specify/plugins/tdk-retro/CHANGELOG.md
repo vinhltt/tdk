@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.2.3] - 2026-11-04
+
+### Changed
+- tdk-retro-propose, tdk-retro-apply: list reader among the status block fields they may use
+
 ## [1.2.2] - 2026-10-27
 
 ### Changed

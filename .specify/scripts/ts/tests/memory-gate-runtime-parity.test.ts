@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { resolve } from 'node:path';
-import { FORBIDDEN_MEMORY_PATH_CHARS, hasForbiddenLocationCharacter } from '../src/commands/util/memory-gate';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { FORBIDDEN_MEMORY_PATH_CHARS, hasForbiddenLocationCharacter, validateGuardianReport } from '../src/commands/util/memory-gate';
 
 const require = createRequire(import.meta.url);
 const SPECIFY = resolve(import.meta.dir, '../../..');
@@ -37,5 +39,63 @@ describe('memory gate and hook stay aligned with the memory runtime', () => {
         expect(hasForbiddenLocationCharacter(value, platform)).toBe(runtime.hasForbiddenLocationCharacter(value, platform));
       }
     }
+  });
+
+  it.each([
+    ['absent', undefined, 'file', 'none'],
+    ['file', { backend: 'file' }, 'file', 'none'],
+    ['obsidian-cli', { backend: 'obsidian-cli', vault: 'v' }, 'obsidian-cli', 'none'],
+    ['unknown backend', { backend: 'other-reader', vault: 'v' }, 'file', 'config-invalid'],
+    ['wrong type', 'x', 'file', 'config-invalid'],
+    ['unsafe vault', { backend: 'obsidian-cli', vault: 'a"b' }, 'file', 'config-invalid'],
+  ])('accepts a memory root the runtime reports ready with a %s reader', async (_label, reader, expectedReader, expectedFallback) => {
+    const workspace = mkdtempSync(join(tmpdir(), 'tdk-gate-reader-'));
+    try {
+      const root = join(workspace, '.specify', 'memory');
+      mkdirSync(root, { recursive: true });
+      writeFileSync(join(root, 'memory-index.md'), '# Index\n');
+      writeFileSync(join(root, 'memory.yaml'), 'version: "2"\nfiles: []\n');
+      writeFileSync(join(workspace, '.specify', '.specify.json'), JSON.stringify({ memory: reader === undefined ? {} : { reader } }));
+
+      const resolved = spawnSync('node', [resolve(RUNTIME_DIR, 'memory-manifest.cjs'), 'resolve'], { cwd: workspace, encoding: 'utf8' });
+      expect(resolved.status).toBe(0);
+      const status = JSON.parse(resolved.stdout) as { status: string; root: string; reader: string; reader_fallback: string };
+      expect(status.status).toBe('ready');
+      expect(status.reader).toBe(expectedReader);
+      expect(status.reader_fallback).toBe(expectedFallback);
+
+      const clear = readFileSync(resolve(import.meta.dir, 'fixtures/guardian-reports/valid-clear.txt'), 'utf8');
+      expect((await validateGuardianReport(clear, 0, status.root, workspace)).state).toBe('clear');
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('memory consumers forward the Status Block reader', () => {
+  const plugin = (path: string) => readFileSync(resolve(SPECIFY, 'plugins', path), 'utf8');
+  const STATUS_LINE = '`ready` → use `root`, `reader`, `binding_coverage`, `domains` only from the block;';
+  const FORWARD = "When the block's `reader` is not `file`, also pass `reader: <that value>` as a control line before `===END-CONTROL===`.";
+
+  it.each([
+    'tdk-core/skills/tdk-clarify/SKILL.md',
+    'tdk-core/skills/tdk-consistency-check/SKILL.md',
+    'tdk-core/skills/tdk-archive/references/ingest-workflow.md',
+    'tdk-core/skills/tdk-specify/references/input-routing-and-mode-workflow.md',
+    'tdk-core/skills/tdk-plan/references/gates.md',
+    'tdk-inception/skills/tdk-constitution/SKILL.md',
+    'tdk-retro/skills/tdk-retro-propose/SKILL.md',
+    'tdk-retro/skills/tdk-retro-apply/SKILL.md',
+  ])('%s takes reader from the block and passes it with every control block', path => {
+    const text = plugin(path);
+    expect(text).toContain(STATUS_LINE);
+    const controlBlocks = text.split('===TDK-MEMORY-CONTROL===').length - 1;
+    expect(text.split(FORWARD).length - 1).toBe(controlBlocks);
+  });
+
+  it('research-phase forwards reader on its prose-described load spawn', () => {
+    const text = plugin('tdk-core/skills/tdk-plan/references/research-phase.md');
+    expect(text).toContain('`mode: load`');
+    expect(text).toContain(FORWARD);
   });
 });

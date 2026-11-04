@@ -67,12 +67,15 @@ re-run by hand):
   worktree. Absolute `memory.path` is used as is. `~` is a literal segment.
 - Invalid config is `config-invalid`: file is not a JSON object, `memory` is not an
   object (`null` included), `memory.path` is not a nonempty non-blank string or
-  contains a forbidden character, `memory.allowExternal` is not a boolean,
-  `memory.reader` is not an object or its `backend` is not a string, or an explicit
-  `--memory-root` is blank. Forbidden characters: C0 controls (U+0000-U+001F), DEL
+  contains a forbidden character, `memory.allowExternal` is not a boolean, or an
+  explicit `--memory-root` is blank. Forbidden characters: C0 controls (U+0000-U+001F), DEL
   and C1 controls (U+007F-U+009F), U+2028, U+2029, backslash, and `` ` `` `$` `"`
-  `'` `;` `&` `|` `<` `>`. `memory.reader.backend` other than `file` is
-  `unsupported-reader`.
+  `'` `;` `&` `|` `<` `>`.
+- `memory.reader` never blocks a root. An empty object or `backend: file` selects the
+  file reader. `obsidian-cli` also requires `vault` matching `^[A-Za-z0-9 ._-]{1,64}$` and
+  accepts `onUnavailable` of `ask` (default), `fallback`, or `fail`; `resolve` then
+  adds `reader_cli`. Any other `memory.reader` value yields `reader: file`,
+  `reader_fallback: config-invalid`, and the warning `reader-config-invalid`.
 - The canonical root and the workspace root are checked after canonicalization
   (symlink targets, directory names, explicit roots) against a narrower set, because
   they are only ever placed inside double quotes: C0/C1 controls, U+2028, U+2029,
@@ -96,7 +99,13 @@ re-run by hand):
 
 Pass `<memoryRoot>` and every path to shell commands as one double-quoted argument;
 the canonical root has already been screened with the location set above and must
-never be interpolated unquoted. Non-init operations with no root STOP with initialization
+never be interpolated unquoted. Double quotes do not protect a note path, because a
+note name is untrusted and `$`, `` ` ``, `"`, a backslash, a control character, U+2028,
+and U+2029 stay active inside them. **Note path check:** before a note path enters any
+shell command, whatever produced it (the inventory, git output, a handoff list,
+`_deprecated/`), look for those characters. On a match, run nothing with that path and
+STOP with `unsafe-note-path` plus the path with each such character shown as `?`, so
+the user can rename the note. A file tool may still read it. Non-init operations with no root STOP with initialization
 guidance. Config is optional; do not ask to create it on a standalone install. Offer
 to persist a selection only when the workspace already has `.specify/` and the user
 wants it.
@@ -169,13 +178,15 @@ Materialize seed templates into `<memoryRoot>/_templates/` using the owning skil
 
 | Consumer | Required exclusion |
 |---|---|
-| Query nominations and canonical inventory | Prune `_templates/**` and `_deprecated/**` before ranking |
-| Index regeneration and typed coverage | Never index/count templates or deprecated records |
-| Changelog staged paths | Exclude `_templates/**` before grouping or asking descriptions |
+| Query nominations and canonical inventory | Prune `_templates/**`, `_deprecated/**`, `.obsidian/**`, and `.trash/**` before ranking |
+| Index regeneration and typed coverage | Never index/count templates, deprecated records, `.obsidian/**`, or `.trash/**` |
+| Changelog staged paths | Exclude `_templates/**`, `.obsidian/**`, and `.trash/**` before grouping or asking descriptions |
 | Deprecation | Reject every target inside `_templates/` |
-| Manifest `files[]` | Exclude `_templates/`, `_deprecated/`, `memory-architect/` from discovery |
+| Manifest `files[]` | Exclude `_templates/`, `_deprecated/`, `memory-architect/`, `.obsidian/`, `.trash/` from discovery |
 | Manifest `templates[]` | Only `_templates/*.md.tpl`; separate asset receipts |
 
+`.obsidian/` and `.trash/` are vault state at any depth, excluded for every reader
+because a root can be opened as a vault even with `reader: file`.
 All manifest writers preserve `templates[]`, unrelated file records, and metadata.
 Template changes never become binding evidence or staged knowledge changes.
 
@@ -186,7 +197,8 @@ coverage, index tables, or changelog groups; deprecating a template must STOP.
 
 Consumer prerequisite: **Node.js >=18 on PATH**. POSIX shell is needed for the
 shown shell/git workflows (Git Bash or WSL on Windows). No consumer install step,
-Python interpreter, Bun runtime, Obsidian app, or external memory service is needed.
+Python interpreter, Bun runtime, Obsidian app, or external memory service is needed;
+the opt-in CLI reader of section 7 is the only feature that uses the Obsidian app.
 The TypeScript source is bundled with its YAML parser into
 `skills/tdk-memory-checksum/scripts/memory-manifest.cjs`; its third-party notice is
 `RUNTIME-LICENSE.txt` in the same directory. Source/build dependencies belong to
@@ -199,18 +211,22 @@ node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' 
 node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" validate "<memoryRoot>" [--allow-external-root]
 ```
 
-For a hash replace the subcommand with `hash "<memoryRoot>" "<relative-file>"`.
+For a hash replace the subcommand with `hash "<memoryRoot>" "<relative-file>"`, after
+the note path check in section 1, because the shell runs an active name before `hash`
+sees it.
 Its output is plain 64-hex text; `validate` and `resolve` emit JSON.
 `resolve [--memory-root "<path>"] [--allow-external-root]` applies section 1 and
-reports `status`, `root`, `memory_path`, `external`, coverage, domains, constitution,
-`warnings`, `error`, and `hint`. Root-state problems are reported inside that JSON with exit
+reports `status`, `root`, `memory_path`, `external`, `reader`, `reader_fallback`,
+coverage, domains, constitution, `warnings`, `error`, and `hint`. Root-state problems are reported inside that JSON with exit
 zero; a nonzero exit means an internal fault. `tdk-memory-query --status` renders it.
 Append `--allow-external-root` whenever section 1 says external-root permission is
 present. Probe Node before any write. All runtime subcommands are read-only; no `rebuild`
 operation exists.
 Exit nonzero means a fatal error: STOP and show the error. Exit zero means the
 report was produced, NOT that integrity is clean. Inspect every mismatch list,
-missing list, and `index_mismatch` before accepting a write/repair candidate.
+missing list, `index_mismatch`, and `unsafe_paths` before accepting a write/repair
+candidate. `validate` leaves a path that fails the note path check out of every other
+list and names it in `unsafe_paths` with each such character shown as `?`.
 
 **Check:** copy only skills and agents into a clean repo, remove build dependency
 access, and execute the shipped CJS with Node; hash and validate must still work.
@@ -236,6 +252,8 @@ Before dispatch (including `--deprecate`) and before the first write:
    recovery flow; it must not invent a baseline without explicit acceptance.
 4. Integrity differences are data, not parse errors: checksum reports them;
    query may read them as unverified context but cannot claim clean integrity.
+   `unsafe_paths` is data as well: reads continue, and a writer continues unless it
+   must run a shell command on that note, where the note path check stops it.
    Writers report differences and obtain approval for affected pre-existing bytes
    before changing their receipts. Never silently rehash unrelated mismatches.
 5. Writes are coordinated sequentially. Read the current manifest, preserve
@@ -259,30 +277,24 @@ be repaired here first, not delegated into the same failing preflight.
 checksum can diagnose it read-only and repair only after user approval. A changed
 index and modified note must remain visible until explicitly addressed.
 
-## Outside scope: upstream existence gates
+## 7. Optional Obsidian CLI reader
 
-Custom and external roots apply inside this plugin. TDK consumers keep using the
-default root `.specify/memory/` until a TDK release that routes through
-`/tdk-memory-query --status`; do not set `memory.path` in a TDK workspace before
-then. The following upstream gates still use the default root. Anchors refer to
-the pre-cutover source:
+`memory.reader.backend: obsidian-cli` lets the Obsidian CLI nominate note paths for
+natural-language queries and free-text agent evidence. That is its only role, and
+`tdk-memory-query/references/obsidian-cli-reader.md` is its only procedure.
 
-- `tdk-core/skills/tdk-plan/SKILL.md:135`
-- `tdk-core/skills/tdk-plan/references/gates.md:48`
-- `tdk-core/skills/tdk-clarify/SKILL.md:74`
-- `tdk-core/skills/tdk-consistency-check/SKILL.md:106`
-- `tdk-core/skills/tdk-specify/SKILL.md:130`
-- `tdk-inception/skills/tdk-constitution/SKILL.md:109`
-- `tdk-retro/skills/tdk-retro-propose/SKILL.md:71`
-- `tdk-retro/skills/tdk-retro-apply/references/apply-flow-memory.md:7`
-- `tdk-core/lib/context-builder.cjs:80`
+- **Forbidden for the CLI:** writes, checksum, changelog, index regeneration, exact
+  `id` or path resolution, typed data-model resolution, and evidence verification.
+  Those always use files. A nominated path is a suggestion until it passes both
+  containment layers and is read from disk.
+- **Nomination is the only thing it can change.** Ranking rules, typed outcomes,
+  binding, Guardian action, and writes do not depend on it, and `reader: file` never
+  touches the CLI.
+- **One vault per project.** The vault root must equal the memory root; anything else
+  is `vault-mismatch`.
 
-## 7. Optional application opening
-
-Obsidian CLI availability must not affect nomination, ordering, typed outcomes,
-evidence, Guardian action, or writes. Do not probe for it during memory work.
-Only after the user explicitly asks to open an already-resolved note may the
-agent use the optional CLI to open that exact contained path. If unavailable,
-show the path and leave the query/validation result unchanged. Never use the
-application or an external service as a discovery, read, validation, or write
-backend; the installed knowledge references describe file formats, not services.
+Separately, after the user explicitly asks to open an already-resolved note, the
+agent may use the optional CLI to open that exact contained path. If unavailable,
+show the path and leave the query/validation result unchanged. Never use an external
+service as a discovery, read, validation, or write backend; the installed knowledge
+references describe file formats, not services.

@@ -43,7 +43,8 @@ Rebuild `memory-index.md` from current FS state using template in `references/me
 - Include all existing files in "Files by Domain" sections
 - For NEW domains: list `domain-overview.md` row (not placeholder)
 - For existing domains: scan filesystem to list actual files
-- Exclude `_templates/**` and `_deprecated/**` from active tables and coverage
+- Exclude `_templates/**`, `_deprecated/**`, `.obsidian/**`, and `.trash/**` from active
+  tables and coverage
 - Preserve Routing Rules table (static)
 
 **Domain Map scope column:**

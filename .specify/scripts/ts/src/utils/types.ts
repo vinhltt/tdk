@@ -54,6 +54,18 @@ export const SpecifyConfigSchema = z.object({
   memory: z.object({
     path: z.string().default('.specify/memory').describe('Memory storage path relative to the workspace root.'),
     allowExternal: z.boolean().default(false).describe('Allow memory.path to resolve outside the workspace root.'),
+    // A malformed reader must not make parseConfig fail for every TDK command. It parses as
+    // absent here, and the memory runtime reports it to the user through the Status Block.
+    reader: z.discriminatedUnion('backend', [
+      z.object({
+        backend: z.literal('file').describe('Read memory from files only.'),
+      }),
+      z.object({
+        backend: z.literal('obsidian-cli').describe('Nominate free-text memory candidates with the Obsidian CLI.'),
+        vault: z.string().regex(/^[A-Za-z0-9 ._-]{1,64}$/).describe('Obsidian vault id or name whose root is the memory root.'),
+        onUnavailable: z.enum(['ask', 'fallback', 'fail']).default('ask').describe('What to do when the Obsidian CLI is unavailable.'),
+      }),
+    ]).optional().catch(undefined).describe('Optional memory read backend. Absent means file.'),
   }).default({ path: '.specify/memory', allowExternal: false }).describe('TDK memory settings.'),
   git: z.object({
     mainBranch: z.string().default('master').describe('Main branch name used by TDK workflows.'),

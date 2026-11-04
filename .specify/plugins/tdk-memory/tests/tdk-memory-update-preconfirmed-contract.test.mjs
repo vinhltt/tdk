@@ -207,12 +207,12 @@ describe('tdk-memory-update preconfirmed candidate mode', () => {
     assert.match(agent, /===TDK-MEMORY-CONTROL===/);
   });
 
-  test('release metadata is 4.2.0 across manifests and the update skill', () => {
+  test('release metadata is 4.3.0 across manifests and the update skill', () => {
     for (const manifest of ['.claude-plugin', '.codex-plugin', '.cursor-plugin']) {
       const { version } = JSON.parse(read(PLUGIN_ROOT, manifest, 'plugin.json'));
-      assert.equal(version, '4.2.0', `${manifest} version`);
+      assert.equal(version, '4.3.0', `${manifest} version`);
     }
-    assert.match(skill, /^metadata:\r?\n  version: 4\.2\.0$/m);
-    assert.match(read(PLUGIN_ROOT, 'CHANGELOG.md'), /^## \[4\.2\.0\] - 2026-10-27$/m);
+    assert.match(skill, /^metadata:\r?\n  version: 4\.3\.0$/m);
+    assert.match(read(PLUGIN_ROOT, 'CHANGELOG.md'), /^## \[4\.3\.0\] - 2026-11-04$/m);
   });
 });

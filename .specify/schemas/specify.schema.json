@@ -150,6 +150,53 @@
           "description": "Memory storage path relative to the workspace root.",
           "type": "string",
           "default": ".specify/memory"
+        },
+        "reader": {
+          "description": "Optional memory read backend. Absent means file.",
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "backend"
+              ],
+              "properties": {
+                "backend": {
+                  "description": "Read memory from files only.",
+                  "type": "string",
+                  "const": "file"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "backend",
+                "vault"
+              ],
+              "properties": {
+                "backend": {
+                  "description": "Nominate free-text memory candidates with the Obsidian CLI.",
+                  "type": "string",
+                  "const": "obsidian-cli"
+                },
+                "onUnavailable": {
+                  "description": "What to do when the Obsidian CLI is unavailable.",
+                  "type": "string",
+                  "enum": [
+                    "ask",
+                    "fallback",
+                    "fail"
+                  ],
+                  "default": "ask"
+                },
+                "vault": {
+                  "description": "Obsidian vault id or name whose root is the memory root.",
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9 ._-]{1,64}$"
+                }
+              }
+            }
+          ]
         }
       },
       "default": {

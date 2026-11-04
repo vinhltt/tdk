@@ -55,7 +55,8 @@ This is the sole resolver for data-model queries, including
 `<memoryRoot>/memory-index.md`, parse its **Data Model** table into a
 stable-sorted canonical `data-model/*.md` inventory, and preserve every indexed
 path's actual casing for exact reads and output. Search/index metadata only nominates candidates; exact-read content supplies identity, eligibility, and domain evidence.
-Exclude `_templates/**` and `_deprecated/**` from the canonical inventory.
+Exclude `_templates/**`, `_deprecated/**`, `.obsidian/**`, and `.trash/**` from the
+canonical inventory.
 
 1. **Candidate nomination and rank verification.** Use
    `Glob("<memoryRoot>/data-model/*.md")` only to verify inventory paths; do
@@ -139,10 +140,16 @@ Exclude `_templates/**` and `_deprecated/**` from the canonical inventory.
 
 **Natural language (no explicit flags):**
 
+- Only when this is not a `--for-agent` call and `resolve` reports
+  `reader: obsidian-cli`: load `references/obsidian-cli-reader.md` (relative to this
+  skill, not the memory root) and follow its Nominate section. Its paths replace the next two bullets and feed the same
+  scoring; a query that falls back continues with those bullets unchanged. With
+  `reader: file` skip this bullet and load nothing.
 - Enumerate the complete eligible Markdown inventory under `<memoryRoot>`.
-  Exclude `_templates/**`, `_deprecated/**`, `memory-architect/**`, and assets
-  **before** nomination, ranking, or counting. Normalize paths to relative POSIX
-  form and deduplicate; preserve original casing for reads and output.
+  Exclude `_templates/**`, `_deprecated/**`, `memory-architect/**`, `.obsidian/**`,
+  `.trash/**`, and assets **before** nomination, ranking, or counting. Normalize
+  paths to relative POSIX form and deduplicate; preserve original casing for reads
+  and output.
 - Grep the complete inventory and match filename/frontmatter too; never let tool
   encounter order or a search-result limit choose the winners. Normalize query
   and compared identity strings with Unicode NFC, trim, and locale-independent
@@ -217,6 +224,9 @@ Resolved: {memory-root-relative file paths}
 Files read: {N} | Domains: {list} | Content type: {type}
 Run /tdk-memory-update to modify these entries.
 ```
+
+After a natural-language query that took the Nominate path, append the one line its
+Record the reader section gives (`reader: ...`). Every other result has no such line.
 
 **Agent mode** (`--for-agent` flag):
 

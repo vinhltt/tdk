@@ -2,7 +2,7 @@
 name: tdk-memory-update
 description: "Update project memory: add services, business rules, data models, or domain knowledge; modify section anchors; deprecate a memory file. Routes natural language updates through memory-index.md and maintains memory.yaml checksums. Also accepts a complete preconfirmed candidate block that writes without prompts. Supports --deprecate [path] and --memory-root [path]."
 metadata:
-  version: 4.2.0
+  version: 4.3.0
   category: "Context & Memory"
   requires:
     - tdk-memory-query

@@ -168,6 +168,7 @@ describe('tdk memory manifest runtime contract', () => {
         verified_count: 1,
         index_mismatch: false,
         templates_mismatches: [],
+        unsafe_paths: [],
       });
     });
   });
@@ -254,6 +255,7 @@ describe('tdk memory manifest runtime contract', () => {
             actual: sha256('# Unlisted template\n'),
           },
         ],
+        unsafe_paths: [],
       });
     });
   });
@@ -369,6 +371,123 @@ describe('tdk memory manifest runtime contract', () => {
     });
   });
 
+  test('ignores Obsidian vault state in the inventory, including symlinks inside it', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = makeMemoryRoot(workspace);
+      const index = '# Index\n';
+      writeRelative(memoryRoot, 'memory-index.md', index);
+      writeRelative(memoryRoot, 'memory.yaml', manifestYaml({ indexSha256: sha256(index) }));
+      writeRelative(memoryRoot, '.trash/deleted-note.md', '# Deleted\n');
+      writeRelative(memoryRoot, '.obsidian/snippets/readme.md', '# Snippets\n');
+      writeRelative(memoryRoot, 'domains/billing/.trash/nested.md', '# Nested\n');
+      symlinkSync(tmpdir(), join(memoryRoot, '.obsidian', 'outside-link'));
+      symlinkSync(tmpdir(), join(memoryRoot, '.trash', 'outside-link'));
+
+      const result = report(runRuntime(workspace, ['validate', 'memory']));
+      assert.deepEqual(result.missing_from_manifest, []);
+      assert.equal(result.verified_count, 0);
+    });
+  });
+
+  const seedIndexedRoot = (workspace, receipts = {}) => {
+    const memoryRoot = makeMemoryRoot(workspace);
+    const index = '# Index\n';
+    writeRelative(memoryRoot, 'memory-index.md', index);
+    writeRelative(memoryRoot, 'memory.yaml', manifestYaml({ indexSha256: sha256(index), ...receipts }));
+    return memoryRoot;
+  };
+
+  test('validate masks a path that stays active inside double quotes and lists it nowhere else', () => {
+    const unsafePaths = [
+      ['$(touch PWNED).md', '?(touch PWNED).md'],
+      ['`touch PWNED`.md', '?touch PWNED?.md'],
+      ['say "hi".md', 'say ?hi?.md'],
+      ['back\\slash.md', 'back?slash.md'],
+      ['line\u2028sep.md', 'line?sep.md'],
+      ['bell\u0007.md', 'bell?.md'],
+      ['domains/$(touch PWNED)/note.md', 'domains/?(touch PWNED)/note.md'],
+      ['_templates/$(touch PWNED).md.tpl', '_templates/?(touch PWNED).md.tpl'],
+    ];
+    for (const [unsafePath, masked] of unsafePaths) {
+      withWorkspace((workspace) => {
+        const memoryRoot = seedIndexedRoot(workspace);
+        writeRelative(memoryRoot, unsafePath, '# Note\n');
+
+        const result = report(runRuntime(workspace, ['validate', 'memory']));
+        assert.deepEqual(result.unsafe_paths, [masked]);
+        assert.deepEqual(result.missing_from_manifest, [], unsafePath);
+        assert.deepEqual(result.templates_mismatches, [], unsafePath);
+      });
+    }
+  });
+
+  test('validate keeps a receipt with an unsafe path out of the lists skills loop over', () => {
+    withWorkspace((workspace) => {
+      const stale = fileReceipt('$(touch PWNED).md', 'old\n');
+      const memoryRoot = seedIndexedRoot(workspace, { files: [stale] });
+      writeRelative(memoryRoot, stale.path, 'changed\n');
+
+      const result = report(runRuntime(workspace, ['validate', 'memory']));
+      assert.deepEqual(result.unsafe_paths, ['?(touch PWNED).md']);
+      assert.deepEqual(result.mismatches, []);
+      assert.deepEqual(result.missing_from_disk, []);
+    });
+  });
+
+  test('validate leaves inert names and paths it never hands out alone', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = seedIndexedRoot(workspace);
+      writeRelative(memoryRoot, "Q&A what's new; (draft).md", '# Note\n');
+      writeRelative(memoryRoot, '_deprecated/$(touch PWNED).md', '# Old\n');
+      writeRelative(memoryRoot, '.trash/$(touch PWNED).md', '# Deleted\n');
+      writeRelative(memoryRoot, 'assets/$(touch PWNED).md', '# Asset\n');
+      writeRelative(memoryRoot, '$(touch PWNED).png', 'not markdown');
+
+      const result = report(runRuntime(workspace, ['validate', 'memory']));
+      assert.deepEqual(result.missing_from_manifest, ["Q&A what's new; (draft).md"]);
+      assert.deepEqual(result.unsafe_paths, []);
+    });
+  });
+
+  test('skips vault state that is itself a symlink, and only vault state', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = makeMemoryRoot(workspace);
+      const index = '# Index\n';
+      writeRelative(memoryRoot, 'memory-index.md', index);
+      writeRelative(memoryRoot, 'memory.yaml', manifestYaml({ indexSha256: sha256(index) }));
+      symlinkSync(tmpdir(), join(memoryRoot, '.obsidian'));
+      symlinkSync(tmpdir(), join(memoryRoot, '.trash'));
+
+      const result = report(runRuntime(workspace, ['validate', 'memory']));
+      assert.deepEqual(result.missing_from_manifest, []);
+      assert.equal(result.verified_count, 0);
+
+      symlinkSync(tmpdir(), join(memoryRoot, '_deprecated'));
+      expectFatal(runRuntime(workspace, ['validate', 'memory']));
+    });
+  });
+
+  test('still checks a recorded receipt under vault state until it is reconciled', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = makeMemoryRoot(workspace);
+      const index = '# Index\n';
+      const deleted = '# Deleted\n';
+      writeRelative(memoryRoot, 'memory-index.md', index);
+      writeRelative(
+        memoryRoot,
+        'memory.yaml',
+        manifestYaml({ indexSha256: sha256(index), files: [fileReceipt('.trash/deleted-note.md', deleted)] }),
+      );
+      writeRelative(memoryRoot, '.trash/deleted-note.md', deleted);
+      const present = report(runRuntime(workspace, ['validate', 'memory']));
+      assert.equal(present.verified_count, 1);
+      assert.deepEqual(present.missing_from_disk, []);
+
+      rmSync(join(memoryRoot, '.trash'), { recursive: true });
+      assert.deepEqual(report(runRuntime(workspace, ['validate', 'memory'])).missing_from_disk, ['.trash/deleted-note.md']);
+    });
+  });
+
   test('exposes only the documented read-only command and flag surface', () => {
     withWorkspace((workspace) => {
       const memoryRoot = makeMemoryRoot(workspace);
@@ -411,12 +530,17 @@ function writeConfig(workspace, memory) {
   writeRelative(workspace, '.specify/.specify.json', JSON.stringify(memory === undefined ? {} : { memory }));
 }
 
-function resolveStatus(workspace, args = []) {
-  const result = runRuntime(workspace, ['resolve', ...args]);
-  const status = report(result);
+function resolveAnyReader(workspace, args = []) {
+  const status = report(runRuntime(workspace, ['resolve', ...args]));
   assert.equal(typeof status.memory_path, 'string', 'memory_path is present in every status');
+  return status;
+}
+
+function resolveStatus(workspace, args = []) {
+  const status = resolveAnyReader(workspace, args);
   assert.equal(status.reader, 'file');
   assert.equal(status.reader_fallback, 'none');
+  assert.equal('reader_cli' in status, false, 'the file reader report never carries CLI settings');
   return status;
 }
 
@@ -649,20 +773,85 @@ describe('tdk memory manifest runtime resolve', () => {
     });
   });
 
-  test('rejects an unsupported reader backend', () => {
+  test('treats an explicit file reader exactly like an absent one', () => {
     withWorkspace((workspace) => {
-      writeConfig(workspace, { reader: { backend: 'obsidian-cli' } });
+      seedMemory(join(workspace, '.specify', 'memory'));
+      writeConfig(workspace, {});
+      const absent = resolveStatus(workspace);
+      for (const reader of [{}, { backend: 'file' }, { backend: 'file', vault: 'ignored"', onUnavailable: 'never' }]) {
+        writeConfig(workspace, { reader });
+        assert.deepEqual(resolveStatus(workspace), absent, JSON.stringify(reader));
+      }
+    });
+  });
+
+  test('selects the CLI reader from a complete configuration and defaults to asking', () => {
+    withWorkspace((workspace) => {
+      seedMemory(join(workspace, '.specify', 'memory'));
+      writeConfig(workspace, { reader: { backend: 'obsidian-cli', vault: 'Team Vault_1.0-a' } });
+      const status = resolveAnyReader(workspace);
+      assert.equal(status.status, 'ready');
+      assert.equal(status.reader, 'obsidian-cli');
+      assert.equal(status.reader_fallback, 'none');
+      assert.deepEqual(status.warnings, []);
+      assert.deepEqual(status.reader_cli, {
+        vault: 'Team Vault_1.0-a',
+        on_unavailable: 'ask',
+        workspace: realpathSync(workspace),
+      });
+
+      for (const onUnavailable of ['ask', 'fallback', 'fail']) {
+        writeConfig(workspace, { reader: { backend: 'obsidian-cli', vault: 'v', onUnavailable } });
+        assert.equal(resolveAnyReader(workspace).reader_cli.on_unavailable, onUnavailable);
+      }
+    });
+  });
+
+  test('degrades a malformed reader to the file reader without blocking memory', () => {
+    withWorkspace((workspace) => {
+      const root = join(workspace, '.specify', 'memory');
+      seedMemory(root);
+      const malformed = [
+        'file',
+        5,
+        null,
+        ['file'],
+        { backend: 5 },
+        { vault: 'v', onUnavailable: 'fail' },
+        { onUnavailable: 'fail' },
+        { backend: 'other-reader', vault: 'v' },
+        { backend: 'obsidian-cli' },
+        { backend: 'obsidian-cli', vault: 7 },
+        { backend: 'obsidian-cli', vault: '' },
+        { backend: 'obsidian-cli', vault: 'x'.repeat(65) },
+        { backend: 'obsidian-cli', vault: 'a"b' },
+        { backend: 'obsidian-cli', vault: '$(id)' },
+        { backend: 'obsidian-cli', vault: 'a;b' },
+        { backend: 'obsidian-cli', vault: 'a\nb' },
+        { backend: 'obsidian-cli', vault: 'v', onUnavailable: 'never' },
+        { backend: 'obsidian-cli', vault: 'v', onUnavailable: 1 },
+        { backend: 'obsidian-cli', vault: 'v', onUnavailable: null },
+      ];
+      for (const reader of malformed) {
+        writeConfig(workspace, { reader });
+        const status = resolveAnyReader(workspace);
+        const label = JSON.stringify(reader);
+        assert.equal(status.status, 'ready', label);
+        assert.equal(status.root, realpathSync(root), label);
+        assert.equal(status.reader, 'file', label);
+        assert.equal(status.reader_fallback, 'config-invalid', label);
+        assert.deepEqual(status.warnings, ['reader-config-invalid'], label);
+        assert.equal('reader_cli' in status, false, label);
+      }
+    });
+  });
+
+  test('keeps a malformed memory block fatal regardless of the reader', () => {
+    withWorkspace((workspace) => {
+      writeConfig(workspace, { path: 5, reader: { backend: 'obsidian-cli', vault: 'v' } });
       const status = resolveStatus(workspace);
       assert.equal(status.status, 'error');
-      assert.equal(status.error, 'unsupported-reader');
-
-      writeConfig(workspace, { reader: { backend: 'file' } });
-      assert.equal(resolveStatus(workspace).status, 'uninitialized');
-
-      for (const reader of ['file', 5, null, ['file']]) {
-        writeConfig(workspace, { reader });
-        assert.equal(resolveStatus(workspace).error, 'config-invalid', JSON.stringify(reader));
-      }
+      assert.equal(status.error, 'config-invalid');
     });
   });
 

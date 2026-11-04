@@ -2,7 +2,8 @@
 
 Load this file only for `/tdk-memory-query --status`, then stop. It is the single
 definition of the Status Block. Do not load the query flow, the root contract, or
-any memory file in this mode. The mode writes nothing and spawns no agent.
+any memory file in this mode; `references/obsidian-cli-reader.md` is loaded only by
+step 4. The mode writes nothing and spawns no agent.
 
 ## Procedure
 
@@ -17,11 +18,16 @@ any memory file in this mode. The mode writes nothing and spawns no agent.
    Flat installation: without a plugin root, use the sibling
    `../tdk-memory-checksum/scripts/memory-manifest.cjs` relative to the loaded
    skill directory. Expand the path to a verified absolute path first.
-3. Parse the JSON from stdout and render exactly one block below. The runtime
+3. Parse the JSON from stdout and, after step 4, render exactly one block below. The runtime
    already applied root precedence, worktree base, containment, external-root
    permission (flag, or `allowExternal` bound to `memory.path`), and state
    classification. Do not re-derive any field and do not read config yourself.
-4. If the runtime exits nonzero or prints no JSON, print one plain line
+4. Only when JSON `reader` is `obsidian-cli` and `status` is `ready`, load
+   `references/obsidian-cli-reader.md` (flat installation: the same path relative to
+   the skill) and run its Probe section. Its outcome replaces `reader`,
+   `reader_fallback`, `warnings`, `status`, and `error` before rendering. Every other
+   case, including `reader: file`, skips this step and never touches the CLI.
+5. If the runtime exits nonzero or prints no JSON, print one plain line
    `STATUS-UNAVAILABLE: runtime failed; check Node.js >=18 and the installed tdk-memory version`
    and no block. Callers treat that as `version-skew`.
 
@@ -35,8 +41,8 @@ status: ready | uninitialized | error
 root: <canonical absolute path>
 memory_path: <memory.path as configured | .specify/memory>
 external: true | false
-reader: file
-reader_fallback: none
+reader: file | obsidian-cli
+reader_fallback: none | config-invalid | not-installed | not-running | vault-mismatch
 binding_coverage: <X of N typed files> | unknown | n/a
 domains: <d1, d2, …> | none | unknown | n/a
 constitution: present | absent
@@ -48,10 +54,10 @@ error: <code> — <memory.path as configured>
 | Line | Source JSON field | Rule |
 |---|---|---|
 | `status` | `status` | copy |
-| `root` | `root` | copy; `none` when `null`. Non-null for `root-missing` and `memory-incomplete` errors too (the location passed the permission and containment checks); this line is the only place an absolute path may appear |
+| `root` | `root` | copy; `none` when `null`. Non-null for `root-missing`, `memory-incomplete`, and `reader-*` errors too (the location passed the permission and containment checks); this line is the only place an absolute path may appear |
 | `memory_path` | `memory_path` | copy; the only path value a consumer may persist |
 | `external` | `external` | `true` / `false` |
-| `reader`, `reader_fallback` | `reader`, `reader_fallback` | copy |
+| `reader`, `reader_fallback` | `reader`, `reader_fallback` | copy, after step 4 when it ran; `reader_cli` is never rendered |
 | `binding_coverage` | `binding_coverage` | copy; legacy `X/N` index labels already arrive as `X of N` |
 | `domains` | `domains` | copy |
 | `constitution` | `constitution` | copy |
@@ -70,12 +76,18 @@ example with `/tdk-memory-init --ensure-templates`); `error` carries one code.
 | `ambiguous-default` | `.specify/memory/` and `memory/` both exist and nothing selects one |
 | `memory-incomplete` | only one of `memory-index.md` and `memory.yaml` exists |
 | `containment` | a symlink moves the root or a control file outside the permitted boundary, the canonical root or workspace path contains a forbidden character, or the root is the workspace, one of its ancestors, or the filesystem root |
-| `unsupported-reader` | `memory.reader.backend` names a backend this version does not provide |
+| `reader-not-installed` | `onUnavailable` refused the fallback: no acceptable Obsidian CLI binary was found |
+| `reader-not-running` | `onUnavailable` refused the fallback: the CLI gave no usable answer |
+| `reader-vault-mismatch` | `onUnavailable` refused the fallback: `memory.reader.vault` is unknown or its root is not this memory root |
 
 Warning codes: `absolute-path` (an absolute `memory.path` exposes a machine path
-once committed) and `legacy-constitution` (the root is not `.specify/memory` yet
+once committed), `legacy-constitution` (the root is not `.specify/memory` yet
 `.specify/memory/constitution.md` still exists; suggest moving it into the root
-with `git mv`). Put any such hint in plain prose after the block, never inside it.
+with `git mv`), `reader-config-invalid` (`memory.reader` is malformed, so the file
+reader is in use and memory is not blocked; `reader_fallback` is `config-invalid`),
+and `reader-not-installed`, `reader-not-running`, `reader-vault-mismatch` (the CLI
+reader is unavailable and the file reader is in use). Put any such hint in plain
+prose after the block, never inside it.
 
 For `external-not-allowed` the JSON `hint` selects the prose remediation after the
 block: `enable-allow-external` means add `"allowExternal": true` beside the

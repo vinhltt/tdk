@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.5.6] - 2026-11-04
+
+### Changed
+- tdk-handoff: script bundle picks up the memory.reader config schema
+
 ## [4.5.5] - 2026-10-27
 
 ### Changed

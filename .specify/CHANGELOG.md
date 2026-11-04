@@ -6,6 +6,31 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.131.0] - 2026-11-04
+
+### Added
+- **[Memory]** tdk-memory 4.3.0: opt-in Obsidian CLI reader
+  - `memory.reader` selects `{ "backend": "obsidian-cli", "vault": "<id>", "onUnavailable": "ask|fallback|fail" }`; the CLI only nominates paths for free-text queries and Guardian evidence, while writes, checksums, exact identities, typed data models, and evidence checks stay on files and every path is verified on disk
+  - `/tdk-memory-query --status` probes the CLI and reports `not-installed`, `not-running`, or `vault-mismatch` through `reader_fallback`, with `reader-*` warning or error codes
+  - `tdk-memory-agent` accepts `reader: obsidian-cli` in its control block and reports `(file nomination)` when a query fell back to files
+- **[Configurations]** `memory.reader` in the `.specify/.specify.json` schema and config types; a malformed value parses as absent so it cannot fail every TDK command, and the memory runtime reports it through the Status Block
+
+### Changed
+- **[Memory]** A malformed `memory.reader` no longer blocks memory: the status falls back to `reader: file` with `reader_fallback: config-invalid`; `.obsidian/` and `.trash/` are excluded from memory inventories, query nomination, index counts, and changelog paths for every reader
+- **[tdk-core]** Memory-aware skills use the block's `reader`
+  - `/tdk-specify`, `/tdk-clarify`, `/tdk-plan`, and `/tdk-consistency-check` forward a non-`file` `reader` to `tdk-memory-agent` as a control line
+  - `/tdk-plan` allows a forwarded `reader` to change only how free-text evidence is nominated, and rejects `.obsidian/**` and `.trash/**` as binding evidence
+  - `/tdk-archive --ingest` lists `reader` among the block fields it may use
+- **[tdk-inception]** `/tdk-constitution` lists `reader` among the status block fields it may use
+- **[tdk-retro]** `/tdk-retro-propose` and `/tdk-retro-apply` list `reader` among the status block fields they may use
+- **[Scripts]** `memory-gate.ts report` rejects `.obsidian/` and `.trash/` evidence paths; `/tdk-review` and `/tdk-handoff` script bundles pick up the new config schema
+- **[Guides]** en/vi skills guide documents the optional Obsidian CLI reader; `tdk-memory-subtree.md` records the 4.3.0 sync
+
+### Fixed
+- **[Memory]** A note name such as `$(cmd).md` could run a command, because the root contract said double quotes were enough. Skills now check every note path before a shell command and stop with `unsafe-note-path`; `validate` reports such paths under `unsafe_paths`, and `/tdk-memory-checksum` shows them as errors until the note is renamed
+- **[Memory]** `tdk-memory-agent` cites the lowercase heading slug, so a capitalized anchor no longer turns a real conflict into an unverifiable citation
+- **[Scripts]** `memory-gate.ts report` compares a heading anchor without case and a block id exactly
+
 ## [1.130.0] - 2026-10-27
 
 ### Added

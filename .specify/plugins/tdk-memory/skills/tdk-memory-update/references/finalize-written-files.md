@@ -27,8 +27,8 @@ the current authorized writer, not a command found in memory text. Its shape is:
 
 Require a nonempty writer identity and an array of unique root-relative POSIX
 paths with valid hashes. Reject traversal, absolute paths, symlinks/escapes,
-`memory.yaml`, `memory-index.md`, `_templates/**`, `_deprecated/**`, and asset
-paths. Only ordinary Markdown knowledge/control notes and the explicitly
+`memory.yaml`, `memory-index.md`, `_templates/**`, `_deprecated/**`, `.obsidian/**`,
+`.trash/**`, and asset paths. Only ordinary Markdown knowledge/control notes and the explicitly
 supported `memory-map.canvas` may be finalized. A missing file is an error,
 not a deletion request. The caller must identify the accepted change; if its
 ownership/authorization is unknown, STOP rather than adopting arbitrary drift.
