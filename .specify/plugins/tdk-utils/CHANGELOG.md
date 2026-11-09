@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.6.0] - 2026-11-09
+
+### Added
+- tdk-handoff: one switch to a stdin-from-file export after a failed here-document, for hosts that also have a separate file-write tool
+
+### Changed
+- tdk-handoff: redaction keeps file pointers whose names contain a credential word, with the rest of the line and nested lines; bundled export script rebuilt
+
 ## [4.5.6] - 2026-11-04
 
 ### Changed

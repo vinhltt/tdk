@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.3.8] - 2026-11-09
+
+### Changed
+- tdk-review: report redaction keeps file pointers whose names contain a credential word, using the same rule as tdk-handoff; bundled report writer rebuilt
+
 ## [14.3.7] - 2026-11-04
 
 ### Changed

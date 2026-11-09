@@ -6,6 +6,21 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.131.2] - 2026-11-09
+
+### Added
+- **[tdk-handoff]** One switch to a stdin-from-file export after a failed here-document
+  - Allowed only when the host runs commands through a string and also has a separate file-write tool, and one here-document ended in a shell parse error, in `invalid_packet` for JSON that was valid before transport, or in the host refusing a command that was too long
+  - The same redacted JSON goes to `packet.json` in a `mktemp -d` directory and reaches the unchanged helper on stdin; a guarded `EXIT` trap removes the file and directory without changing the helper's exit status
+  - A host with only a shell still stops; `cat` or `printf` carrying the body stays forbidden
+
+### Fixed
+- **[tdk-handoff]** Redaction keeps a file pointer whose name contains a credential word, such as `x-auth-y.md:177` or `session-tracker.cjs:12`, together with the rest of the line and its nested lines
+  - Applies to allowlisted source, doc and structured-data extensions followed by a line reference of at most five digits per group; text after the pointer is still scanned, so `auth.ts:12 password=...` keeps the pointer and redacts the value
+  - Indented `grep -n` lines, longer digit groups, comma ranges without a space and other extensions stay redacted; a bare value right after such a pointer is no longer masked, as `redaction-patterns.md` now states
+  - Bundled `handoff-export.js` rebuilt
+- **[tdk-review]** Report redaction uses the same file-pointer rule; `report-contract.md` notes that a pointer with another extension may still be redacted; bundled `review-write-report.js` rebuilt
+
 ## [1.131.1] - 2026-11-09
 
 ### Changed

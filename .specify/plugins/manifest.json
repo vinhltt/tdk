@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-11-09T01:35:53Z",
+  "generated_at": "2026-11-09T04:12:53Z",
   "plugins": {
     "tdk-core": {
-      "version": "14.3.7",
+      "version": "14.3.8",
       "components": {
         "skills": {
           "tdk-archive": {
@@ -22,7 +22,7 @@
             "version": "14.3.7"
           },
           "tdk-review": {
-            "version": "14.3.7"
+            "version": "14.3.8"
           },
           "tdk-specify": {
             "version": "14.3.7"
@@ -41,10 +41,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e94fd7a0f43ccf93767b3eb6c87adec554f4846b89f5e62f6caa22f700a68c31",
-        ".claude-plugin/plugin.json": "06c69b6ee20efdb6d95459c7e5a0ddec3bda4f901aaf306bb447f59a66f7d9c3",
-        ".codex-plugin/plugin.json": "94d2b536b3fc79bb99d9dde488f614c71fcc0aa8a02b1635b71c552aea4e3622",
-        ".cursor-plugin/plugin.json": "94d2b536b3fc79bb99d9dde488f614c71fcc0aa8a02b1635b71c552aea4e3622",
-        "CHANGELOG.md": "d4cba32bd4b553ae23e9dca175dc802ad206ce779ce357397a8f16538578e17b",
+        ".claude-plugin/plugin.json": "a37abf90c471f2e109d0f361d8a5457a0f8d0bb7e44a4054dee6e36e0d974f36",
+        ".codex-plugin/plugin.json": "94a19649af4746327e1f3610fbaec07832050c0e2338e50f172b37f9ffba386f",
+        ".cursor-plugin/plugin.json": "94a19649af4746327e1f3610fbaec07832050c0e2338e50f172b37f9ffba386f",
+        "CHANGELOG.md": "d4678ba06b3f7042b225230d5fec7c8658a5a11803152ecbbaaa77ead6e17bbd",
         "hooks/destructive-command-block.cjs": "8973b014c2f2eb59a481c1747b5395572dcc630029b4434f151843bea6b4cb8a",
         "hooks/dev-context-injector.cjs": "755a4fc0ffa941c8165f27b38c619d1030f68b16782ac2d6ca04047895162c2c",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
@@ -87,17 +87,17 @@
         "skills/tdk-plan/references/scope-challenge.md": "9f341caed80d5e83989c2e83efc24e8aec7ffcaf84d512919990b0e75dbc1913",
         "skills/tdk-plan/references/validate-question-framework.md": "45d39792af3863b0819d694a26e8cc6c424d58c538fa3b3e52ca1256f05171e3",
         "skills/tdk-plan/references/validate-workflow.md": "55062a02fb20504b7e281b65e00a353e9e7654dfd9a1f7ea8028d9aa4976b4d5",
-        "skills/tdk-review/SKILL.md": "f25f644e9449c768e1585149e660f7c4597eadb78c27b405c8350a799f2d566b",
-        "skills/tdk-review/references/report-contract.md": "502c7506dd049a0af44ca30a7399b061f5c1f425bff356585958a2ef90bb5de8",
+        "skills/tdk-review/SKILL.md": "10b87b40ec51a0cebf68bbeaf90440b50a010a3d08861b624c35235d937852a9",
+        "skills/tdk-review/references/report-contract.md": "30576027a912bcaeb8ed79077c2a7503b483cd83e2e0fdf777cea2e1fef406b9",
         "skills/tdk-review/references/review-orchestration.md": "16c7872550aa40ac75e224d7f834a18919cd3b43bf9c210a573a12282373d66e",
         "skills/tdk-review/scripts/RUNTIME-LICENSE.txt": "546f141bc7c20ed1fd339d905c922ecc36295a61bd74627b9449a18282c9714a",
         "skills/tdk-review/scripts/build.ts": "e4555c1ae5416131ae79da507deca92647cd4be4a7984956cf963dbb1bef9810",
         "skills/tdk-review/scripts/bun.lock": "40a5341c6099a3d8b62d971603ac430b8ba6a89052663defa7bc4d1ad7e580df",
         "skills/tdk-review/scripts/package.json": "530e18265171560cf285ecfa20aa5cc7ba1c75805f9909a3df277eb697d02195",
-        "skills/tdk-review/scripts/review-redaction.ts": "fad41196851b052157071aaba3a2427df74836093606736f4bf066068b36c11f",
+        "skills/tdk-review/scripts/review-redaction.ts": "ec2707fea3b40097bb9d7e880fae171f1f124e8d5554fbed7f014a402e4e0751",
         "skills/tdk-review/scripts/review-scope.js": "f25de61bb7e2f8188f08478f4d5cde2059c150c1b31a1d594c3bb1e3fb201491",
         "skills/tdk-review/scripts/review-scope.ts": "188c9d9c072312bb257dba30b8297584e14da0575c34d165fb2e338068f58493",
-        "skills/tdk-review/scripts/review-write-report.js": "1cb76fec601b6ca5945ec7cf993707a448a0162dbd47a3dd8550b5576102f84a",
+        "skills/tdk-review/scripts/review-write-report.js": "c2da185571f28ae3c654c5723a09d1716c5de9f2e24b466ce27effa267dbfccd",
         "skills/tdk-review/scripts/review-write-report.ts": "4b2f477b821e329ec959756c4df83f21520a1caa04e6b1fb8afefaa91fbeca98",
         "skills/tdk-review/scripts/tsconfig.json": "2825ddd3e39b6cf920d5e61f7e57e4efcd597874ee9e8e8ee128f559d242b79c",
         "skills/tdk-specify/SKILL.md": "2ee12edf2b7492212ad3fe0cc875c4b2fc2eb7c21668a120f6ac2dc3b14c3aaf",
@@ -496,7 +496,7 @@
       }
     },
     "tdk-utils": {
-      "version": "4.5.6",
+      "version": "4.6.0",
       "components": {
         "skills": {
           "brainstorming": {
@@ -527,7 +527,7 @@
             "version": "4.5.4"
           },
           "tdk-handoff": {
-            "version": "4.5.6"
+            "version": "4.6.0"
           },
           "tdk-load-project-context": {
             "version": "4.5.0"
@@ -576,10 +576,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e68f07c43a122d63dbd44fafbd978b0adb4f5f18bb95537f80014e859846f8b4",
-        ".claude-plugin/plugin.json": "093843be94a14b2dccf47cce811d9bfbfaf76700f6ac3b4ea4e838ed11546ba0",
-        ".codex-plugin/plugin.json": "093843be94a14b2dccf47cce811d9bfbfaf76700f6ac3b4ea4e838ed11546ba0",
-        ".cursor-plugin/plugin.json": "093843be94a14b2dccf47cce811d9bfbfaf76700f6ac3b4ea4e838ed11546ba0",
-        "CHANGELOG.md": "69b9a7c44e3ed6ffecc0e7d483ab550ece841d0a130343288cb6ce29fac6cd05",
+        ".claude-plugin/plugin.json": "02f1c02e2fbd77314b91cbbc23da2ab84b46bfae5efedbf1f0a97a40335417df",
+        ".codex-plugin/plugin.json": "02f1c02e2fbd77314b91cbbc23da2ab84b46bfae5efedbf1f0a97a40335417df",
+        ".cursor-plugin/plugin.json": "02f1c02e2fbd77314b91cbbc23da2ab84b46bfae5efedbf1f0a97a40335417df",
+        "CHANGELOG.md": "79b9f7aeff1630ced0ad0c1157dbfd87d8e4176b250be88eb5a604cca59d4bd3",
         "agents/researcher.md": "239051264f41b129ef5c59adb573b7e762a528bb58d0ff8dd1e32eee243baaaf",
         "agents/tdk-code-reviewer.md": "84af7c3fa4785bc6e78bc9026ed6ee704c6bc70e3d1d146789138b2a299e83fe",
         "agents/tdk-counsel.md": "13965ba125b16a201b0fb1b412532447ca1279fd0217bc8977b19858ff86456f",
@@ -628,17 +628,17 @@
         "skills/tdk-branch-preflight/SKILL.md": "bb852c4c24fda570d5033dfd49ab4e23a47868e886fa9a780296d10433d4d03b",
         "skills/tdk-branch-preflight/references/git-map-contract.md": "164bab67fd38c481c44a768068e999ec9c838399dd4bc587ed211c1800b4554e",
         "skills/tdk-handoff/LICENSE.txt": "1bd321a3b9cfa8d4af2105e20edd69d830df0b28e83a1b0255558f888e493981",
-        "skills/tdk-handoff/SKILL.md": "9c6bb867c131f665e19bcc55d2261e39988d085552882246bd7cad8136582827",
+        "skills/tdk-handoff/SKILL.md": "ac785d5a0efe9f4387ae569b83bae573e026ca1220dc83060616462e00ac1a90",
         "skills/tdk-handoff/references/artifact-schema.md": "b5086ac6464958d27784dc166db2b19d7dd29a56ca81066fabe1add40a3a61f8",
-        "skills/tdk-handoff/references/redaction-patterns.md": "4f6640798f983ca84f74ad83e10e9f9bd1a25a6e95ceacd977bbec3f4902214d",
+        "skills/tdk-handoff/references/redaction-patterns.md": "0d2bd4d1a03f6ee7c7cf65c7b9a539e85085ead27be77dbd5d80c38279f1202a",
         "skills/tdk-handoff/references/upstream-owner.txt": "3db76c50da7db44169ac8ecb4d8fdeb50e52ecad577e3a32e997ca176a441aee",
         "skills/tdk-handoff/scripts/RUNTIME-LICENSE.txt": "3ea3e8d23e7f9bc30a2c9b54c0c6d946ee52b49e72652c94139063afbd875c3a",
         "skills/tdk-handoff/scripts/build.ts": "484754b33a236e4e44f8e3cf352dd715a443bb7dba57b3801c704f7eb5b219dc",
         "skills/tdk-handoff/scripts/bun.lock": "9493a44b31eae535b70ff383f65284f3eb3e1231b1ed5b7d54c0f621ffe4be5e",
         "skills/tdk-handoff/scripts/handoff-artifact.ts": "46146b7b3b74355debeabdb0be2adb424a52a076a6ebe37a7c455571a9ebe2a0",
-        "skills/tdk-handoff/scripts/handoff-export.js": "66138274659767d8e60bf7a3f71acfc60006b73ec49b136290f0c96ea51cd29f",
+        "skills/tdk-handoff/scripts/handoff-export.js": "dec0a420a531e7a0ba4ecce3c7d347c81208b6a13bc72ff6ae472bbc8d7111c4",
         "skills/tdk-handoff/scripts/handoff-export.ts": "9a2c232416bd6bfbbce01982630ef8586cb571ce52de366aa1dfdfbcaaa5c99e",
-        "skills/tdk-handoff/scripts/handoff-redaction.ts": "eb6e02f58460a44be0b3af59835299cc102e4c84c7a5302cd7abe3093720ac0b",
+        "skills/tdk-handoff/scripts/handoff-redaction.ts": "f92c1765ac7611a6c3f1004840a0f9146502f11803ce9ac17a1b36f2fb4f8aa8",
         "skills/tdk-handoff/scripts/package.json": "f717a7d679e7c2209f8455e082c20f28d046066bbb56519e32cdbeaf1b52ee77",
         "skills/tdk-handoff/scripts/tsconfig.json": "2825ddd3e39b6cf920d5e61f7e57e4efcd597874ee9e8e8ee128f559d242b79c",
         "skills/tdk-load-project-context/SKILL.md": "c2e3e37e15bbc481ce585ce3bd44ac68134d191894a9d3a1a4976423f58f0d15",
