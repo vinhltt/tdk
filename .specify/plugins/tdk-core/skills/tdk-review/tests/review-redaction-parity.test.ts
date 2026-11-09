@@ -3,6 +3,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { sanitizeReviewText } from '../scripts/review-redaction';
 import { sanitizeHandoffText } from '../../../../tdk-utils/skills/tdk-handoff/scripts/handoff-redaction';
+import {
+  ACCEPTED_FAIL_OPEN,
+  ACCEPTED_OVER_REDACTION,
+  KEPT_FILE_POINTERS,
+  LEAK_CASES,
+} from '../../../../tdk-utils/skills/tdk-handoff/tests/file-pointer-cases';
 
 // The review sanitizer copies the handoff detectors; only its kept-path rule may differ. The source comparison
 // is the drift guard: sample inputs alone miss a detector edited in one copy only.
@@ -69,5 +75,23 @@ describe('review and handoff sanitizer parity', () => {
     for (const input of inputs) {
       expect(sanitizeReviewText(input).redactions).toBeLessThanOrEqual(sanitizeHandoffText(input).redactions);
     }
+  });
+
+  it('treats every file-pointer case identically', () => {
+    const inputs = [
+      ...KEPT_FILE_POINTERS,
+      ...LEAK_CASES.map(({ input }) => input),
+      ...ACCEPTED_FAIL_OPEN,
+      ...ACCEPTED_OVER_REDACTION,
+    ];
+    for (const input of inputs) expect(sanitizeReviewText(input), input).toEqual(sanitizeHandoffText(input));
+  });
+
+  // Parity alone would also pass if both copies were wrong in the same way.
+  it('keeps a file pointer and redacts the value after it in the review copy itself', () => {
+    expect(sanitizeReviewText('x-auth-y.md:177, kept?')).toEqual({ text: 'x-auth-y.md:177, kept?', redactions: 0 });
+    const { text } = sanitizeReviewText('auth.ts:12 password=hunter2');
+    expect(text).toStartWith('auth.ts:12 password=');
+    expect(text).not.toContain('hunter2');
   });
 });

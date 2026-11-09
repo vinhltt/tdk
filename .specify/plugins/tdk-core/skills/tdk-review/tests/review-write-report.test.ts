@@ -233,6 +233,17 @@ describe('review-write-report bundle', () => {
     expect(readFileSync(result.payload.path, 'utf-8')).toBe('## Proposed Fix Phases\n/tdk-plan sample-001 "fix [REDACTED:absolute-path]"');
   });
 
+  it('keeps a file pointer with a credential word and its nested line while redacting a real assignment through the bundle', async () => {
+    const { root, feature } = project();
+    const body = ['- See x-auth-y.md:177', '  - nested one', 'db.password: 123456'].join('\n');
+    const result = await run(root, feature, 'pointer-case', body);
+    expect(result.exitCode).toBe(0);
+    expect(result.payload.redactions).toBe(1);
+    const written = readFileSync(result.payload.path, 'utf-8');
+    expect(written).toContain('- See x-auth-y.md:177\n  - nested one\n');
+    expect(written).not.toContain('123456');
+  });
+
   it('exits 1 with invalid_arguments for an unknown flag or a missing option', async () => {
     const { root, feature } = project();
     const unknown = await run(root, feature, 'x', 'x', BUNDLE, ['--bogus']);

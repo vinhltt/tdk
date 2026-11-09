@@ -3,6 +3,13 @@ import {
   containsSensitiveHandoffText,
   sanitizeHandoffText,
 } from '../scripts/handoff-redaction';
+import {
+  ACCEPTED_FAIL_OPEN,
+  ACCEPTED_OVER_REDACTION,
+  KEPT_FILE_POINTERS,
+  LEAK_CASES,
+  POINTER_FOCUS,
+} from './file-pointer-cases';
 
 const awsId = `AKIA${'Q'.repeat(16)}`;
 const awsSecret = 'fabricatedAWSsecretMaterial0123456789abcd/';
@@ -491,6 +498,47 @@ describe('containsSensitiveHandoffText', () => {
       '[REDACTED:api-key]', 'src/file.ts', 'https://example.com/docs'];
     for (const value of values) {
       expect(containsSensitiveHandoffText(value)).toBe(sanitizeHandoffText(value).text !== value);
+    }
+  });
+});
+
+describe('file pointers whose names contain a credential word', () => {
+  it('keeps the pointer, the rest of the line and nested lines unchanged', () => {
+    for (const input of KEPT_FILE_POINTERS) {
+      expect(sanitizeHandoffText(input)).toEqual({ text: input, redactions: 0 });
+    }
+  });
+
+  it('accepts a focus that cites a pointer', () => {
+    expect(containsSensitiveHandoffText(POINTER_FOCUS)).toBe(false);
+  });
+
+  it('still redacts real assignments, values glued to a pointer and indented grep -n lines', () => {
+    for (const { input, value } of LEAK_CASES) {
+      const { text, redactions } = sanitizeHandoffText(input);
+      expect(text, input).not.toContain(value);
+      expect(redactions, input).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('keeps the pointer and redacts an assignment that follows it', () => {
+    const { text } = sanitizeHandoffText('auth.ts:12 password=hunter2');
+    expect(text).toStartWith('auth.ts:12 password=');
+    expect(text).not.toContain('hunter2');
+  });
+
+  // Patterns cannot tell a bare value after an allowlisted pointer from a real line reference, so these
+  // pass through unchanged by design. Changing this means revisiting the accepted fail-open.
+  it('passes the accepted fail-open shapes through unchanged', () => {
+    for (const input of ACCEPTED_FAIL_OPEN) {
+      expect(sanitizeHandoffText(input)).toEqual({ text: input, redactions: 0 });
+    }
+  });
+
+  // These stay redacted on purpose: a wrong keep discloses a value, a wrong redaction only hides a pointer.
+  it('still redacts the accepted over-redaction shapes', () => {
+    for (const input of ACCEPTED_OVER_REDACTION) {
+      expect(sanitizeHandoffText(input).text, input).not.toBe(input);
     }
   });
 });

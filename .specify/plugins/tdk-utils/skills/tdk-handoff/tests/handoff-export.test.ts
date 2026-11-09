@@ -522,3 +522,34 @@ test('supported YAML credentials and Unicode machine paths cannot survive the pe
     if (verification.includes('public_note')) expect(body).toContain('public_note: keep-this-evidence');
   }
 });
+
+test('compiled CLI accepts a focus that cites a file pointer with a credential word', async () => {
+  const dir = root();
+  const input = packet(); input.focus = 'fix session-tracker.cjs:12 regression';
+  const { code, stderr, result } = await cli(dir, input);
+  expect(code).toBe(0); expect(stderr).toBe('');
+  expect(result.ok).toBe(true);
+});
+
+test('compiled CLI keeps a file pointer and its nested list lines', async () => {
+  const dir = root();
+  const input = packet();
+  input.sections.current_state = '- See x-auth-y.md:177\n  - nested one\n  - nested two';
+  const { code, result } = await cli(dir, input);
+  expect(code).toBe(0);
+  expect(result.redactions).toBe(0);
+  const body = readFileSync(join(dir, result.path), 'utf8');
+  for (const line of ['- See x-auth-y.md:177', '  - nested one', '  - nested two']) expect(body).toContain(line);
+});
+
+test('compiled CLI keeps a file pointer but redacts the assignment after it', async () => {
+  const dir = root();
+  const input = packet();
+  input.sections.current_state = 'auth.ts:12 password=hunter2';
+  const { code, result } = await cli(dir, input);
+  expect(code).toBe(0);
+  expect(result.redactions).toBeGreaterThanOrEqual(1);
+  const body = readFileSync(join(dir, result.path), 'utf8');
+  expect(body).toContain('auth.ts:12');
+  expect(body).not.toContain('hunter2');
+});

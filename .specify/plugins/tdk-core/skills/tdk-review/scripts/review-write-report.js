@@ -71,6 +71,12 @@ var TOKEN_SOURCE = String.raw`(?:AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{36
 var ONLY_MARKERS = new RegExp(`^(?:\\s*${MARKER_SOURCE})+\\s*$`);
 var EXACT_TOKEN = new RegExp(`^(?:${TOKEN_SOURCE})$`, "i");
 var URL_TOKEN = new RegExp(`(?<!\\w)(?:${TOKEN_SOURCE})(?![\\w-])`, "i");
+var POINTER_FILE = /\.(?:md|mdx|ts|tsx|mts|cts|js|jsx|cjs|mjs|json|ya?ml|toml|py|go|rs|cs|java|kt|rb|php|c|h|cc|cpp|hpp|swift|sh|bash|ps1|sql|html|css|scss|vue|svelte|tpl)$/i;
+var LINE_REFERENCE = /\d{1,5}(?:-\d{1,5})?(?::\d{1,5})?(?!:(?: {2}|\t))(?=[)\]}>*~|`'",;.!?:]*(?:\s|$)|\]\()/y;
+function startsWithLineReference(text, start) {
+  LINE_REFERENCE.lastIndex = start;
+  return LINE_REFERENCE.test(text);
+}
 var MACHINE_ROOTS = [
   "home",
   "Users",
@@ -370,6 +376,8 @@ function sanitizeReviewText(value) {
     if (!key || !assignmentCategory(key, ""))
       continue;
     const start = match.index + match[0].length;
+    if (match[3] === ":" && !match[1] && POINTER_FILE.test(key) && startsWithLineReference(text, start))
+      continue;
     const parsed = assignmentValue(text, start, match.index, match[3]?.includes("=") ?? false);
     assignments.lastIndex = Math.max(assignments.lastIndex, parsed.end);
     if (!parsed.raw.trim() || ONLY_MARKERS.test(parsed.raw))

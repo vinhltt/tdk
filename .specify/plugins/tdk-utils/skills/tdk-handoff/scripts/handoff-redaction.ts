@@ -6,6 +6,16 @@ const TOKEN_SOURCE = String.raw`(?:AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{
 const ONLY_MARKERS = new RegExp(`^(?:\\s*${MARKER_SOURCE})+\\s*$`);
 const EXACT_TOKEN = new RegExp(`^(?:${TOKEN_SOURCE})$`, 'i');
 const URL_TOKEN = new RegExp(`(?<!\\w)(?:${TOKEN_SOURCE})(?![\\w-])`, 'i');
+// Source, doc and structured-data extensions only. Config and key-material extensions stay out on purpose:
+// a wrong match here discloses a value, while a missing one only over-redacts.
+const POINTER_FILE = /\.(?:md|mdx|ts|tsx|mts|cts|js|jsx|cjs|mjs|json|ya?ml|toml|py|go|rs|cs|java|kt|rb|php|c|h|cc|cpp|hpp|swift|sh|bash|ps1|sql|html|css|scss|vue|svelte|tpl)$/i;
+// At most five digits per group, then a real boundary, so `auth.ts:12)value` and one long digit run stay redacted.
+// A colon plus indentation is `grep -n` output of an indented source line, which can hold a literal, so it stays redacted too.
+const LINE_REFERENCE = /\d{1,5}(?:-\d{1,5})?(?::\d{1,5})?(?!:(?: {2}|\t))(?=[)\]}>*~|`'",;.!?:]*(?:\s|$)|\]\()/y;
+function startsWithLineReference(text: string, start: number): boolean {
+  LINE_REFERENCE.lastIndex = start;
+  return LINE_REFERENCE.test(text);
+}
 
 function tokenCategory(value: string): string | null {
   if (!EXACT_TOKEN.test(value)) return null;
@@ -261,6 +271,8 @@ export function sanitizeHandoffText(value: string): { text: string; redactions: 
     const key = match[2];
     if (!key || !assignmentCategory(key, '')) continue;
     const start = match.index + match[0].length;
+    // Runs before the value is parsed, so text after the pointer is still scanned for real assignments.
+    if (match[3] === ':' && !match[1] && POINTER_FILE.test(key) && startsWithLineReference(text, start)) continue;
     const parsed = assignmentValue(text, start, match.index, match[3]?.includes('=') ?? false);
     assignments.lastIndex = Math.max(assignments.lastIndex, parsed.end);
     if (!parsed.raw.trim() || ONLY_MARKERS.test(parsed.raw)) continue;
