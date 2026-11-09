@@ -57,7 +57,7 @@ Resolve the bundled helper relative to the directory containing this loaded `SKI
 <loaded-skill-root>/scripts/handoff-export.js
 ```
 
-Require preinstalled Bun and this bundled helper before capture export. No consumer `.specify/scripts/ts` tree or npm dependencies are required. The renderer requires Bun's built-in `Bun.markdown.render` and `Bun.markdown.html`; an older runtime missing either capability is an actionable **STOP**, not permission to update Bun automatically. Report the missing runtime/capability/bundle and ask for provisioning outside this invocation. No dependency installation, build, bootstrap, package-manager fallback, alternate writer, or use of another plugin's private runtime resources is allowed. No AK runtime dependency exists. The skill's location never selects the capture host.
+Require preinstalled Bun and this bundled helper before capture export. No consumer `.specify/scripts/ts` tree or npm dependencies are required. The renderer requires Bun's built-in `Bun.markdown.render` and `Bun.markdown.html`; an older runtime missing either capability is an actionable **STOP**, not permission to update Bun automatically. Report the missing runtime/capability/bundle and ask for provisioning outside this invocation. No dependency installation, build, bootstrap, package-manager fallback, alternate artifact writer, or use of another plugin's private runtime resources is allowed. No AK runtime dependency exists. The skill's location never selects the capture host.
 
 ## Collect only necessary read-only evidence
 
@@ -124,7 +124,7 @@ Minimize and redact content **before** sending JSON to the helper, including tit
 
 The helper owns emitted frontmatter, the H1 and exact nine H2s, local date and offset-bearing `generated_at`, redaction count, output directories, and create-new protection. Do not prewrite Markdown or supply generated fields/counts.
 
-## Export once using literal stdin
+## Create the artifact at most once using literal stdin
 
 Invoke exactly this helper with the confirmed canonical host and validated slug:
 
@@ -134,7 +134,7 @@ bun --no-install <loaded-skill-root>/scripts/handoff-export.js --capture-root <c
 
 Prefer a process API: pass executable `bun`, an argument vector containing `--no-install`, the resolved helper path, `--capture-root`, the host path, `--slug`, and the slug; pass the JSON-serialized, already-redacted packet through the API's explicit stdin parameter. Use the host as the working directory. Keep command arguments separate from body content.
 
-On a command-string-only host, use a **single-quoted, noninteractive here-document**. First serialize the minimized/redacted object as JSON, choose a delimiter absent anywhere in that payload, and verify its absence before executing. Substitute only the resolved helper path, confirmed host and slug into shell-quoted arguments; keep the JSON entirely literal. This complete sanitized example demonstrates transport, not evidence to copy into a real packet:
+On a host that runs commands through a string, use a **single-quoted, noninteractive here-document**. First serialize the minimized/redacted object as JSON, choose a delimiter absent anywhere in that payload, and verify its absence before executing. Substitute only the resolved helper path, confirmed host and slug into shell-quoted arguments; keep the JSON entirely literal. This complete sanitized example demonstrates transport, not evidence to copy into a real packet:
 
 ```sh
 bun --no-install '<loaded-skill-root>/scripts/handoff-export.js' --capture-root '<confirmed-capture-root>' --slug 'resume-review' <<'TDK_HANDOFF_JSON_END'
@@ -161,18 +161,41 @@ bun --no-install '<loaded-skill-root>/scripts/handoff-export.js' --capture-root 
 TDK_HANDOFF_JSON_END
 ```
 
-Quote actual argv paths safely, including paths containing single quotes; never interpolate the packet to build executable syntax. Already-redacted JSON may appear in this literal transport; raw secrets, transcripts, or drafts may not. Never pass the body via flags/environment variables or a temporary file, and never evaluate captured content as shell/code. A host scripting tool may call the process API with a JSON data object and explicit stdin; it must not call `eval` on packet content. No pipe that executes captured content is allowed. If literal stdin transport cannot be provided, stop rather than use an unsafe fallback writer.
+Quote actual argv paths safely, including paths containing single quotes; never interpolate the packet to build executable syntax. Already-redacted JSON may appear in this literal transport; raw secrets, transcripts, or drafts may not. Never pass the body via flags/environment variables. Use a temporary file only through the file route below. Never evaluate captured content as shell/code. A host scripting tool may call the process API with a JSON data object and explicit stdin; it must not call `eval` on packet content. No pipe that executes captured content is allowed. If literal stdin transport cannot be provided, stop rather than use an unsafe fallback writer.
 
-Only this final export and creation of missing `.specify/` and `.specify/handoffs/` output-parent directories may mutate disk. There is no overwrite or alternate-directory retry.
+Only this final export, the file route's temporary directory, and creation of missing `.specify/` and `.specify/handoffs/` output-parent directories may mutate disk. There is no overwrite or alternate-directory retry.
+
+### File route after a failed here-document
+
+Some hosts cut or refuse long command strings, so a here-document can fail before or inside the helper. Use this route only when all of these hold:
+
+- the host runs commands through a string and also has a separate file-write tool whose content does not travel through that string;
+- one here-document attempt ended in a shell parse error, in `invalid_packet` for JSON that was valid before transport, or in the host refusing to start the command because it was too long;
+- this route has not already been used for this export.
+
+Any other error still stops as described below. With no separate file-write tool, stop and shorten the packet: `cat`, `printf` or any command carrying the body travels through the same string and can be cut silently with exit 0.
+
+1. Run `mktemp -d` and note the printed directory. On Git Bash, give a native file-write tool the `cygpath -w` form of that directory.
+2. With the file-write tool, write the same already-redacted JSON to `packet.json` in that directory as UTF-8 without a BOM. Never write a raw draft. If writing fails, do the cleanup in step 4 and stop.
+3. From the host directory, run the helper with the POSIX form of the directory. Run this command directly, not wrapped in `bash -c`, because a host safety check can block a wrapped script that contains `rm`:
+
+   ```sh
+   d='<temp-directory>'; ( trap 'rm -f "$d/packet.json" || :; rmdir "$d" 2>/dev/null || :' EXIT; bun --no-install '<loaded-skill-root>/scripts/handoff-export.js' --capture-root '<confirmed-capture-root>' --slug '<slug>' < "$d/packet.json" )
+   ```
+
+   The subshell keeps the helper's exit status, the trap removes the file on every normal exit, and the `|| :` guards stop a cleanup failure from changing that status. Do not append `; rm ...` after the helper, because its status would then hide a failure.
+
+4. Confirm the directory is gone with `test ! -e '<temp-directory>'`. If the helper never ran, or the directory remains after a killed process, run `d='<temp-directory>'; rm -f "$d/packet.json"; rmdir "$d"`. If the directory still exists after that, for example because it holds an unexpected file, leave it and tell the user.
 
 ## Interpret the helper result and return
 
 Require a successful process exit and JSON `{ "ok": true, "path": "...", "kind": "...", "redactions": 0 }`; use its returned values, never fabricate a path/date/count. The path is host-relative `.specify/handoffs/<YYYYMMDD>-<slug>.md`. The count reports helper-applied replacements, not proof that all sensitive information was detected.
 
-On nonzero exit, malformed output, or `{ "ok": false, "error": "..." }`, stop and report only a safe actionable error:
+On nonzero exit, malformed output, or `{ "ok": false, "error": "..." }`, stop and report only a safe actionable error, except for the single switch to the file route above:
 
 - `collision_exists`: request another explicit slug. Never auto-number, overwrite, remove an existing artifact, or retry elsewhere.
 - `sensitive_focus` / `invalid_slug`: request a sanitized focus or valid explicit slug without echoing sensitive input.
+- `invalid_packet` after a here-document, for JSON that was valid before transport, allows the single switch to the file route when all of its conditions hold; a repeat stops.
 - `invalid_packet` / `invalid_structure` / `invalid_arguments`: identify the JSON/schema/arguments problem from safe evidence; do not claim export succeeded. If missing Bun Markdown capability or dependencies caused failure, report that prerequisite for out-of-capture provisioning.
 - `capture_root_mismatch`, `invalid_capture_root`, `invalid_capture_config`, `unsafe_output_path`, or `write_failed`: report the host/config/path/write blocker; do not repair setup, change destinations, or write an ad hoc replacement.
 
