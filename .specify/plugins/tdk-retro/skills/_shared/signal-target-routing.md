@@ -36,5 +36,6 @@ Use this table to classify feedback signals into update targets.
 
 - Prefer the narrowest target that will prevent recurrence.
 - Prefer consumer-owned test skills for consumer-specific test conventions.
-- Do not propose memory targets if memory is not initialized; mark the entry `blocked`.
+- Do not propose memory targets unless memory is `ready`. With `ready` memory and an unknown domain, mark the entry `blocked`.
 - Do not propose direct edits to the memory root; `/tdk-memory-update` owns memory writes.
+- `target_path` is repo-relative with no leading `./`; history matches it exactly.

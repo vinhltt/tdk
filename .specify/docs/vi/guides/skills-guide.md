@@ -194,8 +194,8 @@ Excluded:
 | `/tdk-memory-changelog` | Record staged memory changes trong `CHANGELOG.md`. | staged memory root diff | Memory edits ready để document trước commit. |
 | `/tdk-memory-checksum` | Kiểm tra integrity bằng Node.js; repair chỉ sau khi được duyệt. | `--memory-root`, `--fix` | Phát hiện drift hoặc chẩn đoán `memory.yaml` lỗi mà không tự chấp nhận byte bị sửa. |
 | `/tdk-retro-collect` | Collect retrospective feedback sau TDK spec/session. | reviews, drift, UT results, traces, user feedback | Completed workflow nên feed learning loop. |
-| `/tdk-retro-propose` | Propose technical hoặc memory learning deltas từ feedback. | `retro-feedback.md` | Feedback cần reviewable learning changes. |
-| `/tdk-retro-apply` | Apply approved learning deltas. | approved `learning-delta.md` entries | Accepted retro learnings nên update skills/docs/memory. |
+| `/tdk-retro-propose` | Propose technical hoặc memory learning deltas từ feedback, có đối chiếu với học cũ của các spec khác. | `retro-feedback.md` | Feedback cần reviewable learning changes. |
+| `/tdk-retro-apply` | Apply approved learning deltas, hiện học cũ trên cùng target trước mỗi quyết định. | approved `learning-delta.md` entries | Accepted retro learnings nên update skills/docs/memory. |
 
 Memory skills cần Node.js >=18, không cần Python hay máy chủ transport ngoài.
 `memory.yaml` giữ version `"2"`; receipt template là phần bổ sung tùy chọn.

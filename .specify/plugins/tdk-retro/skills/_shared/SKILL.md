@@ -1,10 +1,10 @@
 ---
 metadata:
-  version: 1.2.2
+  version: 1.3.0
 ---
 
 # _shared
 
-Shared reference documents for tdk-retro skills: script-command-contract, signal-target-routing, learning-delta-schema, retro-feedback-schema, consumer-skill-discovery, archived-spec-handling.
+Shared reference documents for tdk-retro skills: script-command-contract, signal-target-routing, learning-delta-schema, retro-feedback-schema, consumer-skill-discovery, archived-spec-handling, prior-learning-lookup.
 
 Not user-invocable — these files are referenced by `tdk-retro-collect`, `tdk-retro-propose`, and `tdk-retro-apply`.

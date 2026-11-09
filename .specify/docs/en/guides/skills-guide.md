@@ -194,8 +194,8 @@ Excluded:
 | `/tdk-memory-changelog` | Record staged memory changes in `CHANGELOG.md`. | staged memory root diff | Memory edits are ready to document before commit. |
 | `/tdk-memory-checksum` | Read-only Node.js integrity validation; explicitly approved repair. | `--memory-root`, `--fix` | Detect drift or diagnose a malformed `memory.yaml` without silently accepting changed bytes. |
 | `/tdk-retro-collect` | Collect retrospective feedback after a TDK spec/session. | reviews, drift, UT results, traces, user feedback | A completed workflow should feed the learning loop. |
-| `/tdk-retro-propose` | Propose technical or memory learning deltas from feedback. | `retro-feedback.md` | Feedback needs reviewable learning changes. |
-| `/tdk-retro-apply` | Apply approved learning deltas. | approved `learning-delta.md` entries | Accepted retro learnings should update skills/docs/memory. |
+| `/tdk-retro-propose` | Propose technical or memory learning deltas from feedback, checked against earlier learning from other specs. | `retro-feedback.md` | Feedback needs reviewable learning changes. |
+| `/tdk-retro-apply` | Apply approved learning deltas, showing earlier learning on the same target before each decision. | approved `learning-delta.md` entries | Accepted retro learnings should update skills/docs/memory. |
 
 Memory skills require Node.js >=18, not Python or an external transport server.
 `memory.yaml` remains version `"2"`; optional template receipts are additive.

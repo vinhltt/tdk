@@ -4,6 +4,16 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.3.0] - 2026-11-09
+
+### Added
+- Shared prior-learning lookup that searches every spec's learning-delta.md, active and archived, by target, domain, keyword, and entry id
+
+### Changed
+- /tdk-retro-propose checks earlier learning before proposing: new entries record prior (related, reverses, repeats-rejected) and new_evidence, re-runs append instead of rewriting, and the report prints the history counts
+- /tdk-retro-apply shows earlier learning on the same target for every operation, names a reversed or repeated entry in the question, and records decided_at, rejection_reason, and blocked_reason
+- learning-delta schema adds prior, new_evidence, decided_at, rejection_reason, and blocked_reason; entries are append-only
+
 ## [1.2.3] - 2026-11-04
 
 ### Changed

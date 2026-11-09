@@ -6,6 +6,22 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.131.1] - 2026-11-09
+
+### Changed
+- **[tdk-retro]** `/tdk-retro-propose` checks earlier learning in every spec's `learning-delta.md`, active and archived, before proposing
+  - New entries record `prior` (`related`, `reverses`, `repeats-rejected`); the last two also record `new_evidence`, or `new_evidence: none` when there is none
+  - Re-running propose appends instead of rewriting: `applied` and `rejected` entries stay byte-identical, covered signals are reported as `already covered`, and the 10-entry limit counts per run
+  - `blocked` entries return to `proposed` once their `blocked_reason` is gone
+  - The report prints `N spec active, M spec archive, D delta, E entry` and warns when an applied learning is missing from its target file
+  - Memory targets are proposed only when memory is `ready`; an unknown domain on `ready` memory is `blocked`
+- **[tdk-retro]** `/tdk-retro-apply` shows earlier learning on the same target for every operation before asking
+  - Entries that reverse or repeat earlier learning name it in the question; approving one with `new_evidence: none` asks what changed
+  - Rejecting can record `rejection_reason`; decisions record `decided_at`, and blocked entries record `blocked_reason`
+  - The report prints a `git add` line including `learning-delta.md`; it is not run
+  - Memory status now runs before the review step when a memory entry is pending
+- **[Guides]** en/vi skills guide rows for `/tdk-retro-propose` and `/tdk-retro-apply` describe the check against earlier learning
+
 ## [1.131.0] - 2026-11-04
 
 ### Added

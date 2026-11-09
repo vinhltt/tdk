@@ -96,6 +96,19 @@ describe('deriveRetroStatus', () => {
     expect(derive({ 'retro-feedback.md': '#\n', 'learning-delta.md': delta('applied') }).retro_status).toBe('done');
   });
 
+  it('ignores history fields, including reasons that quote entry syntax', () => {
+    const entry = (n: number, status: string, ...fields: string[]) => [
+      `### Entry ${n}`, `- status: ${status}`, ...fields, '- content:', '  ```markdown', '  - status: proposed', '  ```', '',
+    ].join('\n');
+    const deltaMd = ['# Learning Delta - sample-001', '', '## Entries', '',
+      entry(1, 'applied', '- prior: none', '- decided_at: 2026-11-06T00:00:00Z'),
+      entry(2, 'rejected', '- prior: feature/sample-000#Entry 1: reverses', '- new_evidence: none',
+        '- rejection_reason: restates ### Entry 9 and - status: proposed', '- decided_at: 2026-11-06T00:00:00Z'),
+      entry(3, 'blocked', '- blocked_reason: memory not initialized, - status: proposed'),
+    ].join('\n');
+    expect(derive({ 'retro-feedback.md': '#\n', 'learning-delta.md': deltaMd })).toEqual({ retro_status: 'done', blocked: 1 });
+  });
+
   it('does not report done for a delta with no readable entries or an unknown status', () => {
     expect(derive({ 'retro-feedback.md': '#\n', 'learning-delta.md': '# Learning Delta\n' }).retro_status).toBe('proposed');
     expect(derive({ 'retro-feedback.md': '#\n', 'learning-delta.md': delta('applied', 'pending') }).retro_status).toBe('proposed');

@@ -7,24 +7,24 @@
 | Skill | Purpose | Input | Output |
 |---|---|---|---|
 | `tdk-retro-collect` | Collect evidence-backed signals from reviews, phase drift, UT results, Langfuse traces when available, and user feedback. | `{TASK_ID}` | `{FEATURE_DIR}/retro-feedback.md` |
-| `tdk-retro-propose` | Convert active feedback signals into reviewable technical or memory learning deltas. | `{TASK_ID}` | `{FEATURE_DIR}/learning-delta.md` |
-| `tdk-retro-apply` | Ask for user approval per delta, apply approved technical edits, delegate approved memory edits, and update entry statuses. | `{TASK_ID}` | Updated target files and `{FEATURE_DIR}/learning-delta.md` statuses |
+| `tdk-retro-propose` | Convert active feedback signals into reviewable technical or memory learning deltas, checked against earlier learning. | `{TASK_ID}` | `{FEATURE_DIR}/learning-delta.md` (appended on re-run) |
+| `tdk-retro-apply` | Ask for user approval per delta, apply approved technical edits, delegate approved memory edits, and update entry statuses. Shows earlier learning on the same target before each decision. | `{TASK_ID}` | Updated target files and `{FEATURE_DIR}/learning-delta.md` statuses |
 
 ## Artifacts
 
 | File | Owner | Notes |
 |---|---|---|
 | `retro-feedback.md` | `tdk-retro-collect` | Observation artifact only. No proposed fixes. |
-| `learning-delta.md` | `tdk-retro-propose` and `tdk-retro-apply` | Proposal + status tracking artifact. |
+| `learning-delta.md` | `tdk-retro-propose` and `tdk-retro-apply` | Proposal + status tracking artifact, and the learning history later retros read. Entries are append-only. |
 | Memory root files | `tdk-memory-update` | `tdk-retro-apply` delegates memory edits instead of editing memory files directly. |
 
 ## Basic Flow
 
 1. Run after `/tdk-archive` (retro also works on an active spec when needed).
 2. Run `/tdk-retro-collect {TASK_ID}` to write or update `retro-feedback.md`.
-3. Run `/tdk-retro-propose {TASK_ID}` to generate up to 10 proposed deltas in `learning-delta.md`.
+3. Run `/tdk-retro-propose {TASK_ID}` to append up to 10 new proposed deltas in `learning-delta.md`.
 4. Run `/tdk-retro-apply {TASK_ID}` to approve, reject, skip, or apply each delta.
-5. Review changed rules, skills, docs, or memory files before committing.
+5. Review changed rules, skills, docs, or memory files before committing. Commit `learning-delta.md` with them: it is the history later retros read.
 
 ## Flow Chart
 
@@ -74,3 +74,14 @@ flowchart TD
 - New feedback gets the next `UF-###` ID and `status: active`.
 - Existing active feedback is preserved during update runs.
 - Removed feedback is marked `status: removed` so future propose runs ignore it.
+
+## Learning History
+
+`learning-delta.md` files of all specs, active and archived, are the learning history. There is no separate store.
+
+- `/tdk-retro-propose` looks up earlier entries on the same target and by keyword, then records `prior`: `related`, `reverses`, or `repeats-rejected`.
+- `reverses` and `repeats-rejected` need `new_evidence`: a source the earlier entry did not have and that came after its decision, or user feedback naming it. Without one the entry records `new_evidence: none` and stays reviewable. Nothing is blocked: the reviewer decides.
+- `/tdk-retro-apply` shows earlier entries for every operation. Approving an entry with `new_evidence: none` asks what changed.
+- Re-running propose appends. `applied` and `rejected` entries never change. A `proposed` entry with `new_evidence: none` gets the evidence once new feedback names its prior id.
+
+History only sees the files in this checkout, so commit `learning-delta.md`. The report prints `N spec active, M spec archive, D delta, E entry` so empty history is visible, and memory targets are also checked with `/tdk-memory-query`.
