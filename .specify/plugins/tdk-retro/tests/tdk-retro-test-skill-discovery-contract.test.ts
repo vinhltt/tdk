@@ -109,6 +109,8 @@ describe('test-like warning', () => {
       'This heuristic never selects a target',
       '`Consumer test skills: none found`',
     ]);
+    expectAll(section(discovery, '## Notes'), ['propose no T6 entry for the test convention either']);
+    expect(routing).toContain('never move it to T6 on a test-like skill or on a phase delegate outside the test route');
   });
 });
 
@@ -143,6 +145,7 @@ describe('tdk-retro-propose discovery step', () => {
     expect(block).not.toContain('routing:');
     expect(block).not.toContain('Consumer test skills');
     expect(completion).toContain('holds only these lines');
+    expect(completion).toContain('verbatim and on its own line, never reworded into prose');
   });
 });
 

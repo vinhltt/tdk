@@ -175,7 +175,7 @@ lost learning: {id} not found in {target_path}
 - `memory:` appears only when memory was not checked. When tdk-memory is not installed it is `memory: skipped (tdk-memory not installed)`.
 - One `pending elsewhere` line per id, and one `lost learning` line per entry found in Step 7. Leave out a line type with nothing to report.
 
-Right after the status block, outside it, print each of these lines once when it applies:
+Right after the status block, outside it, print each of these lines once when it applies, verbatim and on its own line, never reworded into prose:
 
 - `routing: NOT CHECKED ({reason})` when Step 3 could not resolve the test route.
 - `Consumer test skills: none resolved; test-like skills found: {paths}. Add them to the test route in delegate-routing.md to enable T4.` when discovery produced the test-like warning.

@@ -76,4 +76,5 @@ Read every candidate `SKILL.md`. Extract framework, coverage target, naming conv
 ## Notes
 
 - Do not create consumer skills automatically during retro. Propose T4 only when a candidate exists.
+- With no candidate, propose no T6 entry for the test convention either, on a test-like skill or on an unrouted phase delegate: that bypasses the test route.
 - If several candidates match, include all relevant paths in evidence.
