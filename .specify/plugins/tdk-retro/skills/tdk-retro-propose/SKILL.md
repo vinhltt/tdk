@@ -58,14 +58,24 @@ If `{FEATURE_DIR}/learning-delta.md` exists, read it too. This is a re-run, and 
 
 ## Step 3: Discover Consumer Test Skills
 
-Follow `../_shared/consumer-skill-discovery.md`:
+Follow `../_shared/consumer-skill-discovery.md`. The current `test` route decides the T4 candidates. This spec's phase delegates are evidence only, and the `*-ut`/`*-test` globs are the fallback.
 
-```text
-.claude/skills/*-ut/SKILL.md
-.claude/skills/*-test/SKILL.md
+Resolve the route once per path: once for each `subWorkspaces[].path` in `.specify/.specify.json`, then once for `.`. Never put several paths in one call. Pass the project root first and the path second, for example `-- "<agent-resolved-project-root>" "src/backend"`.
+
+```bash
+PROJECT_DIR="$1"
+ROUTE_PATH="${2:-.}"
+if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
+  echo "Invalid project root: $PROJECT_DIR"
+  echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
+  exit 1
+fi
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/index.ts routing phase-delegates resolve --project-root "$PROJECT_DIR" --domain test --path "$ROUTE_PATH")
 ```
 
-If no consumer test skills exist, do not create T4 entries. Record the no-op in rationale when relevant.
+The first call that fails stops the loop: record `routing: NOT CHECKED ({reason})` and continue with the fallback globs. `state: missing` and `state: present-empty` are not failures; the project simply has no test route.
+
+When discovery yields no T4 candidate, do not create T4 entries. Record the no-op in rationale when relevant, or report the test-like warning that discovery produced.
 
 ## Step 4: Check Memory Availability
 
@@ -156,6 +166,11 @@ lost learning: {id} not found in {target_path}
 - `history:` is the line the lookup printed, once (every lookup prints the same line), including `history: NOT CHECKED (...)`.
 - `memory:` appears only when memory was not checked. When tdk-memory is not installed it is `memory: skipped (tdk-memory not installed)`.
 - One `pending elsewhere` line per id, and one `lost learning` line per entry found in Step 7. Leave out a line type with nothing to report.
+
+Right after the status block, outside it, print each of these lines once when it applies:
+
+- `routing: NOT CHECKED ({reason})` when Step 3 could not resolve the test route.
+- `Consumer test skills: none resolved; test-like skills found: {paths}. Add them to the test route in delegate-routing.md to enable T4.` when discovery produced the test-like warning.
 
 After the block, report:
 - New entry count by target type
