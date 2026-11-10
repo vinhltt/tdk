@@ -73,7 +73,7 @@ fi
 (cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/index.ts routing phase-delegates resolve --project-root "$PROJECT_DIR" --domain test --path "$ROUTE_PATH")
 ```
 
-The first call that fails stops the loop: record `routing: NOT CHECKED ({reason})` and continue with the fallback globs. `state: missing` and `state: present-empty` are not failures; the project simply has no test route.
+The first call that fails stops the loop: record `routing: NOT CHECKED ({reason})` and continue with the fallback globs. For this step, that overrides the non-zero-exit rule in `../_shared/script-command-contract.md`. Drop the `skills[]` and `agents[]` of earlier calls: the whole route set is unknown. `state: missing` and `state: present-empty` are not failures; the project simply has no test route.
 
 When discovery yields no T4 candidate, do not create T4 entries. Record the no-op in rationale when relevant, or report the test-like warning that discovery produced.
 
@@ -101,7 +101,7 @@ After a successful init, run `/tdk-memory-query --status` again and use the new 
 
 ## Step 5: Classify Signals
 
-Agent signals: before classifying a signal about an agent that ran a phase, identify that agent from this spec's `## Delegate Agents` sections or from the `agents[]` that Step 3 resolved. Read the `skills:` frontmatter of `.claude/agents/<name>.md` to get its toolset skills. Then route the signal with the agent rows of `../_shared/signal-target-routing.md`.
+Agent signals: before classifying a signal about an agent that ran a phase, identify that agent from this spec's `## Delegate Agents` sections or from the `agents[]` that Step 3 resolved. Read the `skills:` frontmatter of `.claude/agents/<name>.md` to get its toolset skills. Then route the signal with the agent rows of `../_shared/signal-target-routing.md`. When neither source names the agent, or `.claude/agents/<name>.md` does not exist, do not use the agent rows: classify the signal by what it names, and say in `evidence` that the agent was not identified or has no `.claude/agents` source.
 
 Retro never edits an agent file. The path is indirect:
 
@@ -134,7 +134,7 @@ The file exists: this is a re-run. Never rewrite it from scratch.
 
 1. Keep the header and every existing entry. `applied` and `rejected` entries stay byte-identical.
 2. Number new entries after the highest existing number. The 10-entry limit counts this run's new entries only.
-3. A `blocked` entry whose `blocked_reason` no longer holds (for example memory is now `ready` and lists the domain) goes back to `proposed`, and its `blocked_reason` is removed. Other fields stay as they are. An older entry has no `blocked_reason`: read the cause from its text. When the cause is unclear, it stays `blocked` and the report names it. A `blocked_reason` that starts with `manual:` always stays `blocked`: only a person resolves it.
+3. A `blocked_reason` that starts with `manual:` always stays `blocked`: only a person resolves it. Any other `blocked` entry whose `blocked_reason` no longer holds (for example memory is now `ready` and lists the domain) goes back to `proposed`, and its `blocked_reason` is removed. Other fields stay as they are. An older entry has no `blocked_reason`: read the cause from its text. When the cause is unclear, it stays `blocked` and the report names it.
 4. A `proposed` entry recorded with `new_evidence: none` whose `prior` id is now named by an active `UF-###` item: set `new_evidence` to `{UF id}: {feedback}`, on one line. Other fields stay as they are. Report it as `evidence added`.
 
 Required fields per entry:
@@ -179,6 +179,8 @@ Right after the status block, outside it, print each of these lines once when it
 
 - `routing: NOT CHECKED ({reason})` when Step 3 could not resolve the test route.
 - `Consumer test skills: none resolved; test-like skills found: {paths}. Add them to the test route in delegate-routing.md to enable T4.` when discovery produced the test-like warning.
+
+Print no other `routing:` or `Consumer test skills:` line; a missing or empty test route needs none.
 
 After the block, report:
 - New entry count by target type

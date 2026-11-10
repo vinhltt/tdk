@@ -25,7 +25,7 @@ The current `test` route decides T4. Resolve it with tdk-core's `routing phase-d
 |---|---|---|
 | `ok: true` and `state: present-populated` | The route is known | Use its `skills[]` and `agents[]` |
 | `ok: true` and `state: missing` or `present-empty` | The project has no test route. This is a normal opt-out | The route set is empty. Print no routing line |
-| `ok: false`, a non-zero exit, or output that is not one JSON object | The route is unknown, not empty | Stop calling the resolver. Record `routing: NOT CHECKED ({reason})` once and continue with the fallback globs |
+| `ok: false`, a non-zero exit, or output that is not one JSON object | The route is unknown, not empty | Stop calling the resolver and drop the results of earlier calls. Record `routing: NOT CHECKED ({reason})` once and continue with the fallback globs |
 
 `{reason}` is one line: the JSON `status` followed by the first line of `errors[0]`, or `exit {code}` when the output is not JSON. Config and route errors are the same for every path, so the first failure decides for the whole run.
 
@@ -67,7 +67,7 @@ Matching ignores case. When at least one skill matches, print exactly one line:
 
 `Consumer test skills: none resolved; test-like skills found: {paths}. Add them to the test route in delegate-routing.md to enable T4.`
 
-`{paths}` lists the matched `SKILL.md` paths, comma-separated, repo-relative. This heuristic never selects a target. When no skill matches, keep the graceful no-op: `Consumer test skills: none found`, and propose no T4 entry.
+`{paths}` lists the matched `SKILL.md` paths, comma-separated, repo-relative. This heuristic never selects a target. When no skill matches, keep the graceful no-op: `Consumer test skills: none found`, and propose no T4 entry. The no-op is not a report line; record it in `rationale` when relevant.
 
 ## Reading Candidates
 
