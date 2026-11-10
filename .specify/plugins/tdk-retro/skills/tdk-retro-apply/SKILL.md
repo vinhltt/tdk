@@ -131,6 +131,7 @@ Report:
 - Blocked count
 - Remaining proposed count
 - The `history:` line from the last lookup
+- `OMP projection may be stale; re-run convert-flat from your TDK source checkout`, printed once per run when `references/apply-flow-technical.md` found an OMP twin for any applied target. One convert-flat run refreshes every twin, so the line is never repeated
 - A commit line, printed and never run: `git add {FEATURE_DIR}/learning-delta.md {each applied technical target_path}`. Later retros read `learning-delta.md` as history, so it must be committed with its targets. Memory files are not listed: this skill never names a memory path.
 - Suggested commit message: `feat(retro): apply learnings from {TASK_ID}`
 

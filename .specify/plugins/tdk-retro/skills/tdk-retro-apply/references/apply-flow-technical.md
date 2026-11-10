@@ -17,3 +17,4 @@ Technical entries target T1 through T6.
 - Never edit the memory root in this flow.
 - Do not apply entries without explicit user approval.
 - If the path does not exist and operation is not `add`, mark blocked with `blocked_reason`.
+- After applying a target under `.claude/`, check for its OMP twin under the project root. For a target under `.claude/skills/<name>/`, the twin is the directory `.omp/skills/<name>/`. For any other `.claude/<path>`, the twin is `.omp/<path>`, for example `.omp/agents/<name>.md`. When the twin exists, the report gets the line `OMP projection may be stale; re-run convert-flat from your TDK source checkout`. Print no path with it and never run convert-flat. Judge only by the twin on disk; harness install state files are not evidence either way.

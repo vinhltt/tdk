@@ -101,6 +101,14 @@ After a successful init, run `/tdk-memory-query --status` again and use the new 
 
 ## Step 5: Classify Signals
 
+Agent signals: before classifying a signal about an agent that ran a phase, identify that agent from this spec's `## Delegate Agents` sections or from the `agents[]` that Step 3 resolved. Read the `skills:` frontmatter of `.claude/agents/<name>.md` to get its toolset skills. Then route the signal with the agent rows of `../_shared/signal-target-routing.md`.
+
+Retro never edits an agent file. The path is indirect:
+
+- A behavior lesson lands in the agent's toolset skill (T4 or T6), which the agent loads on its next run.
+- A contract change, or guidance for an agent-only route, lands in the recommendation that owns the agent (T3). After that entry is applied, `/tdk-scaffold-from-recommendation` on the same recommendation proposes the agent patch in its drift review. Name that follow-up in the entry's `rationale`.
+- No usable owner: the entry is `blocked` with a `manual:` reason, as the routing rules describe.
+
 For each feedback signal:
 1. If an entry in this spec's own delta already covers the signal, add no entry and report it as `already covered`. Exception: a `UF-###` item that names an entry id of this spec is a new signal. A `UF-###` item that names the `prior` id of an entry recorded with `new_evidence: none` is evidence for that entry: handle it in Step 6.
 2. Classify root cause with `../_shared/signal-target-routing.md`.
@@ -126,7 +134,7 @@ The file exists: this is a re-run. Never rewrite it from scratch.
 
 1. Keep the header and every existing entry. `applied` and `rejected` entries stay byte-identical.
 2. Number new entries after the highest existing number. The 10-entry limit counts this run's new entries only.
-3. A `blocked` entry whose `blocked_reason` no longer holds (for example memory is now `ready` and lists the domain) goes back to `proposed`, and its `blocked_reason` is removed. Other fields stay as they are. An older entry has no `blocked_reason`: read the cause from its text. When the cause is unclear, it stays `blocked` and the report names it.
+3. A `blocked` entry whose `blocked_reason` no longer holds (for example memory is now `ready` and lists the domain) goes back to `proposed`, and its `blocked_reason` is removed. Other fields stay as they are. An older entry has no `blocked_reason`: read the cause from its text. When the cause is unclear, it stays `blocked` and the report names it. A `blocked_reason` that starts with `manual:` always stays `blocked`: only a person resolves it.
 4. A `proposed` entry recorded with `new_evidence: none` whose `prior` id is now named by an active `UF-###` item: set `new_evidence` to `{UF id}: {feedback}`, on one line. Other fields stay as they are. Report it as `evidence added`.
 
 Required fields per entry:

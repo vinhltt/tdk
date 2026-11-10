@@ -50,7 +50,7 @@ Fields keep this order, and `status` is always first.
 - `proposed`: ready for user review.
 - `approved`: user approved and apply attempted.
 - `rejected`: user rejected.
-- `blocked`: cannot apply without another action, such as `/tdk-memory-init`. `blocked_reason` says why; `/tdk-retro-propose` moves it back to `proposed` once that cause is gone.
+- `blocked`: cannot apply without another action, such as `/tdk-memory-init`. `blocked_reason` says why; `/tdk-retro-propose` moves it back to `proposed` once that cause is gone. A `blocked_reason` that starts with `manual:` means only a person can resolve it: `/tdk-retro-propose` never moves that entry back to `proposed`, and apply never edits its `target_path`.
 - `applied`: successfully applied.
 
 ## Rules

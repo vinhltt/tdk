@@ -31,11 +31,20 @@ Use this table to classify feedback signals into update targets.
 | Data model changed mid-implementation | Memory stale | K1 and K2 |
 | Spec ambiguity caused rework | Missing domain context | K1 |
 | Framework or hook quirk discovered | Configuration undocumented | T3 and optionally T4 |
+| Routed agent followed the wrong practice | Toolset guidance missing | T4 when the agent's toolset skill is a routed test skill, else T6 on that toolset skill |
+| Routed agent's contract is wrong (tools, skills, model, write set, `Status:` or output contract) | Agent contract stale | T3 on the recommendation that owns the agent |
+| Agent-only route (`skills: []`) needs behavior guidance | No toolset skill to carry it | T3 on the recommendation that owns the agent, to add a toolset skill |
 
 ## Selection Rules
 
 - Prefer the narrowest target that will prevent recurrence.
 - Prefer consumer-owned test skills for consumer-specific test conventions.
+- Never target `.claude/agents/*.md`, `.omp/**`, or `.specify/plugins/**`. An agent changes only through its recommendation and `/tdk-scaffold-from-recommendation`, because scaffold owns the agent contract. A `manual:` blocked entry below may name the agent file as `target_path`; apply never edits it.
+- An agent's toolset skills are the `skills:` list in its `.claude/agents/<name>.md` frontmatter. An agent with no `skills:` list is treated as an agent-only route.
+- The recommendation that owns an agent is `.specify/configurations/automation-recommendations/sub-workspaces/*/automation-recommendation.md`, or a legacy recommendation that `/tdk-scaffold-from-recommendation` still accepts (`.specify/configurations/automation-recommendations/recommendation-*.md`, `.specify/reports/recommendation-*.md`). It must have an `agent` row for that name in an `## Executor Decisions` Artifacts table, or list the agent under `## Recommended Agents`.
+- `/tdk-scaffold-from-recommendation` is not in the live skill catalog: create a `status: blocked` entry with `target_id: T3`, `target_path: .claude/agents/<name>.md`, and `blocked_reason: manual: /tdk-scaffold-from-recommendation is not installed; edit .claude/agents/<name>.md by hand`.
+- No recommendation owns the agent: create a `status: blocked` entry with `target_id: T3`, `target_path: .claude/agents/<name>.md`, and `blocked_reason: manual: no recommendation owns @<name>; edit .claude/agents/<name>.md by hand or add it to a recommendation`.
+- Several recommendations own the agent: create the same `blocked` entry with `blocked_reason: manual: several recommendations own @<name> ({paths}); pick one`.
 - Do not propose memory targets unless memory is `ready`. With `ready` memory and an unknown domain, mark the entry `blocked`.
 - Do not propose direct edits to the memory root; `/tdk-memory-update` owns memory writes.
 - `target_path` is repo-relative with no leading `./`; history matches it exactly.
