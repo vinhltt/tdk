@@ -86,6 +86,18 @@ describe('phase delegates as evidence', () => {
   });
 });
 
+describe('TDK-managed skills', () => {
+  it('keeps skills a Claude harness install copied from TDK out of the fallback and the warning', () => {
+    expectAll(section(discovery, '## 3. Fallback Globs'), [
+      'except a TDK-managed skill',
+      '`targetRelativePath` in `managedFiles[]` of `.specify/state/harness-install/claude.json`',
+      'When that file is missing or unreadable, skip nothing',
+      'A skill the test route names is never skipped',
+    ]);
+    expect(section(discovery, '## 4. Test-Like Warning')).toContain('not TDK-managed');
+  });
+});
+
 describe('test-like warning', () => {
   it('prints one exact warning line for skills that look like test skills', () => {
     const warning = section(discovery, '## 4. Test-Like Warning');

@@ -50,11 +50,15 @@ Run these only when the test route yields no T4 candidate, including when routin
 .claude/skills/*-test/SKILL.md
 ```
 
-Every match is a T4 candidate. This keeps projects that name test skills `*-ut` or `*-test` without a test route working as before.
+Every match is a T4 candidate, except a TDK-managed skill (see below). This keeps projects that name test skills `*-ut` or `*-test` without a test route working as before.
+
+### TDK-Managed Skills
+
+A Claude harness install copies TDK's own skills into `.claude/skills/`. A `SKILL.md` listed as a `targetRelativePath` in `managedFiles[]` of `.specify/state/harness-install/claude.json` belongs to TDK, not to the consumer: skip it in the fallback globs and in the test-like warning. When that file is missing or unreadable, skip nothing. A skill the test route names is never skipped: the route is explicit.
 
 ## 4. Test-Like Warning
 
-When the route and the fallback globs both yield no candidate, look for skills that look like test skills. Such a skill is a `.claude/skills/*/SKILL.md` that matches either rule:
+When the route and the fallback globs both yield no candidate, look for skills that look like test skills. Such a skill is a `.claude/skills/*/SKILL.md`, not TDK-managed, that matches either rule:
 
 - Its directory name, split on `-`, has the token `ut`, `test`, `tests`, or `unit`.
 - Its frontmatter `metadata.category` contains `test`.
