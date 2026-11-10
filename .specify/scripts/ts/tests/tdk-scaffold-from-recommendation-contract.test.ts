@@ -243,7 +243,7 @@ describe('TDK scaffold outcome baseline contracts', () => {
 
   it('lets the recommender read scaffold outcomes as evidence without hashing', () => {
     expect(recommendSkill).toContain('scaffold-outcome.json');
-    expect(recommendSkill).toContain('Read only the `outcome` fields: never hash files, compare them, or call the scaffold script');
+    expect(recommendSkill).toContain('Read only each row\'s `kind`, `path`, `outcome`, and `recorded_at`: never hash files, compare them, or call the scaffold script');
     expect(recommendSkill).toContain('record the sidecar path and state `present`, `missing`, or `unreadable`');
   });
 });

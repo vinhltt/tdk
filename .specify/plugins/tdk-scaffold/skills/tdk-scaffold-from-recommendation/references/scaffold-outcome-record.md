@@ -2,7 +2,7 @@
 
 `scaffold-outcome.json` sits beside the recommendation. It records what an approved scaffold run left on disk, so the next run can tell which artifacts changed since then: a hand edit, a retro apply, or a line-ending-only checkout difference that is not a change.
 
-Only `scripts/scaffold-outcome-record.ts` reads or writes this file. Never hash a file, edit the JSON, or infer a label by hand. The script needs preinstalled Bun and nothing else: no `.specify/scripts/ts` tree, no dependency install, no build.
+Only `scripts/scaffold-outcome-record.ts` writes this file or derives baseline labels from it; `/tdk-sub-workspace-automation-recommend` reads its rows directly, as evidence only. Never hash a file for the sidecar, edit the JSON, or infer a baseline label by hand. The raw-byte snapshots of the scaffold's Review Each Artifact steps 4 and 7 are a separate approval guard and stay. The script needs preinstalled Bun and nothing else: no `.specify/scripts/ts` tree, no dependency install, no build.
 
 ## Sidecar v1
 
@@ -35,7 +35,7 @@ Only `scripts/scaffold-outcome-record.ts` reads or writes this file. Never hash 
 bun --no-install <loaded-skill-root>/scripts/scaffold-outcome-record.ts record --project-root <root> --recommendation <repo-relative> [--proposal <repo-relative>] [--rows-file <path>]
 ```
 
-Pass the rows as one JSON array on stdin. When the host cannot pass a here-document, write the array to a temporary file outside the project and pass `--rows-file`.
+Pass the rows as one JSON array on stdin. When the host cannot pass a here-document, write the array to a temporary file outside the project and pass `--rows-file`. Empty stdin is `invalid_rows`. An empty array `[]` is valid and refreshes only `recommendation` and `proposal`.
 
 ```json
 [
@@ -78,7 +78,7 @@ Failures print `{"ok":false,"error":"<code>","detail":"..."}` and exit 1.
 
 | Code | Cause |
 |---|---|
-| `invalid_args` | Unknown command or flag, missing or repeated value, no rows |
+| `invalid_args` | Unknown command or flag, missing or repeated value, an absolute or `\` path in `--recommendation` or `--proposal`, no rows input (stdin is a terminal and there is no `--rows-file`) |
 | `invalid_rows` | Rows are not a JSON array, a row is malformed, its path is not the canonical target for its kind and name, or a `(kind, path)` repeats |
 | `path_outside_root` | A path uses `..` or resolves outside the project root through a symlink |
 | `missing_file` | The recommendation, proposal, or an artifact file does not exist |

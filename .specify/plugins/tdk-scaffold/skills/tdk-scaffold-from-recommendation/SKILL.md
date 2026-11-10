@@ -92,14 +92,18 @@ Use approved requirements as content, not exemplar content. Do not create refere
 
 ## Review Each Artifact
 
-Before step 1, compare against the last baseline once. `references/scaffold-outcome-record.md` owns the sidecar format; only its script reads or writes `scaffold-outcome.json`.
+Before step 1, compare against the last baseline once. `references/scaffold-outcome-record.md` owns the sidecar format; only its script reads or writes `scaffold-outcome.json` in this skill. `/tdk-sub-workspace-automation-recommend` reads its rows as evidence only.
 
 ```text
 bun --no-install <loaded-skill-root>/scripts/scaffold-outcome-record.ts compare --project-root <root> --recommendation <repo-relative>
 ```
 
+`<root>` is `PROJECT_ROOT`. `<repo-relative>` is the recommendation path relative to it, with `/` separators: never absolute and never `\`, even on Windows, because the script rejects both with `invalid_args`. Quote each substituted path.
+Exit 1, `ok: false`, a missing `bun`, or output that is not one JSON object labels every artifact `baseline: not checked (error: {error})`, and the review continues. `{error}` is the JSON `error` code, or `exit {code}` when the output is not JSON.
+
 Label each artifact from its `(kind, path)` row: `unchanged since last scaffold`, `changed since last scaffold ({recorded_at})`, or `missing since last scaffold`. An artifact with no row is `no baseline`.
-Any `state` other than `present` labels every artifact `baseline: not checked ({state}: {reason})`, never unchanged; use `recorded_for` or `version` when there is no `reason`.
+`state: missing` means no scaffold has recorded a baseline yet, so every artifact is `no baseline`.
+Any other `state` (`invalid`, `unsupported-version`, or `foreign`) labels every artifact `baseline: not checked ({state}: {reason})`, never unchanged; use `recorded_for` or `version` when there is no `reason`.
 With `recommendation_changed: true`, say the recommendation was edited after the last scaffold. Labels are review evidence only; they never replace the semantic review below.
 
 1. Resolve its canonical path and any same-name runtime agent by exact frontmatter `name`.
@@ -117,9 +121,10 @@ With `recommendation_changed: true`, say the recommendation was edited after the
 5. Present one grouped question for all drifted artifacts, identifying each by path:
    `Apply patch` | `Keep unchanged` | `Regenerate (destructive)`. Default each artifact to `Keep unchanged`.
    A finding on an artifact labelled `changed since last scaffold` adds: `Apply patch may undo edits made after the last scaffold (hand edit or retro)`.
+   A planned `create` for an artifact labelled `missing since last scaffold` adds: `Create restores a file removed after the last scaffold`.
    No answer/cancel means keep, never implied approval. Regenerate requires a second explicit confirmation naming the file(s) to replace and a full replacement preview.
 6. Preview the complete run-level create/patch/regenerate path list and proposal intent.
-   Outside `--dry-run`, the preview also lists the baseline sidecar `scaffold-outcome.json` beside the recommendation.
+   Outside `--dry-run`, the preview also lists the baseline sidecar `scaffold-outcome.json` beside the recommendation. When compare returned `foreign`, `invalid`, or `unsupported-version`, list it as `not recorded ({state})` instead: `record` refuses that file.
    Outside `--dry-run`, ask approval to apply this reconciliation plan even when frontmatter is `status: approved`.
    Only approved creates and approved per-artifact changes may proceed; a declined run writes nothing.
 7. Immediately before any patch or regeneration, re-hash the target, reviewed references, and inventory.
@@ -237,16 +242,19 @@ With `--dry-run`, print exactly the same next steps, explicitly conditional on t
 
 ## Record Baseline
 
-Record only for an approved run that is not `--dry-run`; skip this step for a dry run or a declined run.
+Record only for an approved run that is not `--dry-run`: the step 6 reconciliation plan was approved, and frontmatter `status: approved` alone does not count. Skip this step for a dry run or a declined run.
 Run it after the proposal write in Routing handoff, so the baseline carries the proposal hash.
-Rows are this run's in-scope artifacts that still exist, with outcome `created`, `patched`, `reused`, or `kept-unchanged`, and that were not refused with `artifact changed after approval`.
+Rows are this run's in-scope artifacts that still exist, with outcome `created`, `patched`, `reused`, or `kept-unchanged`, and whose last patch attempt in this run was not refused with `artifact changed after approval`. An artifact re-approved and patched after such a refusal is recorded as `patched`.
 
 ```text
 bun --no-install <loaded-skill-root>/scripts/scaffold-outcome-record.ts record --project-root <root> --recommendation <repo-relative> [--proposal <repo-relative>] [--rows-file <path>]
 ```
 
 Pass `--proposal` only when this run wrote `delegate-routing-proposal.json`. Rows not in this run, such as agents in a `--skills-only` run, stay as recorded.
-A `record` failure never rolls back artifacts; the Summary prints `baseline: not recorded ({error})`.
+Pass the rows on stdin as one JSON array, in the row shape of `references/scaffold-outcome-record.md` (Record); read that section before this step. A command run with empty stdin fails with `invalid_rows`.
+A row's `files` lists the reference files that step 4 of Review Each Artifact snapshotted for that artifact, or that this run created; the script adds `path` itself.
+A run with no qualifying row still records with `[]`, so the recommendation and proposal hashes are refreshed.
+A `record` failure never rolls back artifacts; the Summary prints `baseline: not recorded ({error})`, where `{error}` is the JSON `error` code, or `exit {code}` when the output is not JSON.
 
 ## Summary
 
