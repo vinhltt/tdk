@@ -2,7 +2,7 @@
 name: tdk-retro-apply
 description: "Review learning-delta.md entries with the user, apply approved technical edits, delegate approved memory edits to tdk-memory-update, and update entry statuses."
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
   category: "TDK Retro"
   requires:
     - tdk-retro-propose

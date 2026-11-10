@@ -2,7 +2,7 @@
 name: tdk-retro-propose
 description: "Read retro-feedback.md and propose concrete technical or memory learning deltas. Writes learning-delta.md."
 metadata:
-  version: "1.3.0"
+  version: "1.4.0"
   category: "TDK Retro"
   requires:
     - tdk-retro-collect

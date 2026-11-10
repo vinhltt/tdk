@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.1.0] - 2026-11-10
+
+### Added
+- tdk-scaffold-from-recommendation: scaffold-outcome.json baseline, written by the skill-local scaffold-outcome-record.ts (record, compare) after each approved run; rows upsert by (kind, path), text hashes fold CRLF to LF, and the next run labels each artifact unchanged, changed, or missing since last scaffold
+
+### Changed
+- tdk-scaffold-from-recommendation: a finding on an artifact changed since the last scaffold warns that the patch may undo hand or retro edits; dry-run and declined runs write no sidecar
+- tdk-sub-workspace-automation-recommend: reads scaffold-outcome.json as evidence and prefers reuse or patch for artifacts scaffold already reconciled; never hashes files
+
 ## [3.0.3] - 2026-10-11
 
 ### Changed

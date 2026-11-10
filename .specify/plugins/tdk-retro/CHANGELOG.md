@@ -4,6 +4,16 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.4.0] - 2026-11-10
+
+### Added
+- Contract tests that pin test-route discovery and agent-learning routing
+
+### Changed
+- tdk-retro-propose: finds consumer test skills through the current test route (routing phase-delegates resolve, once per path); *-ut/*-test globs stay as fallback, a test-like skill outside the route prints one warning line after the status block, and a resolver failure prints routing: NOT CHECKED
+- Agent learnings go to the agent's toolset skill (T4/T6) or to T3 on the recommendation that owns the agent; with no owner, several owners, or scaffold not installed the entry is blocked with a manual: reason that propose never clears and apply never edits
+- tdk-retro-apply: prints an OMP projection hint once when an applied .claude/ target has an .omp/ twin
+
 ## [1.3.0] - 2026-11-09
 
 ### Added

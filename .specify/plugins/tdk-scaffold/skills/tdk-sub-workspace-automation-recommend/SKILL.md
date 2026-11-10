@@ -4,7 +4,7 @@ description: "Recommend skills and agents for one selected sub-workspace from ar
 user-invocable: true
 argument-hint: "--sub-workspace <name> [--no-community-search]"
 metadata:
-  version: "3.0.3"
+  version: "3.1.0"
   author: "VinhLTT"
   category: scaffold
 ---

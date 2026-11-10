@@ -6,6 +6,28 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.131.3] - 2026-11-10
+
+### Added
+- **[tdk-scaffold]** `/tdk-scaffold-from-recommendation` records a baseline after each approved run
+  - `scaffold-outcome.json` beside the recommendation holds one row per artifact, keyed by `(kind, path)`, with its outcome and `recorded_at`; a later run updates its own rows and keeps the rest
+  - Text files hash with CRLF folded to LF, so a clone with `core.autocrlf=true` shows no artifact as changed; other files hash raw bytes
+  - The skill-local `scaffold-outcome-record.ts` (`record`, `compare`) owns the file and refuses a sidecar of another recommendation, a path outside the project root, or a missing file
+  - The next run labels each artifact `unchanged`, `changed`, or `missing since last scaffold`; a finding on a changed artifact warns that the patch may undo hand or retro edits
+  - Dry-run and declined runs write no sidecar; the approval preview lists its path
+
+### Changed
+- **[tdk-retro]** `/tdk-retro-propose` finds consumer test skills through the current `test` route
+  - It resolves the route with `routing phase-delegates resolve`, once per sub-workspace path and once for the project root; delegates listed in a phase are evidence only
+  - The `*-ut`/`*-test` globs stay as fallback. When nothing resolves but a test-like skill exists, the report prints one `Consumer test skills: none resolved; ...` line after the status block, and the test convention gets no entry
+  - A failing resolver prints `routing: NOT CHECKED ({reason})` and propose continues with the fallback globs; TDK-managed skills are never candidates
+- **[tdk-retro]** Agent learnings have a route that never edits agent files
+  - Behavior lessons go to the agent's toolset skill (T4 or T6); contract changes go to T3 on the recommendation that owns the agent, then `/tdk-scaffold-from-recommendation`
+  - With no owning recommendation, several owners, or scaffold not installed, the entry is `blocked` with a `manual:` reason that propose never clears and apply never edits
+- **[tdk-retro]** `/tdk-retro-apply` prints `OMP projection may be stale; re-run convert-flat from your TDK source checkout` once when an applied `.claude/` target has an `.omp/` twin
+- **[tdk-scaffold]** `/tdk-sub-workspace-automation-recommend` reads `scaffold-outcome.json` as evidence and prefers `reuse` or `patch` for artifacts scaffold already reconciled; it never hashes files
+- **[Guides]** en/vi skills guide rows for `/tdk-retro-propose`, `/tdk-retro-apply`, and `/tdk-scaffold-from-recommendation` describe test-route discovery, agent learnings, and the scaffold baseline
+
 ## [1.131.2] - 2026-11-09
 
 ### Added
