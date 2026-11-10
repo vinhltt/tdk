@@ -194,8 +194,8 @@ Excluded:
 | `/tdk-memory-changelog` | Record staged memory changes trong `CHANGELOG.md`. | staged memory root diff | Memory edits ready để document trước commit. |
 | `/tdk-memory-checksum` | Kiểm tra integrity bằng Node.js; repair chỉ sau khi được duyệt. | `--memory-root`, `--fix` | Phát hiện drift hoặc chẩn đoán `memory.yaml` lỗi mà không tự chấp nhận byte bị sửa. |
 | `/tdk-retro-collect` | Collect retrospective feedback sau TDK spec/session. | reviews, drift, UT results, traces, user feedback | Completed workflow nên feed learning loop. |
-| `/tdk-retro-propose` | Propose technical hoặc memory learning deltas từ feedback, có đối chiếu với học cũ của các spec khác. | `retro-feedback.md` | Feedback cần reviewable learning changes. |
-| `/tdk-retro-apply` | Apply approved learning deltas, hiện học cũ trên cùng target trước mỗi quyết định. | approved `learning-delta.md` entries | Accepted retro learnings nên update skills/docs/memory. |
+| `/tdk-retro-propose` | Propose technical hoặc memory learning deltas từ feedback, có đối chiếu với học cũ của các spec khác. Tìm consumer test skill qua route `test`, và đưa bài học về agent vào toolset skill của agent hoặc recommendation sở hữu agent. | `retro-feedback.md` | Feedback cần reviewable learning changes. |
+| `/tdk-retro-apply` | Apply approved learning deltas, hiện học cũ trên cùng target trước mỗi quyết định. In gợi ý chạy lại OMP khi target `.claude/` vừa apply có bản tương ứng dưới `.omp/`. | approved `learning-delta.md` entries | Accepted retro learnings nên update skills/docs/memory. |
 
 Memory skills cần Node.js >=18, không cần Python hay máy chủ transport ngoài.
 `memory.yaml` giữ version `"2"`; receipt template là phần bổ sung tùy chọn.
@@ -351,6 +351,15 @@ dưới `decisions/`, `risks-and-debt/`, `quality-requirements/`, `integrations/
 skills collect những gì đã xảy ra, propose changes, và chỉ apply approved
 deltas. Giữ hai nhóm này tách biệt: retrospectives propose; memory updates lưu
 accepted domain knowledge.
+
+Retro tìm consumer test skill qua route `test` hiện tại trong
+`delegate-routing.md`. Delegate ghi trong phase chỉ là bằng chứng, còn tên
+`*-ut`/`*-test` là fallback. Khi không resolve được gì nhưng có skill trông giống
+test skill, propose in một dòng cảnh báo nêu tên skill đó. Retro không bao giờ sửa
+file agent: bài học hành vi đi vào toolset skill của agent, còn thay đổi contract
+đi vào recommendation sở hữu agent, để lần chạy `/tdk-scaffold-from-recommendation`
+kế tiếp đề xuất patch cho agent. Agent không có recommendation nào sở hữu thành
+entry `blocked` với lý do `manual:`.
 
 #### API Test Generation
 
@@ -623,7 +632,7 @@ không ép vào specification workflow.
 | golden-path:scaffold | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional sau layout/policy review |
 | sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, `engineering.md` theo sub-workspace | Sau config apply |
 | sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | `--sub-workspace`, `--no-community-search` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` hoặc skills.sh lookup | `automation-recommendation.md` | Sau sub-workspace docs |
-| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | `--dry-run`, `--skills-only`, `--agents-only`, `--task` | recommendation đã duyệt với Executor Decisions và action cho từng artifact | Đối chiếu canonical skill/agent, routing proposal, readiness summary | Sau khi duyệt recommendation |
+| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | `--dry-run`, `--skills-only`, `--agents-only`, `--task` | recommendation đã duyệt với Executor Decisions và action cho từng artifact | Đối chiếu canonical skill/agent, routing proposal, baseline `scaffold-outcome.json`, readiness summary | Sau khi duyệt recommendation |
 | delegate:routing | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]` | `--proposal`, `--approval`, `--yes` | route file và proposal; `approvalDigest` đã duyệt cho register | JSON diff, đăng ký gắn với approval, hoặc kiểm tra route equality | Sau khi duyệt routing intent |
 
 Greenfield và brownfield start commands là report/routing entrypoints. Chúng không tạo specs, plans, tracker issues, source code, hoặc `.specify/.specify.json`. Greenfield full mode chạy project-inception interview trước strong routing. Quick mode ghi unanswered critical gaps. Unknown mode chỉ classify nếu chưa đủ minimum facts. Brownfield full mode dùng bounded repo evidence, config-only mode tập trung vào `.specify` state, và unknown mode recommend một evidence-backed next route.
@@ -669,13 +678,15 @@ Syntax: `/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <na
 
 Syntax: `/tdk-sub-workspace-docs [--sub-workspace NAME|--all] [--force]`.
 
-`/tdk-sub-workspace-automation-recommend` recommend skills và agents cho một selected sub-workspace. Nó đọc selected sub-workspace docs, workspace dependency policy, official docs hoặc primary sources, local installed skill catalog, và optional direct community lookup qua `npx skills find` hoặc skills.sh. Nó không support `--all` và không dùng `ck:find-skills`.
+`/tdk-sub-workspace-automation-recommend` recommend skills và agents cho một selected sub-workspace. Nó đọc selected sub-workspace docs, workspace dependency policy, official docs hoặc primary sources, local installed skill catalog, và optional direct community lookup qua `npx skills find` hoặc skills.sh. Nó không support `--all` và không dùng `ck:find-skills`. Khi có `scaffold-outcome.json` cạnh recommendation, nó đọc các outcome đã ghi làm bằng chứng để ưu tiên reuse hoặc patch, không hash file.
 
 Syntax: `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]`.
 
 Recommendation phân biệt **skill** cung cấp toolset với **agent** thực thi trong `## Executor Decisions`, luôn xét `implement` và `test`. Ưu tiên executor có sẵn khi write set có giới hạn và nó sở hữu một gate, tách biệt context hoặc có caller/output contract riêng. Quyết định `no agent` phải nêu tiêu chí không đạt; không bắt buộc agent cho mọi domain. Agent chỉ có trong `.omp/agents/` mà không có canonical twin vẫn chưa rõ ownership; không tự patch hoặc chuyển thành nguồn chuẩn.
 
 `/tdk-scaffold-from-recommendation` đọc recommendation đã duyệt, ưu tiên `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` và giữ legacy file fallbacks. Skill tạo mới/tái sử dụng/duyệt patch trong `.claude/skills/<name>/` và `.claude/agents/<name>.md`, không ghi vào plugin directory do release sở hữu. Khi drift, mặc định **Keep unchanged**; nếu bytes của artifact/reference đổi sau review thì approval của patch mất hiệu lực. Regenerate phá hủy nội dung cũ nên cần xác nhận riêng. Chỉ tái sử dụng vẫn tạo proposal nếu có routing intent; `--dry-run` không ghi artifact hay proposal.
+
+Run đã duyệt và không phải dry run ghi `scaffold-outcome.json` cạnh recommendation. Lần chạy sau so với file này, gắn nhãn từng artifact là unchanged, changed hoặc missing kể từ lần scaffold trước, và cảnh báo rằng patch có thể ghi đè chỉnh sửa sau đó, ví dụ sửa tay hoặc retro apply. Hash của file text bỏ qua khác biệt CRLF và LF, nên checkout có `core.autocrlf` không bị báo changed. Sidecar thuộc recommendation khác hoặc không đọc được thì được giữ nguyên và báo ra.
 
 Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]`.
 Routing artifact để review là `delegate-routing-proposal.json`, chỉ được ghi cạnh recommendation đã duyệt sau khi approve toàn bộ reconciliation plan.

@@ -194,8 +194,8 @@ Excluded:
 | `/tdk-memory-changelog` | Record staged memory changes in `CHANGELOG.md`. | staged memory root diff | Memory edits are ready to document before commit. |
 | `/tdk-memory-checksum` | Read-only Node.js integrity validation; explicitly approved repair. | `--memory-root`, `--fix` | Detect drift or diagnose a malformed `memory.yaml` without silently accepting changed bytes. |
 | `/tdk-retro-collect` | Collect retrospective feedback after a TDK spec/session. | reviews, drift, UT results, traces, user feedback | A completed workflow should feed the learning loop. |
-| `/tdk-retro-propose` | Propose technical or memory learning deltas from feedback, checked against earlier learning from other specs. | `retro-feedback.md` | Feedback needs reviewable learning changes. |
-| `/tdk-retro-apply` | Apply approved learning deltas, showing earlier learning on the same target before each decision. | approved `learning-delta.md` entries | Accepted retro learnings should update skills/docs/memory. |
+| `/tdk-retro-propose` | Propose technical or memory learning deltas from feedback, checked against earlier learning from other specs. Finds consumer test skills through the `test` route and sends agent learnings to the agent's toolset skill or its owning recommendation. | `retro-feedback.md` | Feedback needs reviewable learning changes. |
+| `/tdk-retro-apply` | Apply approved learning deltas, showing earlier learning on the same target before each decision. Prints an OMP refresh hint when an applied `.claude/` target has an `.omp/` twin. | approved `learning-delta.md` entries | Accepted retro learnings should update skills/docs/memory. |
 
 Memory skills require Node.js >=18, not Python or an external transport server.
 `memory.yaml` remains version `"2"`; optional template receipts are additive.
@@ -357,6 +357,15 @@ plane. `constitution.md` plus Typed Memory v3 routes under `decisions/`,
 collect what happened, propose changes, and apply only approved deltas. Keep
 these separate: retrospectives propose; memory updates store accepted domain
 knowledge.
+
+Retro finds consumer test skills through the current `test` route in
+`delegate-routing.md`; a phase's recorded delegates are evidence only, and the
+`*-ut`/`*-test` names are a fallback. When nothing resolves but a skill looks
+like a test skill, propose prints one warning that names it. Retro never edits an
+agent file: a behavior lesson goes to the agent's toolset skill, and a contract
+change goes to the recommendation that owns the agent, so the next
+`/tdk-scaffold-from-recommendation` run proposes the agent patch. An agent no
+recommendation owns becomes a `blocked` entry with a `manual:` reason.
 
 #### API Test Generation
 
@@ -631,7 +640,7 @@ specification workflow.
 | golden-path:scaffold | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional after layout/policy review |
 | sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, `engineering.md` per sub-workspace | After config apply |
 | sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | `--sub-workspace`, `--no-community-search` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` or skills.sh lookup | `automation-recommendation.md` | After sub-workspace docs |
-| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | `--dry-run`, `--skills-only`, `--agents-only`, `--task` | approved recommendation with Executor Decisions and per-artifact actions | Canonical skill/agent reconciliation, routing proposal, readiness summary | After recommendation approval |
+| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | `--dry-run`, `--skills-only`, `--agents-only`, `--task` | approved recommendation with Executor Decisions and per-artifact actions | Canonical skill/agent reconciliation, routing proposal, `scaffold-outcome.json` baseline, readiness summary | After recommendation approval |
 | delegate:routing | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]` | `--proposal`, `--approval`, `--yes` | route file and proposal; reviewed `approvalDigest` for register | JSON diff, approval-bound registration, or route-equality verification | After routing-intent review |
 
 Greenfield and brownfield start commands are report/routing entrypoints. They do not create specs, plans, tracker issues, source code, or `.specify/.specify.json`. Greenfield full mode runs a project-inception interview before strong routing. Quick mode records unanswered critical gaps. Unknown mode classifies only unless minimum facts are present. Brownfield full mode uses bounded repo evidence, config-only mode focuses on `.specify` state, and unknown mode recommends one evidence-backed next route.
@@ -717,7 +726,9 @@ Syntax: `/tdk-sub-workspace-docs [--sub-workspace NAME|--all] [--force]`.
 selected sub-workspace. It reads the selected sub-workspace docs, workspace
 dependency policy, official docs or primary sources, local installed skill
 catalog, and optional direct community lookup through `npx skills find` or
-skills.sh. It does not support `--all` and does not use `ck:find-skills`.
+skills.sh. It does not support `--all` and does not use `ck:find-skills`. When
+`scaffold-outcome.json` sits beside the recommendation, it reads the recorded
+outcomes as evidence to prefer reuse or patch, without hashing files.
 
 Syntax: `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]`.
 
@@ -726,6 +737,8 @@ Recommendations separate toolset **skills** from executor **agents** in `## Exec
 `/tdk-scaffold-from-recommendation` reads the approved recommendation, preferring
 `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md`
 with legacy file fallbacks. It creates/reuses/reviews patches in `.claude/skills/<name>/` and `.claude/agents/<name>.md`, never the release-owned plugin directory. Drift defaults to **Keep unchanged**; patch approval is invalidated if the reviewed artifact/reference bytes change. Regeneration is destructive and needs separate confirmation. A reuse-only run still produces a proposal when routable intent exists; `--dry-run` writes neither artifacts nor proposal.
+
+An approved run that is not a dry run records `scaffold-outcome.json` beside the recommendation. The next run compares against it and labels each artifact unchanged, changed, or missing since the last scaffold, and warns that a patch may undo edits made after it, such as a hand edit or a retro apply. Text hashes ignore CRLF versus LF, so a `core.autocrlf` checkout reports nothing as changed. A sidecar recorded for another recommendation, or one that cannot be read, is kept as is and reported.
 
 Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]`.
 The reviewable routing artifact is `delegate-routing-proposal.json`, written beside the approved recommendation only after run-level approval.
