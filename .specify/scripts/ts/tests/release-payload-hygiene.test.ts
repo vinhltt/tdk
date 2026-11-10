@@ -96,3 +96,24 @@ test('release generation ships the review report-writer and scope sources, bundl
 
   expect(Object.keys(manifest.files).sort()).toEqual(shippable.sort());
 });
+
+test('release generation ships the scaffold outcome recorder, its tsconfig, and reference without its tests', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'scaffold-outcome-payload-'));
+  temporary.push(root);
+  const skill = '.specify/plugins/tdk-scaffold/skills/tdk-scaffold-from-recommendation/';
+  const shippable = [
+    `${skill}scripts/scaffold-outcome-record.ts`,
+    `${skill}scripts/tsconfig.json`,
+    `${skill}references/scaffold-outcome-record.md`,
+  ];
+  const excluded = [`${skill}tests/scaffold-outcome-record.test.ts`, `${skill}scripts/node_modules/x/index.js`];
+  for (const path of [...shippable, ...excluded]) {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(join(root, path), `fixture bytes for ${path}\n`);
+  }
+  writeFileSync(join(root, 'distribute.json'), readFileSync(join(ROOT, 'distribute.json')));
+
+  const manifest = await buildReleaseManifest(root);
+
+  expect(Object.keys(manifest.files).sort()).toEqual(shippable.sort());
+});

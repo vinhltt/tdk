@@ -201,3 +201,49 @@ describe('TDK scaffold routing handoff contracts', () => {
     expect(recommendSkill).toContain('Leaving `## Routing Suggestions` empty is supported');
   });
 });
+
+describe('TDK scaffold outcome baseline contracts', () => {
+  const skill = existsSync(SKILL_PATH) ? read(SKILL_PATH) : '';
+  const recommendSkill = existsSync(RECOMMEND_SKILL_PATH) ? read(RECOMMEND_SKILL_PATH) : '';
+  const recordReferencePath = join(SCAFFOLD_SKILLS_DIR, 'tdk-scaffold-from-recommendation/references/scaffold-outcome-record.md');
+  const recordReference = existsSync(recordReferencePath) ? read(recordReferencePath) : '';
+  const command = 'bun --no-install <loaded-skill-root>/scripts/scaffold-outcome-record.ts';
+
+  it('delegates every sidecar read and write to the skill-local script', () => {
+    expect(skill).toContain('references/scaffold-outcome-record.md');
+    expect(skill).toContain('only its script reads or writes `scaffold-outcome.json`');
+    expect(skill).toContain(`${command} compare --project-root <root> --recommendation <repo-relative>`);
+    expect(skill).toContain(`${command} record --project-root <root> --recommendation <repo-relative>`);
+    expect(existsSync(join(SCAFFOLD_SKILLS_DIR, 'tdk-scaffold-from-recommendation/scripts/scaffold-outcome-record.ts'))).toBe(true);
+  });
+
+  it('records only after an approved run that is not a dry run', () => {
+    expect(skill).toContain('Record only for an approved run that is not `--dry-run`');
+    expect(skill).toContain('after the proposal write in Routing handoff');
+    expect(skill).toContain('the preview also lists the baseline sidecar `scaffold-outcome.json`');
+    expect(skill).toContain('baseline: skipped (dry-run)');
+    expect(skill).toContain('baseline: not recorded ({error})');
+    expect(skill).toContain('Dry run complete. No files written.');
+  });
+
+  it('labels artifacts against the baseline and never trusts a missing or foreign one', () => {
+    expect(skill).toContain('changed since last scaffold ({recorded_at})');
+    expect(skill).toContain('`baseline: not checked ({state}: {reason})`, never unchanged');
+    expect(skill).toContain('`since baseline` column');
+    expect(skill).toContain('`Apply patch may undo edits made after the last scaffold (hand edit or retro)`');
+  });
+
+  it('keeps foreign or invalid sidecars untouched and never stores readiness', () => {
+    expect(skill).toContain('`foreign_sidecar` or `invalid_sidecar`');
+    expect(skill).toContain('Never overwrite it');
+    expect(skill).toContain('never store readiness');
+    expect(recordReference).toContain('never stores readiness');
+    expect(recordReference).toContain('every `\\r\\n` pair is folded to `\\n` first');
+  });
+
+  it('lets the recommender read scaffold outcomes as evidence without hashing', () => {
+    expect(recommendSkill).toContain('scaffold-outcome.json');
+    expect(recommendSkill).toContain('Read only the `outcome` fields: never hash files, compare them, or call the scaffold script');
+    expect(recommendSkill).toContain('record the sidecar path and state `present`, `missing`, or `unreadable`');
+  });
+});

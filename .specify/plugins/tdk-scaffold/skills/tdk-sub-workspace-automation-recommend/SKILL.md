@@ -44,6 +44,7 @@ Read only evidence for the selected sub-workspace unless a project-level artifac
 - `<docsPath>/sub-workspaces/<name>/engineering.md`
 - `.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md`
 - `{docs.path}/custom-workflow/delegate-routing.md`, resolving `docs.path` from `.specify/.specify.json` (default `.specify/configurations`), read-only.
+- `.specify/configurations/automation-recommendations/sub-workspaces/<name>/scaffold-outcome.json`, the baseline `/tdk-scaffold-from-recommendation` recorded beside this recommendation, read-only.
 - Existing local installed skill catalog from the current session, `.claude/skills/*/SKILL.md`, and `.specify/plugins/**/skills/*/SKILL.md`.
 - Existing agents from `.claude/agents/*.md` (canonical consumer source), `.omp/agents/*.md` (runtime bindings), and `.specify/plugins/**/agents/*.md` (TDK-shipped).
 - Official docs and primary sources for the detected tech stack.
@@ -73,6 +74,7 @@ Do not use `ck:find-skills`. Use direct CLI/site lookup only, and summarize resu
    - Combine the current session's local installed skill catalog with `.claude/skills/*/SKILL.md` and `.specify/plugins/**/skills/*/SKILL.md`.
    - Scan `.claude/agents/*.md`, `.omp/agents/*.md`, and `.specify/plugins/**/agents/*.md`. Read frontmatter `name` and the role/input/output contract of likely matches; do not equate a guide skill with an executor or infer agent identity from filenames.
    - Record agents under `## Local Installed Skills Considered` alongside skills, with exact paths and tags: `canonical` for `.claude` consumer agents (record any same-name OMP binding), `runtime-only` for an `.omp` agent with no same-name `.claude` source, and `tdk-shipped` for plugin agents. Keep distinct same-name definitions visible; do not claim inventory alone proves the winning dispatch binding or runtime readiness.
+   - Read `scaffold-outcome.json` when present. Use each `artifacts[].outcome` and `recorded_at` as evidence that scaffold already created or reconciled that artifact, and prefer `reuse` or `patch` over `create` for it. Read only the `outcome` fields: never hash files, compare them, or call the scaffold script; whether an artifact changed since is for `/tdk-scaffold-from-recommendation` to judge. Under `## Evidence Inputs`, record the sidecar path and state `present`, `missing`, or `unreadable`.
    - Prefer reuse or a justified patch when a local artifact already covers the need. Preserve runtime-only agents: allow `reuse @name` as routing intent, but set their artifact action to `none` and note `runtime-only; promote to .claude/agents manually to manage`.
    - Evaluate each considered domain using the executor rubric below, always including `implement`, `test`, and `review`. `review` may be `Applicable: no`. Determine toolset skills separately from the executor; allow agent-only routes and one executor serving both domains when its contract owns both gates.
 
