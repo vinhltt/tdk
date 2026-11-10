@@ -180,7 +180,7 @@ Right after the status block, outside it, print each of these lines once when it
 - `routing: NOT CHECKED ({reason})` when Step 3 could not resolve the test route.
 - `Consumer test skills: none resolved; test-like skills found: {paths}. Add them to the test route in delegate-routing.md to enable T4.` when discovery produced the test-like warning.
 
-Print no other `routing:` or `Consumer test skills:` line; a missing or empty test route needs none.
+Print no other `routing:` or `Consumer test skills:` line; a missing or empty test route needs none. When a line does not apply, leave it out silently: never print it, quote it, or explain why it is absent.
 
 After the block, report:
 - New entry count by target type

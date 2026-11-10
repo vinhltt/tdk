@@ -146,6 +146,8 @@ describe('tdk-retro-propose discovery step', () => {
     expect(block).not.toContain('Consumer test skills');
     expect(completion).toContain('holds only these lines');
     expect(completion).toContain('verbatim and on its own line, never reworded into prose');
+    expect(completion).toContain('Print no other `routing:` or `Consumer test skills:` line');
+    expect(completion).toContain('leave it out silently: never print it, quote it, or explain why it is absent');
   });
 });
 
