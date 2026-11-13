@@ -133,7 +133,7 @@ Excluded:
 | `/tdk-discovery` | Create optional epic context before product alignment. | `<epic-id> [brief|file]`, `--force`, `--interview` | The work is broad enough that problem, persona, and MVP context should exist before epic PRD. |
 | `/tdk-epic-prd` | Turn discovery into epic PRD, slice map, and blocking questions. | `<epic-id>`, `--force`, `--interview` | Discovery exists and you need product alignment before decomposition. |
 | `/tdk-specify` | Create or interview a feature/child `spec.md`. | `<id> [desc]`, `--fast`, `--interview` | You are ready to write the requirement authority for one feature or child slice. |
-| `/tdk-clarify` | Ask targeted questions and write answers back into `spec.md`. | `<id>` | `spec.md` has gaps that should be resolved before planning. |
+| `/tdk-clarify` | Ask up to 5 targeted questions in one message and write the answers back into `spec.md`. | `<id>` | `spec.md` has gaps that should be resolved before planning. |
 | `/tdk-epic-hld` | Create parent epic high-level design context. | `<epic-id>`, `--force` | Epic PRD exists and needs design lenses before child breakdown. |
 | `/tdk-task-breakdown` | Generate child spec seed Markdown from epic PRD plus HLD. | `<epic-id>`, `--force` | An epic needs independently specifiable child slices. |
 | `/tdk-plan` | Generate implementation plan, or refresh existing phase delegates only. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` is ready for planning; use refresh after approved routing changes, or migration for a legacy feature folder. |

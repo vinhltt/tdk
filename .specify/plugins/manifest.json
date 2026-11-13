@@ -1,16 +1,16 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-11-10T15:20:12Z",
+  "generated_at": "2026-11-13T01:23:50Z",
   "plugins": {
     "tdk-core": {
-      "version": "14.3.8",
+      "version": "14.3.9",
       "components": {
         "skills": {
           "tdk-archive": {
             "version": "14.3.7"
           },
           "tdk-clarify": {
-            "version": "14.3.7"
+            "version": "14.3.9"
           },
           "tdk-consistency-check": {
             "version": "14.3.7"
@@ -41,10 +41,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e94fd7a0f43ccf93767b3eb6c87adec554f4846b89f5e62f6caa22f700a68c31",
-        ".claude-plugin/plugin.json": "a37abf90c471f2e109d0f361d8a5457a0f8d0bb7e44a4054dee6e36e0d974f36",
-        ".codex-plugin/plugin.json": "94a19649af4746327e1f3610fbaec07832050c0e2338e50f172b37f9ffba386f",
-        ".cursor-plugin/plugin.json": "94a19649af4746327e1f3610fbaec07832050c0e2338e50f172b37f9ffba386f",
-        "CHANGELOG.md": "d4678ba06b3f7042b225230d5fec7c8658a5a11803152ecbbaaa77ead6e17bbd",
+        ".claude-plugin/plugin.json": "79629cfc2563fa947717e268d8e376f4cc36465c649437bf72a97ce1ead45275",
+        ".codex-plugin/plugin.json": "90f3fc80b6b33d7160f4a2cf6ea70ae65bd913f01ef71a3e0003bbb2b478ee03",
+        ".cursor-plugin/plugin.json": "90f3fc80b6b33d7160f4a2cf6ea70ae65bd913f01ef71a3e0003bbb2b478ee03",
+        "CHANGELOG.md": "cbe1f30797e4776421c84c106a79838b2ccae04f9c9cb233e2a5ba97f84b4ec6",
         "hooks/destructive-command-block.cjs": "8973b014c2f2eb59a481c1747b5395572dcc630029b4434f151843bea6b4cb8a",
         "hooks/dev-context-injector.cjs": "755a4fc0ffa941c8165f27b38c619d1030f68b16782ac2d6ca04047895162c2c",
         "hooks/hook-gateway.cjs": "4a5fcaf5cabf28dc04d92610ede26f9356c189dc33a7f37d4d3ab61aa7e6ed7b",
@@ -66,7 +66,7 @@
         "skills/tdk-archive/references/ingest-workflow.md": "9e44b1a9e0a008c69e013f36a9e309501ac7cbb97bfa07412233ad5ff852e59c",
         "skills/tdk-archive/references/manual-restore.md": "fc7bd70a45d92b74c3579f348cf12a455c8e9abc95f69e4b3c650044252be014",
         "skills/tdk-archive/templates/close-out-template.md.tpl": "083033be7a42f13dc9c8fd48e4648597629e6b6815e0207d245688596d4c4b3b",
-        "skills/tdk-clarify/SKILL.md": "5a6a62fa12629e3c9414dbc35f398e227f43c09a3153a49d2fdafeb34885f17d",
+        "skills/tdk-clarify/SKILL.md": "58ce0aff3d03e7d611397f01c20a4a7bc0d89b58bb99d658dbd933d63c37cdd6",
         "skills/tdk-consistency-check/SKILL.md": "2e46cb863c25ebceafa51533edd318894bee118af4cdb01b3b96307ddc580ea0",
         "skills/tdk-implement/SKILL.md": "de45c875233dac9c04faef8273913ed8fe72e8bb90f0bda903079682fe3523e1",
         "skills/tdk-implement/references/parallel-phase-orchestration.md": "5b3daaf3c2f417d4271c28f75e5e1c47c27fab80c13ecd384acf2ac914550128",

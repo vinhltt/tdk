@@ -6,6 +6,24 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.131.4] - 2026-11-13
+
+### Added
+- **[Scripts]** `tdk-clarify-batched-questions-contract.test.ts` locks the `/tdk-clarify` reply tokens and checks that the one-question-at-a-time wording is gone
+
+### Changed
+- **[tdk-core]** `/tdk-clarify` asks all questions in one message and takes one batched reply; there is no opt-out
+  - Replies use `1A 2B`, `N: <text>`, `N: skip`, `yes`, or `explain N`; an invalid, ambiguous, or contradictory reply gets one fix-up prompt for the pending questions
+  - `done`, `proceed`, `good`, and `no more` no longer end the exchange; they get a short `yes` or `stop` prompt
+  - `stop` records no answers on the first turn; on a fix-up turn it writes held answers and moves pending questions to `## 9. Unresolved Questions`
+  - The 10-question session ceiling is gone; the limit is now 5 displayed questions per run
+  - Skipped, stopped, and newly raised questions are written to `## 9. Unresolved Questions`
+  - Questions left unmentioned that take their recommendation carry `implied default` in the clarification rationale
+  - Questions in the security or compliance categories carry a `(security)` or `(compliance)` tag and are asked again when a partial reply omits them
+  - A question marked `(depends on Qk = X)` is dropped when Qk gets another answer, and asked again if Qk later becomes X
+  - Answers, section updates, and the `## Clarifications` log are saved to `spec.md` in one write after the final reply
+- **[Guides]** en/vi skills guide row for `/tdk-clarify` says it asks up to 5 targeted questions in one message
+
 ## [1.131.3] - 2026-11-10
 
 ### Added

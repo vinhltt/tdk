@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.3.9] - 2026-11-13
+
+### Changed
+- tdk-clarify: asks all questions in one message and takes one batched reply (`1A 2B`, `N: <text>`, `N: skip`, `yes`, `explain N`); there is no opt-out
+- tdk-clarify: `done`, `proceed`, `good`, and `no more` get a short `yes` or `stop` prompt; `stop` writes held answers only on a fix-up turn
+- tdk-clarify: at most 5 displayed questions per run; skipped, stopped, and newly raised questions go to `## 9. Unresolved Questions`
+- tdk-clarify: answers, section updates, and the clarification log are saved to `spec.md` in one write after the final reply
+
 ## [14.3.8] - 2026-11-09
 
 ### Changed

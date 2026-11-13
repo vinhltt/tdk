@@ -134,7 +134,7 @@ Excluded:
 | `/tdk-discovery` | Tạo optional epic context trước product alignment. | `<epic-id> [brief\|file]`, `--force`, `--interview` | Work đủ rộng để problem, persona, và MVP context nên tồn tại trước epic PRD. |
 | `/tdk-epic-prd` | Biến discovery thành epic PRD, slice map, và blocking questions. | `<epic-id>`, `--force`, `--interview` | Discovery đã tồn tại và bạn cần product alignment trước decomposition. |
 | `/tdk-specify` | Tạo hoặc interview feature/child `spec.md`. | `<id> [desc]`, `--fast`, `--interview` | Bạn sẵn sàng viết requirement authority cho một feature hoặc child slice. |
-| `/tdk-clarify` | Hỏi targeted questions và ghi answer lại vào `spec.md`. | `<id>` | `spec.md` có gaps cần resolve trước planning. |
+| `/tdk-clarify` | Hỏi tối đa 5 targeted questions trong một tin nhắn và ghi answer lại vào `spec.md`. | `<id>` | `spec.md` có gaps cần resolve trước planning. |
 | `/tdk-epic-hld` | Tạo parent epic high-level design context. | `<epic-id>`, `--force` | Epic PRD tồn tại và cần design lenses trước child breakdown. |
 | `/tdk-task-breakdown` | Generate child spec seed Markdown từ epic PRD cộng HLD. | `<epic-id>`, `--force` | Một epic cần các child slices có thể spec độc lập. |
 | `/tdk-plan` | Tạo implementation plan hoặc chỉ làm mới delegate của phase hiện có. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` đã sẵn sàng để lập plan; dùng refresh sau khi duyệt đổi route, hoặc migration cho legacy feature folder. |
