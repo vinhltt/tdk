@@ -329,7 +329,7 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.c
 ```
 
 2. Update `memory.yaml`: `sha256`, `updated_at`, `updated_by: "tdk-memory-update"`
-3. Compute SHA256 of regenerated `memory-index.md` → store as `memory_index_sha256`
+3. Hash the regenerated `memory-index.md` with the same `hash` command, never by hand → store as `memory_index_sha256`
 4. Preserve `templates[]`, unrelated file records, and metadata. Validate a
    temporary YAML candidate, then publish under the shared concurrency contract.
 

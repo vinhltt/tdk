@@ -44,8 +44,12 @@ paths yourself. Read its JSON:
   `--allow-external-root`.
 - External-root permission is present when `external` is `true` and `root` is
   non-null. Append `--allow-external-root` to every later runtime
-  `hash|validate|resolve` call of the operation in that case, and only then.
-  `tdk-memory-query` runs its own `resolve`, so invoking it needs no flag.
+  `hash|validate|rank|resolve` call of the operation in that case, and only then.
+  One exception: `ensure-template-set.md` always passes the flag to hash a trusted
+  seed template, because the seed directory is a read-only asset source, not a memory
+  root. `tdk-memory-agent` never adds the flag to `resolve`; it adds it only to `rank`,
+  when its own `resolve` returned `external: true` with a root. `tdk-memory-query` runs
+  its own `resolve`, so invoking it needs no flag.
 
 **What `resolve` implements** (the TDK gate mirrors this; it is not a procedure to
 re-run by hand):
@@ -155,7 +159,7 @@ remaining normalized components. Do not use string-prefix checks.
    `AskUserQuestion`, as in a subagent, or the call fails) STOP with remediation
    instead of writing; only an `--allow-external-root` the user typed in this
    invocation then allows the write. A flag that a skill forwarded (because
-   `resolve` reported an external root) is permission, never consent. Consumer skills never pass the flag on their own.
+   `resolve` reported an external root) is permission, never consent. Consumer skills never pass the flag on their own, except to hash a trusted seed template (section 1). The agent's `rank` call follows the same permission rule (section 1).
    Reads need no consent.
 6. A root outside the workspace requires `memory.yaml` for every operation except
    initialization. Initialization, including `--ensure-templates` on an external
@@ -215,6 +219,20 @@ For a hash replace the subcommand with `hash "<memoryRoot>" "<relative-file>"`, 
 the note path check in section 1, because the shell runs an active name before `hash`
 sees it.
 Its output is plain 64-hex text; `validate` and `resolve` emit JSON.
+`hash` prints the digest with CRLF folded to LF for `.md`, `.md.tpl`, and `.canvas`,
+and of the exact bytes for any other file; `hash --raw` always prints the digest of
+the exact bytes. `validate` also accepts a receipt recorded from the raw or CRLF form
+of the same content, counts it as verified, and lists it in `legacy_receipts`, which
+is not an integrity difference.
+`rank "<memoryRoot>" [--scope <prefix>]... [--allow-external-root]` reads
+`{"terms":[...],"candidates":[...]}` from stdin, `candidates` being optional. Terms are
+untrusted, so they go only through a quoted heredoc, never argv. It owns free-text
+tokenizing, scoring, sorting, and selection, and prints `total`, `selected`, `omitted`,
+`rejected_candidates`, and `unsafe_paths`: paths and integers, never note contents. A
+`--scope` matches whole path segments, takes no trailing `/` and no pattern, and applies
+before scoring, so a pinned note outside the scope stays out. A symlink in the scanned tree is fatal, as
+in `validate`. `rank --print-term` takes exactly one term and no root, and prints
+`{"term":...}` with a normalized term that is inert inside double quotes, or `null`.
 `resolve [--memory-root "<path>"] [--allow-external-root]` applies section 1 and
 reports `status`, `root`, `memory_path`, `external`, `reader`, `reader_fallback`,
 coverage, domains, constitution, `warnings`, `error`, and `hint`. Root-state problems are reported inside that JSON with exit

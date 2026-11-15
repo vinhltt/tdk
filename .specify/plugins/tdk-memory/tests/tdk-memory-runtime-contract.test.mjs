@@ -169,6 +169,7 @@ describe('tdk memory manifest runtime contract', () => {
         index_mismatch: false,
         templates_mismatches: [],
         unsafe_paths: [],
+        legacy_receipts: [],
       });
     });
   });
@@ -256,6 +257,7 @@ describe('tdk memory manifest runtime contract', () => {
           },
         ],
         unsafe_paths: [],
+        legacy_receipts: [],
       });
     });
   });
@@ -496,6 +498,281 @@ describe('tdk memory manifest runtime contract', () => {
       expectFatal(runRuntime(workspace, ['write', 'memory']));
       expectFatal(runRuntime(workspace, ['hash', 'memory', 'payload.bin', '--manifest', 'memory.yaml']));
       expectFatal(runRuntime(workspace, ['validate', 'memory', '--manifest', '/tmp/memory.yaml']));
+      expectFatal(runRuntime(workspace, ['validate', 'memory', '--raw']));
+      expectFatal(runRuntime(workspace, ['hash', 'memory', 'payload.bin', '--raw', '--raw']));
+    });
+  });
+});
+
+describe('tdk memory manifest line ending handling', () => {
+  const LF_NOTE = '# Note\n\nBody line\n';
+  const CRLF_NOTE = LF_NOTE.replaceAll('\n', '\r\n');
+
+  const seedReceipts = (workspace, { files = [], templates = [], index = '# Index\n', indexReceipt = index }) => {
+    const memoryRoot = makeMemoryRoot(workspace);
+    writeRelative(memoryRoot, 'memory-index.md', index);
+    writeRelative(memoryRoot, 'memory.yaml', manifestYaml({
+      indexSha256: sha256(indexReceipt),
+      files: files.map(({ path, receipt }) => fileReceipt(path, receipt)),
+      templates: templates.map(({ path, receipt }) => ({ path, sha256: sha256(receipt), sourceVersion: '1.0.0' })),
+    }));
+    for (const { path, disk } of [...files, ...templates]) writeRelative(memoryRoot, path, disk);
+    return memoryRoot;
+  };
+
+  const validateMemory = (workspace) => report(runRuntime(workspace, ['validate', 'memory']));
+  const hashOf = (workspace, ...args) => {
+    const result = runRuntime(workspace, ['hash', 'memory', ...args]);
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  };
+
+  const COMBINATIONS = [
+    { label: 'LF receipt on LF disk', receipt: LF_NOTE, disk: LF_NOTE, legacy: false },
+    { label: 'LF receipt on CRLF disk', receipt: LF_NOTE, disk: CRLF_NOTE, legacy: false },
+    { label: 'CRLF receipt on CRLF disk', receipt: CRLF_NOTE, disk: CRLF_NOTE, legacy: true },
+    { label: 'CRLF receipt on LF disk', receipt: CRLF_NOTE, disk: LF_NOTE, legacy: true },
+  ];
+
+  for (const { label, receipt, disk, legacy } of COMBINATIONS) {
+    test(`verifies a note with a ${label}`, () => {
+      withWorkspace((workspace) => {
+        seedReceipts(workspace, { files: [{ path: 'notes/a.md', receipt, disk }] });
+        const result = validateMemory(workspace);
+        assert.deepEqual(result.mismatches, []);
+        assert.equal(result.verified_count, 1);
+        assert.deepEqual(result.legacy_receipts, legacy ? ['notes/a.md'] : []);
+      });
+    });
+  }
+
+  test('still reports a real edit against an LF receipt and a CRLF receipt, with the normalized digest as actual', () => {
+    withWorkspace((workspace) => {
+      const edited = '# Note\r\n\r\nEdited line\r\n';
+      seedReceipts(workspace, {
+        files: [
+          { path: 'notes/crlf-receipt.md', receipt: CRLF_NOTE, disk: edited },
+          { path: 'notes/lf-receipt.md', receipt: LF_NOTE, disk: edited },
+        ],
+      });
+      const result = validateMemory(workspace);
+      assert.deepEqual(result.mismatches, [
+        { path: 'notes/crlf-receipt.md', expected: sha256(CRLF_NOTE), actual: sha256(edited.replaceAll('\r\n', '\n')) },
+        { path: 'notes/lf-receipt.md', expected: sha256(LF_NOTE), actual: sha256(edited.replaceAll('\r\n', '\n')) },
+      ]);
+      assert.equal(result.verified_count, 0);
+      assert.deepEqual(result.legacy_receipts, []);
+    });
+  });
+
+  test('leaves the manifest byte-identical after validating legacy receipts', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = seedReceipts(workspace, { files: [{ path: 'notes/a.md', receipt: CRLF_NOTE, disk: LF_NOTE }] });
+      const before = readFileSync(join(memoryRoot, 'memory.yaml'));
+      assert.deepEqual(validateMemory(workspace).legacy_receipts, ['notes/a.md']);
+      assert.deepEqual(readFileSync(join(memoryRoot, 'memory.yaml')), before);
+    });
+  });
+
+  test('accepts the index, templates, and the canvas across line endings', () => {
+    withWorkspace((workspace) => {
+      const template = '# Template\n';
+      const crlfTemplate = '# Template\r\n';
+      const canvas = '{\n  "nodes": []\n}\n';
+      const crlfCanvas = canvas.replaceAll('\n', '\r\n');
+      seedReceipts(workspace, {
+        index: '# Index\r\n',
+        indexReceipt: '# Index\n',
+        files: [{ path: 'memory-map.canvas', receipt: canvas, disk: crlfCanvas }],
+        templates: [
+          { path: '_templates/crlf-receipt.md.tpl', receipt: crlfTemplate, disk: template },
+          { path: '_templates/lf-receipt.md.tpl', receipt: template, disk: crlfTemplate },
+        ],
+      });
+      const result = validateMemory(workspace);
+      assert.equal(result.index_mismatch, false);
+      assert.deepEqual(result.templates_mismatches, []);
+      assert.deepEqual(result.mismatches, []);
+      assert.equal(result.verified_count, 1);
+      assert.deepEqual(result.legacy_receipts, ['_templates/crlf-receipt.md.tpl']);
+    });
+  });
+
+  test('lists a legacy index receipt and does not count index or templates as verified notes', () => {
+    withWorkspace((workspace) => {
+      seedReceipts(workspace, {
+        index: '# Index\n',
+        indexReceipt: '# Index\r\n',
+        files: [{ path: 'notes/b.md', receipt: CRLF_NOTE, disk: CRLF_NOTE }, { path: 'notes/a.md', receipt: CRLF_NOTE, disk: CRLF_NOTE }],
+      });
+      const result = validateMemory(workspace);
+      assert.equal(result.index_mismatch, false);
+      assert.equal(result.verified_count, 2);
+      assert.deepEqual(result.legacy_receipts, ['memory-index.md', 'notes/a.md', 'notes/b.md']);
+    });
+  });
+
+  test('reports a template without a receipt and a deleted template using normalized digests', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = seedReceipts(workspace, {
+        templates: [{ path: '_templates/deleted.md.tpl', receipt: '# Deleted\n', disk: '# Deleted\n' }],
+      });
+      rmSync(join(memoryRoot, '_templates', 'deleted.md.tpl'));
+      writeRelative(memoryRoot, '_templates/unlisted.md.tpl', '# Unlisted\r\n');
+      assert.deepEqual(validateMemory(workspace).templates_mismatches, [
+        { path: '_templates/deleted.md.tpl', expected: sha256('# Deleted\n'), actual: null },
+        { path: '_templates/unlisted.md.tpl', expected: null, actual: sha256('# Unlisted\n') },
+      ]);
+    });
+  });
+
+  test('reports a receipt hashed from mixed line endings once the disk is normalized, but keeps the unchanged file verified', () => {
+    withWorkspace((workspace) => {
+      const mixed = 'first\r\nsecond\nthird\r\n';
+      seedReceipts(workspace, {
+        files: [
+          { path: 'notes/normalized.md', receipt: mixed, disk: mixed.replaceAll('\r\n', '\n') },
+          { path: 'notes/unchanged.md', receipt: mixed, disk: mixed },
+        ],
+      });
+      const result = validateMemory(workspace);
+      assert.deepEqual(result.mismatches.map((item) => item.path), ['notes/normalized.md']);
+      assert.deepEqual(result.legacy_receipts, ['notes/unchanged.md']);
+    });
+  });
+
+  test('hash keeps the digest of LF text and gives CRLF text the same digest', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = makeMemoryRoot(workspace);
+      writeRelative(memoryRoot, 'lf.md', LF_NOTE);
+      writeRelative(memoryRoot, 'crlf.md', CRLF_NOTE);
+      writeRelative(memoryRoot, 'seed.md.tpl', CRLF_NOTE);
+      writeRelative(memoryRoot, 'map.canvas', CRLF_NOTE);
+      assert.equal(hashOf(workspace, 'lf.md'), sha256(LF_NOTE));
+      assert.equal(hashOf(workspace, 'crlf.md'), sha256(LF_NOTE));
+      assert.equal(hashOf(workspace, 'seed.md.tpl'), sha256(LF_NOTE));
+      assert.equal(hashOf(workspace, 'map.canvas'), sha256(LF_NOTE));
+    });
+  });
+
+  test('hash --raw always prints the digest of the bytes on disk', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = makeMemoryRoot(workspace);
+      writeRelative(memoryRoot, 'crlf.md', CRLF_NOTE);
+      assert.equal(hashOf(workspace, 'crlf.md', '--raw'), sha256(CRLF_NOTE));
+      assert.equal(hashOf(workspace, '--raw', 'crlf.md'), sha256(CRLF_NOTE));
+    });
+  });
+
+  test('hash leaves files outside the text kinds byte-exact', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = makeMemoryRoot(workspace);
+      const binary = Buffer.from([0x0d, 0x0a, 0xff, 0x0d, 0x0a]);
+      writeRelative(memoryRoot, 'assets/diagram.bin', binary);
+      writeRelative(memoryRoot, 'notes.tpl', CRLF_NOTE);
+      assert.equal(hashOf(workspace, 'assets/diagram.bin'), sha256(binary));
+      assert.equal(hashOf(workspace, 'notes.tpl'), sha256(CRLF_NOTE));
+    });
+  });
+
+  test('hash leaves a lone carriage return untouched', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = makeMemoryRoot(workspace);
+      const loneCr = 'first\rsecond\nthird\r';
+      writeRelative(memoryRoot, 'lone.md', loneCr);
+      assert.equal(hashOf(workspace, 'lone.md'), sha256(loneCr));
+    });
+  });
+
+  test('hash folds a CRLF that straddles the read chunk boundary', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = makeMemoryRoot(workspace);
+      const prefix = 'x'.repeat(65535);
+      writeRelative(memoryRoot, 'large.md', `${prefix}\r\nend\r\n`);
+      assert.equal(hashOf(workspace, 'large.md'), sha256(`${prefix}\nend\n`));
+    });
+  });
+});
+
+describe('tdk memory manifest values that flows depend on', () => {
+  const LF_TEXT = '# Text\n\nBody\n';
+  const CRLF_TEXT = LF_TEXT.replaceAll('\n', '\r\n');
+  const hashOf = (workspace, ...args) => {
+    const result = runRuntime(workspace, ['hash', ...args]);
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  };
+
+  test('a seed and a destination that differ only in line endings hash alike and stay out of template mismatches', () => {
+    withWorkspace((workspace) => {
+      const seedDir = join(dirname(workspace), 'plugin-assets');
+      writeRelative(seedDir, 'seed.md.tpl', LF_TEXT);
+      const memoryRoot = makeMemoryRoot(workspace);
+      const index = '# Index\n';
+      writeRelative(memoryRoot, 'memory-index.md', index);
+      writeRelative(memoryRoot, '_templates/seed.md.tpl', CRLF_TEXT);
+      writeRelative(memoryRoot, 'memory.yaml', manifestYaml({
+        indexSha256: sha256(index),
+        templates: [{ path: '_templates/seed.md.tpl', sha256: sha256(LF_TEXT), sourceVersion: '1.0.0' }],
+      }));
+
+      assert.deepEqual(report(runRuntime(workspace, ['validate', 'memory'])).templates_mismatches, []);
+      assert.equal(
+        hashOf(workspace, seedDir, 'seed.md.tpl', '--allow-external-root'),
+        hashOf(workspace, 'memory', '_templates/seed.md.tpl'),
+      );
+      expectFatal(runRuntime(workspace, ['hash', seedDir, 'seed.md.tpl']));
+    });
+  });
+
+  test('a raw handoff digest of a CRLF file equals hash --raw, and a receipt from hash validates clean', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = makeMemoryRoot(workspace);
+      const index = '# Index\n';
+      writeRelative(memoryRoot, 'memory-index.md', index);
+      writeRelative(memoryRoot, 'constitution.md', CRLF_TEXT);
+      assert.equal(hashOf(workspace, 'memory', 'constitution.md', '--raw'), sha256(CRLF_TEXT));
+
+      const receipt = hashOf(workspace, 'memory', 'constitution.md');
+      assert.equal(receipt, sha256(LF_TEXT));
+      writeRelative(memoryRoot, 'memory.yaml', manifestYaml({
+        indexSha256: sha256(index),
+        files: [{ path: 'constitution.md', sha256: receipt, updatedAt: GENERATED_AT, updatedBy: 'runtime-contract-test' }],
+      }));
+      const result = report(runRuntime(workspace, ['validate', 'memory']));
+      assert.deepEqual(result.mismatches, []);
+      assert.deepEqual(result.legacy_receipts, []);
+      assert.equal(result.verified_count, 1);
+    });
+  });
+
+  test('replacing legacy receipts with hash values empties legacy_receipts and leaves mismatches alone', () => {
+    withWorkspace((workspace) => {
+      const memoryRoot = makeMemoryRoot(workspace);
+      writeRelative(memoryRoot, 'memory-index.md', CRLF_TEXT);
+      writeRelative(memoryRoot, 'notes/legacy.md', CRLF_TEXT);
+      writeRelative(memoryRoot, 'notes/edited.md', '# Edited\n');
+      const manifest = (indexSha256, legacyReceipt) => manifestYaml({
+        indexSha256,
+        files: [
+          { path: 'notes/edited.md', sha256: sha256('# Original\n'), updatedAt: GENERATED_AT, updatedBy: 'keeper' },
+          { path: 'notes/legacy.md', sha256: legacyReceipt, updatedAt: GENERATED_AT, updatedBy: 'keeper' },
+        ],
+      });
+      writeRelative(memoryRoot, 'memory.yaml', manifest(sha256(CRLF_TEXT), sha256(CRLF_TEXT)));
+
+      const before = report(runRuntime(workspace, ['validate', 'memory']));
+      assert.deepEqual(before.legacy_receipts, ['memory-index.md', 'notes/legacy.md']);
+
+      writeRelative(memoryRoot, 'memory.candidate.yaml', manifest(
+        hashOf(workspace, 'memory', 'memory-index.md'),
+        hashOf(workspace, 'memory', 'notes/legacy.md'),
+      ));
+      const after = report(runRuntime(workspace, ['validate', 'memory', '--manifest', 'memory.candidate.yaml']));
+      assert.deepEqual(after.legacy_receipts, []);
+      assert.deepEqual(after.mismatches, before.mismatches);
+      assert.equal(after.verified_count, before.verified_count);
+      assert.equal(after.index_mismatch, false);
     });
   });
 });

@@ -25,18 +25,45 @@ domains, calls force-reinit, deletes domains, or changes existing knowledge.
    README from the owned memory-readme seed, an empty CHANGELOG, and a valid
    memory-index from `memory-index-template.md` with empty domain rows/sections
    and `Binding coverage: 0 of 0 typed files`. No domain interview or folder is
-   required. Hash those actual bytes; start `version: "2"`, `files[]`, and
+   required. Hash those files with the shipped `hash` command; start `version: "2"`, `files[]`, and
    `memory_index_sha256`. Existing root files are never overwritten here.
    An existing index without a manifest is recoverable only through explicit
    checksum repair approval; do not silently certify an existing knowledge tree.
 
 ## Three-way state table
 
-Compute SHA256 from actual bytes using Node `node:crypto` (for the trusted seed)
-and the shipped `memory-manifest.cjs hash` command (for memory destinations;
-forward `--allow-external-root` when the contract granted external-root permission).
-The `hash` subcommand prints plain 64-hex text, not JSON. Only `validate` prints
-JSON. Do not feed a hash result into a JSON parser.
+Hash only through the shipped `memory-manifest.cjs hash` command, so the seed, the
+destination, and the receipt share one digest. It folds CRLF to LF for `.md.tpl`, so
+a file that differs only in line endings is never a user edit. The `hash` subcommand
+prints plain 64-hex text, not JSON. Only `validate` prints JSON. Do not feed a hash
+result into a JSON parser.
+
+Hash a seed with:
+
+```sh
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<seedDir>" "<name>.md.tpl" --allow-external-root
+```
+
+`<seedDir>` is the asset directory from preflight step 2. The flag is always passed
+for a seed, because that directory is a trusted read-only asset source wherever it
+is installed. It lets the runtime read the seed and is not write consent.
+
+When a manifest exists, take each destination's state from `validate`
+(`templates_mismatches[]`), forwarding `--allow-external-root` when the contract
+granted external-root permission:
+
+| Entry for the path | Destination state | Branch |
+|---|---|---|
+| No entry, destination absent | No receipt, not installed | Copy seed |
+| No entry, destination present | Receipt present, destination equals recorded, including a legacy receipt | `equals recorded` rows |
+| `actual: null` | Receipt present, destination deleted | Restore from the current seed |
+| `expected: null` | No receipt, destination present | Recovery row |
+| `expected` and `actual` both non-null | Destination differs from recorded | `differs from recorded` rows |
+
+Without a manifest there are no receipts, so `hash` of the destination is enough.
+"Equals seed" and "differs from seed" always compare `hash` values, never raw bytes,
+so an upgrade cannot overwrite a file that differs only in line endings.
+
 `recorded` is the seed hash last installed, not permission to overwrite user edits.
 Compare all three values before selecting a branch; refresh has precedence over
 preserve branches, but never rewrites already identical bytes or receipts.
@@ -52,8 +79,8 @@ preserve branches, but never rewrites already identical bytes or receipts.
 
 A missing destination with an existing receipt is restored from the current seed
 and its receipt updated. For any branch with destination equal to current seed,
-only repair a missing/stale receipt; do not rewrite the destination. Do not remove
-unknown destination assets or old receipts automatically.
+only repair a missing/stale receipt, including a legacy receipt; do not rewrite the
+destination. Do not remove unknown destination assets or old receipts automatically.
 
 ## Publication and receipts
 
@@ -67,7 +94,7 @@ Receipts live in `memory.yaml` separately from knowledge:
 ```yaml
 templates:
   - path: _templates/data-model-template.md.tpl
-    sha256: "<actual-installed-seed-sha256>"
+    sha256: "<hash-command-value-of-the-installed-seed>"
     source_version: "<owning-skill-metadata.version>"
 ```
 

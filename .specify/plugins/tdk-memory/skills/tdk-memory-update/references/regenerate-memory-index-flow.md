@@ -6,9 +6,8 @@ Shared logic for rebuilding `memory-index.md` from filesystem state.
 
 ## Edit Detection (before regeneration)
 
-1. Read `memory_index_sha256` from `memory.yaml`
-2. Compute SHA256 of current `memory-index.md` on disk
-3. If mismatch: WARN "memory-index.md was manually edited. Regenerating will overwrite manual changes." (warn-but-proceed)
+1. When `memory.yaml` exists, read `index_mismatch` from the shipped `validate` command (root contract, section 4) instead of comparing hashes yourself. Without a manifest, skip detection.
+2. If `index_mismatch` is `true`: WARN "memory-index.md was manually edited. Regenerating will overwrite manual changes." (warn-but-proceed)
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-11-13T01:23:50Z",
+  "generated_at": "2026-11-15T03:38:29Z",
   "plugins": {
     "tdk-core": {
       "version": "14.3.9",
@@ -275,28 +275,28 @@
       }
     },
     "tdk-memory": {
-      "version": "4.3.0",
+      "version": "4.4.0",
       "components": {
         "skills": {
           "tdk-memory-changelog": {
-            "version": "4.3.0"
+            "version": "4.4.0"
           },
           "tdk-memory-checksum": {
-            "version": "4.3.0"
+            "version": "4.4.0"
           },
           "tdk-memory-init": {
-            "version": "4.3.0"
+            "version": "4.4.0"
           },
           "tdk-memory-query": {
-            "version": "4.3.0"
+            "version": "4.4.0"
           },
           "tdk-memory-update": {
-            "version": "4.3.0"
+            "version": "4.4.0"
           }
         },
         "agents": {
           "tdk-memory-agent": {
-            "version": "4.3.0"
+            "version": "4.4.0"
           }
         },
         "hooks": {},
@@ -305,34 +305,35 @@
       "files": {
         ".claude-plugin/interface.json": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
         ".claude-plugin/marketplace.json": "5a7a114551cc99a3971a18ac960035cb6711caff03042fa65b5ed8a871f91be1",
-        ".claude-plugin/plugin.json": "15616944f5dc50c2f0747b5f835ca32b9cfe6712946116336785e87c65643623",
-        ".codex-plugin/plugin.json": "c8f830e46931da9e7ed8fea68ab50cd800349ab71a6cbacc9f54b7478057faa3",
-        ".cursor-plugin/plugin.json": "c8f830e46931da9e7ed8fea68ab50cd800349ab71a6cbacc9f54b7478057faa3",
+        ".claude-plugin/plugin.json": "2a1888a59e477d89448a90b14dd0b808a1cbf52a5463b53a64abc54f71eed395",
+        ".codex-plugin/plugin.json": "e7b975edad00ee0b19ba9dc185ecb718c479750fc222eca99843ccba8c8979b9",
+        ".cursor-plugin/plugin.json": "e7b975edad00ee0b19ba9dc185ecb718c479750fc222eca99843ccba8c8979b9",
         ".gitignore": "14567ef9a3ede22540eba90110f351cc338ad2a05b506f5da1d265cda25be5c9",
-        "CHANGELOG.md": "19d7d04bc183f1387d37f36981f6e7338ce5df9b84628b20514f5b9d5b1afab9",
+        "CHANGELOG.md": "cf7d539c97b659d9a5049cfdfc95ae81e93ed62431dbbb1634590e190091ae0c",
         "LICENSE": "4537167969bc06e8bfe5a9da25f32de98551bf9f20e797f34b23b7325dcbaf0f",
-        "README.md": "9093de878c85b8f0e7144c7d79e30fa0febeca3168e0b75fd3c6033d7129884d",
-        "agents/tdk-memory-agent.md": "31616c33d66349228194c9d8ba7efea2d76062b0733aa674b210b5b0e3f15ba7",
-        "skills/tdk-memory-changelog/SKILL.md": "0b446189f77bd88f6d12e11a384101a15167c1a581e1fecb52a5b49300561821",
-        "skills/tdk-memory-changelog/references/changelog-entry-format-and-change-type-taxonomy.md": "0f1da23a2c0d642cf7290ab1b28749250168126efdaf8f4915b6543a13335dc4",
-        "skills/tdk-memory-checksum/SKILL.md": "bde4b641e763c81e6afdab1e687cf6223a19aedf897436167867a8547f97eb60",
+        "README.md": "df3da7fe7d498bde6947e2124cbe877d3f01c05a354f63d29d2eeda496a56585",
+        "agents/tdk-memory-agent.md": "3dc58ec7821f9b7b9ac3ad4e2adee095466ad6a2b878ad7298c7543e2c1bcab6",
+        "skills/tdk-memory-changelog/SKILL.md": "f5c549a10a35da253f584c7dc7fc721f455a2788297c853b8c2946182b221361",
+        "skills/tdk-memory-changelog/references/changelog-entry-format-and-change-type-taxonomy.md": "9b15a6c45512c87076e318d04580e32c8d716be32ba28dd776a85235ac978cf2",
+        "skills/tdk-memory-checksum/SKILL.md": "6dd930a4fc1978bd2e7eb5e299f60ffebf4e5b97920c0cfad1d8d32d5a8f61c8",
         "skills/tdk-memory-checksum/scripts/RUNTIME-LICENSE.txt": "8d6c916d6d599ee1c90d9df35c32f1e460558ad5bec797929eb5872b6a2790b5",
         "skills/tdk-memory-checksum/scripts/bun.lock": "0dcf8b1f7e59bc66328f2aba397ae50be6b3c7e58f92baef384326c472f00c54",
-        "skills/tdk-memory-checksum/scripts/memory-manifest.cjs": "855897fd3ad6346994e14d7d8134a84236ba1fe757e6ea4ef14c249d0a12cb17",
-        "skills/tdk-memory-checksum/scripts/memory-manifest.ts": "cec4bc49d0e4f68a501cea1f9108ab7147804bb53eb5f6063c98f1dac7e2e0aa",
+        "skills/tdk-memory-checksum/scripts/memory-manifest.cjs": "00c1bcdd89fccb6e71b6bfcaf2e9db586ec8d1dce18f3ba4a2e92ea302a1a74e",
+        "skills/tdk-memory-checksum/scripts/memory-manifest.ts": "5984492b432cc05b29039e891b23834b5020b96d5efd848a0ec9b3929a032f96",
+        "skills/tdk-memory-checksum/scripts/memory-query-ranking.ts": "1c4712de66617e804741ac9bedcec431bf019c539f83dcc271fd2009c50095dd",
         "skills/tdk-memory-checksum/scripts/package.json": "19e6d3a9eb91640c725d294ba61fe315d7fef0d4a60a6591fdc83af500e26154",
-        "skills/tdk-memory-init/SKILL.md": "4f2b2287693f2f98398e566f6321298676bf09638291a605d0313e9e5a13915f",
+        "skills/tdk-memory-init/SKILL.md": "4bc4380802cd0e5ac955db5794625475d996e812cc321d7adfca9793157dea55",
         "skills/tdk-memory-init/references/VENDORED-LICENSE.md": "64c64d48361edfe8610016441bf593256ea9b67f133b00f47c55aa29ee878567",
         "skills/tdk-memory-init/references/VENDORED.md": "d3299f1a96e1078867d4ceb9fbbae216dd088a572f8bf998afd4d3b511dfd44f",
         "skills/tdk-memory-init/references/domain-extraction-and-confirmation.md": "8cc8986efd9eec697cccf885094e3a11461ec3b5c7c271a9b59972f529b20c76",
         "skills/tdk-memory-init/references/domain-overview-template.md": "64a2039ed72851d753726cb4932f12507d3218779716f075d4e7ac56b33ba11f",
-        "skills/tdk-memory-init/references/ensure-template-set.md": "76326d1cfe05e5c8e52aedfeb9232fab1cf4bb9dd00662a456e897ac4ebdd592",
+        "skills/tdk-memory-init/references/ensure-template-set.md": "fe7b5e28c067df357873bf31e46291cace3efe4956856f848c09ccc9c2cc33bb",
         "skills/tdk-memory-init/references/fresh-init-flow.md": "58bfa19481a847b2c60c16281dcfdc49a9a50b2745378d190a0e167c2a4468d6",
         "skills/tdk-memory-init/references/memory-index-template.md": "55e668f077cf878bda976f25d498d9e7239cf62ee85f40242b55e9d146f2951f",
-        "skills/tdk-memory-init/references/memory-root-and-asset-contract.md": "0c716bc5c5d4bf136d2b72b0737c9a5d03b88ee11d3c6222ea4c650916bf8c91",
+        "skills/tdk-memory-init/references/memory-root-and-asset-contract.md": "417823592bcca9d643f2bca9d22c70977415aa2322780fbba56d5e0cd0921a1a",
         "skills/tdk-memory-init/references/obsidian-json-canvas.md": "39ea281720c404eb63636aace863450f1da51f3dd8904bda05e6e825296f9b73",
         "skills/tdk-memory-init/references/obsidian-markdown.md": "f23a19ad45ca4dd46dba5d4069369c3689c7230bebdca83924c281a72bc71e2b",
-        "skills/tdk-memory-init/references/re-run-flow.md": "888efebad9f0da51b0a649ba928cf94408bcf67b2f535f42538dc10721fe3c7a",
+        "skills/tdk-memory-init/references/re-run-flow.md": "42b118ef32b6d406925ff17a21d4feed04e06d2c0b8325795ce75cffd81b8137",
         "skills/tdk-memory-init/references/templates/memory/arc42-readme-template.md.tpl": "369d3cfb9412cc56a61d202314cef10877db483d8174276e6deaaff6da128566",
         "skills/tdk-memory-init/references/templates/memory/arc42-summary-template.md.tpl": "6f63a21245bef0753872a907456b35e459a2658516dc04ca3234670e5bfc1cff",
         "skills/tdk-memory-init/references/templates/memory/business-rules-template.md.tpl": "1ad6a2151f513335e3215612915f177bfeb3c7fab2199ad05286351964766761",
@@ -353,17 +354,17 @@
         "skills/tdk-memory-init/references/templates/memory/services-template.md.tpl": "39f8f03a9917e08b5dff45bf474f1ce390b4e748b787cdc5f1d74909835840d7",
         "skills/tdk-memory-init/references/templates/memory/stakeholders-and-roles-template.md.tpl": "54cf79511cd464cccb5f4435b4adc0893134cff230908b6d8f2592209d68fe46",
         "skills/tdk-memory-init/references/templates/memory/state-machine-template.md.tpl": "e5c672736c70762df25f7cf4f7b7ec337aff934decc89aa584f9517ff6bd7b1a",
-        "skills/tdk-memory-query/SKILL.md": "7e3c360d714af4ed44c8a2f045d3adb8955137b277ce8b9a2b879cdc8ca24f83",
-        "skills/tdk-memory-query/references/flow-query.md": "98450b0ecdd55ef8a5063057c12686c639e0a698913b29500048128ec61cbd5c",
-        "skills/tdk-memory-query/references/obsidian-cli-reader.md": "6f55ade6998c1408b9b18280849b00d623f2f8001b8d9dfcbe7d201f9de66e99",
+        "skills/tdk-memory-query/SKILL.md": "30cf6c286d27d618dfff6bf955c73bf146e95323d6a0368f6fbf5de4d287b8d2",
+        "skills/tdk-memory-query/references/flow-query.md": "52a7718eb6f940b0cc064b2915e1d11431eb6c936738d1d5c550b5056f802e4d",
+        "skills/tdk-memory-query/references/obsidian-cli-reader.md": "aacf9efd695b0c7b410f58476256b54f6fcbd05ba000b9759775d5bea239df59",
         "skills/tdk-memory-query/references/status-handshake.md": "8e24fd0d3597650904a047a293f0e4171286e68fc2e13595c0fe23bce9f89bc0",
-        "skills/tdk-memory-update/SKILL.md": "d71ad6e87c2a18f4b042bcb7eead8179fa79c01cec6d71d28d51dd0434acfa23",
-        "skills/tdk-memory-update/references/deprecation-flow.md": "085bc1b9798b0e7351abe503304f1129cfd9aba35f2f48dd3f4cffa21cd58dad",
+        "skills/tdk-memory-update/SKILL.md": "060b371cdec03b242d09bfba76afdf94188f12d9703870dea86e9a123decf8ae",
+        "skills/tdk-memory-update/references/deprecation-flow.md": "16a2b210efbb3e0ab9627ab42d561990fafef2e9229212a3f0861fc486a35f32",
         "skills/tdk-memory-update/references/domain-source-extraction-flow.md": "0f53c4d5ee3c867dbdca1badac5ff2ad3b6aebf491ceff77814e669b7b543029",
-        "skills/tdk-memory-update/references/finalize-written-files.md": "3fd941d15b97f2e399538c37744ffeed0722c237b19b4c176eec5a581abf7222",
-        "skills/tdk-memory-update/references/flow-update.md": "21b45a4be6b9b87c86711611c268060c38e4a5265670a4646e5b6a0ec23e2ada",
+        "skills/tdk-memory-update/references/finalize-written-files.md": "418582c30575c9a4096eabf8c3374587806f4368c67bd3d53345d62f7a4b2dd0",
+        "skills/tdk-memory-update/references/flow-update.md": "e997b365c6f8b1a7b340ff29d91f328bd9cc6ca6bbb50de335fa2d4c583f960d",
         "skills/tdk-memory-update/references/memory-section-anchor-update-strategy-additive-vs-replacement.md": "1e90484a2354a43dc22e6ceb41ec84c562daa944b4184217dfc10387ef9333ca",
-        "skills/tdk-memory-update/references/regenerate-memory-index-flow.md": "71f65fef81007b71e2290c14a9583482ae0fff30a39f9f08fb170a51ca8f3998"
+        "skills/tdk-memory-update/references/regenerate-memory-index-flow.md": "5390c2e93465d2df28f44f80a35af093fe251aa54eb04f57b0537c6c99295698"
       }
     },
     "tdk-retro": {

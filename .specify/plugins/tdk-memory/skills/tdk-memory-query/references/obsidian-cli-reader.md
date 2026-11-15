@@ -58,7 +58,8 @@ The first call may launch the Obsidian app. Stop at the first step that yields a
 reason.
 
 1. Locate the binary. Reason: `not-installed`.
-2. Read the vault path. The variable keeps the value out of the command text:
+2. Read the vault path and compare it with `root` in one snippet. The variable keeps
+   the value out of the command text:
 
    ```sh
    vault_path=$(timeout 15 "<binary>" "vault=<vault>" vault info=path </dev/null | tr -d '\r' | grep -Ev 'Loading updated app package|installer is out of date|^[[:space:]]*$')
@@ -69,13 +70,16 @@ reason.
        [ -n "$WSL_DISTRO_NAME" ] && vault_path=$(wslpath -u "$vault_path")
        realpath "$vault_path" ;;
    esac
+   if [ "$vault_path" -ef "<root>" ]; then echo same; else echo different; fi
    ```
 
-   Classify the `payload:` value by the table above. `unknown-vault`: reason
-   `vault-mismatch`. `failed`, more than one line, or any other payload that is not an
-   absolute path: reason `not-running`.
-3. Only a single absolute path gets here. Compare the `realpath` output with `root`.
-   Different: reason `vault-mismatch`.
+   Read the `payload:` line first, by the table above; for an empty payload that retry
+   reruns the whole snippet. `unknown-vault`: reason `vault-mismatch`. `failed`, more
+   than one line, or any other payload that is not an absolute path: reason
+   `not-running`.
+3. Only a single absolute path gets here. Read the last line: `same` passes, and
+   `different` is reason `vault-mismatch`. The shell compares the directories themselves,
+   so two spellings of one path, such as a drive path and its Git Bash form, are `same`.
 
 With no reason the probe passes and `reader` stays `obsidian-cli`. With a reason,
 apply `on_unavailable`:
@@ -103,12 +107,23 @@ not.
 | `tdk-memory-query` | Run the Probe. Refuse stops with its code; fall back uses file nomination for this query | Asked by the Probe |
 | `tdk-memory-agent` with `reader: obsidian-cli` in control | Locate the binary only. Never probe and never ask: the caller's `--status` already probed. A failure to locate is a failed search below | Acts as `fallback` |
 
-1. **Term.** The term is the whole query for `tdk-memory-query`, the same literal the
-   file flow greps, and one keyword or evidence phrase at a time for the agent.
-   Normalize it with Unicode NFC and trim. It must match
-   `^[\p{L}\p{N} ._-]{1,64}$`, which also keeps it inert inside double quotes.
-   Otherwise, as with a question mark or a path in the query, skip the CLI and use file
-   nomination for this query.
+1. **Term.** The term is the whole query for `tdk-memory-query`, the same text the
+   file flow ranks, and one keyword or evidence phrase at a time for the agent.
+   Normalize it through the runtime, which takes no root and reads no file. Encode it
+   as JSON on one physical line and never place it in argv. `<runtime>` is the
+   `memory-manifest.cjs` path your caller already uses for `resolve`. Run the block as
+   printed: the closing `TDK_RANK_INPUT` must start its line, so never indent it.
+
+```sh
+node "<runtime>" rank --print-term <<'TDK_RANK_INPUT'
+{"terms":["<term encoded as a JSON string>"]}
+TDK_RANK_INPUT
+```
+
+   The printed `term` stays inert inside double quotes and is what the search uses.
+   `{"term":null}`, as with a question mark or a path in the query, means skip the CLI
+   and use file nomination for this query under any `on_unavailable`, because no search
+   ran and so none failed. The agent gives up `candidates` for the whole call.
 2. **Search.**
 
    ```sh
@@ -124,13 +139,14 @@ not.
    character, U+2028, U+2029, `` ` ``, `$`, or `"`, does not end in `.md`, or has a
    `_templates`, `_deprecated`, `memory-architect`, `assets`, `.obsidian`, or `.trash`
    segment. A note name is untrusted and those characters stay active inside double
-   quotes, so only a path that passed this filter may reach a shell. Then require an
-   existing regular file under `root`, applying both containment layers (root
-   contract, section 2). Deduplicate. No entries left counts as a failed search.
-4. **Rank.** The remaining paths replace the enumeration and Grep of the file flow.
-   Exact-read them and apply the same scoring and sort from `flow-query.md`. A path
-   matching no scoring rule scores **0**, because the search hit stands in for the
-   literal body match. CLI result order never affects rank.
+   quotes, so only a path that passed this filter may reach a shell. Deduplicate. No
+   entries left counts as a failed search.
+4. **Rank.** The remaining paths become `candidates` of the `rank` call: the one in
+   `flow-query.md` for `tdk-memory-query`, and Step 3.5 for the agent, which gathers
+   every keyword's paths into one call. `rank` keeps only paths in its own inventory,
+   which applies containment and the exclusions, and scores them like any other
+   note. `total: 0` counts as a failed search, so falling back repeats `rank` once
+   without `candidates`. CLI result order never affects rank.
 
 A failed search falls back for that query only:
 

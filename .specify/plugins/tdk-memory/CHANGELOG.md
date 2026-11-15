@@ -4,6 +4,30 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.4.0] - 2026-11-15
+
+### Added
+- `rank "<memoryRoot>" [--scope <prefix>]... [--allow-external-root]` reads `{"terms":[...],"candidates":[...]}` from stdin, never from argv, and owns free-text tokenizing, scoring, sorting, and selection. It prints `total`, `selected`, `omitted`, `rejected_candidates`, and `unsafe_paths`: paths and integers, never note contents. `--scope` takes a literal path prefix matched by whole segments and refuses a pattern. `rank --print-term` prints a normalized term that a search tool can take inside double quotes, or `null`. A symlink in the scanned tree is fatal, as in `validate`.
+- `validate` lists `legacy_receipts`: a receipt recorded from the raw or CRLF form of the same content still verifies and counts in `verified_count`. It is not an integrity difference.
+- `hash --raw` prints the digest of the exact bytes on disk.
+- Normal-mode query results end with `Integrity:` and `Coverage:` lines read from the preflight JSON, and a natural-language query prints `Candidates: N of M`. `Integrity: clean` needs every count at 0 and the index ok; a root without a manifest prints `Integrity: no manifest`.
+- `/tdk-memory-checksum` shows the number of legacy receipts without counting them as issues. `--fix` can re-baseline them after explicit approval; it runs `validate` again and records only paths still listed as legacy, so a file edited while approval waited is not marked verified.
+
+### Changed
+- **`hash` and `validate` fold CRLF to LF for `.md`, `.md.tpl`, and `.canvas`.** The digest of LF content is unchanged, so no migration is needed. Other files keep their byte-exact digest. The changelog's `Verified` column records the folded value and therefore differs from `sha256sum` on a CRLF file.
+- **Free-text results come from `rank` for the query flow, `tdk-memory-agent`, and the Obsidian CLI reader.** A note matches a term when it holds every token of it, so `Foo Bar`, `FooBar`, and `foo-bar` find the same notes with either reader; the CLI only nominates candidates. A match on a note's id or file name outranks title, alias, path, and body. The first five results always stay; past them, a tie at the top score stays only when that score is a path match or better, a matching `constitution.md` or `domains/*/domain-overview.md` stays, and `omitted` counts the rest. This replaces the stable byte-order ranking that never cut a top tie, so a query whose notes match only in their bodies now returns five plus the pinned notes.
+- `tdk-memory-agent` ranks free-text evidence with `rank --scope` instead of a literal Grep, exact-reads every `selected` note without trimming, and adds `--allow-external-root` to `rank` only when its own `resolve` reports an external root. A failed `rank` shows the runtime's error line, which never repeats the query.
+- The template flow hashes a trusted seed through the runtime, so a destination that differs only in line endings is a no-op and an upgrade cannot overwrite it. Index edit detection reads `index_mismatch` from `validate`. `--finalize-written` accepts a raw or a normalized handoff digest and records the value `hash` prints.
+- A term the search tool cannot take, or a CLI ranking with `total: 0`, falls back to file nomination under any `onUnavailable`, because no search failed.
+
+### Fixed
+- A clone with converted line endings, such as Git for Windows with `core.autocrlf=true`, reported every note as changed.
+- Free-text results depended on how a term was spelled and on which reader nominated the notes.
+- The vault probe compared path strings, so two spellings of one directory, such as a drive path and its Git Bash form, reported `vault-mismatch`. It now compares the directories with `-ef` in one snippet.
+
+### Notes
+- A receipt hashed from mixed line endings still mismatches on a normalized disk; `/tdk-memory-checksum --fix` reconciles it.
+
 ## [4.3.0] - 2026-11-04
 
 ### Added

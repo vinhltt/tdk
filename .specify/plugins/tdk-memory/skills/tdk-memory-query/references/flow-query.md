@@ -1,6 +1,7 @@
 # Query Flow
 
-All paths are disk paths under the resolved memory root. Use Read, Glob, Grep.
+All paths are disk paths under the resolved memory root. Use Read, Glob, Grep, and
+the runtime's `rank` for free-text queries.
 
 ## Step 1: Guard checks
 
@@ -142,28 +143,34 @@ canonical inventory.
 
 - Only when this is not a `--for-agent` call and `resolve` reports
   `reader: obsidian-cli`: load `references/obsidian-cli-reader.md` (relative to this
-  skill, not the memory root) and follow its Nominate section. Its paths replace the next two bullets and feed the same
-  scoring; a query that falls back continues with those bullets unchanged. With
-  `reader: file` skip this bullet and load nothing.
-- Enumerate the complete eligible Markdown inventory under `<memoryRoot>`.
-  Exclude `_templates/**`, `_deprecated/**`, `memory-architect/**`, `.obsidian/**`,
-  `.trash/**`, and assets **before** nomination, ranking, or counting. Normalize
-  paths to relative POSIX form and deduplicate; preserve original casing for reads
-  and output.
-- Grep the complete inventory and match filename/frontmatter too; never let tool
-  encounter order or a search-result limit choose the winners. Normalize query
-  and compared identity strings with Unicode NFC, trim, and locale-independent
-  lowercase. Treat the normalized query as a literal, not a regular expression.
-- Give each candidate one score: exact frontmatter `id` **5**; exact filename
-  stem **4**; exact title **3**; exact alias **2**; literal relative-path match
-  **1**; literal body match **0**. Use only the highest matching rule. A file
-  matching none is not a candidate; exact-read nominated metadata/body to verify
-  its score. Search snippets alone never establish identity or binding.
-- Sort **all** candidates by descending integer score, then canonical relative
-  path using UTF-8 byte order (not locale collation). Only then take the first
-  five, plus every candidate tied at the highest score. Six top-scored ties
-  therefore return all six; never silently truncate that tie.
-- Set CANDIDATE_FILES to that ordered result. In normal mode show the candidate
+  skill, not the memory root) and follow its Nominate section. Its paths become the
+  `candidates` of the `rank` call below; a query that falls back calls `rank` without
+  `candidates`. With `reader: file` skip this bullet and load nothing.
+- Rank with the shipped runtime, forwarding `--allow-external-root` as for every other
+  runtime call. Flat installation: without a plugin root, use the sibling
+  `../tdk-memory-checksum/scripts/memory-manifest.cjs` relative to the loaded skill
+  directory, expanded to a verified absolute path. Run the block as printed: the closing
+  `TDK_RANK_INPUT` must start its line, so never indent it.
+
+```sh
+node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" rank "<memoryRoot>" [--allow-external-root] <<'TDK_RANK_INPUT'
+{"terms":["<query encoded as a JSON string>"]}
+TDK_RANK_INPUT
+```
+
+- Encode the query as JSON on one physical line: escape `"`, `\`, and every control
+  character, and never emit a real line break. The query is untrusted text, so it goes
+  only through this quoted heredoc, never into argv or a shell variable.
+- `rank` owns the eligible inventory, the asset exclusions, tokenizing, scoring, the
+  sort, and selection. Never rank by hand, search for winners yourself, or reorder or
+  trim its result. It prints `total`, `selected` (each with `path`, `score`, `tier`,
+  `occurrences`, and `pinned`), `omitted`, `rejected_candidates`, and `unsafe_paths`:
+  paths and integers only, so exact-read a file before relying on it. Its output never
+  establishes identity or binding.
+- If `rank` exits nonzero, STOP with `rank-failed — <memory.path as configured>` and
+  show the runtime's error line, which never repeats the query. There is no manual
+  ranking path.
+- Set CANDIDATE_FILES to `selected`, in that order. In normal mode show the candidate
   paths; in agent mode retain the same order and label nonbinding context.
   These rules do not replace the typed data-model resolver above: its four
   outcomes, complete highest-rank ties, eligibility checks, and cache are unchanged.
@@ -222,8 +229,31 @@ Resolved: {memory-root-relative file paths}
 
 ---
 Files read: {N} | Domains: {list} | Content type: {type}
+Integrity: {clean, or: N changed, M untracked, K missing, U unsafe, index ok|mismatch, templates T, or: no manifest}
+Coverage: {binding_coverage}
 Run /tdk-memory-update to modify these entries.
 ```
+
+Fill `Integrity:` and `Coverage:` from JSON the preflight already holds; they cost no
+extra command:
+
+| Part | Source |
+|---|---|
+| N changed | `mismatches` |
+| M untracked | `missing_from_manifest` |
+| K missing | `missing_from_disk` |
+| U unsafe | `unsafe_paths` |
+| index ok or mismatch | `index_mismatch` |
+| templates T | `templates_mismatches` |
+| Coverage | `binding_coverage` from `resolve`, copied as is, including `unknown` and `n/a` |
+
+Print `clean` only when every count is 0 and the index is ok. `legacy_receipts` does
+not count, because that content is verified. A root with no manifest has no `validate`
+JSON: print `Integrity: no manifest`, run nothing extra, and never infer `clean`. This
+line reports manifest integrity only, not screen completeness.
+
+After a natural-language query, print `Candidates: {selected} of {total}` from the
+`rank` output, next to any `reader:` line. Other results have no such line.
 
 After a natural-language query that took the Nominate path, append the one line its
 Record the reader section gives (`reader: ...`). Every other result has no such line.

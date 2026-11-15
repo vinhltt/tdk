@@ -8,7 +8,7 @@ description: "Query project memory knowledge by natural language. Returns
   'show data model for Z', or when other skills need memory context before implementing.
   Invocable by user (/tdk-memory-query) and by other skills/agents."
 metadata:
-  version: 4.3.0
+  version: 4.4.0
   category: "Context & Memory"
   requires:
     - tdk-memory-init
@@ -53,7 +53,9 @@ and follow its section 1: step 1 is `memory-manifest.cjs resolve` (`--memory-roo
 if the caller gave one, `--allow-external-root` if present in this invocation's arguments, typed or forwarded).
 `<memoryRoot>` is the JSON `root`; any `error` STOPs with its code, and
 `uninitialized` STOPs with initialization guidance. Then enforce both containment
-layers and run read-only YAML preflight using the shipped Node.js runtime. When
+layers and run the read-only preflight of its section 5 (step 2 runs `validate` when
+the manifest exists) using the shipped Node.js runtime. Keep that JSON until the render
+step, whose `Integrity:` line reads it. When
 `resolve` reports `external: true` with a root, forward `--allow-external-root` to
 every runtime call. Never change a manifest during query.
 Prune `_templates/**`, `_deprecated/**`, `.obsidian/**`, and `.trash/**` before any

@@ -57,7 +57,8 @@ Rebuild `memory-index.md` from current FS state using template in `references/me
 
 - Add SHA256 entries for newly created `domain-overview.md` files (one per new domain)
 - Preserve existing file checksums (do not recompute existing files)
-- Recompute `memory_index_sha256` from regenerated memory-index.md
+- Recompute `memory_index_sha256` from regenerated memory-index.md with the `hash`
+  command, never by hand
 - Preserve `templates[]` and unrelated metadata; use the shipped Node hash command
   from the shared contract (forwarding `--allow-external-root` when permission was
   granted), then validate a temporary candidate before publishing

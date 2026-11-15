@@ -9,7 +9,7 @@ description: "Load relevant memory context (mode load) AND validate spec/plan fo
 color: red
 model: opus
 metadata:
-  version: "4.3.0"
+  version: "4.4.0"
 ---
 
 ## Caller control and root contract
@@ -54,6 +54,9 @@ run, with the value as one double-quoted argument,
 and never add `--allow-external-root`. A root outside the workspace is accepted only
 when `memory.allowExternal` binds it to `memory.path`, which the runtime applies;
 an external root that exists only because a caller flag allowed it is refused.
+The one exception is your `rank` call in Step 3.5: add the flag there only when this
+`resolve` returned `external: true` with a non-null root, because `memory.allowExternal`
+has then already bound that root.
 If `resolve` exits nonzero or prints no JSON, refuse: configuration error, read
 nothing, emit no success. Treat a JSON `error` of `external-not-allowed`,
 `containment`, or `config-invalid` the same way, showing the
@@ -125,17 +128,42 @@ cross-domain discovery; do not exit before Step 3.5.
 ### Step 3.5: Cross-domain Discovery
 
 Read the already loaded index's domain scopes and typed routing tables. Match
-feature keywords against domains beyond the initially selected domain; glob only
-those relevant domain/typed prefixes, then grep for exact keyword nominations.
-Prune `_templates/**`, `_deprecated/**`, `.obsidian/**`, and `.trash/**` before
-search. With `reader: obsidian-cli`, the Reader section replaces the grep for each
-keyword; a keyword that falls back greps as above, and one whose search fails under
-`onUnavailable: fail` adds no paths and is named under `## Constraints & Warnings` as
-`reader search failed: <keyword>`. Stable-sort nominated
-workspace-relative paths by UTF-8 bytes and deduplicate. Exact-read the top five
-non-data-model candidates after ranking, retaining every highest-ranked tie.
-Merge verified relevant paths into `RELEVANT_FILES`; do not infer evidence from
+feature keywords against domains beyond the initially selected domain, then rank only
+those relevant domain and typed prefixes in one runtime call, repeated only when the
+Reader section falls back. With no relevant prefix, skip the call: `rank` without
+`--scope` reads the whole root.
+
+```sh
+node "<plugin root>/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" rank "<memoryRoot>" --scope "<prefix>" [--scope "<prefix>"]... [--allow-external-root] <<'TDK_RANK_INPUT'
+{"terms":["<keyword encoded as a JSON string>"]}
+TDK_RANK_INPUT
+```
+
+Put every keyword in `terms`. Encode them as JSON on one physical line, escaping `"`,
+`\`, and every control character; a keyword never goes into argv or a shell variable. A
+prefix is relative to the memory root: remove a trailing `/`, and cut one holding a
+pattern (`*`, `?`, `{`, `}`, `[`, `]`) back to the segments before it, so
+`domains/*/flows` becomes `domains`, because `rank` refuses a pattern. It comes from the
+index and lands inside double quotes, so drop one that contains a control character, a
+backslash, `` ` ``, `$`, or `"`, or that starts with `-`. Never pass `data-model`, and
+never add `constitution.md` to the scope. With `reader: obsidian-cli`, search each keyword
+through the Reader section and put the filtered paths in `candidates` of this same call.
+If any keyword prints `{"term":null}`, or its search fails and falls back, or the call
+reports `total: 0`, drop `candidates` for the whole call and record file nomination. A
+keyword whose search fails under `onUnavailable: fail` adds no paths and is named under
+`## Constraints & Warnings` as `reader search failed: <keyword>`; `total: 0` under that
+setting does the same for every keyword of the call.
+
+Exact-read all of `selected`, in order, and do not trim it further: `rank` alone decides
+how many. Its paths are relative to the memory root, so prepend `<memoryRoot>` when
+merging verified relevant paths into `RELEVANT_FILES`. Do not infer evidence from
 snippets. Data models always go through `tdk-memory-query` in Step 4.
+
+If `rank` exits nonzero, including for a symlink in the root: in `load` mode its keywords
+add no paths and each is named under `## Constraints & Warnings` as
+`rank failed: <keyword>`; in `validate` mode a claim whose only route to evidence was
+this call is `NOT CHECKED`.
+
 This supplements domain resolution and preserves cross-domain recall.
 
 ### Step 4: Load memory files
@@ -323,22 +351,21 @@ default. Deeper graph traversal requires an explicit caller/user request.
 
 | Claim Type | Preferred Tool | Notes |
 |------------|----------------|-------|
-| Business rule, flow, cross-domain assertion | Index → scoped Glob/Grep → exact Read | Stable candidate nominations; prune assets and deprecated paths |
+| Business rule, flow, cross-domain assertion | Index → `rank --scope <prefix>` → exact Read | Stable candidate nominations; prune assets and deprecated paths |
 | Exact entity → data model | Complete marker result in `ENTITY_RESULT_CACHE["{entity}"]` | Consume Phase 2 cache only; never re-query in Phase 3 |
-| Permission, role check | Scoped Grep then exact Read | Verify binding eligibility from full content |
+| Permission, role check | `rank --scope <prefix>` then exact Read | Verify binding eligibility from full content |
 | Integration contract | Read `<memoryRoot>/integrations/{integration-name}.md` | Use exact known contract path |
-| Security/privacy/compliance or quality claim | Scoped Grep in `quality-requirements/`, then Read | Snippets are not evidence |
-| Operations/runbook claim | Scoped Glob/Grep in `operations/`, then Read | Verify exact runbook |
-| Decision/ADR claim | Scoped Glob/Grep in `decisions/`, then Read | Verify accepted decision |
-| Report/export claim | Scoped Glob/Grep in `reports/`, then Read | Verify audience/data contract |
-| Risk/debt/assumption claim | Scoped Glob/Grep in `risks-and-debt/`, then Read | Verify explicit accepted risk |
-| Decision table or state machine | Scoped Glob/Grep in `decision-tables/` or `state-machines/`, then Read | Verify rule/transition |
+| Security/privacy/compliance or quality claim | `rank --scope quality-requirements`, then Read | Snippets are not evidence |
+| Operations/runbook claim | `rank --scope operations`, then Read | Verify exact runbook |
+| Decision/ADR claim | `rank --scope decisions`, then Read | Verify accepted decision |
+| Report/export claim | `rank --scope reports`, then Read | Verify audience/data contract |
+| Risk/debt/assumption claim | `rank --scope risks-and-debt`, then Read | Verify explicit accepted risk |
+| Decision table or state machine | `rank --scope decision-tables --scope state-machines`, then Read | Verify rule/transition |
 | arc42 summary | Read `<memoryRoot>/arc42/{section}.md` | Context only; one hop to typed binding facts |
 
-For free-text evidence selection, follow the shared asset exclusions and
-`skills/tdk-memory-query/references/flow-query.md` → Natural language rules,
-resolved relative to the plugin root (or sibling of `agents/` in a flat copy).
-Do not duplicate or change its ranking. Typed entities always retain the
+For free-text evidence selection, call `rank` as in Step 3.5. It applies the shared
+asset exclusions and is the same ranking `tdk-memory-query` uses, so do not duplicate
+or change it. Typed entities always retain the
 separate four-rank resolver and complete cached marker results. With
 `reader: obsidian-cli` nominate through the Reader section. When a query fails under
 `onUnavailable: fail`, a claim whose only route to evidence was that search is

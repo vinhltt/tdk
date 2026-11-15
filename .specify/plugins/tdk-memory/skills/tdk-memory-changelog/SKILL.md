@@ -2,7 +2,7 @@
 name: tdk-memory-changelog
 description: "Record staged project memory changes in CHANGELOG.md via git diff --staged. Stage the selected memory root first, then run this skill before committing. Supports --memory-root; requires initialized memory."
 metadata: 
-  version: 4.3.0
+  version: 4.4.0
   category: "Analysis & Review"
   requires:
     - tdk-memory-init
@@ -137,6 +137,10 @@ node -e 'if (Number(process.versions.node.split(".")[0]) < 18) process.exit(1)' 
 node "${CLAUDE_PLUGIN_ROOT}/skills/tdk-memory-checksum/scripts/memory-manifest.cjs" hash "<memoryRoot>" "{relative-file-path}" [--allow-external-root]
 ```
 
+This value is what `Verified` records. It folds CRLF to LF, so it stays the same on
+LF and CRLF checkouts and differs from `sha256sum` on a CRLF file. To compare the exact
+bytes on disk, use `hash --raw`.
+
 ### Step 5: Write ONE combined CHANGELOG.md entry
 
 Prepend to `CHANGELOG.md` (after header, before existing entries):
@@ -150,7 +154,7 @@ Prepend to `CHANGELOG.md` (after header, before existing entries):
 ### {file-path-1}
 **Change type**: {added | modified | deprecated}
 **Description**: {group description}
-**Verified**: {sha256}
+**Verified**: {sha256 from the hash command}
 
 ### {file-path-2}
 ...

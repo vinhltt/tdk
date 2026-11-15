@@ -130,18 +130,30 @@ validation, and atomic publication. It does not silently bless modified bytes.
 From an installed checksum skill:
 
 ```sh
-node skills/tdk-memory-checksum/scripts/memory-manifest.cjs hash /absolute/memory/root data-model/account.md
+node skills/tdk-memory-checksum/scripts/memory-manifest.cjs hash /absolute/memory/root data-model/account.md [--raw]
 node skills/tdk-memory-checksum/scripts/memory-manifest.cjs validate /absolute/memory/root
 node skills/tdk-memory-checksum/scripts/memory-manifest.cjs resolve [--memory-root <path>]
+node skills/tdk-memory-checksum/scripts/memory-manifest.cjs rank /absolute/memory/root [--scope <prefix>]... <<'TDK_RANK_INPUT'
+{"terms":["account balance"]}
+TDK_RANK_INPUT
 ```
 
 Invoke from the owning workspace; append `--allow-external-root` for an external
-root when permission exists (the runtime reads no config). `hash` prints SHA-256.
+root when permission exists (the runtime reads no config). `hash` prints SHA-256 of
+the content with CRLF folded to LF for `.md`, `.md.tpl`, and `.canvas`, and of the
+exact bytes for any other file; `--raw` always uses the exact bytes. Receipts and the
+changelog's `Verified` column record the folded value, so a CRLF checkout stays clean
+and `Verified` differs from `sha256sum` on a CRLF file.
 `validate` prints integrity differences and exits 0 for a valid manifest even when
 bytes differ; malformed schema, unsafe paths, unreadable files, and missing
 manifests are fatal/nonzero. Inspect `index_mismatch` and `templates_mismatches` as
-well as the ordinary file reports. `resolve` prints the root state as JSON (what
+well as the ordinary file reports. A receipt recorded from the raw or CRLF form of the
+same content still verifies and is listed in `legacy_receipts`; `checksum --fix` can
+re-baseline it on request. `resolve` prints the root state as JSON (what
 `--status` renders); root-state problems are reported in the JSON with exit 0.
+`rank` reads `{"terms":[...],"candidates":[...]}` from stdin, never from argv, with
+`candidates` optional, and prints `total`, `selected`, `omitted`,
+`rejected_candidates`, and `unsafe_paths`: paths and integers, never note contents.
 Symbolic links inside a memory root are rejected by the inventory commands.
 
 ## Agent invocation
@@ -168,8 +180,12 @@ actual payload; do not move it into quoted feature text.
 
 Typed data-model resolution preserves `resolved`, `warning_ambiguous`,
 `warning_unverified`, and `not_found`. Exact binding identity and domain proof
-are separate from nomination. Free-text results use stable byte-order ranking
-and never truncate a highest-ranked tie. Without the opt-in CLI reader below,
+are separate from nomination. Free-text results come from `rank`, so `Foo Bar`,
+`FooBar`, and `foo-bar` find the same notes with either reader. A match on a note's
+id or file name outranks title, alias, path, and body matches. The first five results
+always stay; past them, a tie at the top score stays when that score is a path match
+or better, and so do a matching `constitution.md` and `domains/*/domain-overview.md`.
+`omitted` counts the rest. Without the opt-in CLI reader below,
 application availability cannot change candidates; with or without it, evidence
 comes from files. Opening an already resolved note is optional and only on an
 explicit user request.

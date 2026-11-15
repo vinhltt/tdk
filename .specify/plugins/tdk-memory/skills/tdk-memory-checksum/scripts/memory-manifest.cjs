@@ -7064,6 +7064,166 @@ var import_node_fs = require("node:fs");
 var import_node_path = require("node:path");
 var import_node_util = require("node:util");
 var import_yaml = __toESM(require_dist(), 1);
+
+// memory-query-ranking.ts
+var SCORE_ID = 5;
+var SCORE_STEM = 4;
+var SCORE_TITLE = 3;
+var SCORE_ALIAS = 2;
+var SCORE_PATH = 1;
+var SCORE_BODY = 0;
+var GUARANTEED_POSITIONS = 5;
+var MIN_SCORE_FOR_TIES = 1;
+var TIER_NOTE = 0;
+var TIER_ARC42 = 1;
+var TIER_ROOT_CONTROL = 2;
+var TIER_ARC42_README = 3;
+var ROOT_CONTROL_FILES = new Set(["README.md", "CHANGELOG.md", "memory-index.md"]);
+var ARC42_README = "arc42/README.md";
+var ARC42_PREFIX = "arc42/";
+var PINNED_PATH = "constitution.md";
+var PINNED_DOMAIN_OVERVIEW = /^domains\/[^/]+\/domain-overview\.md$/;
+var MAX_WORD_BOUNDED_LENGTH = 2;
+var PRINTABLE_TERM = /^[\p{L}\p{N} ._-]{1,64}$/u;
+var NOTE_EXTENSION = /(?<=.)\.md$/iu;
+var WORD_CHARACTER_AT_END = /[\p{L}\p{N}]$/u;
+var WORD_CHARACTER_AT_START = /^[\p{L}\p{N}]/u;
+function splitCamelCase(value) {
+  return value.replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, "$1 $2");
+}
+function wordsOf(value) {
+  return value.normalize("NFC").trim().replace(NOTE_EXTENSION, "").split(/[\s._-]+/u).filter((word) => word.length > 0);
+}
+function partsOf(word) {
+  return splitCamelCase(word).split(" ").map((part) => part.toLowerCase());
+}
+function compactForm(value) {
+  return wordsOf(value).flatMap(partsOf).join("");
+}
+function printableTerm(term) {
+  const printable = wordsOf(term).flatMap(partsOf).join(" ");
+  return PRINTABLE_TERM.test(printable) ? printable : null;
+}
+function isWordBounded(literal) {
+  return Array.from(literal).length <= MAX_WORD_BOUNDED_LENGTH;
+}
+function parseTerm(term) {
+  const words = wordsOf(term).map((word) => {
+    const parts = partsOf(word);
+    return { compact: parts.join(""), parts };
+  });
+  return { compact: words.map((word) => word.compact).join(""), words };
+}
+function isWholeWord(text, start, end) {
+  return !WORD_CHARACTER_AT_END.test(text.slice(Math.max(0, start - 2), start)) && !WORD_CHARACTER_AT_START.test(text.slice(end, end + 2));
+}
+function countOccurrences(literal, text, wholeWordOnly) {
+  if (literal.length === 0)
+    return 0;
+  let count = 0;
+  let position = text.indexOf(literal);
+  while (position !== -1) {
+    const end = position + literal.length;
+    if (wholeWordOnly && !isWholeWord(text, position, end)) {
+      position = text.indexOf(literal, position + 1);
+    } else {
+      count += 1;
+      position = text.indexOf(literal, end);
+    }
+  }
+  return count;
+}
+function fewestOf(items, occurrencesOf) {
+  let fewest = Number.POSITIVE_INFINITY;
+  for (const item of items) {
+    fewest = Math.min(fewest, occurrencesOf(item));
+    if (fewest === 0)
+      break;
+  }
+  return fewest;
+}
+function occurrencesOfPart(part, text) {
+  return isWordBounded(part) ? countOccurrences(part, text.splitAtCamelCase, true) : countOccurrences(part, text.continuous, false);
+}
+function occurrencesOfWord(word, text) {
+  const asParts = fewestOf(word.parts, (part) => occurrencesOfPart(part, text));
+  return word.parts.length > 1 ? Math.max(asParts, countOccurrences(word.compact, text.continuous, true)) : asParts;
+}
+function fileTier(path) {
+  if (path === ARC42_README)
+    return TIER_ARC42_README;
+  if (ROOT_CONTROL_FILES.has(path))
+    return TIER_ROOT_CONTROL;
+  if (path.startsWith(ARC42_PREFIX))
+    return TIER_ARC42;
+  return TIER_NOTE;
+}
+function isPinned(path) {
+  return path === PINNED_PATH || PINNED_DOMAIN_OVERVIEW.test(path);
+}
+function pathMatches(term, pathWithoutExtension) {
+  if (isWordBounded(term.compact)) {
+    return countOccurrences(term.compact, splitCamelCase(pathWithoutExtension).toLowerCase(), true) > 0;
+  }
+  return pathWithoutExtension.toLowerCase().replace(/[\s._-]/gu, "").includes(term.compact);
+}
+function scoreNote(term, note, text) {
+  const occurrences = fewestOf(term.words, (word) => occurrencesOfWord(word, text));
+  const pathWithoutExtension = note.path.normalize("NFC").replace(/\.md$/u, "");
+  const stem = pathWithoutExtension.slice(pathWithoutExtension.lastIndexOf("/") + 1);
+  const { id, title, aliases } = note.identity;
+  const matches = (value) => value !== undefined && compactForm(value) === term.compact;
+  if (matches(id))
+    return { score: SCORE_ID, occurrences };
+  if (matches(stem))
+    return { score: SCORE_STEM, occurrences };
+  if (matches(title))
+    return { score: SCORE_TITLE, occurrences };
+  if (aliases.some(matches))
+    return { score: SCORE_ALIAS, occurrences };
+  if (pathMatches(term, pathWithoutExtension))
+    return { score: SCORE_PATH, occurrences };
+  return occurrences > 0 ? { score: SCORE_BODY, occurrences } : undefined;
+}
+function bestMatch(terms, note) {
+  const normalized = note.text.normalize("NFC");
+  const text = { continuous: normalized.toLowerCase(), splitAtCamelCase: splitCamelCase(normalized).toLowerCase() };
+  let best;
+  for (const term of terms) {
+    const match = scoreNote(term, note, text);
+    if (match === undefined)
+      continue;
+    if (best === undefined || match.score > best.score || match.score === best.score && match.occurrences > best.occurrences) {
+      best = match;
+    }
+  }
+  return best;
+}
+function compareRanked(left, right) {
+  return right.score - left.score || left.tier - right.tier || right.occurrences - left.occurrences || Buffer.compare(Buffer.from(left.path, "utf8"), Buffer.from(right.path, "utf8"));
+}
+function rankNotes(terms, notes) {
+  const parsedTerms = terms.map(parseTerm).filter((term) => term.compact.length > 0);
+  const ranked = [];
+  for (const note of notes) {
+    const match = bestMatch(parsedTerms, note);
+    if (match === undefined)
+      continue;
+    ranked.push({
+      path: note.path,
+      score: match.score,
+      tier: fileTier(note.path),
+      occurrences: match.occurrences,
+      pinned: isPinned(note.path)
+    });
+  }
+  ranked.sort(compareRanked);
+  const highestScore = ranked[0]?.score;
+  const selected = ranked.filter((note, position) => position < GUARANTEED_POSITIONS || note.score >= MIN_SCORE_FOR_TIES && note.score === highestScore || note.pinned);
+  return { total: ranked.length, selected, omitted: ranked.length - selected.length };
+}
+
+// memory-manifest.ts
 var execFileAsync = import_node_util.promisify(import_node_child_process.execFile);
 var MANIFEST_VERSION = "2";
 var DEFAULT_MANIFEST_PATH = "memory.yaml";
@@ -7088,6 +7248,20 @@ var FALLBACK_MEMORY_PATH = "memory";
 var CONSTITUTION_PATH = "constitution.md";
 var MAX_CONFIG_BYTES = 1048576;
 var MAX_INDEX_BYTES = 4194304;
+var SCOPE_PATTERN_CHARACTER = /[*?{}[\]]/;
+var MAX_RANK_INPUT_BYTES = 1048576;
+var MAX_FRONTMATTER_CHARACTERS = 65536;
+var YAML_PARSE_OPTIONS = {
+  customTags: null,
+  merge: false,
+  prettyErrors: false,
+  resolveKnownTags: false,
+  schema: "core",
+  strict: true,
+  stringKeys: true,
+  uniqueKeys: true,
+  version: "1.2"
+};
 var FORBIDDEN_MEMORY_PATH_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\\`$"';&|<>]/;
 var FORBIDDEN_LOCATION_CHARACTERS = /[\u0000-\u001f\u007f-\u009f\u2028\u2029`$"]/;
 var READER_VAULT_PATTERN = /^[A-Za-z0-9 ._-]{1,64}$/;
@@ -7095,6 +7269,9 @@ var READER_ON_UNAVAILABLE = ["ask", "fallback", "fail"];
 var COVERAGE_PATTERN = /^Binding coverage: (\d+)(?: of |\/)(\d+) typed files[ \t\r]*$/m;
 var DOMAIN_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
 var SHA256_PATTERN = /^[a-f0-9]{64}$/;
+var LINE_ENDING_NEUTRAL_SUFFIXES = [".md", ".md.tpl", ".canvas"];
+var CARRIAGE_RETURN = 13;
+var LINE_FEED = 10;
 var ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 class CliError extends Error {
@@ -7104,20 +7281,27 @@ function fail(message) {
 }
 function usage() {
   fail(`Usage:
-` + `  node memory-manifest.cjs hash <memoryRoot> <relPath> [--allow-external-root]
+` + `  node memory-manifest.cjs hash <memoryRoot> <relPath> [--raw] [--allow-external-root]
 ` + `  node memory-manifest.cjs validate <memoryRoot> [--manifest <relativePath>] [--allow-external-root]
-` + "  node memory-manifest.cjs resolve [--memory-root <path>] [--allow-external-root]");
+` + `  node memory-manifest.cjs resolve [--memory-root <path>] [--allow-external-root]
+` + `  node memory-manifest.cjs rank <memoryRoot> [--scope <prefix>]... [--allow-external-root] < request.json
+` + "  node memory-manifest.cjs rank --print-term < request.json");
 }
 function parseInvocation(argumentsAfterNode) {
   const [command, ...rest] = argumentsAfterNode;
   if (command === "hash") {
     let allowExternalRoot = false;
+    let raw = false;
     const positional = [];
     for (const argument of rest) {
       if (argument === "--allow-external-root") {
         if (allowExternalRoot)
           fail("--allow-external-root may only be provided once");
         allowExternalRoot = true;
+      } else if (argument === "--raw") {
+        if (raw)
+          fail("--raw may only be provided once");
+        raw = true;
       } else if (argument.startsWith("--")) {
         usage();
       } else {
@@ -7130,7 +7314,8 @@ function parseInvocation(argumentsAfterNode) {
       command,
       memoryRootArgument: positional[0],
       relativePath: positional[1],
-      allowExternalRoot
+      allowExternalRoot,
+      raw
     };
   }
   if (command === "validate") {
@@ -7181,6 +7366,36 @@ function parseInvocation(argumentsAfterNode) {
       usage();
     }
     return { command, memoryRootArgument, allowExternalRoot };
+  }
+  if (command === "rank") {
+    if (rest.length === 1 && rest[0] === "--print-term")
+      return { command: "print-term" };
+    if (rest.length === 0 || rest[0].startsWith("--"))
+      usage();
+    const memoryRootArgument = rest[0];
+    let allowExternalRoot = false;
+    const scopes = [];
+    for (let index = 1;index < rest.length; index += 1) {
+      const argument = rest[index];
+      if (argument === "--allow-external-root") {
+        if (allowExternalRoot)
+          fail("--allow-external-root may only be provided once");
+        allowExternalRoot = true;
+        continue;
+      }
+      if (argument === "--scope") {
+        if (index + 1 >= rest.length || rest[index + 1].startsWith("--"))
+          usage();
+        validateRelativePath(rest[index + 1], "--scope");
+        if (SCOPE_PATTERN_CHARACTER.test(rest[index + 1]))
+          fail("--scope takes a literal path prefix, not a pattern");
+        scopes.push(rest[index + 1]);
+        index += 1;
+        continue;
+      }
+      usage();
+    }
+    return { command, memoryRootArgument, allowExternalRoot, scopes };
   }
   usage();
 }
@@ -7332,6 +7547,59 @@ async function hashRegularFile(filePath) {
     await handle?.close();
   }
 }
+async function readRegularFile(filePath) {
+  let handle;
+  try {
+    handle = await import_node_fs.promises.open(filePath, import_node_fs.constants.O_RDONLY | (import_node_fs.constants.O_NOFOLLOW ?? 0));
+    const info = await handle.stat();
+    if (!info.isFile())
+      fail(`not a regular file: ${filePath}`);
+    return await handle.readFile();
+  } catch (error) {
+    if (error instanceof CliError)
+      throw error;
+    fail(`cannot read ${filePath}: ${errorMessage(error)}`);
+  } finally {
+    await handle?.close();
+  }
+}
+function isLineEndingNeutral(relativePath) {
+  return LINE_ENDING_NEUTRAL_SUFFIXES.some((suffix) => relativePath.endsWith(suffix));
+}
+function crlfToLf(source) {
+  const output = Buffer.allocUnsafe(source.length);
+  let length = 0;
+  for (let index = 0;index < source.length; index += 1) {
+    if (source[index] === CARRIAGE_RETURN && source[index + 1] === LINE_FEED)
+      continue;
+    output[length] = source[index];
+    length += 1;
+  }
+  return output.subarray(0, length);
+}
+function lfToCrlf(source) {
+  const output = Buffer.allocUnsafe(source.length * 2);
+  let length = 0;
+  for (const byte of source) {
+    if (byte === LINE_FEED) {
+      output[length] = CARRIAGE_RETURN;
+      length += 1;
+    }
+    output[length] = byte;
+    length += 1;
+  }
+  return output.subarray(0, length);
+}
+function sha256Hex(contents) {
+  return import_node_crypto.createHash("sha256").update(contents).digest("hex");
+}
+async function digestsOfFile(filePath, relativePath) {
+  if (!isLineEndingNeutral(relativePath))
+    return { canonical: await hashRegularFile(filePath), legacy: [] };
+  const bytes = await readRegularFile(filePath);
+  const normalized = crlfToLf(bytes);
+  return { canonical: sha256Hex(normalized), legacy: [sha256Hex(bytes), sha256Hex(lfToCrlf(normalized))] };
+}
 async function readManifestSource(filePath) {
   let handle;
   try {
@@ -7477,17 +7745,7 @@ async function readManifest(manifestPath) {
   const source = await readManifestSource(manifestPath);
   let document;
   try {
-    document = import_yaml.parseDocument(source, {
-      customTags: null,
-      merge: false,
-      prettyErrors: false,
-      resolveKnownTags: false,
-      schema: "core",
-      strict: true,
-      stringKeys: true,
-      uniqueKeys: true,
-      version: "1.2"
-    });
+    document = import_yaml.parseDocument(source, YAML_PARSE_OPTIONS);
   } catch (error) {
     fail(`failed to parse manifest ${manifestPath}: ${errorMessage(error)}`);
   }
@@ -7580,11 +7838,11 @@ async function scanTemplateFiles(memoryRoot) {
   }
   return scanFiles(memoryRoot, TEMPLATE_DIRECTORY, (relativePath) => relativePath.endsWith(".md.tpl"));
 }
-async function hashContainedFile(memoryRoot, relativePath, subject) {
+async function digestsOfContainedFile(memoryRoot, relativePath, subject) {
   const target = await inspectContainedTarget(memoryRoot, relativePath, subject);
   if (target.kind !== "file")
     return;
-  return hashRegularFile(target.path);
+  return digestsOfFile(target.path, relativePath);
 }
 async function validate(memoryRootArgument, manifestRelativePath, allowExternalRoot) {
   const memoryRoot = await resolveMemoryRoot(memoryRootArgument, allowExternalRoot);
@@ -7607,33 +7865,42 @@ async function validate(memoryRootArgument, manifestRelativePath, allowExternalR
   const templatePaths = new Set(templateReceipts.map((receipt) => receipt.path));
   const mismatches = [];
   const missingFromDisk = [];
+  const legacyReceipts = [];
   let verifiedCount = 0;
+  const matchesReceipt = (relativePath, recorded, digests) => {
+    if (recorded === digests.canonical)
+      return true;
+    if (!digests.legacy.includes(recorded))
+      return false;
+    legacyReceipts.push(relativePath);
+    return true;
+  };
   for (const receipt of [...fileReceipts].sort((left, right) => left.path.localeCompare(right.path))) {
-    const actual = await hashContainedFile(memoryRoot, receipt.path, `manifest file ${receipt.path}`);
-    if (actual === undefined) {
+    const digests = await digestsOfContainedFile(memoryRoot, receipt.path, `manifest file ${receipt.path}`);
+    if (digests === undefined) {
       missingFromDisk.push(receipt.path);
-    } else if (actual !== receipt.sha256) {
-      mismatches.push({ path: receipt.path, expected: receipt.sha256, actual });
-    } else {
+    } else if (matchesReceipt(receipt.path, receipt.sha256, digests)) {
       verifiedCount += 1;
+    } else {
+      mismatches.push({ path: receipt.path, expected: receipt.sha256, actual: digests.canonical });
     }
   }
-  const indexActual = await hashContainedFile(memoryRoot, INDEX_PATH, "memory index");
-  const indexMismatch = indexActual === undefined || indexActual !== manifest.memoryIndexSha256;
+  const indexDigests = await digestsOfContainedFile(memoryRoot, INDEX_PATH, "memory index");
+  const indexMismatch = indexDigests === undefined || !matchesReceipt(INDEX_PATH, manifest.memoryIndexSha256, indexDigests);
   const templateMismatches = [];
   for (const receipt of [...templateReceipts].sort((left, right) => left.path.localeCompare(right.path))) {
-    const actual = await hashContainedFile(memoryRoot, receipt.path, `template ${receipt.path}`);
-    if (actual === undefined || actual !== receipt.sha256) {
-      templateMismatches.push({ path: receipt.path, expected: receipt.sha256, actual: actual ?? null });
+    const digests = await digestsOfContainedFile(memoryRoot, receipt.path, `template ${receipt.path}`);
+    if (digests === undefined || !matchesReceipt(receipt.path, receipt.sha256, digests)) {
+      templateMismatches.push({ path: receipt.path, expected: receipt.sha256, actual: digests?.canonical ?? null });
     }
   }
   for (const relativePath of [...diskTemplates].sort((left, right) => left.localeCompare(right))) {
     if (templatePaths.has(relativePath))
       continue;
-    const actual = await hashContainedFile(memoryRoot, relativePath, `template ${relativePath}`);
-    if (actual === undefined)
+    const digests = await digestsOfContainedFile(memoryRoot, relativePath, `template ${relativePath}`);
+    if (digests === undefined)
       fail(`template disappeared while validating: ${relativePath}`);
-    templateMismatches.push({ path: relativePath, expected: null, actual });
+    templateMismatches.push({ path: relativePath, expected: null, actual: digests.canonical });
   }
   const result = {
     mismatches: mismatches.sort((left, right) => left.path.localeCompare(right.path)),
@@ -7642,16 +7909,17 @@ async function validate(memoryRootArgument, manifestRelativePath, allowExternalR
     verified_count: verifiedCount,
     index_mismatch: indexMismatch,
     templates_mismatches: templateMismatches.sort((left, right) => left.path.localeCompare(right.path)),
-    unsafe_paths: [...unsafePaths].sort((left, right) => left.localeCompare(right))
+    unsafe_paths: [...unsafePaths].sort((left, right) => left.localeCompare(right)),
+    legacy_receipts: legacyReceipts.sort((left, right) => left.localeCompare(right))
   };
   console.log(JSON.stringify(result, null, 2));
 }
-async function hash(memoryRootArgument, relativePath, allowExternalRoot) {
+async function hash(memoryRootArgument, relativePath, allowExternalRoot, raw) {
   const memoryRoot = await resolveMemoryRoot(memoryRootArgument, allowExternalRoot);
   const target = await inspectContainedTarget(memoryRoot, relativePath, "hash path");
   if (target.kind !== "file")
     fail(`file not found: ${import_node_path.join(memoryRoot, ...validateRelativePath(relativePath, "hash path"))}`);
-  console.log(await hashRegularFile(target.path));
+  console.log(raw ? await hashRegularFile(target.path) : (await digestsOfFile(target.path, relativePath)).canonical);
 }
 var FILE_READER = { backend: "file", invalid: false };
 var INVALID_READER = { backend: "file", invalid: true };
@@ -7936,14 +8204,144 @@ async function resolveStatus(explicitRoot, allowFlag) {
 async function resolveCommand(explicitRoot, allowFlag) {
   console.log(JSON.stringify(await resolveStatus(explicitRoot, allowFlag), null, 2));
 }
+function isStringArray(value) {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+async function readRankRequest() {
+  if (process.stdin.isTTY)
+    fail("rank reads its JSON request from stdin");
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of process.stdin) {
+    size += chunk.length;
+    if (size > MAX_RANK_INPUT_BYTES)
+      fail(`rank input exceeds ${MAX_RANK_INPUT_BYTES} bytes`);
+    chunks.push(chunk);
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch {
+    fail("rank input is not valid JSON");
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed))
+    fail("rank input must be a JSON object");
+  const { terms, candidates, ...unknownKeys } = parsed;
+  if (Object.keys(unknownKeys).length > 0)
+    fail("rank input accepts only terms and candidates");
+  if (!isStringArray(terms) || terms.length === 0)
+    fail("rank input needs a non-empty terms array of strings");
+  if (candidates !== undefined && !isStringArray(candidates))
+    fail("rank input candidates must be an array of strings");
+  return { terms, candidates };
+}
+function scalarText(node) {
+  if (!import_yaml.isScalar(node) || node.value === null || node.value === undefined)
+    return;
+  return String(node.value);
+}
+function readNoteIdentity(text) {
+  const identity = { aliases: [] };
+  if (!text.startsWith(`---
+`))
+    return identity;
+  const closing = /\n---[ \t]*(?:\n|$)/.exec(text.slice(3, MAX_FRONTMATTER_CHARACTERS));
+  if (closing === null)
+    return identity;
+  let document;
+  try {
+    document = import_yaml.parseDocument(text.slice(3, 3 + closing.index), YAML_PARSE_OPTIONS);
+  } catch {
+    return identity;
+  }
+  if (document.errors.length > 0 || !import_yaml.isMap(document.contents))
+    return identity;
+  for (const pair of document.contents.items) {
+    const key = import_yaml.isScalar(pair.key) ? pair.key.value : undefined;
+    if (key === "id")
+      identity.id = scalarText(pair.value);
+    if (key === "title")
+      identity.title = scalarText(pair.value);
+    if (key === "aliases") {
+      const values = import_yaml.isSeq(pair.value) ? pair.value.items : [pair.value];
+      identity.aliases = values.map(scalarText).filter((value) => value !== undefined);
+    }
+  }
+  return identity;
+}
+async function readRankableNote(memoryRoot, relativePath) {
+  const bytes = await readRegularFile(import_node_path.join(memoryRoot, ...relativePath.split("/")));
+  const text = crlfToLf(bytes).toString("utf8");
+  return { path: relativePath, text, identity: readNoteIdentity(text) };
+}
+function isWithinScopes(relativePath, scopes) {
+  if (scopes.length === 0)
+    return true;
+  const path = relativePath.normalize("NFC");
+  return scopes.some((scope) => {
+    const prefix = scope.normalize("NFC");
+    return path === prefix || path.startsWith(`${prefix}/`);
+  });
+}
+async function rank(memoryRootArgument, allowExternalRoot, scopes) {
+  const request = await readRankRequest();
+  const memoryRoot = await resolveMemoryRoot(memoryRootArgument, allowExternalRoot);
+  const inventory = await scanFiles(memoryRoot, "", (relativePath) => relativePath.endsWith(".md"));
+  const safePaths = [];
+  const unsafePaths = new Set;
+  for (const relativePath of inventory) {
+    if (hasForbiddenLocationCharacter(relativePath))
+      unsafePaths.add(displayMemoryPath(relativePath));
+    else
+      safePaths.push(relativePath);
+  }
+  let nominated = safePaths;
+  let rejectedCandidates = 0;
+  if (request.candidates !== undefined) {
+    const diskPathByNormalForm = new Map(safePaths.map((relativePath) => [relativePath.normalize("NFC"), relativePath]));
+    const accepted = new Set;
+    for (const candidate of request.candidates) {
+      const diskPath = diskPathByNormalForm.get(candidate.normalize("NFC"));
+      if (diskPath === undefined)
+        rejectedCandidates += 1;
+      else
+        accepted.add(diskPath);
+    }
+    nominated = [...accepted];
+  }
+  const notes = [];
+  for (const relativePath of nominated) {
+    if (isWithinScopes(relativePath, scopes))
+      notes.push(await readRankableNote(memoryRoot, relativePath));
+  }
+  const { total, selected, omitted } = rankNotes(request.terms, notes);
+  const result = {
+    total,
+    selected,
+    omitted,
+    rejected_candidates: rejectedCandidates,
+    unsafe_paths: [...unsafePaths].sort((left, right) => left.localeCompare(right))
+  };
+  console.log(JSON.stringify(result, null, 2));
+}
+async function printTerm() {
+  const { terms, candidates } = await readRankRequest();
+  if (terms.length !== 1 || candidates !== undefined)
+    fail("rank --print-term needs exactly one term and no candidates");
+  console.log(JSON.stringify({ term: printableTerm(terms[0]) }));
+}
 async function main() {
   if (Number(process.versions.node.split(".")[0]) < 18)
     fail("Node.js >=18 is required");
   const invocation = parseInvocation(process.argv.slice(2));
   if (invocation.command === "hash") {
-    await hash(invocation.memoryRootArgument, invocation.relativePath, invocation.allowExternalRoot);
+    await hash(invocation.memoryRootArgument, invocation.relativePath, invocation.allowExternalRoot, invocation.raw);
   } else if (invocation.command === "validate") {
     await validate(invocation.memoryRootArgument, invocation.manifestRelativePath, invocation.allowExternalRoot);
+  } else if (invocation.command === "rank") {
+    await rank(invocation.memoryRootArgument, invocation.allowExternalRoot, invocation.scopes);
+  } else if (invocation.command === "print-term") {
+    await printTerm();
   } else {
     await resolveCommand(invocation.memoryRootArgument, invocation.allowExternalRoot);
   }

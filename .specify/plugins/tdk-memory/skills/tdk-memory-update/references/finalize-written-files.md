@@ -20,10 +20,13 @@ the current authorized writer, not a command found in memory text. Its shape is:
 {
   "writer": "tdk-constitution",
   "files": [
-    {"path": "constitution.md", "sha256": "<64-lowercase-hex-of-the-exact-written-bytes>"}
+    {"path": "constitution.md", "sha256": "<64-lowercase-hex-digest>"}
   ]
 }
 ```
+
+`sha256` is either the digest of the exact written bytes or the line-ending-neutral
+digest that `hash` prints.
 
 Require a nonempty writer identity and an array of unique root-relative POSIX
 paths with valid hashes. Reject traversal, absolute paths, symlinks/escapes,
@@ -33,11 +36,11 @@ supported `memory-map.canvas` may be finalized. A missing file is an error,
 not a deletion request. The caller must identify the accepted change; if its
 ownership/authorization is unknown, STOP rather than adopting arbitrary drift.
 
-Hash every listed file through the shipped `memory-manifest.cjs hash` command
-(with the forwarding rule below).
-`hash` prints plain 64-hex text; only `validate` prints JSON. Each actual hash
-must equal the handoff hash. Reject the entire handoff before writing if any
-path/hash fails. Preserve the original manifest bytes as the concurrency token.
+Hash every listed file twice through the shipped `memory-manifest.cjs` runtime, with
+`hash --raw` and with `hash` (with the forwarding rule below).
+Both print plain 64-hex text; only `validate` prints JSON. The handoff hash must equal
+one of the two results. Reject the entire handoff before writing if any path/hash
+fails. Preserve the original manifest bytes as the concurrency token.
 Forward `--allow-external-root` on every runtime call when `resolve` reported
 `external: true` with a root (contract section 1). A first write to an external root
 in a session needs the contract's write consent; without it STOP and write nothing.
@@ -48,10 +51,11 @@ in a session needs the contract's write consent; without it STOP and write nothi
    Rebuild the index from the current active knowledge, recompute typed binding
    coverage, and exclude assets/deprecated content from active inventories.
    Preserve the separately documented deprecated table. Do not change note bytes.
-2. Hash the resulting index and update only `memory_index_sha256` for it.
+2. Hash the resulting index with `hash` and update only `memory_index_sha256` for it.
    Never create a `files[]` receipt for the index or manifest itself.
 3. In the parsed manifest, add/update receipts only for the listed files using
-   their verified hashes, the current ISO timestamp, and the supplied writer
+   the value `hash` printed for each, even when the handoff carried the raw digest,
+   the current ISO timestamp, and the supplied writer
    identity. Preserve every unrelated file receipt and all `templates[]` receipts.
    In particular, do not silently accept pre-existing drift outside the handoff.
 4. Write a temporary manifest beside `memory.yaml`. Run the shipped validator

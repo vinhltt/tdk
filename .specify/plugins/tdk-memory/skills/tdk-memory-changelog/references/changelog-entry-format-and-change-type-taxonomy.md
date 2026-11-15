@@ -18,7 +18,7 @@ One combined entry per skill run. Prepend to `CHANGELOG.md` after the header com
 ### {relative/path/to/file-1.md}
 **Change type**: {added | modified | deprecated}
 **Description**: {what changed and why — from group description}
-**Verified**: {sha256 hex — computed from working-tree file}
+**Verified**: {sha256 hex from the `hash` command — computed from working-tree file}
 
 ### {relative/path/to/file-2.md}
 **Change type**: {added | modified | deprecated}
@@ -37,7 +37,7 @@ One combined entry per skill run. Prepend to `CHANGELOG.md` after the header com
 | `### {path}` | Per-file subsection | One per changed file |
 | `Change type` | Auto-derived from git status | A→added, M→modified, D→deprecated |
 | `Description` | User answer (Step 3, per group) | One description covers all files in group |
-| `Verified` | Computed SHA256 | From working-tree file (or `_deprecated/` copy) |
+| `Verified` | `hash` command output | From working-tree file (or `_deprecated/` copy); CRLF folded to LF for text |
 
 ---
 
@@ -125,4 +125,6 @@ Always **prepend** new entries (newest at top). Do not sort or reorder existing 
 
 Use the shipped `memory-manifest.cjs hash` command from the shared root contract,
 forwarding `--allow-external-root` whenever external-root permission exists.
-Never compute SHA256 inline in SKILL.md — always use the script.
+Never compute SHA256 inline in SKILL.md — always use the script. The value folds CRLF
+to LF, so on a CRLF file it differs from `sha256sum`; `hash --raw` gives the digest of
+the exact bytes.

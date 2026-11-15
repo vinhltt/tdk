@@ -3,7 +3,7 @@ name: tdk-memory-checksum
 description: "Validate project memory integrity against memory.yaml using the shipped Node.js runtime. Detect changed, untracked, missing, index, and template files. Read-only by default; --fix offers explicitly approved repairs, including malformed manifest recovery."
 user-invocable: true
 metadata:
-  version: 4.3.0
+  version: 4.4.0
   category: "Context & Memory"
   requires:
     - tdk-memory-init
@@ -81,10 +81,13 @@ node "${CLAUDE_SKILL_DIR}/scripts/memory-manifest.cjs" validate "<memoryRoot>" [
 ```
 
 Parse JSON output: `mismatches[]`, `missing_from_manifest[]`, `missing_from_disk[]`,
-`verified_count`, `index_mismatch`, `templates_mismatches[]`, and `unsafe_paths[]`.
+`verified_count`, `index_mismatch`, `templates_mismatches[]`, `unsafe_paths[]`, and
+`legacy_receipts[]`.
 Exit zero alone does not mean CLEAN. Include index and template discrepancies in the
 report. An entry in `unsafe_paths[]` is an ERROR: its name can run as a command in a
 shell, so it has no receipt and `--fix` cannot baseline it until the user renames it.
+An entry in `legacy_receipts[]` is not an issue: an older runtime recorded it from the
+raw or CRLF form of content the file still holds, and it already counts as verified.
 
 ### Step 3: Screen completeness check
 
@@ -135,6 +138,7 @@ active typed tables.
 
 SHA256 Integrity
   ✅ {N} files verified
+  Legacy receipts: {N} (verified, not an issue)
   ⚠️  {N} MISMATCHES (changed outside tdk-memory):
      - screens/auth/login.md
 
@@ -166,6 +170,9 @@ Summary: {N} issues | Severity: CLEAN | WARNING | ERROR
 - `WARNING` — mismatches or incomplete screens (fixable)
 - `ERROR` — files deleted from disk (data loss risk), or any `unsafe_paths[]` entry
 
+`legacy_receipts[]` never changes the severity, so a report with only legacy receipts
+stays `CLEAN`.
+
 ### Step 6: Handle --fix flag
 
 If `--fix` is present, ask which exact discrepancies and changed bytes to accept:
@@ -177,6 +184,18 @@ If `--fix` is present, ask which exact discrepancies and changed bytes to accept
 - Re-track specifically approved mismatched files via `/tdk-memory-update`
 - Document untracked files or fix incomplete screens via approved update
 - Repair the index checksum or template receipts after reviewing the actual bytes
+- Re-baseline legacy receipts, which is optional because they keep verifying
+  indefinitely. Show the count and every path in `legacy_receipts[]` and obtain
+  explicit approval. A file can change while approval waits, so work in this order: run
+  `hash` for each approved path; run `validate` again on the current manifest and keep
+  only paths it still lists in `legacy_receipts[]`, reporting the rest as not
+  re-baselined; change only `sha256` of the kept paths, or `memory_index_sha256` for
+  `memory-index.md`, to the value `hash` printed, and keep `updated_at`, `updated_by`,
+  and `source_version`. Publish through the temporary candidate below; the candidate
+  must list none of the kept paths in `legacy_receipts[]` and report the same
+  `mismatches[]` as that second `validate`. On refusal write nothing. This is not a
+  rehash of the tree, because the second `validate` has just proven each kept path holds
+  the recorded content, and the candidate check catches a change after it.
 
 Preserve all unaffected file metadata and `templates[]`. Back up existing
 malformed manifest bytes before repair; for a missing manifest record that no
@@ -190,5 +209,5 @@ Reminder: "Run /tdk-memory-changelog before committing to record these changes."
 
 ## Scripts
 
-- `scripts/memory-manifest.cjs` — bundled read-only Node.js hash/validation CLI
+- `scripts/memory-manifest.cjs` — bundled read-only Node.js CLI: line-ending-neutral `hash` (`--raw` for exact bytes), `validate`, `resolve`, and `rank` (free-text candidate ranking)
 - `scripts/RUNTIME-LICENSE.txt` — bundled YAML parser license

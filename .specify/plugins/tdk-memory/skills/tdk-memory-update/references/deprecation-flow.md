@@ -19,8 +19,8 @@ containment checks. On failure STOP without moving or editing anything.
 2. **Edit frontmatter**: set `status: deprecated`, add `deprecated_at: {today}`
 3. **Regenerate memory-index.md**: follow `regenerate-memory-index-flow.md`
 4. **Update memory.yaml**: entry reflects new path in `_deprecated/`; preserve
-   `templates[]` and unrelated entries. Hash actual deprecated bytes and the
-   regenerated index (forwarding `--allow-external-root` whenever external-root
+   `templates[]` and unrelated entries. Hash the deprecated file and the
+   regenerated index with the shipped `hash` command, never by hand (forwarding `--allow-external-root` whenever external-root
    permission exists), then validate a temporary candidate before publication.
 
 ---
