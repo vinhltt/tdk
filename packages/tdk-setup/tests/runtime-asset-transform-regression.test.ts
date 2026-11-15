@@ -104,6 +104,7 @@ function verifyInstalledMemoryRuntime(consumer: FixtureConsumer, prefix: string)
     verified_count: 1,
     index_mismatch: false,
     templates_mismatches: [],
+    unsafe_paths: [],
   });
 }
 
