@@ -6,6 +6,27 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.131.5] - 2026-11-15
+
+### Added
+- **[Memory]** tdk-memory 4.4.0: shared `rank` runtime and line-ending-neutral checksums
+  - `memory-manifest.cjs rank` reads terms only from stdin and owns free-text tokenizing, scoring, sorting, and selection for `/tdk-memory-query`, `tdk-memory-agent`, and the Obsidian CLI reader; it prints paths and counts, never note contents
+  - `validate` lists `legacy_receipts`, receipts recorded from raw CRLF bytes that still verify; `hash --raw` prints the byte-exact digest
+  - Normal-mode `/tdk-memory-query` results end with `Integrity:` and `Coverage:` lines, and a free-text query prints `Candidates: N of M`
+  - `/tdk-memory-checksum` shows legacy receipts, and `--fix` can re-baseline them after approval
+
+### Changed
+- **[Memory]** Hashing and free-text ranking
+  - `hash` and `validate` fold CRLF to LF for `.md`, `.md.tpl`, and `.canvas`; LF digests are unchanged, so no migration is needed
+  - `Foo Bar`, `FooBar`, and `foo-bar` find the same notes with either reader. Past the first five results only a top-score tie from a path match up and matching `constitution.md` or `domain-overview.md` stay; `omitted` counts the rest
+  - `/tdk-retro-propose` prior-learning lookups can find more notes for multi-word terms, and body-only matches stop at five plus pinned notes
+- **[Docs]** `tdk-memory-subtree.md` records the 4.4.0 sync
+
+### Fixed
+- **[Memory]** Line endings and the vault probe
+  - A clone with converted line endings, such as Git for Windows with `core.autocrlf=true`, no longer reports every memory note as changed
+  - The Obsidian CLI vault probe compares directories with `-ef`, so a drive path and its Git Bash form no longer report `vault-mismatch`
+
 ## [1.131.4] - 2026-11-13
 
 ### Added
