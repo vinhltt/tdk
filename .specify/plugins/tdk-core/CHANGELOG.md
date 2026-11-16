@@ -4,6 +4,18 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.4.0] - 2026-11-16
+
+### Added
+- tdk-counsel agent (moved from tdk-utils), with a role for recommending answers to /tdk-plan --validate questions
+
+### Changed
+- /tdk-plan --validate asks every validation question in one message, each with a tdk-counsel recommendation, and takes one reply; at most one repair prompt; nothing is written until you confirm, and plan.md is written once
+- --validate and --red-team go straight to their review workflows after project context, without the routing-file prompt, scope interview, dependency auto-fix, setup, or Rewrite / Append / Abort prompt
+
+### Removed
+- Batched validation (4 questions per batch, Continue / Stop - mark partial prompt, partial recommendation) and mid-interview resume (validation_cursor, trust-ask)
+
 ## [14.3.9] - 2026-11-13
 
 ### Changed

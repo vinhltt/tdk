@@ -297,7 +297,7 @@ for free-text questions, open the memory root as a vault and add `memory.reader`
 | `--tdd` | Add tests-first sections (`Tests Before` / `Refactor` / `Tests After` / `Test Quality Gate` / `Regression Gate`) to implementation phases. |
 | `--ut-backfill` | Generate backfill-focused phases (`Code Summary` / `Mocks & Fixtures Required` / `Test Matrix` / `Test Quality Gate`) for existing code. Accepts `--sub-workspace <name>`, `--module <name>` (requires `--sub-workspace`), and `--standalone`. |
 | `--red-team` | Review an existing plan with adversarial focus. Recovery state stays in `.tdk-tmp`; one final timestamped report stays under `reports/`. |
-| `--validate` | Interview/validate an existing plan. Freeform content becomes validation focus. |
+| `--validate` | Validation interview on an existing plan. `tdk-counsel` recommends an answer for every question; you confirm them all in one reply. Answers go to `## Validation Log` in `plan.md`. Freeform content becomes validation focus. |
 | `--migrate-artifacts` | Dry-run legacy checklist/data-model/quickstart/prose-contract consolidation, then require confirmation before a backed-up transaction. |
 | `--refresh-routing` | Refresh delegate sections of existing `todo` phases after one approved preview; does not regenerate the plan. Mutually exclusive with every other mode/targeting flag. |
 

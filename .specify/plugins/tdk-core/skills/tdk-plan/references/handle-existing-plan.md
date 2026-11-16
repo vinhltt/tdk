@@ -1,6 +1,6 @@
 # Handle Existing Plan (Step 1.5)
 
-**Trigger:** only when `planExists == "true"` from `setup-plan.ts`. Skip entirely if `planExists == "false"` (proceed to Step 2 in **NEW mode**).
+**Trigger:** only when `planExists == "true"` from `setup-plan.ts`. Skip entirely if `planExists == "false"` (proceed to Step 2 in **NEW mode**). `--red-team` / `--validate` never reach this step; they review the existing plan through their own workflows.
 
 For delegate-only changes, use `/tdk-plan <TASK_ID> --refresh-routing` instead of rewrite/append; that action branches immediately after project context, previews only eligible drifted `todo` phases, and refuses any `in_progress` phase. Append never refreshes existing phase delegates.
 

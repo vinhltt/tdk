@@ -16,7 +16,7 @@ Load project routing at Step 0.1b, then use the shared `routing phase-delegates`
    ```
 
    Do not read routes out of the legacy file and do not rename it automatically.
-6. Then **AskUserQuestion**:
+6. Then, for generation runs only (`--red-team` / `--validate` never reach Step 0.1b), **AskUserQuestion**:
    - Question: "No delegate-routing file found. Do you have custom skills or agents to assign per sub-workspace?"
    - Option A: "Yes, I want to create one" → show template path (`.specify/templates/plan/delegate-routing-template.tpl`) + instructions: copy to `{docs.path}/custom-workflow/delegate-routing.md`, add your `/skill` and `@agent` delegates, then re-run `/tdk-plan`. **STOP** — do not proceed with plan generation until file exists.
    - Option B: "No, skip delegate routing" → set `SKILL_ROUTING = empty`, proceed without injection.
@@ -109,11 +109,11 @@ An indented fence is conservatively **container-ambiguous** when its opener has 
 
 ## Red-team / Validate Inline Load
 
-`--red-team` and `--validate` short-circuit Steps 0-4 (per `modes.md`). They do NOT run Step 0.1b.
+`--red-team` and `--validate` short-circuit Steps 0.1b-4 (per `modes.md`). They do NOT run Step 0.1b.
 
 Instead, these modes inline-load the routing file inside their own workflows:
 - **Red-team (Phase 06)**: re-read `{docs.path}/custom-workflow/delegate-routing.md` into `SKILL_ROUTING` so reviewers can assess delegate-assignment quality per phase.
-- **Validate (Phase 07)**: load routing file so validation interview can include delegate-routing questions (e.g. "Are skills and agents correctly assigned to sub-workspaces?").
+- **Validate (Phase 07)**: load the routing file and pass it to `tdk-counsel` as evidence; questions still come only from `validate-question-framework.md`.
 
 This is a lightweight exact-path read (not full Step 0.1b) — parse the file if present, skip silently if the exact resolved file is missing. Do not AskUserQuestion and do not use Search/Grep/Glob for this inline load.
 

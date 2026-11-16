@@ -182,8 +182,6 @@ Resume by state:
 - reply-only: review or discard the saved reply explicitly; it cannot enter
   marker/evidence finalization automatically.
 
-(Mirrors the Phase 07 D5 resume pattern.)
-
 ## Marker Format (S2.F11 — session-prefixed for uniqueness)
 
 Append at end of target phase file (or below frontmatter for `plan.md`):

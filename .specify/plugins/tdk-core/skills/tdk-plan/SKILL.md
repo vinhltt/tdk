@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "14.3.7"
+  version: "14.4.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -64,7 +64,9 @@ flowchart TD
     BM -->|yes| MW[Step 0.migrate Dry-run + Confirm + Transaction]
     BM -->|no| BR{--refresh-routing?}
     BR -->|yes| RW[Step 0.refresh Scan + Selected Check + Approval + Apply]
-    BR -->|no| B2[Step 0.1b Load Skill Routing]
+    BR -->|no| RV{--red-team / --validate?}
+    RV -->|yes| M
+    RV -->|no| B2[Step 0.1b Load Skill Routing]
     B2 --> C[Step 0.memory Memory Pre-load]
     C --> S[Step 0.scope Scope Challenge]
     S --> X[Step 0.deps Cross-Plan Scan]
@@ -135,9 +137,9 @@ Run only when `FLAGS` contains `--refresh-routing`, immediately after project co
 
 ### Step 0.1b — Load Skill Routing
 Load: `references/delegate-routing-injection.md`
-Resolve delegate routing file per reference. Parse sub-workspace sections. Store: `SKILL_ROUTING` map. Missing file → AskUserQuestion per reference (opt-in create or skip with empty map).
+When `FLAGS` contains `--red-team` or `--validate`, skip this step: do not resolve the file here, and do not run the interactive missing-file AskUserQuestion/create flow from this step. Those action flags still MUST always perform exact-path inline routing reads inside their own workflows.
 
-When `FLAGS` contains `--red-team` or `--validate`, do not run the interactive missing-file AskUserQuestion/create flow from this step. Those action flags still MUST always perform exact-path inline routing reads inside their own workflows.
+Otherwise resolve the delegate routing file per reference. Parse sub-workspace sections. Store: `SKILL_ROUTING` map. Missing file → AskUserQuestion per reference (opt-in create or skip with empty map).
 
 ### Step 0.memory — Memory Pre-load
 Load: `references/gates.md`
@@ -176,11 +178,11 @@ Run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/setup-plan.
 
 ### Step 1.5 — Handle Existing Plan
 Load: `references/handle-existing-plan.md`
-**Trigger:** only if `planExists == "true"`. Implements Rewrite / Append / Abort + F13 Soft Dirty Guard + F19 Lowercase Enforcement + Phase File Content Template.
+**Trigger:** only if `planExists == "true"`. `--red-team` / `--validate` never reach this step (see Step 1.7). Implements Rewrite / Append / Abort + F13 Soft Dirty Guard + F19 Lowercase Enforcement + Phase File Content Template.
 
 ### Step 1.7 — Mode Detection
 Load: `references/modes.md`
-Resolve `MODE` from `FLAGS`: `fast` | `hard` | `red-team` | `validate` | `default` (no flag). Resolve `test_mode` independently from `FLAGS`: `tdd` | `ut_backfill` | `none` (no test flag). Conflict / unknown → already STOPped at Step 0. `--red-team` / `--validate` short-circuit to Phase 06 / 07 over the existing plan and skip Steps 2–4, using `USER_CONTENT` as focus text when non-empty. Other modes continue to Step 2 and use `USER_CONTENT` as planning instruction when non-empty; `test_mode` and `BACKFILL_TARGET` carry forward to Step 3b Design and the plan output contract.
+Resolve `MODE` from `FLAGS`: `fast` | `hard` | `red-team` | `validate` | `default` (no flag). When `--red-team` or `--validate` is present, `MODE` is that action, whatever the speed flag. Resolve `test_mode` independently from `FLAGS`: `tdd` | `ut_backfill` | `none` (no test flag). Conflict / unknown → already STOPped at Step 0. `--red-team` / `--validate` reach this step straight from Step 0.1, so they skip Steps 0.1b through 1.5, and short-circuit to Phase 06 / 07 (`red-team-workflow.md` / `validate-workflow.md`) over the existing plan, skipping Steps 2–4 and using `USER_CONTENT` as focus text when non-empty. These review actions never run the scope interview, dependency auto-fix, setup, or the Rewrite / Append / Abort prompt. Other modes continue to Step 2 and use `USER_CONTENT` as planning instruction when non-empty; `test_mode` and `BACKFILL_TARGET` carry forward to Step 3b Design and the plan output contract.
 
 ### Step 2 — Load Context
 Load: `references/gates.md`
@@ -444,7 +446,7 @@ Skip if `MODE in {default, fast}` AND `--red-team` not set. Otherwise spawn the 
 
 ### Step 4.7 — Validation Interview
 Load: `references/validate-workflow.md`
-Skip if `MODE == "fast"`. Otherwise: orphan-detect any prior `(in-progress)` session (Resume / Discard / Cancel via AskUserQuestion + trust-ask). On fresh run, prompt user `Run validation interview? [y/N]` (auto-yes on `--validate` action). Generate 3–8 questions via template framework, biasing toward `USER_CONTENT` as validation focus when non-empty, batch in groups of 4, write `## Validation Log` with `(in-progress) → (completed | partial)` marker + `validation_cursor` resume state. Bumps `validation_session: N`.
+Skip if `MODE == "fast"`. Otherwise ask `Run validation interview? [y/N]` first (`N` ends the step; the `--validate` action never asks it, see Step 1.7). Then check for a legacy `(in-progress)` session from an older TDK version and offer Discard or Cancel in chat. Generate questions via the template framework, biasing toward `USER_CONTENT` as validation focus when non-empty. Consult `tdk-counsel` once for recommended answers, ask every question in one chat message, and read one reply (at most one repair prompt). Then write `## Validation Log` and phase markers once. Bumps `validation_session: N` only when it writes.
 
 ## Required Reference Load Contract
 
@@ -463,7 +465,7 @@ This contract applies only to internal `references/*.md` loads. Project-specific
 | Command | Reference | Purpose |
 |---------|-----------|---------|
 | `/tdk-plan <ID> --red-team` | `references/red-team-workflow.md` | Spawn 3 hostile personas (skeptic + security + reliability), adjudicate findings, apply session-prefixed markers. |
-| `/tdk-plan <ID> --validate` | `references/validate-workflow.md` | Template-based 3–8 question interview across 8 categories (3 tdk-prioritized + 5 ck-plan). Resume-able via `validation_cursor`. |
+| `/tdk-plan <ID> --validate` | `references/validate-workflow.md` | Template-based questions across 8 categories (3 tdk-prioritized + 5 ck-plan) with tdk-counsel recommendations, asked in one message and confirmed in one reply. |
 | `/tdk-plan <ID> --migrate-artifacts` | `references/migrate-artifacts-workflow.md` | Review and explicitly approve legacy artifact migration; skip generation. |
 | `/tdk-plan <ID> --refresh-routing` | `references/delegate-routing-injection.md` | Preview and explicitly approve resolver-only delegate refresh for drifted todo phases; refuse active plans. |
 

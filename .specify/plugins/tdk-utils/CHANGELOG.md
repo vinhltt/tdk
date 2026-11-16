@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.0.0] - 2026-11-16
+
+### Removed
+- tdk-counsel agent (moved to tdk-core). distribute.sh asks to delete .specify/plugins/tdk-utils/agents/tdk-counsel.md on upgrade
+
 ## [4.6.0] - 2026-11-09
 
 ### Added

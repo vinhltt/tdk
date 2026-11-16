@@ -97,14 +97,14 @@ validation is selected rather than silently disabling the gate. See
 NOT CHECKED handling and persistent blocking state. Only research / scope / deps / guardian / red-team /
 validate are skipped in `--fast`; test modes are rejected before dispatch.
 
-`--red-team` and `--validate` are subcommand-equivalent action flags. They short-circuit straight into Phase 06 / 07 over an existing plan; they do NOT run Steps 0–4 again. `--migrate-artifacts` and `--refresh-routing` short-circuit immediately after project context, before setup or generation: migration follows `migrate-artifacts-workflow.md`; refresh follows **Refresh Routing Only** in `delegate-routing-injection.md`. Neither runs the missing-routing opt-in question, memory, scope, dependencies, design, generation gates, or review workflows.
+`--red-team` and `--validate` are subcommand-equivalent action flags. They short-circuit straight into Phase 06 / 07 over an existing plan right after project context (Step 0.1); they do NOT run Steps 0.1b–4. `--migrate-artifacts` and `--refresh-routing` short-circuit immediately after project context, before setup or generation: migration follows `migrate-artifacts-workflow.md`; refresh follows **Refresh Routing Only** in `delegate-routing-injection.md`. Neither runs the missing-routing opt-in question, memory, scope, dependencies, design, generation gates, or review workflows.
 
 ## Frontmatter Write Rules
 
 - `mode: fast` — written only on `--fast`.
 - `mode: hard` — written only on `--hard`.
 - No-flag default → omit `mode:` (or leave the reserved default per `plan-output-contract.md`).
-- `--red-team` / `--validate` invocations don't change `mode:`; they bump `red_team_session` / `validation_session`.
+- `--red-team` / `--validate` invocations don't change `mode:`. `--red-team` bumps `red_team_session`; `--validate` bumps `validation_session` only when it writes.
 - `test_mode: tdd` — written only on `--tdd`.
 - `test_mode: ut_backfill` — written only on `--ut-backfill`.
 - No test flag → omit `test_mode:` (or leave the reserved default `none` per `plan-output-contract.md`).

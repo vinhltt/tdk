@@ -103,8 +103,7 @@ scope_mode: hold          # expansion | hold | reduction | skipped
 blockedBy: []             # plan dirs that must complete first
 blocks: []                # plan dirs blocked by this one
 red_team_session: 0       # incremented per /tdk-plan <ID> --red-team run
-validation_session: 0     # incremented per /tdk-plan <ID> --validate run
-validation_cursor: 0      # next-question index when validate is suspended
+validation_session: 0     # incremented once per validation run that writes
 memory_gate: not-checked   # optional: clear | review | skipped | not-checked | block-impl | authorized
 memory_gate_reason: ""     # required nonempty whenever memory_gate is present
 memory_gate_at: ""         # required ISO-8601 whenever memory_gate is present
@@ -120,8 +119,7 @@ Field-write rules:
 - `test_target`: write only when `test_mode: ut_backfill` and at least one targeting flag is present. Shape: `{ sub_workspace: "<name>", module: "<name>", standalone: true }`; omit empty string fields and omit the field entirely for TDD/non-test plans.
 - `scope_mode`: written by Step 0.scope. One of `expansion | hold | reduction | skipped`. Absent legacy values are treated as `skipped`.
 - `blockedBy` / `blocks`: arrays of plan directory names, or empty arrays when no link exists. The cross-plan dependency scanner gates auto-fix on `schema_version >= 2`.
-- `red_team_session` / `validation_session`: monotonic counters; never reset.
-- `validation_cursor`: `0` after normal completion; non-zero only when a validation session is suspended mid-interview.
+- `red_team_session` / `validation_session`: monotonic counters; never reset. `validation_session` increases only when a validate run writes; a run that stops writes nothing and keeps the counter.
 - `memory_gate` / `memory_gate_reason` / `memory_gate_at`: written only by the
   Guardian outcome handling in `gates.md`, or the live authorization flow in
   `/tdk-implement`. Preserve across ordinary rewrites, red-team, and validation

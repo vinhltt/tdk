@@ -6,6 +6,31 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.132.0] - 2026-11-16
+
+### Added
+- **[Scripts]** Contract tests for the one-reply validation interview and tdk-counsel ownership
+  - `tdk-plan-validate-one-reply-contract.test.ts` locks the counsel consult, reply rules, write guard, and review-action branch
+  - `manifest/tdk-counsel-plugin-ownership.test.ts` checks that only tdk-core ships `tdk-counsel`
+
+### Changed
+- **[tdk-core]** `/tdk-plan --validate` asks every validation question in one message, each with a `tdk-counsel` recommendation, and takes one reply
+  - Reply `yes` to accept all, override with `V2B` or `V3: skip`, or `stop` to write nothing; unmentioned questions take the recommendation
+  - Ambiguous replies get one repair prompt; if still unclear, nothing is written
+  - Nothing is written until you confirm; the plan is re-read before writing, written once, and restored if anything outside the validation edits changed
+  - `## Validation Log` rows gain `Template id` and `Source` columns; counsel rows carry the reason and `file:line` evidence
+  - When counsel fails, it is retried once; questions still without a recommendation must be answered explicitly
+  - Step 4.7 asks `Run validation interview? [y/N]` before checking for an old in-progress session
+  - `--validate` and `--red-team` go straight to their review workflows after project context, without the routing-file prompt, scope interview, dependency auto-fix, setup, or Rewrite / Append / Abort prompt; `--validate` stops when the task has no plan
+  - The `tdk-counsel` agent now ships in tdk-core
+- **[Guides]** en/vi skills guide row for `--validate` says `tdk-counsel` recommends every answer and you confirm them in one reply
+
+### Removed
+- **[tdk-core]** Batched and resumable validation
+  - Batches of 4 questions, the `Continue` / `Stop - mark partial` prompt, and the `partial` recommendation
+  - Mid-interview resume: the `validation_cursor` field and the trust-ask question. The next validate run removes `validation_cursor` from existing plans; an old in-progress session offers only Discard or Cancel
+- **[tdk-utils]** `tdk-counsel` (moved to tdk-core). `distribute.sh` asks to delete `.specify/plugins/tdk-utils/agents/tdk-counsel.md` on upgrade
+
 ## [1.131.5] - 2026-11-15
 
 ### Added

@@ -291,7 +291,7 @@ dạng free-text, hãy mở memory root thành vault và thêm `memory.reader`:
 | `--tdd` | Thêm các section tests-first (`Tests Before` / `Refactor` / `Tests After` / `Test Quality Gate` / `Regression Gate`) vào implementation phases. |
 | `--ut-backfill` | Tạo backfill-focused phases (`Code Summary` / `Mocks & Fixtures Required` / `Test Matrix` / `Test Quality Gate`) cho existing code. Hỗ trợ `--sub-workspace <name>`, `--module <name>` (yêu cầu `--sub-workspace`), và `--standalone`. |
 | `--red-team` | Review existing plan theo adversarial focus. Recovery state nằm trong `.tdk-tmp`; chỉ final timestamped report ở `reports/`. |
-| `--validate` | Interview/validate existing plan. Freeform content trở thành validation focus. |
+| `--validate` | Validation interview trên plan đã có. `tdk-counsel` khuyến nghị đáp án cho mọi câu; bạn xác nhận tất cả trong một reply. Câu trả lời được ghi vào `## Validation Log` trong `plan.md`. Freeform content trở thành validation focus. |
 | `--migrate-artifacts` | Dry-run việc gộp legacy checklist/data-model/quickstart/prose contract, rồi yêu cầu confirmation trước transaction có backup. |
 | `--refresh-routing` | Làm mới delegate sections của các phase `todo` sau một preview được duyệt; không tạo lại plan. Không kết hợp với bất kỳ mode/targeting flag nào khác. |
 

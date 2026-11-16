@@ -20,8 +20,8 @@ Template-based deterministic question generation (Validation S4 D18). Same plan 
 ## Generation Algorithm
 
 ```
-1. Read persisted `#### Spec-Plan Drift Preflight` rows, plan.md, and every `phases/phase-NN-*.md`.
-2. Generate drift questions first from persisted rows:
+1. Read the drift rows from the current run's preflight (held in memory), plan.md, and every `phases/phase-NN-*.md`.
+2. Generate drift questions first from those rows:
      group by questionId, preserve D# order, and sort by severity already emitted by the helper.
 3. For each generic category:
      hits = sum(content.lowerCase().occurrences(kw)) for kw in category.keywords
@@ -32,16 +32,16 @@ Template-based deterministic question generation (Validation S4 D18). Same plan 
    (rule: 2 if category has >= 5 hits AND any phase has >= 2 hits in that category;
    else 1).
 8. If total < 3 questions → pad with general Coverage / Risks templates to reach 3.
-9. No global hard total is applied. Runtime must batch at most 4 questions per AskUserQuestion call and offer Continue / Stop after each batch.
+9. No global hard total is applied. Every question goes into one message (see `validate-workflow.md`).
 ```
 
 Determinism property: identical plan content → identical question set. (Different YAML formatting / whitespace doesn't change keyword counts because the scan is `.toLowerCase()` on the raw text.)
 
 ## Spec-Plan Drift Questions
 
-Spec-plan drift rows are produced by `src/commands/util/spec-plan-drift.ts`. They are deterministic facts, not LLM-generated guesses. Question generation consumes the persisted rows in the current `## Validation Log`; resume must not recompute them mid-session.
+Spec-plan drift rows are produced by `src/commands/util/spec-plan-drift.ts`. They are deterministic facts, not LLM-generated guesses. Question generation consumes the rows from the current run's preflight. The rows stay in memory and are written to `## Validation Log` with the final write.
 
-No global hard total is applied to drift questions because a real plan may have more than 8 material drift findings. To keep the interview usable, batch at most 4 questions, then ask whether to `Continue` or stop and mark the session `partial`.
+No global hard total is applied to drift questions because a real plan may have more than 8 material drift findings. Every question goes into one message as one row of a compact table, which keeps a long list readable.
 
 | Drift Type | Question ID | Option | Action |
 |---|---|---|---|
@@ -64,6 +64,10 @@ No global hard total is applied to drift questions because a real plan may have 
 ## Question Templates
 
 Each template defines: `question` body, 3 substantive options + 1 `Skip this question` option, and an `action` field per option that maps to recommendation logic (`no-op | revise | spec-update-needed`).
+
+### Option Letters
+
+Letter the substantive options A–C in the order of the template, or of the drift table rows for a drift question. D is always `Skip this question` with action `no-op`. Drift questions get D appended, because the drift table lists only three options.
 
 ### Constitution (tdk layer 1)
 
@@ -200,5 +204,3 @@ proceed              if all answered actions == no-op
 revise               if any action == revise (and none == spec-update-needed)
 spec-update-needed   if any action == spec-update-needed
 ```
-
-If validation ended via early-exit (cursor < N), recommendation is `partial` regardless of actions seen so far.

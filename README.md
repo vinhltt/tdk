@@ -91,7 +91,7 @@ requirement authority.
 
 ```text
 /tdk-status feat-001
-/tdk-plan feat-001 --validate       # interview the plan for missing assumptions
+/tdk-plan feat-001 --validate       # validation interview: counsel recommends, you confirm once
 /tdk-plan feat-001 --red-team       # adversarial plan review
 /tdk-plan feat-001 --tdd            # fold tests-first phases into the plan
 /tdk-plan feat-001 --ut-backfill --sub-workspace backend

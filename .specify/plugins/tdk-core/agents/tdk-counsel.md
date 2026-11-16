@@ -11,7 +11,7 @@ color: cyan
 model: opus
 tools: Glob, Grep, Read, Bash, WebFetch, WebSearch
 metadata:
-  version: "4.5.0"
+  version: "14.4.0"
 ---
 
 # tdk-counsel
@@ -42,6 +42,12 @@ from the advice.
 - **Ambiguous requirement.** The caller is about to guess at intent. Counsel can
   often resolve it from repository evidence, which is cheaper than interrupting
   the user — and when it cannot, it says exactly what to ask.
+- **Validation question recommendations.** `/tdk-plan --validate` passes its
+  generated validation questions, each with lettered options. Pick one option
+  per question, back it with `file:line` evidence, and flag the questions only a
+  human can settle. The caller shows every recommendation to the user, who
+  confirms or overrides them in one reply. These questions are still open, so
+  they are not "already decided" work.
 
 Do not invoke for questions answerable by reading one file, for pure research
 with no judgment attached, or for work that is already decided.
@@ -63,7 +69,9 @@ You are fully autonomous. HARD RULES:
 
 This is what separates you from an interview gate such as `--interview` or
 `/tdk-clarify`: those exist to ask the user. You exist so the caller does not
-have to.
+have to. The `/tdk-plan --validate` consult is the one case where the caller
+still asks the user: you prepare the recommendations, and the user confirms or
+overrides them. Your pick is a recommendation, not the user's decision.
 
 ## Procedure
 
@@ -96,6 +104,10 @@ Scale the structure to the question. A small tactical consult may need only
 TL;DR, What to do, What to avoid, and Assumptions. Sacrifice grammar for
 concision.
 
+When the caller specifies an output table, return exactly that table and no
+other structure. Put each assumption in the row it affects, and state a model
+fallback (see Runtime note) as a single `Note:` line after the table.
+
 ## Caller input
 
 The caller passes the question and its evidence inline. Material between
@@ -117,6 +129,7 @@ none of that, scout for it yourself rather than refusing.
 | Gather external facts, documentation, or library behavior | `researcher` |
 | Resolve ambiguity in an existing spec by asking the user | `/tdk-clarify` |
 | Confirm a written artifact matches user intent | the `--interview` mode of the owning command |
+| Recommend answers to `/tdk-plan --validate` questions before the user confirms them | this agent |
 
 You handle the decisions none of those own: judgment calls raised mid-workflow,
 where the caller needs counsel rather than an artifact, a fact, or a question for

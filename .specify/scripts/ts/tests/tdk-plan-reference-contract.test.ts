@@ -148,22 +148,24 @@ describe('tdk-plan reference contract', () => {
     expect(workflow).not.toContain('Load plan.md + every `phase-*.md`');
   });
 
-  it('persists drift rows before validation questions and resumes from persisted rows', () => {
+  it('keeps drift rows in memory and writes them with the final validation write', () => {
     const workflow = read(VALIDATE_WORKFLOW);
+    const framework = read(VALIDATE_QUESTION_FRAMEWORK);
 
-    expect(workflow).toContain('Persist the full drift rows before the Q/A table');
-    expect(workflow).toContain('reuse the persisted drift table');
-    expect(workflow).toContain('do not recompute drift during resume');
-    expect(workflow).toContain('force Discard path');
+    expect(workflow).toContain('keep the rows in memory');
+    expect(workflow).toContain('Write nothing before the user confirms');
+    expect(framework).toContain('held in memory');
+    expect(framework).toContain('written to `## Validation Log` with the final write');
+    expect(workflow).not.toContain('Persist the full drift rows before the Q/A table');
+    expect(workflow).not.toContain('reuse the persisted drift table');
   });
 
   it('uses severity-driven validation questions without fixed total caps', () => {
     const framework = read(VALIDATE_QUESTION_FRAMEWORK);
 
     expect(framework).toContain('No global hard total is applied');
-    expect(framework).toContain('batch at most 4 questions');
-    expect(framework).toContain('Continue');
-    expect(framework).toContain('partial');
+    expect(framework).toContain('Every question goes into one message');
+    expect(framework).not.toContain('batch at most 4 questions');
     expect(framework).not.toContain('Hard cap total at 8');
     expect(framework).not.toContain('Cap at 8');
   });
