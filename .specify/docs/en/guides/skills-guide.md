@@ -137,7 +137,7 @@ Excluded:
 | `/tdk-epic-hld` | Create parent epic high-level design context. | `<epic-id>`, `--force` | Epic PRD exists and needs design lenses before child breakdown. |
 | `/tdk-task-breakdown` | Generate child spec seed Markdown from epic PRD plus HLD. | `<epic-id>`, `--force` | An epic needs independently specifiable child slices. |
 | `/tdk-plan` | Generate implementation plan, or refresh existing phase delegates only. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` is ready for planning; use refresh after approved routing changes, or migration for a legacy feature folder. |
-| `/tdk-implement` | Execute runnable rows from `plan.md ## Phases`. | `<id>`, `--phase NN`, `--no-branch`, `--worktree` | A plan exists and one or more implementation phases are ready. `--worktree` starts the task on a worktree even when the sub-workspace repository is free. |
+| `/tdk-implement` | Execute rows from `plan.md ## Phases` without asking about scope: by default all remaining rows in order, stopping at an unfinished blocker, or exactly one with `--phase NN`. | `<id>`, `--phase NN`, `--no-branch`, `--worktree` | A plan exists and one or more implementation phases are ready. `--worktree` starts the task on a worktree even when the sub-workspace repository is free. |
 | `/tdk-consistency-check` | Cross-artifact consistency check across spec, plan, and constitution. | `<id>`, `--deep` | You need read-only verification across spec, plan, and phases; add `--deep` to verify plan claims against source. |
 | `/tdk-review` | Review an implemented task: diff against spec and phase success criteria, with fix-phase seeds for `/tdk-plan`. | `<id>`, `--phase NN`, `--quick`, `--deep`, `[focus]` | Phases are `done` and you want a code-versus-spec review before shipping; writes one report under `reviews/`. |
 | `/tdk-status` | Show workflow progress, per-repository branch state, test and review evidence, retro and memory status, and the next command chosen from that evidence. | `<id>`, `archive/<folder>/<id>` | You need a read-only status snapshot, or need to see which branch each repository is on. Archived specs stay readable. |
@@ -825,7 +825,7 @@ actions were removed.
 |---------|--------|-----------|-------|--------|------------|
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` with ## Phases | Source code, `plan.md` Status column | plan |
 
-`/tdk-implement` reads the `## Phases` table from `plan.md` and executes all runnable phases by default, marking progress in the table's Status column. Use `/tdk-implement <id> --phase NN` to execute one numeric phase only; selected mode does not auto-run dependencies. Best for small/medium features completable in one session.
+`/tdk-implement` reads the `## Phases` table from `plan.md` and by default runs the remaining phases in row order, marking progress in the table's Status column, and stops at the first phase whose blocker is unfinished instead of skipping ahead. It starts without asking about scope, usually after printing a one-line preview. It asks only for decisions it cannot make itself: the memory gate, stale-phase recovery, routing drift, spike results, and branch preflight. Use `/tdk-implement <id> --phase NN` to execute one numeric phase only; selected mode does not auto-run dependencies. Best for small/medium features completable in one session.
 
 **Re-running `/tdk-plan` after implementation:**
 - **(a) Update phases only** — When feature scope expands or phases change: re-run `/tdk-plan <id>` (overwrites plan.md; you lose current Status-column progress)
@@ -940,7 +940,6 @@ Detailed walkthroughs live in [Scenario Catalog](scenarios/scenario-catalog.md).
 | "Feature not found" | Wrong task ID or folder | Check `.specify/specs/` for existing features; verify prefix in `.specify.env` |
 | "archive target already exists" | The same id was archived before | Pick a different id for the new work, or move the earlier archive out of the way by hand |
 | Command refuses folder `archive` | `archive` is a reserved folder name | Use another folder name; to read an archived spec use `/tdk-status archive/<folder>/<id>` or a retro command |
-| Checklist gate blocks implement | Incomplete checklist items | Complete checklist items or confirm to proceed when prompted |
 
 ### Command Order Quick Reference
 

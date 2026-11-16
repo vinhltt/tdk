@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.0.1] - 2026-11-16
+
+### Changed
+- `tdk-branch-preflight` runs after the `/tdk-implement` execution preview instead of a confirmation step; it still asks one branch question and reads only the phase files of the rows the run executes
+
 ## [5.0.0] - 2026-11-16
 
 ### Removed

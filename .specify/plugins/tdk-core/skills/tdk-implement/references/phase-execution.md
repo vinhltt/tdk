@@ -21,6 +21,7 @@ Execution pseudo-code, ascending `row.number`:
    d. BlockedBy check: for each id in row.blockedBy, phaseByNumber.get(id)?.status must be done or skipped
       Error: "phase NN blocked by MM which is status='X' — run phase MM first or mark phase NN skipped"
       skipped blocker satisfies dependency
+      On error: report it and STOP. The message is for the user; never run phase MM in this invocation.
    d1. Run `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-phase-file.ts "{phasePath}" --plan "{FEATURE_DIR}/plan.md" --phase-number {row.number} --json)`.
       Validation failure STOPs before status mutation.
    d2. Apply `## Sub-Workspace Branch Context` below when `GIT_MAP` exists.
@@ -36,8 +37,9 @@ Execution pseudo-code, ascending `row.number`:
 
 This is the default/selected serial path. Parallel mode also lands here: every phase the checker reports in
 `conflicts` or `rejected`, plus every `parallel_safe: never`, legacy, or spike phase, runs through this same
-behavior synchronously, one phase at a time. The only difference is the status write — a phase deferred from
-a parallel wave writes both surfaces with a single `transition-phase-status` call per transition, as defined
+behavior synchronously, one phase at a time. Two things differ: parallel mode skips the PRE-LOOP scan in
+step 3, because it performs no F3 recovery and its preview already STOPped on stale rows; and a phase deferred
+from a parallel wave writes both surfaces with a single `transition-phase-status` call per transition, as defined
 in `parallel-phase-orchestration.md`, instead of the two legacy status CLIs above. Nothing is retained
 between phases and no ownership is asserted; each phase runs, then writes its status, then the next begins.
 
@@ -201,7 +203,7 @@ Required behavior:
 
 ```text
 Delegate skill not found: /{skill-name}
-Phase NN left in_progress. Add/fix the skill in delegate-routing.md or edit this phase's ## Delegate Skills, then rerun /tdk-implement {TASK_ID}.
+Phase NN left in_progress. Add/fix the skill in delegate-routing.md or edit this phase's ## Delegate Skills, then rerun /tdk-implement {TASK_ID} --phase NN {RERUN_FLAGS}.
 ```
 
 - If a delegate fails, STOP and report the delegate's error. Leave the phase `in_progress` and emit the F3 recovery reminder.
@@ -317,7 +319,7 @@ Agent: @{agent-name}; resolved definition: {path, or not resolved}
 Scanned agent scopes: {project scope, user scope}
 Failing delegates: {agent/skill names with agent-not-found, skill-not-found, no-loader, or unverified}
 Evidence: {missing loader/definition/skill or unverified capability, with the relevant path}
-Phase NN remains todo; no status mutation. Fix readiness and rerun /tdk-implement {TASK_ID}.
+Phase NN remains todo; no status mutation. Fix readiness and rerun /tdk-implement {TASK_ID} with the same arguments as this run.
 ```
 
 Tier 1 failure emits **no F3 recovery reminder**: execution never started. Never fall back to invoking the
@@ -404,12 +406,12 @@ done.
 Old-shape TDD/backfill phase missing `## Test Quality Gate`:
 
 ```text
-Old-shape TDD/backfill phase missing `## Test Quality Gate`. Phase NN left in_progress. Rerun `/tdk-plan` with the same test-mode flag or manually add `## Test Quality Gate` before rerunning `/tdk-implement`.
+Old-shape TDD/backfill phase missing `## Test Quality Gate`. Phase NN left in_progress. Rerun `/tdk-plan` with the same test-mode flag or manually add `## Test Quality Gate` before rerunning `/tdk-implement` with `--phase NN` {RERUN_FLAGS}.
 ```
 
 If repairing by regeneration, rerun `/tdk-plan` with the same test-mode flag.
 If repairing manually, manually add `## Test Quality Gate` before rerunning
-`/tdk-implement`. do not fall through to delegate completion or generic done
+`/tdk-implement` with `--phase NN` {RERUN_FLAGS}. do not fall through to delegate completion or generic done
 when this STOP condition is hit.
 
 Run every safe runnable `Command` in `## Test Quality Gate`. A gate row can pass only when structural target evidence is satisfied and any runnable command exits 0. Do not parse coverage percentages; TDK core validates the declared command/status/evidence contract, not coverage math.
@@ -543,7 +545,7 @@ fi
 ' -- "<agent-resolved-project-root>"
 ```
 
-Print from the JSON `recommendation`, verbatim, without re-deriving or rewording:
+Print from the JSON `recommendation`, verbatim, without re-deriving or rewording, then end the run. The printed command is the user's next choice; never execute it in this invocation:
 
 ```text
 Next: <recommendation.primary.command>

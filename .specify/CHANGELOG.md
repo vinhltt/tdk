@@ -6,6 +6,27 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.133.0] - 2026-11-16
+
+### Changed
+- **[tdk-core]** `/tdk-implement` no longer asks to confirm its scope; there is no opt-out
+  - `/tdk-implement <id>` runs the remaining phases in row order and stops at the first phase whose blocker is unfinished; `--phase NN` runs exactly that phase
+  - `--phase 00` now selects phase 0, which plans may number; it was previously rejected, so the recovery command printed for a stale phase 0 could not run
+  - The run usually prints a one-line preview before it starts, but this is best effort: some runs start without it, and the end-of-run report remains the record of what ran
+  - The skill now activates only on an explicit request to implement, and a phase named in the request is passed as `--phase NN`
+  - F3 recovery options state what the run does next, because a recovery answer now continues the run
+  - `--parallel` stops on a stale `in_progress` phase and points to `/tdk-implement <id> --phase NN` for recovery
+  - `--parallel` now documents the complete phase validation command; a run could previously stop on a missing `--project-root`
+  - Rerun commands the skill prints keep `--phase NN` and `--no-branch` / `--worktree`; the skill never runs a printed command or a blocker on its own
+  - A request that names several phases or a range lists the `--phase NN` commands and stops; it never falls back to all phases
+  - The memory gate, F3 recovery, routing drift, spike decision, and branch preflight still ask
+- **[tdk-utils]** `tdk-branch-preflight` runs after the `/tdk-implement` execution preview instead of a confirmation step; it still asks one branch question and reads only the phase files of the rows the run executes
+- **[Guides]** en/vi skills guide, workflow map, and child-feature and quick-specification scenarios
+  - `/tdk-implement` starts without asking about scope and asks only at the memory gate, stale-phase recovery, routing drift, spike results, and branch preflight
+  - The default run is described as the remaining phases in row order, stopping at the first phase whose blocker is unfinished, instead of "all runnable phases"
+  - The "Checklist gate blocks implement" troubleshooting row is removed; `/tdk-implement` has no checklist gate
+- **[Scripts]** tdk-implement and branch-preflight contract tests cover the one-line preview, `--phase 00`, the parallel stale-row stop, F3 next-step wording, rerun flags, multi-phase requests, and the gates that still ask
+
 ## [1.132.0] - 2026-11-16
 
 ### Added

@@ -230,7 +230,7 @@ flowchart TD
     class CODE_BE,CODE_FE,TESTS code
 ```
 
-`/tdk-implement <id>` runs all runnable rows from `plan.md ## Phases`.
+`/tdk-implement <id>` runs the remaining rows from `plan.md ## Phases` in row order and stops at the first row whose blocker is unfinished.
 `/tdk-implement <id> --phase NN` runs one selected phase while still honoring dependencies and global stale `in_progress` recovery.
 
 ### Phase 3: Close-out And Archive

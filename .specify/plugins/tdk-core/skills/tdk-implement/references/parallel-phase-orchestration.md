@@ -1,7 +1,7 @@
 # Parallel Phase Orchestration
 
 Use only for the `/tdk-implement <TASK_ID> --parallel` branch after shared read-only parsing and
-confirmation. Scheduling is prompt-driven: you select each wave from `plan.md` yourself. Two helpers stay
+the execution preview, which STOPs on any stale `in_progress` row. Scheduling is prompt-driven: you select each wave from `plan.md` yourself. Two helpers stay
 authoritative and must not be reimplemented in prose — `check-phase-write-disjointness.ts` is the sole
 write-safety authority, and `transition-phase-status.ts` is the sole status write path.
 
@@ -16,7 +16,7 @@ trimmed output must be exactly one JSON object:
 
 Probe A uses `"probe": "A"`; probe B uses `"probe": "B"`. Dispatch both in a single message and join both
 through the harness-provided synchronous primitive. Missing results, extra prose, malformed JSON, wrong
-nonce/probe, dispatch errors, or unavailable concurrency -> STOP with the serial rerun command. Do not try a
+nonce/probe, dispatch errors, or unavailable concurrency -> STOP with the serial rerun command `/tdk-implement {TASK_ID} {RERUN_FLAGS}`. Do not try a
 smaller wave or infer harness identity from canary success.
 
 ## Main Agent Contract
@@ -35,6 +35,14 @@ A phase is a candidate when `parallel_safe: auto` **and** every `BlockedBy` entr
 `parallel_safe: never`, legacy phases without the key, and spike phases are never candidates; run them
 serially per `phase-execution.md`.
 
+Validate each candidate before it goes further. `--mode parallel` requires `--project-root`:
+
+```bash
+(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-phase-file.ts "{phasePath}" --plan "{FEATURE_DIR}/plan.md" --phase-number {row.number} --mode parallel --project-root "$PROJECT_DIR" --json)
+```
+
+Validation failure STOPs before status mutation.
+
 ### 3. Infer each candidate's access set
 
 For each candidate, read its `## Related Code Files` section and map the `Read:`, `Modify:`, `Create:`, and
@@ -45,8 +53,8 @@ For each candidate, read its `## Related Code Files` section and map the `Read:`
 ```
 
 Infer the access set directly from the bullets; do not shell out to a markdown parser. Malformed-bullet
-detection is not your job — `validate-phase-file.ts --mode parallel` already reported it earlier in
-`phase-execution.md`, and a phase that failed it never reaches this step.
+detection is not your job — the validation in step 2 reports it, and a phase that failed it never reaches
+this step.
 
 ### 4. Call the checker once per wave
 
@@ -118,8 +126,8 @@ bun src/commands/util/transition-phase-status.ts --project-root "$PROJECT_DIR" \
 ```
 
 If any worker in the wave fails, blocks, or asks for context, mark no sibling `done`: leave the whole wave
-`in_progress` and STOP. The F3 recovery gate in `project-and-phase-contract.md` handles those rows on the
-next run.
+`in_progress` and STOP. Report `/tdk-implement <TASK_ID> --phase NN {RERUN_FLAGS}`, with NN the lowest phase
+number in that wave, as the recovery path: its F3 gate in `project-and-phase-contract.md` handles those rows, and `--parallel` STOPs at the preview until they are recovered.
 
 After a fully successful wave, reparse `plan.md` and restart at step 1. Stop when no candidate remains. When that final stop leaves every phase done or skipped, end with the same next step as the serial completion summary (`phase-execution.md` Completion Summary): the `src/commands/feature/status.ts` collector runs after the last wave's status writes, and its `recommendation.primary` / `recommendation.alternative` are printed verbatim, with `/tdk-status {task_id}` as the only fallback.
 

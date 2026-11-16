@@ -44,7 +44,7 @@ Reject and STOP before task-id validation if any of these are present:
 - duplicate --phase
 - missing value
 - non-numeric value
-- non-positive value
+- negative value
 - extra positional tokens
 - duplicate `--parallel`
 - duplicate `--no-branch`
@@ -59,7 +59,9 @@ Also reject `--parallel` with either `--phase` form before task-id validation, p
 capability probes, or project mutation. Do not infer a harness from environment variables,
 installation metadata, paths, or canary output. Default and selected parsing otherwise stays unchanged.
 
-Normalize `PHASE_FILTER` to a positive number. Display may use padded or unpadded phase numbers, but comparisons MUST use the numeric value.
+Normalize `PHASE_FILTER` to a non-negative number, so `00` and `0` select phase 0. Display may use padded or unpadded phase numbers, but comparisons MUST use the numeric value.
+
+`RERUN_FLAGS` = whichever of `--no-branch` and `--worktree` this run has, otherwise empty. Every rerun command this skill prints carries RERUN_FLAGS.
 
 ## Task ID and Project Context
 
@@ -131,9 +133,9 @@ Decision table:
 
 | Status result | Behavior |
 |---|---|
-| `planned` | Show todo count and first todo phase; continue to parse/confirm. |
-| `in_progress` + `nextPhase` + no `currentPhase` | Show progress and resume target; continue to parse/confirm from `nextPhase`. |
-| `in_progress` + `currentPhase` | Continue to parse, then enter F3 recovery gate before any status mutation. |
+| `planned` | Show todo count and first todo phase; continue to parse and preview. |
+| `in_progress` + `nextPhase` + no `currentPhase` | Show progress and resume target; continue to parse and preview. Without `--phase`, the run resumes at `nextPhase`; with `--phase NN`, `nextPhase` is informational and the target stays NN. |
+| `in_progress` + `currentPhase` | Continue to parse, then Step 4 before any status mutation: serial mode enters the F3 recovery gate; `--parallel` only collects stale rows and STOPs at Step 6. |
 | `in_progress` + no `nextPhase` + no `currentPhase` | STOP. Only blocked rows remain after done work; show blocked rows and recommend resolving them with `/tdk-plan {TASK_ID}`. |
 | `blocked` | STOP. No actionable phase is left; show blocked rows and recommend resolving them with `/tdk-plan {TASK_ID}`. |
 | `done` | STOP. Report done. Appended phases must be present in `plan.md` `## Phases` to be detected. |
@@ -142,16 +144,6 @@ Decision table:
 | `ready` | STOP. No plan yet; recommend `/tdk-plan {TASK_ID}`. |
 | `draft` | STOP. Spec has not passed the quality gate; recommend `/tdk-clarify {TASK_ID}`. |
 | `empty` | STOP. Recommend `/tdk-specify {TASK_ID}`. |
-
-Compact preflight summary:
-
-```text
-Status preflight: {feature_status}
-Progress: {done}/{total - skipped} ({percent}%)
-Counts: todo={todo}, in_progress={inProgress}, blocked={blocked}, skipped={skipped}
-Current: {currentPhase || "none"}
-Next: {nextPhase || "none"}
-```
 
 This preflight is read-only. The phase parser below remains the execution source of truth before writes.
 
@@ -222,7 +214,7 @@ If `## Phases` section is missing, STOP with `"plan.md has no ## Phases table se
 
 ## Step 4 - F3 Recovery Gate
 
-Before resolving selected targets or entering execution, scan all rows:
+In serial mode, before resolving selected targets or entering execution, scan all rows:
 
 ```text
 for each row in rows:
@@ -231,19 +223,17 @@ for each row in rows:
     ask explicit recovery action before any mutation
 ```
 
-Use AskUserQuestion with Retry this phase, Mark done, Mark skipped, and Cancel. Recovery writes MUST use the same order as normal status transitions: `update-phase-frontmatter-status.ts "{phasePath}" {todo|done|skipped}` first, then `update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} {todo|done|skipped}`. After any recovery write, re-run `parse-phases-table.ts` and restart this scan before proceeding.
+Use AskUserQuestion with Retry this phase, Mark done, Mark skipped, and Cancel. Ask about one stale row per AskUserQuestion call, lowest row first, and never batch rows into one call: what the next question says depends on this answer. Each answer only writes this row's status (Retry this phase writes `todo`); none of them executes a row, and the next step below happens after every other stale row has been answered. The description of Retry this phase, Mark done, and Mark skipped must state what the run does next. Without --phase: it continues through the remaining phases in row order and STOPs at the first `todo` row with an unsatisfied blocker. With --phase NN when this row is phase NN: Retry this phase runs it if its blockers are done or skipped; Mark done and Mark skipped end the run with nothing executed. With --phase NN when this row is another phase: the answer only changes this row; then phase NN runs if it is `todo` and its blockers are done or skipped, the run ends with nothing executed if phase NN is already done or skipped, otherwise the run STOPs. The description of Cancel must say that to run only this phase after recovering it, the user cancels and reruns with --phase {row.number}, and that any other stale row is still asked. Recovery writes MUST use the same order as normal status transitions: `update-phase-frontmatter-status.ts "{phasePath}" {todo|done|skipped}` first, then `update-phase-status.ts "{FEATURE_DIR}/plan.md" {row.number} {todo|done|skipped}`. After any recovery write, re-run `parse-phases-table.ts` and restart this scan before proceeding.
 
 For an `in_progress` spike, validate the phase file before showing recovery.
 Never offer direct `Mark done` or `Mark skipped`, because either would bypass
 the spike decision gate. Offer Retry experiment, Resume decision gate when a
 non-pending `## Spike Result` exists, Replan, and Cancel. Approval/replan then
-follows the spike lifecycle in `phase-execution.md`.
+follows the spike lifecycle in `phase-execution.md`. Retry experiment follows the same next-step cases as Retry this phase. Resume decision gate runs that gate on this row now, then the run continues under those cases unless the gate STOPs. Cancel carries the same --phase {row.number} hint.
 
-On phase-work failure during execution, emit: `"Phase NN left in_progress. Recover as described above."`
+On phase-work failure during execution, emit: `"Phase NN left in_progress. Recover it with /tdk-implement {TASK_ID} --phase NN {RERUN_FLAGS}."`
 
-Parallel mode does not perform these two legacy status writes. It reports stale/split rows read-only before
-confirmation, then writes every status through the single `transition-phase-status` call defined in
-`parallel-phase-orchestration.md`.
+Parallel mode performs no F3 recovery and neither of these two legacy status writes. It collects stale rows read-only for Step 6, which STOPs on any of them. Otherwise it writes every status through the single `transition-phase-status` call defined in `parallel-phase-orchestration.md`.
 
 ## Step 5 - Resolve Target Rows
 
@@ -263,11 +253,15 @@ If selected row is `done`, `skipped`, `blocked`, or `cancelled`, report no runna
 
 Dependency checks must read blocker rows from `phaseByNumber.get(id)`. Missing blockers or blockers with status other than `done` / `skipped` stop execution. Do not auto-run dependencies for selected mode.
 
-## Step 6 - Confirm Before Executing
+## Step 6 - Execution Preview
 
-Display compact preflight summary plus phase list from parsed rows. Do not read phase files before this confirmation.
+The preview line and how to print it are in `SKILL.md` Step 6. The invocation already chose the scope, so this step asks the user nothing. The preview is read-only.
 
-If `PHASE_FILTER` exists, list only `TARGET_ROWS` and label selected phase execution. If `PARALLEL_MODE`,
-list the complete parsed graph and label parallel wave execution. Otherwise list all rows and keep all-phase
-wording. Use AskUserQuestion with Yes execute all phases, Yes execute selected phase, Yes execute parallel
-waves (as applicable), and No cancel. Confirmation is read-only.
+If `PARALLEL_MODE` is true and any row has `plan.md` status `in_progress`, list those rows, then STOP before branch preflight, canaries, and any status write:
+
+```text
+Phase {NN} is in_progress. --parallel does not recover stale phases.
+Run /tdk-implement {TASK_ID} --phase {NN} {RERUN_FLAGS} to recover it, then rerun with --parallel.
+```
+
+Name the lowest stale phase number. F3 in that serial run scans every row. A frontmatter/table mismatch on a `todo` row is left to routing preflight, which STOPs before any status mutation.

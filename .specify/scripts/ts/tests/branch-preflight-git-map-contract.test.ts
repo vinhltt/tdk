@@ -160,6 +160,16 @@ describe('repositories holding several sub-workspaces', () => {
   });
 });
 
+describe('branch preflight after the host execution preview', () => {
+  it('asks one branch question and adds no confirmation step of its own', () => {
+    const preflight = read(PREFLIGHT_SKILL);
+
+    expect(preflight).toContain('Ask **one** `AskUserQuestion`');
+    expect(preflight).toContain('its execution preview');
+    expect(preflight).not.toContain('confirmation step');
+  });
+});
+
 describe('worktrees for a repository group', () => {
   const PRECONDITION_STOP = 'add a repo-level sub-workspace for <T> to use worktrees';
 

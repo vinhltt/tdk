@@ -108,7 +108,7 @@ Read `plan.md` before implementation. Check:
 
 ## Step 4: Implement
 
-Run all runnable phases:
+Run the remaining phases in row order (the run stops at a phase whose blocker is unfinished):
 
 ```text
 /tdk-implement feat-001
@@ -122,6 +122,7 @@ Or run one phase:
 
 What should happen:
 
+- The run starts without asking about scope; a named phase runs alone.
 - Claude implements from `plan.md`.
 - Tests or verification run when the plan requires them.
 - Status artifacts update as phases complete.

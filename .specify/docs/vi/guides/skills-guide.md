@@ -138,7 +138,7 @@ Excluded:
 | `/tdk-epic-hld` | Tạo parent epic high-level design context. | `<epic-id>`, `--force` | Epic PRD tồn tại và cần design lenses trước child breakdown. |
 | `/tdk-task-breakdown` | Generate child spec seed Markdown từ epic PRD cộng HLD. | `<epic-id>`, `--force` | Một epic cần các child slices có thể spec độc lập. |
 | `/tdk-plan` | Tạo implementation plan hoặc chỉ làm mới delegate của phase hiện có. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` đã sẵn sàng để lập plan; dùng refresh sau khi duyệt đổi route, hoặc migration cho legacy feature folder. |
-| `/tdk-implement` | Execute runnable rows từ `plan.md ## Phases`. | `<id>`, `--phase NN`, `--no-branch`, `--worktree` | Plan đã tồn tại và một hoặc nhiều implementation phases đã ready. `--worktree` chạy task trên worktree kể cả khi sub-workspace repository đang rảnh. |
+| `/tdk-implement` | Execute các row từ `plan.md ## Phases` mà không hỏi về phạm vi: mặc định tất cả row còn lại theo thứ tự, dừng ở blocker chưa xong, hoặc đúng một phase với `--phase NN`. | `<id>`, `--phase NN`, `--no-branch`, `--worktree` | Plan đã tồn tại và một hoặc nhiều implementation phases đã ready. `--worktree` chạy task trên worktree kể cả khi sub-workspace repository đang rảnh. |
 | `/tdk-consistency-check` | Cross-artifact consistency check trên spec, plan, và constitution. | `<id>`, `--deep` | Bạn cần read-only verification trên spec, plan, và phases; thêm `--deep` để verify claim của plan so với source. |
 | `/tdk-review` | Review một task đã implement: diff so với spec và success criteria của phase, kèm fix-phase seed cho `/tdk-plan`. | `<id>`, `--phase NN`, `--quick`, `--deep`, `[focus]` | Các phase đã `done` và bạn muốn review code so với spec trước khi ship; ghi một report trong `reviews/`. |
 | `/tdk-status` | Hiển thị workflow progress, branch state theo từng repository, evidence về test và review, retro và memory status, cùng command tiếp theo chọn từ evidence đó. | `<id>`, `archive/<folder>/<id>` | Bạn cần read-only status snapshot. Spec đã archive vẫn đọc được. |
@@ -770,7 +770,7 @@ Command giờ là `/tdk-delegate-routing` với ba action — `diff`, `register`
 |---------|--------|-----------|-------|--------|------------|
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` with ## Phases | Source code, `plan.md` Status column | plan |
 
-`/tdk-implement` đọc `## Phases` table từ `plan.md` và execute tất cả runnable phases by default, mark progress trong Status column. Dùng `/tdk-implement <id> --phase NN` để execute một numeric phase; selected mode không auto-run dependencies. Phù hợp nhất với small/medium features có thể complete trong một session.
+`/tdk-implement` đọc `## Phases` table từ `plan.md` và mặc định chạy các phase còn lại theo thứ tự row, mark progress trong Status column, và dừng ở phase đầu tiên có blocker chưa xong thay vì nhảy qua phase sau. Command chạy ngay, không hỏi về phạm vi, và thường in một dòng preview trước khi bắt đầu. Nó chỉ hỏi những quyết định không tự đưa ra được: memory gate, recovery phase dở dang, routing drift, kết quả spike và branch preflight. Dùng `/tdk-implement <id> --phase NN` để execute một numeric phase; selected mode không auto-run dependencies. Phù hợp nhất với small/medium features có thể complete trong một session.
 
 **Re-running `/tdk-plan` after implementation:**
 
@@ -887,7 +887,6 @@ Walkthrough chi tiết nằm trong [Scenario Catalog](scenarios/scenario-catalog
 | "Feature not found" | Sai task ID hoặc folder | Check `.specify/specs/` để xem existing features; verify prefix trong `.specify.env` |
 | "archive target already exists" | Cùng id đã được archive trước đó | Chọn id khác cho công việc mới, hoặc tự di chuyển archive cũ đi chỗ khác |
 | Command từ chối folder `archive` | `archive` là tên folder được reserve | Dùng tên folder khác; để đọc spec đã archive dùng `/tdk-status archive/<folder>/<id>` hoặc command retro |
-| Checklist gate blocks implement | Checklist items chưa complete | Complete checklist items hoặc confirm proceed khi được hỏi |
 
 ### Thứ Tự Command Nhanh
 

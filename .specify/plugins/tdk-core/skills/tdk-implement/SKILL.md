@@ -1,8 +1,8 @@
 ---
 name: tdk-implement
-description: "Primary implementation skill. Execute phases from plan.md ## Phases table. Read plan.md as source of truth for status + dependency graph."
+description: "Execute phases from plan.md ## Phases without asking about scope: all remaining phases in row order by default, stopping at an unfinished blocker, or exactly one with --phase NN. Use only when the user explicitly asks to implement a task or phase (for example 'implement sample-001' or 'implement phase 2 of sample-001'), and pass a phase the user names as --phase NN. Do not use when the user only asks what a phase contains or changes, its status, or its dependencies; read the files and answer instead."
 metadata:
-  version: "14.3.5"
+  version: "14.4.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -27,13 +27,14 @@ You **MUST** consider the user input before proceeding (if not empty).
 This skill reads plan.md and executes phases using the `## Phases` table as the single source of truth (SoT).
 
 - **Primary implementation path**: executes all phases in row order, updating Status cells in the `## Phases` table
-- **Selected phase path**: optional `--phase NN` / `--phase=NN` executes one numeric phase only
+- **Selected phase path**: optional `--phase NN` / `--phase=NN` executes one numeric phase only. A request that names one phase uses this path; never widen it: this path does not also run that phase's blockers, its dependents, or any other row. A request that names several phases or a range, or identifies a phase only by title, never falls back to all phases: resolve a title to its number from `## Phases`; for several phases or a range, list the `--phase NN` commands and STOP
+- **No scope prompt**: the invocation already chose the scope, so the skill neither asks the user to confirm it nor pauses between phases. It asks only to resolve a project root or task ID it cannot determine, and at the memory gate, F3 recovery, routing drift, the spike decision, and branch preflight. None of these asks which phases to run; a script error follows Error Handling above, and anything else that stops the run is a reported STOP
 - **Parallel path**: `--parallel` executes agent-selected `auto` waves gated by the write-disjointness checker
 - **Status tracking**: reads/writes the Status column via `update-phase-status.ts` (parallel waves via the status reconciler), which also syncs the plan root and `spec.md` lifecycle status - no HTML comment markers
 - **Dependency enforcement**: validates BlockedBy before each phase; aborts on unsatisfied deps
 - **Phase validation**: validates every phase contract before status mutation;
   spike phases require executable evidence and a user decision gate
-- **F3 crash recovery**: detects stale `in_progress` rows at startup and requires explicit recovery choice before any status mutation
+- **F3 crash recovery**: detects stale `in_progress` rows at startup. Default and selected modes require an explicit recovery choice before any status mutation; `--parallel` STOPs at Step 6 instead
 - **Counsel on failure**: when a phase fails during execution, consults the `tdk-counsel` agent once and folds its diagnosis into the failure report before handing the recovery decision back to the user; never blocks recovery when the consult is unavailable
 - **Branch preflight**: on polyrepo projects, `tdk-branch-preflight` places every affected sub-workspace repository on the agreed feature branch at Step 6A; `--no-branch` skips every Git step, and `--worktree` asks for a worktree even when the main checkout is free
 - **Serial by default**: default and selected modes remain serial, and no invocation locks the repository — do not run two TDK commands on the same `TASK_ID` concurrently, and two different `TASK_ID`s sharing one working root of a sub-workspace repository are equally unsupported as a concurrent run — give the second task a worktree (`--worktree`, or the busy-repository route)
@@ -41,7 +42,7 @@ This skill reads plan.md and executes phases using the `## Phases` table as the 
 ## Core Contract
 
 Load: `references/project-and-phase-contract.md`
-Use this reference for argument parsing, portable script invocation, status preflight, phase-table parsing, F3 recovery, target resolution, and confirmation.
+Use this reference for argument parsing, portable script invocation, status preflight, phase-table parsing, F3 recovery, target resolution, and the execution preview.
 
 Load: `references/routing-preflight.md`
 Use this reference for `delegate-routing.md` loading and delegate drift handling before status mutation.
@@ -146,16 +147,20 @@ Parse `## Phases` with `parse-phases-table.ts "{FEATURE_DIR}/plan.md" --json`. T
 ### Step 4: F3 Recovery Gate
 
 In serial mode, scan all rows for stale `in_progress` status and use AskUserQuestion recovery. Any recovery
-write must update phase frontmatter first, then `plan.md`, then reparse. In parallel mode, collect stale rows
-read-only and defer recovery to the fenced recovery-only controller branch.
+write must update phase frontmatter first, then `plan.md`, then reparse.
+In parallel mode, collect stale rows read-only; Step 6 reports them and STOPs before any canary or status write.
 
 ### Step 5: Resolve Target Rows
 
 Build `phaseByNumber` and `TARGET_ROWS` after global F3 recovery. Selected mode never auto-runs dependencies.
 
-### Step 6: Confirm Before Executing
+### Step 6: Print the Execution Preview
 
-Display compact status + phase list from parsed rows. Do not read phase files before this confirmation.
+Start your next message with this one line of plain text, before that message's tool call, then keep working in the same turn; this step asks the user nothing and never ends the turn. It is the user's only chance to interrupt before execution starts, so never skip it, even for one phase, and never leave it in thinking or tool output, which the user may not see. Do not read phase files before this preview.
+
+`Execution preview ({label}): {TASK_ID}, phases {numbers}`
+
+`{label}` is `selected phase execution` with `PHASE_FILTER`, `parallel wave execution` with `PARALLEL_MODE`, otherwise `all-phase execution`. `{numbers}` lists the `TARGET_ROWS` whose status is `todo`, separated by commas, or `none`. In parallel mode, a stale `in_progress` row STOPs here with the message in the reference.
 
 ### Step 6A: Branch Preflight
 
@@ -165,7 +170,7 @@ or absent, or when no target row is runnable after Step 5. Exception: when `WORK
 `--worktree needs a sub-workspace repository; root-repository worktrees are not supported` — never run the
 task on the main checkout the user asked to avoid.
 Invoke `tdk-branch-preflight` with `PROJECT_DIR`, `TASK_ID`, `FEATURE_DIR`,
-`PROJECT_CONTEXT`, `TARGET_ROWS`, `WORKTREE_MODE`.
+`PROJECT_CONTEXT`, `TARGET_ROWS`, `WORKTREE_MODE`. The message that makes this call starts with the Step 6 preview line.
 Passing `TARGET_ROWS` keeps preflight scoped to the phases this run executes, so `--phase NN` does not create
 branches in repositories it never touches.
 If STOP -> halt execution before any status mutation.
@@ -182,11 +187,13 @@ create branches for a task that then executes nothing.
 ### Step 6.1: Branch by Execution Mode
 
 When `PARALLEL_MODE` is true, load and execute `references/parallel-phase-orchestration.md`, then STOP;
-do not enter the serial Step 7 loop. Otherwise continue with existing default/selected serial execution.
+do not enter the serial Step 7 loop. When Step 6A was skipped, the message that makes that reference's first tool call starts with the Step 6 preview line. Otherwise continue with existing default/selected serial execution.
 
 ### Step 7: Execute Phases — Row Order
 
-Run phases in ascending row order. Before each `todo` phase status transition:
+When Step 6A was skipped, the message that makes this step's first tool call starts with the Step 6 preview line.
+
+Run `TARGET_ROWS` in ascending row order; with `--phase NN` that is one row. Before each `todo` phase status transition:
 
 #### 7A. Routing Preflight
 
@@ -211,7 +218,7 @@ until approval or a replan updates the graph.
 
 ### Step 8: Completion Summary
 
-After all phases, report executed/skipped counts, then print the next step per `references/phase-execution.md` Completion Summary: run the `src/commands/feature/status.ts` collector last and print its `recommendation.primary` (and `recommendation.alternative`) verbatim, falling back to `/tdk-status {task_id}` only. Never suggest a lifecycle step of your own.
+After all phases, report executed/skipped counts, then print the next step per `references/phase-execution.md` Completion Summary: run the `src/commands/feature/status.ts` collector last and print its `recommendation.primary` (and `recommendation.alternative`) verbatim, falling back to `/tdk-status {task_id}` only. Never suggest a lifecycle step of your own. Print it and end the run; never execute the printed command in this invocation.
 
 ## Required Reference Load Contract
 

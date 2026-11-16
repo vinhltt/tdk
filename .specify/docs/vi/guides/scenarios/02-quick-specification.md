@@ -53,4 +53,4 @@ Dùng `/tdk-implement bug-042 --phase NN` để execute một phase duy nhất.
 - Khác biệt duy nhất là brainstorm enrichment bị skip. Mọi step khác giống nhau.
 - Nếu sau khi dùng `--fast` bạn nhận ra spec cần thêm depth, run `/tdk-clarify` để bổ sung gaps.
 - Cả `--fast` và default modes đều tạo cùng artifact structure — downstream commands hoạt động giống nhau.
-- Dùng `/tdk-implement` để execute tất cả runnable phases từ `## Phases` table của plan, hoặc thêm `--phase NN` cho một phase.
+- Dùng `/tdk-implement` để chạy các phase còn lại từ `## Phases` table của plan theo thứ tự row, dừng ở blocker chưa xong, hoặc thêm `--phase NN` cho một phase.

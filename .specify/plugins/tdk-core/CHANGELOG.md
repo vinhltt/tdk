@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.4.1] - 2026-11-16
+
+### Changed
+- `/tdk-implement` no longer asks to confirm its scope: it runs the remaining phases in row order and stops at an unfinished blocker, or exactly one phase with `--phase NN`
+- `--phase 00` selects phase 0; the one-line preview is best effort; the skill activates only on an explicit request to implement
+- F3 recovery options state what the run does next; `--parallel` stops on a stale `in_progress` phase and points to `--phase NN` recovery
+- Printed rerun commands keep `--phase NN` and branch flags and never run on their own; a multi-phase request lists `--phase NN` commands and stops
+
 ## [14.4.0] - 2026-11-16
 
 ### Added

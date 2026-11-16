@@ -7,7 +7,7 @@ description: "Ensure every affected sub-workspace repository stands on the agree
   NOT user-invocable."
 user-invocable: false
 metadata:
-  version: "4.5.4"
+  version: "5.0.1"
   category: "Git"
   input_format: "PROJECT_DIR (agent-resolved absolute project root), TASK_ID (validated), FEATURE_DIR, PROJECT_CONTEXT, TARGET_ROWS, WORKTREE_MODE (boolean, default false), host skill name"
   output_format: "GIT_MAP (sub-workspace to branch/worktree records) or STOP with a per-repository status report"
@@ -203,7 +203,7 @@ When a plan seed exists, take the affected-repository set from its rows instead 
 re-verify each one still exists and is a repository. Otherwise derive it here.
 
 To derive: read `plan.md` and the phase files — valid at this point, because the host invokes this skill after
-its confirmation step. **Read only the phase files for the rows this run will actually execute** (the host's
+its execution preview. **Read only the phase files for the rows this run will actually execute** (the host's
 resolved target rows), not every phase in the plan. Under `--phase NN` the two differ, and mapping the whole
 plan would create branches in repositories this run never touches. Collect every path under
 `## Related Code Files` (Create/Modify/Delete) and map each

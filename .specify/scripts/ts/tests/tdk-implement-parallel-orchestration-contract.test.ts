@@ -88,6 +88,25 @@ describe('tdk-implement parallel orchestration contract', () => {
     expect(project).toContain('No invocation holds a repo-wide mutex.');
     expect(project).toContain('writes every status through the single `transition-phase-status` call defined in');
   });
+
+  it('names the serial rerun command when canaries fail', () => {
+    const parallel = read(referencePath);
+    const start = parallel.indexOf('## Capability Proof Before Dispatch');
+    const end = parallel.indexOf('## Main Agent Contract');
+
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    expect(parallel.slice(start, end)).toContain('`/tdk-implement {TASK_ID} {RERUN_FLAGS}`');
+  });
+
+  it('gives the complete parallel validation command before access sets are inferred', () => {
+    const reference = read(referencePath);
+    const flags = '--mode parallel --project-root "$PROJECT_DIR" --json';
+
+    expect(reference).toContain(flags);
+    expect(reference.indexOf(flags)).toBeLessThan(reference.indexOf('### 3. Infer each candidate'));
+    expect(reference).not.toContain('already reported it earlier in');
+  });
 });
 
 describe('tdk-implement working root', () => {

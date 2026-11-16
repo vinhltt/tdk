@@ -108,7 +108,7 @@ Kết quả nên có:
 
 ## Step 4: Implement
 
-Run tất cả runnable phases:
+Run các phase còn lại theo thứ tự row (dừng ở phase có blocker chưa xong):
 
 ```text
 /tdk-implement feat-001
@@ -122,6 +122,7 @@ Hoặc run một phase:
 
 Kết quả nên có:
 
+- Lệnh chạy ngay, không hỏi về phạm vi; phase được chỉ định thì chạy riêng phase đó.
 - Claude implement từ `plan.md`.
 - Tests hoặc verification chạy khi plan yêu cầu.
 - Status artifacts update khi phases complete.
