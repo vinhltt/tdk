@@ -199,6 +199,26 @@ describe('routing phase-delegates matching, anchors and byte preservation', () =
     expect(checked.payload.phases[0].expected.skills).toEqual(['/implementation-tools']);
   });
 
+  it('checks a phase whose validate marker sits before a trailing skills and agents block as clean and drift-free', async () => {
+    const fixture = makeFixture('ut_backfill');
+    writeFileSync(fixture.route, '## global\n- test: /test-tools, @test-executor\n');
+    writeFileSync(fixture.phases[0]!, [
+      '---', 'phase: 1', 'status: todo', '---', '# Phase 1: Order service backfill', '',
+      '## Overview', 'Order service overview.', '',
+      '## Key Insights', 'Order service insights.', '',
+      '## Test Quality Gate', 'Keep the quality gate.', '',
+      '<!-- Updated: Validation Session 1 — V1: revise the test matrix -->',
+      '## Delegate Skills', '- `/test-tools` - write the tests', '',
+      '## Delegate Agents', '- `@test-executor` - run the tests', '',
+    ].join('\n'));
+    const checked = await runCli(fixture, 'check');
+    expect(checked.exitCode).toBe(0);
+    expect(checked.payload.phases[0]).toMatchObject({
+      eligible: true, drift: false, expected: { skills: ['/test-tools'], agents: ['@test-executor'] },
+    });
+    expect(checked.payload.phases[0]).not.toHaveProperty('excludedReason');
+  });
+
   for (const newline of ['\n', '\r\n']) {
     it(`keeps all non-delegate bytes, survivor purpose and line endings with ${newline === '\n' ? 'LF' : 'CRLF'}, then reports no drift on a second apply`, async () => {
       const fixture = makeFixture();

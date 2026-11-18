@@ -237,7 +237,7 @@ Then edit every phase file that gets a new marker or, on Discard, holds a discar
 <!-- Updated: Validation Session {N} — {short summary, ≤120 chars} -->
 ```
 
-A phase marker goes at the end of the phase file the question is about (`Phase {N}` in the template, or each phase named in the drift rows' Plan Anchors). A question about the plan as a whole, or whose phase cannot be resolved, is marked in `plan.md` (item 5).
+A phase marker belongs to the phase file the question is about (`Phase {N}` in the template, or each phase named in the drift rows' Plan Anchors). Put a phase marker on its own line at the end of the phase file. If the file ends with managed delegate sections (canonical `## Delegate Skills` and/or `## Delegate Agents` headings outside fences, with no other `#` or `##` heading after them), put the marker on the line immediately before the first of those trailing headings instead, so it ends the preceding section and stays outside the managed delegate range defined in `delegate-routing-injection.md`. A question about the plan as a whole, or whose phase cannot be resolved, is marked in `plan.md` (item 5).
 
 `{summary}` is the question's `id` + the chosen answer's `label`, truncated. Same sanitizer as Phase 06 (`-->`, `<!--`, `<`, `>`, newline strip; pipe escape).
 

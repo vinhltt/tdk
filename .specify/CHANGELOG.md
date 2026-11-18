@@ -6,6 +6,20 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.133.1] - 2026-11-18
+
+### Changed
+- **[Scripts]** Tests cover phase markers placed before a trailing delegate block
+  - `tdk-plan-reference-contract.test.ts` checks that the validate and red-team workflows share one marker placement rule and no longer say to append a marker at the end of the phase file
+  - Resolver tests cover no-op, replacement, deletion, and insertion for skills-only, agents-only, and combined delegate blocks with both marker formats, plus a `routing phase-delegates check` case that reports the phase eligible without drift
+
+### Fixed
+- **[tdk-core]** `/tdk-plan --validate` and `/tdk-plan --red-team` no longer put a phase marker inside a trailing `## Delegate Skills` / `## Delegate Agents` block
+  - When a phase file ends with delegate sections, the marker goes right before the first of them; otherwise it stays at the end of the file
+  - Also covers the red-team and validation steps that run while generating a plan (`--hard` runs red-team automatically)
+  - `/tdk-plan --refresh-routing` and `/tdk-implement` no longer refuse such phases with `delegate_section_not_clean`
+  - Markers already inside a delegate section in existing plans must be removed by hand before rerunning `routing phase-delegates check`
+
 ## [1.133.0] - 2026-11-16
 
 ### Changed

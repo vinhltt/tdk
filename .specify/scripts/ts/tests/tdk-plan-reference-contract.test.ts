@@ -22,6 +22,9 @@ const RETIRED_OBSIDIAN_HELPERS = [
   'obsidian_complex_search',
   'obsidian_batch_get_file_contents',
 ];
+// Shared by validate and red-team so a phase marker never lands inside a trailing managed delegate block.
+const PHASE_MARKER_PLACEMENT_RULE =
+  'Put a phase marker on its own line at the end of the phase file. If the file ends with managed delegate sections (canonical `## Delegate Skills` and/or `## Delegate Agents` headings outside fences, with no other `#` or `##` heading after them), put the marker on the line immediately before the first of those trailing headings instead, so it ends the preceding section and stays outside the managed delegate range defined in `delegate-routing-injection.md`.';
 
 function read(path: string): string {
   return readFileSync(path, 'utf-8');
@@ -343,5 +346,17 @@ describe('tdk-plan reference contract', () => {
     expect(append).not.toMatch(/seed carries/);
     expect(existing).toMatch(/Ask which existing earlier\s+phases must complete/);
     expect(readFileSync(MODES_REFERENCE, 'utf-8')).toMatch(/non-empty `USER_CONTENT` pre-fills the proposed phase description after one confirm/);
+  });
+
+  it('keeps validate and red-team phase markers outside a trailing delegate block', () => {
+    const validate = read(VALIDATE_WORKFLOW);
+    expect(validate).toContain(PHASE_MARKER_PLACEMENT_RULE);
+    expect(validate).not.toContain('A phase marker goes at the end of the phase file');
+    expect(validate).toContain('is marked in `plan.md` (item 5)');
+
+    const redTeam = read(RED_TEAM_WORKFLOW);
+    expect(redTeam).toContain(PHASE_MARKER_PLACEMENT_RULE);
+    expect(redTeam).not.toContain('Append at end of target phase file');
+    expect(redTeam).toContain('A `plan.md` marker goes below its frontmatter');
   });
 });

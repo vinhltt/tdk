@@ -184,7 +184,7 @@ Resume by state:
 
 ## Marker Format (S2.F11 — session-prefixed for uniqueness)
 
-Append at end of target phase file (or below frontmatter for `plan.md`):
+Put a phase marker on its own line at the end of the phase file. If the file ends with managed delegate sections (canonical `## Delegate Skills` and/or `## Delegate Agents` headings outside fences, with no other `#` or `##` heading after them), put the marker on the line immediately before the first of those trailing headings instead, so it ends the preceding section and stays outside the managed delegate range defined in `delegate-routing-injection.md`. A `plan.md` marker goes below its frontmatter. Marker text:
 
 ```html
 <!-- Red Team S{session}.F{finding_id} applied: {sanitized-summary} -->

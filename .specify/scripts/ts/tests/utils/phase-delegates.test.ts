@@ -14,6 +14,7 @@ import {
   resolveExpected,
   rewriteDelegateSections,
   sha256,
+  type DelegateGroups,
 } from '../../src/utils/phase-delegates';
 
 const roots: string[] = [];
@@ -425,6 +426,93 @@ describe('phase delegate parser and byte-preserving rewrite', () => {
     expect(rewritten.startsWith(`${original}\n## Delegate Skills\n`)).toBe(true);
     expect(rewriteDelegateSections(rewritten, { skills: ['/tool'], agents: [] }, 'key-insights')).toBe(rewritten);
   });
+});
+
+describe('phase delegates keep a marker before a trailing delegate block', () => {
+  // A phase whose last ordinary section is Test Quality Gate; the marker goes on the line before the trailing delegate headings.
+  const PHASE_HEAD = [
+    '---', 'phase: 1', 'status: todo', '---', '# Phase 1: Order service backfill', '',
+    '## Overview', 'Order service overview.', '',
+    '## Key Insights', 'Order service insights.', '',
+    '## Code Summary', 'Order service summary.', '',
+    '## Mocks & Fixtures Required', 'Order service fixtures.', '',
+    '## Test Matrix', 'Order service matrix.', '',
+    '## Test Quality Gate', '| Metric | Target | Source | Command | Status |', '|---|---|---|---|---|',
+    '| Matrix rows | 100% non-N/A rows implemented | TDK core | bun test | pending |', '',
+  ].join('\n');
+  const markers = {
+    validate: '<!-- Updated: Validation Session 1 — V1: revise the test matrix -->',
+    'red-team': '<!-- Red Team S1.F1 applied: tighten branch coverage -->',
+  };
+  const layouts: Record<string, { groups: DelegateGroups; replaced: DelegateGroups; block: string; bare: string; replacedBare: string }> = {
+    skills: {
+      groups: { skills: ['/test-tools'], agents: [] },
+      replaced: { skills: ['/new-test-tools'], agents: [] },
+      block: '## Delegate Skills\n- `/test-tools` - write the tests\n',
+      bare: '## Delegate Skills\n- `/test-tools`\n\n',
+      replacedBare: '## Delegate Skills\n- `/new-test-tools`\n\n',
+    },
+    agents: {
+      groups: { skills: [], agents: ['@test-executor'] },
+      replaced: { skills: [], agents: ['@new-test-executor'] },
+      block: '## Delegate Agents\n- `@test-executor` - run the tests\n',
+      bare: '## Delegate Agents\n- `@test-executor`\n\n',
+      replacedBare: '## Delegate Agents\n- `@new-test-executor`\n\n',
+    },
+    both: {
+      groups: { skills: ['/test-tools'], agents: ['@test-executor'] },
+      replaced: { skills: ['/new-test-tools'], agents: ['@new-test-executor'] },
+      block: '## Delegate Skills\n- `/test-tools` - write the tests\n\n## Delegate Agents\n- `@test-executor` - run the tests\n',
+      bare: '## Delegate Skills\n- `/test-tools`\n\n## Delegate Agents\n- `@test-executor`\n\n',
+      replacedBare: '## Delegate Skills\n- `/new-test-tools`\n\n## Delegate Agents\n- `@new-test-executor`\n\n',
+    },
+  };
+
+  function thrownBy(run: () => unknown): unknown {
+    try { run(); } catch (error) { return error; }
+    return undefined;
+  }
+  const lastNonBlankLine = (text: string): string | undefined => text.split(/\r?\n/).filter((line) => line.trim() !== '').pop();
+
+  for (const newline of ['\n', '\r\n']) {
+    const render = (text: string) => text.replace(/\n/g, newline);
+    for (const [layoutName, layout] of Object.entries(layouts)) {
+      for (const [markerName, marker] of Object.entries(markers)) {
+        const label = `${layoutName} layout, ${markerName} marker, ${newline === '\n' ? 'LF' : 'CRLF'}`;
+        const prefix = render(`${PHASE_HEAD}\n${marker}\n`);
+        const block = render(layout.block);
+
+        it(`treats a marker moved after the delegate block as unclean section content (${label})`, () => {
+          const failure = thrownBy(() => rewriteDelegateSections(render(`${PHASE_HEAD}\n${layout.block}${marker}\n`), layout.groups, 'test-quality-gate'));
+          expect(failure instanceof PhaseDelegatesError && failure.status).toBe('delegate_section_not_clean');
+        });
+
+        it(`keeps the bytes unchanged when routing matches a marker before a trailing delegate block (${label})`, () => {
+          const original = prefix + block;
+          expect(rewriteDelegateSections(original, layout.groups, 'test-quality-gate')).toBe(original);
+        });
+
+        it(`keeps the marker before a trailing delegate block through replacement and is idempotent (${label})`, () => {
+          const rewritten = rewriteDelegateSections(prefix + block, layout.replaced, 'test-quality-gate');
+          expect(rewritten).toBe(prefix + render(layout.replacedBare));
+          expect(lastNonBlankLine(rewritten.slice(0, rewritten.indexOf('## Delegate')))).toBe(marker);
+          expect(rewriteDelegateSections(rewritten, layout.replaced, 'test-quality-gate')).toBe(rewritten);
+        });
+
+        it(`deletes a trailing delegate block and leaves the marker as the last non-blank line (${label})`, () => {
+          const rewritten = rewriteDelegateSections(prefix + block, { skills: [], agents: [] }, 'test-quality-gate');
+          expect(rewritten).toBe(prefix);
+          expect(lastNonBlankLine(rewritten)).toBe(marker);
+        });
+
+        it(`inserts a trailing delegate block directly after the marker and is idempotent (${label})`, () => {
+          const inserted = rewriteDelegateSections(prefix, layout.groups, 'test-quality-gate');
+          expect(inserted).toBe(prefix + render(layout.bare));
+          expect(rewriteDelegateSections(inserted, layout.groups, 'test-quality-gate')).toBe(inserted);
+        });
+      }
+    }
+  }
 });
 
 describe('container-fence conservative write admission', () => {

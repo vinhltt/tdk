@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.4.2] - 2026-11-18
+
+### Fixed
+- /tdk-plan --validate and --red-team put a phase marker right before a trailing Delegate Skills / Delegate Agents block instead of inside it, so /tdk-plan --refresh-routing and /tdk-implement no longer refuse the phase with delegate_section_not_clean; otherwise the marker stays at the end of the file
+
 ## [14.4.1] - 2026-11-16
 
 ### Changed

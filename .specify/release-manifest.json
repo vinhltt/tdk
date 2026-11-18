@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-11-16T15:09:20.247Z",
+  "generatedAt": "2026-11-18T02:53:52.786Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -210,7 +210,7 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "ad881b02dc50d0e9c0a6094c75a11f679f6215018dfc3bcfc66d39084566e35c",
+      "sha256": "cd4b4dead21e9fe94b38d10402a3b27f46d08ef0a28342f693027807f94c278b",
       "size": 51011,
       "mode": "0644"
     },
@@ -225,23 +225,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "0374e61bce0a7aa7a102b523790e3a85d1a1921ba5542031bd0425a7ffdab339",
+      "sha256": "c400c649981c60f487387b679b5b8418e980e165d29b238d0eed5ae0cf160c15",
       "size": 191,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "1448f1c739f1f0f88090037ccd74790e5bcbdd6097d310b7c53822a367bbf65d",
+      "sha256": "4587435a6efd202efb66e4a94794a6b847e849e595aa6e959802fe38cf5f3c2e",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "1448f1c739f1f0f88090037ccd74790e5bcbdd6097d310b7c53822a367bbf65d",
+      "sha256": "4587435a6efd202efb66e4a94794a6b847e849e595aa6e959802fe38cf5f3c2e",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "2ab95c8d644676056c1bb372b3bc92446ed0536b3f9de6624326ad8bee06498b",
-      "size": 54369,
+      "sha256": "917e2162d1b858cbe359f76ea312776cbad87777c433374cf42871ec5bf58bbe",
+      "size": 54709,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/agents/tdk-counsel.md": {
@@ -390,7 +390,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/SKILL.md": {
-      "sha256": "a5a8565a395312605f1efd84579bc9758d5fa7140beaefb7be01bb28617c5e21",
+      "sha256": "8f32c5016cf7c315c4dd68d744aa343f9be5b999c51e211edd57ad32cf5ac80d",
       "size": 33189,
       "mode": "0644"
     },
@@ -435,8 +435,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/red-team-workflow.md": {
-      "sha256": "c74e95363f702458241fbe7582087eec418975ea4b129aaeb490b2ac0f89a944",
-      "size": 11151,
+      "sha256": "cd6a491a990bca6623caceb26ad88c5954e1ad1e7df524735177944fc98eef79",
+      "size": 11597,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/research-phase.md": {
@@ -455,8 +455,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/validate-workflow.md": {
-      "sha256": "45ecfa60120c6950ea970731ab79f93a5d836ce24213625745e4f69cd79234f5",
-      "size": 17729,
+      "sha256": "651613f752bc26cd0a31183ec6e43b37d2bfff0c28c93e00dc558751e58d0c9f",
+      "size": 18180,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/SKILL.md": {

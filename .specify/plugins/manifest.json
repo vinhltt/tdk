@@ -1,9 +1,9 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-11-16T15:09:20Z",
+  "generated_at": "2026-11-18T02:53:52Z",
   "plugins": {
     "tdk-core": {
-      "version": "14.4.1",
+      "version": "14.4.2",
       "components": {
         "skills": {
           "tdk-archive": {
@@ -19,7 +19,7 @@
             "version": "14.4.1"
           },
           "tdk-plan": {
-            "version": "14.4.0"
+            "version": "14.4.2"
           },
           "tdk-review": {
             "version": "14.3.8"
@@ -45,10 +45,10 @@
       },
       "files": {
         ".claude-plugin/interface.json": "e94fd7a0f43ccf93767b3eb6c87adec554f4846b89f5e62f6caa22f700a68c31",
-        ".claude-plugin/plugin.json": "0374e61bce0a7aa7a102b523790e3a85d1a1921ba5542031bd0425a7ffdab339",
-        ".codex-plugin/plugin.json": "1448f1c739f1f0f88090037ccd74790e5bcbdd6097d310b7c53822a367bbf65d",
-        ".cursor-plugin/plugin.json": "1448f1c739f1f0f88090037ccd74790e5bcbdd6097d310b7c53822a367bbf65d",
-        "CHANGELOG.md": "2ab95c8d644676056c1bb372b3bc92446ed0536b3f9de6624326ad8bee06498b",
+        ".claude-plugin/plugin.json": "c400c649981c60f487387b679b5b8418e980e165d29b238d0eed5ae0cf160c15",
+        ".codex-plugin/plugin.json": "4587435a6efd202efb66e4a94794a6b847e849e595aa6e959802fe38cf5f3c2e",
+        ".cursor-plugin/plugin.json": "4587435a6efd202efb66e4a94794a6b847e849e595aa6e959802fe38cf5f3c2e",
+        "CHANGELOG.md": "917e2162d1b858cbe359f76ea312776cbad87777c433374cf42871ec5bf58bbe",
         "agents/tdk-counsel.md": "6c6bdfb668771c4be3bdf5d0e4d47c56d685eab67dae8cfe323987219e2c0a61",
         "hooks/destructive-command-block.cjs": "8973b014c2f2eb59a481c1747b5395572dcc630029b4434f151843bea6b4cb8a",
         "hooks/dev-context-injector.cjs": "755a4fc0ffa941c8165f27b38c619d1030f68b16782ac2d6ca04047895162c2c",
@@ -78,7 +78,7 @@
         "skills/tdk-implement/references/phase-execution.md": "4e5755797d08848eb60f5657fdb0b77f6483e3a1a6a1735a1ff3027bb6525c57",
         "skills/tdk-implement/references/project-and-phase-contract.md": "73566eab9f5a99c5a3d26d8657f9b644443ac7f3dde4d553e763294f54dfd69e",
         "skills/tdk-implement/references/routing-preflight.md": "2fbfa447d622a3f5b19296dbf058f726ca7a7af3e648a862a42273d6131f6b06",
-        "skills/tdk-plan/SKILL.md": "a5a8565a395312605f1efd84579bc9758d5fa7140beaefb7be01bb28617c5e21",
+        "skills/tdk-plan/SKILL.md": "8f32c5016cf7c315c4dd68d744aa343f9be5b999c51e211edd57ad32cf5ac80d",
         "skills/tdk-plan/references/cross-plan-deps.md": "8678be6c9d45e0ac8269a2087fbf40d053ef83ae0cbf95b3e5a2c10f1b512e69",
         "skills/tdk-plan/references/delegate-routing-injection.md": "370c5edca0f453acc2bd0f101b78dd50d590d07b1430322bb7a1207acfb05661",
         "skills/tdk-plan/references/design-phase.md": "957db57919b791e35b2d310afb358219ac510be8fed8fac824e556b000b23d56",
@@ -87,11 +87,11 @@
         "skills/tdk-plan/references/migrate-artifacts-workflow.md": "7462f23345b446e0156c824af42a5387796a80a19b749649aaac27de41f79899",
         "skills/tdk-plan/references/modes.md": "f1ded79b94820bcb22d40b83cbe240f505864865e5c7d55bd6a06579ad47d2f5",
         "skills/tdk-plan/references/plan-output-contract.md": "4fb5aaa40c3c49e07520f2e477b0c99fff9bbbd43ecdf4b0176cb86b1c336eef",
-        "skills/tdk-plan/references/red-team-workflow.md": "c74e95363f702458241fbe7582087eec418975ea4b129aaeb490b2ac0f89a944",
+        "skills/tdk-plan/references/red-team-workflow.md": "cd6a491a990bca6623caceb26ad88c5954e1ad1e7df524735177944fc98eef79",
         "skills/tdk-plan/references/research-phase.md": "3e702fd28f15d9ad50fe457864ff46a221a43c9c2887799b8de9a5bdd7f74af7",
         "skills/tdk-plan/references/scope-challenge.md": "9f341caed80d5e83989c2e83efc24e8aec7ffcaf84d512919990b0e75dbc1913",
         "skills/tdk-plan/references/validate-question-framework.md": "6904e844ff92371b24094501b756fb27260e642d8c75f536e544bdf88929d580",
-        "skills/tdk-plan/references/validate-workflow.md": "45ecfa60120c6950ea970731ab79f93a5d836ce24213625745e4f69cd79234f5",
+        "skills/tdk-plan/references/validate-workflow.md": "651613f752bc26cd0a31183ec6e43b37d2bfff0c28c93e00dc558751e58d0c9f",
         "skills/tdk-review/SKILL.md": "10b87b40ec51a0cebf68bbeaf90440b50a010a3d08861b624c35235d937852a9",
         "skills/tdk-review/references/report-contract.md": "30576027a912bcaeb8ed79077c2a7503b483cd83e2e0fdf777cea2e1fef406b9",
         "skills/tdk-review/references/review-orchestration.md": "16c7872550aa40ac75e224d7f834a18919cd3b43bf9c210a573a12282373d66e",
