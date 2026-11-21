@@ -1,7 +1,7 @@
 // @bun
 // review-write-report.ts
-import { lstatSync as lstatSync2, mkdirSync, readFileSync, realpathSync } from "fs";
-import { join, resolve } from "path";
+import { readFileSync } from "fs";
+import { join as join2, resolve } from "path";
 import { parseArgs } from "util";
 
 // ../../../../../scripts/ts/src/utils/agent-output.ts
@@ -51,15 +51,6 @@ function createNewFile(path, body, mode) {
     } catch {}
     return "write_failed";
   }
-}
-
-// ../../../../../scripts/ts/src/utils/path-within.ts
-import { relative, isAbsolute } from "path";
-function isWithin(ancestor, descendant) {
-  if (ancestor === descendant)
-    return true;
-  const rel = relative(ancestor, descendant);
-  return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
 }
 
 // review-redaction.ts
@@ -433,44 +424,59 @@ function sanitizeReviewText(value) {
   return { text, redactions };
 }
 
+// reviews-dir-guard.ts
+import { lstatSync as lstatSync2, mkdirSync, realpathSync } from "fs";
+import { join } from "path";
+
+// ../../../../../scripts/ts/src/utils/path-within.ts
+import { relative, isAbsolute } from "path";
+function isWithin(ancestor, descendant) {
+  if (ancestor === descendant)
+    return true;
+  const rel = relative(ancestor, descendant);
+  return rel !== "" && !rel.startsWith("..") && !isAbsolute(rel);
+}
+
+// reviews-dir-guard.ts
+function ensureRealDirectory(path, container) {
+  try {
+    let info = lstatSync2(path, { throwIfNoEntry: false });
+    if (info === undefined) {
+      mkdirSync(path);
+      info = lstatSync2(path);
+    }
+    return info.isDirectory() && !info.isSymbolicLink() && isWithin(container, realpathSync(path));
+  } catch {
+    return false;
+  }
+}
+function prepareReviewsDir(projectRoot, featureDir) {
+  let canonicalFeature;
+  try {
+    canonicalFeature = realpathSync(featureDir);
+    if (!isWithin(realpathSync(projectRoot), canonicalFeature))
+      return { ok: false, reason: "feature_outside_project" };
+  } catch {
+    return { ok: false, reason: "feature_outside_project" };
+  }
+  const reviews = join(featureDir, "reviews");
+  return ensureRealDirectory(reviews, canonicalFeature) ? { ok: true, reviews } : { ok: false, reason: "reviews_unsafe" };
+}
+
 // review-write-report.ts
 var pad = (value, width = 2) => String(value).padStart(width, "0");
 function stamp(now) {
   return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 }
-function prepareReviewsDir(featureDir, reviews) {
-  let canonicalFeature;
-  try {
-    canonicalFeature = realpathSync(featureDir);
-  } catch {
-    return false;
-  }
-  try {
-    const info = lstatSync2(reviews);
-    return info.isDirectory() && !info.isSymbolicLink() && isWithin(canonicalFeature, realpathSync(reviews));
-  } catch (error) {
-    if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT")
-      return false;
-  }
-  try {
-    mkdirSync(reviews);
-  } catch {
-    return false;
-  }
-  return isWithin(canonicalFeature, realpathSync(reviews));
-}
 function writeReviewReport(projectRoot, featureDirectory, slug, body, now = new Date) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 50)
     return { ok: false, error: "invalid_slug" };
   const featureDir = resolve(featureDirectory);
-  const reviews = join(featureDir, "reviews");
-  let insideProject = false;
-  try {
-    insideProject = isWithin(realpathSync(projectRoot), realpathSync(featureDir));
-  } catch {}
-  if (!insideProject || !prepareReviewsDir(featureDir, reviews))
+  const prepared = prepareReviewsDir(projectRoot, featureDir);
+  if (!prepared.ok)
     return { ok: false, error: "unsafe_output_path" };
-  const path = join(reviews, `${stamp(now)}-${slug}.md`);
+  const { reviews } = prepared;
+  const path = join2(reviews, `${stamp(now)}-${slug}.md`);
   const { text, redactions } = sanitizeReviewText(body);
   const failure = createNewFile(path, text, 420);
   return failure ? { ok: false, error: failure } : { ok: true, path, redactions };

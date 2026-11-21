@@ -70,7 +70,10 @@ const TEST_PATH_REF = /\.(?:test|spec)\.\w+|_test\.\w+|(?:^|[\s`'"(/])tests\/\S/
 const VERDICTS: ReadonlySet<string> = new Set<ReviewVerdict>(['pass', 'pass_with_concerns', 'changes_requested', 'blocked']);
 const MEMORY_STATUSES: ReadonlySet<string> = new Set(['pending', 'partial', 'ingested', 'skipped']);
 const REVIEW_NAME_STAMP = /^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})-/;
-const SEEDS_HEADING = '## Proposed Fix Phases';
+// The review report contract asks for `## Proposed Fix Phases`, but it lists its sections numbered, and a report
+// written as `## 7. Proposed Fix Phases` must still yield its seeds. Anchored to a heading line, so prose that only
+// mentions the section name never starts it.
+const SEEDS_HEADING = /^#{2,}[ \t]+(?:\d+[.)][ \t]+)?Proposed Fix Phases\b[^\n]*$/m;
 function readText(path: string): string | null {
   try { return readFileSync(path, 'utf-8'); } catch { return null; }
 }
@@ -140,9 +143,9 @@ function reviewEpochs(generatedAt: string, name: string): { sortEpoch: number; s
 
 /** Ready lines under `## Proposed Fix Phases`: `/tdk-plan <id> "<description>"`, bare or inside a bullet/backticks; `None.` yields none. */
 function parseSeeds(content: string, taskId: string): string[] {
-  const start = content.indexOf(SEEDS_HEADING);
-  if (start === -1) return [];
-  const afterHeading = content.slice(start + SEEDS_HEADING.length);
+  const heading = SEEDS_HEADING.exec(content);
+  if (!heading) return [];
+  const afterHeading = content.slice(heading.index + heading[0].length);
   const next = afterHeading.search(/^## /m);
   const section = next === -1 ? afterHeading : afterHeading.slice(0, next);
   const prefix = `/tdk-plan ${taskId} "`;

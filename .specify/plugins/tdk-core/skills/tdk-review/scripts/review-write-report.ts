@@ -2,13 +2,13 @@
 // `collision_exists` and leaves the first report byte-identical. Bundled (build.ts): the installed skill needs no
 // consumer `.specify/scripts/ts` tree, and the bundle contains no third-party code.
 
-import { lstatSync, mkdirSync, readFileSync, realpathSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { writeAgentJson } from '../../../../../scripts/ts/src/utils/agent-output';
 import { createNewFile } from '../../../../../scripts/ts/src/utils/create-new-file';
-import { isWithin } from '../../../../../scripts/ts/src/utils/path-within';
 import { sanitizeReviewText } from './review-redaction';
+import { prepareReviewsDir } from './reviews-dir-guard';
 
 export type WriteReportResult =
   | { ok: true; path: string; redactions: number }
@@ -21,27 +21,12 @@ function stamp(now: Date): string {
   return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 }
 
-/** The `reviews/` parent: created if missing, refused if it is a symlink, a file, or resolves outside the feature dir. */
-function prepareReviewsDir(featureDir: string, reviews: string): boolean {
-  let canonicalFeature: string;
-  try { canonicalFeature = realpathSync(featureDir); } catch { return false; }
-  try {
-    const info = lstatSync(reviews);
-    return info.isDirectory() && !info.isSymbolicLink() && isWithin(canonicalFeature, realpathSync(reviews));
-  } catch (error) {
-    if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') return false;
-  }
-  try { mkdirSync(reviews); } catch { return false; }
-  return isWithin(canonicalFeature, realpathSync(reviews));
-}
-
 export function writeReviewReport(projectRoot: string, featureDirectory: string, slug: string, body: string, now = new Date()): WriteReportResult {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 50) return { ok: false, error: 'invalid_slug' };
   const featureDir = resolve(featureDirectory);
-  const reviews = join(featureDir, 'reviews');
-  let insideProject = false;
-  try { insideProject = isWithin(realpathSync(projectRoot), realpathSync(featureDir)); } catch { /* unresolved paths are unsafe */ }
-  if (!insideProject || !prepareReviewsDir(featureDir, reviews)) return { ok: false, error: 'unsafe_output_path' };
+  const prepared = prepareReviewsDir(projectRoot, featureDir);
+  if (!prepared.ok) return { ok: false, error: 'unsafe_output_path' };
+  const { reviews } = prepared;
   const path = join(reviews, `${stamp(now)}-${slug}.md`);
   // Diff evidence can carry secrets. The report stays in the repo, so slash commands, routes and HTML are kept
   // and only secrets and machine paths are redacted.

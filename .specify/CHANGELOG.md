@@ -6,6 +6,36 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.133.2] - 2026-11-21
+
+### Added
+- **[tdk-core]** `tdk-review` gains a shared reviews-directory guard (`reviews-dir-guard.ts`) used by the scope helper and the report writer: the feature directory must sit inside the project, and a symlinked `reviews/`, `reviews/.diff/` or run directory is refused before anything is written
+
+### Changed
+- **[tdk-core]** `/tdk-review` reviewers read per-file diffs and run in waves, so one run covers a large feature instead of stopping at 8 subagents
+  - The scope helper writes each changed file's diff to `<FEATURE_DIR>/reviews/.diff/<run-id>/`, a directory that ignores itself; the next run removes the previous run's diffs. Its JSON carries `changes[]` (path, added, deleted, `diffFile`, `hunks`) and `diffDir`, never diff text. Packing and the per-file line cap are gone, and a failed diff write returns `diff_write_failed`
+  - The main session batches each slice by judgment and dispatches reviewers in waves of at most 8, up to 24 invocations; above that it shows a per-slice breakdown and asks once (Run all / Stop)
+  - Each lens covers every file with a diff: reviewers list what they read in `filesReviewed`, an uncovered assignment gets one retry, and what stays uncovered is listed under File coverage gaps. A lockfile or generated file is listed under Generated, not reviewed
+  - The working-tree snapshot runs again after every wave; a change stops the run before the next wave with `blocked` / `working_tree_changed` and keeps the findings of the waves that finished
+  - The report's Reviewers section starts with the `Review plan:` estimate line and lists every invocation with its wave and batch. `reviewers[]` keeps one entry per (name, lens), and a successful retry lifts its status
+  - Report section headings are written without numbers, so `/tdk-status` finds the `## Proposed Fix Phases` seeds
+  - Standard and deep runs are asked to print the estimate line before dispatch, but acceptance runs under 24 invocations did not; the report line is the record
+  - Migration: routed review agents need no change, because their prompt now carries the reviewer's "Reading the change" section. Updating one to the Reviewer Variant makes it return `filesReviewed`, so the report shows its file coverage
+  - Migration: every reviewed feature gets a self-ignored `reviews/.diff/` directory, cleaned on the next run
+  - Migration: in `manual` mode the scope helper, routing, integrity snapshot and report writer still ask for approval unless an allow rule covers them, and a run with several waves re-runs the snapshot between waves. A long report may still ask once with an allow rule for the writer, because Claude Code stops checking commands over a length limit; it also ignores a project's `permissions.allow` until the workspace is trusted
+  - Measured on Claude Code 2.1.328 (headless, `manual`) and OMP 18.16.0 (permission spike only); the Codex runtime was not measured
+- **[tdk-utils]** `tdk-code-reviewer` takes a batch of files with `diffFile` paths instead of inline diff text, reads each diff to its last line (in chunks for long ones), and returns `filesReviewed`; a lockfile or generated file goes to `notChecked` as `generated, not reviewed`. Its tools are unchanged
+- **[tdk-scaffold]** `tdk-scaffold-from-recommendation` Reviewer Variant takes the same file list and returns `filesReviewed`; scaffolded review agents still get no Bash
+- **[Guides]** en/vi skills guide: `/tdk-review` notes on per-file diffs, waves, the report's estimate line, and routed review agents
+- **[Scripts]** Tests pin the scaffold Reviewer Variant contract and seed parsing under numbered headings
+
+### Fixed
+- **[tdk-core]** `/tdk-review` fixes found by acceptance runs
+  - A git-map row with a `Worktree path` is snapshot in its worktree; the integrity check used to read the main checkout, so uncommitted worktree changes made the review `blocked` / `working_tree_changed` before any reviewer ran
+  - Each command the skill gives runs as its own Bash call with literal paths, and the report body goes as a heredoc on the writer itself, so allow rules for the helpers match; a chained command used to ask again, and a session that cannot prompt stopped
+  - The review waits on each reviewer's completion notice; a scheduled wakeup could start a second review after the report was written
+- **[Scripts]** `/tdk-status` reads fix-phase seeds under a numbered heading such as `## 7. Proposed Fix Phases`; reports written that way showed no `/tdk-plan` seed
+
 ## [1.133.1] - 2026-11-18
 
 ### Changed

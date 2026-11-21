@@ -245,6 +245,20 @@ describe('collectReviewSummary', () => {
       const body = `${fixPhases('None.')}\n${seedLine('sample-001', 'after the section')}\n`;
       expect(summarize(withBody(body)).latestFull?.seedCount).toBe(0);
     });
+
+    it('reads a numbered heading, as written by a report that copied the numbered section list', () => {
+      const line = seedLine('sample-001', 'fix x');
+      for (const heading of ['## 7. Proposed Fix Phases', '## 7) Proposed Fix Phases', '### Proposed Fix Phases']) {
+        const body = fixPhases(line).replace('## Proposed Fix Phases', heading);
+        expect(summarize(withBody(body)).latestFull).toMatchObject({ seedCount: 1, seedReady: line });
+      }
+    });
+
+    it('does not start the section at a line that only mentions its name', () => {
+      const body = ['# Review', '', '7. **Proposed Fix Phases**: see below', seedLine('sample-001', 'not a seed'), '',
+        '## Next actions', '', '- none', ''].join('\n');
+      expect(summarize(withBody(body)).latestFull?.seedCount).toBe(0);
+    });
   });
 
   describe('staleness', () => {

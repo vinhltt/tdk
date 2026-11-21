@@ -342,6 +342,12 @@ test-mode planning.
 Output: `spec.md`, including `## Specification Quality Gate`. `/tdk-clarify`
 reruns the same embedded gate after requirement changes.
 
+#### `/tdk-review`
+
+The scope helper writes each changed file's diff to `<feature>/reviews/.diff/<run-id>/`, a directory that ignores itself and is replaced on the next run. Reviewers read those files themselves, so the main session never holds the diff. Standard and deep runs split each slice into batches and dispatch reviewers in waves; the report records the estimate line (invocations, waves, tokens) in its Reviewers section, and a large run shows it and asks once before spawning anything. Two concurrent reviews of one feature are not supported. Details: [review orchestration](../../../plugins/tdk-core/skills/tdk-review/references/review-orchestration.md).
+
+Routed review agents keep working without changes. Updating one to the Reviewer Variant in the [agent output pattern](../../../plugins/tdk-scaffold/skills/tdk-scaffold-from-recommendation/references/agent-output-pattern.md) makes it return `filesReviewed`, so the report shows its file coverage.
+
 #### Architecture Inception
 
 Use `greenfield-start` or `brownfield-start` first when project shape is uncertain. Use `architecture-advisor` for report-only options/decision/recovery. Use `workspace-layout-propose` for proposal-only layout artifacts. Use `workflow-config-apply` only after layout evidence is ready for guarded config review/apply.

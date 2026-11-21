@@ -4,6 +4,18 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.5.0] - 2026-11-21
+
+### Added
+- tdk-review: shared reviews-directory guard used by the scope helper and the report writer; the feature directory must sit inside the project, and a symlinked reviews/, reviews/.diff/ or run directory is refused before anything is written
+
+### Changed
+- tdk-review: the scope helper writes each changed file's diff to <FEATURE_DIR>/reviews/.diff/<run-id>/ (self-ignored, cleaned on the next run) and returns changes[] with diffFile and hunks instead of diff text; packing and the per-file line cap are gone, and a failed diff write returns diff_write_failed
+- tdk-review: reviewers read their own diff files; the main session batches each slice by judgment and dispatches waves of at most 8, up to 24 invocations, asking once above that
+- tdk-review: per-lens file coverage through filesReviewed with one retry, File coverage gaps and Generated, not reviewed in the report; the working-tree snapshot runs after every wave
+- tdk-review: the report's Reviewers section starts with the Review plan estimate line; section headings are written without numbers so /tdk-status finds the seeds
+- tdk-review: fix the worktree snapshot key, run each given command as its own Bash call with literal paths and a heredoc writer, and wait on reviewer notices instead of a scheduled wakeup
+
 ## [14.4.2] - 2026-11-18
 
 ### Fixed

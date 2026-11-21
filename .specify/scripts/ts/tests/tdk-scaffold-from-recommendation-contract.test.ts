@@ -92,12 +92,25 @@ describe('TDK review domain scaffold contracts', () => {
     expect(reviewerVariant).toMatch(/Never grant `Edit`, `Write`, `Bash`/);
     expect(reviewerVariant).toMatch(/no `Status:` executor contract/);
     const example = reviewerVariant.slice(reviewerVariant.indexOf('```markdown'));
-    expect(example).not.toMatch(/^tools:.*(Edit|Write|Bash)/m);
+    expect(example).not.toMatch(/^tools:.*\b(Edit|Write|Bash|Task|Agent)\b/m);
   });
 
   it('points the reviewer variant at the shipped reviewer schema instead of inventing one', () => {
     expect(reviewerVariant).toContain('tdk-utils/agents/tdk-code-reviewer.md');
-    for (const field of ['requirement_ref', 'evidence', 'notChecked']) expect(reviewerVariant).toContain(field);
+    for (const field of ['requirement_ref', 'evidence', 'notChecked', 'filesReviewed']) expect(reviewerVariant).toContain(field);
+  });
+
+  it('makes a generated reviewer read its diff files the way the shipped reviewer does', () => {
+    expect(reviewerVariant).toMatch(/Copy the `## Reading the change` section of `tdk-utils\/agents\/tdk-code-reviewer\.md` verbatim/);
+    // The example must carry the shipped reviewer's section word for word, so the two cannot drift.
+    const section = (text: string): string => {
+      const start = text.indexOf('## Reading the change\n');
+      return start < 0 ? '' : text.slice(start, text.indexOf('\n## ', start + 1));
+    };
+    const shippedReviewer = read(resolve(SCAFFOLD_SKILLS_DIR, '../../tdk-utils/agents/tdk-code-reviewer.md'));
+    const shipped = section(shippedReviewer);
+    expect(shipped).toContain('filesReviewed');
+    expect(section(reviewerVariant.slice(reviewerVariant.indexOf('```markdown')))).toBe(shipped);
   });
 
   it('keeps the executor variant for executors only and routes reviewers to their own variant', () => {

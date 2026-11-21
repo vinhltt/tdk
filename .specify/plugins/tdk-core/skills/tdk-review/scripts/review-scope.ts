@@ -1,31 +1,32 @@
 // `review-scope`: the deterministic diff scope for /tdk-review. The skill prose consumes this JSON and never
-// restates the git-map, identity or fallback rules. Every git call is read-only and goes through runGit.
+// restates the git-map, identity or fallback rules. Every git call is read-only and goes through runGit. The only
+// files the helper writes are the per-file diffs (and a self-ignoring `.gitignore`) under the feature's `reviews/.diff/`:
+// the JSON carries line counts and diff file paths, never diff text, so its size follows the file count.
 // Bundled (build.ts) so the installed skill carries its own copy; the shared sources below are included at build time.
 
-import { existsSync, lstatSync, readFileSync, realpathSync, type Stats } from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, unlinkSync, writeFileSync, type Stats } from 'node:fs';
 import { dirname, isAbsolute, join, posix, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { writeAgentJson } from '../../../../../scripts/ts/src/utils/agent-output';
 import { autoDetectSubWorkspace, parseConfig } from '../../../../../scripts/ts/src/utils/config';
 import { isWithin } from '../../../../../scripts/ts/src/utils/path-within';
+import { ensureRealDirectory, prepareReviewsDir } from './reviews-dir-guard';
 import type { SpecifyConfig } from '../../../../../scripts/ts/src/utils/types';
 import { runGit } from '../../../../../scripts/ts/src/utils/git-env';
 import { baseCommitIssue, classifySubWorkspaceRepo, commonDirOf, INNER_WORKTREE_NOTES, innerWorktreeRoot, isRegisteredWorktree, readGitMap, rowStateOf, type GitMap, type GitMapRow } from '../../../../../scripts/ts/src/utils/git-map';
 import { extractPhaseRoutingInput } from '../../../../../scripts/ts/src/utils/phase-delegates';
 import { parsePhasesTable } from '../../../../../scripts/ts/src/commands/util/phases-table-parser';
 
-/** Per-file ceiling. Larger or binary files enter the diff as `--stat` only and are listed in `truncated`. */
-const PER_FILE_LINE_CAP = 2000;
-/** Packing target per reviewer piece, not a ceiling: one indivisible file above it becomes its own `oversized` piece. */
-export const PIECE_TARGET_LINES = 1500;
 const MAX_TEXT_BYTES = 1024 * 1024;
 const MAX_BUFFER = 512 * 1024 * 1024;
 
 export interface TruncatedFile { path: string; reason: 'binary' | 'oversize' | 'directory' | 'unreadable' }
 /**
- * The physical repository: base commit, working root and integrity. Its diff text lives only in `slices[].pieces[]`.
+ * The physical repository: base commit, working root and integrity. Its diff content lives only in the diff files
+ * listed by `slices[].changes[]`.
  * `files` are relative to `repoPath`: the configured path for a git-map row (which may be a directory inside its
- * repository), the git toplevel for a fallback repo.
+ * repository), the git toplevel for a fallback repo. `truncated` lists the files that have no content to review.
  */
 export interface ReviewRepo {
   subWorkspace: string | null;
@@ -38,11 +39,18 @@ export interface ReviewRepo {
   diffLines: number;
   truncated: TruncatedFile[];
 }
-/** `index` is 1-based. `files` are `repoPath`-relative and whole: a file is never split across pieces, and a file with no content is in none. */
-export interface ReviewPiece { index: number; files: string[]; diff: string; diffLines: number; oversized: boolean }
 /**
- * The files of one repository owned by one logical sub-workspace. Reviewers are dispatched per slice and piece,
- * so a slice never sees a sibling's diff or routed delegates.
+ * One file of a slice. `path` is `repoPath`-relative. `added`/`deleted` are line counts, null for a file with no content.
+ * `diffFile` is the file's whole rendered diff (POSIX, relative to the project root) and `diffLines` its line count;
+ * a file with no content has `diffFile: null`, `diffLines: 0` and no hunks.
+ * `hunks` are the changed regions in old-side and new-side line numbers, in diff order, so a caller can place a
+ * `file:line` inside or outside a changed region without reading the diff. An added file is `{ 0, 0, 1, N }`.
+ */
+export interface DiffHunk { oldStart: number; oldLines: number; newStart: number; newLines: number }
+export interface ReviewChange { path: string; added: number | null; deleted: number | null; diffLines: number; diffFile: string | null; hunks: DiffHunk[] }
+/**
+ * The files of one repository owned by one logical sub-workspace. Reviewers are dispatched per slice, so a slice
+ * never sees a sibling's diff or routed delegates. A file is never split: its whole diff is one diff file.
  */
 export interface ReviewSlice {
   /** `${repoPath}#${subWorkspace ?? '-'}`, unique per run. */
@@ -54,10 +62,10 @@ export interface ReviewSlice {
   files: string[];
   /** Project-relative in configured coordinates, same order as `files`: the routing resolver's `--path` input. */
   routingPaths: string[];
+  /** Same order as `files` and `routingPaths`. A slice whose files all lack content is listed as stat only and never dispatched. */
+  changes: ReviewChange[];
   diffLines: number;
   truncated: TruncatedFile[];
-  /** Empty when no file of the slice has content: such a slice is listed as stat only and never dispatched. */
-  pieces: ReviewPiece[];
 }
 /**
  * `subWorkspace` is the row name, or the Related Code Files path when that path could not be placed in any repository.
@@ -66,11 +74,17 @@ export interface ReviewSlice {
 export interface NotReviewed { subWorkspace: string; state: string; reason: string; blocking?: true }
 export interface ReviewScope {
   ok: true;
+  /** This run's diff directory, relative to the project root. Each run replaces the previous run's directory. */
+  diffDir: string;
   repos: ReviewRepo[];
   slices: ReviewSlice[];
   notReviewed: NotReviewed[];
   phases: { reviewed: number[]; skipped: { number: number; status: string }[] };
-  /** `git status` snapshot per repo key, taken with `porcelainArgs`. Includes the repo holding the feature dir. */
+  /**
+   * `git status` snapshot taken with `porcelainArgs`, keyed by the directory it was read from, relative to the project root
+   * (`.` is the root). Usually the `repoPath`; a git-map row with a worktree is keyed under its `_worktrees/` path.
+   * Includes the repo holding the feature dir.
+   */
   porcelain: Record<string, string[]>;
   porcelainArgs: string[];
   warnings: string[];
@@ -101,15 +115,30 @@ const excludeBelow = (path: string): string => `:(exclude,glob)${path.replace(/[
 
 const countLines = (text: string): number => (text === '' ? 0 : text.split('\n').length - (text.endsWith('\n') ? 1 : 0));
 
+interface FileStat { added: number | null; deleted: number | null }
 interface RepoDiff extends Pick<ReviewRepo, 'files' | 'diffLines' | 'truncated'> {
   /** Exactly one entry per file, built while rendering. Empty only for a file listed in `truncated` with no content. */
   segments: Map<string, string>;
+  /** Added/deleted lines per file; null for a file with no content. */
+  stats: Map<string, FileStat>;
+}
+
+/** `@@ -a[,b] +c[,d] @@`; an omitted count means 1. Only a line starting with `@@` is a header: content lines start with ' ', '+', '-' or '\\'. */
+const HUNK_HEADER = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/;
+function parseHunks(diff: string): DiffHunk[] {
+  const hunks: DiffHunk[] = [];
+  for (const line of diff.split('\n')) {
+    const match = HUNK_HEADER.exec(line);
+    if (match) hunks.push({ oldStart: Number(match[1]), oldLines: match[2] === undefined ? 1 : Number(match[2]), newStart: Number(match[3]), newLines: match[4] === undefined ? 1 : Number(match[4]) });
+  }
+  return hunks;
 }
 
 /**
  * One repo's tracked diff against `base` plus untracked file content rendered as new-file diffs, one segment per file.
  * Every file is rendered by its own git call: headers are never parsed, because git still quotes some paths under
- * `quotePath=false` and a combined `--stat` abbreviates long paths.
+ * `quotePath=false`. A file with no content (binary, directory, unreadable, untracked over the size limit) renders no
+ * segment and is listed in `truncated`; every other file is rendered in full, however long.
  *
  * Paths are relative to `workingRoot`: the configured sub path for a git-map row, a toplevel for a fallback repo.
  * `--relative` keeps tracked paths there when the sub path is a directory inside its repository; at a toplevel it
@@ -122,20 +151,23 @@ function diffRepo(workingRoot: string, base: string, specs: string[] | undefined
   const truncated: TruncatedFile[] = [];
   const files: string[] = [];
   const segments = new Map<string, string>();
+  const stats = new Map<string, FileStat>();
 
   // `-z --numstat` is `<added>\t<deleted>\t<path>\0`; binary files report `-`.
-  const stats = git(workingRoot, ['diff', ...common, '--relative', '-z', '--numstat', base, '--', ...pathspec]).split('\0').filter(Boolean);
-  for (const entry of stats) {
+  const numstat = git(workingRoot, ['diff', ...common, '--relative', '-z', '--numstat', base, '--', ...pathspec]).split('\0').filter(Boolean);
+  for (const entry of numstat) {
     const [added, deleted, ...rest] = entry.split('\t');
     const path = rest.join('\t');
     files.push(path);
-    let statOnly = true;
-    if (added === '-') truncated.push({ path, reason: 'binary' });
-    else if (Number(added) + Number(deleted) > PER_FILE_LINE_CAP) truncated.push({ path, reason: 'oversize' });
-    else statOnly = false;
-    const args = statOnly ? ['diff', '--no-ext-diff', '--no-color', '--submodule=short', '--relative', '--stat', base] : ['diff', ...common, '--relative', base];
+    if (added === '-') {
+      truncated.push({ path, reason: 'binary' });
+      stats.set(path, { added: null, deleted: null });
+      segments.set(path, '');
+      continue;
+    }
+    stats.set(path, { added: Number(added), deleted: Number(deleted) });
     // A literal pathspec also matches `<path>/...`, which a file or gitlink swapped with a directory would pull in twice.
-    segments.set(path, git(workingRoot, [...args, '--', literal(path), excludeBelow(path)]));
+    segments.set(path, git(workingRoot, ['diff', ...common, '--relative', base, '--', literal(path), excludeBelow(path)]));
   }
 
   // Implement output is mostly new, untracked files; without their content the review would pass unread code.
@@ -146,84 +178,63 @@ function diffRepo(workingRoot: string, base: string, specs: string[] | undefined
     if (!segments.has(path)) files.push(path);
     segments.set(path, prior);
     const absolute = join(workingRoot, path);
+    /** The path has no content to render: list it, and keep any numstat counts a tracked part already gave it. */
+    const skipContent = (why: TruncatedFile['reason']): void => {
+      truncated.push({ path, reason: why });
+      stats.set(path, stats.get(path) ?? { added: null, deleted: null });
+    };
     let reason: TruncatedFile['reason'] | null = null;
     try {
       const info: Stats = lstatSync(absolute);
-      if (info.isDirectory()) { truncated.push({ path, reason: 'directory' }); continue; }
+      if (info.isDirectory()) { skipContent('directory'); continue; }
       if (!info.isSymbolicLink()) {
         if (info.size > MAX_TEXT_BYTES) reason = 'oversize';
-        else {
-          const bytes = readFileSync(absolute);
-          const text = bytes.toString('utf-8');
-          if (bytes.subarray(0, 8000).includes(0)) reason = 'binary';
-          else if (countLines(text) > PER_FILE_LINE_CAP) reason = 'oversize';
-        }
+        else if (readFileSync(absolute).subarray(0, 8000).includes(0)) reason = 'binary';
       }
-    } catch { truncated.push({ path, reason: 'unreadable' }); continue; }
-    if (reason) truncated.push({ path, reason });
+    } catch { skipContent('unreadable'); continue; }
+    if (reason) { skipContent(reason); continue; }
     let out: string;
     try {
-      out = git(workingRoot, ['diff', '--no-index', ...common, ...(reason ? ['--stat'] : []), '--', '/dev/null', path]);
+      out = git(workingRoot, ['diff', '--no-index', ...common, '--', '/dev/null', path]);
     } catch (error) {
       // `--no-index` exits 1 when the files differ, but also when git failed. Only non-empty stdout proves content was read.
       out = error instanceof Error && 'status' in error && error.status === 1 && 'stdout' in error && typeof error.stdout === 'string' ? error.stdout : '';
     }
-    if (out !== '') segments.set(path, prior + out);
-    else if (!reason) truncated.push({ path, reason: 'unreadable' });
+    const before = stats.get(path);
+    if (out !== '') {
+      segments.set(path, prior + out);
+      // A new-file diff has one hunk, `-0,0 +1,N`: N is the number of added lines.
+      stats.set(path, { added: (before?.added ?? 0) + parseHunks(out).reduce((sum, hunk) => sum + hunk.newLines, 0), deleted: before?.deleted ?? 0 });
+    } else skipContent('unreadable');
   }
 
-  // Totality: a file without its own segment would reach no reviewer while the report claims it was in scope.
+  // Totality: a file with content must have its own segment, or it would reach no reviewer while the report claims it was in scope.
   const contentless = new Set(truncated.map((entry) => entry.path));
   const unassigned = files.filter((path) => !segments.has(path) || (segments.get(path) === '' && !contentless.has(path)));
   if (unassigned.length > 0) throw new ReviewScopeError('scope_failed', `No diff segment for ${unassigned.join(', ')} in ${workingRoot}`, { files: unassigned });
   let diffLines = 0;
   for (const segment of segments.values()) diffLines += countLines(segment);
-  return { files, segments, diffLines, truncated };
-}
-
-/**
- * Packs whole files, in diff order, into pieces of at most `PIECE_TARGET_LINES`; a larger file is its own `oversized` piece.
- * A file with no content (a `truncated` directory or unreadable entry) joins no piece: an empty piece would be dispatched,
- * counted against the cap and fail as empty input. It stays in the slice's `files` and `truncated`.
- */
-function packPieces(files: string[], segments: Map<string, string>): ReviewPiece[] {
-  const pieces: ReviewPiece[] = [];
-  let current: ReviewPiece | null = null;
-  for (const file of files) {
-    const segment = segments.get(file)!;
-    if (segment === '') continue;
-    const lines = countLines(segment);
-    if (lines > PIECE_TARGET_LINES) {
-      current = null;
-      pieces.push({ index: pieces.length + 1, files: [file], diff: segment, diffLines: lines, oversized: true });
-      continue;
-    }
-    if (current === null || current.diffLines + lines > PIECE_TARGET_LINES) {
-      current = { index: pieces.length + 1, files: [], diff: '', diffLines: 0, oversized: false };
-      pieces.push(current);
-    }
-    current.files.push(file);
-    current.diff += segment;
-    current.diffLines += lines;
-  }
-  return pieces;
+  return { files, segments, stats, diffLines, truncated };
 }
 
 /** Where a repo's files sit in configured coordinates: under a git-map row's configured path, or under a fallback toplevel. */
 type RoutingBase = { kind: 'prefix'; prefix: string } | { kind: 'top'; top: string };
+
+/** A slice and the rendered diff of each of its files, in `files` order. The segments are written out once every slice is known. */
+interface PendingSlice { slice: ReviewSlice; segments: string[] }
 
 /**
  * Groups each repo's files by owning sub-workspace. Git-map rows use the configured prefix (no realpath), so a symlinked
  * project root, a symlinked `sub.path` and a worktree all still map under the path config and the resolver compare.
  */
 function buildSlices(
-  diffs: { repo: ReviewRepo; base: RoutingBase; segments: Map<string, string> }[],
+  diffs: { repo: ReviewRepo; base: RoutingBase; segments: Map<string, string>; stats: Map<string, FileStat> }[],
   config: SpecifyConfig,
   projectRoot: string,
   projectReal: string,
-): ReviewSlice[] {
-  const slices: ReviewSlice[] = [];
-  for (const { repo, base, segments } of diffs) {
+): PendingSlice[] {
+  const pending: PendingSlice[] = [];
+  for (const { repo, base, segments, stats } of diffs) {
     const owned = new Map<string | null, { files: string[]; routingPaths: string[] }>();
     for (const file of repo.files) {
       const routingPath = base.kind === 'prefix'
@@ -238,17 +249,101 @@ function buildSlices(
     const owners = [...owned.keys()].sort((a, b) => (a === b ? 0 : a === null ? 1 : b === null ? -1 : a < b ? -1 : 1));
     for (const owner of owners) {
       const { files, routingPaths } = owned.get(owner)!;
-      const pieces = packPieces(files, segments);
       const members = new Set(files);
-      slices.push({
-        id: `${repo.repoPath}#${owner ?? '-'}`, repoPath: repo.repoPath, subWorkspace: owner, files, routingPaths,
-        diffLines: pieces.reduce((sum, piece) => sum + piece.diffLines, 0),
-        truncated: repo.truncated.filter((entry) => members.has(entry.path)),
-        pieces,
+      const rendered = files.map((file) => segments.get(file)!);
+      const changes: ReviewChange[] = files.map((file, index) => {
+        const stat = stats.get(file) ?? { added: null, deleted: null };
+        return { path: file, added: stat.added, deleted: stat.deleted, diffLines: countLines(rendered[index]!), diffFile: null, hunks: parseHunks(rendered[index]!) };
+      });
+      pending.push({
+        segments: rendered,
+        slice: {
+          id: `${repo.repoPath}#${owner ?? '-'}`, repoPath: repo.repoPath, subWorkspace: owner, files, routingPaths, changes,
+          diffLines: changes.reduce((sum, change) => sum + change.diffLines, 0),
+          truncated: repo.truncated.filter((entry) => members.has(entry.path)),
+        },
       });
     }
   }
-  return slices;
+  return pending;
+}
+
+/** `YYYYMMDDTHHMMSSZ-xxxxxx`: the only directory names under `reviews/.diff/` that a run may delete. */
+const RUN_ID_PATTERN = /^\d{8}T\d{6}Z-[0-9a-f]{6}$/;
+const pad = (value: number, width: number): string => String(value).padStart(width, '0');
+
+/** Where this run writes: the project-relative `diffRoot` is the only path that reaches an error's `details`. */
+interface DiffArea { diffRoot: string; projectReal: string }
+const relativeTo = (projectReal: string, path: string): string => relative(projectReal, path).replace(/\\/g, '/');
+
+function diffFailure(area: DiffArea, reason: string): never {
+  const diffRoot = relativeTo(area.projectReal, area.diffRoot);
+  throw new ReviewScopeError('diff_write_failed', `Cannot write the diff directory ${diffRoot}: ${reason}`, { reason, diffRoot });
+}
+
+/** An I/O error's code (`EACCES`, `ENOSPC`, ...) is the reason; anything else is a generic write error. */
+const reasonOf = (error: unknown): string => (error instanceof Error && 'code' in error ? String(error.code) : 'write_error');
+
+/**
+ * Makes `<feature>/reviews/.diff/` ready before any git status is read, so the porcelain snapshot already reflects it:
+ * guard `reviews/` and `.diff/`, write `.gitignore` (`*`) before any diff file can exist, and remove the entries of
+ * earlier runs. Only run-id names are removed: a real directory recursively, a regular file by unlink. A symlink or any
+ * other file type wearing a run-id name makes the whole run refuse, and nothing is deleted through or after it.
+ */
+function prepareDiffRoot(projectRoot: string, projectReal: string, featureDir: string): DiffArea {
+  const outcome = prepareReviewsDir(projectRoot, featureDir);
+  if (!outcome.ok) {
+    throw new ReviewScopeError('diff_write_failed', `Cannot use the reviews directory: ${outcome.reason}`, { reason: outcome.reason });
+  }
+  const reviews = realpathSync(outcome.reviews);
+  const area: DiffArea = { diffRoot: join(reviews, '.diff'), projectReal };
+  try {
+    if (!ensureRealDirectory(area.diffRoot, reviews)) return diffFailure(area, 'diff_root_unsafe');
+    const ignore = join(area.diffRoot, '.gitignore');
+    const ignoreInfo = lstatSync(ignore, { throwIfNoEntry: false });
+    if (ignoreInfo !== undefined && !ignoreInfo.isFile()) return diffFailure(area, 'gitignore_unsafe');
+    const stale = readdirSync(area.diffRoot).filter((name) => RUN_ID_PATTERN.test(name)).map((name) => ({ path: join(area.diffRoot, name), info: lstatSync(join(area.diffRoot, name)) }));
+    if (!stale.every(({ info }) => (info.isDirectory() || info.isFile()) && !info.isSymbolicLink())) return diffFailure(area, 'run_dir_unsafe');
+    writeFileSync(ignore, '*');
+    for (const { path, info } of stale) {
+      if (info.isDirectory()) rmSync(path, { recursive: true });
+      else unlinkSync(path);
+    }
+    return area;
+  } catch (error) {
+    if (error instanceof ReviewScopeError) throw error;
+    return diffFailure(area, reasonOf(error));
+  }
+}
+
+/**
+ * Writes each content file's whole diff to `<run-id>/<slice>/<file>.diff` under the prepared `.diff/` and fills `diffFile`.
+ * File names are positions (1-based, zero-padded), never reviewed paths. Returns the run directory relative to the project root.
+ */
+function writeDiffRun(area: DiffArea, pending: PendingSlice[]): string {
+  const rel = (path: string): string => relativeTo(area.projectReal, path);
+  try {
+    const runId = `${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '')}-${randomBytes(3).toString('hex')}`;
+    const runDir = join(area.diffRoot, runId);
+    mkdirSync(runDir);
+    if (!ensureRealDirectory(runDir, area.diffRoot)) return diffFailure(area, 'run_dir_unsafe');
+    const sliceWidth = Math.max(2, String(pending.length).length);
+    pending.forEach(({ slice, segments }, sliceIndex) => {
+      const fileWidth = Math.max(2, String(slice.changes.length).length);
+      const sliceDir = join(runDir, pad(sliceIndex + 1, sliceWidth));
+      segments.forEach((segment, fileIndex) => {
+        if (segment === '') return;
+        mkdirSync(sliceDir, { recursive: true });
+        const file = join(sliceDir, `${pad(fileIndex + 1, fileWidth)}.diff`);
+        writeFileSync(file, segment);
+        slice.changes[fileIndex]!.diffFile = rel(file);
+      });
+    });
+    return rel(runDir);
+  } catch (error) {
+    if (error instanceof ReviewScopeError) throw error;
+    return diffFailure(area, reasonOf(error));
+  }
 }
 
 /** Plan-authored path -> normalized workspace-relative path, or null when its text could leave the project. */
@@ -294,6 +389,9 @@ export function computeReviewScope(options: ReviewScopeOptions): ReviewScope {
     skipped: parsed.phases.filter((row) => !reviewedRows.includes(row)).map((row) => ({ number: row.number, status: row.status })),
   };
 
+  // Prepared before any diff or status is read: the porcelain snapshot below must already include this directory's own changes.
+  const projectReal = realpathSync(projectRoot);
+  const diffArea = prepareDiffRoot(projectRoot, projectReal, featureDir);
   const canonicalFeature = realpathSync(featureDir);
   const related = new Set<string>();
   for (const row of reviewedRows) {
@@ -314,12 +412,12 @@ export function computeReviewScope(options: ReviewScopeOptions): ReviewScope {
   // A seed-only or malformed map records no realized repository, so it contributes no rows: the fallback covers the paths.
   const usable = map !== null && map.layout !== 'malformed' && map.featureBranch !== null ? map : null;
   const repos: ReviewRepo[] = [];
-  const diffs: { repo: ReviewRepo; base: RoutingBase; segments: Map<string, string> }[] = [];
+  const diffs: { repo: ReviewRepo; base: RoutingBase; segments: Map<string, string>; stats: Map<string, FileStat> }[] = [];
   const pushRepo = (fields: Omit<ReviewRepo, 'files' | 'diffLines' | 'truncated'>, base: RoutingBase, specs: string[] | undefined, excludes: string[] = []): void => {
-    const { segments, ...rendered } = diffRepo(fields.workingRoot, fields.baseCommit, specs, excludes);
+    const { segments, stats, ...rendered } = diffRepo(fields.workingRoot, fields.baseCommit, specs, excludes);
     const repo: ReviewRepo = { ...fields, ...rendered };
     repos.push(repo);
-    diffs.push({ repo, base, segments });
+    diffs.push({ repo, base, segments, stats });
   };
   const skip = (subWorkspace: string, state: string, reason: string, blocking: boolean): void => {
     notReviewed.push(blocking ? { subWorkspace, state, reason, blocking: true } : { subWorkspace, state, reason });
@@ -333,7 +431,6 @@ export function computeReviewScope(options: ReviewScopeOptions): ReviewScope {
   const reviewedTops = new Map<string, string | null>();
   /** Toplevels of inner rows with a recorded base: a fallback path there is only diffed against HEAD, which the report must say. */
   const mappedTops = new Set<string>();
-  const projectReal = realpathSync(projectRoot);
   /**
    * `root`-relative pathspecs for the claimed sub paths and own repositories strictly inside `root`, so no file is diffed
    * by two rows, and an own repository's gitlink or nested clone never shows up as a file of an enclosing row or fallback diff.
@@ -485,18 +582,23 @@ export function computeReviewScope(options: ReviewScopeOptions): ReviewScope {
     pushRepo({ subWorkspace: null, repoPath: relative(projectReal, top).replace(/\\/g, '/') || '.', workingRoot: top, baseCommit: base, includesUncommitted: true, source: 'fallback' }, { kind: 'top', top }, specs, excludesUnder(top));
   }
 
-  // The orchestrator replays exactly `git -C <key's repo> <porcelainArgs>` before and after; `-uall` lists files inside new directories.
+  // The orchestrator replays exactly `git -C <project-root>/<key> <porcelainArgs>` before and after; `-uall` lists files
+  // inside new directories. A key is the directory the snapshot was read from, not the repo path: a git-map row with a
+  // worktree is read in that worktree, and keying it by its repo path would replay the main checkout instead.
+  const keyOf = (dir: string): string => relative(projectReal, realpathSync(dir)).replace(/\\/g, '/') || '.';
   const porcelain: Record<string, string[]> = {};
-  for (const repo of repos) porcelain[repo.repoPath] = git(repo.workingRoot, PORCELAIN_ARGS).split('\0').filter(Boolean);
+  for (const repo of repos) porcelain[keyOf(repo.workingRoot)] = git(repo.workingRoot, PORCELAIN_ARGS).split('\0').filter(Boolean);
   // D7: the host repo holds plan.md, phases and reviews/. Snapshot it even when every code repo is mapped separately.
   try {
     const hostTop = realpathSync(runGit(['-C', canonicalFeature, 'rev-parse', '--show-toplevel']));
-    const key = relative(projectReal, hostTop).replace(/\\/g, '/') || '.';
+    const key = keyOf(hostTop);
     if (!Object.hasOwn(porcelain, key)) porcelain[key] = git(hostTop, PORCELAIN_ARGS).split('\0').filter(Boolean);
   } catch { warnings.push('feature dir is not inside a git repository; reviewer writes there cannot be detected'); }
-  const slices = buildSlices(diffs, config, projectRoot, projectReal);
+  const pending = buildSlices(diffs, config, projectRoot, projectReal);
+  const diffDir = writeDiffRun(diffArea, pending);
+  const slices = pending.map((entry) => entry.slice);
   return {
-    ok: true, repos, slices, notReviewed, phases, porcelain, porcelainArgs: PORCELAIN_ARGS, warnings,
+    ok: true, diffDir, repos, slices, notReviewed, phases, porcelain, porcelainArgs: PORCELAIN_ARGS, warnings,
     incomplete: notReviewed.some((entry) => entry.blocking === true),
     // An unmapped path in a mapped repository was diffed against HEAD: its note alone leaves nothing unreviewed.
     empty: notReviewed.every((entry) => entry.state === 'unmapped_in_mapped_repo') && repos.every((repo) => repo.files.length === 0),

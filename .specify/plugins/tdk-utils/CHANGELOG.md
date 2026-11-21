@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.0.2] - 2026-11-21
+
+### Changed
+- tdk-code-reviewer: take a batch of files with diffFile paths instead of inline diff text, read each diff to its last line (in chunks when long), and return filesReviewed; a lockfile or generated file goes to notChecked as generated, not reviewed. Tools are unchanged
+
 ## [5.0.1] - 2026-11-16
 
 ### Changed

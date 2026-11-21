@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.1.1] - 2026-11-21
+
+### Changed
+- tdk-scaffold-from-recommendation: the Reviewer Variant takes the same file list with diffFile paths and returns filesReviewed; scaffolded review agents still get no Bash
+
 ## [3.1.0] - 2026-11-10
 
 ### Added

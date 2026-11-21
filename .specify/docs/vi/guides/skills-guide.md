@@ -336,6 +336,12 @@ planning.
 Output: `spec.md`, gồm `## Specification Quality Gate`. `/tdk-clarify` rerun
 embedded gate này sau requirement changes.
 
+#### `/tdk-review`
+
+Scope helper ghi diff của từng file thay đổi vào `<feature>/reviews/.diff/<run-id>/`. Thư mục này tự ignore và được thay ở lần chạy sau. Reviewer tự đọc các file đó, nên main session không phải giữ diff. Ở mode standard và deep, mỗi slice được chia thành batch, rồi reviewer được dispatch theo wave. Report ghi dòng ước lượng (số invocation, số wave, số token) ở mục Reviewers. Run lớn hiện dòng này và hỏi một lần trước khi spawn. Không hỗ trợ hai lần review cùng lúc trên một feature. Chi tiết: [review orchestration](../../../plugins/tdk-core/skills/tdk-review/references/review-orchestration.md).
+
+Routed review agent vẫn chạy được mà không cần sửa. Cập nhật agent theo mục Reviewer Variant trong [agent output pattern](../../../plugins/tdk-scaffold/skills/tdk-scaffold-from-recommendation/references/agent-output-pattern.md) để agent trả `filesReviewed`; nhờ đó report ghi được coverage theo file của agent.
+
 #### Architecture Inception
 
 Dùng `greenfield-start` hoặc `brownfield-start` trước khi project shape chưa chắc chắn. Dùng `architecture-advisor` cho options/decision/recovery dạng report-only. Dùng `workspace-layout-propose` cho proposal-only layout artifacts. Chỉ dùng `workflow-config-apply` sau khi layout evidence đã ready cho guarded config review/apply.

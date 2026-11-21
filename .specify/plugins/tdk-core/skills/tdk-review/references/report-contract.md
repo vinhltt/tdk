@@ -33,15 +33,17 @@ counts: { critical: 0, high: 1, medium: 2, low: 3, missing: 1 }
 
 `counts` covers verified findings only. `implemented` matrix rows are `low` and are not counted as defects.
 
-`reviewers[]` stays one entry per (name, lens), aggregated over every slice and piece: `status: ok` only when every invocation of that reviewer and lens was ok, otherwise `failed` when any invocation failed, else `skipped`, with the reason of the first invocation in that status; `skills_loaded` is the union in slice order. Per-invocation detail goes in the body, never in new frontmatter keys.
+`reviewers[]` stays one entry per (name, lens), aggregated over every slice and batch. Each assignment (batch × lens, or batch × routed agent) counts with the result of its last invocation, so a retry that succeeds lifts it: `status: ok` when every assignment ended ok, otherwise `failed` when any assignment ended failed, else `skipped`, with the reason of the first assignment in that status; `skills_loaded` is the union in slice order. Waves, batches and per-invocation detail go in the body, never in new frontmatter keys.
 
 ## Sections, in order
 
+Write each section as a `##` heading with exactly its bold name below and no number: `## Proposed Fix Phases`, never `## 7. Proposed Fix Phases`. `/tdk-status` finds the seeds by that heading.
+
 1. **Summary**: verdict, one paragraph, counts.
-2. **Scope**: repos with base commit and `source` (label `fallback` explicitly), slices (id, repo, sub-workspace, files, diffLines, piece count), reviewed phases, skipped phases, `Not reviewed` rows with reasons, `stat only` files from `truncated`, and any scope warnings.
-3. **Reviewers**: one row per invocation: reviewer, lens, slice id, repo, sub-workspace, piece `i/n`, files, diffLines, an `oversized` marker when set, status, reason code if any, and the skills actually loaded. Then **Unreviewed slices**: each slice whose invocations all failed or were skipped, with their reasons, or `None.`. In `--quick`, one row per slice reviewed inline, stating that no subagent ran, plus the routed agents that were not run.
+2. **Scope**: repos with base commit and `source` (label `fallback` explicitly), slices (id, repo, sub-workspace, files, diffLines, batch count), reviewed phases, skipped phases, `Not reviewed` rows with reasons, `stat only` files from `truncated` (binary, directory, unreadable, or an untracked file over 1 MB), **Generated, not reviewed** (each file a reviewer declared generated, with the lens that declared it, or `None.`), and any scope warnings. Never list `reviews/.diff/` as a change.
+3. **Reviewers**: in standard and deep mode, first the `Review plan:` line of `review-orchestration.md` §Waves, exactly as computed before the first spawn. Then one line per invocation: reviewer, lens, `wave`, slice id, repo, sub-workspace, `batch i/n`, files with `+added/−deleted`, status, reason code if any, the skills actually loaded, and `retry` when it re-ran an earlier invocation over the files that one left uncovered. A failed first invocation that a retry rescued keeps its own line. A routed agent's line also names the batch files missing from its `filesReviewed`. Then **Unreviewed slices**: each slice whose invocations all failed or were skipped, with their reasons, or `None.`. Then **File coverage gaps**: each (file × lens) pair still uncovered after its retry, with the reason, or `None.`; a routed agent's gaps stay on its own line. In `--quick`, one row per slice reviewed inline, stating that no subagent ran, plus the routed agents that were not run.
 4. **Spec Compliance Matrix**: one row per FR and SC ID and per phase success criterion, with the status decided by spec synthesis: `implemented | partial | missing | extra`, plus `file:line` evidence or the `requirement_ref` for `missing`. A `missing` row shows no location. Then **Spec coverage gaps**: each criterion left unevaluated, with its ID, why (the `notChecked` reason, or the failed or skipped invocation) and the slice ids involved, or `None.`.
-5. **Findings by severity**: `critical`, `high`, `medium`, `low`. Each finding has an ID, `file:line` (prefixed with its `repoPath` whenever the run has more than one repo), contributing lenses and invocations, evidence (≤5 lines), and recommendation.
+5. **Findings by severity**: `critical`, `high`, `medium`, `low`. Each finding has an ID, `file:line` (prefixed with its `repoPath` whenever the run has more than one repo), contributing lenses and invocations, evidence (≤5 lines), and recommendation. When the run stopped between waves (`working_tree_changed`), say so here: the findings of the waves that finished are still listed.
 6. **Not verified**: findings that failed validation, with the failing rule. They are not counted and never drive the verdict.
 7. **Proposed Fix Phases**: see below.
 8. **Next actions**: the seed lines again, in the order to run them.
@@ -67,11 +69,15 @@ The sanitizer runs once, on the final rendered report inside `review-write-repor
 
 Slug: `<focus-slug | phase-NN | full>-<mode>`. Lowercase kebab-case, at most 50 characters. If the focus text looks credential-bearing, STOP and ask for a sanitized focus without echoing it.
 
-Pipe the redacted report to the helper on stdin. Never put the body in an argument or environment variable.
+Send the redacted report on stdin, as a quoted heredoc attached to the writer command itself, so the write stays one command. An allow rule for the writer matches it while the command is short enough for the harness to check; a long report may still ask for approval once:
 
 ```text
-bun --no-install "<loaded-skill-root>/scripts/review-write-report.js" --project-root <project-root> --feature-dir <FEATURE_DIR> --slug <slug>
+bun --no-install "<loaded-skill-root>/scripts/review-write-report.js" --project-root <project-root> --feature-dir <FEATURE_DIR> --slug <slug> <<'TDK_REVIEW_REPORT_EOF'
+<the redacted report>
+TDK_REVIEW_REPORT_EOF
 ```
+
+Never pipe it from `cat` or another command, and never put the body in an argument or environment variable. No report line may equal the delimiter.
 
 Output `{ "ok": true, "path": "...", "redactions": N }` or `{ "ok": false, "error": "..." }`.
 
@@ -83,4 +89,4 @@ Output `{ "ok": true, "path": "...", "redactions": N }` or `{ "ok": false, "erro
 | `write_failed` | I/O failure | STOP. Report it. |
 | `invalid_arguments` | Missing or unknown flag | STOP. This is a skill bug; report it. |
 
-The helper creates only `reviews/` and only the new file. The report is the single permitted change to the working tree.
+The helper creates only `reviews/` and only the new file. The scope helper also writes per-file diffs under `reviews/.diff/`, a directory that ignores itself, so the report stays the single change the working-tree check sees.

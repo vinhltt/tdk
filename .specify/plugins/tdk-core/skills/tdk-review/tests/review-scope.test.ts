@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it } from 'bun:test';
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { computeReviewScope, ReviewScopeError, type ReviewScope } from '../scripts/review-scope';
+import { computeReviewScope, ReviewScopeError, type ReviewScope, type ReviewSlice } from '../scripts/review-scope';
 
 const BUNDLE = resolve(import.meta.dir, '../scripts/review-scope.js');
 const roots: string[] = [];
@@ -63,12 +63,29 @@ function mapOf(rows: MapRow[], bases: Record<string, string>, extra = ''): strin
   return `---\ntask_id: task-1\nfeature_branch: feat/x\nbase_commit_by_repo:\n${baseLines}\n${extra}---\n\n| Sub-workspace | Repo path | Milestone | Branch | Base ref | Worktree path |\n|---|---|---|---|---|---|\n${table}\n`;
 }
 
-/** All diff text the scope hands reviewers for one repo, in slice and piece order. */
+/** Project root each scope result was computed for: `diffFile` paths are relative to it. */
+const rootOf = new WeakMap<object, string>();
+const track = <T extends object>(result: T, root: string): T => { rootOf.set(result, root); return result; };
+const compute = (options: Parameters<typeof computeReviewScope>[0]): ReviewScope => track(computeReviewScope(options), resolve(options.projectRoot));
+
+/** The diff files of one slice, concatenated in `changes` order. */
+function sliceDiff(result: Pick<ReviewScope, 'slices'>, slice: Pick<ReviewSlice, 'changes'>): string {
+  const root = rootOf.get(result)!;
+  return slice.changes.map((change) => (change.diffFile === null ? '' : readFileSync(join(root, change.diffFile), 'utf-8'))).join('');
+}
+/** All diff text the scope wrote for one repo, in slice and file order. */
 function repoDiff(result: Pick<ReviewScope, 'slices'>, repoPath: string): string {
-  return result.slices.filter((slice) => slice.repoPath === repoPath).flatMap((slice) => slice.pieces.map((piece) => piece.diff)).join('');
+  return result.slices.filter((slice) => slice.repoPath === repoPath).map((slice) => sliceDiff(result, slice)).join('');
+}
+/** The skill's integrity check: `git -C <project-root>/<key> <porcelainArgs>` for every recorded key. */
+function replayPorcelain(result: Pick<ReviewScope, 'porcelain' | 'porcelainArgs'>): Record<string, string[]> {
+  const root = rootOf.get(result)!;
+  return Object.fromEntries(Object.keys(result.porcelain).map((key) => [
+    key, execFileSync('git', ['-C', join(root, key), ...result.porcelainArgs], { encoding: 'utf-8' }).split('\0').filter(Boolean),
+  ]));
 }
 
-const scope = (fx: Fx, phase?: number): ReviewScope => computeReviewScope({ projectRoot: fx.root, featureDir: fx.feature, phase });
+const scope = (fx: Fx, phase?: number): ReviewScope => compute({ projectRoot: fx.root, featureDir: fx.feature, phase });
 function stop(fx: Fx, phase?: number): ReviewScopeError {
   try { scope(fx, phase); } catch (error) { if (error instanceof ReviewScopeError) return error; throw error; }
   throw new Error('expected a ReviewScopeError');
@@ -99,33 +116,39 @@ describe('review scope: realized git-map rows', () => {
     expect(result.porcelain['apps/api']).toEqual([' M src/a.ts', '?? src/new-file.ts']);
   });
 
-  it('lists an untracked binary and an oversize untracked file as stat-only in `truncated`, never as content', () => {
+  it('lists an untracked binary and an untracked file over 1 MB as stat-only in `truncated`, with no diff file', () => {
     const fx = fixture([{ n: 1, paths: ['apps/api/blob.bin', 'apps/api/big.txt'] }]);
     put(join(fx.api, 'blob.bin'), Buffer.from([0, 1, 2, 3, 0, 0, 255]));
-    put(join(fx.api, 'big.txt'), `${'line\n'.repeat(2500)}`);
+    put(join(fx.api, 'big.txt'), 'x'.repeat(1024 * 1024 + 1));
     const scoped = scope(fx);
     const repo = scoped.repos[0]!;
-    const diff = repoDiff(scoped, repo.repoPath);
     expect(repo.truncated.sort((a, b) => a.path.localeCompare(b.path))).toEqual([{ path: 'big.txt', reason: 'oversize' }, { path: 'blob.bin', reason: 'binary' }]);
-    expect(diff).not.toContain('+line');
-    expect(diff).toContain('big.txt');
-    expect(diff).toContain('blob.bin');
-    expect(repo.diffLines).toBeLessThan(20);
+    expect(scoped.slices[0]!.changes).toEqual([
+      { path: 'big.txt', added: null, deleted: null, diffLines: 0, diffFile: null, hunks: [] },
+      { path: 'blob.bin', added: null, deleted: null, diffLines: 0, diffFile: null, hunks: [] },
+    ]);
+    expect(repoDiff(scoped, repo.repoPath)).toBe('');
+    expect(repo.diffLines).toBe(0);
   });
 
-  it('an oversize tracked change is stat-only too, while a small tracked change keeps its content', () => {
-    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts', 'apps/api/src/huge.ts'] }]);
+  it('a large tracked change and a large untracked text file are rendered in full, never cut or listed in `truncated`', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts', 'apps/api/src/huge.ts', 'apps/api/long.txt'] }]);
     put(join(fx.api, 'src', 'huge.ts'), 'seed\n');
     git(fx.api, 'add', '-A'); git(fx.api, 'commit', '-q', '-m', 'seed');
     put(join(fx.api, 'src', 'huge.ts'), 'x\n'.repeat(2500));
     put(join(fx.api, 'src', 'a.ts'), 'export const a = 3;\n');
+    put(join(fx.api, 'long.txt'), lines(2600, 'long'));
     const scoped = scope(fx);
     const repo = scoped.repos[0]!;
+    expect(repo.truncated).toEqual([]);
+    const byPath = new Map(scoped.slices[0]!.changes.map((change) => [change.path, change]));
+    expect(byPath.get('src/huge.ts')).toMatchObject({ added: 2500, deleted: 0 });
+    expect(byPath.get('long.txt')).toMatchObject({ added: 2600, deleted: 0 });
     const diff = repoDiff(scoped, repo.repoPath);
-    expect(repo.files.sort()).toEqual(['src/a.ts', 'src/huge.ts']);
-    expect(repo.truncated).toEqual([{ path: 'src/huge.ts', reason: 'oversize' }]);
     expect(diff).toContain('+export const a = 3;');
-    expect(diff).not.toContain('+x\n+x');
+    expect(diff).toContain('+x\n+x');
+    expect(diff).toContain('+long-2599\n');
+    expect(repo.diffLines).toBe(diff.trimEnd().split('\n').length);
   });
 
   it('reports empty when nothing changed since the base, so no reviewer is spawned (AC10 data half)', () => {
@@ -275,6 +298,20 @@ describe('review scope: rows that are not reviewed', () => {
     expect(scoped.incomplete).toBe(false);
   });
 
+  it('a worktree row is snapshot under its worktree path, so the integrity replay reads the worktree, not the main checkout', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    const dir = join(fx.root, '_worktrees', 'api', 'feat-x');
+    git(fx.api, 'worktree', 'add', '-q', '-b', 'feat/x', dir);
+    put(join(fx.feature, 'git-map.md'), `---\ntask_id: task-1\nfeature_branch: feat/x\nbase_commit_by_repo:\n  api: ${fx.base}\n---\n\n| Sub-workspace | Repo path | Milestone | Branch | Base ref | Worktree path |\n|---|---|---|---|---|---|\n| api | apps/api | main | feat/x | refs/heads/main | _worktrees/api/feat-x |\n`);
+    put(join(dir, 'src', 'a.ts'), 'export const a = "in-worktree";\n');
+    put(join(dir, 'src', 'new.ts'), 'export const n = 1;\n');
+    const result = scope(fx);
+    expect(result.repos[0]).toMatchObject({ repoPath: 'apps/api', workingRoot: dir });
+    expect(result.porcelain['_worktrees/api/feat-x']).toEqual([' M src/a.ts', '?? src/new.ts']);
+    expect(Object.hasOwn(result.porcelain, 'apps/api')).toBe(false);
+    expect(replayPorcelain(result)).toEqual(result.porcelain);
+  });
+
   it('a recorded worktree that no longer exists falls back to the repository itself', () => {
     const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
     put(join(fx.feature, 'git-map.md'), `---\ntask_id: task-1\nfeature_branch: feat/x\nbase_commit_by_repo:\n  api: ${fx.base}\n---\n\n| Sub-workspace | Repo path | Milestone | Branch | Base ref | Worktree path |\n|---|---|---|---|---|---|\n| api | apps/api | main | feat/x | refs/heads/main | _worktrees/api/gone |\n`);
@@ -304,7 +341,7 @@ describe('review scope: fallback to git diff HEAD', () => {
     writePlan(feature, [{ n: 1, paths: ['src/a.ts', 'src/added.ts'] }]);
     put(join(root, 'src', 'a.ts'), 'export const a = 9;\n');
     put(join(root, 'src', 'added.ts'), 'export const added = true;\n');
-    const result = computeReviewScope({ projectRoot: root, featureDir: feature });
+    const result = compute({ projectRoot: root, featureDir: feature });
     expect(result.repos).toHaveLength(1);
     expect(result.repos[0]).toMatchObject({ source: 'fallback', repoPath: '.', workingRoot: root });
     expect(result.repos[0]!.baseCommit).not.toBe('');
@@ -358,7 +395,7 @@ describe('review scope: fallback to git diff HEAD', () => {
     git(outer, 'init', '-q', '-b', 'main'); git(outer, 'add', '-A'); git(outer, 'commit', '-q', '-m', 'base');
     put(join(projectRoot, 'a.ts'), 'new\n');
     put(join(outer, 'outside.ts'), 'SECRET-OUTSIDE\n');
-    const result = computeReviewScope({ projectRoot, featureDir: feature });
+    const result = compute({ projectRoot, featureDir: feature });
     expect(result.repos[0]!.files).toEqual(['proj/a.ts']);
     expect(repoDiff(result, result.repos[0]!.repoPath)).not.toContain('SECRET-OUTSIDE');
   });
@@ -371,7 +408,7 @@ describe('review scope: fallback to git diff HEAD', () => {
     writePlan(feature, [{ n: 1, paths: ['apps/web/index.ts'] }]);
     put(join(feature, 'git-map.md'), '---\ntask_id: task-1\nfeature_branch: feat/x\n---\n\n| Sub-workspace | Repo path | Milestone | Branch | Base ref | Worktree path |\n|---|---|---|---|---|---|\n| web | apps/web | main | - | refs/heads/main | - |\n');
     put(join(root, 'apps', 'web', 'index.ts'), 'new\n');
-    const result = computeReviewScope({ projectRoot: root, featureDir: feature });
+    const result = compute({ projectRoot: root, featureDir: feature });
     expect(result.notReviewed).toEqual([]);
     expect(result.repos[0]).toMatchObject({ source: 'fallback', files: ['apps/web/index.ts'] });
   });
@@ -382,16 +419,6 @@ describe('review scope: untracked content edge cases', () => {
     const fx = fixture([{ n: 1, paths: ['apps/api/src/dirlink'] }]);
     symlinkSync(tmpdir(), join(fx.api, 'src', 'dirlink'));
     expect(scope(fx).repos[0]!.truncated).toEqual([{ path: 'src/dirlink', reason: 'unreadable' }]);
-  });
-
-  it('a file of exactly the line cap keeps its content', () => {
-    const fx = fixture([{ n: 1, paths: ['apps/api/at-cap.txt'] }]);
-    put(join(fx.api, 'at-cap.txt'), 'line\n'.repeat(2000));
-    const scoped = scope(fx);
-    const repo = scoped.repos[0]!;
-    const diff = repoDiff(scoped, repo.repoPath);
-    expect(repo.truncated).toEqual([]);
-    expect(diff).toContain('+line');
   });
 
   it('the porcelain snapshot lists files inside a new directory, so a write there changes it', () => {
@@ -458,7 +485,7 @@ describe('review scope: integrity snapshot of the artifact host', () => {
     const feature = join(root, 'specs', 'task-1');
     writePlan(feature, [{ n: 1, paths: ['src/a.ts'] }]);
     put(join(root, 'src', 'a.ts'), 'new\n');
-    const result = computeReviewScope({ projectRoot: root, featureDir: feature });
+    const result = compute({ projectRoot: root, featureDir: feature });
     expect(Object.keys(result.porcelain)).toEqual(['.']);
     expect(result.warnings).toEqual([]);
   });
@@ -519,8 +546,8 @@ describe('review scope: sub-workspace slices', () => {
     const [backend, web] = result.slices;
     expect(backend).toMatchObject({ repoPath: '.', files: ['apps/backend/src/api.ts'], routingPaths: ['apps/backend/src/api.ts'] });
     expect(web).toMatchObject({ repoPath: '.', files: ['apps/web/src/ui.ts'], routingPaths: ['apps/web/src/ui.ts'] });
-    expect(backend!.pieces.map((piece) => piece.diff).join('')).not.toContain('ui = 1');
-    expect(web!.pieces.map((piece) => piece.diff).join('')).not.toContain('api = 1');
+    expect(sliceDiff(result, backend!)).not.toContain('ui = 1');
+    expect(sliceDiff(result, web!)).not.toContain('api = 1');
     expect(result.repos[0]!.diffLines).toBe(backend!.diffLines + web!.diffLines);
     expect(result.repos[0]).not.toHaveProperty('diff');
   });
@@ -550,7 +577,7 @@ describe('review scope: sub-workspace slices', () => {
     roots.push(outer);
     const link = join(outer, 'project');
     symlinkSync(fx.root, link);
-    const result = computeReviewScope({ projectRoot: link, featureDir: join(link, 'specs', 'task-1') });
+    const result = compute({ projectRoot: link, featureDir: join(link, 'specs', 'task-1') });
     expect(result.slices).toMatchObject([{ id: 'apps/api#api', subWorkspace: 'api', routingPaths: ['apps/api/src/a.ts'] }]);
   });
 
@@ -577,63 +604,286 @@ describe('review scope: sub-workspace slices', () => {
   });
 });
 
-describe('review scope: piece packing', () => {
-  const pieceShape = (result: ReviewScope) => result.slices[0]!.pieces.map((piece) => [piece.files, piece.oversized]);
+/** The hardened per-file `git diff` the helper must reproduce, run directly from `workingRoot`. */
+const HARDENED = ['--no-ext-diff', '--no-textconv', '--no-color', '--no-renames', '--submodule=short', '--src-prefix=a/', '--dst-prefix=b/'];
+function directDiff(workingRoot: string, base: string, path: string, untracked: boolean): string {
+  const args = untracked
+    ? ['diff', '--no-index', ...HARDENED, '--', '/dev/null', path]
+    : ['diff', ...HARDENED, '--relative', base, '--', `:(literal)${path}`];
+  try { return execFileSync('git', ['-C', workingRoot, ...args], { encoding: 'utf-8' }); }
+  catch (error) { return (error as { stdout: string }).stdout; } // `--no-index` exits 1 when the files differ
+}
+const RUN_ID = /^\d{8}T\d{6}Z-[0-9a-f]{6}$/;
 
-  it('files totalling exactly the 1500 target share one piece; one more line splits them into two', () => {
-    const fx = fixture([{ n: 1, paths: ['apps/api/a.txt', 'apps/api/b.txt'] }]);
-    put(join(fx.api, 'a.txt'), lines(700, 'a'));
-    put(join(fx.api, 'b.txt'), lines(700, 'b'));
-    // New-file headers have a fixed size: measure it instead of pinning git's header layout.
-    const header = (scope(fx).slices[0]!.diffLines - 1400) / 2;
-    put(join(fx.api, 'b.txt'), lines(1500 - 700 - 2 * header, 'b'));
-    const exact = scope(fx);
-    expect(exact.slices[0]!.diffLines).toBe(1500);
-    expect(pieceShape(exact)).toEqual([[['a.txt', 'b.txt'], false]]);
-
-    put(join(fx.api, 'b.txt'), lines(1500 - 700 - 2 * header + 1, 'b'));
-    const over = scope(fx);
-    expect(over.slices[0]!.diffLines).toBe(1501);
-    expect(pieceShape(over)).toEqual([[['a.txt'], false], [['b.txt'], false]]);
-    expect(over.slices[0]!.pieces.map((piece) => piece.index)).toEqual([1, 2]);
-  });
-
-  it('one indivisible file over the target is its own oversized piece, still under the stat-only cap', () => {
-    const fx = fixture([{ n: 1, paths: ['apps/api/big.txt', 'apps/api/small.txt'] }]);
-    put(join(fx.api, 'big.txt'), lines(1600, 'big'));
-    put(join(fx.api, 'small.txt'), 'small\n');
+describe('review scope: diff files', () => {
+  it('writes each content file whole, equal to the hardened git diff, with workingRoot a subdirectory of its repo', () => {
+    const fx = innerFixture('clone', [{ n: 1, paths: ['src/be/core', 'src/be/auth'] }]);
+    put(join(fx.core, 'a.ts'), 'export const a = 3;\n');
+    rmSync(join(fx.auth, 'i.ts'));
     const result = scope(fx);
-    expect(result.slices[0]!.truncated).toEqual([]);
-    expect(pieceShape(result)).toEqual([[['big.txt'], true], [['small.txt'], false]]);
-    expect(result.slices[0]!.pieces[0]!.diff).toContain('+big-1599');
-  });
-
-  it('maps every file to exactly one piece and loses no content, including quoted and abbreviated paths', () => {
-    const longDir = `${'nested-directory-name/'.repeat(6)}deep`;
-    const quoted = process.platform === 'win32' ? [] : ['src/q"x.ts'];
-    const tracked = ['src/a.ts', 'src/with space.ts', `${longDir}/huge.ts`, ...quoted];
-    const fx = fixture([{ n: 1, paths: [...tracked, 'src/new.ts'].map((path) => `apps/api/${path}`) }]);
-    for (const path of tracked) put(join(fx.api, path), 'seed\n');
-    git(fx.api, 'add', '-A'); git(fx.api, 'commit', '-q', '-m', 'seed');
-    for (const path of tracked) put(join(fx.api, path), `marker ${path}\n`);
-    put(join(fx.api, longDir, 'huge.ts'), lines(2500, 'huge'));
-    put(join(fx.api, 'src', 'new.ts'), 'marker src/new.ts\n');
-
-    const result = scope(fx);
-    const pieces = result.slices.flatMap((slice) => slice.pieces);
-    const placed = pieces.flatMap((piece) => piece.files);
-    expect(placed.sort()).toEqual([...result.repos[0]!.files].sort());
-    expect(new Set(placed).size).toBe(placed.length);
-    for (const path of [...tracked.filter((path) => !path.endsWith('huge.ts')), 'src/new.ts']) {
-      const owners = pieces.filter((piece) => piece.diff.includes(`+marker ${path}\n`));
-      expect(owners).toHaveLength(1);
-      expect(owners[0]!.files).toContain(path);
+    expect(result.repos.map((repo) => repo.workingRoot)).toEqual([fx.core, fx.auth]);
+    const seen: string[] = [];
+    for (const repo of result.repos) {
+      for (const slice of result.slices.filter((candidate) => candidate.repoPath === repo.repoPath)) {
+        for (const change of slice.changes) {
+          const expected = directDiff(repo.workingRoot, repo.baseCommit, change.path, change.path === 'u.ts');
+          expect(expected).not.toBe('');
+          expect(readFileSync(join(fx.root, change.diffFile!), 'utf-8')).toBe(expected);
+          expect(change.diffLines).toBe(expected.trimEnd().split('\n').length);
+          seen.push(`${repo.repoPath}:${change.path}`);
+        }
+      }
     }
-    // The stat-only file keeps its own `--stat` segment even when git abbreviates the long path.
-    expect(result.slices[0]!.truncated).toEqual([{ path: `${longDir}/huge.ts`, reason: 'oversize' }]);
-    expect(pieces.every((piece) => piece.diff !== '')).toBe(true);
-    expect(pieces.map((piece) => piece.diff).join('')).toContain('1 file changed');
-    expect(result.repos[0]!.diffLines).toBe(pieces.reduce((sum, piece) => sum + piece.diffLines, 0));
+    expect(seen.sort()).toEqual(['src/be/auth:i.ts', 'src/be/core:a.ts', 'src/be/core:n.ts', 'src/be/core:u.ts']);
+    const byPath = new Map(result.slices.flatMap((slice) => slice.changes).map((change) => [change.path, change]));
+    expect(byPath.get('a.ts')).toMatchObject({ added: 1, deleted: 1 });
+    expect(byPath.get('n.ts')).toMatchObject({ added: 1, deleted: 0 });
+    expect(byPath.get('i.ts')).toMatchObject({ added: 0, deleted: 1 });
+    expect(byPath.get('u.ts')).toMatchObject({ added: 1, deleted: 0 });
+  });
+
+  describe('hunk ranges', () => {
+    const headersOf = (root: string, diffFile: string): string[] =>
+      readFileSync(join(root, diffFile), 'utf-8').split('\n').filter((line) => line.startsWith('@@')).map((line) => line.replace(/^@@ -(\S+) \+(\S+) @@.*$/, '$1 $2'));
+    const asHeader = (hunk: { oldStart: number; oldLines: number; newStart: number; newLines: number }): string => `${hunk.oldStart},${hunk.oldLines} ${hunk.newStart},${hunk.newLines}`;
+
+    it('a modified file with two separate hunks reports exactly those ranges, equal to its `@@` headers', () => {
+      const fx = fixture([{ n: 1, paths: ['apps/api/long.txt'] }]);
+      const body = Array.from({ length: 40 }, (_, i) => `row-${i + 1}\n`);
+      put(join(fx.api, 'long.txt'), body.join(''));
+      git(fx.api, 'add', '-A'); git(fx.api, 'commit', '-q', '-m', 'long');
+      put(join(fx.feature, 'git-map.md'), mapOf([{ name: 'api', path: 'apps/api' }], { api: git(fx.api, 'rev-parse', 'HEAD') }));
+      const edited = [...body];
+      edited[1] = 'changed-2\n';
+      edited[2] = 'changed-3\n';
+      edited[35] = 'changed-36\n';
+      put(join(fx.api, 'long.txt'), edited.join(''));
+      const change = scope(fx).slices[0]!.changes[0]!;
+      expect(change.hunks).toEqual([{ oldStart: 1, oldLines: 6, newStart: 1, newLines: 6 }, { oldStart: 33, oldLines: 7, newStart: 33, newLines: 7 }]);
+      expect(change.hunks.map(asHeader)).toEqual(headersOf(fx.root, change.diffFile!));
+    });
+
+    it('an untracked file reports one new-file hunk whose `newLines` is its line count', () => {
+      const fx = fixture([{ n: 1, paths: ['apps/api/fresh.txt'] }]);
+      put(join(fx.api, 'fresh.txt'), lines(7, 'f'));
+      expect(scope(fx).slices[0]!.changes[0]!.hunks).toEqual([{ oldStart: 0, oldLines: 0, newStart: 1, newLines: 7 }]);
+    });
+
+    it('a deleted tracked file reports `newStart: 0, newLines: 0`', () => {
+      const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+      rmSync(join(fx.api, 'src', 'a.ts'));
+      expect(scope(fx).slices[0]!.changes[0]!.hunks).toEqual([{ oldStart: 1, oldLines: 1, newStart: 0, newLines: 0 }]);
+    });
+
+    it('a stat-only file reports no hunks', () => {
+      const fx = fixture([{ n: 1, paths: ['apps/api/blob.bin'] }]);
+      put(join(fx.api, 'blob.bin'), Buffer.from([0, 1, 2, 0]));
+      expect(scope(fx).slices[0]!.changes[0]).toMatchObject({ diffFile: null, hunks: [] });
+    });
+
+    it('a header without counts parses as one line on each side', () => {
+      const fx = fixture([{ n: 1, paths: ['apps/api/one.txt'] }]);
+      put(join(fx.api, 'one.txt'), 'x\n');
+      git(fx.api, 'add', '-A'); git(fx.api, 'commit', '-q', '-m', 'one');
+      put(join(fx.feature, 'git-map.md'), mapOf([{ name: 'api', path: 'apps/api' }], { api: git(fx.api, 'rev-parse', 'HEAD') }));
+      put(join(fx.api, 'one.txt'), 'y\n');
+      const change = scope(fx).slices[0]!.changes[0]!;
+      expect(headersOf(fx.root, change.diffFile!)).toEqual(['1 1']);
+      expect(change.hunks).toEqual([{ oldStart: 1, oldLines: 1, newStart: 1, newLines: 1 }]);
+    });
+
+    it('a path both deleted from the index and untracked keeps every hunk in order', () => {
+      const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+      git(fx.api, 'rm', '-q', '--cached', 'src/a.ts');
+      expect(scope(fx).slices[0]!.changes[0]!.hunks).toEqual([{ oldStart: 1, oldLines: 1, newStart: 0, newLines: 0 }, { oldStart: 0, oldLines: 0, newStart: 1, newLines: 1 }]);
+    });
+  });
+
+  it('names run dir, slice and file by position; diffFile paths are POSIX and relative to the project root', () => {
+    const fx = monorepo([{ name: 'backend', path: 'apps/backend' }, { name: 'web', path: 'apps/web' }], ['apps/backend', 'apps/web']);
+    put(join(fx.root, 'apps', 'backend', 'src', 'one.ts'), 'one\n');
+    put(join(fx.root, 'apps', 'backend', 'src', 'two.ts'), 'two\n');
+    put(join(fx.root, 'apps', 'web', 'src', 'ui.ts'), 'ui\n');
+    const result = scope(fx);
+    expect(result.diffDir).toMatch(/^specs\/task-1\/reviews\/\.diff\/\d{8}T\d{6}Z-[0-9a-f]{6}$/);
+    expect(result.slices.flatMap((slice) => slice.changes.map((change) => change.diffFile))).toEqual([
+      `${result.diffDir}/01/01.diff`, `${result.diffDir}/01/02.diff`, `${result.diffDir}/02/01.diff`,
+    ]);
+    expect(existsSync(join(fx.root, `${result.diffDir}/02/01.diff`))).toBe(true);
+  });
+
+  it('is self-ignoring: `.diff/.gitignore` is `*` and the repository status is unchanged by the run', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    git(fx.root, 'init', '-q', '-b', 'main');
+    put(join(fx.api, 'src', 'a.ts'), 'changed\n');
+    const status = (): string => git(fx.root, 'status', '--porcelain=v1', '-uall');
+    const before = status();
+    const result = scope(fx);
+    expect(readFileSync(join(fx.feature, 'reviews', '.diff', '.gitignore'), 'utf-8')).toBe('*');
+    expect(status()).toBe(before);
+  });
+
+  it('restores a missing `.gitignore` when `.diff/` already exists', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    mkdirSync(join(fx.feature, 'reviews', '.diff'), { recursive: true });
+    put(join(fx.api, 'src', 'a.ts'), 'changed\n');
+    scope(fx);
+    expect(readFileSync(join(fx.feature, 'reviews', '.diff', '.gitignore'), 'utf-8')).toBe('*');
+  });
+
+  it('a second run deletes the first run directory and leaves entries that are not run ids', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    put(join(fx.api, 'src', 'a.ts'), 'changed\n');
+    const diffRoot = join(fx.feature, 'reviews', '.diff');
+    const first = scope(fx);
+    put(join(diffRoot, 'notes', 'keep.txt'), 'keep');
+    put(join(diffRoot, '20260101T000000Z-zzzzzz', 'keep.txt'), 'keep');
+    put(join(diffRoot, 'readme.txt'), 'keep');
+    const second = scope(fx);
+    expect(second.diffDir).not.toBe(first.diffDir);
+    expect(existsSync(join(fx.root, first.diffDir))).toBe(false);
+    expect(readdirSync(diffRoot).filter((name) => RUN_ID.test(name))).toEqual([second.diffDir.split('/').pop()!]);
+    for (const kept of ['notes/keep.txt', '20260101T000000Z-zzzzzz/keep.txt', 'readme.txt']) expect(existsSync(join(diffRoot, kept))).toBe(true);
+  });
+
+  it('removes a stale regular file named like a run id instead of failing every later run', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    put(join(fx.api, 'src', 'a.ts'), 'changed\n');
+    const stale = join(fx.feature, 'reviews', '.diff', '20260101T000000Z-abcdef');
+    put(stale, 'leftover');
+    const result = scope(fx);
+    expect(existsSync(stale)).toBe(false);
+    expect(existsSync(join(fx.root, result.diffDir))).toBe(true);
+  });
+
+  it('records a porcelain equal to the live status when a run restores a deleted `.gitignore`', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    git(fx.root, 'init', '-q', '-b', 'main');
+    put(join(fx.api, 'src', 'a.ts'), 'changed\n');
+    scope(fx);
+    rmSync(join(fx.feature, 'reviews', '.diff', '.gitignore'));
+    const second = scope(fx);
+    const live = execFileSync('git', ['-C', fx.root, 'status', '--porcelain=v1', '-z', '--untracked-files=all'], { encoding: 'utf-8' }).split('\0').filter(Boolean);
+    expect(second.porcelain['.']).toEqual(live);
+    expect(live.some((line) => line.includes('.diff'))).toBe(false);
+  });
+
+  it('the JSON carries no diff text', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    put(join(fx.api, 'src', 'a.ts'), 'SENTINEL-CONTENT\n');
+    const text = JSON.stringify(scope(fx));
+    expect(text).not.toContain('SENTINEL-CONTENT');
+    expect(text).not.toContain('@@');
+  });
+
+  it('JSON size follows the file count, not the diff length', () => {
+    const sizeFor = (repeat: number): number => {
+      const fx = fixture([{ n: 1, paths: ['apps/api/a.txt', 'apps/api/b.txt'] }]);
+      put(join(fx.api, 'a.txt'), lines(20 * repeat, 'a'));
+      put(join(fx.api, 'b.txt'), lines(20 * repeat, 'b'));
+      const result = scope(fx);
+      expect(result.slices[0]!.changes).toHaveLength(2);
+      // Mask what is random or machine-specific (temp root, run id) and the numeric values (line counts); the structure is what is compared.
+      return JSON.stringify(result).split(fx.root).join('ROOT').replace(/\d{8}T\d{6}Z-[0-9a-f]{6}/g, 'RUN').replace(/(?<=[:[,])\d+(?=[,}\]])/g, '#').length;
+    };
+    expect(sizeFor(10)).toBe(sizeFor(1));
+  });
+});
+
+describe('review scope: diff directory guard', () => {
+  /** Everything under `dir`, as relative path -> kind, so "nothing written or deleted" is a plain equality. */
+  function tree(dir: string, prefix = ''): string[] {
+    if (!existsSync(dir)) return [];
+    return readdirSync(dir).sort().flatMap((name) => {
+      const info = lstatSync(join(dir, name));
+      const path = `${prefix}${name}`;
+      return info.isDirectory() ? [`${path}/`, ...tree(join(dir, name), `${path}/`)] : [path];
+    });
+  }
+  function refused(fx: Fx): ReviewScopeError {
+    put(join(fx.api, 'src', 'a.ts'), 'changed\n');
+    return stop(fx);
+  }
+
+  it('refuses a `reviews` symlink and writes nothing through it', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    const outside = realpathSync(mkdtempSync(join(tmpdir(), 'review-outside-')));
+    roots.push(outside);
+    symlinkSync(outside, join(fx.feature, 'reviews'));
+    expect(refused(fx)).toMatchObject({ code: 'diff_write_failed', details: { reason: 'reviews_unsafe' } });
+    expect(tree(outside)).toEqual([]);
+  });
+
+  it('refuses a `reviews/.diff` symlink and writes nothing through it', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    const outside = realpathSync(mkdtempSync(join(tmpdir(), 'review-outside-')));
+    roots.push(outside);
+    mkdirSync(join(fx.feature, 'reviews'));
+    symlinkSync(outside, join(fx.feature, 'reviews', '.diff'));
+    expect(refused(fx)).toMatchObject({ code: 'diff_write_failed', details: { reason: 'diff_root_unsafe' } });
+    expect(tree(outside)).toEqual([]);
+  });
+
+  it('refuses a run-id-named symlink pointing outside: nothing is deleted through it and nothing is written', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    const outside = realpathSync(mkdtempSync(join(tmpdir(), 'review-outside-')));
+    roots.push(outside);
+    put(join(outside, 'precious.txt'), 'precious');
+    const diffRoot = join(fx.feature, 'reviews', '.diff');
+    mkdirSync(diffRoot, { recursive: true });
+    symlinkSync(outside, join(diffRoot, '20260101T000000Z-abcdef'));
+    const older = join(diffRoot, '20250101T000000Z-123456');
+    put(join(older, 'x.diff'), 'older');
+    const before = tree(diffRoot);
+    expect(refused(fx)).toMatchObject({ code: 'diff_write_failed', details: { reason: 'run_dir_unsafe' } });
+    expect(tree(outside)).toEqual(['precious.txt']);
+    expect(tree(diffRoot)).toEqual(before);
+  });
+
+  it('refuses a `.gitignore` that is a symlink or a directory, without writing through it', () => {
+    for (const make of ['symlink', 'directory'] as const) {
+      const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+      const outside = realpathSync(mkdtempSync(join(tmpdir(), 'review-outside-')));
+      roots.push(outside);
+      const diffRoot = join(fx.feature, 'reviews', '.diff');
+      mkdirSync(diffRoot, { recursive: true });
+      if (make === 'symlink') symlinkSync(join(outside, 'target'), join(diffRoot, '.gitignore'));
+      else mkdirSync(join(diffRoot, '.gitignore'));
+      expect(refused(fx)).toMatchObject({ code: 'diff_write_failed', details: { reason: 'gitignore_unsafe' } });
+      expect(tree(outside)).toEqual([]);
+    }
+  });
+
+  it('refuses `.diff` when it is a regular file', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    mkdirSync(join(fx.feature, 'reviews'));
+    put(join(fx.feature, 'reviews', '.diff'), 'not a directory');
+    expect(refused(fx)).toMatchObject({ code: 'diff_write_failed', details: { reason: 'diff_root_unsafe' } });
+    expect(readFileSync(join(fx.feature, 'reviews', '.diff'), 'utf-8')).toBe('not a directory');
+  });
+
+  it.skipIf(process.getuid?.() === 0)('maps an I/O failure to `diff_write_failed`, e.g. a read-only `.diff`', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    const diffRoot = join(fx.feature, 'reviews', '.diff');
+    mkdirSync(diffRoot, { recursive: true });
+    chmodSync(diffRoot, 0o555);
+    try {
+      expect(refused(fx)).toMatchObject({ code: 'diff_write_failed', details: { reason: 'EACCES' } });
+    } finally { chmodSync(diffRoot, 0o755); }
+  });
+
+  it('refuses a feature dir outside the project and keeps project-relative details', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    const elsewhere = realpathSync(mkdtempSync(join(tmpdir(), 'review-feature-')));
+    roots.push(elsewhere);
+    cpSync(fx.feature, join(elsewhere, 'task-1'), { recursive: true });
+    put(join(fx.api, 'src', 'a.ts'), 'changed\n');
+    let error: unknown;
+    try { compute({ projectRoot: fx.root, featureDir: join(elsewhere, 'task-1') }); } catch (caught) { error = caught; }
+    expect(error).toBeInstanceOf(ReviewScopeError);
+    expect(error).toMatchObject({ code: 'diff_write_failed', details: { reason: 'feature_outside_project' } });
+    expect(JSON.stringify((error as ReviewScopeError).details)).not.toContain(elsewhere);
+    expect(existsSync(join(elsewhere, 'task-1', 'reviews'))).toBe(false);
   });
 });
 
@@ -643,11 +893,12 @@ describe('review scope: segment edge cases', () => {
     git(fx.api, 'rm', '-q', '--cached', 'src/a.ts');
     const result = scope(fx);
     expect(result.repos[0]!.files).toEqual(['src/a.ts']);
-    const pieces = result.slices[0]!.pieces;
-    expect(pieces).toHaveLength(1);
-    expect(pieces[0]!.diff).toContain('deleted file mode');
-    expect(pieces[0]!.diff).toContain('new file mode');
-    expect(pieces[0]!.diff.split('+export const a = 1;')).toHaveLength(2);
+    const diff = sliceDiff(result, result.slices[0]!);
+    expect(result.slices[0]!.changes).toHaveLength(1);
+    expect(diff).toContain('deleted file mode');
+    expect(diff).toContain('new file mode');
+    expect(diff.split('+export const a = 1;')).toHaveLength(2);
+    expect(result.slices[0]!.changes[0]).toMatchObject({ added: 1, deleted: 1 });
   });
 
   it('a file replaced by a directory does not pull the directory content into its own segment twice', () => {
@@ -660,11 +911,11 @@ describe('review scope: segment edge cases', () => {
     expect(diff.split('+export const inner = 1;')).toHaveLength(2);
   });
 
-  it('a slice whose only entry has no content gets no piece, so nothing is dispatched for it', () => {
+  it('a slice whose only entry has no content has no diff file, so nothing is dispatched for it', () => {
     const fx = fixture([{ n: 1, paths: ['apps/api/nested'] }]);
     initRepo(join(fx.api, 'nested', 'lib'), { 'x.ts': 'x\n' });
     const result = scope(fx);
-    expect(result.slices).toMatchObject([{ id: 'apps/api#api', files: ['nested/lib/'], truncated: [{ path: 'nested/lib/', reason: 'directory' }], pieces: [], diffLines: 0 }]);
+    expect(result.slices).toMatchObject([{ id: 'apps/api#api', files: ['nested/lib/'], truncated: [{ path: 'nested/lib/', reason: 'directory' }], changes: [{ path: 'nested/lib/', added: null, deleted: null, diffLines: 0, diffFile: null, hunks: [] }], diffLines: 0 }]);
   });
 });
 
@@ -950,13 +1201,16 @@ describe('review scope: sub-workspaces inside a repository group worktree', () =
       ]);
       expect(result.slices.map((slice) => slice.id)).toEqual(['src/be/core#core', 'src/be/auth#auth']);
       expect(result.slices[0]!.routingPaths).toEqual(['src/be/core/a.ts', 'src/be/core/n.ts', 'src/be/core/u.ts']);
-      const diff = result.slices.flatMap((slice) => slice.pieces.map((piece) => piece.diff)).join('');
+      const diff = result.slices.map((slice) => sliceDiff(result, slice)).join('');
       expect(diff).toContain('+export const u = 1;');
       expect(diff).toContain('+export const i = 2;');
       expect(diff).not.toContain('other-task');
       expect(result.notReviewed).toEqual([]);
       expect(result.incomplete).toBe(false);
       expectDisjointSlices(result);
+      // Each inner row is snapshot where it was diffed: replaying its key reads the worktree, not the main checkout.
+      expect(Object.keys(result.porcelain)).toEqual(expect.arrayContaining([`${WT1}/core`, `${WT1}/auth`]));
+      expect(replayPorcelain(result)).toEqual(result.porcelain);
     });
 
     it(`${kind}: Shared.Data routes to shared-data and Shared to shared, whether or not an own row exists`, () => {
@@ -1020,11 +1274,11 @@ describe('review scope: sub-workspaces inside a repository group worktree', () =
 
       const first = scope(fx);
       expect(first.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['src/be/core', ['a.ts']], ['src/be/auth', ['i.ts']]]);
-      const other = computeReviewScope({ projectRoot: fx.root, featureDir: second });
+      const other = compute({ projectRoot: fx.root, featureDir: second });
       expect(other.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['src/be/core', ['t2.ts']], ['src/be/Shared', ['s.ts']]]);
       for (const result of [first, other]) {
         expect(result.incomplete).toBe(false);
-        expect(result.slices.map((slice) => slice.pieces.map((piece) => piece.diff).join('')).join('')).not.toContain('other-task');
+        expect(result.slices.map((slice) => sliceDiff(result, slice)).join('')).not.toContain('other-task');
       }
       expect(repoDiff(first, 'src/be/core')).not.toContain('t2.ts');
       expect(repoDiff(other, 'src/be/core')).not.toContain('a.ts');
@@ -1150,7 +1404,7 @@ describe('review scope: own repositories inside another row', () => {
       const feature = join(root, 'specs', 'task-1');
       writePlan(feature, [{ n: 1, paths: ['src/be/src/a.ts', 'src/be/lib/src/a.ts'] }]);
       put(join(feature, 'git-map.md'), mapOf(subWorkspaces, { be: beBase, lib: libBase }));
-      const result = computeReviewScope({ projectRoot: root, featureDir: feature });
+      const result = compute({ projectRoot: root, featureDir: feature });
       expect(result.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['src/be', ['src/a.ts']], ['src/be/lib', ['src/a.ts']]]);
       expect(result.slices.map((slice) => slice.id)).toEqual(['src/be#be', 'src/be/lib#lib']);
     });
@@ -1228,7 +1482,7 @@ describe('review scope: plain directory rows and lost repositories', () => {
     put(join(feature, 'git-map.md'), mapOf([{ name: 'api', path: 'apps/api' }], { api: base }));
     put(join(root, 'apps', 'api', 'src', 'a.ts'), 'changed\n');
     rmSync(join(root, 'apps', 'api', '.git'), { recursive: true, force: true });
-    const result = computeReviewScope({ projectRoot: root, featureDir: feature });
+    const result = compute({ projectRoot: root, featureDir: feature });
     expect(result.notReviewed).toEqual([{ subWorkspace: 'api', state: 'invalid-base-commit', reason: 'does not name a commit in this repository; apps/api is not a separate git repository', blocking: true }]);
     expect(result.incomplete).toBe(true);
     expect(result.repos).toEqual([]);
@@ -1265,7 +1519,7 @@ describe('review scope: plain directory rows and lost repositories', () => {
     const feature = join(root, 'specs', 'task-1');
     writePlan(feature, [{ n: 1, paths: ['apps/api'] }]);
     put(join(feature, 'git-map.md'), mapOf(subWorkspaces, { apps: base }));
-    const result = computeReviewScope({ projectRoot: root, featureDir: feature });
+    const result = compute({ projectRoot: root, featureDir: feature });
     expect(result.repos.map((repo) => [repo.repoPath, repo.files])).toEqual([['apps', ['api', 'api/x.ts']]]);
     const diff = repoDiff(result, 'apps');
     expect(diff).toContain('+Subproject commit ');
@@ -1326,6 +1580,9 @@ describe('review-scope bundle', () => {
     const result = await run(fx);
     expect(result.exitCode).toBe(0);
     expect(result.payload).toMatchObject({ ok: true, empty: false, repos: [{ subWorkspace: 'api', source: 'git-map' }] });
+    const [change] = result.payload.slices[0].changes;
+    expect(readFileSync(join(fx.root, change.diffFile), 'utf-8')).toContain('+changed');
+    expect(JSON.stringify(result.payload)).not.toContain('+changed');
   });
 
   it('exits 1 with the error envelope for an in_progress phase, and rejects a non-numeric --phase', async () => {
@@ -1352,7 +1609,7 @@ describe('review-scope bundle', () => {
     expect(scoped.exitCode).toBe(0);
     expect(scoped.payload).toMatchObject({ ok: true, empty: false });
     const repo = scoped.payload.repos[0];
-    const diff = repoDiff(scoped.payload, repo.repoPath);
+    const diff = repoDiff(track(scoped.payload, fx.root), repo.repoPath);
     expect(repo.files.sort()).toEqual(['src/a.ts', 'src/b.ts']);
     // The planted defect sits in an untracked file: its content must reach the reviewers.
     expect(diff).toContain('+export function run(x) { return eval(x); }');
