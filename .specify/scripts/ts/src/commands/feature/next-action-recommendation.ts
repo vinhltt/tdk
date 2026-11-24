@@ -91,12 +91,11 @@ function implementRule({ taskId, feature_status, phases }: NextActionInput): Rec
   return rec('impl-all', line(`/tdk-implement ${taskId}`, reason), phaseOnly);
 }
 
-/** Fix-seed form: the single Ready line verbatim, a generic Append for several, the report path when none parsed. */
+/** Fix-seed form: a pointer to the report so `/tdk-plan` reads every fix group at once; the report path when no seed parsed. */
 function seedLine(ref: ReviewRef, taskId: string): RecommendationLine {
-  if (ref.seedCount === 1 && ref.seedReady !== null) {
-    return line(ref.seedReady, `Review requested changes, apply the fix seed from ${ref.file}`);
+  if (ref.seedCount >= 1) {
+    return line(`/tdk-plan ${taskId} "${ref.file}"`, `Review requested changes; append its fix phases from ${ref.file} in one run`);
   }
-  if (ref.seedCount >= 2) return line(`/tdk-plan ${taskId}`, `${ref.seedCount} fix seeds in ${ref.file}; Append each`);
   return line(`/tdk-plan ${taskId}`, `Review requested changes but no fix seeds parsed, see ${ref.file}`);
 }
 
@@ -140,9 +139,8 @@ function doneRule({ taskId, testEvidence, reviews, gitUncommitted }: NextActionI
   const hint = gitUncommitted > 0
     ? `; ${gitUncommitted} uncommitted file(s) under feature dir — commit them first, /tdk-archive blocks on uncommitted changes`
     : '';
-  const seeds = latest.seedCount;
-  const unapplied = latest.verdict === 'pass_with_concerns' && seeds >= 1
-    ? line(seedLine(latest, taskId).command, `${seeds} unapplied fix seed${seeds === 1 ? '' : 's'}`)
+  const unapplied = latest.verdict === 'pass_with_concerns' && latest.seedCount >= 1
+    ? line(seedLine(latest, taskId).command, `fix phases proposed in ${latest.file}`)
     : undefined;
   const reason = `Reviewed ${reviews.fullCount}× (latest: ${latest.verdict}, ${reviewDate(latest)})${hint}`;
   return rec('archive-ready', line(`/tdk-archive ${taskId}`, reason), unapplied);

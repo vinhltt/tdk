@@ -30,6 +30,10 @@ describe('status preflight skill contract', () => {
   const implementContract = `${implementSkill}\n${implementReferenceText}`;
   const statusSkill = read(STATUS_SKILL);
 
+  it('tdk-status matches a fix group to phases per report, because finding IDs repeat across reports', () => {
+    expect(statusSkill).toMatch(/with a finding ID that no phase covers\s+through a `Review:` line in `## Context Links` naming that report/);
+  });
+
   it('tdk-implement runs the status collector before execution', () => {
     expect(implementSkill).toContain('### Step 2: Status Preflight');
     expect(implementContract).toContain('src/commands/feature/status.ts {TASK_ID}');

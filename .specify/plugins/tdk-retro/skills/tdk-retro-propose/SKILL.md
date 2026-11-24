@@ -2,7 +2,7 @@
 name: tdk-retro-propose
 description: "Read retro-feedback.md and propose concrete technical or memory learning deltas. Writes learning-delta.md."
 metadata:
-  version: "1.4.0"
+  version: "1.5.0"
   category: "TDK Retro"
   requires:
     - tdk-retro-collect
@@ -53,6 +53,8 @@ Fixture fallback: if path resolution fails and `$PROJECT_DIR/.specify/examples/s
 Read `{FEATURE_DIR}/retro-feedback.md`. If missing, stop and ask the user to run `/tdk-retro-collect {TASK_ID}` first.
 
 When reading `## From: User Feedback`, use only entries with `status: active`; ignore entries with `status: removed`.
+
+When reading `## From: Reviews`, the lines under `### Findings without a fix phase` carry no reason, because none is recorded. A finding without a fix phase is a signal for a process proposal, not evidence that a defect was missed. The `- [severity] {finding}` bullets stay the source of each review finding's severity.
 
 If `{FEATURE_DIR}/learning-delta.md` exists, read it too. This is a re-run, and Steps 5 and 6 use it.
 
@@ -124,7 +126,7 @@ For each feedback signal:
    - `reverses` when it removes, contradicts, or narrows away an obligation of an `applied` prior entry that is not superseded. The lookup describes how to check that.
    - `repeats-rejected` when it proposes again what a `rejected` prior entry proposed. Quote that entry's `rejection_reason` in `rationale` when it has one.
 10. For `reverses` and `repeats-rejected`, test the signal against the evidence rule in `../_shared/learning-delta-schema.md`. Write what changed to `new_evidence`, or `new_evidence: none` when nothing qualifies. The entry stays `proposed` either way: the reviewer decides. Propose the change the signal asks for, even when it reverses earlier learning without evidence: do not drop it or soften it into a compatible change. Name a compatible alternative in `rationale` when one exists.
-11. Limit output to 10 new entries, highest severity first.
+11. Limit output to 10 new entries, highest severity first. For review signals, the `- [severity] {finding}` bullets stay the primary severity source. A finding without a fix phase is a signal for a process proposal, not evidence that a defect was missed.
 
 ## Step 6: Write learning-delta.md
 

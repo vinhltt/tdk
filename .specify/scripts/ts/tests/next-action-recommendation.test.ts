@@ -205,17 +205,20 @@ describe('done rules', () => {
     expect(r.primary).toEqual({ command: `/tdk-review ${ID}`, reason: 'plan changed after review 2026-10-19' });
   });
 
-  it('review-changes: one seed is the Ready line verbatim', () => {
+  it('review-changes: one seed recommends the report pointer', () => {
     const line = seedLine('Fix the retry loop');
     const r = recommendNextAction(input({ reviews: reviews(ref({ verdict: 'changes_requested', seedCount: 1, seedReady: line })) }));
     expect(r.rule).toBe('review-changes');
-    expect(r.primary.command).toBe(line);
+    expect(r.primary).toEqual({
+      command: `/tdk-plan ${ID} "reviews/20261019-090000-full-standard.md"`,
+      reason: 'Review requested changes; append its fix phases from reviews/20261019-090000-full-standard.md in one run',
+    });
     expect(r.alternative?.command).toBe(`/tdk-review ${ID}`);
   });
 
-  it('review-changes: several seeds append each', () => {
+  it('review-changes: several seeds recommend the same report pointer', () => {
     const r = recommendNextAction(input({ reviews: reviews(ref({ verdict: 'changes_requested', seedCount: 3 })) }));
-    expect(r.primary).toEqual({ command: `/tdk-plan ${ID}`, reason: '3 fix seeds in reviews/20261019-090000-full-standard.md; Append each' });
+    expect(r.primary.command).toBe(`/tdk-plan ${ID} "reviews/20261019-090000-full-standard.md"`);
   });
 
   it('review-changes: no parsed seed points at the report', () => {
@@ -240,15 +243,15 @@ describe('done rules', () => {
     expect(r.alternative).toBeUndefined();
   });
 
-  it('archive-ready: pass_with_concerns with one seed offers that seed', () => {
+  it('archive-ready: pass_with_concerns with one seed offers the report pointer', () => {
     const line = seedLine('Tighten input validation');
     const r = recommendNextAction(input({ reviews: reviews(ref({ verdict: 'pass_with_concerns', seedCount: 1, seedReady: line })) }));
-    expect(r.alternative).toEqual({ command: line, reason: '1 unapplied fix seed' });
+    expect(r.alternative).toEqual({ command: `/tdk-plan ${ID} "reviews/20261019-090000-full-standard.md"`, reason: 'fix phases proposed in reviews/20261019-090000-full-standard.md' });
   });
 
-  it('archive-ready: pass_with_concerns with several seeds offers the generic Append form', () => {
+  it('archive-ready: pass_with_concerns with several seeds offers the same report pointer', () => {
     const r = recommendNextAction(input({ reviews: reviews(ref({ verdict: 'pass_with_concerns', seedCount: 2 })) }));
-    expect(r.alternative).toEqual({ command: `/tdk-plan ${ID}`, reason: '2 unapplied fix seeds' });
+    expect(r.alternative).toEqual({ command: `/tdk-plan ${ID} "reviews/20261019-090000-full-standard.md"`, reason: 'fix phases proposed in reviews/20261019-090000-full-standard.md' });
   });
 
   it('archive-ready: a pass never offers seeds', () => {

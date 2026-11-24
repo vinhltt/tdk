@@ -132,6 +132,8 @@ The per-batch `spec` rows are inputs to synthesis only. The synthesized per-crit
 
 Union the verified findings and dedupe by `(repoPath, file, line ±2, lens-agnostic title)`. The same path in two repos is never merged. Keep the highest severity and every contributor (lens, slice id and batch). If dedupe would merge findings that name different requirements, keep them separate.
 
+Then number the deduped findings `F1`…`Fn` for the whole report: by severity (`critical` first, `low` last), then by `repoPath`, file and line. A `missing` finding has no location: within its severity it comes after the located findings, ordered by `requirement_ref`. A reviewer's own `id` stays inside its invocation and never reaches the report, and a Not verified finding gets no ID. `F<n>` is a finding ID of this report only; it is unrelated to the F-numbered rule labels in tdk-plan's references, such as F13.
+
 ## 7. Verdict
 
 | Verdict | When |

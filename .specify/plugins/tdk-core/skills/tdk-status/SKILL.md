@@ -2,7 +2,7 @@
 name: tdk-status
 description: "This skill should be used when the user asks to 'check status', 'tdk-status', 'what's the progress of <task-id>', 'which branch is each repo on', or needs a read-only report of a TDK feature's artifacts, phase progress, and per-repository branch state. Never modifies files."
 metadata:
-  version: "14.3.5"
+  version: "14.6.0"
 ---
 
 # /tdk-status - Track Workflow Progress
@@ -64,7 +64,8 @@ Use structured JSON fields, not this skill's formatted report or recommendation 
   `null`. Both have the same shape: `reviews.latestFull.file`, `reviews.latestFull.verdict`
   (`pass` | `pass_with_concerns` | `changes_requested` | `blocked` | `unknown`), `reviews.latestFull.scope`,
   `reviews.latestFull.generatedAt`, `reviews.latestFull.blockedReason` (empty unless `blocked`),
-  `reviews.latestFull.seedCount` (Ready lines under `## Proposed Fix Phases`), `reviews.latestFull.seedReady`
+  `reviews.latestFull.seedCount` (Ready lines under the last `## Proposed Fix Phases` heading; a current report has
+  one, pointing at the report itself), `reviews.latestFull.seedReady`
   (that line when there is exactly one, else `null`) and `reviews.latestFull.stale` (`plan.md` or a phase file
   changed after the report was generated)
 - `reviews.ignored`: `reviews/*.md` files without a usable `verdict`, such as `analyze-report.md`
@@ -268,8 +269,8 @@ matching row wins, in this order. `recommendation.rule` names the row:
 | `review-blocked` | latest full verdict `blocked` | `/tdk-review <id>` | — |
 | `review-unknown` | latest full verdict `unknown` | `/tdk-review <id>` | — |
 | `review-stale` | latest full review older than `plan.md` / phase files | `/tdk-review <id>` | — |
-| `review-changes` | latest full verdict `changes_requested` | the fix seed: its Ready line, or `/tdk-plan <id>` | `/tdk-review <id>` |
-| `archive-ready` | latest full verdict `pass` / `pass_with_concerns` | `/tdk-archive <id>` | the fix seed when `pass_with_concerns` left seeds |
+| `review-changes` | latest full verdict `changes_requested` | `/tdk-plan <id> "reviews/<file>"` when a seed was parsed, else `/tdk-plan <id>` | `/tdk-review <id>` |
+| `archive-ready` | latest full verdict `pass` / `pass_with_concerns` | `/tdk-archive <id>` | `/tdk-plan <id> "reviews/<file>"` when `pass_with_concerns` left seeds |
 
 ### 💭 Agent Insight (optional)
 After the Recommendation, add this section only when something material is worth saying; omit it otherwise.
@@ -281,7 +282,8 @@ After the Recommendation, add this section only when something material is worth
   other option.
 - UT judgment: when the ladder has moved past tests but a phase changed logic or data with no matching test file,
   you may suggest `/tdk-plan <id> --ut-backfill`, citing the phase file and the missing test path.
-- Other signals worth a bullet: fix seeds not yet in the phase list, `git.uncommitted` above 0 before review or
+- Other signals worth a bullet: fix groups (`### G<k>` under the report's Proposed Fix Phases) with a finding ID that no phase covers
+  through a `Review:` line in `## Context Links` naming that report (your reading of the phase files, not a JSON field), `git.uncommitted` above 0 before review or
   archive, `stale` / `outdated` warnings, drifted sub-workspaces, `/tdk-review <id> --phase NN` after a risky
   phase mid-implementation, and `reviews.latestAny` differing from `reviews.latestFull` (`/tdk-archive` close-out
   reads the newest review of any scope, the ladder the newest full one).

@@ -302,6 +302,14 @@ describe('tdk-archive skill contract', () => {
     expect(DRAFTING).not.toMatch(/last two path segments/);
   });
 
+  it('drafts follow-up seeds from unapplied fix groups as description seeds, not report pointers', () => {
+    const debt = DRAFTING.split('\n').find((line) => line.startsWith('| Debt & follow-ups |')) ?? '';
+    expect(debt).toContain('### G<k>');
+    expect(debt).toMatch(/finding IDs are all covered by the `Review:` lines[^|]*that name that same review, taken over all phases/);
+    expect(debt).toContain('/tdk-plan <task-id> "<Description of G<k>>"');
+    expect(debt).toMatch(/never a `reviews\/<file>` pointer/);
+  });
+
   it('keeps SKILL.md within its size budget', () => {
     expect(SKILL.split('\n').length).toBeLessThanOrEqual(150);
   });

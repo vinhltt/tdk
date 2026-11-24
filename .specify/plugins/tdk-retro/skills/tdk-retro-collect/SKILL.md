@@ -2,7 +2,7 @@
 name: tdk-retro-collect
 description: "Create or update retrospective feedback after a TDK spec: reviews, phase drift, UT results, Langfuse traces when available, and user feedback. Writes retro-feedback.md and supports adding or removing user feedback entries across repeated collection runs."
 metadata:
-  version: "1.2.0"
+  version: "1.5.0"
   category: "TDK Retro"
   requires:
     - tdk-implement
@@ -90,6 +90,23 @@ red-team sessions, use the final report and any unresolved deferred report.
 If neither directory exists, record `Status: skipped` for reviews with reason `no review files found`.
 
 Extract findings semantically. Do not use regex-only parsing for markdown prose.
+
+### Map findings to fix phases
+
+Map the findings of each tdk-review report to the phases planned to fix them. The map reads only the reports directly under `{FEATURE_DIR}/reviews/` (`reviews/*.md`): never `{FEATURE_DIR}/reviews/.diff/`, `review-reports/` or red-team reports. Read the labels below semantically too, like the findings above; do not match them with a regex alone.
+
+A report's `Proposed Fix Phases` section starts at the last heading that names it, so a heading quoted in a finding's evidence does not count. Older reports may number it, as in `7. Proposed Fix Phases`. Then, per report, take the first case that applies:
+
+- Its frontmatter `verdict` is `blocked`: `/tdk-plan` refuses it, so its findings can have no fix phase. Record `Status: skipped` for its map, with reason `review was blocked`. The finding extraction above still runs for it.
+- No such section: the report stays out of the map.
+- The section says `None.`: the report has no finding to map.
+- The section has no `### G<k>` block or no `- Findings:` line: the report predates finding links. Record `Status: skipped` for its map, with reason `report predates finding links`. The finding extraction above still runs for it.
+- Otherwise, map it:
+  1. From each `### G<k>` block, read the finding IDs (`F<n>`) on its `- Findings:` line.
+  2. Join each finding ID with the same report's **Findings by severity** section to get its severity. A `G<k>` block carries no severity.
+  3. For each phase in the Step 2 table, read the `- Review:` line in the `## Context Links` section of its phase file, for example ``- Review: `../reviews/<file>.md` (F2, F5)``. It names the report, matched by file name, and in parentheses the finding IDs that phase fixes. A `Review:` line without parentheses links an older report and names no finding.
+  4. Pair each finding with every phase whose `Review:` line names its report and its ID, with that phase's status from the Step 2 table. A finding named by several phases gets one pairing per phase.
+  5. A finding that no phase names has no fix phase. Label it `no fix phase; no recorded reason`: why a group got no phase is never stored, so never guess a reason.
 
 ## Step 4: Detect Phase Drift
 
@@ -193,6 +210,8 @@ Required source sections:
 - UT Execution
 - Langfuse Traces
 - User Feedback
+
+Under Reviews, after the finding bullets, write the Step 3 map as the schema's two blocks, `### Finding → fix phase` and `### Findings without a fix phase`.
 
 ## Completion
 

@@ -32,7 +32,7 @@ Every mutating invocation classifies and validates what it writes:
 
 - **New:** classify and validate every generated phase.
 - **Append:** preserve untouched legacy phase files byte-for-byte. Classify and
-  validate only the appended phase, then validate the complete access-set input.
+  validate only the appended phases, then validate the complete access-set input.
 - **Rewrite:** after explicit destructive confirmation, reclassify and validate
   every rewritten phase. No rewritten phase receives the legacy exemption;
   preserve the exclusion of `research/`, `reports/`, `contracts/`, and legacy
@@ -378,8 +378,10 @@ variables below:
    its complete `auto` access set (including phases not currently ready):
    `(cd "$PROJECT_DIR/.specify/scripts/ts" && bun src/commands/util/validate-phase-file.ts "$PHASE_PATH" --phase-number "$PHASE_NUMBER" --plan "$FEATURE_DIR/plan.md" --mode parallel --project-root "$PROJECT_DIR" --json)`
 4. Validate write disjointness across every `parallel_safe: auto` phase in the
-   plan, including phases no wave could start yet. Build `ACCESS_SETS_JSON`
-   yourself: for each `auto` phase, read its `## Related Code Files` section and
+   plan that is not `done`, `skipped` or `cancelled`, including phases no wave
+   could start yet. A finished phase never enters a wave, and its `Create:` or
+   `Delete:` targets no longer match the tree. Build `ACCESS_SETS_JSON`
+   yourself: for each of those phases, read its `## Related Code Files` section and
    map the `Read:`, `Modify:`, `Create:`, and `Delete:` bullets to one JSON
    element, then pass the complete array on stdin in exactly one call. Do not
    shell out to a markdown parser.
@@ -402,7 +404,7 @@ variables below:
    a write-policy rejection and fails the gate; exit `1` is an unexpected failure.
 
 New and rewrite validate every generated phase. Append validates only the
-appended phase at gate 3, while gate 4 checks every `auto` phase in the plan.
+appended phases at gate 3, while gate 4 checks every unfinished `auto` phase in the plan.
 Accept legacy-metadata warnings for untouched append phases. Any invalid result,
 unexpected non-zero exit, malformed JSON, or runtime/I/O error removes only
 invocation-new files and STOPs with exact diagnostics.

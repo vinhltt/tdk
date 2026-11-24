@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.5.0] - 2026-11-24
+
+### Added
+- tdk-retro-collect: finding to fix phase map with phase status, and a list of findings without a fix phase; reports that predate finding links and blocked reports are skipped with a reason
+
+### Changed
+- tdk-retro-propose: a finding without a fix phase is a signal for a process proposal, not a missed defect
+
 ## [1.4.0] - 2026-11-10
 
 ### Added

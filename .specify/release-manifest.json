@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "algorithm": "sha256",
-  "generatedAt": "2026-11-21T08:39:14.993Z",
+  "generatedAt": "2026-11-24T02:09:35.789Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -135,8 +135,8 @@
       "mode": "0644"
     },
     ".specify/docs/en/guides/skills-guide.md": {
-      "sha256": "de6f0101cd26b34ca2096552a8643f3da14eab21ad2f45841d348435aa498f99",
-      "size": 86763,
+      "sha256": "42ff80ae49cfdd12b27cf2a0aaa14d9fa7619a034f857106940c3fca87e014be",
+      "size": 88134,
       "mode": "0644"
     },
     ".specify/docs/en/guides/workflow-map.md": {
@@ -200,8 +200,8 @@
       "mode": "0644"
     },
     ".specify/docs/vi/guides/skills-guide.md": {
-      "sha256": "a5d3daa6d97734d403c60d19cfde742be28861b3ea70b71a25ec590e4858ee20",
-      "size": 90624,
+      "sha256": "f037affc70874fc28c02a05f86ef1365fb876ee918655dfa8562de5d662d26f9",
+      "size": 92263,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/workflow-map.md": {
@@ -210,7 +210,7 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "e830ca35d874a9d4b4d86b99dd41b081e235f62c57f92511295345eeda3e331d",
+      "sha256": "c7cf072690b894c64b3e2cce38b0b212290f6f62738c5b191c8b724645620ece",
       "size": 51137,
       "mode": "0644"
     },
@@ -225,23 +225,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "658539777b052b33c39e0e386c04395b496eeeaa44cd6941ff1b911c38fc68ad",
+      "sha256": "648a34a80f7a5d11d1f050c2b2dd8926f68bd02bf13dba0b9851953182e0f73f",
       "size": 191,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "f4a4d401ac1faecd39862af069cd91a0e019e2943c2154be02d645d787becbab",
+      "sha256": "90401f09f19d3318c9a2aee1d18588e5e706ad68963c16265c86492a4954c110",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "f4a4d401ac1faecd39862af069cd91a0e019e2943c2154be02d645d787becbab",
+      "sha256": "90401f09f19d3318c9a2aee1d18588e5e706ad68963c16265c86492a4954c110",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "7944b4b5ab4b0391f93f473d13709ed8044c22aa27d4f73aafc63a2a862e596e",
-      "size": 56022,
+      "sha256": "d616dfc5fe6b277d18ce08f98aae11b03c241e466917a409a8dc70efe66bc14c",
+      "size": 57360,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/agents/tdk-counsel.md": {
@@ -330,13 +330,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-archive/SKILL.md": {
-      "sha256": "e22f92e09bf1a0bcd80bd0e3a44004735df3462005df5edd093b465081ee812a",
+      "sha256": "cb780918450f45980e29a5bf10f9c2323370b1a8b30073ccfb6c64a5c4bb3eae",
       "size": 10863,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-archive/references/close-out-drafting.md": {
-      "sha256": "69616e88b832f05bf4fcfdda85e550a3f5461048b8ce1182d8e7cc11ee14beef",
-      "size": 7472,
+      "sha256": "a9dc373673e3fa4bf4af9c86676d6de1631093729f2c77131f462222b52567f9",
+      "size": 7918,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-archive/references/ingest-workflow.md": {
@@ -390,8 +390,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/SKILL.md": {
-      "sha256": "8f32c5016cf7c315c4dd68d744aa343f9be5b999c51e211edd57ad32cf5ac80d",
-      "size": 33189,
+      "sha256": "946c841ae8a841ab6724f0ebb229b5f1aebded77c4374b99d481eb514a21c9ff",
+      "size": 36432,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/cross-plan-deps.md": {
@@ -415,8 +415,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/handle-existing-plan.md": {
-      "sha256": "139d0e5407da5f6e72165ef2954c78bc17b6e4a0c99e48d748ef663682550076",
-      "size": 12125,
+      "sha256": "6556fbcdd1b3663560b6876a8142584f6de7e7a486826fee2ff0d60998cf443d",
+      "size": 21836,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/migrate-artifacts-workflow.md": {
@@ -425,13 +425,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/modes.md": {
-      "sha256": "f1ded79b94820bcb22d40b83cbe240f505864865e5c7d55bd6a06579ad47d2f5",
-      "size": 12489,
+      "sha256": "92a51bf624d7042bdafa3d1b434ab571b866bd55409a75ff26585373f712ed7c",
+      "size": 12745,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/plan-output-contract.md": {
-      "sha256": "4fb5aaa40c3c49e07520f2e477b0c99fff9bbbd43ecdf4b0176cb86b1c336eef",
-      "size": 22175,
+      "sha256": "194df63f9851a9c9782cd895dad8705cb0e2b5e7976180a129dac43949a18f06",
+      "size": 22345,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-plan/references/red-team-workflow.md": {
@@ -460,18 +460,18 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/SKILL.md": {
-      "sha256": "3eea77131f2d736092ca9c14f6c3aa209fd7e306f9d8569af18debbd57c980dd",
-      "size": 6907,
+      "sha256": "8dd475fea33e771b1e210aa39c7037d3f1fd19e32278629477b566da0354d4b1",
+      "size": 7155,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/references/report-contract.md": {
-      "sha256": "e5e3f9624fbb9185dfdd5fc593e4edef56df97ed886100d8a7d7b43726129d56",
-      "size": 8613,
+      "sha256": "25424aa5a234996809f2f93c11590d98444cc21328b598c2ab917080f91eec62",
+      "size": 10850,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/references/review-orchestration.md": {
-      "sha256": "17cd2910dc8761a0152d52629a7f979992469838dd3c93ef1183618c87bdf015",
-      "size": 17118,
+      "sha256": "7ab6dc81d22358a47e31ec4a2afaabbfebc73a5bd3c33579a027eec047c1f1c9",
+      "size": 17637,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/RUNTIME-LICENSE.txt": {
@@ -510,13 +510,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-write-report.js": {
-      "sha256": "2722fa3dc7f459659e1ba5ed47c73fdab228713546a08ada2ccfdb64a9307c7b",
-      "size": 19482,
+      "sha256": "585664bac5acbf276b3f93b0cbe8a0715fa8588134b3a24cd168b37b5ec2d61c",
+      "size": 20277,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-write-report.ts": {
-      "sha256": "715fd799250f5601bf42c0cacca424fcdd237fb6acec83a8c55155fa2252cf92",
-      "size": 3013,
+      "sha256": "e84f683e371fff581252683c4ae0bc233d3451f8a8ff31680268c7e16191356b",
+      "size": 4541,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/reviews-dir-guard.ts": {
@@ -565,8 +565,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-status/SKILL.md": {
-      "sha256": "166510383de3eb15da76246b806d9bc8573da17d1971f0218eec842821c21be2",
-      "size": 19355,
+      "sha256": "7646590795500be9e08c72cfafac4d7ed380938b277babb3e9e615e6c74161c7",
+      "size": 19668,
       "mode": "0644"
     },
     ".specify/plugins/tdk-epic/.claude-plugin/interface.json": {
@@ -1285,23 +1285,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/.claude-plugin/plugin.json": {
-      "sha256": "3b5be8b6dfb8bfd931dd58e0f712427f013d26ad56f7e25b4e2d801a7198cd0b",
+      "sha256": "9e8b2394c95a705c705a776b442fedbb9ed6a219b70a98f8dbacee7601708678",
       "size": 202,
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/.codex-plugin/plugin.json": {
-      "sha256": "3b5be8b6dfb8bfd931dd58e0f712427f013d26ad56f7e25b4e2d801a7198cd0b",
+      "sha256": "9e8b2394c95a705c705a776b442fedbb9ed6a219b70a98f8dbacee7601708678",
       "size": 202,
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/.cursor-plugin/plugin.json": {
-      "sha256": "3b5be8b6dfb8bfd931dd58e0f712427f013d26ad56f7e25b4e2d801a7198cd0b",
+      "sha256": "9e8b2394c95a705c705a776b442fedbb9ed6a219b70a98f8dbacee7601708678",
       "size": 202,
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/CHANGELOG.md": {
-      "sha256": "b8d6521724e88002ec0c7ba54992ef3165c381e1dc9a93ed690d1f67437435b6",
-      "size": 5589,
+      "sha256": "03a5ebecedc6ed2f18a6c2c4ffdd5a9159ff9446d55908027fa00c5f935c3735",
+      "size": 5935,
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/README.md": {
@@ -1310,7 +1310,7 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/skills/_shared/SKILL.md": {
-      "sha256": "9853f3431146639625aa0e2502f862d0e3987e346def26bb243c7e9f19869427",
+      "sha256": "6c45872e583593e8fd93c50ed6133cf9a8f457075e679dc3e3d5ff95fa785c71",
       "size": 382,
       "mode": "0644"
     },
@@ -1335,8 +1335,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/skills/_shared/retro-feedback-schema.md": {
-      "sha256": "76ab6a3a9534738d0438bef9ccfdb677e9d4684dcf738783884a5cb8d3de0866",
-      "size": 2321,
+      "sha256": "b70df23a0d412facfdd1509c53f2f36682b374282e6c54b6d51c252eebd60b88",
+      "size": 3121,
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/skills/_shared/script-command-contract.md": {
@@ -1370,8 +1370,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/skills/tdk-retro-collect/SKILL.md": {
-      "sha256": "11faad3f7fdefff8b670e75152366123603b9e44700413d7ea1198ab3075f71e",
-      "size": 8438,
+      "sha256": "e100c1555db1f286fb9821a53ad06e513e3c17e6c72a9e19d88968871c70496e",
+      "size": 10776,
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/skills/tdk-retro-collect/references/langfuse-trace-analysis.md": {
@@ -1385,8 +1385,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-retro/skills/tdk-retro-propose/SKILL.md": {
-      "sha256": "0530bb4658bd06f363c0df2345b4717267ec5e302f9c0b777839c74a891c2e32",
-      "size": 13704,
+      "sha256": "e2022402885e59357b749679ade07406ef6e24a9ccec8472f2c0ca102294845c",
+      "size": 14221,
       "mode": "0644"
     },
     ".specify/plugins/tdk-scaffold/.claude-plugin/interface.json": {
@@ -2085,13 +2085,13 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/feature/next-action-evidence.ts": {
-      "sha256": "b89f9656a6948ed7e5d3339b2425c23f2db1059b8ce987d939f1d94a10531fa6",
-      "size": 9803,
+      "sha256": "ffaccabeac4aa7950c09ec75e2914483e1958fe260d96b035074c3268b074c81",
+      "size": 10042,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/feature/next-action-recommendation.ts": {
-      "sha256": "f83fa8020819aedb7c5f9a6938545751d18f1ae4db258082a1728c0b701dcbf3",
-      "size": 9443,
+      "sha256": "d8507f4485ddcb6d4df652ff3fa64b977462b13d78c712c84cb31e90dbeda4f6",
+      "size": 9305,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/feature/status.ts": {

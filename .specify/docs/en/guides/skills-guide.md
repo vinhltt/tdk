@@ -139,7 +139,7 @@ Excluded:
 | `/tdk-plan` | Generate implementation plan, or refresh existing phase delegates only. | `<id> [content]`, `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` is ready for planning; use refresh after approved routing changes, or migration for a legacy feature folder. |
 | `/tdk-implement` | Execute rows from `plan.md ## Phases` without asking about scope: by default all remaining rows in order, stopping at an unfinished blocker, or exactly one with `--phase NN`. | `<id>`, `--phase NN`, `--no-branch`, `--worktree` | A plan exists and one or more implementation phases are ready. `--worktree` starts the task on a worktree even when the sub-workspace repository is free. |
 | `/tdk-consistency-check` | Cross-artifact consistency check across spec, plan, and constitution. | `<id>`, `--deep` | You need read-only verification across spec, plan, and phases; add `--deep` to verify plan claims against source. |
-| `/tdk-review` | Review an implemented task: diff against spec and phase success criteria, with fix-phase seeds for `/tdk-plan`. | `<id>`, `--phase NN`, `--quick`, `--deep`, `[focus]` | Phases are `done` and you want a code-versus-spec review before shipping; writes one report under `reviews/`. |
+| `/tdk-review` | Review an implemented task: diff against spec and phase success criteria, with fix groups and one `/tdk-plan` Ready line that points at the report. | `<id>`, `--phase NN`, `--quick`, `--deep`, `[focus]` | Phases are `done` and you want a code-versus-spec review before shipping; writes one report under `reviews/`. |
 | `/tdk-status` | Show workflow progress, per-repository branch state, test and review evidence, retro and memory status, and the next command chosen from that evidence. | `<id>`, `archive/<folder>/<id>` | You need a read-only status snapshot, or need to see which branch each repository is on. Archived specs stay readable. |
 | `/tdk-archive` | Close out a `done` or `cancelled` spec: write `close-out.md` from its artifacts, archive the folder, optionally ingest memory candidates. | `<id>`, `--auto-upmem`, `--ingest [id]`; [usage](#close-out-and-archive) | A feature is finished and should leave the active specs list; also to ingest or retry memory rows of an already archived spec. |
 
@@ -348,6 +348,8 @@ The scope helper writes each changed file's diff to `<feature>/reviews/.diff/<ru
 
 Routed review agents keep working without changes. Updating one to the Reviewer Variant in the [agent output pattern](../../../plugins/tdk-scaffold/skills/tdk-scaffold-from-recommendation/references/agent-output-pattern.md) makes it return `filesReviewed`, so the report shows its file coverage.
 
+The report numbers its findings `F1`…`Fn` and groups them into fix groups `G<k>`, each with its finding IDs and the files it writes. One Ready line, `/tdk-plan <id> "reviews/<file>"`, appends all of them in one run, and each appended phase links back to the report and its finding IDs through a `Review:` line. `/tdk-retro-collect` maps every finding to its phase through those links, and the `/tdk-archive` close-out lists the groups no phase took as `/tdk-plan` seeds. Details: [report contract](../../../plugins/tdk-core/skills/tdk-review/references/report-contract.md).
+
 #### Architecture Inception
 
 Use `greenfield-start` or `brownfield-start` first when project shape is uncertain. Use `architecture-advisor` for report-only options/decision/recovery. Use `workspace-layout-propose` for proposal-only layout artifacts. Use `workflow-config-apply` only after layout evidence is ready for guarded config review/apply.
@@ -403,7 +405,7 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 7 | `/tdk-plan <id> [content] [flags]` | Generate implementation plan with design artifacts |
 | 10 | `/tdk-consistency-check <id> [--deep]` | Cross-artifact consistency check; `--deep` verifies plan claims against source |
 | 11 | `/tdk-status <id>` | Show workflow progress, per-repository branch state, test and review evidence, and retro status; recommends the first unmet step (read-only, any time) |
-| 12 | `/tdk-review <id> [--phase NN] [--quick\|--deep] [focus]` | Review implemented code against the spec; writes a report with `/tdk-plan` fix-phase seeds |
+| 12 | `/tdk-review <id> [--phase NN] [--quick\|--deep] [focus]` | Review implemented code against the spec; writes a report whose Ready line `/tdk-plan <id> "reviews/<file>"` appends its fix phases |
 | 12a | `/tdk-archive <id> [--auto-upmem]` \| `/tdk-archive --ingest [id]` | Close out and archive a `done`/`cancelled` spec; optional memory ingest |
 | 13 | `/tdk-constitution` (update) or `/tdk-constitution --init <brief\|file>` | Update project authority or initialize constitution and Memory v3 artifacts |
 | 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake and routing report |
@@ -463,14 +465,14 @@ For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalo
 | clarify | `/tdk-clarify <id>` | — | `spec.md` | `spec.md` (updated) | specify |
 | high-level-design | `/tdk-epic-hld <epic-id>` | `--force` | `epic-prd.md`, `prd.md`, `slice-map.md`, `open-questions.md`; optional HLD routing | `high-level-design.md` + 5 design artifacts | epic-prd |
 | task-breakdown | `/tdk-task-breakdown <epic-id>` | `--force` | `epic-prd.md` + `epic-prd/`; `high-level-design.md` + `high-level-design/` | `tasks-breakdown.md`, `tasks-breakdown/task-NNN-*.md` child spec seed files | high-level-design |
-| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` for generation; existing `plan.md` and route file for refresh | `plan.md`, `phases/*.md`; refresh changes delegate sections only | clarify, or approved route change |
+| plan | `/tdk-plan <id> [content] [flags]` | `--fast`, `--hard`, `--tdd`, `--ut-backfill`, `--red-team`, `--validate`, `--migrate-artifacts`, `--refresh-routing` | `spec.md` for generation; on an existing plan, `[content]` may be a review report, another `.md` file, or text; existing `plan.md` and route file for refresh | `plan.md`, `phases/*.md`; refresh changes delegate sections only | clarify, or approved route change |
 | implement | `/tdk-implement <id> [--phase NN]` | `--phase NN` | `plan.md` | Source code, `plan.md` Status column | plan |
 | consistency-check | `/tdk-consistency-check <id>` | `--deep` | `spec.md`, `plan.md ## Phases` | Report (no file created) | plan |
-| review | `/tdk-review <id> [--phase NN]` | `--quick`, `--deep` | `spec.md`, `plan.md ## Phases`, git diff of the done phases | One new `reviews/<timestamp>-<slug>.md` report | implement |
-| status | `/tdk-status <id>` | — | Feature directory, `git-map.md` | Progress report (no file created) | specify |
+| review | `/tdk-review <id> [--phase NN]` | `--quick`, `--deep` | `spec.md`, `plan.md ## Phases`, git diff of the done phases | One new `reviews/<timestamp>-<slug>.md` report with fix groups and one Ready line | implement |
+| status | `/tdk-status <id>` | — | Feature directory, `git-map.md` | Progress report and next command, such as `/tdk-plan <id> "reviews/<file>"` after a review that proposed fixes (no file created) | specify |
 | archive | `/tdk-archive <id>` | `--auto-upmem`, `--ingest [id]` | Feature directory with status `done` or `cancelled`, committed artifacts | `close-out.md`; feature moved to `<specsRoot>/archive/<folder>/<id>/` | implement |
 
-`/tdk-plan` accepts freeform content after `<id>` in every mode. Default, `--fast`, and `--hard` treat content as planning instruction; `--red-team` treats it as review focus; `--validate` treats it as validation focus. Known mode flags can appear after `<id>` before or after the content. `--tdd` and `--ut-backfill` are independent test-mode flags: they select whether generated phases include tests-first or backfill sections with `Test Quality Gate` rows, and compose with the default or `--hard` speed mode (not `--fast`).
+`/tdk-plan` accepts freeform content after `<id>` in every mode. Default, `--fast`, and `--hard` treat content as planning instruction, or, on an existing plan, read a review report or another `.md` file named by it; `--red-team` treats it as review focus; `--validate` treats it as validation focus. Known mode flags can appear after `<id>` before or after the content. `--tdd` and `--ut-backfill` are independent test-mode flags: they select whether generated phases include tests-first or backfill sections with `Test Quality Gate` rows, and compose with the default or `--hard` speed mode (not `--fast`).
 `--refresh-routing` and `--migrate-artifacts` are standalone actions: neither accepts another speed, test, targeting, or action flag, and they cannot be combined with each other.
 
 ### Handoff Capture
@@ -835,7 +837,7 @@ actions were removed.
 
 **Re-running `/tdk-plan` after implementation:**
 - **(a) Update phases only** — When feature scope expands or phases change: re-run `/tdk-plan <id>` (overwrites plan.md; you lose current Status-column progress)
-- **(b) Append new phases** — When adding follow-up work: manually add rows to the existing `## Phases` table in plan.md, run `bun src/commands/util/update-phase-status.ts --reconcile-root <plan>` from `.specify/scripts/ts` so the feature status leaves `done`, then resume with `/tdk-implement <id> [--phase NN]`
+- **(b) Append new phases** — When adding follow-up work: run `/tdk-plan <id> <content>` and choose Append, or pass a review report (`/tdk-plan <id> "reviews/<file>.md"`), which skips that choice. Text that makes one phase keeps the single-phase questions. Otherwise `/tdk-plan` splits the content by the files each unit writes, shows one confirm table with dependencies pre-filled, and appends every confirmed phase in one transaction, or none. A `done` feature returns to `in_progress`. Then resume with `/tdk-implement <id> [--phase NN]`. Details: [handle-existing-plan.md](../../../plugins/tdk-core/skills/tdk-plan/references/handle-existing-plan.md#batch-append-flow)
 
 ### Feature Lifecycle Status
 
@@ -863,7 +865,7 @@ actions were removed.
 /tdk-archive --ingest [id]
 ```
 
-- Order for a `done` feature: tests → full review → archive → retro → memory ingest. `/tdk-status <id>` recommends the first unmet step from evidence on disk: `/tdk-plan <id> --ut-backfill` when no test evidence exists; `/tdk-review <id>` when the latest `scope: full` review is missing, blocked, or older than the newest `plan.md`/phase file change; the fix-phase seed from that review on `changes_requested`; `/tdk-archive <id>` on `pass` or `pass_with_concerns`. A `cancelled` feature goes straight to `/tdk-archive`.
+- Order for a `done` feature: tests → full review → archive → retro → memory ingest. `/tdk-status <id>` recommends the first unmet step from evidence on disk: `/tdk-plan <id> --ut-backfill` when no test evidence exists; `/tdk-review <id>` when the latest `scope: full` review is missing, blocked, or older than the newest `plan.md`/phase file change; `/tdk-plan <id> "reviews/<file>"` on `changes_requested` when that review proposed fixes, which appends its fix phases; `/tdk-archive <id>` on `pass` or `pass_with_concerns`. A `cancelled` feature goes straight to `/tdk-archive`.
 - `/tdk-implement`, `/tdk-review`, `/tdk-archive` and `/tdk-retro-apply` end with the same next step `/tdk-status` would give: each runs the read-only status collector after its own writes and prints `recommendation.primary` (and the alternative) as is, falling back to `/tdk-status <id>`. An archived spec is queried as `archive/<folder>/<id>`.
 - Preflight runs `archive.ts --check` and writes nothing. It stops on: lifecycle status other than `done`/`cancelled`, uncommitted changes in the feature directory (`close-out.md` and `sessions.jsonl` are exempt), lock files, unfinished artifact migration, live task worktrees, unfinished red-team sessions, and an existing archive target. Each blocker prints its fix.
 - On success the skill writes `close-out.md` (outcome, what shipped, decisions, review results, debt, success-criteria results, and memory candidates, all drafted from the spec's own artifacts), archives the folder, and prints the `git add` and `git commit` lines for you to run. It never runs git.

@@ -258,13 +258,18 @@ describe('tdk-plan reference contract', () => {
     expect(modes).toContain('`## Delegate Skills` and `## Delegate Agents` when routing injects delegates');
   });
 
-  it('validates append write disjointness across every auto phase in the plan', () => {
+  it('validates append write disjointness across every unfinished auto phase in the plan', () => {
     const existingPlanWorkflow = read(resolve(REFERENCES_DIR, 'handle-existing-plan.md'));
     const outputContract = read(resolve(REFERENCES_DIR, 'plan-output-contract.md'));
 
     expect(existingPlanWorkflow).toContain(
       'validates write disjointness across every `parallel_safe: auto` phase',
     );
+    // A finished phase's Create target exists and its Delete target is gone, so checking it rejects every later append.
+    expect(existingPlanWorkflow).toMatch(/`parallel_safe: auto` phase in the\s+plan that is not `done`, `skipped` or `cancelled`/);
+    expect(outputContract).toMatch(/`parallel_safe: auto` phase in the\s+plan that is not `done`, `skipped` or `cancelled`, including phases no wave\s+could start yet/);
+    expect(outputContract).toContain('gate 4 checks every unfinished `auto` phase in the plan');
+    expect(skill).toMatch(/disjointness gate validates every\s+unfinished `parallel_safe: auto` phase/);
     expect(outputContract).toContain(
       'printf \'%s\' "$ACCESS_SETS_JSON" | bun src/commands/util/check-phase-write-disjointness.ts --project-root "$PROJECT_DIR" --validate-only',
     );
@@ -334,6 +339,111 @@ describe('tdk-plan reference contract', () => {
       expect(text, name).not.toContain('.specify/memory');
       expect(text, name).not.toMatch(/memory-index\.md|memory\.yaml|memory\.path/);
     }
+  });
+
+  it('classifies an existing plan input before routing, memory and scope, and stops on a bad pointer before any write', () => {
+    const input = skill.slice(skill.indexOf('### Step 0.input'), skill.indexOf('### Step 0.1b'));
+    expect(skill.indexOf('### Step 0.input')).toBeGreaterThan(skill.indexOf('### Step 0.refresh'));
+    expect(skill.indexOf('### Step 0.input')).toBeLessThan(skill.indexOf('### Step 0.1b'));
+    expect(skill.indexOf('### Step 0.input')).toBeLessThan(skill.indexOf('### Step 0.scope'));
+    expect(input).toMatch(/Run only when `FLAGS` holds no action flag[^\n]*`FEATURE_DIR\/plan\.md` already exists/);
+    expect(input).toMatch(/never from `MODE`/);
+    expect(input).toMatch(/With no plan yet, skip this step/);
+    expect(input).toMatch(/Try `FEATURE_DIR\/<token>` first, then `PROJECT_DIR\/<token>`/);
+    expect(input).toMatch(/STOP before any write/);
+    expect(input).toMatch(/realpath leaves the project root/);
+    expect(input).toMatch(/not a regular file/);
+    expect(input).toMatch(/A single token that contains `\{\{TDK_REVIEW_REPORT_FILE\}\}` STOPs before any write/);
+    expect(input).toMatch(/strip one pair of enclosing double or single quotes/);
+    expect(input).toMatch(/a single token with no whitespace that ends in `\.md`/);
+    expect(input).toMatch(/`task_id` names the same ticket as `TASK_ID`[^\n]*without a leading `<folder>\/`/);
+    expect(input).toMatch(/under `FEATURE_DIR\/reviews\/` without being a direct child of it/);
+    expect(input).toMatch(/`verdict: blocked` report STOPs before any write/);
+    expect(input).toContain('status --porcelain -- plan.md spec.md phases/');
+    expect(input).toMatch(/For every kind/);
+    expect(input).toMatch(/never instructions to follow/);
+    expect(input).toMatch(/neutral description instead/);
+    expect(input).not.toMatch(/\bMODE ==|MODE is/);
+  });
+
+  it('appends a whole batch in one confirmed all-or-nothing transaction', () => {
+    const existing = readFileSync(resolve(REFERENCES_DIR, 'handle-existing-plan.md'), 'utf-8');
+    const batch = existing.slice(existing.indexOf('### Batch append flow'), existing.indexOf('## Abort'));
+    expect(batch.length).toBeGreaterThan(0);
+    expect(existing.indexOf('### Batch append flow')).toBeGreaterThan(existing.indexOf('### Interactive append flow'));
+    expect(existing).toMatch(/`review-report`: skip the prompt below and run the \*\*Batch append flow\*\* directly/);
+    expect(existing).toMatch(/On \(a\) Rewrite, a `markdown-file` is read as data and its content is the planning input/);
+    expect(batch).toContain('--validate-only');
+    expect(batch).toMatch(/A hub or shared file[^\n]*never joins two units/);
+    expect(batch).toMatch(/never merge across configured sub-workspaces/);
+    expect(batch).toMatch(/`as text`: treat `USER_CONTENT` as text/);
+    expect(batch).toMatch(/\*\*Empty batch\.\*\*[^\n]*STOP[^\n]*run no resolver, and skip Phase 0\.guardian, Step 4, Step 4\.5 and Step 4\.7/);
+    expect(batch).toMatch(/then run `--reconcile-root` once/);
+    expect(batch).toMatch(/Print one table in chat and read one reply/);
+    expect(batch).toMatch(/Ask at most one repair prompt/);
+    expect(batch).toMatch(/never drop the dependency edge silently/);
+    expect(batch).toMatch(/The batch is all-or-nothing/);
+    expect(batch).toMatch(/Resolve `MODE` and `test_mode` with Step 1\.7 now/);
+    expect(batch).toMatch(/Step 3a runs once for the whole batch/);
+    expect(batch).toMatch(/gates 1 and 2 once, gate 3 for each new phase in ascending order, gate 4 once/);
+    expect(batch).toMatch(/gets its `\{Review Context Link\}` line, with the unit's finding IDs/);
+    expect(batch).toMatch(/Never copy finding evidence or diff excerpts verbatim/);
+    expect(batch).toMatch(/continue with Phase 0\.guardian and Steps 4, 4\.5 and 4\.7, once for the whole batch/);
+    expect(skill).toMatch(/After a batch append, also report each appended phase with its source/);
+  });
+
+  it('extracts and dedupes batch units per report, so an ID of another report never hides a finding', () => {
+    const existing = readFileSync(resolve(REFERENCES_DIR, 'handle-existing-plan.md'), 'utf-8');
+    const batch = existing.slice(existing.indexOf('### Batch append flow'), existing.indexOf('## Abort'));
+    expect(batch).toMatch(/one unit per block, with its `Description`, `Findings` IDs/);
+    expect(batch).toMatch(/Older review report[^\n]*one unit per proposed fix group, with no IDs[^\n]*`repos\[\]\.repo_path`/);
+    expect(batch.indexOf('**Dedupe against existing phases.**')).toBeGreaterThan(0);
+    expect(batch.indexOf('**Dedupe against existing phases.**')).toBeLessThan(batch.indexOf('**Group by write set.**'));
+    expect(batch).toMatch(/A phase file with no Phases row[^\n]*STOP, naming it, before the table/);
+    expect(batch).toMatch(/every phase in the Phases table that is not `cancelled` or `skipped`/);
+    expect(batch).toMatch(/Only lines that name this same report count/);
+    expect(batch).toMatch(/An ID is covered when any of those phases lists it/);
+    expect(batch).toMatch(/Every ID of a unit is covered: drop the unit by default, reason `already planned in phase NN`/);
+    expect(batch).toMatch(/Some of its IDs are covered: drop those IDs/);
+    expect(batch).toMatch(/Older report without IDs, and one of those phases points at this same report: one warning/);
+    expect(batch).toMatch(/a `G<j>` that step 2 dropped maps to the phases that cover it/);
+    expect(batch).toMatch(/Steps 3 to 5 of the interactive flow and the row rules of its step 8 apply to every unit/);
+    expect(batch).toMatch(/A real cycle STOPs/);
+  });
+
+  it('previews and confirms a batch without treating a write-policy rejection as a script error', () => {
+    const existing = readFileSync(resolve(REFERENCES_DIR, 'handle-existing-plan.md'), 'utf-8');
+    const batch = existing.slice(existing.indexOf('### Batch append flow'), existing.indexOf('## Abort'));
+    expect(batch).toMatch(/Exit `2` of this preview is a result to report, not a script error[^\n]*every other non-zero exit is one/);
+    expect(batch).toMatch(/rejected existing phase: STOP before the table/);
+    expect(batch).toMatch(/rejected draft: mark its unit \*\*blocked\*\*/);
+    expect(batch).toMatch(/when `INPUT_TREE_CLEAN` is false, the warning `uncommitted changes/);
+    expect(batch).toMatch(/One numbered row per unit, a unit dropped by step 2 included/);
+    expect(batch).toMatch(/`keep 4` brings back what step 2 took from row 4/);
+    expect(batch).toMatch(/After `drop`, `keep`, `merge`, `edit` or `deps`, redo steps 4 and 5 for every unit that is left/);
+    expect(batch).toMatch(/can be planned again by passing its description as text, or once its phase is `cancelled` or `skipped`/);
+  });
+
+  it('prints how to recover a batch before its first write and again when it fails', () => {
+    const existing = readFileSync(resolve(REFERENCES_DIR, 'handle-existing-plan.md'), 'utf-8');
+    const batch = existing.slice(existing.indexOf('### Batch append flow'), existing.indexOf('## Abort'));
+    const write = batch.slice(batch.indexOf('9. **Write, as one transaction.**'), batch.indexOf('10. **On failure.**'));
+    const failure = batch.slice(batch.indexOf('10. **On failure.**'));
+    expect(write).toMatch(/\*\*Recovery block\.\*\* Before the first write, print the phase files about to be created/);
+    expect(write).toMatch(/When `INPUT_TREE_CLEAN` is true, print `git checkout -- <plan\.md> <spec\.md>` and `rm -- <phase files>` as one code block/);
+    expect(write).toMatch(/When false, give no `git checkout` line/);
+    expect(write).toMatch(/Never run these recovery commands yourself/);
+    expect(failure).toMatch(/remove only invocation-new files/);
+    expect(failure).toMatch(/print all three of these even when the restore succeeded/);
+    expect(failure).toMatch(/whole message verbatim, with nothing shortened/);
+    expect(failure).toMatch(/recovery block of step 9 again, never replaced by a remark that no recovery is needed/);
+  });
+
+  it('keeps no mode auto-detection while Step 0.input classifies the input kind', () => {
+    const modes = readFileSync(MODES_REFERENCE, 'utf-8');
+    expect(modes).toContain('No `--auto` flag.');
+    expect(modes).not.toContain('No auto-detection.');
+    expect(modes).toMatch(/Step 0\.input classifies the `USER_CONTENT` kind/);
   });
 
   it('pre-fills the Append description from a non-empty USER_CONTENT after one confirm and keeps the blank prompt otherwise (AC7)', () => {

@@ -6,6 +6,34 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.134.0] - 2026-11-24
+
+### Added
+- **[tdk-core]** `/tdk-plan <id> "reviews/<file>.md"` on an existing plan appends every fix group of a review report in one run
+  - A new Step 0.input reads what the content names: a review report, another `.md` file, or text. A report goes straight to the batch append flow; a `.md` file after (b) Append and text that splits into several units take it too. Text that stays one unit keeps the single-phase flow and its questions
+  - The batch groups the work by write set (a hub file such as `src/index.ts` never joins two units, and units never merge across sub-workspaces), previews write conflicts and waves, shows one confirm table and reads one reply: `ok`, `drop`, `keep`, `merge`, `edit`, `deps`, `as text`, `abort`
+  - All phases are written in one transaction with the same gates as a single append; any failure restores `plan.md` and `spec.md` and removes the new phase files
+  - A phase from a report carries ``- Review: `../reviews/<file>.md` (F2, F5)`` in `## Context Links`, and running the same report again drops findings that a phase already covers. Only lines that name that same report count, and `cancelled` or `skipped` phases do not; `keep N` brings a dropped unit back
+  - Before any write, the run stops on a path that leaves the project, a path under `reviews/` that is not a direct child, a missing `.md` file, and a `blocked` report
+  - The recovery commands printed before the first write are best effort: 5 of 7 measured batch writes printed them. The run restores the files itself on failure, so they matter only when a session is cut in the middle
+- **[tdk-retro]** `tdk-retro-collect` writes a finding → fix phase map with each phase's status and a list of findings without a fix phase; reports that predate finding links and `blocked` reports are `skipped` with a reason
+- **[Scripts]** Tests pin the batch append contract, the finding map, and that the report writer and `/tdk-status` use the same Proposed Fix Phases heading
+- **[General]** Example spec `append-001` with review reports for batch append, not shipped to consumers
+
+### Changed
+- **[tdk-core]** Review reports, `/tdk-status`, close-out and the write checks follow the new link
+  - A `/tdk-review` report numbers its findings `F1`…`Fn`, writes fix groups as `### G<k>` blocks, and has one Ready line, `/tdk-plan <id> "reviews/<file>"`, that points at the report itself; it used to have one description line per group. A `blocked` report has none
+  - `/tdk-status` recommends that pointer whenever a report has at least one seed, older reports included; it used to print the single seed or a generic Append. `seedCount` and `seedReady` stay in its JSON
+  - `/tdk-archive` close-out reads the `G<k>` groups and writes a description seed only for a group that no phase covers
+  - The write-disjointness gate and its preview skip phases that are `done`, `skipped` or `cancelled`, as `/tdk-implement` does
+  - Migration: update all plugins together. An older `/tdk-plan` reads the new Ready line as a description and appends one phase named after a path
+- **[tdk-retro]** `tdk-retro-propose` reads a finding without a fix phase as a signal for a process proposal, not as a missed defect
+- **[Guides]** en/vi skills guide: batch append, the Ready line pointer and the `Review:` link
+
+### Fixed
+- **[tdk-core]** Appending to a plan no longer fails with `ACCESS_TARGET_ALREADY_EXISTS` because a finished `auto` phase lists a `Create:` file that now exists
+- **[Scripts]** `/tdk-status` reads seeds below the last Proposed Fix Phases heading, so a heading quoted as finding evidence no longer moves it
+
 ## [1.133.2] - 2026-11-21
 
 ### Added

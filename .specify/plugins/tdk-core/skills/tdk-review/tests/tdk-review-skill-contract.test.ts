@@ -51,7 +51,7 @@ describe('tdk-review skill contract', () => {
     expect(REPORT).not.toMatch(/Pipe the redacted report/);
   });
 
-  it('writes section headings without numbers, so /tdk-status finds the fix-phase seeds', () => {
+  it('writes section headings without numbers, so /tdk-status and the write helper find the Ready line', () => {
     const sections = REPORT.slice(REPORT.indexOf('## Sections, in order'), REPORT.indexOf('\n## Proposed Fix Phases\n'));
     expect(sections).toMatch(/`##` heading with exactly its bold name below and no number/);
     expect(sections).toMatch(/never `## 7\. Proposed Fix Phases`/);
@@ -195,10 +195,50 @@ describe('tdk-review skill contract', () => {
     expect(REPORT).toMatch(/\|\s*`collision_exists`[^\n]*Never retry/);
   });
 
-  it('requires fix-phase seeds that /tdk-plan can take as USER_CONTENT', () => {
-    expect(REPORT).toContain('Proposed Fix Phases');
-    expect(REPORT).toMatch(/\/tdk-plan <task-id> "<description>"/);
-    expect(REPORT).toMatch(/MUST NOT contain any `--` token/);
+  const FIX_PHASES = REPORT.slice(REPORT.indexOf('\n## Proposed Fix Phases\n'), REPORT.indexOf('\n## Redaction\n'));
+
+  it('ends the fix groups with one Ready line that points /tdk-plan at the report itself', () => {
+    expect(FIX_PHASES.match(/\/tdk-plan <task-id> "reviews\/\{\{TDK_REVIEW_REPORT_FILE\}\}"/g)).toHaveLength(1);
+    expect(REPORT).not.toMatch(/\/tdk-plan <task-id> "<description>"/);
+    expect(FIX_PHASES).toMatch(/report's one Ready line, alone on its line/);
+    expect(FIX_PHASES).toMatch(/only below the last heading that names this section/);
+    expect(FIX_PHASES).toMatch(/Next actions repeats the same line/);
+    expect(REPORT).toMatch(/\*\*Next actions\*\*: the Ready line again/);
+    expect(FIX_PHASES).toMatch(/No findings → write `None\.` under this heading, and no Ready line/);
+  });
+
+  it('writes each fix group as a G<k> block with its finding IDs and project-relative Modify and Create paths', () => {
+    for (const label of ['### G1: <short title>', '- Description:', '- Findings: F2, F5', '- Dependencies:', '- Related Code Files:', '  - Modify: `', '  - Create: `']) {
+      expect(FIX_PHASES).toContain(label);
+    }
+    expect(FIX_PHASES).toMatch(/Every verified finding is in exactly one group/);
+    expect(FIX_PHASES).toMatch(/A group never points at a later group/);
+    expect(FIX_PHASES).toMatch(/project-relative: the finding's `repoPath` joined with its file, or the file alone when `repoPath` is `\.`/);
+    expect(FIX_PHASES).toMatch(/Never chain groups through a hub or shared file/);
+    expect(FIX_PHASES).toMatch(/Never merge across configured sub-workspaces/);
+    expect(FIX_PHASES).toMatch(/Each `missing` finding is its own group, keyed by its `requirement_ref`/);
+  });
+
+  it('gives a blocked report its groups for reference but no Ready line, and points it back at /tdk-review', () => {
+    expect(FIX_PHASES).toMatch(/A `blocked` report has no Ready line/);
+    expect(FIX_PHASES).toMatch(/`working_tree_changed`\), still write the groups of the finished waves/);
+    expect(REPORT).toMatch(/A `blocked` report has no Ready line: its Next action is `\/tdk-review <task-id>`/);
+  });
+
+  it('numbers findings once for the whole report, and never numbers a Not verified finding', () => {
+    const dedupe = section('### Dedupe', '## 7. Verdict');
+    expect(dedupe).toMatch(/number the deduped findings `F1`…`Fn` for the whole report/);
+    expect(dedupe).toMatch(/ordered by `requirement_ref`/);
+    expect(dedupe).toMatch(/A reviewer's own `id` stays inside its invocation and never reaches the report/);
+    expect(dedupe).toMatch(/a Not verified finding gets no ID/);
+    expect(REPORT).toMatch(/ID `F<n>`, unique within the report/);
+    expect(REPORT).toMatch(/\*\*Not verified\*\*:[^\n]*They carry no ID/);
+  });
+
+  it('prints the Ready line built from the written path, not copied from the body', () => {
+    const step5 = SKILL.slice(SKILL.indexOf('## Step 5'));
+    expect(step5).toMatch(/Build it from the `path` the helper returned/);
+    expect(SKILL).not.toMatch(/"<description>"/);
   });
 
   it('keeps a seed description free of `--`, which /tdk-plan would parse as a flag, and states the helper redacts', () => {

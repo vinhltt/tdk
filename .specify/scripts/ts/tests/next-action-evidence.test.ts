@@ -254,6 +254,20 @@ describe('collectReviewSummary', () => {
       }
     });
 
+    it('reads one pointer Ready line of a grouped report as a single seed', () => {
+      const pointer = '/tdk-plan sample-001 "reviews/20261019-090000-full-standard.md"';
+      const body = fixPhases('### G1: Retry', '- Description: x', '- Findings: F1', '', '### G2: Cache', '- Findings: F2', '', pointer);
+      expect(summarize(withBody(body)).latestFull).toMatchObject({ seedCount: 1, seedReady: pointer });
+    });
+
+    it('counts only the Ready line under the last heading when evidence quotes the heading', () => {
+      const fake = seedLine('sample-001', 'quoted in evidence');
+      const real = '/tdk-plan sample-001 "reviews/20261019-090000-full-standard.md"';
+      const body = ['# Review', '', '## Findings', '', 'Evidence:', '## Proposed Fix Phases', fake, '',
+        fixPhases(real).replace('# Review\n', '')].join('\n');
+      expect(summarize(withBody(body)).latestFull).toMatchObject({ seedCount: 1, seedReady: real });
+    });
+
     it('does not start the section at a line that only mentions its name', () => {
       const body = ['# Review', '', '7. **Proposed Fix Phases**: see below', seedLine('sample-001', 'not a seed'), '',
         '## Next actions', '', '- none', ''].join('\n');

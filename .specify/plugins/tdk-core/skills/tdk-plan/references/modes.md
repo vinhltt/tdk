@@ -16,7 +16,7 @@ Single source of truth for `/tdk-plan` flag dispatch. SKILL.md only routes; this
 - `--migrate-artifacts` and `--refresh-routing` are action-only. Each conflicts with every speed, test, targeting, and other action flag, including one another. Reject conflicts before any mutation. Migration defaults to a mutation-free dry run; refresh requires an existing plan and explicit approval of a selected-phase preview.
 - Any token beginning with `--` that is not an exact whitelisted mode flag → STOP with error.
 - Backfill targeting flag values are not `USER_CONTENT`; parse and store them in `BACKFILL_TARGET`.
-- No `--auto` flag. No auto-detection. No-flag invocation = default full flow.
+- No `--auto` flag. No mode auto-detection; Step 0.input classifies the `USER_CONTENT` kind (review report / `.md` file / text). No-flag invocation = default full flow.
 
 ## Test Mode Flags
 
@@ -60,7 +60,7 @@ Natural-language sub-workspace/module mentions and CWD auto-detection remain acc
 
 | Mode | Routing |
 |---|---|
-| default, `--fast`, `--hard` | Treat `USER_CONTENT` as planning instruction for Step 2/3 and append/update intent. On an existing plan with option (b) Append, a non-empty `USER_CONTENT` pre-fills the proposed phase description after one confirm; empty keeps the blank prompt. |
+| default, `--fast`, `--hard` | Treat `USER_CONTENT` as planning instruction for Step 2/3 and append/update intent. On an existing plan with option (b) Append, a non-empty `USER_CONTENT` pre-fills the proposed phase description after one confirm; empty keeps the blank prompt. A review report, another `.md` file, or text that splits into two or more phases instead takes the batch append flow: one confirm table with dependencies pre-filled. |
 | `--red-team` | Treat `USER_CONTENT` as red-team focus for reviewer prompts. |
 | `--validate` | Treat `USER_CONTENT` as validation focus for question generation. |
 | `--migrate-artifacts` | Ignore freeform planning intent; dry-run legacy artifact consolidation for the resolved feature. |

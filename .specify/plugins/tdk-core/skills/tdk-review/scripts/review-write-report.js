@@ -1,7 +1,7 @@
 // @bun
 // review-write-report.ts
 import { readFileSync } from "fs";
-import { join as join2, resolve } from "path";
+import { basename, join as join2, resolve } from "path";
 import { parseArgs } from "util";
 
 // ../../../../../scripts/ts/src/utils/agent-output.ts
@@ -465,6 +465,22 @@ function prepareReviewsDir(projectRoot, featureDir) {
 
 // review-write-report.ts
 var pad = (value, width = 2) => String(value).padStart(width, "0");
+var FIX_PHASES_HEADING = /^#{2,}[ \t]+(?:\d+[.)][ \t]+)?Proposed Fix Phases\b[^\n]*$/;
+var READY_LINE = /^([ \t]*(?:(?:[-*+]|\d+[.)])[ \t]+)?(?:\*\*Ready line\*\*:[ \t]*)?)(`?)(\/tdk-plan \S+ "reviews\/)\{\{TDK_REVIEW_REPORT_FILE\}\}"\2([ \t]*\r?)$/;
+function fillReportFileName(text, fileName) {
+  const lines = text.split(`
+`);
+  let heading = lines.length - 1;
+  while (heading >= 0 && !FIX_PHASES_HEADING.test(lines[heading]))
+    heading--;
+  if (heading === -1)
+    return text;
+  for (let index = heading + 1;index < lines.length; index++) {
+    lines[index] = lines[index].replace(READY_LINE, (_match, lead, tick, command, tail) => `${lead}${tick}${command}${fileName}"${tick}${tail}`);
+  }
+  return lines.join(`
+`);
+}
 function stamp(now) {
   return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 }
@@ -478,7 +494,7 @@ function writeReviewReport(projectRoot, featureDirectory, slug, body, now = new 
   const { reviews } = prepared;
   const path = join2(reviews, `${stamp(now)}-${slug}.md`);
   const { text, redactions } = sanitizeReviewText(body);
-  const failure = createNewFile(path, text, 420);
+  const failure = createNewFile(path, fillReportFileName(text, basename(path)), 420);
   return failure ? { ok: false, error: failure } : { ok: true, path, redactions };
 }
 if (import.meta.main) {
@@ -502,5 +518,6 @@ if (import.meta.main) {
   }
 }
 export {
-  writeReviewReport
+  writeReviewReport,
+  fillReportFileName
 };

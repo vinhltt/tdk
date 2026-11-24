@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { parse as parseYaml } from 'yaml';
+import { validatePhaseFile } from '../src/commands/util/phase-file-validator';
 
 const SKILL_DOC = resolve(
   __dirname,
@@ -148,6 +149,41 @@ describe('handle-existing-plan.md path conventions', () => {
       expect(index).toBeGreaterThan(previousIndex);
       previousIndex = index;
     }
+  });
+
+  function renderWithReviewLink(reviewLink: string | null): string {
+    const rendered = phaseFileTemplate
+      .replaceAll('{N}', '4')
+      .replaceAll('{NN}', '04')
+      .replaceAll('{Phase Title YAML}', '"Fix retry loop"')
+      .replaceAll('{Phase Name}', 'Fix retry loop')
+      .replaceAll('{Dependencies YAML}', '[]')
+      .replaceAll('{Parallel Safe}', 'auto')
+      .replaceAll('{Parallel Reason Field}', '')
+      .replaceAll('{Related Code File Entries}', '- Modify: `src/retry.ts`');
+    return reviewLink === null
+      ? rendered.replace(/^\{Review Context Link\}\n/m, '')
+      : rendered.replace('{Review Context Link}', reviewLink);
+  }
+
+  it.each([
+    ['with finding IDs', '- Review: `../reviews/20261011-090507-full-standard.md` (F2, F5)'],
+    ['without finding IDs', '- Review: `../reviews/20261011-090507-full-standard.md`'],
+    ['with the line deleted', null],
+  ])('renders the review context link %s into a valid phase file', (_case, reviewLink) => {
+    const rendered = renderWithReviewLink(reviewLink);
+    const contextLinks = rendered.slice(rendered.indexOf('## Context Links'), rendered.indexOf('## Overview'));
+    expect(contextLinks).toContain('- Spec: `../spec.md`\n');
+    expect(rendered).not.toContain('{Review Context Link}');
+    if (reviewLink === null) expect(contextLinks).not.toContain('Review:');
+    else expect(contextLinks).toContain(`- Spec: \`../spec.md\`\n${reviewLink}\n`);
+    expect(validatePhaseFile(rendered).errors).toEqual([]);
+  });
+
+  it('documents the review context link placeholder and when it is deleted', () => {
+    expect(content).toContain('`{Review Context Link}` -> for a phase appended from a review report');
+    expect(content).toMatch(/New plans and rewrites always delete it/);
+    expect(phaseFileTemplate).toContain('- Spec: `../spec.md`\n{Review Context Link}\n');
   });
 
   it('phase file template does not use the legacy bold status block', () => {

@@ -24,6 +24,15 @@
   - Evidence: `{file}` or quoted short excerpt
   - Suggested target: {optional T/K target hint}
 
+### Finding → fix phase
+- {report file} {finding ID} [severity] → phase {NN} ({status})
+- {report file}
+  - Status: skipped
+  - Reason: report predates finding links | review was blocked
+
+### Findings without a fix phase
+- {report file} {finding ID} [severity]: no fix phase; no recorded reason
+
 ## From: Phase Drift
 - [severity] {drift}
   - Planned: {plan intent}
@@ -65,6 +74,8 @@ Use one of:
 - Keep every finding evidence-backed.
 - Use short excerpts only; avoid dumping full reports or traces.
 - If a source is unavailable, keep the section and record `Status: skipped` with a clear reason.
+- The two Reviews blocks hold the finding-to-phase map of `tdk-retro-collect` Step 3. `{report file}` is the report's file name under `reviews/`; `{NN}` and `{status}` come from the plan's Phases table. Write one line per finding and phase pair, and one skipped entry per report that predates finding links or was blocked. A block with nothing to list holds `None.`.
+- `no fix phase; no recorded reason` is a fixed label: the reason a finding got no phase is never stored, so never add or guess one.
 - Do not fabricate Langfuse findings when the CLI, `.env`, or the session file (`sessions.jsonl`, or legacy `sessions.txt`) is unavailable.
 - Preserve active user feedback across update runs unless the user explicitly removes it.
 - Removed user feedback is no longer an active learning signal; `/tdk-retro-propose` must ignore entries with `status: removed`.

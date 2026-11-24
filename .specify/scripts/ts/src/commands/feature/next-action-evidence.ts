@@ -41,7 +41,7 @@ export interface ReviewRef {
   /** Empty unless the verdict is `blocked`. */
   blockedReason: string;
   seedCount: number;
-  /** The Ready line verbatim when exactly one seed was parsed. */
+  /** The Ready line verbatim when exactly one seed was parsed: a `reviews/<file>` pointer in current reports, a description line in older ones. */
   seedReady: string | null;
   /** plan.md or a phase file changed after the review was generated. */
   stale: boolean;
@@ -141,11 +141,14 @@ function reviewEpochs(generatedAt: string, name: string): { sortEpoch: number; s
   };
 }
 
-/** Ready lines under `## Proposed Fix Phases`: `/tdk-plan <id> "<description>"`, bare or inside a bullet/backticks; `None.` yields none. */
+/**
+ * Ready lines under the last `## Proposed Fix Phases` heading: `/tdk-plan <id> "<pointer or description>"`, bare or inside
+ * a bullet/backticks; `None.` yields none. The last heading wins because evidence in earlier sections may quote the heading.
+ */
 function parseSeeds(content: string, taskId: string): string[] {
-  const heading = SEEDS_HEADING.exec(content);
+  const heading = [...content.matchAll(new RegExp(SEEDS_HEADING.source, 'gm'))].pop();
   if (!heading) return [];
-  const afterHeading = content.slice(heading.index + heading[0].length);
+  const afterHeading = content.slice(heading.index! + heading[0].length);
   const next = afterHeading.search(/^## /m);
   const section = next === -1 ? afterHeading : afterHeading.slice(0, next);
   const prefix = `/tdk-plan ${taskId} "`;

@@ -111,7 +111,8 @@ describe('tdk-plan --validate one-reply contract', () => {
 
     expect(skill).toContain('BR -->|no| RV{--red-team / --validate?}');
     expect(skill).toContain('RV -->|yes| M');
-    expect(skill).toContain('RV -->|no| B2[Step 0.1b Load Skill Routing]');
+    expect(skill).toContain('RV -->|no| IN[Step 0.input Classify Input]');
+    expect(skill).toContain('IN --> B2[Step 0.1b Load Skill Routing]');
     expect(skill).toContain('`--red-team` / `--validate` never reach this step (see Step 1.7)');
     expect(handleExisting).toContain('`--red-team` / `--validate` never reach this step');
     expect(workflow).toContain('If `{FEATURE_DIR}/plan.md` does not exist, STOP');

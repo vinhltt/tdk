@@ -4,6 +4,19 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.6.0] - 2026-11-24
+
+### Added
+- tdk-plan: /tdk-plan <id> "reviews/<file>.md" on an existing plan appends every fix group of a review report in one run; a markdown file after Append and text that splits into several units take the same batch flow (one confirm table, one all-or-nothing transaction)
+- tdk-plan: phases from a report carry a Review line with the report and its finding IDs; running the same report again drops findings that a phase already covers, and keep N brings a dropped unit back
+
+### Changed
+- tdk-plan: Step 0.input classifies the content (review report, markdown file, text) and stops before any write on a path that leaves the project, a nested path under reviews/, a missing markdown file or a blocked report
+- tdk-plan: the write-disjointness gate and its preview skip phases that are done, skipped or cancelled, so a finished phase with Create targets no longer fails every later append with ACCESS_TARGET_ALREADY_EXISTS
+- tdk-review: findings are numbered F1..Fn, fix groups are G<k> blocks, and the report has one Ready line that points at the report itself instead of one description line per group
+- tdk-status: recommends the report pointer whenever a report has at least one seed, older reports included
+- tdk-archive: close-out writes a description seed only for a G<k> group that no phase covers
+
 ## [14.5.0] - 2026-11-21
 
 ### Added

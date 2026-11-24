@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'bun:test';
 import { chmodSync, cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { writeReviewReport } from '../scripts/review-write-report';
+import { fillReportFileName, writeReviewReport } from '../scripts/review-write-report';
 
 const BUNDLE = resolve(import.meta.dir, '../scripts/review-write-report.js');
 const roots: string[] = [];
@@ -95,6 +95,67 @@ describe('review-write-report', () => {
       expect(writeReviewReport(root, feature, 'x', 'x', NOW)).toEqual({ ok: false, error: 'write_failed' });
       expect(readdirSync(join(feature, 'reviews'))).toEqual([]);
     } finally { chmodSync(join(feature, 'reviews'), 0o700); }
+  });
+});
+
+const PLACEHOLDER_READY = '/tdk-plan sample-001 "reviews/{{TDK_REVIEW_REPORT_FILE}}"';
+const FILE = '20261011-090507-full-standard.md';
+const FILLED_READY = `/tdk-plan sample-001 "reviews/${FILE}"`;
+
+describe('fillReportFileName', () => {
+  it('fills the Ready line under Proposed Fix Phases and its repeat under Next actions', () => {
+    const body = ['## Proposed Fix Phases', '### G1: Fix retries', '- Findings: F1', '', PLACEHOLDER_READY, '', '## Next actions', PLACEHOLDER_READY, ''].join('\n');
+    expect(fillReportFileName(body, FILE)).toBe(body.replaceAll(PLACEHOLDER_READY, FILLED_READY));
+  });
+
+  it.each([
+    ['a bullet', `- ${PLACEHOLDER_READY}`, `- ${FILLED_READY}`],
+    ['a numbered item', `1. ${PLACEHOLDER_READY}`, `1. ${FILLED_READY}`],
+    ['backticks', `\`${PLACEHOLDER_READY}\``, `\`${FILLED_READY}\``],
+    ['a Ready line label', `- **Ready line**: \`${PLACEHOLDER_READY}\``, `- **Ready line**: \`${FILLED_READY}\``],
+    ['a CRLF line end', `${PLACEHOLDER_READY}\r`, `${FILLED_READY}\r`],
+  ])('fills a Ready line written as %s', (_name, line, filled) => {
+    expect(fillReportFileName(`## Proposed Fix Phases\n${line}\n`, FILE)).toBe(`## Proposed Fix Phases\n${filled}\n`);
+  });
+
+  it.each(['## 7. Proposed Fix Phases', '### Proposed Fix Phases', '## 7) Proposed Fix Phases'])('finds the section under the heading %p', (heading) => {
+    expect(fillReportFileName(`${heading}\n${PLACEHOLDER_READY}`, FILE)).toBe(`${heading}\n${FILLED_READY}`);
+  });
+
+  it('keeps the contract Ready line quoted as finding evidence, above the section', () => {
+    const quoted = '/tdk-plan <task-id> "reviews/{{TDK_REVIEW_REPORT_FILE}}"';
+    const body = ['## Findings by severity', `- F1 report-contract.md:58: ${quoted}`, `  ${quoted}`, '## Proposed Fix Phases', PLACEHOLDER_READY].join('\n');
+    const filled = fillReportFileName(body, FILE);
+    expect(filled.split('\n').slice(0, 3)).toEqual(body.split('\n').slice(0, 3));
+    expect(filled.endsWith(FILLED_READY)).toBe(true);
+  });
+
+  it('anchors on the last heading when evidence quotes the heading and a Ready line under it', () => {
+    const body = ['## Findings by severity', '```text', '## Proposed Fix Phases', PLACEHOLDER_READY, '```', '## Proposed Fix Phases', PLACEHOLDER_READY].join('\n');
+    const lines = fillReportFileName(body, FILE).split('\n');
+    expect(lines[3]).toBe(PLACEHOLDER_READY);
+    expect(lines[6]).toBe(FILLED_READY);
+  });
+
+  it('keeps a placeholder inside a sentence below the heading', () => {
+    const body = `## Proposed Fix Phases\nRun ${PLACEHOLDER_READY} once the groups look right.\n${PLACEHOLDER_READY}`;
+    expect(fillReportFileName(body, FILE)).toBe(`## Proposed Fix Phases\nRun ${PLACEHOLDER_READY} once the groups look right.\n${FILLED_READY}`);
+  });
+
+  it('leaves a body with no Proposed Fix Phases heading, or no placeholder, unchanged', () => {
+    expect(fillReportFileName(`## Summary\n${PLACEHOLDER_READY}`, FILE)).toBe(`## Summary\n${PLACEHOLDER_READY}`);
+    expect(fillReportFileName('## Proposed Fix Phases\nNone.\n', FILE)).toBe('## Proposed Fix Phases\nNone.\n');
+  });
+
+  it('writes the Ready line with the file name of the path it returns', () => {
+    const { root, feature } = project();
+    const body = ['## Proposed Fix Phases', PLACEHOLDER_READY, '## Next actions', `- ${PLACEHOLDER_READY}`, ''].join('\n');
+    const result = writeReviewReport(root, feature, 'full-standard', body, NOW);
+    if (!result.ok) throw new Error(result.error);
+    const name = result.path.split(/[\\/]/).pop()!;
+    expect(name).toBe(FILE);
+    expect(readFileSync(result.path, 'utf-8')).toBe(['## Proposed Fix Phases', FILLED_READY, '## Next actions', `- ${FILLED_READY}`, ''].join('\n'));
+    expect(result.redactions).toBe(0);
   });
 });
 
@@ -242,6 +303,14 @@ describe('review-write-report bundle', () => {
     const written = readFileSync(result.payload.path, 'utf-8');
     expect(written).toContain('- See x-auth-y.md:177\n  - nested one\n');
     expect(written).not.toContain('123456');
+  });
+
+  it('fills the Ready line with the written file name through the bundle', async () => {
+    const { root, feature } = project();
+    const result = await run(root, feature, 'ready-case', `## Proposed Fix Phases\n${PLACEHOLDER_READY}\n`, isolatedBundle());
+    expect(result.exitCode).toBe(0);
+    const name = String(result.payload.path).split(/[\\/]/).pop();
+    expect(readFileSync(result.payload.path, 'utf-8')).toBe(`## Proposed Fix Phases\n/tdk-plan sample-001 "reviews/${name}"\n`);
   });
 
   it('exits 1 with invalid_arguments for an unknown flag or a missing option', async () => {
