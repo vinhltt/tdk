@@ -2,9 +2,9 @@
 name: tdk-delegate-routing
 description: "This skill should be used when the user asks to \"diff a routing proposal\", \"register delegate routes\", \"verify delegate routing\", \"review delegate-routing-proposal.json\", \"set up delegate-routing.md\", or map a domain to a /skill or @agent for /tdk-plan and /tdk-implement. Provides the diff, register, and verify actions of the deterministic TDK delegate routing helper, plus the prompt-driven first-file setup step."
 user-invocable: true
-argument-hint: "<diff|register|verify> [--project-root <root>] [--proposal <path>] [--approval <approvalDigest>] [--yes]"
+argument-hint: "<diff|register|verify> [--project-root <root>] [--proposal <path>] [--approval <approvalDigest>] [--yes] [--auto]"
 metadata:
-  version: "3.0.3"
+  version: "3.2.0"
   author: "VinhLTT"
   category: scaffold
 ---
@@ -44,6 +44,12 @@ When `diff` reports `status: "missing"`, walk the user through creation instead 
 2. Resolve `{docs.path}/custom-workflow/delegate-routing.md` and **print the resolved absolute path** so the user never has to infer `docs.path`.
 3. Copy `.specify/templates/plan/delegate-routing-template.tpl` to that path, creating the `custom-workflow/` directory if needed.
 4. Let the user edit the copied file, then rerun `diff`.
+
+## Auto mode
+
+`register --auto` with a `--proposal` file that has entries replaces the human steps of First-Time Setup, Guardrails, and `references/workflow-review-register.md`; `--auto` is a skill argument, never a CLI flag. A missing route file runs First-Time Setup steps 1–3 without step 4, then `diff` runs.
+It registers only when every `diff` operation is `add` into a section that the same `diff` warns is a new routing section; that warning is expected, other warnings and `derived` reasons are reported without blocking, `register` uses that `diff`'s `approvalDigest` with `--yes`, and `verify` follows.
+Under `--auto`, anything else (`update`, `noop`, an `unresolved-artifact` reason, a conflict error, `approval_required`, or `stale_approval`) registers nothing, is reported, and is never retried.
 
 ## Guardrails
 

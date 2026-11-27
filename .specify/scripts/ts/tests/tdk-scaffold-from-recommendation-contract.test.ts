@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const SCAFFOLD_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-scaffold/skills');
@@ -12,6 +12,7 @@ const PROPOSAL_FORMAT_PATH = join(
 );
 const REVIEW_REGISTER_PATH = join(ROUTING_REFERENCE_DIR, 'workflow-review-register.md');
 const RECOMMEND_SKILL_PATH = join(SCAFFOLD_SKILLS_DIR, 'tdk-sub-workspace-automation-recommend/SKILL.md');
+const ROUTE_TEMPLATE_PATH = resolve(import.meta.dir, '../../../templates/plan/delegate-routing-template.tpl');
 const SKILLS_GUIDE_PATH = resolve(import.meta.dir, '../../../../.specify/docs/en/guides/skills-guide.md');
 const NEW_RECOMMENDATION_PATH =
   '.specify/configurations/automation-recommendations/sub-workspaces/*/automation-recommendation.md';
@@ -258,5 +259,139 @@ describe('TDK scaffold outcome baseline contracts', () => {
     expect(recommendSkill).toContain('scaffold-outcome.json');
     expect(recommendSkill).toContain('Read only each row\'s `kind`, `path`, `outcome`, and `recorded_at`: never hash files, compare them, or call the scaffold script');
     expect(recommendSkill).toContain('record the sidecar path and state `present`, `missing`, or `unreadable`');
+  });
+});
+
+// Unattended runs: each child skill keeps its manual gates and adds one `--auto` clause that
+// picks the non-writing branch for every question it cannot answer from approved input.
+describe('TDK scaffold unattended auto-mode contracts', () => {
+  const skill = existsSync(SKILL_PATH) ? read(SKILL_PATH) : '';
+  const routingSkill = existsSync(ROUTING_SKILL_PATH) ? read(ROUTING_SKILL_PATH) : '';
+  const routeTemplate = existsSync(ROUTE_TEMPLATE_PATH) ? read(ROUTE_TEMPLATE_PATH) : '';
+
+  function argumentHint(text: string): string {
+    return text.match(/^argument-hint: (.*)$/m)?.[1] ?? '';
+  }
+
+  it('lets scaffold treat an approved recommendation as run approval before any gate is read', () => {
+    expect(argumentHint(skill)).toContain('[--auto]');
+    expect(skill).toContain('## Auto mode');
+    expect(skill.indexOf('## Auto mode')).toBeLessThan(skill.indexOf('## Resolve Input File'));
+    expect(skill).toContain('counts as the step 6 run approval, Record Baseline included');
+    expect(skill).toContain('without the step 6 question');
+    expect(skill).toContain('only `created` and `reused` rows');
+    expect(skill).toContain('non-writing branch');
+    expect(skill).toContain('nothing is patched or regenerated');
+    expect(skill).toContain('aborts the run');
+  });
+
+  it('keeps the manual scaffold approval gates unchanged', () => {
+    expect(skill).toContain('ask approval to apply this reconciliation plan even when frontmatter is `status: approved`');
+    expect(skill).toContain('`status: approved` alone does not count');
+    expect(skill).toContain('If status is not approved, ask `Proceed anyway`');
+  });
+
+  it('lets routing register unattended only as additions into a new section', () => {
+    expect(argumentHint(routingSkill)).toContain('[--auto]');
+    expect(routingSkill).toContain('## Auto mode');
+    expect(routingSkill).toContain('never a CLI flag');
+    expect(routingSkill).toContain('steps 1–3 without step 4');
+    expect(routingSkill).toContain('every `diff` operation is `add`');
+    expect(routingSkill).toContain('new routing section');
+    for (const refusal of ['`update`', '`noop`', 'a conflict error', '`approval_required`', '`stale_approval`']) {
+      expect(routingSkill).toContain(refusal);
+    }
+    expect(routingSkill).toContain('`references/workflow-review-register.md`');
+    expect(routingSkill).toContain('`derived` reasons are reported without blocking');
+    expect(routingSkill).toContain('never retried');
+  });
+
+  it('ships a route template whose global section has no active delegate', () => {
+    expect(existsSync(ROUTE_TEMPLATE_PATH)).toBe(true);
+    const globalHeading = routeTemplate.match(/^## global[ \t]*$/m);
+    expect(globalHeading).not.toBeNull();
+    const afterGlobal = routeTemplate.slice((globalHeading?.index ?? 0) + (globalHeading?.[0].length ?? 0));
+    const nextSection = afterGlobal.search(/^(<!-- )?## /m);
+    const globalBlock = nextSection === -1 ? afterGlobal : afterGlobal.slice(0, nextSection);
+    const activeDelegates = globalBlock
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('<!--'))
+      .filter((line) => /^\s*-\s*[\w-]+:\s*.*[/@]/.test(line));
+    expect(activeDelegates).toEqual([]);
+    expect(globalBlock).toContain('- test: (default - no delegate)');
+  });
+});
+
+// The bootstrap entry is prompt-only: it orchestrates the child skills and ships no script or reference.
+describe('TDK sub-workspace bootstrap entry contracts', () => {
+  const bootstrapDir = join(SCAFFOLD_SKILLS_DIR, 'tdk-sub-workspace-bootstrap');
+  const bootstrapPath = join(bootstrapDir, 'SKILL.md');
+  const bootstrap = existsSync(bootstrapPath) ? read(bootstrapPath) : '';
+
+  it('ships exactly one SKILL.md', () => {
+    expect(existsSync(bootstrapDir)).toBe(true);
+    expect(readdirSync(bootstrapDir)).toEqual(['SKILL.md']);
+  });
+
+  it('is listed in the plugin manifest at its frontmatter version', () => {
+    const manifest = JSON.parse(read(resolve(SCAFFOLD_SKILLS_DIR, '../../manifest.json')));
+    const entry = manifest.plugins['tdk-scaffold'].components.skills['tdk-sub-workspace-bootstrap'];
+    expect(entry).toBeDefined();
+    expect(bootstrap).toContain(`version: "${entry.version}"`);
+  });
+
+  it('states run consent and the non-writing branch for child questions', () => {
+    expect(bootstrap).toContain('name: tdk-sub-workspace-bootstrap');
+    expect(bootstrap).toContain('Running this command is the consent to create every missing artifact');
+    expect(bootstrap).toContain('take its non-writing branch');
+    expect(bootstrap).toContain('Never modify, overwrite, or delete existing bytes');
+  });
+
+  it('runs every child skill per sub-workspace in unattended mode and reports for later review', () => {
+    for (const token of [
+      '--sub-workspace <name>',
+      '--auto --no-community-search',
+      '/tdk-scaffold-from-recommendation <recommendation-path> --auto',
+      'bootstrap-report.md',
+      'Needs your review',
+      '.omp/',
+      'deferred',
+      'evidence: thin',
+      'Next: review "Needs your review", then /tdk-plan',
+    ]) {
+      expect(bootstrap).toContain(token);
+    }
+  });
+
+  it('registers routes unattended with an absolute proposal path and lists them for review', () => {
+    expect(bootstrap).toMatch(/\/tdk-delegate-routing register --project-root <root> --proposal <absolute-proposal-path> --auto/);
+    expect(bootstrap).toContain('each registered route');
+    expect(bootstrap).toContain('kept from an earlier run');
+    expect(bootstrap).toContain('created while an earlier proposal or the `## <name>` route section was kept');
+    expect(bootstrap).toContain('restored after it was removed since the last scaffold');
+  });
+
+  it('reruns scaffold only for planned creates that are neither on disk nor recorded', () => {
+    expect(bootstrap).toContain('`Artifacts` tables under `## Executor Decisions`');
+    expect(bootstrap).toContain('The tables exist and hold no row with action `create`, `patch`, or `reuse` → record `scaffold: nothing to scaffold`');
+    expect(bootstrap).toContain('Without these tables, run it on the first two conditions only.');
+    expect(bootstrap).toContain('`kept-unresolved` with each reason');
+    expect(bootstrap).toContain('a `create` row\'s source path has neither a file nor a row in that sidecar');
+    expect(bootstrap).toContain('never trigger a rerun on their own');
+    expect(bootstrap).toContain('its report section\'s scaffold line lists as `kept-unresolved` for conflicting requirements or a runtime-only twin');
+    expect(bootstrap).toContain('a sidecar that does not parse or names another recommendation');
+    expect(bootstrap).toContain('scaffold recording its own `scaffold-outcome.json` again');
+  });
+
+  it('keeps unchanged report sections byte-for-byte across reruns', () => {
+    expect(bootstrap).toContain('rewritten only when that sub-workspace\'s outcome changes');
+    expect(bootstrap).toContain('keep its section byte-for-byte');
+    expect(bootstrap).toContain('Create the report when it does not exist');
+  });
+
+  it('never runs docs for all targets at once or community skill lookup', () => {
+    expect(bootstrap).not.toContain('/tdk-sub-workspace-docs --all');
+    expect(bootstrap).not.toContain('npx');
+    expect(bootstrap).not.toContain('skills find');
   });
 });

@@ -9,7 +9,7 @@ related-skills:
   - tdk-workflow-config-apply
   - tdk-sub-workspace-docs
 metadata:
-  version: "1.0.0"
+  version: "1.1.4"
   author: "VinhLTT"
   category: architecture-workflow
 ---
@@ -140,7 +140,7 @@ Required report sections:
      /tdk-scout --scope <repo-root> --task-hint "brownfield onboarding"
      /tdk-architecture-advisor --recover-existing <brownfield-onboarding.md>
      /tdk-workflow-config-apply --reconcile
-     /tdk-sub-workspace-docs --all
+     /tdk-sub-workspace-bootstrap  # without tdk-scaffold: /tdk-sub-workspace-docs --all
      ```
    - Typical `--config-only` recommendation chain:
      ```bash
@@ -161,7 +161,7 @@ Required report sections:
 - Recommend `tdk-scout` when repo boundaries, framework ownership, or file roles are unclear.
 - Recommend `/tdk-architecture-advisor --recover-existing <brownfield-onboarding.md>` when repo evidence is ready for architecture recovery.
 - Recommend `tdk-workflow-config-apply --reconcile` when observed repo shape differs from `.specify` config, or when `.specify` config is missing expected sub-workspaces/modules. Normal apply remains `/tdk-workflow-config-apply` after review.
-- Recommend `tdk-sub-workspace-docs --all` only after config evidence is present or after topology dry-run/apply is accepted.
+- Recommend `/tdk-sub-workspace-bootstrap` (without tdk-scaffold: `/tdk-sub-workspace-docs --all`) only after config evidence is present or after topology dry-run/apply is accepted.
 - Recommend `tdk-discovery` only when product intent is missing and the user wants product-scope questions.
 - Do not present recommendations as completed work, applied configuration, or source-tree changes.
 

@@ -4,10 +4,12 @@ Dùng guide này khi command TDK chưa hiển thị, dependency bị thiếu, ho
 
 ## Prerequisites
 
-`repomix` là bắt buộc với hai workflow:
+`repomix` là bắt buộc với ba workflow:
 
 - `/tdk-scout --scope`
 - `/tdk-sub-workspace-docs`
+- `/tdk-sub-workspace-bootstrap`, lệnh này dừng trước mọi thao tác ghi khi không
+  tìm thấy `repomix` trên `PATH`
 
 **Không** cần `repomix` cho `/tdk-scout --from-pack`, vì lệnh này đọc pack có sẵn.
 

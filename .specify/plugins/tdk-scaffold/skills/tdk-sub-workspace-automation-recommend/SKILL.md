@@ -2,9 +2,9 @@
 name: tdk-sub-workspace-automation-recommend
 description: "Recommend skills and agents for one selected sub-workspace from arc42-lite docs, dependency policy, official docs, local installed skill catalog, and direct community skill lookup."
 user-invocable: true
-argument-hint: "--sub-workspace <name> [--no-community-search]"
+argument-hint: "--sub-workspace <name> [--no-community-search] [--auto]"
 metadata:
-  version: "3.1.0"
+  version: "3.2.0"
   author: "VinhLTT"
   category: scaffold
 ---
@@ -31,6 +31,7 @@ Output path:
 |---|---|
 | `--sub-workspace <name>` | Required. Select exactly one configured sub-workspace. |
 | `--no-community-search` | Skip direct community lookup through `npx skills find` or skills.sh. |
+| `--auto` | Unattended run: no community search and no question; see Notes. |
 
 ## Evidence Sources
 
@@ -93,6 +94,7 @@ Do not use `ck:find-skills`. Use direct CLI/site lookup only, and summarize resu
    - Create the output directory.
    - If the output file exists, ask whether to overwrite or keep it.
    - Write the markdown file with YAML frontmatter and the sections below.
+   - With `--auto`, keep an existing output file, and write the approval frontmatter from Notes instead of `status: draft`.
    - Fill `## Executor Decisions` first; derive both agent recommendations and routing suggestions from these decisions, not keyword matching alone.
    - Include routing suggestions only as reviewable proposals. Do not mutate `delegate-routing.md`.
 
@@ -210,6 +212,7 @@ Repeat for every considered domain. Include one row per delegate artifact, inclu
 ## Notes
 
 - Recommendations are not scaffold instructions until the user reviews them and changes frontmatter to `status: approved`.
+- With `--auto`, community search is off and an existing output file is kept. The first write carries `status: approved`, `approval: auto-init`, and `approved_at: <ISO-8601>` instead of `status: draft`, plus `evidence: thin` when the sub-workspace path holds only a manifest or little code, so scaffold may run on it unreviewed.
 - Skills + agents only. Do not recommend hooks, MCP servers, or plugin packaging unless the selected sub-workspace evidence makes that explicitly necessary.
 - Executor contracts follow the **Executor Variant** in `../tdk-scaffold-from-recommendation/references/agent-output-pattern.md`; do not apply it to guide/reviewer agents. Honor `/tdk-implement`'s `Delegate Skill Loading Requirement`: an empty toolset needs no loader; non-empty toolsets require dispatch-keyed static readiness and actual child load receipts. OMP uses `read skill://<name>`; Claude preload and inherited `Skill` are ready only in the exercised G3 cases of the loading contract. Recommendations do not grant runtime readiness.
 - Routing suggestions are reviewable handoff notes for scaffold, derived from Executor Decisions. Route mutation is a separate reviewed `/tdk-delegate-routing` workflow; never create, patch, or register routes during recommendation.

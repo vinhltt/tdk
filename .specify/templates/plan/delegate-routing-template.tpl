@@ -12,7 +12,8 @@ Auto-detected domains: `research`, `implement`, `test`, `database`, `design`. Ot
 
 - research: (default - no delegate)
 - implement: (default - no delegate)
-- test: /your-consumer-unit-test-skill
+- test: (default - no delegate)
+<!-- - test: /your-consumer-unit-test-skill -->
 
 <!-- ## backend -->
 <!-- - research: /your-research-skill -->

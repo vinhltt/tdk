@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.1.4] - 2026-11-26
+
+### Changed
+- tdk-workflow-config-apply, tdk-brownfield-start, tdk-architecture-advisor: next steps point at /tdk-sub-workspace-bootstrap, with /tdk-sub-workspace-docs --all as the route without tdk-scaffold
+- tdk-sub-workspace-docs: keeps .specify/cache/tdk-docs/ and prints its path instead of asking whether to delete it
+
 ## [1.1.3] - 2026-11-04
 
 ### Changed

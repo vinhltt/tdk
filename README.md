@@ -52,7 +52,7 @@ snippets such as `bash`, `bun`, `git`, or test runners.
 /tdk-workspace-layout-propose .specify/configurations/architecture/architecture-decision.md
 /tdk-workflow-config-apply
 /tdk-workspace-dependency-policy .specify/configurations/workspace-layout/workspace-layout-proposal.json
-/tdk-sub-workspace-docs --all
+/tdk-sub-workspace-bootstrap  # without tdk-scaffold: /tdk-sub-workspace-docs --all
 ```
 
 `/tdk-workflow-config-apply` previews changes first. Approve only when the diff matches the intended
@@ -158,7 +158,7 @@ Full contract:
 | **tdk-memory** | Domain memory init, update, query, changelog, checksum, memory agent |
 | **tdk-test-api** | API test planning, testcase generation, Playwright TypeScript codegen |
 | **tdk-retro** | Retrospective collection, learning proposal, approved learning application |
-| **tdk-scaffold** | Sub-workspace automation recommendations, skill/agent scaffolding, delegate routing, guarded golden-path recipes |
+| **tdk-scaffold** | Sub-workspace automation recommendations, one-command sub-workspace bootstrap, skill/agent scaffolding, delegate routing, guarded golden-path recipes |
 
 Every install includes the coupled base `tdk-core`, `tdk-inception`, `tdk-memory`, and `tdk-utils`.
 Selection adds optional workflows to that base; there is no runtime-independent core-only install.

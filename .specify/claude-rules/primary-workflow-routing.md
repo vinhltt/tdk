@@ -38,6 +38,8 @@ tdk-greenfield-start or tdk-brownfield-start
         ↓
 [tdk-workspace-dependency-policy]       advisory policy + snippets
         ↓
+[tdk-sub-workspace-bootstrap]           docs, skills, agents, routes per sub-workspace; review report
+        ↓
 [tdk-golden-path-scaffold]              dry-run/approved skeleton recipe
 
 PROJECT AUTHORITY
@@ -135,6 +137,7 @@ legacy-layout guidance instead of auto-migrating them.
 | Propose workspace layout markdown/json | `tdk-workspace-layout-propose` | `tdk-workflow-config-apply` |
 | Review/apply runtime config from layout evidence | `tdk-workflow-config-apply` | `tdk-workspace-layout-propose` |
 | Produce dependency policy/snippets | `tdk-workspace-dependency-policy` | `tdk-golden-path-scaffold` |
+| Set up docs, skills, agents and routes for every sub-workspace | `tdk-sub-workspace-bootstrap` | `tdk-sub-workspace-docs` (docs only) |
 | Create guarded skeleton recipe/structure | `tdk-golden-path-scaffold` | source-code implementation |
 | Set/update project-wide principles & knowledge | `tdk-constitution` | `tdk-specify` |
 | Explore epic problem/personas/MVP before PRD | `tdk-discovery` | `tdk-specify` |
@@ -159,6 +162,7 @@ Need architecture decision only                -> tdk-architecture-advisor
 Need workspace layout proposal                 -> tdk-workspace-layout-propose
 Layout proposal ready for guarded config       -> tdk-workflow-config-apply
 Need dependency policy from approved layout    -> tdk-workspace-dependency-policy
+Config applied, sub-workspaces need automation -> tdk-sub-workspace-bootstrap
 Need guarded skeleton recipe                   -> tdk-golden-path-scaffold
 No project principles yet, or they changed     -> tdk-constitution
 Epic-level problem/personas/MVP unclear        -> tdk-discovery
@@ -215,8 +219,8 @@ Invoke these on demand outside the main spec -> ship spine:
   `tdk-config-sync`.
 - Inception sub-workspaces: `tdk-sub-workspace-init`,
   `tdk-sub-workspace-list`, `tdk-sub-workspace-docs`.
-- Optional scaffold automation: `tdk-sub-workspace-automation-recommend` and
-  `tdk-golden-path-scaffold`.
+- Optional scaffold automation: `tdk-sub-workspace-bootstrap`,
+  `tdk-sub-workspace-automation-recommend`, and `tdk-golden-path-scaffold`.
 - Research/navigation: `tdk-scout`, `docs-seeker`, research/problem-solving
   utilities.
 - Memory/learning: `tdk-memory-*` and `tdk-retro-*` workflows.

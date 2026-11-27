@@ -98,7 +98,7 @@ rename `/tdk-*` commands or change their artifact paths.
 | `tdk-memory` | Domain memory commands and memory agent |
 | `tdk-test-api` | API test planning, testcase generation, and Playwright TypeScript generation |
 | `tdk-retro` | Retrospective collection, learning proposals, and approved learning application |
-| `tdk-scaffold` | Automation recommendations, skill/agent scaffolding, routing, and guarded recipes |
+| `tdk-scaffold` | Automation recommendations, skill/agent scaffolding, routing, one-command sub-workspace bootstrap, and guarded recipes |
 
 Every harness install resolves the coupled base `tdk-core`, `tdk-inception`,
 `tdk-memory`, and `tdk-utils`. Optional plugin selection adds workflows to that
@@ -170,9 +170,10 @@ Excluded:
 | `/tdk-sub-workspace-init` | Initialize a sub-workspace config entry. | `[name]` | A monorepo/service boundary needs its own docs/rules context. |
 | `/tdk-sub-workspace-list` | List configured sub-workspaces. | no flags | You need inventory of sub-workspace config. |
 | `/tdk-sub-workspace-docs` | Generate arc42-lite docs for one or all sub-workspaces. | `--sub-workspace NAME`, `--all`, `--force` | Sub-workspace docs need README, architecture, interfaces, data-flow, and engineering pages. |
-| `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents for one sub-workspace. | `--sub-workspace <name>`, `--no-community-search` | Existing sub-workspace docs should drive automation recommendations. |
-| `/tdk-scaffold-from-recommendation` | Reconcile approved skills/agents in canonical `.claude/` source. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only`, `--task <id>` | Review create/reuse/patch outcomes and routing intent without silent overwrite. |
-| `/tdk-delegate-routing` | Review, register, and verify delegate-routing proposals. | `diff`, `register --approval <approvalDigest> --yes`, `verify`, `--proposal <path>` | A reviewed diff authorizes these exact proposal and route bytes; verification is route equality, not runtime readiness. |
+| `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents for one sub-workspace. | `--sub-workspace <name>`, `--no-community-search`, `--auto` | Existing sub-workspace docs should drive automation recommendations. |
+| `/tdk-scaffold-from-recommendation` | Reconcile approved skills/agents in canonical `.claude/` source. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only`, `--task <id>`, `--auto` | Review create/reuse/patch outcomes and routing intent without silent overwrite. |
+| `/tdk-delegate-routing` | Review, register, and verify delegate-routing proposals. | `diff`, `register --approval <approvalDigest> --yes`, `register --auto`, `verify`, `--proposal <path>` | A reviewed diff authorizes these exact proposal and route bytes; verification is route equality, not runtime readiness. |
+| `/tdk-sub-workspace-bootstrap` | Run docs, recommendation, scaffold, and route registration for every configured sub-workspace without questions; creates only missing artifacts. | `--sub-workspace <name>` | After config apply and before `/tdk-plan`, when you want one command and a report to review afterwards instead of answering questions step by step. |
 | `/tdk-repo-worktree` | Manage Git worktrees for sub-workspace repositories of a polyrepo project. | `create <id> [--repo <sub-name>]`, `list [<id>]`, `cleanup <id>`, `reset <id> [--repo <sub-name>]` | A sub-workspace repository is busy on another feature branch, or task worktrees need listing or cleanup. Sub-workspaces inside one nested repository or submodule share one worktree once that repository has a repo-level sub-workspace. |
 
 ### Testing And API
@@ -426,9 +427,10 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 25 | `/tdk-sub-workspace-init` | Initialize a new sub-workspace |
 | 26 | `/tdk-sub-workspace-list` | List all configured sub-workspaces |
 | 27 | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | Generate arc42-lite docs under `<docsPath>/sub-workspaces/<name>/` |
-| 28 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | Recommend skills/agents for one selected sub-workspace |
-| 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | Reconcile approved canonical skills/agents and propose routing, including reuse-only runs |
-| 30 | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]` | Register only the reviewed diff; approval and `--yes` are required for register |
+| 28 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search] [--auto]` | Recommend skills/agents for one selected sub-workspace |
+| 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>] [--auto]` | Reconcile approved canonical skills/agents and propose routing, including reuse-only runs |
+| 30 | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes] [--auto]` | Register only the reviewed diff; approval and `--yes` are required for register, except `register --auto`, which supplies them itself for new sections only |
+| 30a | `/tdk-sub-workspace-bootstrap [--sub-workspace <name>]` | Run 27–30 for every configured sub-workspace without questions; writes `bootstrap-report.md` to review afterwards |
 | — | **Primary Implementation** | |
 | 33 | `/tdk-implement <id> [--phase NN]` | Execute implementation directly from plan.md ## Phases (recommended) |
 | — | `/tdk-handoff [task-id \| issue-url \| focus] [--kind continuation\|spec\|investigation\|feature\|upstream-bug] [--slug <slug>]` | Capture one local packet; review and share manually, without lifecycle or tracker actions |
@@ -647,9 +649,10 @@ specification workflow.
 | module-boundary:policy | `/tdk-module-boundary-policy [topology\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | Compatibility route for dependency policy | legacy `module-boundary-policy.md`, optional `enforcement-snippets.md` | Compatibility only |
 | golden-path:scaffold | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional after layout/policy review |
 | sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, `engineering.md` per sub-workspace | After config apply |
-| sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | `--sub-workspace`, `--no-community-search` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` or skills.sh lookup | `automation-recommendation.md` | After sub-workspace docs |
-| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | `--dry-run`, `--skills-only`, `--agents-only`, `--task` | approved recommendation with Executor Decisions and per-artifact actions | Canonical skill/agent reconciliation, routing proposal, `scaffold-outcome.json` baseline, readiness summary | After recommendation approval |
-| delegate:routing | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]` | `--proposal`, `--approval`, `--yes` | route file and proposal; reviewed `approvalDigest` for register | JSON diff, approval-bound registration, or route-equality verification | After routing-intent review |
+| sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search] [--auto]` | `--sub-workspace`, `--no-community-search`, `--auto` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` or skills.sh lookup | `automation-recommendation.md` | After sub-workspace docs |
+| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>] [--auto]` | `--dry-run`, `--skills-only`, `--agents-only`, `--task`, `--auto` | approved recommendation with Executor Decisions and per-artifact actions | Canonical skill/agent reconciliation, routing proposal, `scaffold-outcome.json` baseline, readiness summary | After recommendation approval |
+| delegate:routing | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes] [--auto]` | `--proposal`, `--approval`, `--yes`, `--auto` (with `register` only) | route file and proposal; reviewed `approvalDigest` for register | JSON diff, approval-bound registration, or route-equality verification | After routing-intent review |
+| sub-workspace:bootstrap | `/tdk-sub-workspace-bootstrap [--sub-workspace <name>]` | `--sub-workspace` | `.specify/.specify.json` `subWorkspaces[]`, sub-workspace source, existing docs, recommendations, scaffold outcomes, and route file | Missing docs, approved recommendations, skills, agents, and route sections per sub-workspace; `.specify/configurations/automation-recommendations/bootstrap-report.md` | After config apply; before `/tdk-plan` |
 
 Greenfield and brownfield start commands are report/routing entrypoints. They do not create specs, plans, tracker issues, source code, or `.specify/.specify.json`. Greenfield full mode runs a project-inception interview before strong routing. Quick mode records unanswered critical gaps. Unknown mode classifies only unless minimum facts are present. Brownfield full mode uses bounded repo evidence, config-only mode focuses on `.specify` state, and unknown mode recommends one evidence-backed next route.
 
@@ -726,7 +729,9 @@ Syntax: `/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <na
 for one configured sub-workspace or all configured sub-workspaces:
 `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, and `engineering.md` under
 `<docsPath>/sub-workspaces/<name>/`. It updates managed AUTO-GEN sections and
-does not delete old generated docs.
+does not delete old generated docs. When all targets finish, it keeps
+`.specify/cache/tdk-docs/` and prints its path without asking; delete that folder
+by hand when you no longer need it.
 
 Syntax: `/tdk-sub-workspace-docs [--sub-workspace NAME|--all] [--force]`.
 
@@ -738,7 +743,13 @@ skills.sh. It does not support `--all` and does not use `ck:find-skills`. When
 `scaffold-outcome.json` sits beside the recommendation, it reads the recorded
 outcomes as evidence to prefer reuse or patch, without hashing files.
 
-Syntax: `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]`.
+Syntax: `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search] [--auto]`.
+
+With `--auto`, it asks nothing: community search is off, an existing
+recommendation is kept, and a new one is written with `status: approved`,
+`approval: auto-init`, and `approved_at` instead of `status: draft`, plus
+`evidence: thin` when the sub-workspace holds only a manifest or little code.
+Scaffold may then run on it without a human review.
 
 Recommendations separate toolset **skills** from executor **agents** in `## Executor Decisions`, always considering `implement` and `test`. Prefer an existing executor when its write set is bounded and it owns a gate, isolates context, or has a distinct caller/output contract. A justified `no agent` names the failed criterion; agents are not mandatory. Runtime-only `.omp/agents/` definitions without canonical twins remain ownership-unresolved and are never patched or promoted automatically.
 
@@ -748,8 +759,10 @@ with legacy file fallbacks. It creates/reuses/reviews patches in `.claude/skills
 
 An approved run that is not a dry run records `scaffold-outcome.json` beside the recommendation. The next run compares against it and labels each artifact unchanged, changed, or missing since the last scaffold, and warns that a patch may undo edits made after it, such as a hand edit or a retro apply. Text hashes ignore CRLF versus LF, so a `core.autocrlf` checkout reports nothing as changed. A sidecar recorded for another recommendation, or one that cannot be read, is kept as is and reported.
 
-Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]`.
+Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>] [--auto]`.
 The reviewable routing artifact is `delegate-routing-proposal.json`, written beside the approved recommendation only after run-level approval.
+
+With `--auto`, frontmatter `status: approved` counts as the run approval: planned `create` and `reuse` proceed without the approval question, the routing proposal is written unless one already exists, and the baseline records only `created` and `reused` rows. Every other question takes the branch that writes nothing (keep, exclude, abort, or skip) and is named in the summary, so nothing is patched or regenerated. A recommendation without `status: approved` aborts the run.
 
 For OMP, conversion requires an existing **TDK source checkout**: `packages/tdk-setup` is not shipped in a consumer. Scaffold prints a resolved source-CLI command for `convert-flat "<consumer-root>" --harness omp --parts agents,skills --dry-run`, then an approved `--yes` command; it reports a prerequisite if that source cannot be found. Copy the printed absolute CLI command from the consumer root. Conversion refuses unowned `.omp/agents/<name>.md` targets; never add `--force` without an explicit ownership decision. See the [canonical reconciliation contract](../../../plugins/tdk-scaffold/skills/tdk-scaffold-from-recommendation/SKILL.md).
 
@@ -759,9 +772,39 @@ Readiness has four independent labels: **source ready**, **runtime installed**, 
 
 Use `diff --proposal <path>` → review → `register --proposal <path> --approval <approvalDigest> --yes` → `verify --proposal <path>`. The digest from `diff` binds **both proposal and route bytes**. Editing either requires a new diff and approval; stale approval writes nothing. `verify` reports `scope: route-equality`, even for a nonexistent agent: it does not prove runtime installation, loading capability, or phase freshness. Creating the route file is a prompt step: use `.specify/templates/plan/delegate-routing-template.tpl`.
 
-Syntax: `/tdk-delegate-routing <diff|register|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]`.
+Syntax: `/tdk-delegate-routing <diff|register|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes] [--auto]`.
+
+`register --auto` with a `--proposal` that has entries replaces the human review; `--auto` is a skill argument, never a CLI flag. A missing route file is created from the template first. The skill registers only when every `diff` operation is an `add` into a new routing section: it passes that diff's `approvalDigest` with `--yes` itself, then runs `verify`. Anything else (`update`, `noop`, an `unresolved-artifact` reason, a conflict error, `approval_required`, or `stale_approval`) registers nothing, is reported, and is never retried.
 
 Execution uses the [two-tier loading contract](../../../plugins/tdk-core/skills/tdk-implement/references/phase-execution.md#delegate-skill-loading-requirement), selected by the actual dispatch primitive. Tier 1 resolves the executor binding and, for non-empty skill toolsets, its loader: OMP uses proven child `read skill://<name>` capability plus effective `read`, not a literal Claude `Skill` entry. Claude readiness is `ready` for an explicit `Skill` grant, omitted `tools` when no delegate has `disable-model-invocation: true`, or a complete `skills:` preload (exercised G3). With explicit tools and no `Skill`, a delegate that is not preloaded or has `disable-model-invocation: true` is `no-loader`; wildcard/unknown tools stay `unverified`. Agent-only routes need no skill-loader. Static failure (`agent-not-found`, `skill-not-found`, `no-loader`, `unverified`) keeps the phase `todo` without F3 recovery; a load failure after dispatch ends `Status: BLOCKED`, keeps `in_progress`, and requires F3 recovery. Successful executors list each loaded skill with its locator and first heading, and emit exactly one literal `Status:` line.
+
+`/tdk-sub-workspace-bootstrap` (`tdk-scaffold`) chains the four commands above for every configured sub-workspace, in config order, without questions. Running it is the consent to create every missing artifact it covers. A step runs only when its output is missing, and existing files are never modified, overwritten, or deleted, apart from appending a new `## <name>` section to the route file, scaffold recording its own `scaffold-outcome.json` again, and rewriting its own report. When a child skill would ask, bootstrap takes the branch that writes nothing and lists the item for review. A failure in one sub-workspace never stops the others. A configured path that does not exist is `skipped (missing path)`; a folder with no source file or package manifest is `deferred` until code or a manifest exists. "No questions" means the TDK skills ask nothing; Claude Code itself may still ask permission before writing under `.claude/`, depending on your permission mode.
+
+A full run for one sub-workspace costs a repomix pack, a scout pass, a docs writer, official-docs research, and a scaffold. Bootstrap prints that plan before it starts and does not wait for an answer; `--sub-workspace <name>` limits the run to one sub-workspace.
+
+| Step | Runs when | Work for one sub-workspace |
+|---|---|---|
+| Docs | none of the docs files exist | `/tdk-sub-workspace-docs --sub-workspace <name>`: repomix pack, scout pass, docs writer subagent |
+| Recommendation | no recommendation exists | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> --auto --no-community-search`: official-docs research |
+| Scaffold | this run wrote the recommendation, no `scaffold-outcome.json` exists yet, or a planned `create` artifact is neither on disk nor recorded there; a recommendation with nothing to create, patch, or reuse records `nothing to scaffold` | `/tdk-scaffold-from-recommendation <recommendation-path> --auto`: creates the missing skills and agents |
+| Routing | a routing proposal exists and the route file has no `## <name>` section | `/tdk-delegate-routing register --auto`: diff, register, verify; a route conflict skips routing for every remaining sub-workspace |
+
+Run bootstrap after `/tdk-workflow-config-apply` (and the optional `/tdk-workspace-dependency-policy`) and before `/tdk-plan`, so new plans pick up the registered routes. For an existing plan with `todo` phases, the report lists `/tdk-plan <TASK_ID> --refresh-routing`.
+
+The report is `.specify/configurations/automation-recommendations/bootstrap-report.md`: `## Needs your review` first, then one section per sub-workspace with its outcomes, paths, and `Review:` items, then `## How to give feedback`. Delete a `Review:` item once reviewed. Edit generated files directly, or rerun a child command by hand: `/tdk-sub-workspace-docs --sub-workspace <name>` takes correction feedback for existing docs, and `/tdk-scaffold-from-recommendation <recommendation-path>` without `--auto` reviews drift.
+
+Syntax: `/tdk-sub-workspace-bootstrap [--sub-workspace <name>]`.
+
+After implementing a spec, `/tdk-retro-collect <TASK_ID>` feeds lessons back into what bootstrap created. Retro routes each lesson to a target from its routing table:
+
+| Lesson about | Retro target |
+|---|---|
+| A recommendation | T3, `.specify/configurations/**/*.md` |
+| Sub-workspace docs | No retro target: rerun `/tdk-sub-workspace-docs --sub-workspace <name>` with the correction |
+| A skill | T4 for a consumer test skill resolved through the `test` route; T6 (the user skill `SKILL.md`) for other guidance. A test convention with no T4 candidate gets no entry |
+| A route | T5, `delegate-routing.md` |
+| An agent's contract (tools, skills, model, write set, output) | T3 on the recommendation that owns the agent; then `/tdk-scaffold-from-recommendation` without `--auto` reviews the drift and proposes the agent patch |
+| How an agent does its work | T4 or T6 on the agent's toolset skill; an agent without one gets T3 on its recommendation, to add a toolset skill |
 
 #### Migrating Previously Scaffolded Artifacts
 

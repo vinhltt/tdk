@@ -50,7 +50,7 @@ Do not read secret-like files. Redact sensitive values before report text.
   recovery findings are ready for layout proposal.
 - Recommend `/tdk-workflow-config-apply --reconcile` only as a later
   preview route after layout proposal artifacts are reviewed.
-- Recommend `/tdk-sub-workspace-docs --all` only when config evidence is enough
+- Recommend `/tdk-sub-workspace-bootstrap` (without tdk-scaffold: `/tdk-sub-workspace-docs --all`) only when config evidence is enough
   to identify docs targets.
 
 ## Stop Conditions

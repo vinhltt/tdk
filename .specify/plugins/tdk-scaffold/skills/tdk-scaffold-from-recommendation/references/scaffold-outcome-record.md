@@ -2,7 +2,7 @@
 
 `scaffold-outcome.json` sits beside the recommendation. It records what an approved scaffold run left on disk, so the next run can tell which artifacts changed since then: a hand edit, a retro apply, or a line-ending-only checkout difference that is not a change.
 
-Only `scripts/scaffold-outcome-record.ts` writes this file or derives baseline labels from it; `/tdk-sub-workspace-automation-recommend` reads its rows directly, as evidence only. Never hash a file for the sidecar, edit the JSON, or infer a baseline label by hand. The raw-byte snapshots of the scaffold's Review Each Artifact steps 4 and 7 are a separate approval guard and stay. The script needs preinstalled Bun and nothing else: no `.specify/scripts/ts` tree, no dependency install, no build.
+Only `scripts/scaffold-outcome-record.ts` writes this file or derives baseline labels from it; `/tdk-sub-workspace-automation-recommend` reads its rows directly, as evidence only, and `/tdk-sub-workspace-bootstrap` reads them only to decide whether to run scaffold again. Never hash a file for the sidecar, edit the JSON, or infer a baseline label by hand. The raw-byte snapshots of the scaffold's Review Each Artifact steps 4 and 7 are a separate approval guard and stay. The script needs preinstalled Bun and nothing else: no `.specify/scripts/ts` tree, no dependency install, no build.
 
 ## Sidecar v1
 

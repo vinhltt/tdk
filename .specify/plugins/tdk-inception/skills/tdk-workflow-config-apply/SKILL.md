@@ -3,7 +3,7 @@ name: tdk-workflow-config-apply
 description: "Interactively review and apply guarded .specify/.specify.json changes derived from workspace layout proposal JSON."
 argument-hint: "[(no flags)|--dry-run|--reconcile|--yes --expect-hash <hash>] [--topology <path>]"
 metadata:
-  version: "1.0.0"
+  version: "1.1.4"
 ---
 
 # tdk-workflow-config-apply
@@ -213,6 +213,7 @@ Show:
 - `planHash` only when useful for automation/debug; do not make it the primary
   user action in default mode
 - unresolved questions, if any
+- after a successful apply that leaves `subWorkspaces[]` non-empty, print `Next: /tdk-workspace-dependency-policy <proposal path> (optional), then /tdk-sub-workspace-bootstrap (tdk-scaffold); without tdk-scaffold: /tdk-sub-workspace-docs --all`; print no such line for a dry-run, a reconcile preview, or a failed apply
 
 ## Quality Gates
 

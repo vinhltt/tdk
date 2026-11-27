@@ -28,6 +28,8 @@ export interface DelegateRoutingSection {
 export interface DelegateRoutingDocument {
   lines: string[];
   trailingNewline: boolean;
+  /** Line ending written back on register: CRLF only when every line break in the file is CRLF. */
+  newline: '\n' | '\r\n';
   sections: DelegateRoutingSection[];
   routes: DelegateRoute[];
 }
@@ -80,13 +82,16 @@ export function resolveDelegateRoutingPath(projectRoot: string): string {
   return join(docsRoot, ...ROUTING_RELATIVE_PATH);
 }
 
-function splitMarkdown(markdown: string): { lines: string[]; trailingNewline: boolean } {
+function splitMarkdown(markdown: string): { lines: string[]; trailingNewline: boolean; newline: '\n' | '\r\n' } {
   const normalized = markdown.replace(/\r\n/g, '\n');
   const trailingNewline = normalized.endsWith('\n');
   const body = trailingNewline ? normalized.slice(0, -1) : normalized;
+  // A uniformly CRLF file keeps CRLF so register only adds bytes; mixed endings fall back to LF.
+  const allCrlf = markdown.includes('\r\n') && !markdown.replace(/\r\n/g, '').includes('\n');
   return {
     lines: body.length === 0 ? [] : body.split('\n'),
     trailingNewline,
+    newline: allCrlf ? '\r\n' : '\n',
   };
 }
 
@@ -125,7 +130,7 @@ function parseRouteDelegates(value: string): string[] {
 }
 
 export function parseDelegateRouting(markdown: string): DelegateRoutingDocument {
-  const { lines, trailingNewline } = splitMarkdown(markdown);
+  const { lines, trailingNewline, newline } = splitMarkdown(markdown);
   const sections: DelegateRoutingSection[] = [];
   const routes: DelegateRoute[] = [];
   let current: DelegateRoutingSection | undefined;
@@ -154,12 +159,12 @@ export function parseDelegateRouting(markdown: string): DelegateRoutingDocument 
     routes.push(activeRoute);
   });
 
-  return { lines, trailingNewline, sections, routes };
+  return { lines, trailingNewline, newline, sections, routes };
 }
 
 export function formatDelegateRouting(document: DelegateRoutingDocument): string {
-  const body = document.lines.join('\n');
-  return document.trailingNewline ? `${body}\n` : body;
+  const body = document.lines.join(document.newline);
+  return document.trailingNewline ? `${body}${document.newline}` : body;
 }
 
 function routeKey(section: string, domain: string): string {

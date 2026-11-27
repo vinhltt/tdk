@@ -99,7 +99,7 @@ tạo; nó không đổi tên command `/tdk-*` hoặc thay đổi đường dẫ
 | `tdk-memory` | Các command domain memory và memory agent |
 | `tdk-test-api` | Lập kế hoạch API test, tạo testcase, và sinh mã Playwright TypeScript |
 | `tdk-retro` | Thu thập retrospective, đề xuất bài học, và áp dụng bài học đã được duyệt |
-| `tdk-scaffold` | Đề xuất automation, scaffold skill/agent, routing, và các recipe có guard |
+| `tdk-scaffold` | Đề xuất automation, scaffold skill/agent, routing, bootstrap sub-workspace bằng một lệnh, và các recipe có guard |
 
 Mỗi lần cài harness đều phân giải thành bộ base gắn kết gồm `tdk-core`,
 `tdk-inception`, `tdk-memory`, và `tdk-utils`. Chọn plugin tùy chọn chỉ bổ sung
@@ -171,9 +171,10 @@ Excluded:
 | `/tdk-sub-workspace-init` | Initialize sub-workspace config entry. | `[name]` | Monorepo/service boundary cần docs/rules context riêng. |
 | `/tdk-sub-workspace-list` | List configured sub-workspaces. | no flags | Bạn cần inventory sub-workspace config. |
 | `/tdk-sub-workspace-docs` | Generate arc42-lite docs cho một hoặc tất cả sub-workspaces. | `--sub-workspace NAME`, `--all`, `--force` | Sub-workspace docs cần README, architecture, interfaces, data-flow, và engineering pages. |
-| `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents cho một sub-workspace. | `--sub-workspace <name>`, `--no-community-search` | Existing sub-workspace docs nên drive automation recommendations. |
-| `/tdk-scaffold-from-recommendation` | Đối chiếu skill/agent đã duyệt trong nguồn chuẩn `.claude/`. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only`, `--task <id>` | Duyệt tạo mới, tái sử dụng hoặc patch; không ghi đè ngầm. |
-| `/tdk-delegate-routing` | Duyệt, đăng ký và kiểm tra delegate-routing proposal. | `diff`, `register --approval <approvalDigest> --yes`, `verify`, `--proposal <path>` | Diff đã duyệt chỉ cho phép đúng proposal và route bytes đó; verify không chứng minh runtime readiness. |
+| `/tdk-sub-workspace-automation-recommend` | Recommend skills/agents cho một sub-workspace. | `--sub-workspace <name>`, `--no-community-search`, `--auto` | Existing sub-workspace docs nên drive automation recommendations. |
+| `/tdk-scaffold-from-recommendation` | Đối chiếu skill/agent đã duyệt trong nguồn chuẩn `.claude/`. | `[path]`, `--dry-run`, `--skills-only`, `--agents-only`, `--task <id>`, `--auto` | Duyệt tạo mới, tái sử dụng hoặc patch; không ghi đè ngầm. |
+| `/tdk-delegate-routing` | Duyệt, đăng ký và kiểm tra delegate-routing proposal. | `diff`, `register --approval <approvalDigest> --yes`, `register --auto`, `verify`, `--proposal <path>` | Diff đã duyệt chỉ cho phép đúng proposal và route bytes đó; verify không chứng minh runtime readiness. |
+| `/tdk-sub-workspace-bootstrap` | Chạy docs, recommendation, scaffold và đăng ký route cho mọi sub-workspace đã configure mà không hỏi; chỉ tạo artifact còn thiếu. | `--sub-workspace <name>` | Sau config apply và trước `/tdk-plan`, khi bạn muốn chạy một lệnh rồi review report sau, thay vì trả lời câu hỏi ở từng bước. |
 
 ### Testing And API
 
@@ -420,9 +421,10 @@ Các helper này tồn tại trong source nhưng không được catalog như di
 | 25 | `/tdk-sub-workspace-init` | Initialize sub-workspace mới |
 | 26 | `/tdk-sub-workspace-list` | List tất cả configured sub-workspaces |
 | 27 | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | Generate arc42-lite docs dưới `<docsPath>/sub-workspaces/<name>/` |
-| 28 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | Recommend skills/agents cho một selected sub-workspace |
-| 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | Đối chiếu canonical skill/agent và đề xuất route, kể cả khi chỉ tái sử dụng |
-| 30 | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]` | Chỉ đăng ký diff đã duyệt; register bắt buộc có approval và `--yes` |
+| 28 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search] [--auto]` | Recommend skills/agents cho một selected sub-workspace |
+| 29 | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>] [--auto]` | Đối chiếu canonical skill/agent và đề xuất route, kể cả khi chỉ tái sử dụng |
+| 30 | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes] [--auto]` | Chỉ đăng ký diff đã duyệt; register bắt buộc có approval và `--yes`, trừ `register --auto` tự cung cấp hai giá trị này và chỉ cho section mới |
+| 30a | `/tdk-sub-workspace-bootstrap [--sub-workspace <name>]` | Chạy 27–30 cho mọi sub-workspace đã configure mà không hỏi; ghi `bootstrap-report.md` để review sau |
 | — | **Primary Implementation** | |
 | 33 | `/tdk-implement <id> [--phase NN]` | Execute implementation trực tiếp từ `plan.md ## Phases` |
 | — | `/tdk-handoff [task-id \| issue-url \| focus] [--kind continuation\|spec\|investigation\|feature\|upstream-bug] [--slug <slug>]` | Capture một packet local; review và chia sẻ thủ công, không chạy lifecycle hay thao tác tracker |
@@ -639,9 +641,10 @@ không ép vào specification workflow.
 | module-boundary:policy | `/tdk-module-boundary-policy [topology\|file] [--audit\|--suggest]` | `--audit`, `--suggest` | Compatibility route cho dependency policy | legacy `module-boundary-policy.md`, optional `enforcement-snippets.md` | Compatibility only |
 | golden-path:scaffold | `/tdk-golden-path-scaffold [layout\|file] [--dry-run\|--yes] [--preset <name>]` | `--dry-run`, `--yes`, `--preset` | approved layout/config evidence, architecture decision/recovery, optional dependency policy | `golden-path-scaffold-plan.md`, `golden-path-recipe.json`, `generated-files-report.md` | Optional sau layout/policy review |
 | sub-workspace:docs | `/tdk-sub-workspace-docs [--sub-workspace NAME\|--all] [--force]` | `--sub-workspace`, `--all`, `--force` | `.specify/.specify.json`, sub-workspace source, scout output, optional dependency policy | `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, `engineering.md` theo sub-workspace | Sau config apply |
-| sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]` | `--sub-workspace`, `--no-community-search` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` hoặc skills.sh lookup | `automation-recommendation.md` | Sau sub-workspace docs |
-| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]` | `--dry-run`, `--skills-only`, `--agents-only`, `--task` | recommendation đã duyệt với Executor Decisions và action cho từng artifact | Đối chiếu canonical skill/agent, routing proposal, baseline `scaffold-outcome.json`, readiness summary | Sau khi duyệt recommendation |
-| delegate:routing | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]` | `--proposal`, `--approval`, `--yes` | route file và proposal; `approvalDigest` đã duyệt cho register | JSON diff, đăng ký gắn với approval, hoặc kiểm tra route equality | Sau khi duyệt routing intent |
+| sub-workspace:automation-recommend | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search] [--auto]` | `--sub-workspace`, `--no-community-search`, `--auto` | selected sub-workspace docs, dependency policy, official docs, local installed skill catalog, optional `npx skills find` hoặc skills.sh lookup | `automation-recommendation.md` | Sau sub-workspace docs |
+| scaffold:from-recommendation | `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>] [--auto]` | `--dry-run`, `--skills-only`, `--agents-only`, `--task`, `--auto` | recommendation đã duyệt với Executor Decisions và action cho từng artifact | Đối chiếu canonical skill/agent, routing proposal, baseline `scaffold-outcome.json`, readiness summary | Sau khi duyệt recommendation |
+| delegate:routing | `/tdk-delegate-routing <diff\|register\|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes] [--auto]` | `--proposal`, `--approval`, `--yes`, `--auto` (chỉ với `register`) | route file và proposal; `approvalDigest` đã duyệt cho register | JSON diff, đăng ký gắn với approval, hoặc kiểm tra route equality | Sau khi duyệt routing intent |
+| sub-workspace:bootstrap | `/tdk-sub-workspace-bootstrap [--sub-workspace <name>]` | `--sub-workspace` | `subWorkspaces[]` trong `.specify/.specify.json`, sub-workspace source, docs, recommendation, scaffold outcome và route file đã có | Docs, recommendation đã duyệt, skill, agent và route section còn thiếu theo từng sub-workspace; `.specify/configurations/automation-recommendations/bootstrap-report.md` | Sau config apply; trước `/tdk-plan` |
 
 Greenfield và brownfield start commands là report/routing entrypoints. Chúng không tạo specs, plans, tracker issues, source code, hoặc `.specify/.specify.json`. Greenfield full mode chạy project-inception interview trước strong routing. Quick mode ghi unanswered critical gaps. Unknown mode chỉ classify nếu chưa đủ minimum facts. Brownfield full mode dùng bounded repo evidence, config-only mode tập trung vào `.specify` state, và unknown mode recommend một evidence-backed next route.
 
@@ -682,13 +685,15 @@ Compatibility syntax: `/tdk-module-boundary-policy [topology|file] [--audit|--su
 
 Syntax: `/tdk-golden-path-scaffold [layout|file] [--dry-run|--yes] [--preset <name>]`.
 
-`/tdk-sub-workspace-docs` generate arc42-lite docs set gồm năm file cho một configured sub-workspace hoặc tất cả configured sub-workspaces: `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, và `engineering.md` dưới `<docsPath>/sub-workspaces/<name>/`. Nó update managed AUTO-GEN sections và không delete old generated docs.
+`/tdk-sub-workspace-docs` generate arc42-lite docs set gồm năm file cho một configured sub-workspace hoặc tất cả configured sub-workspaces: `README.md`, `architecture.md`, `interfaces.md`, `data-flow.md`, và `engineering.md` dưới `<docsPath>/sub-workspaces/<name>/`. Nó update managed AUTO-GEN sections và không delete old generated docs. Khi mọi target chạy xong, skill giữ lại `.specify/cache/tdk-docs/` và in đường dẫn của folder này mà không hỏi; hãy xóa tay folder đó khi không còn cần.
 
 Syntax: `/tdk-sub-workspace-docs [--sub-workspace NAME|--all] [--force]`.
 
 `/tdk-sub-workspace-automation-recommend` recommend skills và agents cho một selected sub-workspace. Nó đọc selected sub-workspace docs, workspace dependency policy, official docs hoặc primary sources, local installed skill catalog, và optional direct community lookup qua `npx skills find` hoặc skills.sh. Nó không support `--all` và không dùng `ck:find-skills`. Khi có `scaffold-outcome.json` cạnh recommendation, nó đọc các outcome đã ghi làm bằng chứng để ưu tiên reuse hoặc patch, không hash file.
 
-Syntax: `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search]`.
+Syntax: `/tdk-sub-workspace-automation-recommend --sub-workspace <name> [--no-community-search] [--auto]`.
+
+Với `--auto`, skill không hỏi câu nào: community search bị tắt, recommendation đã có được giữ nguyên, còn recommendation mới được ghi với `status: approved`, `approval: auto-init` và `approved_at` thay cho `status: draft`, kèm `evidence: thin` khi sub-workspace chỉ có manifest hoặc rất ít code. Nhờ vậy scaffold có thể chạy trên recommendation đó mà không cần người review trước.
 
 Recommendation phân biệt **skill** cung cấp toolset với **agent** thực thi trong `## Executor Decisions`, luôn xét `implement` và `test`. Ưu tiên executor có sẵn khi write set có giới hạn và nó sở hữu một gate, tách biệt context hoặc có caller/output contract riêng. Quyết định `no agent` phải nêu tiêu chí không đạt; không bắt buộc agent cho mọi domain. Agent chỉ có trong `.omp/agents/` mà không có canonical twin vẫn chưa rõ ownership; không tự patch hoặc chuyển thành nguồn chuẩn.
 
@@ -696,8 +701,10 @@ Recommendation phân biệt **skill** cung cấp toolset với **agent** thực 
 
 Run đã duyệt và không phải dry run ghi `scaffold-outcome.json` cạnh recommendation. Lần chạy sau so với file này, gắn nhãn từng artifact là unchanged, changed hoặc missing kể từ lần scaffold trước, và cảnh báo rằng patch có thể ghi đè chỉnh sửa sau đó, ví dụ sửa tay hoặc retro apply. Hash của file text bỏ qua khác biệt CRLF và LF, nên checkout có `core.autocrlf` không bị báo changed. Sidecar thuộc recommendation khác hoặc không đọc được thì được giữ nguyên và báo ra.
 
-Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>]`.
+Syntax: `/tdk-scaffold-from-recommendation [path] [--dry-run] [--skills-only] [--agents-only] [--task <id>] [--auto]`.
 Routing artifact để review là `delegate-routing-proposal.json`, chỉ được ghi cạnh recommendation đã duyệt sau khi approve toàn bộ reconciliation plan.
+
+Với `--auto`, frontmatter `status: approved` được tính là approval cho cả lần chạy: các action `create` và `reuse` đã lên kế hoạch chạy luôn mà không hỏi, routing proposal được ghi nếu chưa có, và baseline chỉ ghi các dòng `created` và `reused`. Mọi câu hỏi khác đi theo nhánh không ghi gì (keep, exclude, abort hoặc skip) và được nêu trong summary, nên không có gì bị patch hay regenerate. Recommendation không có `status: approved` sẽ làm lần chạy dừng lại.
 
 Để chuyển sang OMP cần một **TDK source checkout** có thật: consumer payload không chứa `packages/tdk-setup`. Scaffold in lệnh dùng đường dẫn source CLI đã resolve cho `convert-flat "<consumer-root>" --harness omp --parts agents,skills --dry-run`, rồi lệnh `--yes` sau khi duyệt; nếu chưa tìm được nguồn thì báo prerequisite. Có thể copy lệnh CLI tuyệt đối được in và chạy từ consumer root. Conversion từ chối `.omp/agents/<name>.md` không thuộc ownership của TDK; không tự thêm `--force`. Xem [contract đối chiếu nguồn chuẩn](../../../plugins/tdk-scaffold/skills/tdk-scaffold-from-recommendation/SKILL.md).
 
@@ -707,9 +714,39 @@ Readiness có bốn nhãn độc lập: **source ready**, **runtime installed**,
 
 Quy trình: `diff --proposal <path>` → review → `register --proposal <path> --approval <approvalDigest> --yes` → `verify --proposal <path>`. Digest do `diff` trả về gắn **cả proposal lẫn route bytes**; sửa một trong hai phải diff và duyệt lại, stale approval không ghi gì. `verify` báo `scope: route-equality`, kể cả khi agent không tồn tại; nó không chứng minh runtime installation, loader hay phase freshness. Tạo route file lần đầu là bước prompt, dùng `.specify/templates/plan/delegate-routing-template.tpl`.
 
-Syntax: `/tdk-delegate-routing <diff|register|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes]`.
+Syntax: `/tdk-delegate-routing <diff|register|verify> [--proposal <path>] [--approval <approvalDigest>] [--yes] [--auto]`.
+
+`register --auto` với một `--proposal` có entry sẽ thay cho bước review của người dùng; `--auto` là argument của skill, không bao giờ là flag của CLI. Nếu chưa có route file, skill tạo file đó từ template trước. Skill chỉ register khi mọi operation của `diff` đều là `add` vào một routing section mới: khi đó nó tự truyền `approvalDigest` của chính diff đó cùng `--yes`, rồi chạy `verify`. Mọi trường hợp khác (`update`, `noop`, reason `unresolved-artifact`, lỗi conflict, `approval_required` hoặc `stale_approval`) không register gì, được báo ra, và không bao giờ thử lại.
 
 Execution dùng [contract tải skill hai tầng](../../../plugins/tdk-core/skills/tdk-implement/references/phase-execution.md#delegate-skill-loading-requirement) theo dispatch primitive thực tế. Tier 1 resolve agent binding; với toolset có skill, nó còn kiểm tra loader. OMP cần khả năng child `read skill://<name>` đã được chứng minh và quyền `read` hiệu lực, không cần token Claude `Skill` trong tools. Claude `ready` khi có explicit `Skill`, `tools` bỏ trống và không delegate nào có `disable-model-invocation: true`, hoặc `skills:` preload đầy đủ (G3 đã chạy thật). Với tools tường minh và không có `Skill`, delegate chưa được preload hoặc có `disable-model-invocation: true` là `no-loader`; wildcard/tools không rõ vẫn `unverified`. Agent-only không cần skill-loader. Lỗi static (`agent-not-found`, `skill-not-found`, `no-loader`, `unverified`) giữ phase `todo`, không có F3 recovery; lỗi load sau dispatch kết thúc `Status: BLOCKED`, giữ `in_progress` và yêu cầu F3 recovery. Executor thành công liệt kê từng skill đã load cùng locator và heading đầu tiên, và phát đúng một dòng `Status:` literal.
+
+`/tdk-sub-workspace-bootstrap` (`tdk-scaffold`) nối bốn command ở trên cho mọi sub-workspace đã configure, theo thứ tự trong config, mà không hỏi câu nào. Chạy command này chính là đồng ý tạo mọi artifact còn thiếu mà nó phụ trách. Một bước chỉ chạy khi output của bước đó còn thiếu, và file đã có không bao giờ bị sửa, ghi đè hay xóa, ngoại trừ việc append một section `## <name>` mới vào route file, việc scaffold ghi lại `scaffold-outcome.json` của chính nó, và việc ghi lại report của chính bootstrap. Khi một child skill lẽ ra sẽ hỏi, bootstrap chọn nhánh không ghi gì và đưa mục đó vào danh sách review. Lỗi ở một sub-workspace không bao giờ làm dừng các sub-workspace khác. Path đã configure nhưng không tồn tại được báo là `skipped (missing path)`; folder chưa có source file hay package manifest nào được báo là `deferred` cho đến khi có code hoặc manifest. "Không hỏi" nghĩa là các TDK skill không hỏi câu nào; bản thân Claude Code vẫn có thể xin quyền trước khi ghi vào `.claude/`, tùy permission mode bạn đang dùng.
+
+Một lần chạy đầy đủ cho một sub-workspace tốn một repomix pack, một lượt scout, một docs writer, một lượt nghiên cứu official docs và một lượt scaffold. Bootstrap in kế hoạch này trước khi bắt đầu và không chờ trả lời; `--sub-workspace <name>` giới hạn lần chạy vào một sub-workspace.
+
+| Bước | Chạy khi | Công việc cho một sub-workspace |
+|---|---|---|
+| Docs | chưa có file docs nào | `/tdk-sub-workspace-docs --sub-workspace <name>`: repomix pack, lượt scout, docs writer subagent |
+| Recommendation | chưa có recommendation | `/tdk-sub-workspace-automation-recommend --sub-workspace <name> --auto --no-community-search`: nghiên cứu official docs |
+| Scaffold | lần chạy này vừa ghi recommendation, chưa có `scaffold-outcome.json`, hoặc một artifact `create` đã lên kế hoạch không có trên disk và cũng không được ghi trong file đó; recommendation không có gì để create, patch hay reuse thì ghi `nothing to scaffold` | `/tdk-scaffold-from-recommendation <recommendation-path> --auto`: tạo các skill và agent còn thiếu |
+| Routing | đã có routing proposal và route file chưa có section `## <name>` | `/tdk-delegate-routing register --auto`: diff, register, verify; khi route xung đột thì mọi sub-workspace còn lại đều bỏ qua bước routing |
+
+Hãy chạy bootstrap sau `/tdk-workflow-config-apply` (và `/tdk-workspace-dependency-policy` nếu dùng) và trước `/tdk-plan`, để plan mới nhận được các route vừa đăng ký. Với plan đã có phase `todo`, report liệt kê lệnh `/tdk-plan <TASK_ID> --refresh-routing`.
+
+Report nằm ở `.specify/configurations/automation-recommendations/bootstrap-report.md`: `## Needs your review` đứng đầu, sau đó là một section cho mỗi sub-workspace với outcome, đường dẫn và các mục `Review:`, cuối cùng là `## How to give feedback`. Xóa một mục `Review:` khi đã review xong. Bạn có thể sửa trực tiếp file được tạo ra, hoặc chạy tay lại một child command: `/tdk-sub-workspace-docs --sub-workspace <name>` nhận correction feedback cho docs đã có, còn `/tdk-scaffold-from-recommendation <recommendation-path>` không kèm `--auto` sẽ review drift.
+
+Syntax: `/tdk-sub-workspace-bootstrap [--sub-workspace <name>]`.
+
+Sau khi implement một spec, `/tdk-retro-collect <TASK_ID>` đưa bài học quay lại những gì bootstrap đã tạo. Retro chuyển mỗi bài học tới một target trong bảng routing của nó:
+
+| Bài học về | Retro target |
+|---|---|
+| Một recommendation | T3, `.specify/configurations/**/*.md` |
+| Sub-workspace docs | Không có retro target: chạy lại `/tdk-sub-workspace-docs --sub-workspace <name>` kèm nội dung cần sửa |
+| Một skill | T4 cho consumer test skill được resolve qua route `test`; T6 (`SKILL.md` của user skill) cho các hướng dẫn khác. Quy ước test không có ứng viên T4 thì không tạo entry |
+| Một route | T5, `delegate-routing.md` |
+| Contract của agent (tools, skills, model, write set, output) | T3 trên recommendation sở hữu agent; sau đó `/tdk-scaffold-from-recommendation` không kèm `--auto` review drift và đề xuất patch cho agent |
+| Cách agent làm việc | T4 hoặc T6 trên toolset skill của agent; agent chưa có toolset skill thì nhận T3 trên recommendation của nó để thêm toolset skill |
 
 #### Di Chuyển Artifact Đã Scaffold Theo Đường Dẫn Cũ
 

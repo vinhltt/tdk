@@ -10,7 +10,7 @@ related-skills:
   - tdk-workspace-layout-propose
   - tdk-workflow-config-apply
 metadata:
-  version: "1.0.0"
+  version: "1.1.4"
   author: "VinhLTT"
   category: architecture-workflow
 ---

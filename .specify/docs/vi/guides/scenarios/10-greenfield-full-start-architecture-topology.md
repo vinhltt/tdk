@@ -16,21 +16,34 @@ Scenario này cover toàn bộ project-start chain:
 -> /tdk-workspace-layout-propose
 -> /tdk-workflow-config-apply
 -> /tdk-workspace-dependency-policy
--> /tdk-sub-workspace-docs --all
+-> /tdk-sub-workspace-bootstrap
+```
+
+`/tdk-sub-workspace-bootstrap` chạy docs, recommendation, scaffold và đăng ký
+route cho mọi sub-workspace đã configure mà không hỏi câu nào. Chuỗi thủ công
+vẫn là phương án thay thế khi bạn muốn review từng recommendation trước khi
+scaffold, hoặc khi chưa cài `tdk-scaffold`:
+
+```text
+/tdk-sub-workspace-docs --all
 -> /tdk-sub-workspace-automation-recommend --sub-workspace <name>
+-> review recommendation, đặt status: approved
+-> /tdk-scaffold-from-recommendation <recommendation-path>
+-> /tdk-delegate-routing diff, rồi register
 ```
 
 Chain này có hai nhóm artifact khác nhau:
 
 - **Project-level artifacts**: inception, constitution/memory, architecture,
-  workspace layout, dependency policy, sub-workspace docs, và automation recommendations.
+  workspace layout, dependency policy, sub-workspace docs, automation
+  recommendations, cùng các skill, agent và route được scaffold từ chúng.
 - **Feature/epic artifacts**: discovery, `spec.md` với embedded quality gate, và
   clarifications.
 
 Important gate: `/tdk-workflow-config-apply` preview trước và hỏi trước khi
 ghi config. Với project mới, approve guarded apply trước
-`/tdk-sub-workspace-docs --all`; nếu không, docs generation chỉ hoạt động khi
-`.specify/.specify.json` đã có `subWorkspaces[]` được configure.
+`/tdk-sub-workspace-bootstrap` hoặc `/tdk-sub-workspace-docs --all`; cả hai chỉ
+hoạt động khi `.specify/.specify.json` đã có `subWorkspaces[]` được configure.
 
 ## Prerequisites
 
@@ -40,10 +53,14 @@ ghi config. Với project mới, approve guarded apply trước
   project/workspace đến `/tdk-sub-workspace-docs` được đóng gói dưới
   `tdk-inception`; command tiếp nối `/tdk-sub-workspace-automation-recommend`
   thuộc `tdk-scaffold`. Tên command và đường dẫn artifact không đổi.
+- `/tdk-sub-workspace-bootstrap` cũng thuộc `tdk-scaffold`. Nếu không có plugin
+  này, dùng chuỗi thủ công bắt đầu từ `/tdk-sub-workspace-docs --all`; các bước
+  sau của chuỗi đó cũng cần `tdk-scaffold`.
 - Project có JSON `.specify/.specify.json`; workflow config apply không tạo
   first-time config từ đầu.
 - Có `bun`.
-- `repomix` được install trước `/tdk-sub-workspace-docs --all`. Xem mục
+- `repomix` được install trước `/tdk-sub-workspace-bootstrap` hoặc
+  `/tdk-sub-workspace-docs --all`. Xem mục
   Prerequisites trong `.specify/docs/vi/guides/setup/setup-guide.md`.
 
 ## Chuỗi Command Đề Xuất
@@ -66,9 +83,13 @@ apply parsed `planHash` internally. Sau đó tiếp tục:
 
 ```text
 /tdk-workspace-dependency-policy .specify/configurations/workspace-layout/workspace-layout-proposal.json
-/tdk-sub-workspace-docs --all
-/tdk-sub-workspace-automation-recommend --sub-workspace <name>
+/tdk-sub-workspace-bootstrap
 ```
+
+Khi bootstrap chạy xong, review
+`.specify/configurations/automation-recommendations/bootstrap-report.md`, bắt đầu
+từ `## Needs your review`, trước khi chạy `/tdk-plan`. Chuỗi thủ công nằm ở bước
+10 bên dưới.
 
 Nếu bạn cố ý muốn policy guidance trước runtime config apply, chạy
 `/tdk-workflow-config-apply --dry-run` trước, rồi
@@ -88,8 +109,7 @@ proposed layout.
 | 7 | `/tdk-workspace-layout-propose` | `.specify/configurations/workspace-layout/workspace-layout-proposal.md`, `workspace-layout-proposal.json` | No |
 | 8 | `/tdk-workflow-config-apply` | Diff/warnings review, then updated `.specify/.specify.json`, apply report, backup when approved | Yes, after confirmation |
 | 9 | `/tdk-workspace-dependency-policy` | `.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md`, optional `enforcement-snippets.md` | No |
-| 10 | `/tdk-sub-workspace-docs --all` | Arc42-lite docs per configured sub-workspace under `<docsPath>/sub-workspaces/<name>/` | No runtime config mutation |
-| 11 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name>` | `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | No |
+| 10 | `/tdk-sub-workspace-bootstrap` | Với mỗi configured sub-workspace: arc42-lite docs dưới `<docsPath>/sub-workspaces/<name>/`, `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md`, các skill và agent còn thiếu dưới `.claude/`, và một section `## <name>` mới trong `delegate-routing.md`; cùng với `.specify/configurations/automation-recommendations/bootstrap-report.md` | No `.specify/.specify.json` mutation; chỉ tạo artifact còn thiếu |
 
 `<feature-dir>` được resolve từ project config và task ID. Trong default setup,
 nó thường nằm dưới `.specify/specs/<id>/`.
@@ -272,14 +292,61 @@ Output:
 dependency-cruiser, package manager files, source folders, layout files, ADRs,
 routing files, hoặc `.specify/.specify.json`.
 
-### 10. Sub-workspace docs
+### 10. Sub-workspace bootstrap
+
+```text
+/tdk-sub-workspace-bootstrap
+```
+
+Command này cần configured `subWorkspaces[]` trong `.specify/.specify.json`, và
+cần có `bun` cùng `repomix` trên `PATH`. Thêm `--sub-workspace <name>` để chỉ
+chạy cho một sub-workspace. Với mỗi configured sub-workspace, theo thứ tự trong
+config, bootstrap chỉ chạy một bước khi output của bước đó còn thiếu:
+
+- `/tdk-sub-workspace-docs --sub-workspace <name>` khi chưa có file docs nào;
+- `/tdk-sub-workspace-automation-recommend --sub-workspace <name> --auto --no-community-search`
+  khi chưa có recommendation; `--auto` ghi file này với `status: approved` và
+  `approval: auto-init`;
+- `/tdk-scaffold-from-recommendation <recommendation-path> --auto`, bước này tạo
+  các skill và agent còn thiếu dưới `.claude/` và không patch gì;
+- `/tdk-delegate-routing register --auto`, bước này thêm section `## <name>` vào
+  `delegate-routing.md` chỉ khi route file chưa có section đó.
+
+Bootstrap không bao giờ sửa, ghi đè hay xóa file đã có, ngoại trừ việc append
+một route section, việc scaffold ghi lại `scaffold-outcome.json` của chính nó,
+và việc ghi lại report của chính bootstrap. Khi một child skill lẽ ra sẽ
+hỏi, bootstrap chọn nhánh không ghi gì và đưa mục đó vào danh sách review. Lỗi ở
+một sub-workspace không làm dừng các sub-workspace khác. Với layout mới, folder
+sub-workspace chưa có source file hay package manifest nào được báo là
+`deferred`; chạy lại bootstrap khi đã có code hoặc manifest. Path đã configure
+nhưng không tồn tại được báo là `skipped (missing path)`.
+
+Report nằm ở
+`.specify/configurations/automation-recommendations/bootstrap-report.md`. Đọc
+`## Needs your review` trước: mục này liệt kê skill và agent mới (kèm `tools` và
+`skills:` của từng agent), route đã đăng ký, các câu hỏi đã bị bỏ qua, và các
+sub-workspace bị deferred hoặc thiếu docs. Sau đó tiếp tục với `/tdk-plan`.
+
+"Không hỏi" nghĩa là các TDK skill không hỏi câu nào. Bản thân Claude Code vẫn
+có thể xin quyền trước khi ghi vào `.claude/`, tùy permission mode bạn đang dùng.
+
+#### Phương án thủ công
+
+Dùng chuỗi này khi muốn review từng recommendation trước khi scaffold, hoặc khi
+chưa cài `tdk-scaffold`; nếu không có plugin đó thì chỉ dùng được
+`/tdk-sub-workspace-docs --all`. Command và đường dẫn artifact giống hệt những
+gì bootstrap dùng.
 
 ```text
 /tdk-sub-workspace-docs --all
+/tdk-sub-workspace-automation-recommend --sub-workspace <name>
+/tdk-scaffold-from-recommendation .specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md
+/tdk-delegate-routing diff --proposal <path-to-delegate-routing-proposal.json>
 ```
 
-Command này cần configured `subWorkspaces[]` trong `.specify/.specify.json` và
-real paths trên disk. Với mỗi target, nó ghi hoặc refresh:
+`/tdk-sub-workspace-docs --all` cần configured `subWorkspaces[]` trong
+`.specify/.specify.json` và real paths trên disk. Với mỗi target, nó ghi hoặc
+refresh:
 
 - `<docsPath>/sub-workspaces/<name>/README.md`
 - `<docsPath>/sub-workspaces/<name>/architecture.md`
@@ -291,17 +358,18 @@ Skill chạy resolver, pack code bằng repomix, chạy scout, rồi delegate wr
 cho `tdk-docs-writer` agent. Nó chỉ generate arc42-lite docs;
 nó không tạo PRDs, roadmap docs, hoặc runtime config.
 
-### 11. Sub-workspace automation recommendation
-
-```text
-/tdk-sub-workspace-automation-recommend --sub-workspace <name>
-```
-
-Run command này cho từng sub-workspace sau khi docs tồn tại. Recommendation đọc
+Chạy `/tdk-sub-workspace-automation-recommend --sub-workspace <name>` cho từng
+sub-workspace sau khi docs tồn tại. Recommendation đọc
 selected sub-workspace docs, workspace dependency policy, official docs, primary
 sources, local installed skills, và optional direct community lookup qua
 `npx skills find` hoặc skills.sh. Nó không dùng `ck:find-skills` và không
 support `--all`.
+
+Review recommendation rồi đặt `status: approved` trong frontmatter của nó, sau đó
+chạy `/tdk-scaffold-from-recommendation`. Skill này ghi
+`delegate-routing-proposal.json` cạnh recommendation; review proposal đó bằng
+`/tdk-delegate-routing diff`, rồi register với `approvalDigest` của diff và
+`--yes`. Xem [skills guide](../skills-guide.md#project-inception-commands).
 
 ## What This Chain Does Not Produce
 

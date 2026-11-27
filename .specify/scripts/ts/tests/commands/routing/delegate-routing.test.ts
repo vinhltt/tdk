@@ -158,6 +158,22 @@ describe('tdk routing delegate command', () => {
     expect(JSON.parse(secondRegister.stdout).status).toBe('noop');
   });
 
+  for (const newline of ['\n', '\r\n']) {
+    it(`appends a new section without changing existing bytes or ${newline === '\n' ? 'LF' : 'CRLF'} line endings`, async () => {
+      const root = makeRoot();
+      const original = ['# Delegate Routing', '', '## global', '', '- implement: (default - no delegate)', ''].join(newline);
+      writeRoute(root, original);
+      const proposalPath = writeProposal(root, [{ subWorkspace: 'backend', domain: 'implement', delegates: ['/backend-skill'] }]);
+      const diff = JSON.parse((await runCli(root, ['routing', 'delegate', 'diff', '--project-root', root, '--proposal', proposalPath])).stdout);
+      const registered = await runCli(root, ['routing', 'delegate', 'register', '--project-root', root, '--proposal', proposalPath, '--yes', '--approval', diff.approvalDigest]);
+      expect(registered.exitCode).toBe(0);
+      const after = readFileSync(routeFile(root), 'utf-8');
+      expect(after.startsWith(original)).toBe(true);
+      expect(after).toContain('## backend');
+      if (newline === '\r\n') expect(after.replace(/\r\n/g, '')).not.toContain('\n');
+    });
+  }
+
   it('does not create a route file on register when missing, and returns the copy-template hint', async () => {
     const root = makeRoot();
     const proposalPath = writeProposal(root, [

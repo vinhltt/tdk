@@ -25,7 +25,7 @@ Use this workflow for default mode and `--full`.
 - Recommend `/tdk-architecture-advisor --recover-existing <brownfield-onboarding.md>` after onboarding/scout evidence is ready for architecture recovery.
 - Recommend `/tdk-workspace-layout-propose --from-existing <architecture-recovery.md>` after recovery evidence is reviewed.
 - Recommend `/tdk-workflow-config-apply --reconcile` only after layout proposal artifacts are reviewed. Reconcile remains report-only; normal apply uses `/tdk-workflow-config-apply` after review.
-- Recommend `/tdk-sub-workspace-docs --all` only after config evidence exists or topology dry-run is accepted later.
+- Recommend `/tdk-sub-workspace-bootstrap` (without tdk-scaffold: `/tdk-sub-workspace-docs --all`) only after config evidence exists or topology dry-run is accepted later.
 - Recommend product discovery only as a later route when product intent is missing.
 
 ## Stop Conditions

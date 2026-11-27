@@ -2,9 +2,9 @@
 name: tdk-scaffold-from-recommendation
 description: "Reconcile approved automation recommendations with canonical .claude skills and agents: create missing artifacts, review drift before patching, and emit approval-bound routing proposals and readiness handoffs."
 user-invocable: true
-argument-hint: "[<path-to-automation-recommendation.md>] [--dry-run] [--skills-only] [--agents-only] [--task <TASK_ID>]"
+argument-hint: "[<path-to-automation-recommendation.md>] [--dry-run] [--skills-only] [--agents-only] [--task <TASK_ID>] [--auto]"
 metadata:
-  version: "3.1.1"
+  version: "3.2.0"
   author: "VinhLTT"
   category: scaffold
   requires:
@@ -41,9 +41,16 @@ Handle source artifacts and a reviewable proposal only; do not install, convert,
 | `--skills-only` | Reconcile skills only; filter suggested and derived proposal delegates to skills. |
 | `--agents-only` | Reconcile agents only; filter suggested and derived proposal delegates to agents. |
 | `--task <TASK_ID>` | Select an existing plan for the read-only `phase delegates current` check. |
+| `--auto` | Unattended run; see § Auto mode. |
 
 Reject both kind filters together, unknown flags, and a missing `--task` value before writes.
 With `--task`, use `tdk-validate-task-id` and read-only `tdk-load-project-context` resolution to obtain `FEATURE_DIR/plan.md`; never run plan setup or create a missing plan.
+
+## Auto mode
+
+With `--auto`, frontmatter `status: approved` counts as the step 6 run approval, Record Baseline included: planned `create` and `reuse` proceed without the step 6 question, the routing proposal is written unless one already exists, and the baseline is recorded with only `created` and `reused` rows.
+Every other question takes its non-writing branch (keep, exclude, abort, or skip) and is named in the Summary; nothing is patched or regenerated.
+With `--auto`, a recommendation without `status: approved` aborts the run.
 
 ## Resolve Input File
 
@@ -92,7 +99,7 @@ Use approved requirements as content, not exemplar content. Do not create refere
 
 ## Review Each Artifact
 
-Before step 1, compare against the last baseline once. `references/scaffold-outcome-record.md` owns the sidecar format; only its script reads or writes `scaffold-outcome.json` in this skill. `/tdk-sub-workspace-automation-recommend` reads its rows as evidence only.
+Before step 1, compare against the last baseline once. `references/scaffold-outcome-record.md` owns the sidecar format; only its script reads or writes `scaffold-outcome.json` in this skill. `/tdk-sub-workspace-automation-recommend` reads its rows as evidence only, and `/tdk-sub-workspace-bootstrap` reads them only to decide whether to run scaffold again.
 
 ```text
 bun --no-install <loaded-skill-root>/scripts/scaffold-outcome-record.ts compare --project-root <root> --recommendation <repo-relative>

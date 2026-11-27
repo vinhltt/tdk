@@ -4,10 +4,12 @@ Use this when TDK commands are not visible yet, dependencies are missing, or a n
 
 ## Prerequisites
 
-`repomix` is required by two workflows:
+`repomix` is required by three workflows:
 
 - `/tdk-scout --scope`
 - `/tdk-sub-workspace-docs`
+- `/tdk-sub-workspace-bootstrap`, which stops before any write when `repomix` is
+  not on `PATH`
 
 It is **not** required for `/tdk-scout --from-pack`, which reads an existing pack.
 

@@ -16,21 +16,35 @@ This scenario covers the full project-start chain:
 -> /tdk-workspace-layout-propose
 -> /tdk-workflow-config-apply
 -> /tdk-workspace-dependency-policy
--> /tdk-sub-workspace-docs --all
+-> /tdk-sub-workspace-bootstrap
+```
+
+`/tdk-sub-workspace-bootstrap` runs docs, recommendation, scaffold, and route
+registration for every configured sub-workspace without asking questions. The
+manual chain remains the alternative when you want to review each
+recommendation before anything is scaffolded, or when `tdk-scaffold` is not
+installed:
+
+```text
+/tdk-sub-workspace-docs --all
 -> /tdk-sub-workspace-automation-recommend --sub-workspace <name>
+-> review the recommendation, set status: approved
+-> /tdk-scaffold-from-recommendation <recommendation-path>
+-> /tdk-delegate-routing diff, then register
 ```
 
 The chain has two different artifact classes:
 
 - **Project-level artifacts**: inception, constitution/memory, architecture,
-  workspace layout, dependency policy, sub-workspace docs, and automation recommendations.
+  workspace layout, dependency policy, sub-workspace docs, automation
+  recommendations, and the skills, agents, and routes scaffolded from them.
 - **Feature/epic artifacts**: discovery, `spec.md` with embedded quality gate,
   and clarifications.
 
 Important gate: `/tdk-workflow-config-apply` previews first and asks before it
 writes config. On a fresh project, approve the guarded apply before
-`/tdk-sub-workspace-docs --all`; otherwise docs generation only works when
-`.specify/.specify.json` already has configured `subWorkspaces[]`.
+`/tdk-sub-workspace-bootstrap` or `/tdk-sub-workspace-docs --all`; both only
+work when `.specify/.specify.json` already has configured `subWorkspaces[]`.
 
 ## Prerequisites
 
@@ -40,10 +54,14 @@ writes config. On a fresh project, approve the guarded apply before
   through `/tdk-sub-workspace-docs` are packaged under `tdk-inception`; the
   follow-on `/tdk-sub-workspace-automation-recommend` command belongs to
   `tdk-scaffold`. Their names and artifact paths are unchanged.
+- `/tdk-sub-workspace-bootstrap` also belongs to `tdk-scaffold`. Without that
+  plugin, use the manual chain starting at `/tdk-sub-workspace-docs --all`; its
+  later steps need `tdk-scaffold` as well.
 - The project has a JSON `.specify/.specify.json`; workflow config apply does not create
   first-time config from scratch.
 - `bun` is available.
-- `repomix` is installed before `/tdk-sub-workspace-docs --all`. See the
+- `repomix` is installed before `/tdk-sub-workspace-bootstrap` or
+  `/tdk-sub-workspace-docs --all`. See the
   Prerequisites section of `.specify/docs/en/guides/setup/setup-guide.md`.
 
 ## Recommended Command Sequence
@@ -66,9 +84,13 @@ applies the parsed `planHash` internally. Then continue:
 
 ```text
 /tdk-workspace-dependency-policy .specify/configurations/workspace-layout/workspace-layout-proposal.json
-/tdk-sub-workspace-docs --all
-/tdk-sub-workspace-automation-recommend --sub-workspace <name>
+/tdk-sub-workspace-bootstrap
 ```
+
+When bootstrap finishes, review
+`.specify/configurations/automation-recommendations/bootstrap-report.md`,
+starting with `## Needs your review`, before `/tdk-plan`. For the manual chain,
+see step 10 below.
 
 If you intentionally want policy guidance before runtime config apply, run
 `/tdk-workflow-config-apply --dry-run` first, then
@@ -88,8 +110,7 @@ proposed layout.
 | 7 | `/tdk-workspace-layout-propose` | `.specify/configurations/workspace-layout/workspace-layout-proposal.md`, `workspace-layout-proposal.json` | No |
 | 8 | `/tdk-workflow-config-apply` | Diff/warnings review, then updated `.specify/.specify.json`, apply report, backup when approved | Yes, after confirmation |
 | 9 | `/tdk-workspace-dependency-policy` | `.specify/configurations/workspace-dependency-policy/workspace-dependency-policy.md`, optional `enforcement-snippets.md` | No |
-| 10 | `/tdk-sub-workspace-docs --all` | Arc42-lite docs per configured sub-workspace under `<docsPath>/sub-workspaces/<name>/` | No runtime config mutation |
-| 11 | `/tdk-sub-workspace-automation-recommend --sub-workspace <name>` | `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | No |
+| 10 | `/tdk-sub-workspace-bootstrap` | Per configured sub-workspace: arc42-lite docs under `<docsPath>/sub-workspaces/<name>/`, `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md`, missing skills and agents under `.claude/`, and a new `## <name>` section in `delegate-routing.md`; plus `.specify/configurations/automation-recommendations/bootstrap-report.md` | No `.specify/.specify.json` mutation; creates only missing artifacts |
 
 `<feature-dir>` is resolved from project config and task ID. In a default setup,
 it is usually under `.specify/specs/<id>/`.
@@ -276,14 +297,62 @@ This is policy/report only. It does not edit ESLint, Nx, Turborepo,
 dependency-cruiser, package manager files, source folders, layout files, ADRs,
 routing files, or `.specify/.specify.json`.
 
-### 10. Sub-workspace docs
+### 10. Sub-workspace bootstrap
+
+```text
+/tdk-sub-workspace-bootstrap
+```
+
+This requires configured `subWorkspaces[]` in `.specify/.specify.json`, with
+`bun` and `repomix` on `PATH`. Add `--sub-workspace <name>` to limit the run to
+one sub-workspace. For each configured sub-workspace, in config order, bootstrap
+runs a step only when its output is missing:
+
+- `/tdk-sub-workspace-docs --sub-workspace <name>` when none of the docs files
+  exist;
+- `/tdk-sub-workspace-automation-recommend --sub-workspace <name> --auto --no-community-search`
+  when no recommendation exists; `--auto` writes it with `status: approved` and
+  `approval: auto-init`;
+- `/tdk-scaffold-from-recommendation <recommendation-path> --auto`, which creates
+  missing skills and agents under `.claude/` and patches nothing;
+- `/tdk-delegate-routing register --auto`, which adds a `## <name>` section to
+  `delegate-routing.md` only when the route file has none.
+
+Bootstrap never modifies, overwrites, or deletes existing files, apart from
+appending a route section, scaffold recording its own `scaffold-outcome.json`
+again, and rewriting its own report. When a child skill would
+ask a question, bootstrap takes the branch that writes nothing and lists the item
+for review. A failure in one sub-workspace does not stop the others. On a fresh
+layout, a sub-workspace folder with no source file or package manifest is
+reported as `deferred`; rerun bootstrap once code or a manifest exists. A
+configured path that does not exist is reported as `skipped (missing path)`.
+
+The report is
+`.specify/configurations/automation-recommendations/bootstrap-report.md`. Read
+`## Needs your review` first: it lists new skills and agents (with each agent's
+`tools` and `skills:`), registered routes, skipped questions, and deferred or
+incomplete sub-workspaces. Then continue with `/tdk-plan`.
+
+"No questions" means the TDK skills ask nothing. Claude Code itself may still ask
+permission before writing under `.claude/`, depending on your permission mode.
+
+#### Manual alternative
+
+Use this chain to review each recommendation before anything is scaffolded, or
+when `tdk-scaffold` is not installed; without that plugin only
+`/tdk-sub-workspace-docs --all` is available. Commands and artifact paths are the
+same ones bootstrap uses.
 
 ```text
 /tdk-sub-workspace-docs --all
+/tdk-sub-workspace-automation-recommend --sub-workspace <name>
+/tdk-scaffold-from-recommendation .specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md
+/tdk-delegate-routing diff --proposal <path-to-delegate-routing-proposal.json>
 ```
 
-This requires configured `subWorkspaces[]` in `.specify/.specify.json` and real
-paths on disk. For each target, it writes or refreshes:
+`/tdk-sub-workspace-docs --all` requires configured `subWorkspaces[]` in
+`.specify/.specify.json` and real paths on disk. For each target, it writes or
+refreshes:
 
 - `<docsPath>/sub-workspaces/<name>/README.md`
 - `<docsPath>/sub-workspaces/<name>/architecture.md`
@@ -295,17 +364,18 @@ The skill runs the resolver, packs code with repomix, runs scout, then delegates
 writing to the `tdk-docs-writer` agent. It generates arc42-lite docs only;
 it does not create PRDs, roadmap docs, or runtime config.
 
-### 11. Sub-workspace automation recommendation
-
-```text
-/tdk-sub-workspace-automation-recommend --sub-workspace <name>
-```
-
-Run this per sub-workspace after docs exist. The recommendation reads the
+Run `/tdk-sub-workspace-automation-recommend --sub-workspace <name>` per
+sub-workspace after docs exist. The recommendation reads the
 selected sub-workspace docs, workspace dependency policy, official docs, primary
 sources, local installed skills, and optional direct community lookup through
 `npx skills find` or skills.sh. It does not use `ck:find-skills` and does not
 support `--all`.
+
+Review the recommendation and set `status: approved` in its frontmatter, then run
+`/tdk-scaffold-from-recommendation`. It writes `delegate-routing-proposal.json`
+beside the recommendation; review that proposal with `/tdk-delegate-routing diff`,
+then register it with the diff's `approvalDigest` and `--yes`. See the
+[skills guide](../skills-guide.md#project-inception-commands).
 
 ## What This Chain Does Not Produce
 

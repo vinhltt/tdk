@@ -42,6 +42,7 @@ flowchart TD
     GOLDEN_PATH[golden-path-scaffold-plan.md<br/>golden-path-recipe.json]
     SUB_WORKSPACE_DOCS[sub-workspaces/name/<br/>README architecture interfaces data-flow engineering]
     AUTOMATION_RECOMMEND[automation-recommendation.md]
+    BOOTSTRAP_REPORT[bootstrap-report.md<br/>Needs your review first]
     DISCOVERY[discovery.md + discovery/<br/>Epic Context]
     EPIC_PRD[epic-prd.md + epic-prd/<br/>PRD + Slice Map]
     HLD[high-level-design.md + high-level-design/<br/>Parent HLD]
@@ -58,6 +59,7 @@ flowchart TD
     POLICY -.->|/tdk-golden-path-scaffold<br/>dry-run first| GOLDEN_PATH
     POLICY -.->|/tdk-sub-workspace-docs<br/>arc42-lite docs| SUB_WORKSPACE_DOCS
     SUB_WORKSPACE_DOCS -.->|/tdk-sub-workspace-automation-recommend<br/>one workspace| AUTOMATION_RECOMMEND
+    CONFIG_PATCH -.->|/tdk-sub-workspace-bootstrap<br/>docs to routes, every workspace| BOOTSTRAP_REPORT
     REQ -.->|/tdk-discovery<br/>optional, epic| DISCOVERY
     DISCOVERY -.->|/tdk-epic-prd<br/>product alignment| EPIC_PRD
     EPIC_PRD -.->|/tdk-epic-hld<br/>parent design| HLD
@@ -105,7 +107,7 @@ flowchart TD
     classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px,color:#0f172a
     classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px,color:#0f172a
 
-    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,HLD,TASK_BREAKDOWN,SPEC,SPEC_CLARIFIED phase0
+    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,BOOTSTRAP_REPORT,DISCOVERY,EPIC_PRD,HLD,TASK_BREAKDOWN,SPEC,SPEC_CLARIFIED phase0
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES phase1
     class CONSTITUTION,MEMORY_CONTROL,TYPED_MEMORY,ARC42,UIUX,REF_DATAMODEL,REF_STATE reference
     class CODE_BE,CODE_FE,TESTS code
@@ -130,6 +132,7 @@ flowchart LR
     GOLDEN_PATH[golden-path scaffold<br/>recipe/report]
     SUB_WORKSPACE_DOCS[sub-workspace docs<br/>arc42-lite]
     AUTOMATION_RECOMMEND[automation recommendation<br/>one workspace]
+    BOOTSTRAP_REPORT[bootstrap-report.md<br/>every workspace]
     DISCOVERY[discovery.md + discovery/<br/>Epic Context]
     EPIC_PRD[epic-prd.md + epic-prd/<br/>PRD + Slice Map]
     HLD[high-level-design.md + high-level-design/<br/>Parent HLD]
@@ -147,6 +150,7 @@ flowchart LR
     POLICY -.->|"/tdk-golden-path-scaffold<br/>dry-run first"| GOLDEN_PATH
     POLICY -.->|"/tdk-sub-workspace-docs"| SUB_WORKSPACE_DOCS
     SUB_WORKSPACE_DOCS -.->|"/tdk-sub-workspace-automation-recommend"| AUTOMATION_RECOMMEND
+    CONFIG_PATCH -.->|"/tdk-sub-workspace-bootstrap<br/>docs, recommend, scaffold, route"| BOOTSTRAP_REPORT
     REQ -.->|"/tdk-discovery<br/>epic-id brief"| DISCOVERY
     DISCOVERY -.->|"/tdk-epic-prd<br/>epic-id"| EPIC_PRD
     EPIC_PRD -.->|"/tdk-epic-hld<br/>epic-id"| HLD
@@ -163,7 +167,7 @@ flowchart LR
     classDef note fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#0f172a
 
     class REQ input
-    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,DISCOVERY,EPIC_PRD,SPEC,SPEC_CLAR,HLD,TASKS output
+    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,BOOTSTRAP_REPORT,DISCOVERY,EPIC_PRD,SPEC,SPEC_CLAR,HLD,TASKS output
     class CONTENT note
 ```
 
@@ -378,7 +382,8 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `.specify/configurations/golden-path/golden-path-recipe.json` | `/tdk-golden-path-scaffold --dry-run` | scaffold plan and approved layout/config evidence | Set `status: approved` before guarded apply | Optional skeleton recipe |
 | `.specify/configurations/golden-path/generated-files-report.md` | `/tdk-golden-path-scaffold --dry-run` or `--yes` | recipe and safety gates | Review created/skipped/existing/refused paths | Scaffold report |
 | `<docsPath>/sub-workspaces/<name>/{README,architecture,interfaces,data-flow,engineering}.md` | `/tdk-sub-workspace-docs` | configured sub-workspace path, repomix pack, scout output, optional dependency policy | `/tdk-sub-workspace-automation-recommend` | Per sub-workspace docs refresh |
-| `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | `/tdk-sub-workspace-automation-recommend` | selected sub-workspace docs, dependency policy, official docs, local skill catalog, optional direct skill search | `/tdk-scaffold-from-recommendation` after approval | Per sub-workspace automation review |
+| `.specify/configurations/automation-recommendations/sub-workspaces/<name>/automation-recommendation.md` | `/tdk-sub-workspace-automation-recommend` | selected sub-workspace docs, dependency policy, official docs, local skill catalog, optional direct skill search | `/tdk-scaffold-from-recommendation` once `status: approved` (`--auto` skips its run question) | Per sub-workspace automation review |
+| `.specify/configurations/automation-recommendations/bootstrap-report.md` | `/tdk-sub-workspace-bootstrap` | `subWorkspaces[]` in `.specify/.specify.json`, outcomes of the docs, recommendation, scaffold, and routing steps | Human review of `## Needs your review`, then `/tdk-plan` | Each bootstrap run; a sub-workspace section changes only when its outcome changes |
 | `discovery.md` + `discovery/` | `/tdk-discovery` | Epic brief or file, project context, memory, constitution; existing discovery files for ID-only `--interview` | Optional context for `/tdk-epic-prd` | Optional before epic PRD |
 | `epic-prd.md` + `epic-prd/` | `/tdk-epic-prd` | Existing `discovery.md`, `problem.md`, `personas.md`, and `mvp-scope.md`; existing PRD files for ID-only `--interview` | Feeds `/tdk-epic-hld`, then `/tdk-task-breakdown` child spec seeds | Optional after discovery |
 | `spec.md` + `## Specification Quality Gate` | `/tdk-specify` | User description, child seed from `tasks-breakdown/`, or existing `spec.md` for ID-only `--interview` | `/tdk-clarify`, `/tdk-plan`, all downstream | Feature or child-slice start |

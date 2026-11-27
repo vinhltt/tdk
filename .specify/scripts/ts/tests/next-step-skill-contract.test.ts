@@ -162,3 +162,48 @@ describe('tdk-retro-apply next step', () => {
     expect(step7).not.toMatch(CANONICAL_ID_CALL);
   });
 });
+
+// Inception skills run before the spec lifecycle, so they have no status collector to defer to.
+// Their contract is the route token itself: after config, point at the sub-workspace bootstrap, and keep
+// the docs-only command as the fallback for projects without the optional tdk-scaffold plugin.
+describe('inception routes point at the sub-workspace bootstrap', () => {
+  const INCEPTION = join(PLUGINS, 'tdk-inception/skills');
+  const BOOTSTRAP = 'sub-workspace-bootstrap';
+  const DOCS_ALL = 'sub-workspace-docs --all';
+
+  /** The docs-only command may appear only as the fallback, after `without` on its own line. */
+  function expectBootstrapWithFallback(slice: string): void {
+    expect(slice).toContain(BOOTSTRAP);
+    expect(slice).toContain('without');
+    for (const line of slice.split('\n').filter((l) => l.includes(DOCS_ALL))) {
+      const without = line.indexOf('without');
+      expect(without).toBeGreaterThanOrEqual(0);
+      expect(line.indexOf(DOCS_ALL)).toBeGreaterThan(without);
+    }
+  }
+
+  it('config-apply reports the bootstrap with the docs fallback after a successful apply', () => {
+    const skill = read(INCEPTION, 'tdk-workflow-config-apply/SKILL.md');
+    const report = between(skill, '### Step 6 - Report', '## Quality Gates');
+    expect(report).toContain('/tdk-sub-workspace-bootstrap');
+    expect(report).toContain('without tdk-scaffold');
+    expectBootstrapWithFallback(report);
+  });
+
+  it('brownfield start recommends the bootstrap in its route chain and rules', () => {
+    const skill = read(INCEPTION, 'tdk-brownfield-start/SKILL.md');
+    expectBootstrapWithFallback(between(skill, '7. **Return recommended next routes.**', '## Mode Behavior'));
+    expectBootstrapWithFallback(between(skill, '## Recommendation Rules', '## Failure Modes'));
+  });
+
+  it('brownfield and architecture recovery references recommend the bootstrap', () => {
+    for (const path of [
+      'tdk-brownfield-start/references/workflow-full.md',
+      'tdk-architecture-advisor/references/workflow-recover-existing.md',
+    ]) {
+      const text = read(INCEPTION, path);
+      expect(text).toContain(BOOTSTRAP);
+      expectBootstrapWithFallback(between(text, '## Route Rules', '## Stop Conditions'));
+    }
+  });
+});

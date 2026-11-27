@@ -4,7 +4,7 @@ description: "Init or update arc42-lite documentation for one or all configured 
 user-invocable: true
 argument-hint: "[--sub-workspace NAME | --all] [--force]"
 metadata:
-  version: "1.1.0"
+  version: "1.1.4"
   author: "VinhLTT"
   category: docs
 ---
@@ -96,7 +96,7 @@ The skill reads code evidence, scout output, and `workspace-dependency-policy.md
      not replace it with a hard-coded list: the writer uses it to decide which
      files get `update` splicing versus fresh `init` rendering.
 
-4. After all targets finish, ask whether to keep or delete `.specify/cache/tdk-docs/`. Default to keep.
+4. After all targets finish, keep `.specify/cache/tdk-docs/` and print its path; delete it by hand when it is no longer needed.
 
 5. Final summary per target:
 

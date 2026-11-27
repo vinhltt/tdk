@@ -99,3 +99,23 @@ describe('TDK sub-workspace automation recommendation contracts', () => {
     expect(readme).not.toContain('/tdk-recommend-automations');
   });
 });
+
+describe('TDK sub-workspace automation recommendation unattended contracts', () => {
+  const canonicalPath = join(SCAFFOLD_SKILLS_DIR, CANONICAL_NAME, 'SKILL.md');
+  const canonical = existsSync(canonicalPath) ? read(canonicalPath) : '';
+
+  it('accepts --auto and writes an approved recommendation without community search or questions', () => {
+    expect(canonical.match(/^argument-hint: (.*)$/m)?.[1] ?? '').toContain('[--auto]');
+    expect(canonical).toContain('community search is off');
+    expect(canonical).toContain('an existing output file is kept');
+    expect(canonical).toContain('approval: auto-init');
+    expect(canonical).toContain('approved_at: <ISO-8601>');
+    expect(canonical).toContain('evidence: thin');
+  });
+
+  it('keeps manual recommendations as drafts that need review', () => {
+    // The output template line, not the `--auto` note that names it inline.
+    expect(canonical).toMatch(/^status: draft$/m);
+    expect(canonical).toContain('until the user reviews them and changes frontmatter to `status: approved`');
+  });
+});

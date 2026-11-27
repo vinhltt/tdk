@@ -88,3 +88,12 @@ describe('TDK sub-workspace docs contracts', () => {
     expect(readme).toContain('/tdk-sub-workspace-docs');
   });
 });
+
+describe('TDK sub-workspace docs cache handling', () => {
+  const skill = read(join(INCEPTION_SKILLS_DIR, SKILL_NAME, 'SKILL.md'));
+
+  it('keeps the docs cache and prints its path instead of asking', () => {
+    expect(skill).not.toContain('ask whether to keep or delete');
+    expect(skill).toContain('keep `.specify/cache/tdk-docs/` and print its path');
+  });
+});

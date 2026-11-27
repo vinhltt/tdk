@@ -6,6 +6,33 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.135.0] - 2026-11-26
+
+### Added
+- **[tdk-scaffold]** `/tdk-sub-workspace-bootstrap` takes every configured sub-workspace from config to docs, skills, agents and registered routes in one run, with no questions
+  - For each sub-workspace, in config order: docs, an auto-approved recommendation, scaffold, then route registration. A step runs only when its output is missing and its input is ready. Existing bytes are never changed, except for a new section appended to the route file and the command's own report
+  - A sub-workspace with only a manifest or little code runs in full and is flagged `thin`. One with no code and no manifest is `deferred`. A missing path is reported with its fix. A failure in one sub-workspace never stops the others
+  - Scaffold runs again only when a planned `create` artifact is neither on disk nor in `scaffold-outcome.json`, for example after a denied write. These stay review items instead: a file the user removed, an artifact left unresolved for conflicting requirements or a runtime-only twin, and an unreadable sidecar
+  - The report `.specify/configurations/automation-recommendations/bootstrap-report.md` opens with `## Needs your review`: new skills and agents with their tools, registered routes, kept or skipped items, and the OMP `convert-flat` warning. It has one section per sub-workspace, and later runs keep unchanged sections byte for byte
+  - Needs `repomix` and `bun`. Without the `tdk-scaffold` plugin, use the manual chain that starts at `/tdk-sub-workspace-docs --all`
+- **[tdk-scaffold]** `--auto` on `/tdk-sub-workspace-automation-recommend`, `/tdk-scaffold-from-recommendation` and `/tdk-delegate-routing register`
+  - Recommend: community search is off and an existing file is kept. The first write carries `status: approved`, `approval: auto-init` and `approved_at`, plus `evidence: thin` when the path holds little code
+  - Scaffold: `status: approved` counts as the run approval, so planned creates and reuses proceed. Every other question takes its non-writing branch and is named in the Summary. A recommendation without `status: approved` aborts the run
+  - Delegate routing: registers only when every `diff` operation adds to a new section, using that diff's digest, then verifies. Anything else registers nothing and is reported. `--auto` is a skill argument, never a CLI flag
+- **[Scripts]** Contract tests pin the bootstrap entry, the three `--auto` clauses, the docs cache rule, the route template and the new next-step routes
+
+### Changed
+- **[tdk-inception]** Next steps point at `/tdk-sub-workspace-bootstrap`
+  - `/tdk-workflow-config-apply` prints it after a successful apply that leaves `subWorkspaces[]` non-empty, after the optional `/tdk-workspace-dependency-policy`. Brownfield start and the architecture advisor's recovery flow recommend it too. Each names `/tdk-sub-workspace-docs --all` as the route without `tdk-scaffold`
+  - `/tdk-sub-workspace-docs` keeps `.specify/cache/tdk-docs/` and prints its path instead of asking whether to delete it
+- **[tdk-scaffold]** `scaffold-outcome.json` docs list `/tdk-sub-workspace-bootstrap` as a reader, which decides whether scaffold runs again; the file format is unchanged
+- **[Configurations]** `primary-workflow-routing` lists `/tdk-sub-workspace-bootstrap` in the inception lane, the intent table, the next-skill list and the optional scaffold automation
+- **[Templates]** The delegate routing template's `## global` section has no active example delegate: `- test: (default - no delegate)`, with the example commented out
+- **[Guides]** en/vi workflow map, greenfield scenario 10, skills guide and setup guide cover bootstrap, the `--auto` flags, the cost of each sub-workspace, and how retro feedback reaches recommendations, skills and routes
+
+### Fixed
+- **[Scripts]** `routing delegate register` keeps CRLF line endings when the whole route file uses CRLF; a file that mixes LF and CRLF is still written with LF
+
 ## [1.134.0] - 2026-11-24
 
 ### Added

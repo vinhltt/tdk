@@ -4,6 +4,16 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.2.0] - 2026-11-26
+
+### Added
+- tdk-sub-workspace-bootstrap: one command runs docs, recommendation, scaffold and route registration for every configured sub-workspace without questions, creates only missing artifacts, and writes a review report
+
+### Changed
+- tdk-sub-workspace-automation-recommend: --auto turns community search off, keeps an existing file, and writes status: approved with approval: auto-init and approved_at
+- tdk-scaffold-from-recommendation: --auto counts status: approved as the run approval and takes the non-writing branch of every other question; scaffold-outcome.json docs list bootstrap as a reader
+- tdk-delegate-routing: register --auto registers only add operations into a new section with that diff's digest, then verifies; anything else is reported
+
 ## [3.1.1] - 2026-11-21
 
 ### Changed
