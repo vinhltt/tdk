@@ -11812,6 +11812,7 @@ function buildSlices(diffs, config, projectRoot, projectReal) {
       });
       pending.push({
         segments: rendered,
+        workingRoot: repo.workingRoot,
         slice: {
           id: `${repo.repoPath}#${owner ?? "-"}`,
           repoPath: repo.repoPath,
@@ -11820,7 +11821,8 @@ function buildSlices(diffs, config, projectRoot, projectReal) {
           routingPaths,
           changes,
           diffLines: changes.reduce((sum, change) => sum + change.diffLines, 0),
-          truncated: repo.truncated.filter((entry) => members.has(entry.path))
+          truncated: repo.truncated.filter((entry) => members.has(entry.path)),
+          materialFile: null
         }
       });
     }
@@ -11841,7 +11843,7 @@ function prepareDiffRoot(projectRoot, projectReal, featureDir) {
     throw new ReviewScopeError("diff_write_failed", `Cannot use the reviews directory: ${outcome.reason}`, { reason: outcome.reason });
   }
   const reviews = realpathSync4(outcome.reviews);
-  const area = { diffRoot: join4(reviews, ".diff"), projectReal };
+  const area = { diffRoot: join4(reviews, ".diff"), projectReal, projectRoot: resolve2(projectRoot) };
   try {
     if (!ensureRealDirectory(area.diffRoot, reviews))
       return diffFailure(area, "diff_root_unsafe");
@@ -11866,6 +11868,38 @@ function prepareDiffRoot(projectRoot, projectReal, featureDir) {
     return diffFailure(area, reasonOf(error));
   }
 }
+var MATERIAL_FENCE = "=== REVIEWED MATERIAL ===";
+var isRemoved = (segment, hunks) => /^deleted file mode/m.test(segment) && !/^new file mode/m.test(segment) && !hunks.some((hunk) => hunk.newLines > 0);
+function underProjectRoot(area, path) {
+  const absolute = resolve2(path);
+  if (isWithin(area.projectRoot, absolute))
+    return absolute;
+  const real = existsSync3(absolute) ? realpathSync4(absolute) : absolute;
+  return isWithin(area.projectReal, real) ? join4(area.projectRoot, relative4(area.projectReal, real)) : absolute;
+}
+function renderMaterial(area, entry, others) {
+  const { slice } = entry;
+  const absolute = (diffFile) => diffFile === null ? null : join4(area.projectRoot, diffFile);
+  const own = slice.changes.map((change) => JSON.stringify({ path: change.path, added: change.added, deleted: change.deleted, diffFile: absolute(change.diffFile) }));
+  const context = others.flatMap((other) => other.slice.changes.flatMap((change, index) => {
+    if (change.diffFile === null)
+      return [];
+    const removed = isRemoved(other.segments[index], change.hunks) ? { removed: true } : {};
+    return [JSON.stringify({ slice: other.slice.id, workingRoot: underProjectRoot(area, other.workingRoot), path: change.path, ...removed })];
+  }));
+  return [
+    MATERIAL_FENCE,
+    `ASSIGNMENT slice=${slice.id} repo=${slice.repoPath} sub_workspace=${slice.subWorkspace ?? "null"}`,
+    `WORKING_ROOT ${underProjectRoot(area, entry.workingRoot)}`,
+    "FILES",
+    ...own,
+    "OTHER_CHANGES",
+    ...context,
+    MATERIAL_FENCE
+  ].join(`
+`) + `
+`;
+}
 function writeDiffRun(area, pending) {
   const rel = (path) => relativeTo(area.projectReal, path);
   try {
@@ -11886,6 +11920,13 @@ function writeDiffRun(area, pending) {
         writeFileSync(file, segment);
         slice.changes[fileIndex].diffFile = rel(file);
       });
+    });
+    pending.forEach((entry, sliceIndex) => {
+      if (entry.slice.changes.every((change) => change.diffFile === null))
+        return;
+      const file = join4(runDir, pad(sliceIndex + 1, sliceWidth), "files.txt");
+      writeFileSync(file, renderMaterial(area, entry, pending.filter((other) => other !== entry)));
+      entry.slice.materialFile = rel(file);
     });
     return rel(runDir);
   } catch (error) {

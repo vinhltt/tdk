@@ -6,6 +6,25 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.137.0] - 2026-11-28
+
+### Added
+- **[tdk-core]** `/tdk-review --specialist` (standard and deep): a routed agent whose canonical `.claude/agents/<name>.md` declares `review_contract: full` under `metadata` replaces `@tdk-code-reviewer` for its slice or part
+  - When that agent fails, is skipped, or misses a spec row, the core reviewer reruns the unit as `fallback`; files it missed get one core retry
+  - A canonical file whose `name` differs, or OMP and Codex copies, never count as a declaration; `--quick --specialist` ignores the flag with a note
+- **[tdk-scaffold]** The Reviewer Variant generates agents that declare `review_contract: full`, take `LENSES` and `MATERIAL`, and copy `## Reading the change` and `## Lens checklists` of `tdk-code-reviewer` verbatim. Running alongside without `LENSES`, such an agent applies its own checks and returns `"lenses": ["routed"]`
+
+### Changed
+- **[tdk-core]** `/tdk-review` runs one reviewer per slice instead of batches × lenses in waves
+  - One `@tdk-code-reviewer` per slice applies every lens of the mode (`spec,quality`; `--deep` adds `security,reliability`); routed agents run alongside and only add spec evidence
+  - A slice over 15000 diff lines is split by module into parts with `PART i/n` and `ONLY_PATHS`; a file is never split
+  - All invocations go out in one message; a run over 24 asks once "Run all" or "Stop"; one retry round goes out in one message
+  - Coverage is per file over the whole slice; a file still uncovered after the retry is a file coverage gap and caps the verdict at `pass_with_concerns`
+  - The `Review plan:` estimate line is gone; the Reviewers section opens with `N invocations: core a, specialist b, routed c, parts d, retries e`
+- **[tdk-core]** `review-scope.js` writes one material file per slice (`slices[].materialFile`, `<diffDir>/<NN>/files.txt`): the slice's files with absolute diff paths, then the files other slices changed as current-file context, with `"removed": true` for a deleted file. Absolute paths use the project root as passed, symlinks kept
+- **[tdk-utils]** `tdk-code-reviewer` takes `LENSES` and `MATERIAL`, plus an optional `PART`/`ONLY_PATHS` block, instead of `LENS` and an inline batch. It returns top-level `lenses`, reads the current files of other slices' changes as context, reports cross-slice defects on its own changed line, and reads long material in chunks
+- **[Docs]** `skills-guide` (en, vi) and the `append-001` example reviews describe one reviewer per slice and `--specialist`
+
 ## [1.136.2] - 2026-11-28
 
 ### Added

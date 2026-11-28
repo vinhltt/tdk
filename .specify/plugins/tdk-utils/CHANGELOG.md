@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.0.4] - 2026-11-28
+
+### Changed
+- tdk-code-reviewer: takes LENSES and MATERIAL (with an optional PART/ONLY_PATHS block) instead of LENS and an inline batch, returns top-level lenses, and reads the current files of other slices' changes as context
+
 ## [5.0.3] - 2026-11-28
 
 ### Changed

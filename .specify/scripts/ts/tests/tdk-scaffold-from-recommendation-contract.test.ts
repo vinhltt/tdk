@@ -87,31 +87,59 @@ describe('TDK review domain scaffold contracts', () => {
   const agentPattern = read(join(patterns, 'agent-output-pattern.md'));
   const skillPattern = read(join(patterns, 'skill-output-pattern.md'));
   const reviewerVariant = agentPattern.slice(agentPattern.indexOf('## Reviewer Variant'));
+  const variantExample = reviewerVariant.slice(reviewerVariant.indexOf('```markdown'));
+  const shippedReviewer = read(resolve(SCAFFOLD_SKILLS_DIR, '../../tdk-utils/agents/tdk-code-reviewer.md'));
+  // A section runs from its heading to the next `## ` heading; a missing heading or a missing end yields ''.
+  const section = (text: string, heading: string): string => {
+    const start = text.indexOf(`${heading}\n`);
+    const end = start < 0 ? -1 : text.indexOf('\n## ', start + 1);
+    return end < 0 ? '' : text.slice(start, end);
+  };
 
   it('generates a reviewer that is read-only: no write, shell, or spawn tools and no executor status line', () => {
     expect(reviewerVariant).toContain('tools: Read, Grep, Glob, Skill');
     expect(reviewerVariant).toMatch(/Never grant `Edit`, `Write`, `Bash`/);
     expect(reviewerVariant).toMatch(/no `Status:` executor contract/);
-    const example = reviewerVariant.slice(reviewerVariant.indexOf('```markdown'));
-    expect(example).not.toMatch(/^tools:.*\b(Edit|Write|Bash|Task|Agent)\b/m);
+    expect(variantExample).not.toMatch(/^tools:.*\b(Edit|Write|Bash|Task|Agent)\b/m);
+    expect(variantExample).not.toContain('Status:');
   });
 
-  it('points the reviewer variant at the shipped reviewer schema instead of inventing one', () => {
+  it('points the reviewer variant at the shipped reviewer inputs and schema instead of inventing one', () => {
     expect(reviewerVariant).toContain('tdk-utils/agents/tdk-code-reviewer.md');
-    for (const field of ['requirement_ref', 'evidence', 'notChecked', 'filesReviewed']) expect(reviewerVariant).toContain(field);
+    for (const input of ['TASK_ID', 'LENSES', 'MATERIAL', 'ONLY_PATHS']) expect(reviewerVariant).toContain(input);
+    for (const field of ['lenses', 'requirement_ref', 'evidence', 'notChecked', 'filesReviewed', 'invalid_lens', 'empty_or_malformed_input']) {
+      expect(reviewerVariant).toContain(field);
+    }
+    expect(reviewerVariant).not.toMatch(/\bLENS\b|batch|wave/);
   });
 
-  it('makes a generated reviewer read its diff files the way the shipped reviewer does', () => {
-    expect(reviewerVariant).toMatch(/Copy the `## Reading the change` section of `tdk-utils\/agents\/tdk-code-reviewer\.md` verbatim/);
-    // The example must carry the shipped reviewer's section word for word, so the two cannot drift.
-    const section = (text: string): string => {
-      const start = text.indexOf('## Reading the change\n');
-      return start < 0 ? '' : text.slice(start, text.indexOf('\n## ', start + 1));
-    };
-    const shippedReviewer = read(resolve(SCAFFOLD_SKILLS_DIR, '../../tdk-utils/agents/tdk-code-reviewer.md'));
-    const shipped = section(shippedReviewer);
-    expect(shipped).toContain('filesReviewed');
-    expect(section(reviewerVariant.slice(reviewerVariant.indexOf('```markdown')))).toBe(shipped);
+  it('makes a generated reviewer read the change and apply the lenses the way the shipped reviewer does', () => {
+    expect(reviewerVariant).toMatch(
+      /Copy the `## Reading the change` and `## Lens checklists` sections of `tdk-utils\/agents\/tdk-code-reviewer\.md` verbatim/,
+    );
+    expect(section(shippedReviewer, '## Reading the change')).toContain('filesReviewed');
+    expect(section(shippedReviewer, '## Lens checklists')).toContain('is outside this review');
+    // The example must carry both shipped sections byte for byte, so the two cannot drift.
+    for (const heading of ['## Reading the change', '## Lens checklists']) {
+      const shipped = section(shippedReviewer, heading);
+      expect({ heading, empty: shipped === '' }).toEqual({ heading, empty: false });
+      expect({ heading, copy: section(variantExample, heading) }).toEqual({ heading, copy: shipped });
+    }
+  });
+
+  it('declares the full review contract only in the generated example metadata', () => {
+    const frontmatterStart = variantExample.indexOf('---\n');
+    const frontmatter = variantExample.slice(frontmatterStart, variantExample.indexOf('\n---\n', frontmatterStart + 4));
+    expect(frontmatter).toMatch(/^metadata:\n(?: {2}.*\n)* {2}review_contract: full$/m);
+    expect(shippedReviewer).not.toContain('review_contract');
+  });
+
+  it('states when /tdk-review trusts the declaration and when it falls back to the core reviewer', () => {
+    expect(reviewerVariant).toMatch(/reads `review_contract` only with `--specialist`/);
+    expect(reviewerVariant).toMatch(/canonical `\.claude\/agents\/<name>\.md`, because the OMP and Codex conversions drop `metadata`/);
+    expect(reviewerVariant).toMatch(/output is broken, lacks a spec row, or misses a file, `\/tdk-review` runs `@tdk-code-reviewer`/);
+    expect(reviewerVariant).toMatch(/first declared agent of a slice or part in resolver order replaces `@tdk-code-reviewer`/);
+    expect(reviewerVariant).toMatch(/does not replace `@tdk-code-reviewer`[^\n]*`"lenses": \["routed"\]`/);
   });
 
   it('keeps the executor variant for executors only and routes reviewers to their own variant', () => {

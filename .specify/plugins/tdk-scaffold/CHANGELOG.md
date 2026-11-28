@@ -4,6 +4,14 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [3.2.1] - 2026-11-28
+
+### Added
+- tdk-scaffold-from-recommendation: the Reviewer Variant generates agents that declare review_contract: full and copy the core reviewer's reading rules and lens checklists verbatim
+
+### Changed
+- tdk-scaffold-from-recommendation: the Reviewer Variant takes LENSES and MATERIAL like the core reviewer, returns top-level lenses, and returns "lenses": ["routed"] when it runs alongside without LENSES
+
 ## [3.2.0] - 2026-11-26
 
 ### Added

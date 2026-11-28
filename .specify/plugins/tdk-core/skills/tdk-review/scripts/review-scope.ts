@@ -1,7 +1,7 @@
 // `review-scope`: the deterministic diff scope for /tdk-review. The skill prose consumes this JSON and never
 // restates the git-map, identity or fallback rules. Every git call is read-only and goes through runGit. The only
-// files the helper writes are the per-file diffs (and a self-ignoring `.gitignore`) under the feature's `reviews/.diff/`:
-// the JSON carries line counts and diff file paths, never diff text, so its size follows the file count.
+// files the helper writes are the per-file diffs, one material file per slice and a self-ignoring `.gitignore` under the
+// feature's `reviews/.diff/`: the JSON carries line counts and file paths, never diff text, so its size follows the file count.
 // Bundled (build.ts) so the installed skill carries its own copy; the shared sources below are included at build time.
 
 import { randomBytes } from 'node:crypto';
@@ -66,6 +66,11 @@ export interface ReviewSlice {
   changes: ReviewChange[];
   diffLines: number;
   truncated: TruncatedFile[];
+  /**
+   * Project-relative path of the slice's material file (`<diffDir>/<NN>/files.txt`), which lists its files and the files
+   * other slices changed. Null exactly when no file of the slice has a `diffFile`.
+   */
+  materialFile: string | null;
 }
 /**
  * `subWorkspace` is the row name, or the Related Code Files path when that path could not be placed in any repository.
@@ -221,7 +226,7 @@ function diffRepo(workingRoot: string, base: string, specs: string[] | undefined
 type RoutingBase = { kind: 'prefix'; prefix: string } | { kind: 'top'; top: string };
 
 /** A slice and the rendered diff of each of its files, in `files` order. The segments are written out once every slice is known. */
-interface PendingSlice { slice: ReviewSlice; segments: string[] }
+interface PendingSlice { slice: ReviewSlice; segments: string[]; workingRoot: string }
 
 /**
  * Groups each repo's files by owning sub-workspace. Git-map rows use the configured prefix (no realpath), so a symlinked
@@ -257,10 +262,12 @@ function buildSlices(
       });
       pending.push({
         segments: rendered,
+        workingRoot: repo.workingRoot,
         slice: {
           id: `${repo.repoPath}#${owner ?? '-'}`, repoPath: repo.repoPath, subWorkspace: owner, files, routingPaths, changes,
           diffLines: changes.reduce((sum, change) => sum + change.diffLines, 0),
           truncated: repo.truncated.filter((entry) => members.has(entry.path)),
+          materialFile: null,
         },
       });
     }
@@ -272,8 +279,11 @@ function buildSlices(
 const RUN_ID_PATTERN = /^\d{8}T\d{6}Z-[0-9a-f]{6}$/;
 const pad = (value: number, width: number): string => String(value).padStart(width, '0');
 
-/** Where this run writes: the project-relative `diffRoot` is the only path that reaches an error's `details`. */
-interface DiffArea { diffRoot: string; projectReal: string }
+/**
+ * Where this run writes: the project-relative `diffRoot` is the only path that reaches an error's `details`.
+ * `projectRoot` is the root as the caller spelled it (absolute, symlinks kept): the base of every absolute path in a material file.
+ */
+interface DiffArea { diffRoot: string; projectReal: string; projectRoot: string }
 const relativeTo = (projectReal: string, path: string): string => relative(projectReal, path).replace(/\\/g, '/');
 
 function diffFailure(area: DiffArea, reason: string): never {
@@ -296,7 +306,7 @@ function prepareDiffRoot(projectRoot: string, projectReal: string, featureDir: s
     throw new ReviewScopeError('diff_write_failed', `Cannot use the reviews directory: ${outcome.reason}`, { reason: outcome.reason });
   }
   const reviews = realpathSync(outcome.reviews);
-  const area: DiffArea = { diffRoot: join(reviews, '.diff'), projectReal };
+  const area: DiffArea = { diffRoot: join(reviews, '.diff'), projectReal, projectRoot: resolve(projectRoot) };
   try {
     if (!ensureRealDirectory(area.diffRoot, reviews)) return diffFailure(area, 'diff_root_unsafe');
     const ignore = join(area.diffRoot, '.gitignore');
@@ -316,8 +326,53 @@ function prepareDiffRoot(projectRoot: string, projectReal: string, featureDir: s
   }
 }
 
+const MATERIAL_FENCE = '=== REVIEWED MATERIAL ===';
+
 /**
- * Writes each content file's whole diff to `<run-id>/<slice>/<file>.diff` under the prepared `.diff/` and fills `diffFile`.
+ * A file is removed when its diff declares `deleted file mode`, no `new file mode`, and adds no line. A modified file that
+ * only lost lines has hunks with no new lines too, but no such header. A `git rm --cached` file left in the tree, even an
+ * empty one, also renders as a new file, so it is never removed.
+ */
+const isRemoved = (segment: string, hunks: DiffHunk[]): boolean =>
+  /^deleted file mode/m.test(segment) && !/^new file mode/m.test(segment) && !hunks.some((hunk) => hunk.newLines > 0);
+
+/**
+ * A directory as the project root spells it: one already under that spelling is kept, one reached through the real path
+ * (a repository's toplevel) is re-based onto it, and anything outside the project stays as it is.
+ */
+function underProjectRoot(area: DiffArea, path: string): string {
+  const absolute = resolve(path);
+  if (isWithin(area.projectRoot, absolute)) return absolute;
+  const real = existsSync(absolute) ? realpathSync(absolute) : absolute;
+  return isWithin(area.projectReal, real) ? join(area.projectRoot, relative(area.projectReal, real)) : absolute;
+}
+
+/**
+ * One slice's material: its own files, then the files other slices changed (content files only) as context. Every line
+ * after the header is a `JSON.stringify` object, so a path with quotes, newlines or unicode stays on one line.
+ */
+function renderMaterial(area: DiffArea, entry: PendingSlice, others: PendingSlice[]): string {
+  const { slice } = entry;
+  const absolute = (diffFile: string | null): string | null => (diffFile === null ? null : join(area.projectRoot, diffFile));
+  const own = slice.changes.map((change) => JSON.stringify({ path: change.path, added: change.added, deleted: change.deleted, diffFile: absolute(change.diffFile) }));
+  const context = others.flatMap((other) => other.slice.changes.flatMap((change, index) => {
+    if (change.diffFile === null) return [];
+    const removed = isRemoved(other.segments[index]!, change.hunks) ? { removed: true as const } : {};
+    return [JSON.stringify({ slice: other.slice.id, workingRoot: underProjectRoot(area, other.workingRoot), path: change.path, ...removed })];
+  }));
+  return [
+    MATERIAL_FENCE,
+    `ASSIGNMENT slice=${slice.id} repo=${slice.repoPath} sub_workspace=${slice.subWorkspace ?? 'null'}`,
+    `WORKING_ROOT ${underProjectRoot(area, entry.workingRoot)}`,
+    'FILES', ...own,
+    'OTHER_CHANGES', ...context,
+    MATERIAL_FENCE,
+  ].join('\n') + '\n';
+}
+
+/**
+ * Writes each content file's whole diff to `<run-id>/<slice>/<file>.diff` under the prepared `.diff/` and fills `diffFile`,
+ * then each content slice's `files.txt` and `materialFile`.
  * File names are positions (1-based, zero-padded), never reviewed paths. Returns the run directory relative to the project root.
  */
 function writeDiffRun(area: DiffArea, pending: PendingSlice[]): string {
@@ -338,6 +393,13 @@ function writeDiffRun(area: DiffArea, pending: PendingSlice[]): string {
         writeFileSync(file, segment);
         slice.changes[fileIndex]!.diffFile = rel(file);
       });
+    });
+    // After every diff file exists: only content files (those with a `diffFile`) are listed as other slices' context.
+    pending.forEach((entry, sliceIndex) => {
+      if (entry.slice.changes.every((change) => change.diffFile === null)) return;
+      const file = join(runDir, pad(sliceIndex + 1, sliceWidth), 'files.txt');
+      writeFileSync(file, renderMaterial(area, entry, pending.filter((other) => other !== entry)));
+      entry.slice.materialFile = rel(file);
     });
     return rel(runDir);
   } catch (error) {

@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.6.2] - 2026-11-28
+
+### Added
+- tdk-review: --specialist lets a routed agent that declares review_contract: full replace the core reviewer for its slice or part, with a core fallback when it fails or misses a spec row
+
+### Changed
+- tdk-review: one reviewer per slice applies every lens of the mode; a slice over 15000 diff lines is split by module into parts; all invocations go out in one message, with one retry round and per-file coverage over the slice
+- tdk-review: review-scope.js writes one material file per slice with the slice's files and the files other slices changed
+
 ## [14.6.1] - 2026-11-28
 
 ### Changed

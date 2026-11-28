@@ -45,7 +45,7 @@ Verdict: `changes_requested`. The session lifetime is compared in the wrong unit
 ## Scope
 
 - Repo `.` (no sub-workspace), base commit `7c41d9e2a0b35f86e1c27d40b9a6f3e85d12c0ab`, source `fallback` (no `git-map.md` row; diffed against the recorded base).
-- Slice `s1`: repo `.`, sub-workspace none, 5 files, 68 diff lines, 1 batch.
+- Slice `s1`: repo `.`, sub-workspace none, 5 files, 68 diff lines.
 - Reviewed phases: 01. Skipped phases: 02 (not started at review time).
 - Not reviewed: None.
 - Stat only: None.
@@ -53,12 +53,9 @@ Verdict: `changes_requested`. The session lifetime is compared in the wrong unit
 
 ## Reviewers
 
-Review plan: 4 invocations (+≤20 retries) in 1 waves (≤8 per wave), ≥~67k est. tokens
+1 invocations: core 1, specialist 0, routed 0, parts 0, retries 0
 
-- tdk-code-reviewer, spec, wave 1, s1, repo `.`, sub-workspace none, batch 1/1, 5 files +68/−0, ok, skills none.
-- tdk-code-reviewer, quality, wave 1, s1, same batch, ok, skills none.
-- tdk-code-reviewer, security, wave 1, s1, same batch, ok, skills none.
-- tdk-code-reviewer, reliability, wave 1, s1, same batch, ok, skills none.
+- tdk-code-reviewer, lenses `spec,quality,security,reliability`, s1, repo `.`, sub-workspace none, 5 files +68/−0, ok, skills none.
 
 **Unreviewed slices**: None.
 
@@ -73,7 +70,7 @@ Review plan: 4 invocations (+≤20 retries) in 1 waves (≤8 per wave), ≥~67k 
 
 **Spec coverage gaps**:
 
-- FR-002, FR-004, SC-001, SC-002: recorded as `notChecked` by the spec invocation, which judged only the focus areas, slice `s1`.
+- FR-002, FR-004, SC-001, SC-002: recorded as `notChecked` by the reviewer, which judged only the focus areas, slice `s1`.
 
 ## Findings by severity
 

@@ -45,7 +45,7 @@ Verdict: `changes_requested`. Phase 02 adds order placement, bulk pricing and st
 ## Scope
 
 - Repo `.` (no sub-workspace), base commit `2e8a0f57c1d94b6e3a7f0c25d8e1b94f6a3c7d10`, source `fallback` (no `git-map.md` row; diffed against the recorded base).
-- Slice `s1`: repo `.`, sub-workspace none, 4 files, 46 diff lines, 1 batch.
+- Slice `s1`: repo `.`, sub-workspace none, 4 files, 46 diff lines.
 - Reviewed phases: 02. Skipped phases: 01 (outside `--phase 2`).
 - Not reviewed: None.
 - Stat only: None.
@@ -53,12 +53,9 @@ Verdict: `changes_requested`. Phase 02 adds order placement, bulk pricing and st
 
 ## Reviewers
 
-Review plan: 4 invocations (+≤20 retries) in 1 waves (≤8 per wave), ≥~64k est. tokens
+1 invocations: core 1, specialist 0, routed 0, parts 0, retries 0
 
-- tdk-code-reviewer, spec, wave 1, s1, repo `.`, sub-workspace none, batch 1/1, `src/index.ts` +4/−0, `src/orders/order-pricing.ts` +8/−0, `src/orders/order-service.ts` +20/−0, `src/inventory/stock-level.ts` +12/−0, ok, skills none.
-- tdk-code-reviewer, quality, wave 1, s1, same batch, ok, skills none.
-- tdk-code-reviewer, security, wave 1, s1, same batch, ok, skills none.
-- tdk-code-reviewer, reliability, wave 1, s1, same batch, ok, skills none.
+- tdk-code-reviewer, lenses `spec,quality,security,reliability`, s1, repo `.`, sub-workspace none, `src/index.ts` +4/−0, `src/orders/order-pricing.ts` +8/−0, `src/orders/order-service.ts` +20/−0, `src/inventory/stock-level.ts` +12/−0, ok, skills none.
 
 **Unreviewed slices**: None.
 
@@ -78,7 +75,7 @@ Review plan: 4 invocations (+≤20 retries) in 1 waves (≤8 per wave), ≥~64k 
 
 **Spec coverage gaps**:
 
-- FR-001, FR-002, FR-003, FR-004, SC-002: outside this phase; no file of slice `s1` implements them (`notChecked` of the spec invocation), slice `s1`.
+- FR-001, FR-002, FR-003, FR-004, SC-002: outside this phase; no file of slice `s1` implements them (`notChecked` of the reviewer), slice `s1`.
 
 ## Findings by severity
 
@@ -88,25 +85,25 @@ None.
 
 ### high
 
-- **F1** `src/orders/order-service.ts:16` (spec, quality; s1 batch 1/1)
+- **F1** `src/orders/order-service.ts:16` (spec, quality; s1)
   - Evidence:
     ```ts
     total += line.unitPrice * line.quantity;
     ```
   - Recommendation: price each line through `priceOrderLine`, and let it return the discount it applied so the placed order can show it.
-- **F2** FR-007, missing (spec; s1 batch 1/1)
+- **F2** FR-007, missing (spec; s1)
   - Evidence: searched `src/inventory/stock-level.ts`, `src/orders/order-service.ts` and `src/index.ts` for a low-stock list or a threshold of 5 units; none exists.
   - Recommendation: add a low-stock list in its own inventory module that returns the products with fewer than 5 units on hand, and export it from the public entry point.
 
 ### medium
 
-- **F3** `src/inventory/stock-level.ts:9` (spec, reliability; s1 batch 1/1)
+- **F3** `src/inventory/stock-level.ts:9` (spec, reliability; s1)
   - Evidence:
     ```ts
     const next = { sku, onHand: level.onHand - quantity };
     ```
   - Recommendation: refuse a reservation larger than the stock on hand with a typed error, and export that error from the public entry point.
-- **F4** `src/orders/order-pricing.ts:7` (spec; s1 batch 1/1)
+- **F4** `src/orders/order-pricing.ts:7` (spec; s1)
   - Evidence:
     ```ts
     return quantity > BULK_QUANTITY ? gross * (1 - BULK_DISCOUNT) : gross;

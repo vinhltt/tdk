@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from 'bun:test';
+import { afterEach, describe, expect, it, mock } from 'bun:test';
+import * as nodeFs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { chmodSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1637,5 +1638,252 @@ describe('review-scope bundle', () => {
     expect(added).toHaveLength(1);
     expect(added[0]).toMatch(/^\?\? specs\/task-1\/reviews\/\d{8}-\d{6}-e2e-standard\.md$/);
     expect(before['.']!.filter((line) => !after['.']!.includes(line))).toEqual([]);
+  });
+});
+
+/** The lines of a material file between its fences, grouped by section header. */
+function parseMaterial(result: Pick<ReviewScope, 'slices'>, slice: Pick<ReviewSlice, 'materialFile'>): { text: string; assignment: string; workingRoot: string; files: Record<string, unknown>[]; others: Record<string, unknown>[] } {
+  const text = readFileSync(join(rootOf.get(result)!, slice.materialFile!), 'utf-8');
+  const lines = text.split('\n');
+  expect(lines.at(-1)).toBe('');
+  const body = lines.slice(0, -1);
+  expect(body[0]).toBe('=== REVIEWED MATERIAL ===');
+  expect(body.at(-1)).toBe('=== REVIEWED MATERIAL ===');
+  const filesAt = body.indexOf('FILES');
+  const othersAt = body.indexOf('OTHER_CHANGES');
+  expect(body[3]).toBe('FILES');
+  return {
+    text,
+    assignment: body[1]!,
+    workingRoot: body[2]!.replace(/^WORKING_ROOT /, ''),
+    files: body.slice(filesAt + 1, othersAt).map((line) => JSON.parse(line)),
+    others: body.slice(othersAt + 1, -1).map((line) => JSON.parse(line)),
+  };
+}
+
+describe('review scope: material files', () => {
+  const BACKEND_AND_WEB = [{ name: 'backend', path: 'apps/backend' }, { name: 'web', path: 'apps/web' }];
+  const twoSlices = (): { fx: Fx; result: ReviewScope } => {
+    const fx = monorepo(BACKEND_AND_WEB, ['apps/backend', 'apps/web']);
+    put(join(fx.root, 'apps', 'backend', 'src', 'api.ts'), 'export const api = 1;\n');
+    put(join(fx.root, 'apps', 'web', 'src', 'ui.ts'), 'export const ui = 1;\n');
+    return { fx, result: scope(fx) };
+  };
+
+  it('writes one material file per slice with content; a stat-only slice has materialFile null', () => {
+    const { result } = twoSlices();
+    expect(result.slices.map((slice) => slice.materialFile)).toEqual([`${result.diffDir}/01/files.txt`, `${result.diffDir}/02/files.txt`]);
+    const fx = fixture([{ n: 1, paths: ['apps/api/nested'] }]);
+    initRepo(join(fx.api, 'nested', 'lib'), { 'x.ts': 'x\n' });
+    expect(scope(fx).slices[0]!.materialFile).toBeNull();
+  });
+
+  it('material has the fences, header, working root, JSON lines and absolute diff files', () => {
+    const { fx, result } = twoSlices();
+    const backend = parseMaterial(result, result.slices[0]!);
+    expect(backend.assignment).toBe('ASSIGNMENT slice=.#backend repo=. sub_workspace=backend');
+    expect(backend.workingRoot).toBe(fx.root);
+    const change = result.slices[0]!.changes[0]!;
+    expect(backend.files).toEqual([{ path: 'apps/backend/src/api.ts', added: 1, deleted: 0, diffFile: join(fx.root, change.diffFile!) }]);
+    expect(readFileSync(backend.files[0]!.diffFile as string, 'utf-8')).toContain('+export const api = 1;');
+    expect(backend.others).toEqual([{ slice: '.#web', workingRoot: fx.root, path: 'apps/web/src/ui.ts' }]);
+  });
+
+  it('a stat-only file stays in FILES with diffFile null and never appears in another slice\'s OTHER_CHANGES', () => {
+    const fx = monorepo(BACKEND_AND_WEB, ['apps/backend', 'apps/web']);
+    put(join(fx.root, 'apps', 'backend', 'src', 'api.ts'), 'export const api = 1;\n');
+    put(join(fx.root, 'apps', 'backend', 'src', 'blob.bin'), Buffer.from([0, 1, 2, 3]));
+    put(join(fx.root, 'apps', 'web', 'src', 'ui.ts'), 'export const ui = 1;\n');
+    const result = scope(fx);
+    const backend = parseMaterial(result, result.slices[0]!);
+    expect(backend.files.map((file) => [file.path, file.diffFile === null])).toEqual([['apps/backend/src/api.ts', false], ['apps/backend/src/blob.bin', true]]);
+    expect(backend.files[1]).toMatchObject({ added: null, deleted: null });
+    expect(parseMaterial(result, result.slices[1]!).others.map((other) => other.path)).toEqual(['apps/backend/src/api.ts']);
+  });
+
+  it('OTHER_CHANGES excludes the slice\'s own files and spans slices of another repo and of the same repo', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts', 'tools/x.ts'] }]);
+    put(join(fx.api, 'src', 'a.ts'), 'changed\n');
+    const tools = join(fx.root, 'tools');
+    initRepo(tools, { 'x.ts': 'x\n', 'y.ts': 'y\n' });
+    put(join(tools, 'x.ts'), 'x2\n');
+    const result = scope(fx);
+    const api = result.slices.find((slice) => slice.id === 'apps/api#api')!;
+    const other = result.slices.find((slice) => slice.id === 'tools#-')!;
+    const apiMaterial = parseMaterial(result, api);
+    expect(apiMaterial.others).toEqual([{ slice: 'tools#-', workingRoot: tools, path: 'x.ts' }]);
+    expect(apiMaterial.workingRoot).toBe(fx.api);
+    const toolsMaterial = parseMaterial(result, other);
+    expect(toolsMaterial.others).toEqual([{ slice: 'apps/api#api', workingRoot: fx.api, path: 'src/a.ts' }]);
+    expect(toolsMaterial.assignment).toBe('ASSIGNMENT slice=tools#- repo=tools sub_workspace=null');
+  });
+
+  it('OTHER_CHANGES is empty when the run has one slice, and holds slices of the same repository in slice order', () => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts'] }]);
+    put(join(fx.api, 'src', 'a.ts'), 'changed\n');
+    const single = scope(fx);
+    const material = parseMaterial(single, single.slices[0]!);
+    expect(material.others).toEqual([]);
+    expect(material.text).toContain('OTHER_CHANGES\n=== REVIEWED MATERIAL ===\n');
+
+    const { result } = twoSlices();
+    expect(parseMaterial(result, result.slices[1]!).others.map((other) => other.slice)).toEqual(['.#backend']);
+  });
+
+  it('marks a deleted file with removed:true right after path; modified, added and line-trimmed files carry no such field', () => {
+    const fx = monorepo(BACKEND_AND_WEB, ['apps/backend', 'apps/web']);
+    put(join(fx.root, 'apps', 'web', 'src', 'ui.ts'), 'export const ui = 1;\n');
+    rmSync(join(fx.root, 'apps', 'backend', 'src', 'seed.ts'));
+    const result = scope(fx);
+    const web = parseMaterial(result, result.slices[1]!);
+    expect(web.others).toEqual([{ slice: '.#backend', workingRoot: fx.root, path: 'apps/backend/src/seed.ts', removed: true }]);
+    expect(Object.keys(web.others[0]!)).toEqual(['slice', 'workingRoot', 'path', 'removed']);
+
+    const trimmed = monorepo(BACKEND_AND_WEB, ['apps/backend', 'apps/web']);
+    put(join(trimmed.root, 'apps', 'backend', 'src', 'seed.ts'), 'one\ntwo\nthree\n');
+    git(trimmed.root, 'add', '-A');
+    git(trimmed.root, 'commit', '-q', '-m', 'grow');
+    // Emptied but present: every hunk has zero new lines, yet the file still exists.
+    put(join(trimmed.root, 'apps', 'backend', 'src', 'seed.ts'), '');
+    put(join(trimmed.root, 'apps', 'backend', 'src', 'added.ts'), 'new\n');
+    put(join(trimmed.root, 'apps', 'web', 'src', 'ui.ts'), 'export const ui = 1;\n');
+    const result2 = scope(trimmed);
+    const others = parseMaterial(result2, result2.slices[1]!).others;
+    expect(others.map((other) => other.path).sort()).toEqual(['apps/backend/src/added.ts', 'apps/backend/src/seed.ts']);
+    for (const other of others) expect(other).not.toHaveProperty('removed');
+  });
+
+  it('paths with quotes, newlines and unicode stay valid JSON on one line', () => {
+    const fx = monorepo(BACKEND_AND_WEB, ['apps/backend', 'apps/web']);
+    const odd = ['say "hi".ts', 'new\nline.ts', 'café-中.ts', 'back\\slash.ts'];
+    for (const name of odd) put(join(fx.root, 'apps', 'backend', 'src', name), 'x\n');
+    put(join(fx.root, 'apps', 'web', 'src', 'ui.ts'), 'export const ui = 1;\n');
+    const result = scope(fx);
+    const web = parseMaterial(result, result.slices[1]!);
+    expect(web.others.map((other) => other.path).sort()).toEqual(odd.map((name) => `apps/backend/src/${name}`).sort());
+    const own = parseMaterial(result, result.slices[0]!);
+    expect(own.files.map((file) => file.path).sort()).toEqual(odd.map((name) => `apps/backend/src/${name}`).sort());
+  });
+
+  it('materialFile is a POSIX path relative to the project root inside diffDir', () => {
+    const { fx, result } = twoSlices();
+    for (const slice of result.slices) {
+      expect(slice.materialFile!.startsWith(`${result.diffDir}/`)).toBe(true);
+      expect(slice.materialFile!).toMatch(/^[^/].*\/\d{2}\/files\.txt$/);
+      expect(existsSync(join(fx.root, slice.materialFile!))).toBe(true);
+    }
+  });
+
+  /** A tools repo next to the `apps/api` row, so the run has a git-map slice and a fallback slice. */
+  const apiAndTools = (): Fx & { tools: string } => {
+    const fx = fixture([{ n: 1, paths: ['apps/api/src/a.ts', 'tools/x.ts'] }]);
+    const tools = join(fx.root, 'tools');
+    initRepo(tools, { 'x.ts': 'x\n' });
+    put(join(fx.api, 'src', 'a.ts'), 'changed\n');
+    put(join(tools, 'x.ts'), 'x2\n');
+    return { ...fx, tools };
+  };
+
+  it('a git-map row with a worktree has that worktree as its WORKING_ROOT, here and in the other slices\' OTHER_CHANGES', () => {
+    const fx = apiAndTools();
+    const worktree = join(fx.root, '_worktrees', 'api', 'wt');
+    git(fx.api, 'worktree', 'add', '-q', '-b', 'feat/x', worktree, fx.base);
+    put(join(worktree, 'src', 'a.ts'), 'changed in worktree\n');
+    put(join(fx.feature, 'git-map.md'), mapOf([{ name: 'api', path: 'apps/api', worktree: '_worktrees/api/wt' }], { api: fx.base }));
+    const result = scope(fx);
+    const api = result.slices.find((slice) => slice.id === 'apps/api#api')!;
+    const tools = result.slices.find((slice) => slice.id === 'tools#-')!;
+    expect(result.repos.find((repo) => repo.subWorkspace === 'api')!.workingRoot).toBe(worktree);
+    expect(parseMaterial(result, api).workingRoot).toBe(worktree);
+    expect(parseMaterial(result, tools).workingRoot).toBe(join(fx.root, 'tools'));
+    expect(parseMaterial(result, tools).others).toEqual([{ slice: 'apps/api#api', workingRoot: worktree, path: 'src/a.ts' }]);
+  });
+
+  it('every absolute path in a material file shares the project root as given, even when that root is a symlink', () => {
+    const fx = apiAndTools();
+    const holder = realpathSync(mkdtempSync(join(tmpdir(), 'review-link-')));
+    roots.push(holder);
+    const link = join(holder, 'project');
+    symlinkSync(fx.root, link);
+    const result = compute({ projectRoot: link, featureDir: join(link, 'specs', 'task-1') });
+    expect(result.slices.map((slice) => slice.id).sort()).toEqual(['apps/api#api', 'tools#-']);
+    // The recorded repository roots keep their own spelling: only the material text is re-based.
+    expect(result.repos.find((repo) => repo.source === 'fallback')!.workingRoot).toBe(join(fx.root, 'tools'));
+    for (const slice of result.slices) {
+      const material = parseMaterial(result, slice);
+      const absolute = [material.workingRoot, ...material.files.map((file) => file.diffFile as string), ...material.others.map((other) => other.workingRoot as string)];
+      expect(absolute).toHaveLength(3);
+      for (const path of absolute) expect(path === link || path.startsWith(`${link}/`)).toBe(true);
+      for (const file of material.files) expect(existsSync(file.diffFile as string)).toBe(true);
+    }
+    const api = parseMaterial(result, result.slices.find((slice) => slice.id === 'apps/api#api')!);
+    expect(api.workingRoot).toBe(join(link, 'apps', 'api'));
+    expect(api.others[0]!.workingRoot).toBe(join(link, 'tools'));
+  });
+
+  it('FILES lines never carry removed, even for a deleted file; only OTHER_CHANGES marks it', () => {
+    const fx = monorepo(BACKEND_AND_WEB, ['apps/backend', 'apps/web']);
+    rmSync(join(fx.root, 'apps', 'backend', 'src', 'seed.ts'));
+    put(join(fx.root, 'apps', 'web', 'src', 'ui.ts'), 'export const ui = 1;\n');
+    const result = scope(fx);
+    const backend = parseMaterial(result, result.slices[0]!);
+    expect(backend.files.map((file) => file.path)).toEqual(['apps/backend/src/seed.ts']);
+    for (const file of backend.files) expect(file).not.toHaveProperty('removed');
+    expect(backend.text.slice(0, backend.text.indexOf('OTHER_CHANGES'))).not.toContain('removed');
+    expect(parseMaterial(result, result.slices[1]!).others).toEqual([{ slice: '.#backend', workingRoot: fx.root, path: 'apps/backend/src/seed.ts', removed: true }]);
+  });
+
+  it('a file removed from the index but still on disk is not marked removed', () => {
+    const fx = monorepo(BACKEND_AND_WEB, ['apps/backend', 'apps/web']);
+    git(fx.root, 'rm', '-q', '--cached', 'apps/backend/src/seed.ts');
+    put(join(fx.root, 'apps', 'web', 'src', 'ui.ts'), 'export const ui = 1;\n');
+    const result = scope(fx);
+    const others = parseMaterial(result, result.slices[1]!).others;
+    expect(others.map((other) => other.path)).toEqual(['apps/backend/src/seed.ts']);
+    expect(others[0]).not.toHaveProperty('removed');
+    expect(parseMaterial(result, result.slices[1]!).text).not.toContain('"removed":true');
+  });
+
+  it('a file emptied and removed from the index but still on disk is not marked removed', () => {
+    const fx = monorepo(BACKEND_AND_WEB, ['apps/backend', 'apps/web']);
+    put(join(fx.root, 'apps', 'backend', 'src', 'seed.ts'), '');
+    git(fx.root, 'rm', '-q', '--cached', 'apps/backend/src/seed.ts');
+    put(join(fx.root, 'apps', 'web', 'src', 'ui.ts'), 'export const ui = 1;\n');
+    const result = scope(fx);
+    const others = parseMaterial(result, result.slices[1]!).others;
+    expect(others.map((other) => other.path)).toEqual(['apps/backend/src/seed.ts']);
+    expect(others[0]).not.toHaveProperty('removed');
+  });
+
+  it('a failure writing a material file is diff_write_failed with its I/O code and a project-relative diffRoot', () => {
+    const { fx } = twoSlices();
+    const real = { ...nodeFs };
+    mock.module('node:fs', () => ({
+      ...real,
+      writeFileSync: (path: string, ...rest: unknown[]) => {
+        if (String(path).endsWith('files.txt')) throw Object.assign(new Error('no space left'), { code: 'ENOSPC' });
+        return (real.writeFileSync as (...args: unknown[]) => void)(path, ...rest);
+      },
+    }));
+    let error: ReviewScopeError | undefined;
+    try { scope(fx); } catch (caught) { if (caught instanceof ReviewScopeError) error = caught; else throw caught; } finally { mock.module('node:fs', () => real); }
+    expect(error).toMatchObject({ code: 'diff_write_failed', details: { reason: 'ENOSPC' } });
+    expect(error!.details!.diffRoot).toMatch(/\.diff$/);
+    expect(JSON.stringify(error!.details)).not.toContain(fx.root);
+  });
+
+  it('the bundle reports the same materialFile and material text as the source', async () => {
+    const { fx, result } = twoSlices();
+    // A later run deletes this run's directory, so read the source output first.
+    const sourceTexts = result.slices.map((slice) => parseMaterial(result, slice).text.replaceAll(result.diffDir, '<run>'));
+    const proc = Bun.spawn([process.execPath, '--no-install', BUNDLE, '--project-root', fx.root, '--feature-dir', fx.feature], { stdout: 'pipe', stderr: 'pipe' });
+    const payload = JSON.parse(await new Response(proc.stdout).text()) as ReviewScope;
+    expect(await proc.exited).toBe(0);
+    expect(payload.slices.map((slice) => slice.materialFile === null ? null : slice.materialFile.replace(payload.diffDir, '<run>')))
+      .toEqual(result.slices.map((slice) => slice.materialFile!.replace(result.diffDir, '<run>')));
+    track(payload, fx.root);
+    for (const [index, slice] of payload.slices.entries()) {
+      expect(parseMaterial(payload, slice).text.replaceAll(payload.diffDir, '<run>')).toBe(sourceTexts[index]!);
+    }
   });
 });

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "tdkVersion": "1.136.2",
+  "tdkVersion": "1.137.0",
   "algorithm": "sha256",
-  "generatedAt": "2026-11-28T05:33:03.603Z",
+  "generatedAt": "2026-11-28T09:44:31.185Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -141,8 +141,8 @@
       "mode": "0644"
     },
     ".specify/docs/en/guides/skills-guide.md": {
-      "sha256": "0d46df298d1ec25d24a93735ca9aeae1c34a6bcdf6df79df6ab6764510bbd595",
-      "size": 100731,
+      "sha256": "66c364860d6f6d6a7928955c50e506aa1adff9d0c359312e4888c856ccd38557",
+      "size": 101721,
       "mode": "0644"
     },
     ".specify/docs/en/guides/workflow-map.md": {
@@ -211,8 +211,8 @@
       "mode": "0644"
     },
     ".specify/docs/vi/guides/skills-guide.md": {
-      "sha256": "6014c40caf02031f968694ac1c4854d09570d60e89c1f5b49cf44b96e06e5c25",
-      "size": 106690,
+      "sha256": "0aaf3e100a7c1442ddc8d6a312c8bb9489577a14b1eb0192b2746675f5c9a1eb",
+      "size": 107749,
       "mode": "0644"
     },
     ".specify/docs/vi/guides/workflow-map.md": {
@@ -221,7 +221,7 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "2b9bf42e407029ca22df84c56498b1e7164bd8cad8a16ae468b16fe8e40e5013",
+      "sha256": "ffa691d1be1c33e3395d3cf54222b14353f83cdf47d960d370a3749df7a40539",
       "size": 51714,
       "mode": "0644"
     },
@@ -236,23 +236,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.claude-plugin/plugin.json": {
-      "sha256": "b76725c3c26c8da5972779f43131f3bc85b48c47e37780c1525ade5f0a40d035",
+      "sha256": "94d403a828edef1be29ddb0622be4617db437a8d990e55c3b1b3fa352b67efee",
       "size": 191,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.codex-plugin/plugin.json": {
-      "sha256": "d45691df7b21a90bbcd9533296eeb0d2f903dec53ffd432d2a2ef20d2dc84067",
+      "sha256": "98a26003d988dcf62d9d1cf4313f3f9bfc0c381f5b0255fd0e2dceb12e173519",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/.cursor-plugin/plugin.json": {
-      "sha256": "d45691df7b21a90bbcd9533296eeb0d2f903dec53ffd432d2a2ef20d2dc84067",
+      "sha256": "98a26003d988dcf62d9d1cf4313f3f9bfc0c381f5b0255fd0e2dceb12e173519",
       "size": 181,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/CHANGELOG.md": {
-      "sha256": "06a00e2fc56ae5d19dba300afc95bac932976c8f369f9e39a75b080120b84e61",
-      "size": 57707,
+      "sha256": "4050226f1aa9c367b32f4ed75d9a6700fbb98e0a39d766bb062cbef9bdf290f4",
+      "size": 58295,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/agents/tdk-counsel.md": {
@@ -471,18 +471,18 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/SKILL.md": {
-      "sha256": "dcc48d916ba161d35cc41a0048d5f0d2e83615c27040ecc1518b15c167f18523",
-      "size": 7157,
+      "sha256": "41763514fc7e82b4aa726b271e76c4297b4304e996ecfb2d68e9f1246b093d20",
+      "size": 7029,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/references/report-contract.md": {
-      "sha256": "25424aa5a234996809f2f93c11590d98444cc21328b598c2ab917080f91eec62",
-      "size": 10850,
+      "sha256": "c98f7c9fcb78fe11ffe6dab507c0589d93a49249bf31fb3bb2b17658d4897a6c",
+      "size": 9684,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/references/review-orchestration.md": {
-      "sha256": "7ab6dc81d22358a47e31ec4a2afaabbfebc73a5bd3c33579a027eec047c1f1c9",
-      "size": 17637,
+      "sha256": "09ce9f162d7963849ab7d7f3a77ae921d4acb3ad545ea0a350cec4bcff74fea7",
+      "size": 14693,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/RUNTIME-LICENSE.txt": {
@@ -511,13 +511,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-scope.js": {
-      "sha256": "be2b43f20ce441b5feb50c513e48c88c43a54233d7f2de302fadc9896f43eeae",
-      "size": 402631,
+      "sha256": "af12054f24ac56bb370d1aee84f7846cd1b9bf895f88307b62adcc48ecd2a722",
+      "size": 404667,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-scope.ts": {
-      "sha256": "c17805520740e2b75eab3267b52d86c5fe56e30618cc94ab501760e4bb4e1909",
-      "size": 41237,
+      "sha256": "5c54901fd29ef7564e522df97963d54eb03f126ffaf123172fab3d2168f7aec3",
+      "size": 44816,
       "mode": "0644"
     },
     ".specify/plugins/tdk-core/skills/tdk-review/scripts/review-write-report.js": {
@@ -1416,23 +1416,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-scaffold/.claude-plugin/plugin.json": {
-      "sha256": "df516d0997831797eab0ea4d88505455b6a73a4992369053154f97efdad46236",
+      "sha256": "ac00c791f7c905c5ceda06a5ceb7541f23d6492e872399abea956683d754e362",
       "size": 227,
       "mode": "0644"
     },
     ".specify/plugins/tdk-scaffold/.codex-plugin/plugin.json": {
-      "sha256": "df516d0997831797eab0ea4d88505455b6a73a4992369053154f97efdad46236",
+      "sha256": "ac00c791f7c905c5ceda06a5ceb7541f23d6492e872399abea956683d754e362",
       "size": 227,
       "mode": "0644"
     },
     ".specify/plugins/tdk-scaffold/.cursor-plugin/plugin.json": {
-      "sha256": "df516d0997831797eab0ea4d88505455b6a73a4992369053154f97efdad46236",
+      "sha256": "ac00c791f7c905c5ceda06a5ceb7541f23d6492e872399abea956683d754e362",
       "size": 227,
       "mode": "0644"
     },
     ".specify/plugins/tdk-scaffold/CHANGELOG.md": {
-      "sha256": "b936f363b02e534f59656b0c0c4aee868a681ff4443589251928ba8339f4b3d1",
-      "size": 10504,
+      "sha256": "1b13022103da8d026ceb88155f2720c4cea0bc58523a484c333ad77fd197a5fa",
+      "size": 10938,
       "mode": "0644"
     },
     ".specify/plugins/tdk-scaffold/skills/tdk-delegate-routing/SKILL.md": {
@@ -1516,13 +1516,13 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-scaffold/skills/tdk-scaffold-from-recommendation/SKILL.md": {
-      "sha256": "a63b368210512946fa873baf3d921003469a05e1ead001ccd0e299c07a74e808",
+      "sha256": "e08976617b2cd0ba6ae75f6d211a61ce08cb1d9117a94799ac64afae1b6c2616",
       "size": 23462,
       "mode": "0644"
     },
     ".specify/plugins/tdk-scaffold/skills/tdk-scaffold-from-recommendation/references/agent-output-pattern.md": {
-      "sha256": "2eb73c7d58590039fd3727a96761571bbc1a4cb665afc97692b70a2dfd719e00",
-      "size": 8846,
+      "sha256": "fe317e7c8dc5f913f3828bcbd38c18ef415d414227fa62c2c24a089ec58ddaf8",
+      "size": 13570,
       "mode": "0644"
     },
     ".specify/plugins/tdk-scaffold/skills/tdk-scaffold-from-recommendation/references/delegate-routing-proposal-format.md": {
@@ -1626,23 +1626,23 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.claude-plugin/plugin.json": {
-      "sha256": "15cf49b0c44dae27fbc7942bcb154817ff7761f619aa977a589c70b2f16f2dd6",
+      "sha256": "6bc3432fed59357f4648c62317cf5a683389fe6e9d10f02e9f7b5282d9527dfe",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.codex-plugin/plugin.json": {
-      "sha256": "15cf49b0c44dae27fbc7942bcb154817ff7761f619aa977a589c70b2f16f2dd6",
+      "sha256": "6bc3432fed59357f4648c62317cf5a683389fe6e9d10f02e9f7b5282d9527dfe",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/.cursor-plugin/plugin.json": {
-      "sha256": "15cf49b0c44dae27fbc7942bcb154817ff7761f619aa977a589c70b2f16f2dd6",
+      "sha256": "6bc3432fed59357f4648c62317cf5a683389fe6e9d10f02e9f7b5282d9527dfe",
       "size": 214,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/CHANGELOG.md": {
-      "sha256": "4ab16bc173f1bd1e16f35cf8eedca938aa78960d726815bded51ed7f058e8f20",
-      "size": 13720,
+      "sha256": "7597dfdce02de1846095dbd40c1a6a10cced8b94c40a26184862021fac28e0a6",
+      "size": 13973,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/researcher.md": {
@@ -1651,8 +1651,8 @@
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/tdk-code-reviewer.md": {
-      "sha256": "6afc1a2903643ad5f43ec2bcef8f8f1395921d9148dbb36b93935f24f3540ba8",
-      "size": 8631,
+      "sha256": "779fabf38209e5670c71a4022a21304198cef19ae12e0a67bd659f0a53a002c2",
+      "size": 8603,
       "mode": "0644"
     },
     ".specify/plugins/tdk-utils/agents/tdk-red-team-reliability.md": {

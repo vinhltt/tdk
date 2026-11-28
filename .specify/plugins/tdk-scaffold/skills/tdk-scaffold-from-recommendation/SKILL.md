@@ -4,7 +4,7 @@ description: "Reconcile approved automation recommendations with canonical .clau
 user-invocable: true
 argument-hint: "[<path-to-automation-recommendation.md>] [--dry-run] [--skills-only] [--agents-only] [--task <TASK_ID>] [--auto]"
 metadata:
-  version: "3.2.0"
+  version: "3.2.1"
   author: "VinhLTT"
   category: scaffold
   requires:
