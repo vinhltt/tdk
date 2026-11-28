@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { sha256File } from './checksum';
 import { manifestPathFor } from './manifest-store';
 import { normalizeTargetRelativePath } from './target-relative-path';
+import { optionalVersionFields, readClaudeStateTdkVersion, readSourceTdkVersion } from './tdk-version';
 import { validateInstallPlanTargets } from './target-path-safety';
 import { ALL_CONVERT_PARTS } from './convert-parts';
 import type { ConvertPart, ConvertPartSelection } from './convert-parts';
@@ -242,6 +243,7 @@ export interface BuildConvertReconcilePlanInput {
   selection: ConvertPartSelection;
   hookTargetPlatform?: HookTargetPlatform;
   force?: boolean;
+  installerVersion?: string;
 }
 
 export function buildConvertReconcilePlan(params: BuildConvertReconcilePlanInput): ConvertReconcilePlan {
@@ -321,13 +323,18 @@ export function buildConvertReconcilePlan(params: BuildConvertReconcilePlanInput
     version: 1,
     harness: params.harnessSpec.harness,
     selectedPlugins: [...new Set([...params.previousManifest.selectedPlugins, CONVERT_FLAT_OWNER])].sort(),
-    installerVersion: '0.1.0',
+    installerVersion: params.installerVersion ?? readSourceTdkVersion(),
     installedAt: nowIso(),
     managedFiles: [
       ...previousOther,
       ...nextOwned.values(),
     ].sort((a, b) => a.targetRelativePath.localeCompare(b.targetRelativePath)),
     managedHooks: params.previousManifest.managedHooks,
+    ...optionalVersionFields({
+      sourceTdkVersion: readClaudeStateTdkVersion(params.consumerRoot),
+      tdkVersion: params.previousManifest.tdkVersion,
+      pluginVersions: params.previousManifest.pluginVersions,
+    }),
     ...(params.harnessSpec.harness === 'omp'
       ? { convertedParts: [...params.selection.activeParts] }
       : {}),
@@ -372,6 +379,7 @@ export function buildCodexReconcilePlan(params: {
   previousManifest: HarnessInstallManifest;
   migrationReport: MigrationReport;
   force?: boolean;
+  installerVersion?: string;
 }): ConvertReconcilePlan {
   return buildConvertReconcilePlan({
     ...params,

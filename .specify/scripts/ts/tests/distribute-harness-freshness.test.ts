@@ -6,6 +6,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { writeFixtureMarketplace } from "./fixture-marketplace";
 
 const TDK_ROOT = resolve(import.meta.dir, "../../../..");
 const TOOLING = ".claude/skills/tdk-bump/scripts";
@@ -74,6 +75,7 @@ function expectSuccess(result: CommandResult): void {
 }
 
 function regenerateRelease(f: Fixture): void {
+  writeFixtureMarketplace(f.source);
   expectSuccess(Bun.spawnSync({
     cmd: [process.execPath, join(f.source, TOOLING, "generate-release-manifest.ts"), "--project-root", f.source, "--write"],
     cwd: f.cwd, stdin: "ignore", stdout: "pipe", stderr: "pipe",

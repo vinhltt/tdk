@@ -1344,6 +1344,26 @@ print_section() {
     echo ""
 }
 
+# Print the TDK release version recorded in a release manifest. Prints "unknown"
+# when the file, bun, or a semver tdkVersion is missing. Display only: never exits.
+read_release_manifest_tdk_version() {
+    local manifest="$1" version=""
+    if [[ -f "$manifest" ]] && command -v bun &>/dev/null; then
+        version="$(bun -e '
+            try {
+                const v = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")).tdkVersion;
+                if (typeof v === "string" && /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/.test(v)) process.stdout.write(v);
+            } catch {}
+        ' "$manifest" 2>/dev/null)" || version=""
+    fi
+    printf '%s\n' "${version:-unknown}"
+}
+
+# Capture both versions before classification snapshots the target and before
+# publication replaces the target release manifest.
+SOURCE_TDK_VERSION="$(read_release_manifest_tdk_version "$SOURCE_RELEASE_MANIFEST")"
+TARGET_TDK_VERSION="$(read_release_manifest_tdk_version "$TARGET_RELEASE_MANIFEST")"
+
 # ─── Phase 1: Dry-run — classify all files ────────────────────────────────────
 log "${BOLD}${CYAN}━━━ Analyzing changes ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
@@ -1380,6 +1400,7 @@ echo -e "  ${GREEN}New:${NC}       $TOTAL_NEW files"
 echo -e "  ${YELLOW}Updated:${NC}   $TOTAL_UPDATED files"
 echo -e "  ${RED}Deleted:${NC}   $TOTAL_DELETED files"
 echo -e "  ${DIM}Unchanged: $TOTAL_UNCHANGED files${NC}"
+echo -e "  TDK version: $TARGET_TDK_VERSION → $SOURCE_TDK_VERSION"
 [[ $TOTAL_DELETED -gt 0 ]] && echo -e "  ${RED}  ⚠ Marked files will be REMOVED from target${NC}"
 echo ""
 
@@ -2086,6 +2107,7 @@ if [[ $ERROR_COUNT -gt 0 ]]; then
     echo -e "${RED}Distribution completed with $ERROR_COUNT errors.${NC}"
     exit 1
 else
+    echo -e "  TDK version: $TARGET_TDK_VERSION → $SOURCE_TDK_VERSION"
     echo -e "${GREEN}Distribution complete! $COPIED_COUNT files synced, $DELETED_COUNT files removed from $TARGET_ROOT${NC}"
     report_harness_freshness
 fi

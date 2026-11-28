@@ -1,6 +1,7 @@
 {
   "algorithm": "sha256",
-  "generated_at": "2026-11-28T05:26:30Z",
+  "tdk_version": "1.136.2",
+  "generated_at": "2026-11-28T05:33:03Z",
   "plugins": {
     "tdk-core": {
       "version": "14.6.1",

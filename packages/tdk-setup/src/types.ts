@@ -31,6 +31,12 @@ export interface HarnessInstallManifest {
   managedHooks: ManagedHook[];
   convertedParts?: ConvertPart[];
   hookTargetPlatform?: HookTargetPlatform;
+  /** Version of the payload applied by the last install (from the consumer release manifest). */
+  tdkVersion?: string;
+  /** Version of the `.claude/` projection that the last convert-flat converted. */
+  sourceTdkVersion?: string;
+  /** Resolved plugin versions recorded by the last install; never includes convert-flat. */
+  pluginVersions?: Record<string, string>;
 }
 
 export interface ManagedFile {
@@ -146,6 +152,8 @@ export interface InstallPlan {
   nextInstallSettings?: unknown;
   installSettingsChanged: boolean;
   migration?: PrefixMigrationPlan;
+  /** Legacy ownership file removed after a successful Claude apply; set only when its path is safe. */
+  legacyManifestPath?: string;
   operationStamp?: string;
   durableBackupRoots?: string[];
 }
@@ -169,6 +177,8 @@ export interface BuildPlanInput {
   installSettingsPath?: string;
   nextInstallSettings?: unknown;
   migration?: PrefixMigrationPlan;
+  /** Overrides the installer version stamped into the manifest (tests). */
+  installerVersion?: string;
 }
 
 export interface ApplyOptions {

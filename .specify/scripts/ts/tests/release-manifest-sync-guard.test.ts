@@ -7,6 +7,8 @@ import { isExcludedByReleaseRules } from "../../../../.claude/skills/tdk-bump/sc
 const TDK_ROOT = resolve(import.meta.dir, "../../../..");
 const MANIFEST_PATH = join(TDK_ROOT, ".specify", "release-manifest.json");
 const DISTRIBUTE_JSON_PATH = join(TDK_ROOT, "distribute.json");
+const PLUGINS_MANIFEST_PATH = join(TDK_ROOT, ".specify", "plugins", "manifest.json");
+const MARKETPLACE_PATH = join(TDK_ROOT, ".claude-plugin", "marketplace.json");
 
 type FileEntry = { sha256: string; size: number; mode: string };
 type ReleaseManifest = {
@@ -19,6 +21,18 @@ function readJson<T>(path: string): T {
 }
 
 describe("shipped release manifest stays in sync with the source tree", () => {
+  // Stamps are generated: bump marketplace, then `manifest --write`, then generate-release-manifest --write.
+  test("release manifest, plugins manifest and marketplace carry the same TDK version", () => {
+    const marketplaceVersion = readJson<{ metadata: { version: string } }>(MARKETPLACE_PATH).metadata.version;
+    const releaseVersion = readJson<{ tdkVersion?: string }>(MANIFEST_PATH).tdkVersion;
+    const pluginsVersion = readJson<{ tdk_version?: string }>(PLUGINS_MANIFEST_PATH).tdk_version;
+
+    expect({ releaseVersion, pluginsVersion }).toEqual({
+      releaseVersion: marketplaceVersion,
+      pluginsVersion: marketplaceVersion,
+    });
+  });
+
   test("rules mirror distribute.json ship/doNotShip", () => {
     const manifest = readJson<ReleaseManifest>(MANIFEST_PATH);
     const distributeJson = readJson<{ ship: string[]; doNotShip: string[] }>(DISTRIBUTE_JSON_PATH);

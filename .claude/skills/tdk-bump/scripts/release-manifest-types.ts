@@ -1,6 +1,8 @@
 export const RELEASE_MANIFEST_RELATIVE_PATH = ".specify/release-manifest.json";
 export const RELEASE_MANIFEST_SCHEMA_VERSION = 1;
 export const RELEASE_MANIFEST_ALGORITHM = "sha256";
+export const MARKETPLACE_RELATIVE_PATH = ".claude-plugin/marketplace.json";
+export const TDK_VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 
 export interface DistributeConfig {
   ship: string[];
@@ -15,6 +17,7 @@ export interface ReleaseManifestFileEntry {
 
 export interface ReleaseManifest {
   schemaVersion: number;
+  tdkVersion?: string;
   algorithm: string;
   generatedAt: string;
   rules: {

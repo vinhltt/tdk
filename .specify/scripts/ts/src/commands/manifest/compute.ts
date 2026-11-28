@@ -12,6 +12,7 @@ import { identifyComponents } from './identify-components';
 import { comparePlugin, compareComponents } from './compare';
 import { seedVersionsFromChecksums } from './seed-versions';
 import { findProjectRoot } from './find-project-root';
+import { resolveTdkVersion } from './resolve-tdk-version';
 import { readComponentVersionFromSource } from './read-component-version';
 import { COMPONENT_TYPES } from './types';
 import { formatAgentJson, writeAgentJson } from '../../utils/index';
@@ -61,6 +62,7 @@ function computeManifestForRoot(
   locatorVariant: LocatorVariant,
   opts: { write?: boolean; seed?: boolean },
   seededVersions: Record<string, Partial<Record<string, Record<string, string>>>>,
+  tdkVersion?: string,
 ): RootScanResult {
   // Absent root is a no-op — keeps fresh/single-plugin trees working
   if (!fs.existsSync(rootDir) || !fs.statSync(rootDir).isDirectory()) {
@@ -68,7 +70,13 @@ function computeManifestForRoot(
   }
 
   const existing = loadManifest(manifestPath);
-  const currentManifest: Manifest = { algorithm: 'sha256', generated_at: '', plugins: {} };
+  // Key order is the on-disk order: algorithm, tdk_version (omitted when unknown), generated_at, plugins.
+  const currentManifest: Manifest = {
+    algorithm: 'sha256',
+    ...(tdkVersion !== undefined ? { tdk_version: tdkVersion } : {}),
+    generated_at: '',
+    plugins: {},
+  };
   const comparisonResults: Record<string, PluginComparison> = {};
 
   for (const pluginDirName of fs.readdirSync(rootDir).sort()) {
@@ -217,6 +225,8 @@ function main(): void {
     seededVersions = seedVersionsFromChecksums(pluginsDir);
   }
 
+  const tdkVersion = resolveTdkVersion(projectRoot);
+
   // Run classic plugins root scan (always — even if dir is absent, returns empty no-op)
   const pluginsResult = computeManifestForRoot(
     pluginsDir,
@@ -224,6 +234,7 @@ function main(): void {
     'classic',
     opts,
     seededVersions,
+    tdkVersion,
   );
 
   // Run codex plugins root scan — no-op when .specify/codex-plugins/ is absent
@@ -233,6 +244,7 @@ function main(): void {
     'codex',
     opts,
     {},
+    tdkVersion,
   );
 
   // Merge comparison results for output (plugins first, then codex — sorted within each)

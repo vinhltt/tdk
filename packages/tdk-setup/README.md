@@ -148,6 +148,38 @@ set globally. Each harness ownership manifest under
 actually installed for that harness, so a later Claude run does not rewrite
 Codex ownership state (or vice versa).
 
+### Version stamps in ownership state
+
+Each ownership manifest records which TDK release it reflects. The fields are
+optional. A missing field means "unknown", and old state files still load.
+
+| Field | Written to | Written by | Meaning |
+| --- | --- | --- | --- |
+| `tdkVersion` | `claude.json`, `codex.json` | `install` | `tdkVersion` of the consumer's `.specify/release-manifest.json` at the last apply, i.e. the payload that was installed |
+| `pluginVersions` | `claude.json`, `codex.json` | `install` | Version of each installed plugin, taken from `.specify/plugins/manifest.json` (Claude) or `.specify/codex-plugins/manifest.json` (Codex) |
+| `sourceTdkVersion` | `omp.json`, `codex.json` | `convert-flat` | `claude.json.tdkVersion` at the last conversion, i.e. the `.claude/` projection that was converted |
+| `installerVersion` | all three | every apply | TDK version of the source checkout running `tdk-setup` (`.claude-plugin/marketplace.json`), or `unknown` |
+
+- `codex.json` has two writers. `install --harness codex` and
+  `convert-flat --harness codex` each keep the other's fields.
+- Codex install preflight rejects generated packages whose plugin versions
+  differ from the distributed payload. The `tdkVersion` it records therefore
+  matches the content it installs.
+- `tdk-setup --version` prints the source checkout's TDK version.
+- A source checkout newer than the distributed payload records an older
+  `tdkVersion` and a newer `installerVersion`. That is expected: the installed
+  content comes from the payload.
+- When the recorded version differs from the current one, `install --check` and
+  `convert-flat --harness omp --check` print one
+  `version (informational): ...` line. The exit code depends only on file
+  drift. A version change with no file change is not stale.
+- The first successful Claude apply deletes the legacy
+  `.specify/state/harness-install.json`. `--check` and `--dry-run` leave it in
+  place. If the file cannot be removed safely (for example, it is a symlink),
+  the install warns and continues.
+- Release-side stamps are documented in
+  [maintainer distribution notes](../../docs/maintainer-distribution.md#release-version-stamps).
+
 Consumers installed before the `tdk-inception` ownership split have no saved
 selection migration. Back up the consumer, refresh the distributed payload,
 then explicitly run `--all-plugins --dry-run` and `--all-plugins --yes` for each

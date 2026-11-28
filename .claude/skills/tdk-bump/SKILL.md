@@ -16,7 +16,10 @@ This skill completes SUCCESS only when ALL:
 2. `marketplace.json.metadata.version` matches the bumped version
 3. All affected plugin.json bumped **across every existing manifest format** (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`). Missing Codex/Cursor mirrors are auto-scaffolded by `plugin-bump`.
 4. All changed skill/agent/hook/command components bumped — "changed" = any file in component directory M/A/D (not just SKILL.md). Removed components NOT bumped, listed under `### Removed` in CHANGELOG.
-5. Step 14 `verify.ts` and release manifest check both exit 0 — includes per-format checks on claude/codex/cursor `plugin.json` and `.specify/release-manifest.json` freshness.
+5. Step 14 `verify.ts` and the release manifest check both exit 0. Together they cover:
+   - per-format checks on the claude, codex and cursor `plugin.json` files;
+   - the TDK version stamps (`.specify/release-manifest.json` → `tdkVersion`, `.specify/plugins/manifest.json` → `tdk_version`);
+   - `.specify/release-manifest.json` freshness.
 
 ANY fail → report FAILED, DO NOT print success summary.
 
@@ -86,7 +89,7 @@ If `version` from Step 1 is `null` (marketplace.json has no version or file is m
 **Auto mode (`--auto`):** Set version to `0.1.0` automatically. Print: "No version found — defaulting to 0.1.0".
 
 **Interactive mode:** Use `AskUserQuestion`:
-- **Question**: "`.specify/plugins/.claude-plugin/marketplace.json` has no version. Set one now?"
+- **Question**: "`.claude-plugin/marketplace.json` has no version. Set one now?"
 - **Options**:
   - "Set to 0.1.0" (Recommended)
   - "Let me specify version"
@@ -270,7 +273,7 @@ Run all affected plugins sequentially (or in parallel via background tasks if ch
 
 ### Step 12: Workspace-level finalization
 
-After every affected plugin has been bumped by `plugin-bump`, tdk-bump owns ONLY the workspace-scope files that `plugin-bump` deliberately ignores. Three generated writes total:
+After every affected plugin has been bumped by `plugin-bump`, tdk-bump owns ONLY the workspace-scope files that `plugin-bump` deliberately ignores. There are three generated writes, and **their order is load-bearing**. Writes 2 and 3 both stamp `metadata.version` from write 1 (as `tdk_version` and `tdkVersion`), so running them out of order ships a stale version. Step 14 catches that.
 
 1. **Bump `marketplace.json`** — set `.claude-plugin/marketplace.json` → `metadata.version` to the new workspace version (from Step 8).
    Codex reads this same file as a legacy-compatible marketplace catalog — no separate `.codex-plugin/marketplace.json` needed.
@@ -279,13 +282,13 @@ After every affected plugin has been bumped by `plugin-bump`, tdk-bump owns ONLY
    ```bash
    bun run manifest --project-root <project-root> --write
    ```
-   `manifest compute` reads component versions directly from each definition file (SKILL.md `metadata.version`, agent `version`, hooks.json `version`) — the source-of-truth files `plugin-bump` just wrote. No explicit version propagation needed; the new versions are picked up automatically.
+   `manifest compute` reads component versions directly from each definition file (SKILL.md `metadata.version`, agent `version`, hooks.json `version`) — the source-of-truth files `plugin-bump` just wrote. No explicit version propagation needed; the new versions are picked up automatically. It also stamps the marketplace version as top-level `tdk_version`.
 
 3. **Refresh `.specify/release-manifest.json`** — run:
    ```bash
    bun .claude/skills/tdk-bump/scripts/generate-release-manifest.ts --project-root <project-root> --write
    ```
-   The release manifest records the shippable `.specify/` payload from `distribute.json`. It is maintainer-only tooling, but the generated JSON is shipped to consumers.
+   The release manifest records the shippable `.specify/` payload from `distribute.json`, plus the marketplace version as `tdkVersion`. It is maintainer-only tooling, but the generated JSON is shipped to consumers. The generator fails when `metadata.version` is missing or not semver.
 
 **Version consistency rule:** After Step 12, the version string for each plugin MUST match across:
 - `manifest.json` → `plugins.{plugin}.version`
@@ -313,6 +316,8 @@ bun .specify/scripts/ts/src/commands/changelog/verify.ts \
 ```
 
 Check 3 now reports per format — failure lines look like `plugin.json vs manifest [tdk-core/codex]` and the `fix:` hint suggests re-running `plugin-bump --target=plugins/<plugin>` to resync.
+
+Check 6 compares the two TDK version stamps (`.specify/release-manifest.json` → `tdkVersion`, `.specify/plugins/manifest.json` → `tdk_version`) with `--expected-version`. Its `fix:` hint is to re-run Step 12 writes 2 and 3 in order. Never hand-edit those generated files.
 
 Expected output on success: `ALL CHECKS PASSED` (exit 0).
 

@@ -7,11 +7,12 @@ import { Command } from 'commander';
 import { createConvertCommand } from './codex-convert-command';
 import { createConvertFlatCommand } from './convert-flat';
 import { createInstallCommand } from './install';
+import { readSourceTdkVersion } from './tdk-version';
 
 const program = new Command()
   .name('tdk-setup')
   .description('Standalone TDK harness setup CLI')
-  .version('0.1.0');
+  .version(readSourceTdkVersion());
 
 program.addCommand(createInstallCommand());
 program.addCommand(createConvertCommand());

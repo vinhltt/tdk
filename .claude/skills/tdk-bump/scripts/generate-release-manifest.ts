@@ -7,10 +7,12 @@ import { parseArgs } from "node:util";
 import { canonicalReleaseFileMode } from "./canonical-release-file-mode.ts";
 import { readDistributeConfig, resolveShippableFiles } from "./release-manifest-resolver.ts";
 import {
+  MARKETPLACE_RELATIVE_PATH,
   RELEASE_MANIFEST_ALGORITHM,
   RELEASE_MANIFEST_RELATIVE_PATH,
   RELEASE_MANIFEST_SCHEMA_VERSION,
   ReleaseManifestError,
+  TDK_VERSION_PATTERN,
   type ReleaseManifest,
   type ReleaseManifestFileEntry,
 } from "./release-manifest-types.ts";
@@ -30,6 +32,22 @@ function fileEntry(projectRoot: string, relativePath: string): ReleaseManifestFi
   };
 }
 
+/** Reads the TDK release version from the marketplace file; throws when it is missing or not semver. */
+function readTdkVersion(projectRoot: string): string {
+  const path = join(projectRoot, MARKETPLACE_RELATIVE_PATH);
+  if (!existsSync(path)) throw new ReleaseManifestError(`marketplace file not found: ${path}`);
+  let version: unknown;
+  try {
+    version = (JSON.parse(readFileSync(path, "utf8")) as { metadata?: { version?: unknown } }).metadata?.version;
+  } catch (error) {
+    throw new ReleaseManifestError(`marketplace file is not valid JSON: ${path}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  if (typeof version !== "string" || !TDK_VERSION_PATTERN.test(version)) {
+    throw new ReleaseManifestError(`marketplace metadata.version is not a semver string in ${path}: ${JSON.stringify(version)}`);
+  }
+  return version;
+}
+
 function semanticJson(manifest: ReleaseManifest): string {
   const { generatedAt: _generatedAt, ...semantic } = manifest;
   return JSON.stringify(semantic);
@@ -46,6 +64,7 @@ export async function buildReleaseManifest(
   projectRoot: string,
   options: BuildOptions = {},
 ): Promise<ReleaseManifest> {
+  const tdkVersion = readTdkVersion(projectRoot);
   const config = await readDistributeConfig(projectRoot);
   const filePaths = await resolveShippableFiles(projectRoot, config);
   const files: ReleaseManifest["files"] = {};
@@ -53,6 +72,7 @@ export async function buildReleaseManifest(
 
   const next: ReleaseManifest = {
     schemaVersion: RELEASE_MANIFEST_SCHEMA_VERSION,
+    tdkVersion,
     algorithm: RELEASE_MANIFEST_ALGORITHM,
     generatedAt: options.now ?? new Date().toISOString(),
     rules: {

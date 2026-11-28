@@ -3,17 +3,17 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
   emptyHarnessManifest,
-  legacyManifestPathFor,
   loadHarnessManifest,
   manifestPathFor,
   saveHarnessManifest,
 } from '../src/manifest-store';
+import { legacyOwnershipManifestPath } from '../src/target-path-safety';
 import { makeConsumer } from './fixtures';
 
 describe('ownership manifest migration', () => {
   test('reads legacy manifest path and writes new per-harness manifest without deleting legacy state', () => {
     const consumer = makeConsumer();
-    const legacyPath = legacyManifestPathFor(consumer.root);
+    const legacyPath = legacyOwnershipManifestPath(consumer.root);
     fs.mkdirSync(path.dirname(legacyPath), { recursive: true });
     fs.writeFileSync(legacyPath, JSON.stringify({
       ...emptyHarnessManifest(),

@@ -49,12 +49,17 @@ export function validateHarnessTargetPath(input: {
   return targetPath;
 }
 
+/** Legacy single-file ownership manifest, removable only by a Claude apply. */
+export function legacyOwnershipManifestPath(consumerRoot: string): string {
+  return path.join(consumerRoot, '.specify', 'state', 'harness-install.json');
+}
+
 export function harnessAllowedRoots(consumerRoot: string, harness: InstallPlan['harness']): string[] {
   const stateRoot = path.join(consumerRoot, '.specify', 'state', 'harness-install');
   const installSettingsPath = path.join(consumerRoot, '.specify', 'install-settings.json');
   switch (harness) {
     case 'claude':
-      return [path.join(consumerRoot, '.claude'), stateRoot, installSettingsPath];
+      return [path.join(consumerRoot, '.claude'), stateRoot, installSettingsPath, legacyOwnershipManifestPath(consumerRoot)];
     case 'codex':
       return [path.join(consumerRoot, '.agents'), path.join(consumerRoot, '.codex'), stateRoot, installSettingsPath];
     case 'omp':
@@ -118,6 +123,7 @@ export function validateInstallPlanTargets(plan: InstallPlan): void {
     validateMutation(plan.installSettingsPath, 'Install settings');
   }
   validateMutation(plan.manifestPath, 'Ownership manifest');
+  if (plan.legacyManifestPath) validateMutation(plan.legacyManifestPath, 'Legacy ownership manifest');
   const journalPath = migrationJournalTargetPath(plan);
   if (journalPath) validateMutation(journalPath, 'Migration journal');
 }

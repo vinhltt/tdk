@@ -1,7 +1,8 @@
 {
   "schemaVersion": 1,
+  "tdkVersion": "1.136.2",
   "algorithm": "sha256",
-  "generatedAt": "2026-11-28T05:26:30.943Z",
+  "generatedAt": "2026-11-28T05:33:03.603Z",
   "rules": {
     "source": "distribute.json",
     "ship": [
@@ -220,8 +221,8 @@
       "mode": "0644"
     },
     ".specify/plugins/manifest.json": {
-      "sha256": "8ced4ac8d3aa39954868bc3bc8f69a91a015ce4d9d8b2d83620bd1bb87069454",
-      "size": 51686,
+      "sha256": "2b9bf42e407029ca22df84c56498b1e7164bd8cad8a16ae468b16fe8e40e5013",
+      "size": 51714,
       "mode": "0644"
     },
     ".specify/plugins/plugin-dependencies.json": {
@@ -2019,6 +2020,11 @@
       "size": 2649,
       "mode": "0644"
     },
+    ".specify/scripts/ts/src/commands/changelog/checks/check-release-version-stamps.ts": {
+      "sha256": "a0e7f326bdeaa2c4fa1fce7884ae26964288eaf39b5055c5b258e77ee5eb217c",
+      "size": 2329,
+      "mode": "0644"
+    },
     ".specify/scripts/ts/src/commands/changelog/checks/check-skill-versions.ts": {
       "sha256": "13277e591b0cb6c8dbb1a7670c6e67efd853068d7ede44a84788a8d61be420de",
       "size": 2399,
@@ -2030,13 +2036,13 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/changelog/checks/types.ts": {
-      "sha256": "867a13cc48bfeabdd45c83879aefc2c861e718e301e9c5f7d6cc1d6ca8b3e3a4",
-      "size": 1354,
+      "sha256": "713bb86bae8fb047eee2a98ddd8d044a1e89250d1f5b565001588b30f870f80b",
+      "size": 1378,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/changelog/verify.ts": {
-      "sha256": "cedfc7fae1e9f51b11b27574ba263757bcfec5fc153b76fb13f26ebc9efa9f13",
-      "size": 5260,
+      "sha256": "6b830776b80d62b95d9a7e93bcae9c4402a13c07192349027e36e7f204fcfa43",
+      "size": 5487,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/config/diff.ts": {
@@ -2130,8 +2136,8 @@
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/manifest/compute.ts": {
-      "sha256": "f8eb7fdce2de1f6b442d3ffb2a7982cae2246f3c957d7b1b272cfa41b67e8b71",
-      "size": 11550,
+      "sha256": "2a903de5f1e228e1737aa69e42595c2f4e5bb6b9070ef722f55de052fe9707cc",
+      "size": 11910,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/manifest/find-project-root.ts": {
@@ -2152,6 +2158,11 @@
     ".specify/scripts/ts/src/commands/manifest/read-component-version.ts": {
       "sha256": "57d4a0df5bd7c2625459cd51b7e801088d71afabb4be6b597636388908b40667",
       "size": 4353,
+      "mode": "0644"
+    },
+    ".specify/scripts/ts/src/commands/manifest/resolve-tdk-version.ts": {
+      "sha256": "994009787f5385c13e5480aa70b9afb79c93a53a440cd657e2a65be55e46c148",
+      "size": 1501,
       "mode": "0644"
     },
     ".specify/scripts/ts/src/commands/manifest/scan-files.ts": {

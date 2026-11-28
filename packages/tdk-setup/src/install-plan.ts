@@ -10,7 +10,8 @@ import { manifestPathFor } from './manifest-store';
 import { buildPrefixRewriteMap, transformFileContent, transformTargetRelativePath } from './prefix-transform';
 import { buildRuntimeAssetMap, transformRuntimeAssetContent } from './runtime-asset-transform';
 import { assertSafeClaudeTargetRelativePath, normalizeTargetRelativePath, posixTargetPath } from './target-relative-path';
-import { validateInstallPlanTargets } from './target-path-safety';
+import { pickPluginVersions, optionalVersionFields, readPayloadTdkVersion, readSourceTdkVersion } from './tdk-version';
+import { harnessAllowedRoots, legacyOwnershipManifestPath, validateHarnessTargetPath, validateInstallPlanTargets } from './target-path-safety';
 import type {
   BuildPlanInput,
   Collision,
@@ -23,6 +24,34 @@ import type {
   RequiredPrompt,
   TransformedPluginFile,
 } from './types';
+
+/** Legacy manifest path when it exists and is safe to remove; an unsafe path becomes a warning. */
+function planLegacyManifestRemoval(consumerRoot: string, warnings: string[]): string | undefined {
+  const legacyPath = legacyOwnershipManifestPath(consumerRoot);
+  try {
+    const stat = fs.lstatSync(legacyPath);
+    if (stat.isSymbolicLink() || !stat.isFile()) {
+      warnings.push('Legacy ownership manifest will be left in place: it is not a regular file');
+      return undefined;
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    warnings.push(`Legacy ownership manifest will be left in place: ${(error as Error).message}`);
+    return undefined;
+  }
+  try {
+    validateHarnessTargetPath({
+      consumerRoot,
+      targetPath: legacyPath,
+      allowedRoots: harnessAllowedRoots(consumerRoot, 'claude'),
+      label: 'Legacy ownership manifest',
+    });
+    return legacyPath;
+  } catch (error) {
+    warnings.push(`Legacy ownership manifest will be left in place: ${(error as Error).message}`);
+    return undefined;
+  }
+}
 
 function nowIso(): string { return new Date().toISOString(); }
 
@@ -191,11 +220,19 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
     version: 1,
     harness: 'claude',
     selectedPlugins: [...input.selectedPlugins].sort(),
-    installerVersion: '0.1.0',
+    installerVersion: input.installerVersion ?? readSourceTdkVersion(),
     installedAt: nowIso(),
     managedFiles,
     managedHooks: hookMerge.managedHooks,
+    ...optionalVersionFields({
+      tdkVersion: readPayloadTdkVersion(input.consumerRoot),
+      pluginVersions: pickPluginVersions(
+        Object.fromEntries(input.plugins.map((plugin) => [plugin.name, plugin])),
+        input.selectedPlugins,
+      ),
+    }),
   };
+  const legacyManifestPath = planLegacyManifestRemoval(input.consumerRoot, warnings);
 
   const plan: InstallPlan = {
     harness: 'claude',
@@ -217,6 +254,7 @@ export function buildClaudeInstallPlan(input: BuildPlanInput): InstallPlan {
     nextInstallSettings: input.nextInstallSettings,
     installSettingsChanged: input.nextInstallSettings !== undefined,
     migration: input.migration,
+    ...(legacyManifestPath === undefined ? {} : { legacyManifestPath }),
     operationStamp: nowIso().replace(/[:.]/g, '-'),
   };
   validateInstallPlanTargets(plan);

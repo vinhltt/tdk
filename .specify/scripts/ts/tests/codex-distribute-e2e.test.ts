@@ -12,6 +12,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { createHash } from 'node:crypto';
+import { writeFixtureMarketplace } from './fixture-marketplace';
 
 interface FixtureConsumer {
   root: string;
@@ -103,6 +104,7 @@ function prepareDistributeSource(sourceRoot: string): void {
   fs.cpSync(releaseManifestToolingPath, path.join(sourceRoot, '.claude', 'skills', 'tdk-bump', 'scripts'), {
     recursive: true,
   });
+  writeFixtureMarketplace(sourceRoot);
   const manifest = Bun.spawnSync({
     cmd: ['bun', releaseManifestCliPath, '--project-root', sourceRoot, '--write'],
     cwd: sourceRoot,

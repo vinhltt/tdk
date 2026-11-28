@@ -24,6 +24,7 @@ import {
 } from './codex-target-mapper';
 import { manifestPathFor } from './manifest-store';
 import { assertSafeCodexTargetRelativePath, normalizeTargetRelativePath } from './target-relative-path';
+import { optionalVersionFields, readManifestPluginVersions, readPayloadTdkVersion, readSourceTdkVersion } from './tdk-version';
 import { validateInstallPlanTargets } from './target-path-safety';
 import type { Manifest } from './manifest-types';
 import type {
@@ -53,6 +54,7 @@ export interface BuildCodexInstallPlanInput {
   targetPrefix: string;
   installSettingsPath?: string;
   nextInstallSettings?: unknown;
+  installerVersion?: string;
 }
 
 function nowIso(): string {
@@ -421,10 +423,15 @@ export function buildCodexInstallPlan(input: BuildCodexInstallPlanInput): Instal
     version: 1,
     harness: 'codex',
     selectedPlugins: [...input.selectedPlugins].sort(),
-    installerVersion: '0.1.0',
+    installerVersion: input.installerVersion ?? readSourceTdkVersion(),
     installedAt: nowIso(),
     managedFiles: [...nextManaged.values()].sort((a, b) => a.targetRelativePath.localeCompare(b.targetRelativePath)),
     managedHooks: input.previousManifest.managedHooks,
+    ...optionalVersionFields({
+      tdkVersion: readPayloadTdkVersion(input.consumerRoot),
+      pluginVersions: readManifestPluginVersions(input.consumerRoot, 'codex-plugins', input.selectedPlugins),
+      sourceTdkVersion: input.previousManifest.sourceTdkVersion,
+    }),
   };
 
   const plan: InstallPlan = {

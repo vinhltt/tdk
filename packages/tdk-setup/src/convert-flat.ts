@@ -22,6 +22,7 @@ import { applyInstallPlan } from './install-writer';
 import { loadHarnessManifest, manifestPathFor } from './manifest-store';
 import { buildOmpWritePlan } from './omp-output-writer';
 import { checkOmpDrift, renderOmpDriftFindings } from './omp-drift-check';
+import { ompVersionDriftNote } from './tdk-version';
 import { renderApplyResult } from './render';
 import { resolveConsumerRoot } from './root-resolution';
 
@@ -102,6 +103,8 @@ export function createConvertFlatCommand(): Command {
           }
           const findings = checkOmpDrift(root.consumerRoot);
           process.stdout.write(renderOmpDriftFindings(findings));
+          const versionNote = ompVersionDriftNote(root.consumerRoot, loadHarnessManifest(root.consumerRoot, 'omp'));
+          if (versionNote) process.stdout.write(versionNote);
           if (findings.length > 0) process.exitCode = 1;
           return;
         }

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { writeFixtureMarketplace } from "./fixture-marketplace";
 
 const ROOT = resolve(import.meta.dir, "../../../..");
 const TOOLING = ".claude/skills/tdk-bump/scripts";
@@ -31,6 +32,7 @@ function fixture() {
 }
 
 function manifest(source: string) {
+  writeFixtureMarketplace(source);
   const result = Bun.spawnSync({
     cmd: [process.execPath, join(source, TOOLING, "generate-release-manifest.ts"), "--project-root", source, "--write"],
     stdout: "pipe", stderr: "pipe",

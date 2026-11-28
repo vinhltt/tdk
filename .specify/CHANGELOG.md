@@ -6,6 +6,29 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.136.2] - 2026-11-28
+
+### Added
+- **[Setup]** Ownership state records which TDK release produced each projection
+  - `install` writes `tdkVersion`, read from the target's `.specify/release-manifest.json`, and `pluginVersions`, read from `plugins/manifest.json` (Codex: `codex-plugins/manifest.json`), into `.specify/state/harness-install/<harness>.json`
+  - `convert-flat` writes `sourceTdkVersion`, read from `claude.json`. Each command keeps the fields the other one owns
+  - `installerVersion` is the source TDK version instead of a fixed `0.1.0`, or `unknown` when the source marketplace cannot be read. `tdk-setup --version` prints the same value
+  - `install --harness claude --check` and `convert-flat --harness omp --check` print a `version (informational): …` line when the recorded version differs from the payload or the `.claude` projection. Exit codes and status lines are unchanged
+  - State files written by older releases still load; a malformed version field is dropped instead of failing the run
+- **[Distribution]** `distribute.sh` prints `TDK version: <target> → <source>` in its Summary, and again in Result after a successful sync. A release manifest without `tdkVersion` shows as `unknown`
+- **[Scripts]** Release version stamps in the payload
+  - `manifest compute --write` writes `tdk_version` into `plugins/manifest.json` and `codex-plugins/manifest.json`: the marketplace version in the TDK source, otherwise the consumer release manifest's `tdkVersion`, otherwise no key
+  - `changelog verify` gains a sixth check: `tdkVersion` in `.specify/release-manifest.json` and `tdk_version` in `plugins/manifest.json` must equal `--expected-version`
+  - Tests cover the stamp resolution, the three-way version equality in the shipped payload, and the distribute version line
+- **[Claude Skills]** `tdk-bump` release-manifest generator writes `tdkVersion` from `.claude-plugin/marketplace.json` and fails when that version is missing or not semver
+
+### Changed
+- **[Setup]** A Claude `install` apply deletes the legacy `.specify/state/harness-install.json`
+  - `--check` and `--dry-run` never delete it; the dry-run plan names it
+  - A symlink or non-regular file at that path is left in place with a warning, and so is a file whose bytes changed after planning. A failed delete warns and does not fail the install
+- **[Claude Skills]** `tdk-bump` documents the release stamps: Step 12 order is load-bearing (marketplace, then manifest, then release manifest), Step 14 describes the new verify check, and Step 2 names `.claude-plugin/marketplace.json`
+- **[Docs]** `docs/maintainer-distribution.md` gains a Release Version Stamps section; the tdk-setup README documents the version fields in ownership state
+
 ## [1.136.1] - 2026-11-28
 
 ### Changed

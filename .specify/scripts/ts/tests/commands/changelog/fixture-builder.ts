@@ -14,6 +14,9 @@ export interface FixtureSpec {
   version: string;                                     // top-level marketplace version
   changelogHeaderVersion?: string | null;              // override; null = no header; undefined = use version
   marketplaceVersion?: string;                         // override; undefined = use version
+  releaseManifestTdkVersion?: string | null;           // override; null = omit tdkVersion; undefined = use version
+  omitReleaseManifest?: boolean;                       // true = do not write .specify/release-manifest.json
+  pluginsManifestTdkVersion?: string | null;           // override; null = omit tdk_version; undefined = use version
   plugins: Array<{
     name: string;
     pluginJsonVersion: string;                          // Claude anchor (always written)
@@ -54,8 +57,11 @@ export function buildFixture(root: string, spec: FixtureSpec): void {
   // Build manifest + per-plugin files.
   const manifest: {
     algorithm: string;
+    tdk_version?: string;
     plugins: Record<string, { version: string; components: { skills: Record<string, { version: string }>; agents: Record<string, never>; hooks: Record<string, never>; commands: Record<string, never> }; files: Record<string, string> }>;
   } = { algorithm: 'sha256', plugins: {} };
+  const pluginsStamp = spec.pluginsManifestTdkVersion === undefined ? spec.version : spec.pluginsManifestTdkVersion;
+  if (pluginsStamp !== null) manifest.tdk_version = pluginsStamp;
 
   for (const p of spec.plugins) {
     const pluginDir = join(root, '.specify', 'plugins', p.name);
@@ -108,6 +114,14 @@ export function buildFixture(root: string, spec: FixtureSpec): void {
     join(root, '.specify', 'plugins', 'manifest.json'),
     JSON.stringify(manifest, null, 2),
   );
+
+  if (!spec.omitReleaseManifest) {
+    const releaseStamp = spec.releaseManifestTdkVersion === undefined ? spec.version : spec.releaseManifestTdkVersion;
+    writeFileSync(
+      join(root, '.specify', 'release-manifest.json'),
+      JSON.stringify({ schemaVersion: 1, ...(releaseStamp !== null ? { tdkVersion: releaseStamp } : {}), files: {} }, null, 2),
+    );
+  }
 }
 
 /** Canonical "all pass" spec — tests clone + mutate to produce drift scenarios. */

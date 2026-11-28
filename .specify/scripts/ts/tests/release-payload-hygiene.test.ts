@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { buildReleaseManifest } from '../../../../.claude/skills/tdk-bump/scripts/generate-release-manifest';
+import { writeFixtureMarketplace } from './fixture-marketplace';
 
 const ROOT = resolve(import.meta.dir, '../../../..');
 const temporary: string[] = [];
@@ -31,6 +32,7 @@ test('release generation ships runtime and notice but excludes nested logs, test
     ship: [prefix, '.specify/templates/'],
     doNotShip: rules.doNotShip,
   }));
+  writeFixtureMarketplace(root);
   const manifest = await buildReleaseManifest(root);
   expect(Object.keys(manifest.files).sort()).toEqual(files.slice(0, 2).sort());
 });
@@ -64,6 +66,7 @@ test('release generation ships handoff source, bundled runtime, build metadata, 
   }
   writeFileSync(join(root, 'distribute.json'), readFileSync(join(ROOT, 'distribute.json')));
 
+  writeFixtureMarketplace(root);
   const manifest = await buildReleaseManifest(root);
 
   expect(Object.keys(manifest.files).sort()).toEqual(shippable.sort());
@@ -92,6 +95,7 @@ test('release generation ships the review report-writer and scope sources, bundl
   }
   writeFileSync(join(root, 'distribute.json'), readFileSync(join(ROOT, 'distribute.json')));
 
+  writeFixtureMarketplace(root);
   const manifest = await buildReleaseManifest(root);
 
   expect(Object.keys(manifest.files).sort()).toEqual(shippable.sort());
@@ -113,6 +117,7 @@ test('release generation ships the scaffold outcome recorder, its tsconfig, and 
   }
   writeFileSync(join(root, 'distribute.json'), readFileSync(join(ROOT, 'distribute.json')));
 
+  writeFixtureMarketplace(root);
   const manifest = await buildReleaseManifest(root);
 
   expect(Object.keys(manifest.files).sort()).toEqual(shippable.sort());

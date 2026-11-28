@@ -7,7 +7,8 @@ import {
   assertSafeCodexTargetRelativePath,
   assertSafeOmpTargetRelativePath,
 } from './target-relative-path';
-import { validateHarnessTargetPath } from './target-path-safety';
+import { isVersionString, readSourceTdkVersion } from './tdk-version';
+import { legacyOwnershipManifestPath, validateHarnessTargetPath } from './target-path-safety';
 import type { HarnessInstallManifest, HarnessName } from './types';
 
 export function emptyHarnessManifest(harness: HarnessName = 'claude'): HarnessInstallManifest {
@@ -15,19 +16,22 @@ export function emptyHarnessManifest(harness: HarnessName = 'claude'): HarnessIn
     version: 1,
     harness,
     selectedPlugins: [],
-    installerVersion: '0.1.0',
+    installerVersion: readSourceTdkVersion(),
     installedAt: '',
     managedFiles: [],
     managedHooks: [],
   };
 }
 
-export function legacyManifestPathFor(consumerRoot: string): string {
-  return path.join(consumerRoot, '.specify', 'state', 'harness-install.json');
-}
-
 export function manifestPathFor(consumerRoot: string, harness: HarnessName = 'claude'): string {
   return path.join(consumerRoot, '.specify', 'state', 'harness-install', `${harness}.json`);
+}
+
+function isPluginVersions(value: unknown): value is Record<string, string> {
+  return typeof value === 'object'
+    && value !== null
+    && !Array.isArray(value)
+    && Object.values(value).every((version) => typeof version === 'string');
 }
 
 function readManifest(manifestPath: string, expectedHarness: HarnessName): HarnessInstallManifest {
@@ -45,8 +49,12 @@ function readManifest(manifestPath: string, expectedHarness: HarnessName): Harne
   ) {
     throw new Error('unexpected manifest shape');
   }
+  const { tdkVersion, sourceTdkVersion, pluginVersions, ...rest } = data;
   return {
-    ...data,
+    ...rest,
+    ...(isVersionString(tdkVersion) ? { tdkVersion } : {}),
+    ...(isVersionString(sourceTdkVersion) ? { sourceTdkVersion } : {}),
+    ...(isPluginVersions(pluginVersions) ? { pluginVersions } : {}),
     convertedParts: data.convertedParts === undefined
       ? undefined
       : ALL_CONVERT_PARTS.filter((part) => data.convertedParts!.includes(part)),
@@ -77,7 +85,7 @@ function readManifest(manifestPath: string, expectedHarness: HarnessName): Harne
 
 export function loadHarnessManifest(consumerRoot: string, harness: HarnessName = 'claude'): HarnessInstallManifest {
   const manifestPath = manifestPathFor(consumerRoot, harness);
-  const legacyManifestPath = legacyManifestPathFor(consumerRoot);
+  const legacyManifestPath = legacyOwnershipManifestPath(consumerRoot);
   const existingPath = fs.existsSync(manifestPath)
     ? manifestPath
     : harness === 'claude' && fs.existsSync(legacyManifestPath)

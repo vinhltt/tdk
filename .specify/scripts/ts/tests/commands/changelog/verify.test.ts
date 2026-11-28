@@ -4,11 +4,11 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { runChecks, inferAffected } from '../../../src/commands/changelog/verify';
 import { buildFixture, happyPathSpec } from './fixture-builder';
 
-describe('verify.ts — 5 checks + auto-infer', () => {
+describe('verify.ts — 6 checks + auto-infer', () => {
   let root: string;
 
   beforeEach(() => {
@@ -184,6 +184,112 @@ describe('verify.ts — 5 checks + auto-infer', () => {
     );
     const inferredFail = inferredResults.find(r => !r.ok && r.index === 3);
     expect(inferredFail).toBeDefined();
+  });
+});
+
+describe('verify.ts — release version stamps', () => {
+  let root: string;
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'verify-stamps-'));
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  const run = () => runChecks({ root, expectedVersion: '1.2.0', plugins: ['tdk-utils'], skills: ['brainstorming'] });
+
+  function expectRegenerateHint(hint: string | undefined): void {
+    expect(hint).toBeDefined();
+    expect(hint).toContain('do not edit it by hand');
+    const manifestStep = hint!.indexOf('bun run manifest');
+    const releaseStep = hint!.indexOf('generate-release-manifest.ts');
+    expect(manifestStep).toBeGreaterThan(-1);
+    expect(releaseStep).toBeGreaterThan(manifestStep);
+    expect(hint).toContain(`(cd "${root}/.specify/scripts/ts" && bun run manifest --project-root "${root}" --write) && bun "${root}/.claude/skills/tdk-bump/scripts/generate-release-manifest.ts" --project-root "${root}" --write`);
+  }
+
+  it('passes both stamps when they equal the expected version', () => {
+    buildFixture(root, happyPathSpec());
+    const stamps = run().filter(r => r.index === 6);
+    expect(stamps.length).toBe(2);
+    expect(stamps.every(r => r.ok)).toBe(true);
+  });
+
+  it('fails the release manifest stamp when it lags the marketplace', () => {
+    const spec = happyPathSpec();
+    spec.releaseManifestTdkVersion = '1.1.0';
+    buildFixture(root, spec);
+    const fails = run().filter(r => !r.ok);
+    expect(fails.length).toBe(1);
+    expect(fails[0]?.index).toBe(6);
+    expect(fails[0]?.name).toContain('release-manifest');
+    expect(fails[0]?.expected).toBe('1.2.0');
+    expect(fails[0]?.actual).toBe('1.1.0');
+    expectRegenerateHint(fails[0]?.fixHint);
+  });
+
+  it('builds the regenerate hint from an absolute root even when the root is relative', () => {
+    const spec = happyPathSpec();
+    spec.releaseManifestTdkVersion = '1.1.0';
+    buildFixture(root, spec);
+    const relativeRoot = relative(process.cwd(), root);
+    expect(relativeRoot.startsWith('/')).toBe(false);
+    const fails = runChecks({ root: relativeRoot, expectedVersion: '1.2.0', plugins: ['tdk-utils'], skills: ['brainstorming'] })
+      .filter(r => !r.ok);
+    expect(fails.length).toBe(1);
+    expect(fails[0]?.fixHint).toContain(`--project-root "${root}" --write`);
+    expect(fails[0]?.fixHint).not.toContain(relativeRoot === '' ? '\0' : `"${relativeRoot}"`);
+  });
+
+  it('fails the plugins manifest stamp when it lags the marketplace', () => {
+    const spec = happyPathSpec();
+    spec.pluginsManifestTdkVersion = '1.1.0';
+    buildFixture(root, spec);
+    const fails = run().filter(r => !r.ok);
+    expect(fails.length).toBe(1);
+    expect(fails[0]?.name).toContain('plugins manifest');
+    expect(fails[0]?.actual).toBe('1.1.0');
+    expectRegenerateHint(fails[0]?.fixHint);
+  });
+
+  it('fails a stamp that is absent from its file', () => {
+    const spec = happyPathSpec();
+    spec.releaseManifestTdkVersion = null;
+    spec.pluginsManifestTdkVersion = null;
+    buildFixture(root, spec);
+    const fails = run().filter(r => !r.ok && r.index === 6);
+    expect(fails.length).toBe(2);
+    for (const fail of fails) {
+      expect(fail.actual).toBe('(missing)');
+      expectRegenerateHint(fail.fixHint);
+    }
+  });
+
+  it('fails a stamp that is not a semver string', () => {
+    const spec = happyPathSpec();
+    spec.releaseManifestTdkVersion = 'latest';
+    buildFixture(root, spec);
+    const fail = run().find(r => !r.ok && r.index === 6);
+    expect(fail?.actual).toContain('invalid');
+  });
+
+  it('fails when the release manifest file is missing', () => {
+    const spec = happyPathSpec();
+    spec.omitReleaseManifest = true;
+    buildFixture(root, spec);
+    const fail = run().find(r => !r.ok && r.index === 6);
+    expect(fail?.name).toContain('release-manifest');
+    expect(fail?.actual).toBe('file missing');
+    expectRegenerateHint(fail?.fixHint);
+  });
+
+  it('fails when a stamp file is not valid JSON', () => {
+    buildFixture(root, happyPathSpec());
+    writeFileSync(join(root, '.specify', 'release-manifest.json'), '{ nope');
+    const fail = run().find(r => !r.ok && r.index === 6);
+    expect(fail?.actual).toContain('parse error');
   });
 });
 

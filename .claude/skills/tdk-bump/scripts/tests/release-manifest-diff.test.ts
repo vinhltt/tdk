@@ -317,4 +317,49 @@ describe("release manifest diff", () => {
     });
     expect(result.generatedAt).toBe(source.generatedAt);
   });
+  describe("tdkVersion stamp compatibility", () => {
+    const files = {
+      "a.txt": { sha256: "a2", size: 1, mode: "0644" },
+      "b.txt": { sha256: "b", size: 2, mode: "0644" },
+    };
+    const targetFiles = {
+      "a.txt": { sha256: "a1", size: 1, mode: "0644" },
+      "b.txt": { sha256: "b", size: 2, mode: "0644" },
+    };
+    const expected = [
+      { action: "updated", path: "a.txt", expectedTargetSha256: "a1" },
+      { action: "unchanged", path: "b.txt", expectedTargetSha256: "b" },
+    ];
+
+    test("diffs a target manifest that predates the stamp", () => {
+      const source = manifest(files, { tdkVersion: "1.2.3" });
+      const legacyTarget = manifest(targetFiles);
+      expect("tdkVersion" in legacyTarget).toBe(false);
+
+      expect(diffReleaseManifests(source, legacyTarget)).toEqual(expected);
+    });
+
+    test.each([
+      ["a number", 7],
+      ["garbage text", "not a version"],
+      ["null", null],
+    ])("ignores a tdkVersion that is %s", (_label, badValue) => {
+      const source = manifest(files, { tdkVersion: badValue as unknown as string });
+      const target = manifest(targetFiles, { tdkVersion: badValue as unknown as string });
+
+      expect(diffReleaseManifests(source, target)).toEqual(expected);
+    });
+
+    test("materialized target manifest keeps the source tdkVersion", () => {
+      const targetRoot = join(tmp, "stamped-target");
+      mkdirSync(join(targetRoot, ".specify"), { recursive: true });
+      writeFileSync(join(targetRoot, ".specify", "setup.sh"), "echo SAMPLE\n");
+      const source = manifest(
+        { ".specify/setup.sh": { sha256: "source-bytes", size: 12, mode: "0644" } },
+        { tdkVersion: "1.2.3" },
+      );
+
+      expect(materializeTargetManifest(source, targetRoot).tdkVersion).toBe("1.2.3");
+    });
+  });
 });

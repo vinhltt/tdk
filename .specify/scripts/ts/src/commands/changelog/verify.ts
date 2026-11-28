@@ -1,6 +1,7 @@
 // CLI: verify — deterministic post-flight check for tdk-bump skill.
 // Replaces the LLM-driven markdown checklist (brainstorm §3) with exit-coded TS gate.
-// 5 checks: CHANGELOG header, marketplace.json, plugin.json, SKILL.md, cross-consistency.
+// 6 checks: CHANGELOG header, marketplace.json, plugin.json, SKILL.md, cross-consistency,
+// release version stamps (release-manifest tdkVersion + plugins manifest tdk_version).
 // No writes, no mutation — pure read + report.
 
 import { runGit } from '../../utils/git-env';
@@ -12,6 +13,7 @@ import { checkMarketplaceVersion } from './checks/check-marketplace-version';
 import { checkPluginVersions } from './checks/check-plugin-versions';
 import { checkSkillVersions } from './checks/check-skill-versions';
 import { checkCrossConsistency } from './checks/check-cross-consistency';
+import { checkReleaseVersionStamps } from './checks/check-release-version-stamps';
 import { PLUGIN_DIR, findSkillPlugin } from './checks/fs-helpers';
 
 export interface RunDeps {
@@ -75,6 +77,7 @@ export function runChecks(opts: CheckOpts, deps: RunDeps = {}): CheckResult[] {
   results.push(...checkPluginVersions(resolved));
   results.push(...checkSkillVersions(resolved));
   results.push(...checkCrossConsistency(resolved));
+  results.push(...checkReleaseVersionStamps(resolved));
   return results;
 }
 
@@ -86,7 +89,7 @@ export function report(results: CheckResult[]): number {
     return 0;
   }
   for (const f of failures) {
-    process.stdout.write(`\u2717 [${f.index}/5] ${f.name}\n`);
+    process.stdout.write(`\u2717 [${f.index}/6] ${f.name}\n`);
     if (f.expected !== undefined || f.actual !== undefined) {
       process.stdout.write(`        expected: ${f.expected ?? '(none)'}    actual: ${f.actual ?? '(none)'}\n`);
     }

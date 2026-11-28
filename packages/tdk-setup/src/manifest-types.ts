@@ -16,5 +16,6 @@ export interface ManifestEntry {
 export interface Manifest {
   algorithm?: string;
   generated_at?: string;
+  tdk_version?: string;
   plugins: Record<string, ManifestEntry>;
 }

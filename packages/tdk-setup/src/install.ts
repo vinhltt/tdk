@@ -4,7 +4,8 @@ import * as path from 'node:path';
 import { blockingCollisions } from './collisions';
 import { resolveConsumerRoot } from './root-resolution';
 import { discoverPluginInventory, discoverPrefixRewritePlugins, listManifestPluginNames } from './plugin-discovery';
-import { legacyManifestPathFor, loadHarnessManifest, manifestPathFor } from './manifest-store';
+import { loadHarnessManifest, manifestPathFor } from './manifest-store';
+import { legacyOwnershipManifestPath } from './target-path-safety';
 import { assertResolvedCodexPackages } from './codex-install-preflight';
 import { loadPluginDependencyPolicy, resolvePluginSelection } from './plugin-dependencies';
 import { validateInstallPlanTargets } from './target-path-safety';
@@ -22,6 +23,7 @@ import {
   type ResolvedCodexSettings,
 } from './install-settings';
 import { buildCodexInstallPlan } from './codex-install-plan';
+import { claudeVersionDriftNote, readPayloadTdkVersion } from './tdk-version';
 import { buildClaudeInstallPlan } from './install-plan';
 import { claudeInstallIsStale, claudeInstallLocalModifications } from './install-drift';
 import { applyInstallPlan } from './install-writer';
@@ -168,7 +170,7 @@ export function createInstallCommand(): Command {
         const installSettings = loadInstallSettings(root.consumerRoot);
         const previousManifest = loadHarnessManifest(root.consumerRoot, targetHarness);
         const savedSelection = opts.check
-          ? fs.existsSync(manifestPathFor(root.consumerRoot, 'claude')) || fs.existsSync(legacyManifestPathFor(root.consumerRoot))
+          ? fs.existsSync(manifestPathFor(root.consumerRoot, 'claude')) || fs.existsSync(legacyOwnershipManifestPath(root.consumerRoot))
             ? previousManifest.selectedPlugins
             : installSettings?.defaults.selectedPlugins
           : undefined;
@@ -244,7 +246,7 @@ export function createInstallCommand(): Command {
           if (!confirmed) throw new Error('Install cancelled.');
         }
 
-        process.stdout.write(renderInstallPlan(plan, selection.requestedPlugins));
+        process.stdout.write(renderInstallPlan(plan, selection.requestedPlugins, opts.check ? 'check' : opts.dryRun ? 'dry-run' : 'apply'));
         if (opts.check) {
           const items = claudeInstallIsStale(plan, previousManifest);
           for (const item of items) {
@@ -253,6 +255,8 @@ export function createInstallCommand(): Command {
           for (const modified of claudeInstallLocalModifications(plan, previousManifest)) {
             process.stdout.write(`modified (informational): ${modified}\n`);
           }
+          const versionNote = claudeVersionDriftNote(previousManifest, readPayloadTdkVersion(root.consumerRoot));
+          if (versionNote) process.stdout.write(versionNote);
           process.stdout.write(items.length > 0
             ? `Claude projection is stale (${items.length} item${items.length === 1 ? '' : 's'}). No files changed.\n`
             : 'Claude projection is current. No files changed.\n');

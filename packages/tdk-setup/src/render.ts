@@ -1,7 +1,11 @@
 import type { ApplyResult, InstallPlan } from './types';
 import { blockingCollisions } from './collisions';
 
-export function renderInstallPlan(plan: InstallPlan, requestedOptionalPlugins: string[] = []): string {
+export function renderInstallPlan(
+  plan: InstallPlan,
+  requestedOptionalPlugins: string[] = [],
+  mode: 'check' | 'dry-run' | 'apply' = 'apply',
+): string {
   const lines: string[] = [];
   const blockers = blockingCollisions(plan.collisions, plan.prompts);
   lines.push(`Requested optional plugins: ${requestedOptionalPlugins.join(', ') || '(none)'}`);
@@ -10,6 +14,9 @@ export function renderInstallPlan(plan: InstallPlan, requestedOptionalPlugins: s
   lines.push(`${plan.harness === 'codex' ? 'Codex config' : 'Claude settings'}: ${plan.claudeSettingsPath}`);
   lines.push(`Manifest: ${plan.manifestPath}`);
   if (plan.installSettingsPath) lines.push(`Install settings: ${plan.installSettingsPath}`);
+  if (plan.legacyManifestPath && mode !== 'check') {
+    lines.push('Legacy manifest: .specify/state/harness-install.json will be removed after the new state is written');
+  }
   if (plan.migration) lines.push(`Prefix migration: ${plan.migration.fromPrefix} -> ${plan.migration.toPrefix}`);
   lines.push(`Writes: ${plan.writes.length}`);
   for (const write of plan.writes) {

@@ -175,3 +175,48 @@ describe('harness target path safety', () => {
     expect(() => validateInstallPlanTargets(approvedWritePlan)).not.toThrow();
   });
 });
+
+describe('legacy ownership manifest root', () => {
+  const legacyOf = (root: string): string => path.join(root, '.specify', 'state', 'harness-install.json');
+  const check = (root: string, harness: InstallPlan['harness']): string => validateHarnessTargetPath({
+    consumerRoot: root,
+    targetPath: legacyOf(root),
+    allowedRoots: harnessAllowedRoots(root, harness),
+    label: 'Legacy ownership manifest',
+  });
+
+  test('a plain file passes only for the claude harness', () => {
+    const consumer = makeConsumer('tdk-legacy-root-');
+    fs.mkdirSync(path.dirname(legacyOf(consumer.root)), { recursive: true });
+    fs.writeFileSync(legacyOf(consumer.root), '{}');
+    expect(check(consumer.root, 'claude')).toBe(fs.realpathSync(legacyOf(consumer.root)));
+    expect(() => check(consumer.root, 'codex')).toThrow('outside allowed harness roots');
+    expect(() => check(consumer.root, 'omp')).toThrow('outside allowed harness roots');
+  });
+
+  test('a symlinked file or a symlinked ancestor is rejected', () => {
+    const consumer = makeConsumer('tdk-legacy-root-symlink-');
+    const outside = path.join(consumer.root, 'outside');
+    fs.mkdirSync(outside);
+    fs.writeFileSync(path.join(outside, 'target.json'), '{}');
+    fs.mkdirSync(path.dirname(legacyOf(consumer.root)), { recursive: true });
+    fs.symlinkSync(path.join(outside, 'target.json'), legacyOf(consumer.root));
+    expect(() => check(consumer.root, 'claude')).toThrow('symlinked ancestor');
+
+    const ancestor = makeConsumer('tdk-legacy-root-ancestor-');
+    const realState = path.join(ancestor.root, 'real-state');
+    fs.mkdirSync(realState);
+    fs.symlinkSync(realState, path.join(ancestor.root, '.specify', 'state'));
+    expect(() => check(ancestor.root, 'claude')).toThrow('symlinked ancestor');
+  });
+
+  test('the exception covers that single file, not its siblings', () => {
+    const consumer = makeConsumer('tdk-legacy-root-sibling-');
+    expect(() => validateHarnessTargetPath({
+      consumerRoot: consumer.root,
+      targetPath: path.join(consumer.root, '.specify', 'state', 'other.json'),
+      allowedRoots: harnessAllowedRoots(consumer.root, 'claude'),
+      label: 'Sibling',
+    })).toThrow('outside allowed harness roots');
+  });
+});

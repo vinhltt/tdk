@@ -4,7 +4,7 @@
 
 export interface CheckResult {
   ok: boolean;
-  index: number;        // 1..5 (display index in failure output)
+  index: number;        // 1..6 (display index in failure output)
   name: string;         // short human label, e.g. "CHANGELOG header"
   expected?: string;
   actual?: string;
@@ -32,6 +32,7 @@ export interface ManifestEntry {
 
 export interface Manifest {
   algorithm?: string;
+  tdk_version?: string;
   generated_at?: string;
   plugins: Record<string, ManifestEntry>;
 }

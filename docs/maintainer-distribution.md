@@ -22,6 +22,37 @@ change:
 bun .claude/skills/tdk-bump/scripts/generate-release-manifest.ts --project-root . --write
 ```
 
+## Release Version Stamps
+
+The TDK release version has a single source: `.claude-plugin/marketplace.json`, field
+`metadata.version`. That file is not shipped, so the generators copy the version into the payload.
+
+| Field | File | Meaning |
+|---|---|---|
+| `tdkVersion` | `.specify/release-manifest.json` | The TDK release the payload was built from. The generator fails when the marketplace version is missing or is not semver. Regenerating outside a bump keeps the same value. |
+| `tdk_version` | `.specify/plugins/manifest.json`, `.specify/codex-plugins/manifest.json` | The same release. See the resolution rules below. |
+
+The `manifest` command resolves `tdk_version` from the first source that exists:
+
+1. **TDK source tree.** When `distribute.json` and the marketplace file both exist, it uses the marketplace version.
+2. **Consumer.** Otherwise it uses `tdkVersion` from `.specify/release-manifest.json`. This covers a consumer
+   computing its own `codex-plugins` manifest.
+3. **Neither.** The key is omitted.
+
+tdk-bump Step 12 must keep its order: bump the marketplace, run `manifest --write`, then generate the
+release manifest. The `verify.ts` script in Step 14 fails when either stamp differs from the bumped
+version, and the release-manifest sync-guard test enforces the same equality.
+
+`distribute.sh` prints `TDK version: <target> → <source>` in Summary and, after a successful run,
+in Result. A target distributed before these stamps existed shows `unknown`.
+
+Harness state files record the payload version at their last apply. See
+[tdk-setup README](../packages/tdk-setup/README.md).
+
+**Rollback:** every stamp is additive and optional, so reverting the change is enough. One exception: a
+successful Claude install deletes the legacy `.specify/state/harness-install.json`, and that file
+cannot be recovered once the install transaction commits.
+
 ## Ownership Proof
 
 Normal updates and removals require a regular, non-symlink target file whose SHA-256 still matches

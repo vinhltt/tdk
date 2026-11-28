@@ -97,6 +97,8 @@ function writeMigrationJournal(
       targetRelativePath: removal.targetRelativePath,
       installedChecksum: removal.previous.installedChecksum,
     })),
+    ...(plan.nextManifest.tdkVersion === undefined ? {} : { tdkVersion: plan.nextManifest.tdkVersion }),
+    installerVersion: plan.nextManifest.installerVersion,
   }, null, 2)}\n`, 'Migration journal', transaction, expectedPreimage);
   return journalPath;
 }
@@ -329,6 +331,26 @@ function restoreSnapshots(plan: InstallPlan, snapshots: FileSnapshot[], transact
   return preservedTargets;
 }
 
+/** Best-effort final step: new state is already written, the legacy file is only a read fallback. */
+function removeLegacyManifest(
+  plan: InstallPlan,
+  legacyPath: string,
+  expectedPreimage: FileSnapshot,
+  transaction: InstallTransaction,
+  removed: string[],
+  warnings: string[],
+): void {
+  try {
+    assertMatchesSnapshot(plan, expectedPreimage, 'Legacy ownership manifest');
+    if (!fs.existsSync(legacyPath)) return;
+    fs.unlinkSync(legacyPath);
+    recordPublishedRemoval(transaction, legacyPath);
+    removed.push(path.relative(plan.consumerRoot, legacyPath).split(path.sep).join('/'));
+  } catch (err) {
+    warnings.push(`Legacy ownership manifest was not removed: ${(err as Error).message}`);
+  }
+}
+
 function isCleanupPrompt(prompt: RequiredPrompt): boolean {
   return prompt.type === 'unmanaged-stale-hooks-json-cleanup';
 }
@@ -462,6 +484,7 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
   for (const removal of plan.removals) capture(removal.targetPath);
   for (const prompt of approvedCleanupPrompts) capture(prompt.path);
   capture(plan.manifestPath);
+  if (plan.legacyManifestPath) capture(plan.legacyManifestPath);
   const plannedJournalPath = migrationJournalTargetPath(plan);
   if (plannedJournalPath) capture(plannedJournalPath);
 
@@ -570,6 +593,7 @@ export async function applyInstallPlan(plan: InstallPlan, options: ApplyOptions)
     }
 
     if (!plan.migration) writeManifest();
+    if (plan.legacyManifestPath) removeLegacyManifest(plan, plan.legacyManifestPath, expectedPreimage(plan.legacyManifestPath), transaction, removed, warnings);
   } catch (err) {
     let preservedTargets: string[] = [];
     try {
