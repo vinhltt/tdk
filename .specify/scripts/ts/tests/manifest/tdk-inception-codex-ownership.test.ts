@@ -34,7 +34,9 @@ const UTILS_MOVED_SKILLS = [
   'tdk-workspace-dependency-policy',
   'tdk-module-boundary-policy',
 ];
-const INCEPTION_SKILLS = [...CORE_MOVED_SKILLS, ...UTILS_MOVED_SKILLS].sort();
+// Skills that started in tdk-inception instead of moving from another plugin.
+const NATIVE_SKILLS = ['tdk-project-bootstrap'];
+const INCEPTION_SKILLS = [...CORE_MOVED_SKILLS, ...UTILS_MOVED_SKILLS, ...NATIVE_SKILLS].sort();
 
 const SOURCE_MANIFEST = JSON.parse(readFileSync(SOURCE_MANIFEST_PATH, 'utf-8')) as SourceManifest;
 
@@ -43,7 +45,7 @@ function readJson(path: string): Record<string, unknown> {
 }
 
 describe('tdk-inception source plugin ownership', () => {
-  it('owns exactly the 15 source skill roots', () => {
+  it('owns exactly the 16 source skill roots', () => {
     const sourceSkills = readdirSync(join(INCEPTION_ROOT, 'skills'), { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name)

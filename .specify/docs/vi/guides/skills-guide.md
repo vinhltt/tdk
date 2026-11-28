@@ -93,7 +93,7 @@ tạo; nó không đổi tên command `/tdk-*` hoặc thay đổi đường dẫ
 | Plugin | Phạm vi sở hữu |
 |---|---|
 | `tdk-core` | Bàn giao child feature (`specify`, `clarify`, `plan`, `implement`, analysis/status, `archive`) cùng cổng hook/runtime dùng chung |
-| `tdk-inception` | Nền tảng project/workspace: greenfield/brownfield intake, constitution, architecture, layout/config, dependency policy, và sub-workspace docs |
+| `tdk-inception` | Nền tảng project/workspace: bootstrap project bằng một lệnh, greenfield/brownfield intake, constitution, architecture, layout/config, dependency policy, và sub-workspace docs |
 | `tdk-epic` | Discovery, PRD, HLD, và task breakdown ở cấp parent epic |
 | `tdk-utils` | Các tiện ích dùng chung cho scout, research, tra cứu docs, context, brainstorm, và giải quyết vấn đề |
 | `tdk-memory` | Các command domain memory và memory agent |
@@ -150,6 +150,7 @@ Excluded:
 
 | Skill | Summary | Main modes/options | Dùng khi |
 |-------|---------|--------------------|----------|
+| `/tdk-project-bootstrap` | Đưa một repository mới hoặc có sẵn thành project TDK đã configure trong một lần chạy: onboarding hoặc inception, architecture, layout, một câu hỏi config, memory domain được suy ra, constitution, sub-workspace, và `AGENTS.md` ở root; review report sau. | `[brief\|file]`, `--brownfield`, `--greenfield`, `--quick` | Ngay sau khi cài TDK, khi bạn muốn một lệnh thay vì chạy lần lượt từng inception command. |
 | `/tdk-constitution` | Quản lý constitution authority, Arc42 summaries, và Typed Memory v3 routes. | `/tdk-constitution` (update), `/tdk-constitution --init <brief\|file>` | Project governance hoặc binding durable facts cần init/update. |
 | `/tdk-greenfield-start` | New-project intake và safe route recommendation. | `[brief\|file]`, `--full`, `--quick`, `--unknown` | Bắt đầu project mới và chưa chắc nên chạy TDK path nào trước. |
 | `/tdk-brownfield-start` | Observe-first onboarding cho existing repository. | `[repo-root]`, `--full`, `--config-only`, `--unknown` | Onboard repo có sẵn mà chưa muốn mutate layout/config quá sớm. |
@@ -403,6 +404,7 @@ Các helper này tồn tại trong source nhưng không được catalog như di
 | 12 | `/tdk-review <id> [--phase NN] [--quick\|--deep] [focus]` | Review code đã implement so với spec; ghi report có Ready line `/tdk-plan <id> "reviews/<file>"` để append các fix phase |
 | 12a | `/tdk-archive <id> [--auto-upmem]` \| `/tdk-archive --ingest [id]` | Close-out và archive spec `done`/`cancelled`; ingest memory là tùy chọn |
 | 13 | `/tdk-constitution` (update) hoặc `/tdk-constitution --init <brief\|file>` | Update project authority hoặc initialize constitution và Memory v3 artifacts |
+| 13a | `/tdk-project-bootstrap [brief\|file] [--brownfield\|--greenfield] [--quick]` | Một lệnh từ lúc cài đặt đến project đã configure; một câu hỏi config, rồi review `project-bootstrap-report.md` |
 | 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake và routing report |
 | 15 | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | Existing-repo onboarding và safe setup recommendations |
 | 16 | `/tdk-architecture-advisor [input\|file] [--recover-existing\|--unknown]` | Project architecture options, decision, hoặc recovery reports |
@@ -443,6 +445,7 @@ Dùng file này để tra cứu command. Nếu cần workflow từng bước đ�
 | Feature nhỏ đã hiểu rõ và có thể skip brainstorm | [Quick Specification](scenarios/02-quick-specification.md) |
 | Cần status snapshot hoặc progress check | [Progress Tracking](scenarios/04-progress-tracking.md) |
 | Project mới cần architecture và layout guidance | [Greenfield Full Start, Architecture, Topology](scenarios/10-greenfield-full-start-architecture-topology.md) |
+| Repository có sẵn cần setup project TDK bằng `/tdk-project-bootstrap` | [Brownfield Project Bootstrap](scenarios/11-brownfield-project-bootstrap.md) |
 
 Để xem đầy đủ danh sách scenario, dùng [Scenario Catalog](scenarios/scenario-catalog.md). Để xem quan hệ input/output giữa files, dùng [Workflow Map](workflow-map.md). Giữ guide này để tra cứu command syntax, flags, modes, inputs, và outputs.
 
@@ -631,6 +634,7 @@ không ép vào specification workflow.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
+| project:bootstrap | `/tdk-project-bootstrap [brief\|file] [--brownfield\|--greenfield] [--quick]` | `--brownfield`, `--greenfield`, `--quick` | Evidence của repository, hoặc brief hay file trong workspace cho greenfield; report, config và memory đã có | Onboarding hoặc inception, architecture, layout còn thiếu, config apply sau gate, memory domain, constitution, artifact sub-workspace, `AGENTS.md` và `CLAUDE.md` ở root; `.specify/configurations/inception/project-bootstrap-report.md` | Đã cài `.specify/`, có `bun` trên `PATH` |
 | greenfield:start | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | `--full`, `--quick`, `--unknown` | Project brief, optional README/docs | `.specify/configurations/inception/project-inception.md` với readiness, assumptions, unresolved questions, và recommendation confidence | None |
 | brownfield:start | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | `--full`, `--config-only`, `--unknown` | Existing repo evidence, optional scout output | `.specify/configurations/inception/brownfield-onboarding.md` với observed evidence tách khỏi inferred recommendations | None |
 | architecture:advisor | `/tdk-architecture-advisor [input\|file] [--recover-existing\|--unknown]` | `--recover-existing`, `--unknown` | Inception, onboarding, discovery, spec, scout, README, hoặc bounded repo evidence | `.specify/configurations/architecture/architecture-options.md`, `.specify/configurations/architecture/architecture-decision.md`, hoặc `.specify/configurations/architecture/architecture-recovery.md` | Optional sau start/scout/discovery |
@@ -747,6 +751,34 @@ Sau khi implement một spec, `/tdk-retro-collect <TASK_ID>` đưa bài học qu
 | Một route | T5, `delegate-routing.md` |
 | Contract của agent (tools, skills, model, write set, output) | T3 trên recommendation sở hữu agent; sau đó `/tdk-scaffold-from-recommendation` không kèm `--auto` review drift và đề xuất patch cho agent |
 | Cách agent làm việc | T4 hoặc T6 trên toolset skill của agent; agent chưa có toolset skill thì nhận T3 trên recommendation của nó để thêm toolset skill |
+
+`/tdk-project-bootstrap` (`tdk-inception`) nối toàn bộ inception lane cho cả repository. Với repository có sẵn, nó chạy `/tdk-brownfield-start --full`, `/tdk-architecture-advisor --recover-existing`, và `/tdk-workspace-layout-propose --from-existing`; với repository mới, nó chạy `/tdk-greenfield-start <brief>` cùng phần interview, `/tdk-architecture-advisor`, và `/tdk-workspace-layout-propose`. Sau đó là một config gate, `/tdk-memory-init` với các domain được suy ra, `/tdk-constitution --init --auto`, bước sub-workspace, và một `AGENTS.md` ở root. Chạy command này chính là đồng ý tạo mọi artifact còn thiếu mà nó phụ trách. Một bước chỉ chạy khi output của nó còn thiếu và input đã sẵn sàng. Bản thân command không bao giờ sửa, ghi đè hay xóa byte đã có, ngoại trừ lần config apply được xác nhận ở gate và việc ghi lại report của chính nó; các child skill vẫn giữ quy tắc ghi riêng. Khi một child skill lẽ ra sẽ hỏi, command chọn nhánh không ghi gì và đưa mục đó vào danh sách review. Config gate là câu hỏi duy nhất của nó; `/tdk-greenfield-start` vẫn giữ interview riêng, và memory root nằm ngoài repository có thể thêm một lần xin đồng ý của chính tdk-memory.
+
+Mode lấy từ flag, nếu không có thì từ mode đã ghi trong report có sẵn, nếu không nữa thì là brownfield khi có code hoặc package manifest nằm ngoài các folder của TDK và công cụ. Greenfield cần một brief hoặc một file markdown bên trong workspace. Khi chưa có cả `.specify/.specify.json` lẫn `.specify/.specify.yaml`, command tạo một `.specify/.specify.json` tối thiểu, không có `architecture` hay `subWorkspaces`; khi chỉ có YAML config, nó không tạo gì và bỏ qua gate cùng bước sub-workspace.
+
+Gate preview guarded topology apply và chỉ hỏi khi diff không phải ` no changes` và plan apply-eligible: `Apply` hoặc `Stop to edit the proposal`, trong đó `Apply including overwrites` là lựa chọn apply duy nhất khi có confirmation finding. Chọn Stop, apply lỗi, hoặc lần chạy không thể hỏi, sẽ halt trước bước memory: report giữ tóm tắt gate, và dòng cuối là `Next: fix the listed items, then rerun /tdk-project-bootstrap`. Chạy lại sẽ tiếp tục từ chỗ dừng: mọi bước đều bỏ qua khi output đã tồn tại; muốn tạo lại một file, hãy xóa nó và mọi file sau nó trong chain. Lần chạy lại không phát hiện sub-workspace mới; section `## How to add a sub-workspace later` của report đưa ra đường đi đó.
+
+Report nằm ở `.specify/configurations/inception/project-bootstrap-report.md`: `## Needs your review` đứng đầu, tiếp theo là mode và mỗi bước một dòng, `## How to add a sub-workspace later`, và `## Rollback`. `AGENTS.md` ở root theo [AGENTS.md contract](../../../plugins/tdk-inception/skills/tdk-project-bootstrap/references/agents-md-contract.md). Xem hướng dẫn từng bước trong [Brownfield Project Bootstrap](scenarios/11-brownfield-project-bootstrap.md).
+
+Syntax: `/tdk-project-bootstrap [brief|file] [--brownfield|--greenfield] [--quick]`.
+
+Chi phí tăng theo số sub-workspace. Phần cố định chạy một lần: onboarding hoặc inception interview, architecture advisor, layout proposal, bước memory, và constitution cùng `arc42/README.md` và 12 arc42 summary. Bước advisor và layout chạy trong subagent khi harness hỗ trợ. Sau đó bước sub-workspace thêm một lần chạy sub-workspace bootstrap cho mỗi sub-workspace đã configure, như bảng theo từng bước ở trên.
+
+| Số sub-workspace trong config đã apply | Công việc |
+|---|---|
+| 0, proposal có `subWorkspaces[]` rỗng | Chỉ phần cố định; config và bước sub-workspace bị bỏ qua |
+| 1 | Phần cố định cộng một lần chạy sub-workspace bootstrap |
+| N | Phần cố định cộng N lần chạy sub-workspace bootstrap; path chưa tồn tại được ghi là `deferred` |
+
+Khi không có `tdk-scaffold`, mỗi sub-workspace chỉ tốn bước docs: một repomix pack, một lượt scout và một docs writer. Lần chạy lại bỏ qua mọi bước đã có output.
+
+Bài học từ các spec sau quay lại qua `/tdk-retro-collect <TASK_ID>`:
+
+| Bài học về | Retro target |
+|---|---|
+| Quy tắc hành vi agent áp dụng cho toàn project | T1: `CLAUDE.md`, hoặc `AGENTS.md` khi `CLAUDE.md` ở root chỉ import `@AGENTS.md`, đúng như cầu nối mà command này ghi |
+| Business rule, service, flow hoặc data model của một domain được suy ra | K1, `domains/` dưới memory root; retro chỉ đề xuất khi memory ở trạng thái `ready`, và `/tdk-memory-update` là bên ghi |
+| Mọi thứ bước sub-workspace đã tạo | Bảng retro của sub-workspace bootstrap ở trên |
 
 #### Di Chuyển Artifact Đã Scaffold Theo Đường Dẫn Cũ
 

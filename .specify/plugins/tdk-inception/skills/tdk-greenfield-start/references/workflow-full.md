@@ -21,6 +21,7 @@ Use this workflow for default mode and `--full`.
 
 ## Route Rules
 
+- Recommend `/tdk-project-bootstrap <brief|project-inception.md>` when the user wants the whole setup in one command: it runs the interview, then everything after it with one config confirmation.
 - Recommend `/tdk-constitution --init` when project principles or product context do not exist.
 - Recommend `/tdk-discovery` when the work is epic/product-sized and product context needs depth.
 - Recommend `/tdk-epic-prd` when epic/product-sized work has enough context for parent slice mapping.

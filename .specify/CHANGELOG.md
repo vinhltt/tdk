@@ -6,6 +6,35 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.136.0] - 2026-11-28
+
+### Added
+- **[tdk-inception]** `/tdk-project-bootstrap` takes a new or existing repository to a configured TDK project in one run, and the only question is the config confirmation
+  - Brownfield runs onboarding, architecture recovery and the layout proposal with no question. Greenfield runs the inception interview from a brief or a markdown file, then the architecture advisor and the layout proposal. The mode is detected, or set with `--brownfield` or `--greenfield`
+  - When neither `.specify/.specify.json` nor `.specify/.specify.yaml` exists, it seeds a minimal JSON config, with the main branch read from `origin/HEAD`
+  - The config gate previews the layout with the guarded topology dry-run and asks once: `Apply` or `Stop to edit the proposal`, or `Apply including overwrites` when the dry-run finds overwrites. A dry-run that ends with ` no changes` asks nothing, and an empty `subWorkspaces[]` skips the gate. A run that cannot ask halts and keeps the summary in the report
+  - Memory domains are inferred from the reports, README and docs, and passed to `/tdk-memory-init` as preconfirmed `provenance: inferred` blocks. A domain is a business concept the sources name, so a purely technical library or tool gets none. Package, folder and sub-workspace names are never domain names
+  - It runs `/tdk-constitution --init --auto`, then `/tdk-sub-workspace-bootstrap` when at least one configured path exists, or `/tdk-sub-workspace-docs` without `tdk-scaffold`. Sub-workspaces whose folders do not exist yet are `deferred`
+  - A root `AGENTS.md` describes the project: purpose, a sub-workspace table, commands read from a manifest or CI, observed conventions, and where knowledge lives. It never carries TDK workflow rules. When neither `CLAUDE.md` nor `.claude/CLAUDE.md` exists, a one-line `CLAUDE.md` imports it with `@AGENTS.md`. Existing files are kept, and the report suggests the import line
+  - The report `.specify/configurations/inception/project-bootstrap-report.md` opens with `## Needs your review` and lists every step with its outcome, each skipped question, each fix, how to add a sub-workspace later, and rollback. Rerunning resumes: a step skips when its output exists, and an edited file is used as is
+- **[tdk-inception]** `/tdk-constitution --init --auto` asks nothing
+  - Each question takes its non-writing branch and is listed under `Needs review`: a legacy constitution gets the `git mv` instead of a write, a markerless or legacy file is kept, and README conflicts keep constitution and memory authority
+  - `RATIFICATION_DATE` becomes `TODO(RATIFICATION_DATE)`, template deltas are reported as pending and nothing under `.specify/templates/` is edited, and a script error is returned to the caller instead of waiting
+  - `--auto` is valid only with `--init`, and it never starts the tdk-memory-init interview
+- **[Memory]** tdk-memory 4.5.0 and 4.5.1: preconfirmed domains for `/tdk-memory-init`
+  - Complete `===TDK-MEMORY-DOMAIN===` blocks are written with no question, and the run ends with one `Result:` line per domain. A domain that already exists is `already present` and kept byte for byte
+  - On an existing root the index only gains rows for new domains; arc42 and typed rows stay byte-identical
+  - 4.5.1 indexes a domain overview that an interrupted run left out of the Domain Map
+- **[Guides]** en/vi scenario 11, Brownfield Project Bootstrap: install, run, the gate, reading and fixing the report, commit, adding a sub-workspace later, and rollback
+
+### Changed
+- **[tdk-inception]** `/tdk-brownfield-start` and `/tdk-greenfield-start` name `/tdk-project-bootstrap` as the one-command route for the steps after them
+- **[tdk-retro]** Signal routing sends a T1 rule to `AGENTS.md` when the root `CLAUDE.md` only imports `@AGENTS.md`
+- **[Configurations]** `primary-workflow-routing` lists `/tdk-project-bootstrap` in the inception lane and the intent table
+- **[Guides]** en/vi greenfield scenario 10 gets a one-command path; workflow map, scenario catalog, index, skills guide with a cost profile, and setup guide point at `/tdk-project-bootstrap`, which needs no copy of `.specify.json.example`
+- **[Docs]** `tdk-memory-subtree.md` records the 4.5.0 and 4.5.1 syncs
+- **[Scripts]** Contract tests pin the bootstrap entry, its halt, resume, gate and domain rules, the `--auto` constitution clause, and the new next-step routes
+
 ## [1.135.0] - 2026-11-26
 
 ### Added

@@ -2,7 +2,7 @@
 name: tdk-constitution
 description: "Create or update the project constitution and constitution-owned project knowledge artifacts from interactive or provided principle inputs"
 metadata:
-  version: "1.1.3"
+  version: "1.2.0"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -10,7 +10,7 @@ metadata:
 **If ANY script returns an error, you MUST:**
 1. **STOP immediately** - Do NOT attempt workarounds or auto-fixes
 2. **Report the error** - Show the exact error message to the user
-3. **Wait for user** - Ask user how to proceed before taking any action
+3. **Wait for user** - Ask user how to proceed before taking any action (under `--auto`, return the error line to the caller instead; see Auto mode)
 
 **DO NOT:**
 - Try alternative approaches when scripts fail
@@ -132,6 +132,11 @@ perform the public `tdk-memory-init --ensure-templates` invocation in
 and use the new block. This is also the shared YAML preflight
 for both init and update; a malformed existing manifest stops without a
 constitution write. Then apply the migration and report-stub policy below.
+
+#### Auto mode
+`--auto` is valid only with `--init` (any other combination stops) and never asks or waits: for each question take the non-writing branch and list it under `Needs review` in the completion report — legacy constitution: write nothing and give the `git mv`; markerless or legacy file: keep it; README conflicts: keep constitution and memory authority and list each conflict with its source; unknown `RATIFICATION_DATE`: `TODO(RATIFICATION_DATE)`; ambiguous version bump: the lowest bump with its reason.
+Consistency propagation only reports under `--auto`: list template deltas as pending in the Sync Impact Report and edit nothing under `.specify/templates/`. The project root is the session working directory; never ask for it. Never start the tdk-memory-init interview under `--auto`; domains come only from the caller.
+A script error stops this skill and returns the error line to the caller instead of waiting for the user. Any other question: take the non-writing branch, report it, continue.
 
 ### Project Init Contract
 

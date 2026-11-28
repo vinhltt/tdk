@@ -9,7 +9,7 @@ description: "Load relevant memory context (mode load) AND validate spec/plan fo
 color: red
 model: opus
 metadata:
-  version: "4.4.0"
+  version: "4.5.1"
 ---
 
 ## Caller control and root contract

@@ -3,7 +3,7 @@ name: tdk-greenfield-start
 description: "New-project intake and routing entry point that asks project-inception questions, writes project-inception.md, and recommends safe next TDK routes"
 argument-hint: "[brief|file] [--full|--quick|--unknown]"
 metadata:
-  version: "1.0.0"
+  version: "1.2.0"
 ---
 
 # tdk-greenfield-start
@@ -130,6 +130,7 @@ readiness:
 Common route examples:
 
 ```text
+/tdk-project-bootstrap <brief>  # runs the interview, then everything after it with one config confirmation
 /tdk-constitution --init <brief|project-inception.md>
 /tdk-discovery <epic-id> <brief|project-inception.md>
 /tdk-architecture-advisor <project-inception.md>

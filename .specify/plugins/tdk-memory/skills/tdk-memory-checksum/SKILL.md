@@ -3,7 +3,7 @@ name: tdk-memory-checksum
 description: "Validate project memory integrity against memory.yaml using the shipped Node.js runtime. Detect changed, untracked, missing, index, and template files. Read-only by default; --fix offers explicitly approved repairs, including malformed manifest recovery."
 user-invocable: true
 metadata:
-  version: 4.4.0
+  version: 4.5.1
   category: "Context & Memory"
   requires:
     - tdk-memory-init

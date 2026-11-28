@@ -9,7 +9,7 @@ related-skills:
   - tdk-workflow-config-apply
   - tdk-sub-workspace-docs
 metadata:
-  version: "1.1.4"
+  version: "1.2.0"
   author: "VinhLTT"
   category: architecture-workflow
 ---
@@ -137,8 +137,10 @@ Required report sections:
    - Treat all follow-up commands as recommendations only. Do not execute them from this skill unless the user explicitly asks for that follow-up after reading the report.
    - Typical `--full` recommendation chain:
      ```bash
+     /tdk-project-bootstrap  # one command for the advisor, layout, config, and sub-workspace steps below, plus memory, constitution, and AGENTS.md; /tdk-scout stays manual
      /tdk-scout --scope <repo-root> --task-hint "brownfield onboarding"
      /tdk-architecture-advisor --recover-existing <brownfield-onboarding.md>
+     /tdk-workspace-layout-propose --from-existing <architecture-recovery.md>
      /tdk-workflow-config-apply --reconcile
      /tdk-sub-workspace-bootstrap  # without tdk-scaffold: /tdk-sub-workspace-docs --all
      ```
@@ -158,6 +160,7 @@ Required report sections:
 
 ## Recommendation Rules
 
+- Recommend `/tdk-project-bootstrap` first when the user wants the whole `--full` chain in one run with a single config confirmation.
 - Recommend `tdk-scout` when repo boundaries, framework ownership, or file roles are unclear.
 - Recommend `/tdk-architecture-advisor --recover-existing <brownfield-onboarding.md>` when repo evidence is ready for architecture recovery.
 - Recommend `tdk-workflow-config-apply --reconcile` when observed repo shape differs from `.specify` config, or when `.specify` config is missing expected sub-workspaces/modules. Normal apply remains `/tdk-workflow-config-apply` after review.

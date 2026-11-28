@@ -61,6 +61,29 @@ that leaves the repository (for example `../team-memory`) resolves from the main
 worktree so every worktree reaches the same root. Targets must always remain inside
 the selected root.
 
+### Preconfirmed domains
+
+A caller that has already decided the domains passes one or more complete blocks to
+`/tdk-memory-init` instead of answering the interview:
+
+```text
+===TDK-MEMORY-DOMAIN===
+domain: sample-billing
+provenance: inferred
+sourceFiles:
+- docs/sample/billing-overview.md
+evidence: Billing issues invoices and tracks payment status for each order.
+===END-DOMAIN===
+```
+
+The skill writes those domains without a prompt and ends with one `Result:` line per
+domain (`written`, `already present`, or `error: <domain>: <reason>`). `provenance` is
+recorded in each `domain-overview.md`, so inferred domains stay visible for review.
+On a root that already holds memory it only adds index rows for the new domains.
+The only question it may ask is the write consent for a root outside the workspace.
+An incomplete block runs the interactive flow; no flag is involved. The full rule
+is in `skills/tdk-memory-init/references/fresh-init-flow.md`.
+
 ### Configuration and external roots
 
 `.specify/.specify.json` is optional. It may hold:

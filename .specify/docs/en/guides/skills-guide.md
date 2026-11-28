@@ -92,7 +92,7 @@ rename `/tdk-*` commands or change their artifact paths.
 | Plugin | Ownership |
 |---|---|
 | `tdk-core` | Child feature delivery (`specify`, `clarify`, `plan`, `implement`, analysis/status, `archive`) plus the shared hook/runtime gateway |
-| `tdk-inception` | Project/workspace foundation: greenfield/brownfield intake, constitution, architecture, layout/config, dependency policy, and sub-workspace docs |
+| `tdk-inception` | Project/workspace foundation: one-command project bootstrap, greenfield/brownfield intake, constitution, architecture, layout/config, dependency policy, and sub-workspace docs |
 | `tdk-epic` | Parent epic discovery, PRD, HLD, and task breakdown |
 | `tdk-utils` | Generic scout, research, docs lookup, context, brainstorm, and problem-solving utilities |
 | `tdk-memory` | Domain memory commands and memory agent |
@@ -149,6 +149,7 @@ Excluded:
 
 | Skill | Summary | Main modes/options | Use when |
 |-------|---------|--------------------|----------|
+| `/tdk-project-bootstrap` | Take a new or existing repository to a configured TDK project in one run: onboarding or inception, architecture, layout, one config question, inferred memory domains, constitution, sub-workspaces, and a root `AGENTS.md`; review the report afterwards. | `[brief\|file]`, `--brownfield`, `--greenfield`, `--quick` | Right after installing TDK, when you want one command instead of running the inception commands one at a time. |
 | `/tdk-constitution` | Manage constitution authority, Arc42 summaries, and Typed Memory v3 routes. | `/tdk-constitution` (update), `/tdk-constitution --init <brief\|file>` | Project governance or binding durable facts need initialization/update. |
 | `/tdk-greenfield-start` | New-project intake and safe route recommendation. | `[brief|file]`, `--full`, `--quick`, `--unknown` | Starting a new project and not sure which TDK path to run first. |
 | `/tdk-brownfield-start` | Observe-first onboarding for an existing repository. | `[repo-root]`, `--full`, `--config-only`, `--unknown` | Onboarding an existing repo without mutating layout/config too early. |
@@ -409,6 +410,7 @@ These exist in source but are not cataloged as direct user commands: `_shared`, 
 | 12 | `/tdk-review <id> [--phase NN] [--quick\|--deep] [focus]` | Review implemented code against the spec; writes a report whose Ready line `/tdk-plan <id> "reviews/<file>"` appends its fix phases |
 | 12a | `/tdk-archive <id> [--auto-upmem]` \| `/tdk-archive --ingest [id]` | Close out and archive a `done`/`cancelled` spec; optional memory ingest |
 | 13 | `/tdk-constitution` (update) or `/tdk-constitution --init <brief\|file>` | Update project authority or initialize constitution and Memory v3 artifacts |
+| 13a | `/tdk-project-bootstrap [brief\|file] [--brownfield\|--greenfield] [--quick]` | One command from install to a configured project; one config question, then `project-bootstrap-report.md` to review |
 | 14 | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | New-project intake and routing report |
 | 15 | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | Existing-repo onboarding and safe setup recommendations |
 | 16 | `/tdk-architecture-advisor [input\|file] [--recover-existing\|--unknown]` | Project architecture options, decision, or recovery reports |
@@ -449,6 +451,7 @@ Use this file for command lookup. For runnable step-by-step workflows, start wit
 | Small well-understood feature where brainstorm can be skipped | [Quick Specification](scenarios/02-quick-specification.md) |
 | You need a status snapshot or progress check | [Progress Tracking](scenarios/04-progress-tracking.md) |
 | New project needs architecture and layout guidance | [Greenfield Full Start, Architecture, Topology](scenarios/10-greenfield-full-start-architecture-topology.md) |
+| Existing repository needs TDK project setup with `/tdk-project-bootstrap` | [Brownfield Project Bootstrap](scenarios/11-brownfield-project-bootstrap.md) |
 
 For the full scenario list, use the [Scenario Catalog](scenarios/scenario-catalog.md). For file input/output relationships, use the [Workflow Map](workflow-map.md). Keep this guide open when you need command syntax, flags, modes, inputs, and outputs.
 
@@ -639,6 +642,7 @@ specification workflow.
 
 | Command | Syntax | Key Flags | Input | Output | Depends On |
 |---------|--------|-----------|-------|--------|------------|
+| project:bootstrap | `/tdk-project-bootstrap [brief\|file] [--brownfield\|--greenfield] [--quick]` | `--brownfield`, `--greenfield`, `--quick` | Repository evidence, or a brief or workspace file for greenfield; existing reports, config, and memory | Missing onboarding or inception, architecture, layout, config apply after the gate, memory domains, constitution, sub-workspace artifacts, root `AGENTS.md` and `CLAUDE.md`; `.specify/configurations/inception/project-bootstrap-report.md` | `.specify/` installed, `bun` on `PATH` |
 | greenfield:start | `/tdk-greenfield-start [brief\|file] [--full\|--quick\|--unknown]` | `--full`, `--quick`, `--unknown` | Project brief, optional README/docs | `.specify/configurations/inception/project-inception.md` with readiness, assumptions, unresolved questions, and recommendation confidence | None |
 | brownfield:start | `/tdk-brownfield-start [repo-root] [--full\|--config-only\|--unknown]` | `--full`, `--config-only`, `--unknown` | Existing repo evidence, optional scout output | `.specify/configurations/inception/brownfield-onboarding.md` with observed evidence separated from inferred recommendations | None |
 | architecture:advisor | `/tdk-architecture-advisor [input\|file] [--recover-existing\|--unknown]` | `--recover-existing`, `--unknown` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | `.specify/configurations/architecture/architecture-options.md`, `.specify/configurations/architecture/architecture-decision.md`, or `.specify/configurations/architecture/architecture-recovery.md` | Optional after start/scout/discovery |
@@ -805,6 +809,34 @@ After implementing a spec, `/tdk-retro-collect <TASK_ID>` feeds lessons back int
 | A route | T5, `delegate-routing.md` |
 | An agent's contract (tools, skills, model, write set, output) | T3 on the recommendation that owns the agent; then `/tdk-scaffold-from-recommendation` without `--auto` reviews the drift and proposes the agent patch |
 | How an agent does its work | T4 or T6 on the agent's toolset skill; an agent without one gets T3 on its recommendation, to add a toolset skill |
+
+`/tdk-project-bootstrap` (`tdk-inception`) chains the inception lane for the whole repository. For an existing repository it runs `/tdk-brownfield-start --full`, `/tdk-architecture-advisor --recover-existing`, and `/tdk-workspace-layout-propose --from-existing`; for a new one, `/tdk-greenfield-start <brief>` with its interview, `/tdk-architecture-advisor`, and `/tdk-workspace-layout-propose`. Then come one config gate, `/tdk-memory-init` with inferred domains, `/tdk-constitution --init --auto`, the sub-workspace step, and a root `AGENTS.md`. Running it is the consent to create every missing artifact it covers. A step runs only when its output is missing and its input is ready. The command itself never modifies, overwrites, or deletes existing bytes, apart from the config apply the gate confirms and rewriting its own report; child skills keep their own write rules. When a child skill would ask, it takes the branch that writes nothing and lists the item for review. The config gate is its only question; `/tdk-greenfield-start` keeps its own interview, and a memory root outside the repository may add tdk-memory's own one-time consent.
+
+The mode comes from a flag, else the mode recorded in an existing report, else brownfield when code or a package manifest exists outside the TDK and tool folders. Greenfield needs a brief or a markdown file inside the workspace. When neither `.specify/.specify.json` nor `.specify/.specify.yaml` exists, the command seeds a minimal `.specify/.specify.json` without `architecture` or `subWorkspaces`; with only a YAML config it seeds nothing and skips the gate and the sub-workspace step.
+
+The gate previews the guarded topology apply and asks only when the diff is not ` no changes` and the plan is apply-eligible: `Apply` or `Stop to edit the proposal`, with `Apply including overwrites` as the only apply option when there are confirmation findings. Stop, a failed apply, or a run that cannot ask halts before memory: the report keeps the gate summary, and the last line is `Next: fix the listed items, then rerun /tdk-project-bootstrap`. Reruns resume: every step skips when its output exists; to regenerate a file, delete it and every later file in its chain. Reruns do not detect new sub-workspaces; the report's `## How to add a sub-workspace later` gives that route.
+
+The report is `.specify/configurations/inception/project-bootstrap-report.md`: `## Needs your review` first, then the mode and one line per step, `## How to add a sub-workspace later`, and `## Rollback`. The root `AGENTS.md` follows the [AGENTS.md contract](../../../plugins/tdk-inception/skills/tdk-project-bootstrap/references/agents-md-contract.md). For the walkthrough, see [Brownfield Project Bootstrap](scenarios/11-brownfield-project-bootstrap.md).
+
+Syntax: `/tdk-project-bootstrap [brief|file] [--brownfield|--greenfield] [--quick]`.
+
+The cost grows with the number of sub-workspaces. A fixed part runs once: onboarding or the inception interview, the architecture advisor, the layout proposal, the memory step, and the constitution with `arc42/README.md` and the 12 arc42 summaries. The advisor and layout steps run in a subagent when the harness supports it. The sub-workspace step then adds one sub-workspace bootstrap run per configured sub-workspace, as in the per-step table above.
+
+| Sub-workspaces in the applied config | Work |
+|---|---|
+| 0, an empty `subWorkspaces[]` in the proposal | Fixed part only; config and the sub-workspace step are skipped |
+| 1 | Fixed part plus one sub-workspace bootstrap run |
+| N | Fixed part plus N sub-workspace bootstrap runs; a path that does not exist yet is listed as `deferred` |
+
+Without `tdk-scaffold`, each sub-workspace costs only the docs step: a repomix pack, a scout pass, and a docs writer. A rerun skips every step whose output exists.
+
+Lessons from later specs flow back through `/tdk-retro-collect <TASK_ID>`:
+
+| Lesson about | Retro target |
+|---|---|
+| A project-wide agent behavior rule | T1: `CLAUDE.md`, or `AGENTS.md` when the root `CLAUDE.md` only imports `@AGENTS.md`, as the bridge this command writes does |
+| A business rule, service, flow, or data model of an inferred domain | K1, `domains/` under the memory root; retro proposes it only when memory is `ready`, and `/tdk-memory-update` owns the write |
+| Anything the sub-workspace step created | The sub-workspace bootstrap retro table above |
 
 #### Migrating Previously Scaffolded Artifacts
 

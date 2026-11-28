@@ -355,6 +355,31 @@ describe('config topology apply dry-run', () => {
     expect(mode).toBe(process.platform === 'win32' ? '666' : '600');
   });
 
+  it('reports no changes in the dry-run diff once the proposal is applied', async () => {
+    writeJson(configPath(), {
+      $schema: './schemas/specify.schema.json',
+      version: '1.0',
+      name: 'demo',
+      git: { mainBranch: 'main', prefixList: 'feat' },
+      specs: { defaultFolder: 'feature', ticketFormat: '^([a-zA-Z]+/)?([a-zA-Z]+)-([0-9]+)$' },
+    });
+    writeJson(layoutPath(), { subWorkspaces: [{ name: 'app', path: 'apps/app' }] });
+    const firstDryRun = JSON.parse((await runCli(['--topology', layoutPath(), '--dry-run'])).stdout);
+
+    const applied = await runCli([
+      '--topology',
+      layoutPath(),
+      '--yes',
+      '--expect-hash',
+      firstDryRun.planHash,
+    ]);
+    expect(applied.exitCode).toBe(0);
+
+    const secondDryRun = JSON.parse((await runCli(['--topology', layoutPath(), '--dry-run'])).stdout);
+    const diffLines = secondDryRun.diff.split('\n');
+    expect(diffLines[diffLines.length - 1]).toBe(' no changes');
+  });
+
   it('rejects stale --expect-hash after raw config changes', async () => {
     writeJson(configPath(), { name: 'demo', metadata: { note: 'previewed' } });
     writeJson(layoutPath(), { subWorkspaces: [{ name: 'app', path: 'apps/app' }] });

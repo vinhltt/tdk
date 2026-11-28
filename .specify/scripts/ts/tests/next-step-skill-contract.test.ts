@@ -207,3 +207,30 @@ describe('inception routes point at the sub-workspace bootstrap', () => {
     }
   });
 });
+
+// The one-command entry runs the whole inception lane, so both start skills offer it first.
+describe('start skills offer the one-command project bootstrap', () => {
+  const INCEPTION = join(PLUGINS, 'tdk-inception/skills');
+  const ENTRY = '/tdk-project-bootstrap';
+
+  it('brownfield start lists the entry, with layout between recovery and config apply', () => {
+    const skill = read(INCEPTION, 'tdk-brownfield-start/SKILL.md');
+    const chain = between(skill, '7. **Return recommended next routes.**', '## Mode Behavior');
+    expect(chain).toContain(ENTRY);
+    const layout = chain.indexOf('/tdk-workspace-layout-propose --from-existing');
+    expect(layout).toBeGreaterThan(chain.indexOf('/tdk-architecture-advisor --recover-existing'));
+    expect(layout).toBeLessThan(chain.indexOf('/tdk-workflow-config-apply'));
+    expect(between(skill, '## Recommendation Rules', '## Failure Modes')).toContain(ENTRY);
+  });
+
+  it('both start workflows and the greenfield route examples offer the entry', () => {
+    for (const path of [
+      'tdk-brownfield-start/references/workflow-full.md',
+      'tdk-greenfield-start/references/workflow-full.md',
+    ]) {
+      expect(between(read(INCEPTION, path), '## Route Rules', '## Stop Conditions')).toContain(ENTRY);
+    }
+    const greenfield = read(INCEPTION, 'tdk-greenfield-start/SKILL.md');
+    expect(between(greenfield, 'Common route examples:', '### Step 8')).toContain(ENTRY);
+  });
+});

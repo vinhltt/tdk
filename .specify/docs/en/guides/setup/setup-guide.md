@@ -100,6 +100,21 @@ you need: child feature, parent epic, or both. The coupled base is always
 installed. After install, verify the `/tdk-` commands for that workflow are
 visible in Claude Code chat.
 
+Then set up the project from Claude Code chat:
+
+- Run `/tdk-project-bootstrap` at the project root to set up project knowledge
+  in one command; see
+  [Brownfield Project Bootstrap](../scenarios/11-brownfield-project-bootstrap.md).
+  For a new repository without code, pass a brief:
+  `/tdk-project-bootstrap "Project brief..."`.
+- You do not need to copy `.specify/.specify.json.example` when setup reports
+  that no `.specify/.specify.json` was found: when neither a JSON nor a YAML
+  config exists, `/tdk-project-bootstrap` seeds a minimal
+  `.specify/.specify.json`. The example carries sample sub-workspaces.
+- Installing `--plugins tdk-scaffold` is recommended: with it, the bootstrap
+  sub-workspace step runs `/tdk-sub-workspace-bootstrap`; without it, that step
+  writes only sub-workspace docs.
+
 ## Troubleshooting
 
 | Problem | What to do |

@@ -1,6 +1,52 @@
 # Re-run Flow (Adding Domains)
 
 Triggered when user selects "Add more domains" at Step 2 guard detection.
+Preconfirmed domain mode enters it directly, without that choice (next section).
+
+---
+
+## Preconfirmed domain mode
+
+Entered from `references/fresh-init-flow.md` ("Dispatch: preconfirmed domain mode")
+when the `resolve` JSON of Step 1 reports `status: ready`. The detection rule, path
+check, redaction, present rule, no-write rule, external-root consent and Result
+lines are the ones defined there. No `AskUserQuestion` anywhere in this mode except
+that external-root write consent. Differences from the steps below:
+
+1. **Step 1 skipped:** the new domains are the block domains that are not present
+   and passed the path check and redaction. A present block domain ends with
+   `Result: already present <domain>` and writes nothing for its overview; an
+   unindexed one still gets its index row and section in Step 4, its canvas node
+   and its Step 5 receipt.
+2. **Step 3:** write each overview with the fresh path's Step 5 rules (Description
+   from `evidence`, source reference from `sourceFiles`, `{provenance}` from the
+   block).
+3. **Step 4 only adds rows:** keep every existing line of `memory-index.md`
+   byte-identical, including arc42, decision and other typed rows, except the
+   `Binding coverage:` line. Append one Domain Map row per new or unindexed domain,
+   with `{scope-summary-from-step-1}` as the first sentence of `evidence` (for an
+   unindexed domain, of its overview's Description paragraph) cut to 120
+   characters, with `|` escaped as `\|`, and one `### {Domain}` section with its
+   `domain-overview.md` row at the end of `## Files by Domain`. Recount both
+   `Binding coverage:` numbers from the filesystem with the exclusions of Step 4.
+   Before the first write after Step 1, check that `memory-index.md` has both
+   `## Domain Map` and `## Files by Domain`; otherwise end with
+   `Result: error: memory-index-sections-missing` and write nothing.
+4. **Canvas:** after Step 4, regenerate `memory-map.canvas` with the fresh path's
+   Step 6.5 from every domain under `domains/` that has a `domain-overview.md`, so a
+   root that never had a canvas gets one and an existing canvas gains the new domain
+   nodes. The node order (`index` in Step 6.5) is the Domain Map order of the updated
+   `memory-index.md`.
+5. **Step 5** runs as written, for the new and unindexed overviews, and also
+   records the regenerated `memory-map.canvas` receipt. **Step 6** reports
+   `memory-index.md: {N} rows added` instead of `regenerated`, where `{N}` is the
+   number of rows added, and
+   `memory.yaml: updated ({N} new entries, memory-map.canvas receipt recorded)`.
+   `{existing-list}` is the domains under `domains/` before this run. Then print
+   the Result lines.
+6. **No domain left to write:** when every block domain is listed by the `resolve`
+   JSON or has an error, skip Steps 2–5 and the canvas, as the no-write rule says:
+   no write, no index change and no `memory.yaml` change.
 
 ---
 

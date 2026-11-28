@@ -45,6 +45,33 @@ ghi config. Với project mới, approve guarded apply trước
 `/tdk-sub-workspace-bootstrap` hoặc `/tdk-sub-workspace-docs --all`; cả hai chỉ
 hoạt động khi `.specify/.specify.json` đã có `subWorkspaces[]` được configure.
 
+## Chạy Bằng Một Lệnh
+
+`/tdk-project-bootstrap` chạy phần lớn chain này bằng một lệnh, với đúng một câu
+hỏi về config:
+
+```text
+/tdk-project-bootstrap "Project brief..."
+```
+
+Lệnh này chạy `/tdk-greenfield-start` cùng phần interview của nó, rồi
+`/tdk-architecture-advisor`, `/tdk-workspace-layout-propose`, một config gate
+chạy cùng guarded CLI apply mà `/tdk-workflow-config-apply` bọc bên ngoài,
+memory với các domain được suy ra, `/tdk-constitution --init --auto`, bước
+sub-workspace, và một `AGENTS.md` ở root. Nó tạo một `.specify/.specify.json`
+tối thiểu khi chưa có config JSON hay YAML nào. Cần có brief, hoặc một file
+markdown bên trong workspace, trừ khi `project-inception.md` đã tồn tại và không
+ở trạng thái `not-ready`, nên sau khi halt ở chỗ đó hãy truyền lại brief: dòng cuối
+khi đó là `Next: fix the listed items, then rerun /tdk-project-bootstrap <brief>`.
+
+Lệnh này không chạy `/tdk-discovery`, `/tdk-specify`, `/tdk-clarify`, hay
+`/tdk-workspace-dependency-policy`; hãy tự chạy các lệnh đó sau. Review
+`.specify/configurations/inception/project-bootstrap-report.md`, bắt đầu từ
+`## Needs your review`. Gate, report, chạy lại, commit và rollback hoạt động
+giống như trong [Brownfield Project Bootstrap](11-brownfield-project-bootstrap.md).
+Dùng chain từng bước bên dưới khi bạn muốn review từng bước trước khi bước sau
+chạy.
+
 ## Prerequisites
 
 - TDK đã được install trong consumer project dưới `.specify/`.
@@ -57,7 +84,7 @@ hoạt động khi `.specify/.specify.json` đã có `subWorkspaces[]` được 
   này, dùng chuỗi thủ công bắt đầu từ `/tdk-sub-workspace-docs --all`; các bước
   sau của chuỗi đó cũng cần `tdk-scaffold`.
 - Project có JSON `.specify/.specify.json`; workflow config apply không tạo
-  first-time config từ đầu.
+  first-time config từ đầu. Đường chạy bằng một lệnh tạo sẵn một bản tối thiểu.
 - Có `bun`.
 - `repomix` được install trước `/tdk-sub-workspace-bootstrap` hoặc
   `/tdk-sub-workspace-docs --all`. Xem mục
@@ -387,7 +414,7 @@ chạy `/tdk-scaffold-from-recommendation`. Skill này ghi
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Topology apply báo missing JSON config | `.specify/.specify.json` không tồn tại hoặc chỉ có YAML config | Tạo/migrate JSON config trước; first-time creation đang deferred |
+| Topology apply báo missing JSON config | `.specify/.specify.json` không tồn tại hoặc chỉ có YAML config | Tạo/migrate JSON config trước, hoặc chạy `/tdk-project-bootstrap`, lệnh này tạo JSON config tối thiểu khi chưa có config JSON hay YAML nào |
 | `--yes` bị reject | Thiếu `--expect-hash` trong automation mode | Dùng no-flag interactive mode, hoặc rerun dry-run và truyền parsed `planHash` |
 | Sub-workspace docs báo không có sub-workspaces | Dry-run đã review nhưng chưa apply | Run guarded workflow config apply, rồi rerun docs |
 | Sub-workspace docs báo missing path | Config trỏ tới folder không tồn tại | Tạo intended folder hoặc fix layout/config trước docs |

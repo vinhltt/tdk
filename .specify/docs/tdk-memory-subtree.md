@@ -5,12 +5,15 @@ TDK embeds its regular files at `.specify/plugins/tdk-memory/` using Git subtree
 submodule. Consumers need Node.js >=18 for the shipped checksum bundle; Bun and package
 installation are maintainer-only build requirements. The consumer manifest remains
 `memory.yaml` version `"2"`. The file-only/control-header contract was released as
-plugin version `4.0.0`; the current embedded version is `4.4.0`; `4.1.0` added the
+plugin version `4.0.0`; the current embedded version is `4.5.1`; `4.1.0` added the
 preconfirmed structured-candidate input to `/tdk-memory-update`; `4.2.0` added the
 read-only `resolve` runtime subcommand, `/tdk-memory-query --status`, and opt-in external
 memory roots (`memory.allowExternal`); `4.3.0` added the opt-in Obsidian CLI reader
 (`memory.reader`); `4.4.0` made checksums ignore CRLF versus LF in text notes and moved
-free-text ranking into the shared `rank` runtime subcommand.
+free-text ranking into the shared `rank` runtime subcommand; `4.5.0` added complete
+`===TDK-MEMORY-DOMAIN===` blocks to `/tdk-memory-init`, which scaffold preconfirmed
+domains without prompts; `4.5.1` indexes a domain overview that an interrupted run left
+out of the Domain Map.
 
 ## One-way synchronization: upstream to TDK
 
@@ -93,5 +96,5 @@ The #169 sync encountered a checkout with no `git-subtree-dir` history marker;
 published upstream first. Its exact diff from pinned `ccb46d4` to published
 `8bfe2d6` was applied to the prefix, then the pin and inventories were updated.
 The `4.1.0`, `4.1.1` and `4.2.0` syncs hit the same condition and used the same path (exact
-diffs `8bfe2d6..0345296`, `0345296..e9e4b25` and `e9e4b25..61efe1e` applied to the prefix); so did the `4.4.0` sync (`1b17495..57430fe`). The full commit-derived guard described above
+diffs `8bfe2d6..0345296`, `0345296..e9e4b25` and `e9e4b25..61efe1e` applied to the prefix); so did the `4.4.0` sync (`1b17495..57430fe`), the `4.5.0` sync (`57430fe..7978050`) and the `4.5.1` sync (`7978050..8120876`). The full commit-derived guard described above
 proves the imported files, not a successful subtree merge. Do not fabricate ancestry markers or bypass a failed guard.

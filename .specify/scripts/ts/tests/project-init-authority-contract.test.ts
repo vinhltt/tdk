@@ -186,4 +186,27 @@ describe('constitution-driven project init contract', () => {
       expect(skill).toContain(row);
     },
   );
+
+  it('lets --init --auto run without questions, writing nothing where a question would be', () => {
+    const skill = readSpecify('plugins/tdk-inception/skills/tdk-constitution/SKILL.md');
+    const modeResolution = section(skill, '### Mode Resolution');
+    const autoStart = modeResolution.indexOf('#### Auto mode');
+
+    // The clause follows the ensure-templates step it covers, inside Mode Resolution.
+    expect(autoStart).toBeGreaterThan(modeResolution.indexOf('After resolving an actionable mode'));
+    const clause = modeResolution.slice(autoStart);
+    expect(clause.split('\n').filter((line) => line.trim() !== '').length).toBeLessThanOrEqual(5);
+
+    for (const text of [
+      '`--auto` is valid only with `--init`',
+      'TODO(RATIFICATION_DATE)',
+      'returns the error line to the caller',
+      'Any other question: take the non-writing branch',
+      'The project root is the session working directory',
+      'Never start the tdk-memory-init interview under `--auto`',
+    ]) {
+      expect(clause).toContain(text);
+    }
+    expect(clause).toMatch(/edit nothing under `\.specify\/templates\/`/);
+  });
 });

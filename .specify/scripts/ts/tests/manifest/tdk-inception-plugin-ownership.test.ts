@@ -30,7 +30,10 @@ const UTILS_MOVED_SKILLS = [
   'tdk-workspace-dependency-policy',
   'tdk-module-boundary-policy',
 ];
-const INCEPTION_SKILLS = [...CORE_MOVED_SKILLS, ...UTILS_MOVED_SKILLS];
+// Skills that started in tdk-inception instead of moving from another plugin.
+const NATIVE_SKILLS = ['tdk-project-bootstrap'];
+const MOVED_SKILLS = [...CORE_MOVED_SKILLS, ...UTILS_MOVED_SKILLS];
+const INCEPTION_SKILLS = [...MOVED_SKILLS, ...NATIVE_SKILLS];
 const RETAINED_CORE_SKILLS = [
   'tdk-specify',
   'tdk-clarify',
@@ -122,7 +125,7 @@ describe('tdk-inception source plugin ownership', () => {
     expect(Object.keys(inceptionSkills).sort()).toEqual([...INCEPTION_SKILLS].sort());
     expect(Object.keys(inceptionAgents)).toEqual([DOCS_WRITER_AGENT]);
 
-    for (const skill of INCEPTION_SKILLS) {
+    for (const skill of MOVED_SKILLS) {
       const oldOwnerSkills = CORE_MOVED_SKILLS.includes(skill) ? coreSkills : utilsSkills;
       const oldOwnerFiles = CORE_MOVED_SKILLS.includes(skill) ? coreFiles : utilsFiles;
       const oldOwnerDir = CORE_MOVED_SKILLS.includes(skill) ? CORE_SKILLS_DIR : UTILS_SKILLS_DIR;

@@ -4,6 +4,26 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [4.5.1] - 2026-11-27
+
+### Fixed
+- A preconfirmed block domain whose overview exists but that the Domain Map does not list, such as an overview an interrupted run left behind, is now indexed on the next run: its overview stays byte-identical and it gets its Domain Map row, Files by Domain section, canvas node, and manifest receipt, still with `Result: already present <domain>`. Before, it stayed unindexed on every rerun, because the root was `ready` with no domains and the domain counted as present. On the re-run path the Domain Map row of such a domain takes its scope summary from the overview's Description paragraph, and `{N}` in `memory-index.md: {N} rows added` counts every row added.
+
+## [4.5.0] - 2026-11-27
+
+### Added
+- `/tdk-memory-init` accepts one or more complete `===TDK-MEMORY-DOMAIN===` blocks (`domain`, `provenance: inferred|confirmed`, `sourceFiles`, `evidence`) and scaffolds those domains with no question: no Domains exist guard, no Domain Source Files prompt, no confirmation. It ends with one `Result: written <domain>`, `Result: already present <domain>`, or `Result: error: <domain>: <reason>` line per domain; a failure that stops the whole run prints one `Result: error: <reason>` line. An incomplete block runs the interactive flow unchanged, and no flag enables the mode.
+- `domain-overview.md` records provenance in its generated-by line: `confirmed` for a domain the user confirmed, or the block's value. `authority`, `binding`, and `status` are unchanged.
+
+### Changed
+- In this mode the path follows the `resolve` status, read before any write, not `domains/`: `uninitialized` takes the fresh-init steps, `ready` takes the re-run steps, and `memory-incomplete` ends the run with an error. On the re-run path the index only gains rows for the new domains; every other line, including arc42 and typed rows, stays byte-identical, and only the `Binding coverage:` line is recounted. `memory-map.canvas` is regenerated from every domain in Domain Map order and its receipt recorded, so a root first created by `--ensure-templates` also gets a canvas.
+- A block domain counts as present when its overview exists or the Domain Map already lists it. When no block domain is left to write, nothing is written after template materialization. An existing index without `## Domain Map` or `## Files by Domain` ends the run before any write with `Result: error: memory-index-sections-missing`.
+- Block `evidence` goes through the same snippet redaction as interactive extraction before it is written. A value that matches ends that domain with `error: <domain>: evidence redacted`. A `sourceFiles` path that fails the path guard, including any absolute path, ends that domain with `error: <domain>: invalid path <path>`.
+- The external-root write consent is the only question the mode may ask. Declining it ends the run with `Result: error: external-root-consent-required`.
+
+### Notes
+- The interactive flow is unchanged, including its full index rebuild on re-run.
+
 ## [4.4.0] - 2026-11-15
 
 ### Added

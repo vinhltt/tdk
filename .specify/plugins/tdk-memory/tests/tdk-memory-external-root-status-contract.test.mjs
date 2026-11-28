@@ -623,9 +623,9 @@ describe('coverage label and release', () => {
       'skills/tdk-memory-checksum/SKILL.md',
       'skills/tdk-memory-changelog/SKILL.md',
     ]) {
-      assert.match(read(path), /^metadata:\s*\r?\n  version: 4\.4\.0$/m, path);
+      assert.match(read(path), /^metadata:\s*\r?\n  version: 4\.5\.1$/m, path);
     }
-    assert.match(agent, /^metadata:\r?\n  version: "4\.4\.0"$/m);
+    assert.match(agent, /^metadata:\r?\n  version: "4\.5\.1"$/m);
   });
 
   test('documents the added, changed, and note entries in the changelog', () => {

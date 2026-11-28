@@ -46,6 +46,7 @@ snippets such as `bash`, `bun`, `git`, or test runners.
 ### Greenfield project and sub-workspaces
 
 ```text
+/tdk-project-bootstrap "Project brief..."  # or run the commands below one at a time
 /tdk-greenfield-start "Project brief..." --full
 /tdk-constitution --init .specify/configurations/inception/project-inception.md
 /tdk-architecture-advisor .specify/configurations/inception/project-inception.md
@@ -57,6 +58,11 @@ snippets such as `bash`, `bun`, `git`, or test runners.
 
 `/tdk-workflow-config-apply` previews changes first. Approve only when the diff matches the intended
 workspace layout.
+
+`/tdk-project-bootstrap` runs that chain except `/tdk-workspace-dependency-policy`, plus memory domains
+and a root `AGENTS.md`, for a new or existing repository. Apart from the greenfield interview, the config
+preview is its only question; everything else goes to
+`.specify/configurations/inception/project-bootstrap-report.md` for review afterwards.
 
 ### Broad epic to child specs
 

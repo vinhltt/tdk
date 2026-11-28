@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.5.1] - 2026-11-28
+
+### Changed
+- Signal routing sends a T1 rule to AGENTS.md when the root CLAUDE.md only imports @AGENTS.md
+
 ## [1.5.0] - 2026-11-24
 
 ### Added

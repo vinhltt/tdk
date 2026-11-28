@@ -8,6 +8,7 @@
 | Tình huống | Mở | Lý do |
 |---|---|---|
 | Máy mới hoặc repo consumer vừa clone | [Setup Guide](setup/setup-guide.md) | Cài TDK và xác nhận command `/tdk-*` hiển thị trong Claude Code |
+| Repo có sẵn đã cài TDK nhưng chưa setup project | [Brownfield Project Bootstrap](scenarios/11-brownfield-project-bootstrap.md) | Chạy `/tdk-project-bootstrap` một lần, rồi review report của nó |
 | Project mới, feature lớn, hoặc ý tưởng còn mơ hồ | [Epic Start Guide](scenarios/00-epic-start-guide.md) | Biến một epic thành các child feature spec |
 | Một child feature hoặc seed đã rõ để build | [Child Feature Implementation](scenarios/01-child-feature-implementation.md) | Đi thẳng vào spec, plan, implement |
 | Chưa chắc workflow nào phù hợp | [Scenario Catalog](scenarios/scenario-catalog.md) | So sánh các scenario phổ biến trước khi chọn |
@@ -36,6 +37,7 @@ Khi feature `done` hoặc `cancelled`, đóng nó bằng `/tdk-archive`. Xem [Cl
 | Tôi cần... | Đi tới |
 |---|---|
 | Cài đặt và verify TDK | [Setup Guide](setup/setup-guide.md) |
+| Setup một repository có sẵn bằng `/tdk-project-bootstrap` | [Brownfield Project Bootstrap](scenarios/11-brownfield-project-bootstrap.md) |
 | Bắt đầu một epic và chia thành child work | [Epic Start Guide](scenarios/00-epic-start-guide.md) |
 | Implement một child feature | [Child Feature Implementation](scenarios/01-child-feature-implementation.md) |
 | Làm theo recipe thực tế | [Scenario Catalog](scenarios/scenario-catalog.md) |

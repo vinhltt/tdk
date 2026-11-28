@@ -43,6 +43,7 @@ flowchart TD
     SUB_WORKSPACE_DOCS[sub-workspaces/name/<br/>README architecture interfaces data-flow engineering]
     AUTOMATION_RECOMMEND[automation-recommendation.md]
     BOOTSTRAP_REPORT[bootstrap-report.md<br/>Needs your review first]
+    PROJECT_BOOTSTRAP_REPORT[project-bootstrap-report.md<br/>Needs your review first]
     DISCOVERY[discovery.md + discovery/<br/>Epic Context]
     EPIC_PRD[epic-prd.md + epic-prd/<br/>PRD + Slice Map]
     HLD[high-level-design.md + high-level-design/<br/>Parent HLD]
@@ -51,6 +52,7 @@ flowchart TD
     %% Phase 0: Feature Specification
     REQ -.->|/tdk-greenfield-start<br/>project intake| GREENFIELD_INCEPTION
     REQ -.->|/tdk-brownfield-start<br/>repo onboarding| BROWNFIELD_ONBOARDING
+    REQ -.->|/tdk-project-bootstrap<br/>whole project lane, one config question| PROJECT_BOOTSTRAP_REPORT
     GREENFIELD_INCEPTION -.->|/tdk-architecture-advisor<br/>project decision| ARCHITECTURE_REPORTS
     BROWNFIELD_ONBOARDING -.->|/tdk-architecture-advisor --recover-existing<br/>recovery report| ARCHITECTURE_REPORTS
     ARCHITECTURE_REPORTS -.->|/tdk-workspace-layout-propose<br/>proposal only| TOPOLOGY
@@ -107,7 +109,7 @@ flowchart TD
     classDef code fill:#e3f2fd,stroke:#0d47a1,stroke-width:2px,color:#0f172a
     classDef infra fill:#fce4ec,stroke:#880e4f,stroke-width:2px,color:#0f172a
 
-    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,BOOTSTRAP_REPORT,DISCOVERY,EPIC_PRD,HLD,TASK_BREAKDOWN,SPEC,SPEC_CLARIFIED phase0
+    class REQ,GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,BOOTSTRAP_REPORT,PROJECT_BOOTSTRAP_REPORT,DISCOVERY,EPIC_PRD,HLD,TASK_BREAKDOWN,SPEC,SPEC_CLARIFIED phase0
     class PLAN,RESEARCH,DATAMODEL,STATETRANS,CONTRACTS,QUICKSTART,WIREFRAMES phase1
     class CONSTITUTION,MEMORY_CONTROL,TYPED_MEMORY,ARC42,UIUX,REF_DATAMODEL,REF_STATE reference
     class CODE_BE,CODE_FE,TESTS code
@@ -133,6 +135,7 @@ flowchart LR
     SUB_WORKSPACE_DOCS[sub-workspace docs<br/>arc42-lite]
     AUTOMATION_RECOMMEND[automation recommendation<br/>one workspace]
     BOOTSTRAP_REPORT[bootstrap-report.md<br/>every workspace]
+    PROJECT_BOOTSTRAP_REPORT[project-bootstrap-report.md<br/>whole project lane]
     DISCOVERY[discovery.md + discovery/<br/>Epic Context]
     EPIC_PRD[epic-prd.md + epic-prd/<br/>PRD + Slice Map]
     HLD[high-level-design.md + high-level-design/<br/>Parent HLD]
@@ -142,6 +145,7 @@ flowchart LR
 
     REQ -.->|"/tdk-greenfield-start"| GREENFIELD_INCEPTION
     REQ -.->|"/tdk-brownfield-start"| BROWNFIELD_ONBOARDING
+    REQ -.->|"/tdk-project-bootstrap<br/>one config question"| PROJECT_BOOTSTRAP_REPORT
     GREENFIELD_INCEPTION -.->|"/tdk-architecture-advisor"| ARCHITECTURE_REPORTS
     BROWNFIELD_ONBOARDING -.->|"/tdk-architecture-advisor --recover-existing"| ARCHITECTURE_REPORTS
     ARCHITECTURE_REPORTS -.->|"/tdk-workspace-layout-propose"| TOPOLOGY
@@ -167,7 +171,7 @@ flowchart LR
     classDef note fill:#f5f5f5,stroke:#616161,stroke-width:1px,color:#0f172a
 
     class REQ input
-    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,BOOTSTRAP_REPORT,DISCOVERY,EPIC_PRD,SPEC,SPEC_CLAR,HLD,TASKS output
+    class GREENFIELD_INCEPTION,BROWNFIELD_ONBOARDING,TOPOLOGY,CONFIG_PATCH,POLICY,SUB_WORKSPACE_DOCS,AUTOMATION_RECOMMEND,BOOTSTRAP_REPORT,PROJECT_BOOTSTRAP_REPORT,DISCOVERY,EPIC_PRD,SPEC,SPEC_CLAR,HLD,TASKS output
     class CONTENT note
 ```
 
@@ -367,6 +371,7 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `<memory root>/arc42/*.md` | `/tdk-constitution --init <brief\|file>` or `/tdk-constitution` | Constitution and typed Memory v3 facts | Architecture context/read-models (`binding: false`) that link to typed binding facts | Project knowledge summaries change |
 | `.specify/configurations/inception/project-inception.md` | `/tdk-greenfield-start` | Project brief or workspace-local file plus project-inception questions | Readiness-aware recommended greenfield route | New-project intake |
 | `.specify/configurations/inception/brownfield-onboarding.md` | `/tdk-brownfield-start` | Existing repo evidence, optional scout output | Evidence/confidence-based brownfield onboarding route | Existing-repo intake |
+| `.specify/configurations/inception/project-bootstrap-report.md` | `/tdk-project-bootstrap` | Outcomes of the onboarding or inception, architecture, layout, config gate, memory, constitution, sub-workspace, and `AGENTS.md` steps | Human review of `## Needs your review`, then `/tdk-plan`; a rerun resumes from it | Each run; only the lines of steps that run are rewritten |
 | `.specify/configurations/architecture/architecture-options.md` | `/tdk-architecture-advisor` | Inception, onboarding, discovery, spec, scout, README, or bounded repo evidence | Architecture decision review | Project architecture options |
 | `.specify/configurations/architecture/architecture-decision.md` | `/tdk-architecture-advisor` | `architecture-options.md` plus accepted assumptions | `/tdk-workspace-layout-propose` or future layout work | Project architecture decision |
 | `.specify/configurations/architecture/architecture-recovery.md` | `/tdk-architecture-advisor --recover-existing` | Brownfield onboarding, scout, README, or bounded repo evidence | Brownfield-safe architecture recovery review | Existing-repo recovery |
@@ -403,7 +408,7 @@ Always run `config:diff` before `config:sync` to preview changes. Use `--dry-run
 | `plan.md` (TDD/backfill phases) | `/tdk-plan --tdd` \| `/tdk-plan --ut-backfill` | `spec.md` (opt), test/domain routing (TDD) or test routing only (backfill) | `/tdk-implement` with readiness and `Test Quality Gate` before done | Feature UT |
 | `phases/phase-NN-{module}.md` (backfill sections) | `/tdk-plan --ut-backfill`; approved `--refresh-routing` for todo delegates | `spec.md` (opt), `delegate-routing.md` test route only | consumer test skills and/or executor via both delegate sections, then gate validation | Feature UT |
 | `*.test.ts` / `test_*.py` etc. | consumer test toolset/executor | `phases/phase-NN-{module}.md` | Test runner | Feature UT |
-| `.specify/.specify.json` | `/tdk-sub-workspace-init` | Project config | `config:*`, unit-test routing, sub-workspace docs | Project setup |
+| `.specify/.specify.json` | `/tdk-sub-workspace-init`; minimal seed by `/tdk-project-bootstrap` when no JSON or YAML config exists | Project config | `config:*`, unit-test routing, sub-workspace docs | Project setup |
 | `document-manager.md` | `/tdk-config-index` | All docs files | Manual reference, LLM tools | On demand |
 
 ---

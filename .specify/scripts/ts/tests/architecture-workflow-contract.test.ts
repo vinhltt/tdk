@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const INCEPTION_SKILLS_DIR = resolve(import.meta.dir, '../../../plugins/tdk-inception/skills');
@@ -136,5 +136,75 @@ describe('architecture workflow foundation contracts', () => {
     expect(hld).not.toContain('workspace-topology.json');
     expect(hld).not.toContain('topology apply');
     expect(hld).not.toContain('.specify/.specify.json');
+  });
+});
+
+describe('one-command project bootstrap entry', () => {
+  const entryDir = resolve(INCEPTION_SKILLS_DIR, 'tdk-project-bootstrap');
+  const skill = read(skillPath('tdk-project-bootstrap'));
+  const agentsContract = read(resolve(entryDir, 'references/agents-md-contract.md'));
+
+  it('is a user-invocable inception skill holding only SKILL.md and the AGENTS.md contract', () => {
+    expect(skill).toContain('name: tdk-project-bootstrap');
+    expect(skill).toContain('user-invocable: true');
+    expect(skill).toContain('argument-hint: "[brief|file] [--brownfield|--greenfield] [--quick]"');
+    expectArchitectureWorkflowMetadata(skill);
+    expect(readdirSync(entryDir).sort()).toEqual(['SKILL.md', 'references']);
+    expect(readdirSync(resolve(entryDir, 'references'))).toEqual(['agents-md-contract.md']);
+  });
+
+  it('asks only the config gate question, driven by the topology CLI dry-run', () => {
+    expect(skill).toContain('Running this command is the consent');
+    expect(skill).toContain('only question this command asks');
+    for (const token of ['--dry-run', '--expect-hash <planHash>', '--accept-overwrites', '` no changes`']) {
+      expect(skill).toContain(token);
+    }
+    // The parsed `before` and raw `after` configs never compare equal; the diff tail is the signal.
+    expect(skill).not.toContain('changes.before');
+    expect(skill).toContain('empty `subWorkspaces[]` in the proposal: skip config and the sub-workspace step without calling the CLI');
+    expect(skill).toContain('A non-zero exit or non-JSON stdout');
+  });
+
+  it('seeds a minimal config only when neither a JSON nor a YAML config exists', () => {
+    for (const token of ['git.mainBranch', '"prefixList": "feat"', '"defaultFolder": "feature"', '"ticketFormat"']) {
+      expect(skill).toContain(token);
+    }
+    expect(skill).toContain('When neither `.specify/.specify.json` nor `.specify/.specify.yaml` exists');
+    expect(skill).toContain('When only `.specify/.specify.yaml` exists, do not seed');
+    expect(skill).toContain('do not copy `.specify.json.example`');
+    expect(skill).toContain('seeds a minimal `.specify/.specify.json` when no config exists');
+    expect(skill).toContain('`/tdk-workflow-config-apply` still never creates one');
+  });
+
+  it('hands memory, constitution, and sub-workspaces to their owners without questions', () => {
+    expect(skill).toContain('===TDK-MEMORY-DOMAIN===');
+    // Inferred domains are binding memory, so a purely technical repository must infer none.
+    expect(skill).toContain('a purely technical library or tool has no domain');
+    // A fresh greenfield layout has no folders yet, so the sub-workspace step has nothing to work on.
+    expect(skill).toContain('and at least one of their paths exists');
+    expect(skill).toContain('When none of the paths exists, as after a fresh greenfield layout, skip this step');
+    expect(skill).toContain('provenance: inferred');
+    expect(skill).toContain('/tdk-constitution --init --auto');
+    expect(skill).toContain('check `bun` and `repomix` on `PATH` first');
+    expect(skill).toContain('How to add a sub-workspace later');
+  });
+
+  it('resumes on rerun and halts before memory when evidence or the gate is not ready', () => {
+    expect(skill).toContain('**Halt** means: skip every remaining step of §2–§7, then run §8 and §9.');
+    // Resuming never cascades on its own: the user deletes the later files of a chain.
+    expect(skill).toContain('To regenerate a file, delete it and every later file in its chain');
+    expect(skill).toContain('unless the inception report already exists and is not `not-ready`');
+    expect(skill).toContain('On a rerun keep the lines and review items of every step that skips');
+    expect(skill).toContain('Skip when `architecture-decision.md` exists.');
+    expect(skill).toContain('With findings, the only apply option is `Apply including overwrites`');
+    expect(skill).toContain('Next: fix the listed items, then rerun /tdk-project-bootstrap');
+  });
+
+  it('keeps AGENTS.md a project description with a Claude Code bridge', () => {
+    expect(agentsContract).toContain('Create only when');
+    expect(agentsContract).toContain('150 lines');
+    expect(agentsContract).toContain('@AGENTS.md');
+    expect(agentsContract).toContain('Never include a TDK marker block (any `<!-- tdk` comment)');
+    expect(skill).not.toMatch(/^<!-- tdk/m);
   });
 });

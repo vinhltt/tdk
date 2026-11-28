@@ -21,9 +21,11 @@ Dùng scenarios khi bạn biết tình huống và muốn một command sequence
 | Track | Scenario | Dùng khi |
 |---|---|---|
 | 10 | [Greenfield Full Start, Architecture, Topology](10-greenfield-full-start-architecture-topology.md) | Project mới cần architecture và layout guidance. |
+| 11 | [Brownfield Project Bootstrap](11-brownfield-project-bootstrap.md) | Repository có sẵn cần setup project TDK bằng một lần chạy `/tdk-project-bootstrap`. |
 
 ## Chưa Biết Chọn Scenario Nào
 
 - Project mới hoặc ý tưởng lớn: bắt đầu với [Epic Start Guide](00-epic-start-guide.md).
 - Đã có một child feature: dùng [Child Feature Implementation](01-child-feature-implementation.md).
+- Repository có sẵn chưa setup project TDK: dùng [Brownfield Project Bootstrap](11-brownfield-project-bootstrap.md).
 - Tra cứu command: mở [TDK Skills Guide](../skills-guide.md).

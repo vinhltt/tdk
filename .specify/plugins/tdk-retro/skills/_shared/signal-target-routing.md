@@ -6,7 +6,7 @@ Use this table to classify feedback signals into update targets.
 
 | ID | Target | Use When |
 |---|---|---|
-| T1 | `CLAUDE.md` | Agent behavior rule applies across the project. |
+| T1 | `CLAUDE.md`, or `AGENTS.md` when the root `CLAUDE.md` only imports `@AGENTS.md` | Agent behavior rule applies across the project. |
 | T2 | `.claude/rules/*.md` | Workspace rule needs refinement. |
 | T3 | `.specify/configurations/**/*.md` | TDK configuration or hook guidance is stale. |
 | T4 | Consumer test skill resolved by `consumer-skill-discovery.md` (`.claude/skills/<name>/SKILL.md`) | Test convention or implementation rule belongs to the consumer project. |

@@ -8,6 +8,7 @@
 | Situation | Open | Why |
 |---|---|---|
 | New machine or freshly cloned repo | [Setup Guide](setup/setup-guide.md) | Install TDK and confirm `/tdk-*` commands appear |
+| Existing repo with TDK installed but no project setup yet | [Brownfield Project Bootstrap](scenarios/11-brownfield-project-bootstrap.md) | Run `/tdk-project-bootstrap` once, then review its report |
 | New project, broad feature, or vague idea | [Epic Start Guide](scenarios/00-epic-start-guide.md) | Turn an epic into child feature specs |
 | One clear child feature or seed to build | [Child Feature Implementation](scenarios/01-child-feature-implementation.md) | Go straight to spec, plan, implement |
 | Not sure which workflow fits | [Scenario Catalog](scenarios/scenario-catalog.md) | Compare common scenarios before choosing |
@@ -36,6 +37,7 @@ When a feature is `done` or `cancelled`, close it out with `/tdk-archive`. See [
 | I need to... | Go to |
 |---|---|
 | Install and verify TDK | [Setup Guide](setup/setup-guide.md) |
+| Set up an existing repository with `/tdk-project-bootstrap` | [Brownfield Project Bootstrap](scenarios/11-brownfield-project-bootstrap.md) |
 | Start an epic and break it into child work | [Epic Start Guide](scenarios/00-epic-start-guide.md) |
 | Implement one child feature | [Child Feature Implementation](scenarios/01-child-feature-implementation.md) |
 | Follow a real-world recipe | [Scenario Catalog](scenarios/scenario-catalog.md) |

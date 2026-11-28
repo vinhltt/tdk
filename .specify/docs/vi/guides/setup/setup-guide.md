@@ -99,6 +99,21 @@ workflow cần dùng: child feature, parent epic, hoặc cả hai. Bộ base g�
 được cài. Sau đó, xác nhận các command `/tdk-` của workflow đó hiển thị trong
 Claude Code chat.
 
+Sau đó setup project từ Claude Code chat:
+
+- Chạy `/tdk-project-bootstrap` tại project root để setup project knowledge
+  bằng một lệnh; xem
+  [Brownfield Project Bootstrap](../scenarios/11-brownfield-project-bootstrap.md).
+  Với repository mới chưa có code, truyền thêm brief:
+  `/tdk-project-bootstrap "Project brief..."`.
+- Không cần copy `.specify/.specify.json.example` khi setup báo không tìm thấy
+  `.specify/.specify.json`: nếu chưa có config JSON hay YAML nào,
+  `/tdk-project-bootstrap` tự tạo một `.specify/.specify.json` tối thiểu. File
+  example chứa các sub-workspace mẫu.
+- Nên cài thêm `--plugins tdk-scaffold`: khi có plugin này, bước sub-workspace
+  của bootstrap chạy `/tdk-sub-workspace-bootstrap`; nếu không có, bước đó chỉ
+  ghi sub-workspace docs.
+
 ## Khắc Phục Sự Cố
 
 | Vấn đề | Cách xử lý |

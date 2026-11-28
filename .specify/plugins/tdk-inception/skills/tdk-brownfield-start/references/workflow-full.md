@@ -21,6 +21,7 @@ Use this workflow for default mode and `--full`.
 
 ## Route Rules
 
+- Recommend `/tdk-project-bootstrap` when the user wants the advisor, layout, config, memory, constitution, sub-workspace, and `AGENTS.md` steps in one run with a single config confirmation.
 - Recommend `tdk-scout` when repo boundaries, ownership, or file roles are unclear.
 - Recommend `/tdk-architecture-advisor --recover-existing <brownfield-onboarding.md>` after onboarding/scout evidence is ready for architecture recovery.
 - Recommend `/tdk-workspace-layout-propose --from-existing <architecture-recovery.md>` after recovery evidence is reviewed.

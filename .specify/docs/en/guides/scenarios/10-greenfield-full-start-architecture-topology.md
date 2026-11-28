@@ -46,6 +46,33 @@ writes config. On a fresh project, approve the guarded apply before
 `/tdk-sub-workspace-bootstrap` or `/tdk-sub-workspace-docs --all`; both only
 work when `.specify/.specify.json` already has configured `subWorkspaces[]`.
 
+## One-Command Path
+
+`/tdk-project-bootstrap` runs most of this chain in one command, with one config
+question:
+
+```text
+/tdk-project-bootstrap "Project brief..."
+```
+
+It runs `/tdk-greenfield-start` with its interview, then
+`/tdk-architecture-advisor`, `/tdk-workspace-layout-propose`, a config gate that
+runs the same guarded CLI apply that `/tdk-workflow-config-apply` wraps, memory
+with inferred domains, `/tdk-constitution --init --auto`, the sub-workspace step,
+and a root `AGENTS.md`. It seeds a minimal `.specify/.specify.json` when neither
+a JSON nor a YAML config exists. The brief, or a markdown file inside the
+workspace, is required unless `project-inception.md` already exists and is not
+`not-ready`, so after a halt at that point pass the brief again: the last line
+is then `Next: fix the listed items, then rerun /tdk-project-bootstrap <brief>`.
+
+It does not run `/tdk-discovery`, `/tdk-specify`, `/tdk-clarify`, or
+`/tdk-workspace-dependency-policy`; run those yourself afterwards. Review
+`.specify/configurations/inception/project-bootstrap-report.md`, starting with
+`## Needs your review`. The gate, report, reruns, commit, and rollback work as
+in [Brownfield Project Bootstrap](11-brownfield-project-bootstrap.md). Use the
+step-by-step chain below when you want to review each step before the next one
+runs.
+
 ## Prerequisites
 
 - TDK is installed in the consumer project under `.specify/`.
@@ -58,7 +85,7 @@ work when `.specify/.specify.json` already has configured `subWorkspaces[]`.
   plugin, use the manual chain starting at `/tdk-sub-workspace-docs --all`; its
   later steps need `tdk-scaffold` as well.
 - The project has a JSON `.specify/.specify.json`; workflow config apply does not create
-  first-time config from scratch.
+  first-time config from scratch. The one-command path seeds a minimal one.
 - `bun` is available.
 - `repomix` is installed before `/tdk-sub-workspace-bootstrap` or
   `/tdk-sub-workspace-docs --all`. See the
@@ -393,7 +420,7 @@ then register it with the diff's `approvalDigest` and `--yes`. See the
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Topology apply says missing JSON config | `.specify/.specify.json` does not exist or only YAML config exists | Create/migrate JSON config first; first-time creation is deferred |
+| Topology apply says missing JSON config | `.specify/.specify.json` does not exist or only YAML config exists | Create/migrate JSON config first, or run `/tdk-project-bootstrap`, which seeds a minimal JSON config when no JSON or YAML config exists |
 | `--yes` is rejected | Missing `--expect-hash` in automation mode | Use no-flag interactive mode, or rerun dry-run and pass the parsed `planHash` |
 | Sub-workspace docs says no sub-workspaces | Dry-run was reviewed but not applied | Run guarded workflow config apply, then rerun docs |
 | Sub-workspace docs says missing path | Config points to a folder that does not exist | Create the intended folder or fix layout/config before docs |

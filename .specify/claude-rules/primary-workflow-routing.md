@@ -28,6 +28,9 @@ Route only to workflow commands available in the current session:
 ```text
 PROJECT INCEPTION / SETUP, optional project-level lane
 
+[tdk-project-bootstrap]                 one command for the whole lane below, plus memory,
+                                        constitution, and AGENTS.md; one config confirmation
+        or step by step:
 tdk-greenfield-start or tdk-brownfield-start
         ↓
 [tdk-architecture-advisor]              report-only architecture options/decision
@@ -132,7 +135,7 @@ legacy-layout guidance instead of auto-migrating them.
 
 | User intent | Skill | Don't confuse with |
 |-------------|-------|--------------------|
-| Start a new project/repo route | `tdk-greenfield-start` or `tdk-brownfield-start` | `tdk-specify` |
+| Start a new project/repo route | `tdk-project-bootstrap` (one command), or `tdk-greenfield-start` / `tdk-brownfield-start` step by step | `tdk-specify` |
 | Produce architecture options/decision/recovery report | `tdk-architecture-advisor` | `tdk-workspace-layout-propose` |
 | Propose workspace layout markdown/json | `tdk-workspace-layout-propose` | `tdk-workflow-config-apply` |
 | Review/apply runtime config from layout evidence | `tdk-workflow-config-apply` | `tdk-workspace-layout-propose` |
@@ -157,6 +160,7 @@ legacy-layout guidance instead of auto-migrating them.
 ## Decision tree
 
 ```text
+New/unknown repo shape, one command            -> tdk-project-bootstrap
 New/unknown repo shape                         -> tdk-greenfield-start or tdk-brownfield-start
 Need architecture decision only                -> tdk-architecture-advisor
 Need workspace layout proposal                 -> tdk-workspace-layout-propose

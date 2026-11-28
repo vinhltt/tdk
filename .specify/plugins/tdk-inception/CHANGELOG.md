@@ -4,6 +4,15 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.2.0] - 2026-11-28
+
+### Added
+- tdk-project-bootstrap: one command takes a new or existing repository to a configured TDK project; the config confirmation is the only question. It seeds a minimal config when none exists, previews the layout and asks Apply or Stop, infers business memory domains as preconfirmed blocks, runs the constitution with --auto and the sub-workspace step when a configured path exists, writes a root AGENTS.md with a one-line CLAUDE.md bridge, and reports every step under Needs your review
+- tdk-constitution: --init --auto asks nothing; each question takes its non-writing branch and is listed for review, RATIFICATION_DATE becomes a TODO, templates are only reported, and a script error is returned to the caller
+
+### Changed
+- tdk-brownfield-start, tdk-greenfield-start: name /tdk-project-bootstrap as the one-command route for the steps after them
+
 ## [1.1.4] - 2026-11-26
 
 ### Changed
