@@ -14,7 +14,7 @@ Langfuse is optional. Never block retro collection when trace data is unavailabl
 ## Fetch Commands
 
 ```bash
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR"
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'

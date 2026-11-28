@@ -119,7 +119,7 @@ describe('tdk-retro-propose discovery step', () => {
     const step = section(propose, '## Step 3: Discover Consumer Test Skills');
     expectAll(step, [
       '../_shared/consumer-skill-discovery.md',
-      'PROJECT_DIR="$1"',
+      'PROJECT_DIR="${1}"',
       'ROUTE_PATH="${2:-.}"',
       '[ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]',
       RESOLVE_COMMAND,

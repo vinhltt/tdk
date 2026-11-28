@@ -26,7 +26,7 @@ Run `tdk-load-project-context` with `require_feature_dir` false for `featureEnv.
 
   ```bash
   bash -lc '
-  PROJECT_DIR="$1"
+  PROJECT_DIR="${1}"
   if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
     echo "Invalid project root: $PROJECT_DIR" >&2
     exit 1

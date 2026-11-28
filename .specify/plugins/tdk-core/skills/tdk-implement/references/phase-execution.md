@@ -536,7 +536,7 @@ The next step comes from the `/tdk-status` ladder, never from this skill. Run th
 
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1

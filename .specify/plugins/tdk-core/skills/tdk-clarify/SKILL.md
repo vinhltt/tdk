@@ -2,7 +2,7 @@
 name: tdk-clarify
 description: "Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions in one message, taking one batched reply, and encoding the answers back into the spec."
 metadata:
-  version: "14.3.9"
+  version: "14.6.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -124,7 +124,7 @@ Skip the rest of this step unless the block is `ready`.
 1. Run the prerequisite command with an agent-resolved project root (pass the validated task_id from Step 0):
    ```bash
    bash -lc '
-   PROJECT_DIR="$1"
+   PROJECT_DIR="${1}"
    if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
      echo "Invalid project root: $PROJECT_DIR" >&2
      exit 1

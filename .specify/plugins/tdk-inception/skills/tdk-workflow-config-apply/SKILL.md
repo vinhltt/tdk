@@ -3,7 +3,7 @@ name: tdk-workflow-config-apply
 description: "Interactively review and apply guarded .specify/.specify.json changes derived from workspace layout proposal JSON."
 argument-hint: "[(no flags)|--dry-run|--reconcile|--yes --expect-hash <hash>] [--topology <path>]"
 metadata:
-  version: "1.1.4"
+  version: "1.2.1"
 ---
 
 # tdk-workflow-config-apply
@@ -99,9 +99,9 @@ Ask the user for the project root if it cannot be identified confidently; do not
 
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
-TOPOLOGY_PATH="$2"
-RECONCILE_MODE="$3"
+PROJECT_DIR="${1}"
+TOPOLOGY_PATH="${2}"
+RECONCILE_MODE="${3}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
@@ -169,10 +169,10 @@ provided `--expect-hash` value.
 
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
-TOPOLOGY_PATH="$2"
-PLAN_HASH="$3"
-ACCEPT_OVERWRITES="$4"
+PROJECT_DIR="${1}"
+TOPOLOGY_PATH="${2}"
+PLAN_HASH="${3}"
+ACCEPT_OVERWRITES="${4}"
 case "$TOPOLOGY_PATH" in
   /*) TOPOLOGY_ARG="$TOPOLOGY_PATH" ;;
   *) TOPOLOGY_ARG="$PROJECT_DIR/$TOPOLOGY_PATH" ;;

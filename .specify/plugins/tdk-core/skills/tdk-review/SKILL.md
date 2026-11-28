@@ -6,7 +6,7 @@ compatibility: "Requires a task with plan.md and at least one phase with status 
 user-invocable: true
 license: MIT
 metadata:
-  version: "14.6.0"
+  version: "14.6.1"
   category: "Analysis & Review"
   requires:
     - tdk-implement (phases marked done)
@@ -75,7 +75,7 @@ Then print the next step. It comes from the `/tdk-status` ladder, never from thi
 
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1

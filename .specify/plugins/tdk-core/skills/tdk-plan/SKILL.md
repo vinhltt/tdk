@@ -2,7 +2,7 @@
 name: tdk-plan
 description: "Execute the implementation planning workflow using the plan template to generate design artifacts."
 metadata:
-  version: "14.6.0"
+  version: "14.6.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -108,7 +108,7 @@ Before any direct Bun script command in this skill or its references, resolve th
 
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
@@ -326,7 +326,7 @@ appearing for the first time at implement time. Runs after Step 3d, because it r
        set -- $(git -C "$PROJECT_DIR/$SUB" remote)
        case "$#" in
          0) REMOTE_STATE="no_remote" ;;
-         1) REMOTE="$1" ;;
+         1) REMOTE="${1}" ;;
          *) REMOTE_STATE="multiple_remotes" ;;
        esac
      fi

@@ -2,7 +2,7 @@
 name: tdk-status
 description: "This skill should be used when the user asks to 'check status', 'tdk-status', 'what's the progress of <task-id>', 'which branch is each repo on', or needs a read-only report of a TDK feature's artifacts, phase progress, and per-repository branch state. Never modifies files."
 metadata:
-  version: "14.6.0"
+  version: "14.6.1"
 ---
 
 # /tdk-status - Track Workflow Progress
@@ -23,7 +23,7 @@ Consumers should call the collector directly:
 
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
@@ -132,7 +132,7 @@ Parse `$ARGUMENTS` for feature ID:
 
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1

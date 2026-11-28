@@ -2,7 +2,7 @@
 name: tdk-retro-propose
 description: "Read retro-feedback.md and propose concrete technical or memory learning deltas. Writes learning-delta.md."
 metadata:
-  version: "1.5.0"
+  version: "1.5.2"
   category: "TDK Retro"
   requires:
     - tdk-retro-collect
@@ -35,7 +35,7 @@ Transform collected feedback into up to 10 new reviewable learning delta entries
 Parse `$ARGUMENTS` as the raw task id (`{task_id}`). The canonical `TASK_ID` comes from the script output below.
 
 ```bash
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR"
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
@@ -65,7 +65,7 @@ Follow `../_shared/consumer-skill-discovery.md`. The current `test` route decide
 Resolve the route once per path: once for each `subWorkspaces[].path` in `.specify/.specify.json`, then once for `.`. Never put several paths in one call. Pass the project root first and the path second, for example `-- "<agent-resolved-project-root>" "src/backend"`.
 
 ```bash
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 ROUTE_PATH="${2:-.}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR"

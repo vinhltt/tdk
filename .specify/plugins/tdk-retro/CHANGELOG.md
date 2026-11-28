@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.5.2] - 2026-11-28
+
+### Changed
+- Command blocks of `tdk-retro-collect`, `tdk-retro-propose` and `tdk-retro-apply` write positionals as `${N}`, so a skill argument no longer replaces them; the session filter of `tdk-retro-collect` uses `$(0)`, since a single argument already replaced its `$0`
+- Shared notes and a `tdk-retro-collect` reference use the same form
+
 ## [1.5.1] - 2026-11-28
 
 ### Changed

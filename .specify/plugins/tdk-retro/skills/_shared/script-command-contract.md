@@ -7,7 +7,7 @@ Retro skills may call existing TDK TypeScript scripts. They must be safe from an
 Always pass the agent-resolved project root as the first shell argument before direct script calls:
 
 ```bash
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR"
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'

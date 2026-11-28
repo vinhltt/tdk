@@ -2,7 +2,7 @@
 name: tdk-implement
 description: "Execute phases from plan.md ## Phases without asking about scope: all remaining phases in row order by default, stopping at an unfinished blocker, or exactly one with --phase NN. Use only when the user explicitly asks to implement a task or phase (for example 'implement sample-001' or 'implement phase 2 of sample-001'), and pass a phase the user names as --phase NN. Do not use when the user only asks what a phase contains or changes, its status, or its dependencies; read the files and answer instead."
 metadata:
-  version: "14.4.1"
+  version: "14.6.1"
 ---
 
 ## ⛔ CRITICAL: Error Handling
@@ -121,7 +121,7 @@ Before any direct TDK TypeScript script call, resolve the project root at the ag
 
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1

@@ -101,7 +101,7 @@ function expectNoShellRootDiscovery(skillText: string): void {
 
 function expectAgentProvidedProjectRoot(skillText: string): void {
   expectNoShellRootDiscovery(skillText);
-  expect(skillText).toContain('PROJECT_DIR="$1"');
+  expect(skillText).toContain('PROJECT_DIR="${1}"');
   expect(skillText).toContain('[ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]');
   expect(skillText).toContain('Invalid project root: $PROJECT_DIR');
   expect(skillText).toContain(AGENT_PROJECT_ROOT_ARG);

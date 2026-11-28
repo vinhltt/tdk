@@ -4,6 +4,12 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [14.6.1] - 2026-11-28
+
+### Changed
+- Command blocks of `tdk-archive`, `tdk-clarify`, `tdk-consistency-check`, `tdk-implement`, `tdk-plan`, `tdk-review` and `tdk-status` write positionals as `${N}`, so a skill argument no longer replaces them before the agent reads the block
+- References of `tdk-archive` and `tdk-implement` use the same form
+
 ## [14.6.0] - 2026-11-24
 
 ### Added

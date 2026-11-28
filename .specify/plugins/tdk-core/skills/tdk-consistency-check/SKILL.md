@@ -6,7 +6,7 @@ compatibility: "Requires successful completion of /tdk-plan with a valid plan.md
 user-invocable: true
 license: MIT
 metadata:
-  version: "14.3.7"
+  version: "14.6.1"
   category: "Analysis & Review"
   requires:
     - tdk-plan (for prerequisite plan.md with ## Phases table)
@@ -156,7 +156,7 @@ Skip the rest of this step unless the block is `ready`.
 Run the prerequisite command with an agent-resolved project root (pass the validated task_id from Step 0):
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
@@ -276,7 +276,7 @@ Parse the `## Phases` table from plan.md using the CLI wrapper:
 1. **Parse plan.md `## Phases` table**: Run:
    ```bash
    bash -lc '
-   PROJECT_DIR="$1"
+   PROJECT_DIR="${1}"
    if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
      echo "Invalid project root: $PROJECT_DIR" >&2
      exit 1

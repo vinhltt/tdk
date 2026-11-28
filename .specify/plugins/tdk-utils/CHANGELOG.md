@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [5.0.3] - 2026-11-28
+
+### Changed
+- Command blocks of `tdk-load-project-context` and `tdk-setup-guide` write positionals as `${N}`, so a skill argument no longer replaces them; `tdk-load-project-context` gets its `ARGUMENTS:` line back
+
 ## [5.0.2] - 2026-11-21
 
 ### Changed

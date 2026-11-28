@@ -2,7 +2,7 @@
 name: tdk-config-diff
 description: "Compare Workspace and Sub-Workspace Docs."
 metadata:
-  version: "1.0.0"
+  version: "1.2.1"
 ---
 
 # /tdk-config-diff - Compare Workspace and Sub-Workspace Docs
@@ -37,7 +37,7 @@ If no sub-workspace specified:
 ```bash
 # Add --detailed when needed.
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1

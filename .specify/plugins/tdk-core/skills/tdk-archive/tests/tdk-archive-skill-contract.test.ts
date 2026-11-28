@@ -94,7 +94,7 @@ describe('tdk-archive skill contract', () => {
 
   it('resolves the project root from an agent-provided argument, never by shell discovery', () => {
     const wrapper = between(SKILL, '```bash', '```\n\nParse the JSON');
-    expect(wrapper).toContain('PROJECT_DIR="$1"');
+    expect(wrapper).toContain('PROJECT_DIR="${1}"');
     expect(wrapper).toContain('-- "<agent-resolved-project-root>"');
     expect(SKILL).not.toMatch(/CLAUDE_PROJECT_DIR|git rev-parse --show-toplevel|\$PWD/);
   });

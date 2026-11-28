@@ -43,7 +43,7 @@ Do not create or edit any other file inside the archive directory (`spec.md`, `p
 `feature/status.ts` accepts an archived spec as `archive/{TASK_ID}`. It returns `retro_status` (`none`, `collected`, `proposed`, `done`), `retro_blocked`, and `archived`:
 
 ```bash
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR"
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'

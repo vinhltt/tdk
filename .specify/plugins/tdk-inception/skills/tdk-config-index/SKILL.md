@@ -2,7 +2,7 @@
 name: tdk-config-index
 description: "Generate or update the Document Manager index for workspace and sub-workspace docs."
 metadata:
-  version: "1.0.0"
+  version: "1.2.1"
 ---
 
 # /tdk-config-index - Generate Document Manager Index
@@ -44,7 +44,7 @@ Creates/updates `{docs.path}/document-manager.md`
 # If sub-workspace specified:
 # Add --full when needed.
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
@@ -55,7 +55,7 @@ fi
 # Otherwise (workspace level):
 # Add --full when needed.
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1

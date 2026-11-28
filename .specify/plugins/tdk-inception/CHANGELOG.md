@@ -4,6 +4,11 @@ All notable changes to this plugin will be documented in this file.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), Semver.
 
+## [1.2.1] - 2026-11-28
+
+### Changed
+- Command blocks of `tdk-config-diff`, `tdk-config-index`, `tdk-config-sync` and `tdk-workflow-config-apply` write positionals as `${N}`, so a skill argument no longer replaces them; the three config skills get their `ARGUMENTS:` line back
+
 ## [1.2.0] - 2026-11-28
 
 ### Added

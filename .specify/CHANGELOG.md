@@ -6,6 +6,17 @@ will be documented in this file.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
+## [1.136.1] - 2026-11-28
+
+### Changed
+- **[Scripts]** The skill body guard rejects `$N` and the escaped `\$N` in every `SKILL.md`, and an unbraced `PROJECT_DIR="$1"` in any skill markdown. Three contract tests pin `PROJECT_DIR="${1}"`
+
+### Fixed
+- **[tdk-core]** Command blocks of 7 skills reach the agent as written. Claude Code replaces `$N` in a `SKILL.md` body with the N-th skill argument before the agent reads it, so `/tdk-plan <id> --validate` showed `PROJECT_DIR="--validate"` and `REMOTE="--validate"`. Positionals are now `${N}`, which it leaves alone
+- **[tdk-inception]** Same fix in `tdk-config-diff`, `tdk-config-index`, `tdk-config-sync` and `tdk-workflow-config-apply`. The three config skills also get their `ARGUMENTS:` line back, which Claude Code drops once it has replaced a placeholder
+- **[tdk-retro]** Same fix in `tdk-retro-collect`, `tdk-retro-propose` and `tdk-retro-apply`. `tdk-retro-collect` lost the `$0` of its session filter even with one argument; it is now `$(0)`
+- **[tdk-utils]** Same fix in `tdk-load-project-context`, which also gets its `ARGUMENTS:` line back, and `tdk-setup-guide`
+
 ## [1.136.0] - 2026-11-28
 
 ### Added

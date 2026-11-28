@@ -2,7 +2,7 @@
 name: tdk-config-sync
 description: "Synchronize documentation files between workspace and sub-workspaces."
 metadata:
-  version: "1.0.0"
+  version: "1.2.1"
 ---
 
 # /tdk-config-sync - Sync Documentation Between Workspace and Sub-Workspaces
@@ -47,7 +47,7 @@ If no direction specified:
 Run diff script first:
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
@@ -105,7 +105,7 @@ If user selects "Cancel":
 # From sub-workspace to parent:
 # Add --dry-run and/or --force when needed.
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
@@ -116,7 +116,7 @@ fi
 # From parent to sub-workspace:
 # Add --dry-run and/or --force when needed.
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
@@ -127,7 +127,7 @@ fi
 # All sub-workspaces:
 # Add --dry-run and/or --force when needed.
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1

@@ -2,7 +2,7 @@
 name: tdk-retro-apply
 description: "Review learning-delta.md entries with the user, apply approved technical edits, delegate approved memory edits to tdk-memory-update, and update entry statuses."
 metadata:
-  version: "1.4.0"
+  version: "1.5.2"
   category: "TDK Retro"
   requires:
     - tdk-retro-propose
@@ -36,7 +36,7 @@ Apply only user-approved learning deltas. Technical targets are edited directly.
 Parse `$ARGUMENTS` as the raw task id (`{task_id}`). The canonical `TASK_ID` comes from the script output below.
 
 ```bash
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR"
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
@@ -138,7 +138,7 @@ Report:
 Then print the next step. It comes from the `/tdk-status` ladder, never from this skill. Run the status lookup from `../_shared/archived-spec-handling.md` (Retro Status Lookup) **last**, after the Step 6 writes, with the same project root as Step 1:
 
 ```bash
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR"
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'

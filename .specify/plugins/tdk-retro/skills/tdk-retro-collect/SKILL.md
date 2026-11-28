@@ -2,7 +2,7 @@
 name: tdk-retro-collect
 description: "Create or update retrospective feedback after a TDK spec: reviews, phase drift, UT results, Langfuse traces when available, and user feedback. Writes retro-feedback.md and supports adding or removing user feedback entries across repeated collection runs."
 metadata:
-  version: "1.5.0"
+  version: "1.5.2"
   category: "TDK Retro"
   requires:
     - tdk-implement
@@ -36,7 +36,7 @@ Parse `$ARGUMENTS` as the raw task id (`{task_id}`). The canonical `TASK_ID` com
 Run the prerequisite check using the shared script command contract:
 
 ```bash
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR"
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
@@ -62,7 +62,7 @@ On `Stop`, report that nothing was written.
 ## Step 2: Parse Plan Phases
 
 ```bash
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR"
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
@@ -150,8 +150,8 @@ value to langfuse — never a whole JSON line.
 Run Langfuse from project root so `--env .env` resolves correctly:
 
 ```bash
-PROJECT_DIR="$1"
-FEATURE_DIR="$2"
+PROJECT_DIR="${1}"
+FEATURE_DIR="${2}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR"
   echo 'Ask the user for the project root and re-run with: -- "<agent-resolved-project-root>"'
@@ -165,7 +165,7 @@ session_ids() {
   grep -v '^[[:space:]]*$' "$FEATURE_DIR/sessions.txt" 2>/dev/null
 }
 
-session_ids | awk '!seen[$0]++' | head -10 | while read -r session_id; do
+session_ids | awk '!seen[$(0)]++' | head -10 | while read -r session_id; do
   (cd "$PROJECT_DIR" && langfuse --env .env api traces list --session-id "$session_id")
 done
 ```

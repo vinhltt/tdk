@@ -2,7 +2,7 @@
 name: tdk-setup-guide
 description: "Interactive setup guide for TDK environment. Checks prerequisites, verifies config, troubleshoots issues. Use when asking 'how to set up', 'setup help', 'verify setup', 'check prerequisites', 'tdk setup', 'installation guide', 'troubleshoot setup'."
 metadata:
-  version: "2.2.6"
+  version: "5.0.3"
 ---
 
 # TDK Setup Guide
@@ -93,7 +93,7 @@ ls .venv/Scripts/python.exe 2>/dev/null || ls .venv/bin/python3 2>/dev/null
 ```bash
 # Check .specify.json exists and is valid
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1

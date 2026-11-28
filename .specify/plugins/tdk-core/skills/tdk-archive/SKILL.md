@@ -6,7 +6,7 @@ compatibility: "Requires a spec whose derived status is done or cancelled and a 
 user-invocable: true
 license: MIT
 metadata:
-  version: "14.6.0"
+  version: "14.6.1"
   category: "Lifecycle"
   requires:
     - tdk-validate-task-id, tdk-load-project-context (tdk-utils)
@@ -63,7 +63,7 @@ Run `--check` before anything is written. Pass the project root from Step 2 as a
 
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
@@ -111,7 +111,7 @@ The next step comes from the `/tdk-status` ladder, never from this skill. Every 
 
 ```bash
 bash -lc '
-PROJECT_DIR="$1"
+PROJECT_DIR="${1}"
 if [ -z "$PROJECT_DIR" ] || [ ! -d "$PROJECT_DIR/.specify/scripts/ts" ]; then
   echo "Invalid project root: $PROJECT_DIR" >&2
   exit 1
